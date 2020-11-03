@@ -1,3 +1,11 @@
+# Database and venv
+venv/
+db.sqlite3
+
+# Pycharm project files
+.idea/
+*.ini
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
