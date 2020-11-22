@@ -2,6 +2,10 @@
 venv/
 db.sqlite3
 
+# Sensitive files
+local_settings.py
+webclient_env_var.sh
+
 # Pycharm project files
 .idea/
 *.ini
