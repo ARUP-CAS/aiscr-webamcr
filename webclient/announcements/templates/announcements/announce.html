@@ -1,16 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
+{% block title %}Oznámení o stavebním či jiném záměru{% endblock %}
+
+{% block content %}
 <form method="post">
     {% csrf_token %}
-    {{ form }}
+    {% for field in form %}
+    <div class="fieldWrapper">
+        {{ field.errors }}
+        {{ field.label_tag }} {{ field }}
+        {% if field.help_text %}
+        <p class="help">{{ field.help_text|safe }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
     <input type="submit" value="Submit">
 </form>
-
-</body>
-</html>
+{% endblock %}
