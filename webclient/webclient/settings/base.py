@@ -3,14 +3,13 @@ import dj_database_url
 
 from pathlib import Path
 
-
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 SECRET_KEY = os.environ['WEBCLIENT_SECRET_KEY']
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
