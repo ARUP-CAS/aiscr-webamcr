@@ -6,6 +6,7 @@ exclude =
     __pycache__,
     venv,
     .idea,
+	dev.py,
 	local_test.py,
 	production.py
 max-complexity = 10
