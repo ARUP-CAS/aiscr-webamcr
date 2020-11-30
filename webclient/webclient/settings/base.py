@@ -33,6 +33,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'webclient.urls'
 
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
