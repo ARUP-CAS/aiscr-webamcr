@@ -6,10 +6,10 @@ from django.utils.translation import gettext_lazy as _
 
 def validate_phone_number(number):
     number = number.replace(" ", "")
-    SVK = '+421'
-    CZE = '+420'
+    SVK = "+421"
+    CZE = "+420"
     is_valid = False
-    r = re.compile('[0-9]+')
+    r = re.compile("[0-9]+")
     # With country code
     if number.startswith(SVK) or number.startswith(CZE):
         rest = number[4:]  # Without the country code
@@ -23,6 +23,6 @@ def validate_phone_number(number):
 
     if not is_valid:
         raise ValidationError(
-            _('%(value)s nesprávný formát čísla. Musí být: +420xxxxxxxxx'),
-            params={'value': number},
+            _("%(value)s nesprávný formát čísla. Musí být: +420xxxxxxxxx"),
+            params={"value": number},
         )
