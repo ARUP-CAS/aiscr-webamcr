@@ -1,8 +1,6 @@
 import hashlib
 
-from django.contrib.auth.hashers import (
-    PBKDF2PasswordHasher
-)
+from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
 
 class PBKDF2WrappedSHA1PasswordHasher(PBKDF2PasswordHasher):

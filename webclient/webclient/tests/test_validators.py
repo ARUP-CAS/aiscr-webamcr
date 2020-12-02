@@ -1,6 +1,7 @@
-from django.test import TestCase
-from .validators import validate_phone_number
 from django.core.exceptions import ValidationError
+from django.test import TestCase
+
+from .validators import validate_phone_number
 
 
 class ValidatorTestCase(TestCase):
