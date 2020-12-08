@@ -1,11 +1,34 @@
-import os
+import json
 from pathlib import Path
 
-import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.environ["WEBCLIENT_SECRET_KEY"]
+with open(BASE_DIR / "webclient/settings/secrets.json", "r") as f:
+    secrets = json.load(f)
+
+
+def get_secret(setting, file=secrets):
+    try:
+        return file[setting]
+    except KeyError:
+        error_msg = "Set the {0} environment variable".format(setting)
+        raise ImproperlyConfigured(error_msg)
+
+
+SECRET_KEY = get_secret("SECRET_KEY")
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": get_secret("DB_NAME"),
+        "USER": get_secret("DB_USER"),
+        "PASSWORD": get_secret("DB_PASS"),
+        "HOST": get_secret("DB_HOST"),
+        "PORT": get_secret("DB_PORT"),
+    }
+}
 
 DEBUG = False
 
@@ -54,8 +77,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "webclient.wsgi.application"
-
-DATABASES = {"default": dj_database_url.config(conn_max_age=0)}
 
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
