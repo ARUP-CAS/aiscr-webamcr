@@ -5,7 +5,17 @@
 {% block content %}
 <form method="post">
     {% csrf_token %}
-    {% for field in form %}
+    {% for field in form_oznamovatel %}
+    <div class="fieldWrapper">
+        {{ field.errors }}
+        {{ field.label_tag }} {{ field }}
+        {% if field.help_text %}
+        <p class="help">{{ field.help_text|safe }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% for field in form_projekt %}
     <div class="fieldWrapper">
         {{ field.errors }}
         {{ field.label_tag }} {{ field }}
