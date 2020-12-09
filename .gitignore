@@ -5,7 +5,7 @@ db.sqlite3
 # Sensitive files
 local_settings.py
 webclient_env_var.sh
-secrects.json
+secrets.json
 
 # Pycharm project files
 .idea/

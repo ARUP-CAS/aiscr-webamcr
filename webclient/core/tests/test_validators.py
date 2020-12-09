@@ -1,7 +1,6 @@
+from core.validators import validate_phone_number
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-
-from .validators import validate_phone_number
 
 
 class ValidatorTestCase(TestCase):
@@ -16,5 +15,4 @@ class ValidatorTestCase(TestCase):
             self.fail("Valid numbers should not raise exceptions")
 
         for number in invalid_numbers:
-            print(number)
             self.assertRaises(ValidationError, validate_phone_number, number)
