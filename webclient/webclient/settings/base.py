@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "crispy_forms",
+    "core",
     "oznameni",
     "projekt",
     "heslar",
@@ -112,3 +113,30 @@ USE_TZ = True
 STATIC_URL = "/static/"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "timestamp": {
+            "format": "{asctime} {levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "timestamp",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "propagate": True,
+        },
+        "oznameni": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+    },
+}

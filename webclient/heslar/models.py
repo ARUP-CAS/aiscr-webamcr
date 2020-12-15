@@ -16,7 +16,6 @@ class Heslar(models.Model):
     puvodni_id = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "heslar"
         unique_together = (
             ("nazev_heslare", "zkratka"),
@@ -46,7 +45,6 @@ class HeslarDatace(models.Model):
     )
 
     class Meta:
-        managed = False
         db_table = "heslar_datace"
 
 
@@ -66,7 +64,6 @@ class HeslarDokumentTypMaterialRada(models.Model):
     validated = models.SmallIntegerField()
 
     class Meta:
-        managed = False
         db_table = "heslar_dokument_typ_material_rada"
         unique_together = (
             ("dokument_rada", "dokument_typ", "dokument_material"),
@@ -88,7 +85,6 @@ class HeslarHierarchie(models.Model):
     typ = models.TextField()
 
     class Meta:
-        managed = False
         db_table = "heslar_hierarchie"
         unique_together = (("heslo_podrazene", "heslo_nadrazene", "typ"),)
 
@@ -98,7 +94,6 @@ class HeslarNazev(models.Model):
     povolit_zmeny = models.BooleanField()
 
     class Meta:
-        managed = False
         db_table = "heslar_nazev"
 
 
@@ -110,7 +105,6 @@ class HeslarOdkaz(models.Model):
     uri = models.TextField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "heslar_odkaz"
 
 
@@ -128,7 +122,6 @@ class RuianKatastr(models.Model):
     )
 
     class Meta:
-        managed = False
         db_table = "ruian_katastr"
 
 
@@ -141,7 +134,6 @@ class RuianKraj(models.Model):
     aktualni = models.BooleanField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "ruian_kraj"
 
 

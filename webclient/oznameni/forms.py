@@ -1,11 +1,23 @@
+import logging
+
 from core.validators import validate_phone_number
 from crispy_forms.bootstrap import Accordion, AccordionGroup
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout, Reset, Submit
+from crispy_forms.layout import Div, Field, Layout, Submit
 from django import forms
 from django.utils.translation import gettext as _
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
+
+logger = logging.getLogger(__name__)
+
+
+class DateRangeField(forms.DateField):
+    def to_python(self, value):
+        values = value.split(" - ")
+        from_date = super(DateRangeField, self).to_python(values[0])
+        to_date = super(DateRangeField, self).to_python(values[1])
+        return from_date, to_date
 
 
 class OznamovatelForm(forms.ModelForm):
@@ -16,9 +28,9 @@ class OznamovatelForm(forms.ModelForm):
         model = Oznamovatel
         fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa")
         widgets = {
-            "oznamovatel": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "odpovedna_osoba": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "adresa": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "oznamovatel": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "odpovedna_osoba": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "adresa": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
             "oznamovatel": _("Oznamovatel"),
@@ -57,22 +69,27 @@ class OznamovatelForm(forms.ModelForm):
 
 
 class ProjektOznameniForm(forms.ModelForm):
+
+    planovane_zahajeni = DateRangeField(
+        label=_("Plánované zahájení prací"),
+        widget=forms.TextInput(attrs={"rows": 1, "cols": 40}),
+        help_text=_("Termín plánovaného zahájení realizace záměru."),
+    )
+
     class Meta:
         model = Projekt
         fields = ("planovane_zahajeni", "podnet", "lokalizace", "parcelni_cislo")
         widgets = {
-            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
-            "planovane_zahajeni": _("Plánované zahájení prací"),
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
         }
         help_texts = {
-            "planovane_zahajeni": _("Termín plánovaného zahájení realizace záměru."),
             "podnet": _(
                 "Charakteristika stavebního nebo jiného záměru (např. rodinný dům, inženýrské sítě, výstavba "
                 "komunikace, terénní úpravy, těžba suroviny apod.). "
@@ -101,5 +118,30 @@ class ProjektOznameniForm(forms.ModelForm):
             ),
         )
 
+
+class UploadFileForm(forms.Form):
+    soubory = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={"multiple": True}),
+        help_text="Vyberte jeden nebo více souborů.",
+        required=False,
+    )
+    souhlas = forms.BooleanField(
+        label=_("Souhlasím s podmínkami o zpracování osobních údajů")
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(UploadFileForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+        self.helper.layout = Layout(
+            Accordion(
+                AccordionGroup(
+                    _("Projektová a jiná dokumentace"),
+                    "soubory",
+                )
+            ),
+            Field("souhlas"),
+        )
+
         self.helper.layout.append(Submit("save", _("Odeslat formulář")))
-        self.helper.layout.append(Reset("reset", _("Smazat formulář")))

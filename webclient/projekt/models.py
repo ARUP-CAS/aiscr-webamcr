@@ -1,3 +1,4 @@
+from core.models import SouborVazby
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from heslar.models import Heslar, RuianKatastr
@@ -33,7 +34,9 @@ class Projekt(models.Model):
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, blank=True, null=True)
     # geom = models.TextField(blank=True, null=True)  # This field type is a guess.
-    # soubory = models.ForeignKey('SouborVazby', models.DO_NOTHING, db_column='soubory', blank=True, null=True)
+    soubory = models.ForeignKey(
+        SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
+    )
     # historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column='historie', blank=True, null=True)
     # organizace = models.ForeignKey(Organizace, models.DO_NOTHING, db_column='organizace', blank=True, null=True)
     oznaceni_stavby = models.TextField(blank=True, null=True)
@@ -43,7 +46,6 @@ class Projekt(models.Model):
     planovane_zahajeni = DateRangeField(blank=True, null=False)
 
     class Meta:
-        managed = False
         db_table = "projekt"
         unique_together = (("id", "oznamovatel"),)
 
@@ -56,6 +58,5 @@ class ProjektKatastr(models.Model):
     hlavni = models.BooleanField()
 
     class Meta:
-        managed = False
         db_table = "projekt_katastr"
         unique_together = (("projekt", "katastr"),)

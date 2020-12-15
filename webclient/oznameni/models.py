@@ -9,5 +9,4 @@ class Oznamovatel(models.Model):
     telefon = models.TextField()
 
     class Meta:
-        managed = False
         db_table = "oznamovatel"

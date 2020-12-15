@@ -6,6 +6,7 @@
 {% block title %}Oznámení o stavebním či jiném záměru{% endblock %}
 
 {% block head %}
+<!-- Map imports -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
    crossorigin=""/>
@@ -13,6 +14,10 @@
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin="">
 </script>
+<!-- Date picker imports -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 {% endblock %}
 
 {% block content %}
@@ -40,9 +45,14 @@
     {% include "map.html" %}
 
     {% crispy form_projekt %}
+
+    {% crispy form_file %}
 </form>
 {% endblock %}
 
 {% block script %}
 <script src="{% static "map.js" %}"></script>
+<script>
+$('input[name="planovane_zahajeni"]').daterangepicker();
+</script>
 {% endblock %}
