@@ -1,0 +1,5 @@
+from typing import Final
+
+PROJEKT_PRUZKUM_ID: Final = 1125
+PROJEKT_BADATELSKY_ID: Final = 1126
+PROJEKT_ZACHRANNY_ID: Final = 1127

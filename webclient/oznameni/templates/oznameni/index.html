@@ -47,6 +47,28 @@
     {% crispy form_projekt %}
 
     {% crispy form_file %}
+
+    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky" aria-expanded="false" aria-controls="collapsePodminky">
+        {% translate "Přečíst podmínky" %}
+    </button>
+    <div class="collapse" id="collapsePodminky">
+        <div class="card card-body">
+            {% include "components/podminky.html" %}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div id="div_id_souhlas" class="custom-control custom-checkbox">
+            <input type="checkbox" name="souhlas" class="checkboxinput custom-control-input" required="" id="id_souhlas">
+            <label for="id_souhlas" class="custom-control-label requiredField">
+                {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
+                <span class="asteriskField">*</span>
+            </label>
+        </div>
+    </div>
+
+    <input type="submit" name="save" value="{% translate 'Odeslat formulář' %}" class="btn btn-primary" id="submit-id-save">
+
 </form>
 {% endblock %}
 

@@ -1,9 +1,8 @@
 import logging
 
 from core.validators import validate_phone_number
-from crispy_forms.bootstrap import Accordion, AccordionGroup
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Field, Layout, Submit
+from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
 from oznameni.models import Oznamovatel
@@ -17,6 +16,7 @@ class DateRangeField(forms.DateField):
         values = value.split(" - ")
         from_date = super(DateRangeField, self).to_python(values[0])
         to_date = super(DateRangeField, self).to_python(values[1])
+
         return from_date, to_date
 
 
@@ -51,9 +51,12 @@ class OznamovatelForm(forms.ModelForm):
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
-            Accordion(
-                AccordionGroup(
-                    _("Oznamovatel"),
+            Div(
+                Div(
+                    HTML(_("Oznamovatel")),
+                    css_class="card-header",
+                ),
+                Div(
                     "oznamovatel",
                     "odpovedna_osoba",
                     "adresa",
@@ -62,15 +65,17 @@ class OznamovatelForm(forms.ModelForm):
                         Div("email", css_class="col-sm-6"),
                         css_class="row",
                     ),
-                )
-            ),
+                    css_class="card-body",
+                ),
+                css_class="card",
+            )
         )
         self.helper.form_tag = False
 
 
 class ProjektOznameniForm(forms.ModelForm):
-
     planovane_zahajeni = DateRangeField(
+        required=True,
         label=_("Plánované zahájení prací"),
         widget=forms.TextInput(attrs={"rows": 1, "cols": 40}),
         help_text=_("Termín plánovaného zahájení realizace záměru."),
@@ -107,26 +112,26 @@ class ProjektOznameniForm(forms.ModelForm):
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
-            Accordion(
-                AccordionGroup(
-                    _("Charakteristika záměru"),
+            Div(
+                Div(
+                    HTML(_("Charakteristika záměru")),
+                    css_class="card-header",
+                ),
+                Div(
                     "planovane_zahajeni",
                     "podnet",
                     "lokalizace",
                     "parcelni_cislo",
-                )
-            ),
+                    css_class="card-body",
+                ),
+                css_class="card",
+            )
         )
 
 
 class UploadFileForm(forms.Form):
     soubory = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={"multiple": True}),
-        help_text="Vyberte jeden nebo více souborů.",
         required=False,
-    )
-    souhlas = forms.BooleanField(
-        label=_("Souhlasím s podmínkami o zpracování osobních údajů")
     )
 
     def __init__(self, *args, **kwargs):
@@ -135,13 +140,15 @@ class UploadFileForm(forms.Form):
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
-            Accordion(
-                AccordionGroup(
-                    _("Projektová a jiná dokumentace"),
+            Div(
+                Div(
+                    HTML(_("Projektová a jiná dokumentace")),
+                    css_class="card-header",
+                ),
+                Div(
                     "soubory",
-                )
-            ),
-            Field("souhlas"),
+                    css_class="card-body",
+                ),
+                css_class="card",
+            )
         )
-
-        self.helper.layout.append(Submit("save", _("Odeslat formulář")))
