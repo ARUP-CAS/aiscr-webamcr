@@ -8,5 +8,8 @@ class Oznamovatel(models.Model):
     oznamovatel = models.TextField()
     telefon = models.TextField()
 
+    def __str__(self):
+        return self.odpovedna_osoba + " (" + self.email + ")"
+
     class Meta:
         db_table = "oznamovatel"
