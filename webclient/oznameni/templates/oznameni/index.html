@@ -15,7 +15,7 @@
    crossorigin="">
 </script>
 <!-- Date picker imports -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 {% endblock %}
@@ -76,7 +76,5 @@
 
 {% block script %}
 <script src="{% static 'map.js' %}"></script>
-<script>
-$('input[name="planovane_zahajeni"]').daterangepicker();
-</script>
+<script src="{% static 'daterangepicker.js' %}"></script>
 {% endblock %}
