@@ -1,5 +1,8 @@
+import datetime
 import logging
 
+from captcha.fields import ReCaptchaField
+from captcha.widgets import ReCaptchaV2Checkbox
 from core.validators import validate_phone_number
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
@@ -16,7 +19,9 @@ class DateRangeField(forms.DateField):
         values = value.split(" - ")
         from_date = super(DateRangeField, self).to_python(values[0])
         to_date = super(DateRangeField, self).to_python(values[1])
-
+        # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
+        # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
+        to_date += datetime.timedelta(days=1)
         return from_date, to_date
 
 
@@ -152,3 +157,7 @@ class UploadFileForm(forms.Form):
                 css_class="card",
             )
         )
+
+
+class FormWithCaptcha(forms.Form):
+    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)

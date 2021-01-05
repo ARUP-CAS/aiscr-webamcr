@@ -1,4 +1,5 @@
 from core.models import SouborVazby
+from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from heslar.models import Heslar, RuianKatastr
@@ -33,7 +34,7 @@ class Projekt(models.Model):
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, blank=True, null=True)
-    # geom = models.TextField(blank=True, null=True)  # This field type is a guess.
+    geom = pgmodels.PointField(blank=True, null=True)
     soubory = models.ForeignKey(
         SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
     )

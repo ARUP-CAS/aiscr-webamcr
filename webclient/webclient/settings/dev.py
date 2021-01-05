@@ -17,3 +17,5 @@ INTERNAL_IPS = [
 ]
 
 CRISPY_FAIL_SILENTLY = not DEBUG
+
+SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]

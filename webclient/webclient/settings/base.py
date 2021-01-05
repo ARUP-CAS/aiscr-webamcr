@@ -21,7 +21,7 @@ SECRET_KEY = get_secret("SECRET_KEY")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": get_secret("DB_NAME"),
         "USER": get_secret("DB_USER"),
         "PASSWORD": get_secret("DB_PASS"),
@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
     "crispy_forms",
+    "captcha",
     "core",
     "oznameni",
     "projekt",
