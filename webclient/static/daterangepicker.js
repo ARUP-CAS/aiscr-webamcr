@@ -2,7 +2,8 @@
 moment.locale('cs');
 $('input[name="planovane_zahajeni"]').daterangepicker({
     "locale": {
-        "applyLabel": "Vybrat odhad začátku prací",
+        "applyLabel": "Vybrat odhad začátku pracíaaa",
         "cancelLabel": "Zrušit"
-    }
+    },
+    format: 'dd/mm/yyyy'
 });

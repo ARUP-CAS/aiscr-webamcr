@@ -135,7 +135,7 @@ class ProjektOznameniForm(forms.ModelForm):
 
 
 class UploadFileForm(forms.Form):
-    soubory = forms.FileField(
+    soubor = forms.FileField(
         required=False,
     )
 
@@ -151,7 +151,7 @@ class UploadFileForm(forms.Form):
                     css_class="card-header",
                 ),
                 Div(
-                    "soubory",
+                    "soubor",
                     css_class="card-body",
                 ),
                 css_class="card",

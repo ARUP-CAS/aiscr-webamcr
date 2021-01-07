@@ -34,12 +34,23 @@ ENV C_INCLUDE_PATH=/usr/include/gdal
 # This will install latest version of GDAL
 RUN pip3 install GDAL==3.0.4
 
-COPY /webclient/requirements/ .
+COPY ./webclient/webclient/requirements .
 
 RUN pip3 install -r dev.txt
 
 RUN mkdir /code
+COPY ./webclient /code
 WORKDIR /code
-COPY . /code/
 
+# Uploaded images
+RUN mkdir -p /vol/web/media
+# Staic files for the app
+RUN mkdir -p /vol/web/static
 
+RUN adduser user
+RUN passwd -d user
+RUN chown -R user:user /vol
+RUN chmod -R 755 /vol/web
+USER user
+
+CMD ["entrypoint.sh"]

@@ -2,10 +2,12 @@ version: "3.8"
 
 services:
   web:
-    build: .
+    build:
+      context: .
     command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/code
+      - ./webclient:/code
+      # - C:/tmp_media:/vol/web
     ports:
       - "8000:8000"
     environment:

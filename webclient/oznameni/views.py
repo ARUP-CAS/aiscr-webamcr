@@ -1,6 +1,8 @@
 import logging
 
 from core import constants as c
+from core.constants import PROJEKT_FILE_TYPE
+from core.models import SouborVazby
 from django.contrib.gis.geos import Point
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -27,12 +29,17 @@ def index(request):
         if form_ozn.is_valid() and form_projekt.is_valid() and form_file.is_valid():
             logger.debug("Form is valid")
 
+            # Create child objects to the project object
+            sv = SouborVazby(typ_vazby=PROJEKT_FILE_TYPE)
+            sv.save()
+
             o = form_ozn.save()
             logger.debug("Saving object: " + str(o))
             p = form_projekt.save(commit=False)
             p.stav = c.PROJEKT_STAV_OZNAMENY
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
+            p.soubory = sv
             # TODO retrieve gps coordinates from the request and create a point from them
             # longitude = request.POST[]
             # latitude = request.POST[]
@@ -40,7 +47,20 @@ def index(request):
             p.save()
             logger.debug("Saving object: " + str(p))
 
-            # TODO upload souboru skrz form_file.save()
+            # soubor = request.FILES.get("soubor")
+
+            # s = Soubor(
+            #    path=soubor,
+            #    vazba=sv,
+            #    #nazev_zkraceny=
+            #    nazev_puvodni=soubor.name,
+            #    # vlastnik= ??
+            #    mimetype="aaa"
+            #    size_bytes=soubor.size,
+            #    typ_souboru=OTHER_PROJECT_FILES,
+            # )
+            # s.save()
+
             context = {"ident_cely": p.ident_cely, "email": o.email}
             return render(request, "oznameni/success.html", {"context": context})
         else:
