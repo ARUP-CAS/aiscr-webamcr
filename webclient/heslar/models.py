@@ -148,5 +148,4 @@ class RuianOkres(models.Model):
     aktualni = models.BooleanField(blank=True, null=True)
 
     class Meta:
-        managed = False
         db_table = "ruian_okres"

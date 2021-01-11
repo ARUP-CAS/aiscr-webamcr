@@ -1,4 +1,5 @@
 from django.db import models
+from uzivatel.models import AuthUser
 
 from .constants import DOKUMENT_FILE_TYPE, PROJEKT_FILE_TYPE, SAMOSTATNY_NALEZ_FILE_TYPE
 
@@ -21,7 +22,7 @@ class Soubor(models.Model):
     nazev_zkraceny = models.TextField()
     nazev_puvodni = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
-    # vlastnik = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column='vlastnik')
+    vlastnik = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column="vlastnik")
     nazev = models.TextField(unique=True)
     mimetype = models.TextField()
     size_bytes = models.IntegerField()

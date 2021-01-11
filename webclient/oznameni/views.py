@@ -1,13 +1,14 @@
 import logging
 
 from core import constants as c
-from core.constants import PROJEKT_FILE_TYPE
-from core.models import SouborVazby
+from core.constants import OTHER_PROJECT_FILES, PROJEKT_FILE_TYPE
+from core.models import Soubor, SouborVazby
 from django.contrib.gis.geos import Point
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
+from uzivatel.models import AuthUser
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, UploadFileForm
 
@@ -34,32 +35,39 @@ def index(request):
             sv.save()
 
             o = form_ozn.save()
-            logger.debug("Saving object: " + str(o))
+            logger.debug("Saving announcer object: " + str(o))
             p = form_projekt.save(commit=False)
             p.stav = c.PROJEKT_STAV_OZNAMENY
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
             p.soubory = sv
-            # TODO retrieve gps coordinates from the request and create a point from them
-            # longitude = request.POST[]
-            # latitude = request.POST[]
-            p.geom = Point(5, 23)
+            longitude = request.POST.get("id_longitude")
+            latitude = request.POST.get("id_latitude")
+            # TODO map main cadastre based on the geom
+            p.geom = Point(longitude, latitude)
             p.save()
-            logger.debug("Saving object: " + str(p))
+            logger.debug("Saving project object: " + str(p))
 
-            # soubor = request.FILES.get("soubor")
-
-            # s = Soubor(
-            #    path=soubor,
-            #    vazba=sv,
-            #    #nazev_zkraceny=
-            #    nazev_puvodni=soubor.name,
-            #    # vlastnik= ??
-            #    mimetype="aaa"
-            #    size_bytes=soubor.size,
-            #    typ_souboru=OTHER_PROJECT_FILES,
-            # )
-            # s.save()
+            soubor = request.FILES.get("soubor")
+            logger.debug("Soubor  : " + str(request.FILES))
+            if soubor:
+                s = Soubor(
+                    path=soubor,
+                    vazba=sv,
+                    # TODO set correct short name
+                    nazev_zkraceny="aaa",
+                    nazev_puvodni=soubor.name,
+                    # Default files owner amcr@arup.cas.cz
+                    vlastnik=get_object_or_404(AuthUser, email="amcr@arup.cas.cz"),
+                    # TODO set correct mimetype
+                    mimetype="aaa",
+                    size_bytes=soubor.size,
+                    typ_souboru=OTHER_PROJECT_FILES,
+                )
+                logger.debug("Saving file object: " + str(s))
+                s.save()
+            else:
+                logger.debug("No file attached to the announcement form.")
 
             context = {"ident_cely": p.ident_cely, "email": o.email}
             return render(request, "oznameni/success.html", {"context": context})

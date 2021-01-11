@@ -85,19 +85,29 @@ class ProjektOznameniForm(forms.ModelForm):
         widget=forms.TextInput(attrs={"rows": 1, "cols": 40}),
         help_text=_("Termín plánovaného zahájení realizace záměru."),
     )
+    latitude = forms.CharField(widget=forms.HiddenInput())
+    longitude = forms.CharField(widget=forms.HiddenInput())
 
     class Meta:
         model = Projekt
-        fields = ("planovane_zahajeni", "podnet", "lokalizace", "parcelni_cislo")
+        fields = (
+            "planovane_zahajeni",
+            "podnet",
+            "lokalizace",
+            "parcelni_cislo",
+            "oznaceni_stavby",
+        )
         widgets = {
             "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
+            "oznaceni_stavby": _("Označení stavby"),
         }
         help_texts = {
             "podnet": _(
@@ -109,6 +119,7 @@ class ProjektOznameniForm(forms.ModelForm):
                 "název polní trati, místní název  apod.). "
             ),
             "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
+            "oznaceni_stavby": _("Lorem ipsum"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -127,6 +138,9 @@ class ProjektOznameniForm(forms.ModelForm):
                     "podnet",
                     "lokalizace",
                     "parcelni_cislo",
+                    "oznaceni_stavby",
+                    "latitude",
+                    "longitude",
                     css_class="card-body",
                 ),
                 css_class="card",
