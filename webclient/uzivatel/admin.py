@@ -9,16 +9,8 @@ class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
     form = AuthUserChangeForm
     model = AuthUser
-    list_display = (
-        "email",
-        "is_staff",
-        "is_active",
-    )
-    list_filter = (
-        "email",
-        "is_staff",
-        "is_active",
-    )
+    list_display = ("email", "is_staff", "is_active", "organizace")
+    list_filter = ("email", "is_staff", "is_active", "organizace")
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Permissions", {"fields": ("is_staff", "is_active")}),
@@ -28,7 +20,14 @@ class CustomUserAdmin(UserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("email", "password1", "password2", "is_staff", "is_active"),
+                "fields": (
+                    "email",
+                    "password1",
+                    "password2",
+                    "is_staff",
+                    "is_active",
+                    "organizace",
+                ),
             },
         ),
     )

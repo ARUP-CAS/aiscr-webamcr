@@ -56,7 +56,7 @@ class ProjektKatastr(models.Model):
         Projekt, models.DO_NOTHING, db_column="projekt", primary_key=True
     )
     katastr = models.ForeignKey(RuianKatastr, models.DO_NOTHING, db_column="katastr")
-    hlavni = models.BooleanField()
+    hlavni = models.BooleanField(default=False)
 
     class Meta:
         db_table = "projekt_katastr"

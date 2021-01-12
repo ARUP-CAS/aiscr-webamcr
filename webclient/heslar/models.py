@@ -91,7 +91,7 @@ class HeslarHierarchie(models.Model):
 
 class HeslarNazev(models.Model):
     nazev = models.TextField(unique=True)
-    povolit_zmeny = models.BooleanField()
+    povolit_zmeny = models.BooleanField(default=True)
 
     class Meta:
         db_table = "heslar_nazev"
