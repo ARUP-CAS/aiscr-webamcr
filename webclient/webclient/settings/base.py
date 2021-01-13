@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "captcha",
     "core",
+    "historie",
     "oznameni",
     "projekt",
     "heslar",

@@ -3,6 +3,7 @@ import logging
 from core import constants as c
 from core.constants import OTHER_PROJECT_FILES, PROJEKT_FILE_TYPE
 from core.models import Soubor, SouborVazby
+from core.utils import get_mime_type
 from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
@@ -60,7 +61,7 @@ def index(request):
                     # Default files owner amcr@arup.cas.cz
                     vlastnik=get_object_or_404(AuthUser, email="amcr@arup.cas.cz"),
                     # TODO set correct mimetype
-                    mimetype="aaa",
+                    mimetype=get_mime_type(soubor.name),
                     size_bytes=soubor.size,
                     typ_souboru=OTHER_PROJECT_FILES,
                 )

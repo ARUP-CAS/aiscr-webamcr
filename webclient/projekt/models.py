@@ -3,6 +3,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from heslar.models import Heslar, RuianKatastr
+from historie.models import HistorieVazby
 from oznameni.models import Oznamovatel
 
 
@@ -38,26 +39,33 @@ class Projekt(models.Model):
     soubory = models.ForeignKey(
         SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
     )
-    # historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column='historie', blank=True, null=True)
+    historie = models.ForeignKey(
+        HistorieVazby,
+        on_delete=models.CASCADE,
+        db_column="historie",
+        blank=True,
+        null=True,
+    )
     # organizace = models.ForeignKey(Organizace, models.DO_NOTHING, db_column='organizace', blank=True, null=True)
     oznaceni_stavby = models.TextField(blank=True, null=True)
     oznamovatel = models.ForeignKey(
         Oznamovatel, models.DO_NOTHING, db_column="oznamovatel", blank=True, null=True
     )
     planovane_zahajeni = DateRangeField(blank=True, null=False)
+    katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
 
     class Meta:
         db_table = "projekt"
         unique_together = (("id", "oznamovatel"),)
 
+    def get_main_cadastre(self):
+        for k in self.katastry:
+            if k.hlavni:
+                return k
+        return None
+
 
 class ProjektKatastr(models.Model):
-    projekt = models.OneToOneField(
-        Projekt, models.DO_NOTHING, db_column="projekt", primary_key=True
-    )
-    katastr = models.ForeignKey(RuianKatastr, models.DO_NOTHING, db_column="katastr")
+    projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
+    katastr = models.ForeignKey(RuianKatastr, on_delete=models.CASCADE)
     hlavni = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = "projekt_katastr"
-        unique_together = (("projekt", "katastr"),)
