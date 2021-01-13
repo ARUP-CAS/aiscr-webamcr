@@ -1,7 +1,7 @@
 import logging
 
 from core import constants as c
-from core.constants import OTHER_PROJECT_FILES, PROJEKT_FILE_TYPE
+from core.constants import OTHER_PROJECT_FILES, OZNAMENI, PROJEKT_RELATION_TYPE
 from core.models import Soubor, SouborVazby
 from core.utils import get_mime_type
 from django.contrib.gis.geos import Point
@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
+from historie.models import Historie, HistorieVazby
 from uzivatel.models import AuthUser
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, UploadFileForm
@@ -32,8 +33,12 @@ def index(request):
             logger.debug("Form is valid")
 
             # Create child objects to the project object
-            sv = SouborVazby(typ_vazby=PROJEKT_FILE_TYPE)
+            sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
             sv.save()
+            hv = HistorieVazby(typ_vazby=PROJEKT_RELATION_TYPE)
+            hv.save()
+            # Retrieve default user associated with the project
+            owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
 
             o = form_ozn.save()
             logger.debug("Saving announcer object: " + str(o))
@@ -42,11 +47,18 @@ def index(request):
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
             p.soubory = sv
+            # TODO add record to history table about the creation
+            p.historie = hv
             longitude = request.POST.get("id_longitude")
             latitude = request.POST.get("id_latitude")
             # TODO map main cadastre based on the geom
             p.geom = Point(longitude, latitude)
             p.save()
+            Historie(
+                typ_zmeny=OZNAMENI,
+                uzivatel=owner,
+                vazba=hv,
+            ).save()
             logger.debug("Saving project object: " + str(p))
 
             soubor = request.FILES.get("soubor")
@@ -58,8 +70,7 @@ def index(request):
                     # TODO set correct short name
                     nazev_zkraceny="aaa",
                     nazev_puvodni=soubor.name,
-                    # Default files owner amcr@arup.cas.cz
-                    vlastnik=get_object_or_404(AuthUser, email="amcr@arup.cas.cz"),
+                    vlastnik=owner,
                     # TODO set correct mimetype
                     mimetype=get_mime_type(soubor.name),
                     size_bytes=soubor.size,

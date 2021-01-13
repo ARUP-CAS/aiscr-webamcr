@@ -13,7 +13,7 @@ def get_secret(setting, file=secrets):
     try:
         return file[setting]
     except KeyError:
-        error_msg = "Set the {0} environment variable".format(setting)
+        error_msg = "Add {0} variable to secrets.json file".format(setting)
         raise ImproperlyConfigured(error_msg)
 
 

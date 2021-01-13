@@ -1,15 +1,15 @@
 from django.db import models
 from uzivatel.models import AuthUser
 
-from .constants import DOKUMENT_FILE_TYPE, PROJEKT_FILE_TYPE, SAMOSTATNY_NALEZ_FILE_TYPE
+from .constants import PROJEKT_RELATION_TYPE, SAMOSTATNY_NALEZ_RELATION_TYPE
 
 
 class SouborVazby(models.Model):
 
     CHOICES = (
-        (PROJEKT_FILE_TYPE, "Projekt"),
-        (DOKUMENT_FILE_TYPE, "Dokument"),
-        (SAMOSTATNY_NALEZ_FILE_TYPE, "Samostatný nález"),
+        (PROJEKT_RELATION_TYPE, "Projekt"),
+        (PROJEKT_RELATION_TYPE, "Dokument"),
+        (SAMOSTATNY_NALEZ_RELATION_TYPE, "Samostatný nález"),
     )
 
     typ_vazby = models.TextField(max_length=2, choices=CHOICES)
