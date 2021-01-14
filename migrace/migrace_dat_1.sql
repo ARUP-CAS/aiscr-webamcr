@@ -58,7 +58,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateCatastersFromAkce();
-drop function migrateCatastersFromAkce;
+drop function migrateCatastersFromAkce();
 
 -- b) Tesovani migrace
 
@@ -84,7 +84,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateCatastersFromLokalita();
-drop function migrateCatastersFromLokalita;
+drop function migrateCatastersFromLokalita();
 
 -- b) Tesovani migrace
 
@@ -143,7 +143,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateCatastersFromProjekt();
-drop function migrateCatastersFromProjekt;
+drop function migrateCatastersFromProjekt();
 
 -- b) Testovani migrace
 

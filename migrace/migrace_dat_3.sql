@@ -38,7 +38,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migratePosudkyFromDokument();
-drop function migratePosudkyFromDokument;
+drop function migratePosudkyFromDokument();
 
 -- c) Test dat
 

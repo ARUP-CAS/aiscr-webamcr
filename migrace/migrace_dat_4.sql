@@ -236,7 +236,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 select migrateUplatneniFromMaterialDokumentu();
-drop function migrateUplatneniFromMaterialDokumentu;
+drop function migrateUplatneniFromMaterialDokumentu();
 
 alter table heslar_material_dokumentu drop column nove_id;
 

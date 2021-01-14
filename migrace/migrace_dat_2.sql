@@ -48,7 +48,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateVedouciOstatniFromAkce();
-drop function migrateVedouciOstatniFromAkce;
+drop function migrateVedouciOstatniFromAkce();
 
 -- c) Tesovani migrace
 
@@ -73,7 +73,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateVedouciFromNeidentAkce();
-drop function migrateVedouciFromNeidentAkce;
+drop function migrateVedouciFromNeidentAkce();
 
 -- c) Test migrace
 
@@ -117,7 +117,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateAutorFromDokument();
-drop function migrateAutorFromDokument;
+drop function migrateAutorFromDokument();
 
 -- c) Test migrace
 
@@ -145,6 +145,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateAutorFromExterniZdroj();
-drop function migrateAutorFromExterniZdroj;
+drop function migrateAutorFromExterniZdroj();
 
 -- c) Test migrace
