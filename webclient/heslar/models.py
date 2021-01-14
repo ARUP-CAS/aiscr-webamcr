@@ -1,3 +1,4 @@
+from django.contrib.gis.db import models as pgmodels
 from django.db import models
 
 
@@ -113,10 +114,10 @@ class RuianKatastr(models.Model):
     aktualni = models.BooleanField()
     nazev = models.TextField()
     kod = models.IntegerField()
-    # definicni_bod = models.TextField()  # This field type is a guess.
+    definicni_bod = pgmodels.GeometryField(null=False)
     nazev_stary = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
-    # pian = models.ForeignKey(Pian, models.DO_NOTHING, db_column='pian')
+    pian = models.IntegerField()  # TODO
     soucasny = models.ForeignKey(
         "self", models.DO_NOTHING, db_column="soucasny", blank=True, null=True
     )
@@ -129,7 +130,7 @@ class RuianKraj(models.Model):
     nazev = models.TextField(unique=True)
     kod = models.IntegerField(unique=True)
     rada_id = models.CharField(max_length=1)
-    # definicni_bod = models.TextField(blank=True, null=True)  # This field type is a guess.
+    definicni_bod = pgmodels.PointField(blank=True, null=True)
     # hranice = models.TextField(blank=True, null=True)  # This field type is a guess.
     aktualni = models.BooleanField(blank=True, null=True)
 

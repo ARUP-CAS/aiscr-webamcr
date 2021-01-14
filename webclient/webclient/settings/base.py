@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "projekt",
     "heslar",
     "uzivatel",
+    "pian",
 ]
 
 MIDDLEWARE = [
