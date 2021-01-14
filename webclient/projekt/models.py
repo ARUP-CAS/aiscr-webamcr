@@ -1,3 +1,5 @@
+import logging
+
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
@@ -5,6 +7,8 @@ from django.db import models
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from oznameni.models import Oznamovatel
+
+logger = logging.getLogger(__name__)
 
 
 class Projekt(models.Model):
@@ -51,7 +55,7 @@ class Projekt(models.Model):
     oznamovatel = models.ForeignKey(
         Oznamovatel, models.DO_NOTHING, db_column="oznamovatel", blank=True, null=True
     )
-    planovane_zahajeni = DateRangeField(blank=True, null=False)
+    planovane_zahajeni = DateRangeField(blank=True, null=True)
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
 
     class Meta:
@@ -63,6 +67,22 @@ class Projekt(models.Model):
             if k.hlavni:
                 return k
         return None
+
+    def parse_ident_cely(self):
+        year = None
+        number = None
+        region = None
+        permanent = None
+        if self.ident_cely:
+            last_dash_index = self.ident_cely.rfind("-")
+            region = self.ident_cely[last_dash_index - 1 : last_dash_index]
+            last_part = self.ident_cely[last_dash_index + 1 :]
+            year = last_part[:4]
+            number = last_part[4:]
+            permanent = False if "X-" in self.ident_cely else True
+        else:
+            logger.debug("Cannot retrieve year from null ident_cely")
+        return permanent, region, year, number
 
 
 class ProjektKatastr(models.Model):

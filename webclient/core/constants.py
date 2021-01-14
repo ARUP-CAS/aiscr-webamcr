@@ -14,18 +14,28 @@ PROJEKT_STAV_NAVRZEN_KE_ZRUSENI: Final = 7
 PROJEKT_STAV_ZRUSENY: Final = 8
 # Transakce historie
 # Projekty
-OZNAMENI: Final = 0
-SCHVALENI_OZNAMENI: Final = 1
-ZAPSANI: Final = 2
-PRIHLASENI: Final = 3
-ZAHAJENI_V_TERENU: Final = 4
-UKONCENI_V_TERENU: Final = 5
-UZAVRENI: Final = 6
-NAVRZENI_KE_ZRUSENI: Final = 7
-RUSENI: Final = 8
-ODMITNUTI_ZRUSENI: Final = 9
-VRACENI: Final = 10
-# TODO Akce
+OZNAMENI_PROJ: Final = 0
+SCHVALENI_OZNAMENI_PROJ: Final = 1
+ZAPSANI_PROJ: Final = 2
+PRIHLASENI_PROJ: Final = 3
+ZAHAJENI_V_TERENU_PROJ: Final = 4
+UKONCENI_V_TERENU_PROJ: Final = 5
+UZAVRENI_PROJ: Final = 6
+NAVRZENI_KE_ZRUSENI_PROJ: Final = 7
+RUSENI_PROJ: Final = 8
+VRACENI_PROJ: Final = 9
+# Akce
+ZAPSANI_AKCE: Final = 11
+ODESLANI_AKCE: Final = 12
+ARCHIVACE_AKCE: Final = 13
+VRACENI_AKCE: Final = 14
+# Dokument
+# Samostatny nalez
+# Uzivatel
+# Pian
+# Lokalita
+# Uzivatel_spoluprace
+# Externi_zdroj
 
 IDENTIFIKATOR_DOCASNY_PREFIX: Final = "X-"
 

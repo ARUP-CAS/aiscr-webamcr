@@ -37,3 +37,23 @@ update historie h set typ_zmeny = 3 from (select his.id as hid from historie his
 update historie h set typ_zmeny = 3 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=5) as sel where id=sel.hid;
 update historie h set typ_zmeny = 3 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=4) as sel where id=sel.hid;
 update historie h set typ_zmeny = 2 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=6) as sel where id=sel.hid;
+
+-- COMMENT???? CO S TIM?
+-- Dalsi vec je ze v historii maji modely 3D (dokumenty) jinou historii (transakce) jako maji klasicke dokumenty:
+--ZAPSANI = 1
+--ODESLANI = 2
+--ARCHIVACE = 3
+--ZPET_K_ODESLANI = 4
+--ZPET_K_ZAPSANI = 5
+--AKTUALIZACE = 6
+--ZMENA_AUTORA = 7
+-- Tranzakce mezi stavy 3D modelu v nove historii musime namapovat na dokumenty aby byly stejne
+--ZAPSANI = 1
+--ODESLANI = 2
+--ARCHIVACE = 3
+--VRACENI = 4
+--Takze:
+-- 5 -> 4
+-- 6 a 7 smazat
+update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and his.typ_zmeny=5) as sel where id=sel.hid;
+delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument');

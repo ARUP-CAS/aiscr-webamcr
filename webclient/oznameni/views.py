@@ -1,7 +1,7 @@
 import logging
 
 from core import constants as c
-from core.constants import OTHER_PROJECT_FILES, OZNAMENI, PROJEKT_RELATION_TYPE
+from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ, PROJEKT_RELATION_TYPE
 from core.models import Soubor, SouborVazby
 from core.utils import get_mime_type
 from django.contrib.gis.geos import Point
@@ -47,7 +47,6 @@ def index(request):
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
             p.soubory = sv
-            # TODO add record to history table about the creation
             p.historie = hv
             longitude = request.POST.get("id_longitude")
             latitude = request.POST.get("id_latitude")
@@ -55,7 +54,7 @@ def index(request):
             p.geom = Point(longitude, latitude)
             p.save()
             Historie(
-                typ_zmeny=OZNAMENI,
+                typ_zmeny=OZNAMENI_PROJ,
                 uzivatel=owner,
                 vazba=hv,
             ).save()
