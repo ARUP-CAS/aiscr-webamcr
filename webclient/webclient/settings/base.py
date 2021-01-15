@@ -117,6 +117,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+# DEFAULT_CHARSET = "utf-8"
+
 STATIC_URL = "/static/static/"
 MEDIA_URL = "/static/media/"
 

@@ -1,4 +1,5 @@
-from core.utils import get_mime_type
+from core.utils import get_cadastre_from_point, get_mime_type
+from django.contrib.gis.geos import Point
 from django.test import TestCase
 
 
@@ -11,3 +12,9 @@ class UtilsTests(TestCase):
         self.assertEqual(txt, "text/plain")
         self.assertEqual(pdf, "application/pdf")
         self.assertEqual(csv, "text/csv")
+
+    def test_get_cadastre_from_point(self):
+
+        praha_centrum = Point(50.086872, 14.417970)
+        katastr = get_cadastre_from_point(praha_centrum)
+        self.assertEqual(katastr, None)

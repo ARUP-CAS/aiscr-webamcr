@@ -218,8 +218,8 @@ alter table samostatny_nalez drop column datum_vlozeni;
 alter table samostatny_nalez drop column datum_archivace;
 -- 147. vazba_spoluprace.datum_vytvoreni
 alter table uzivatel_spoluprace drop column datum_vytvoreni;
--- 148. ruian_katastr.hranice
-alter table ruian_katastr drop column hranice;
+-- 148. ruian_katastr.hranice TOHLE JE CHYBA HRANICE TAM MAJI BYT
+-- alter table ruian_katastr drop column hranice;
 -- 149. soubor.dokument
 alter table soubor drop column dokument;
 -- 150. soubor.projekt

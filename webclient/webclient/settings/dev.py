@@ -21,3 +21,5 @@ INTERNAL_IPS = [ip[:-1] + "1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
 CRISPY_FAIL_SILENTLY = not DEBUG
 
 SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
+
+TEST_RUNNER = "core.tests.runner.AMCRTestRunner"

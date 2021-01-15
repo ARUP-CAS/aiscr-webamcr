@@ -115,6 +115,7 @@ class RuianKatastr(models.Model):
     nazev = models.TextField()
     kod = models.IntegerField()
     definicni_bod = pgmodels.GeometryField(null=False)
+    hranice = pgmodels.GeometryField(null=True)
     nazev_stary = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
     pian = models.IntegerField()  # TODO

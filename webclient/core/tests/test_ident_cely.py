@@ -10,12 +10,15 @@ from core.ident_cely import (
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from heslar import hesla
-from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
+from heslar.models import Heslar, HeslarNazev, RuianKatastr
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt, ProjektKatastr
 
 
 class IdentTests(TestCase):
+
+    # fixtures = ['heslar.json', ]
+
     def setUp(self):
         hn = HeslarNazev(nazev="Typy projektu")
         hp = HeslarNazev(nazev="Presnost")
@@ -68,22 +71,6 @@ class IdentTests(TestCase):
             stav=2,
         )
         pian.save()
-        kraj = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
-        okres = RuianOkres(id=162, nazev="Testovy okres", kraj=kraj, spz="spz", kod=2)
-        katastr = RuianKatastr(
-            id=150,
-            nazev="Testovaci katastr",
-            okres=okres,
-            kod=3,
-            aktualni=True,
-            definicni_bod=GEOSGeometry(
-                "0101000020E610000042D35729E77F3040234F91EAF9804840"
-            ),
-            pian=1,
-        )
-        kraj.save()
-        okres.save()
-        katastr.save()
 
     def test_get_permanent_project_ident(self):
         p = Projekt(

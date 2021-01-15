@@ -46,6 +46,8 @@ def index(request):
             p.stav = c.PROJEKT_STAV_OZNAMENY
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
+            # TODO assign ident
+            # p.ident_cely =
             p.soubory = sv
             p.historie = hv
             longitude = request.POST.get("id_longitude")
