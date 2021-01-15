@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from core.ident_cely import (
     get_ident_consecutive_number,
+    get_permanent_project_ident,
     get_region_from_cadastre,
     get_temporary_project_ident,
 )
@@ -11,7 +12,7 @@ from django.test import TestCase
 from heslar import hesla
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from pian.models import Kladyzm, Pian
-from projekt.models import Projekt
+from projekt.models import Projekt, ProjektKatastr
 
 
 class IdentTests(TestCase):
@@ -85,8 +86,18 @@ class IdentTests(TestCase):
         katastr.save()
 
     def test_get_permanent_project_ident(self):
-        # TODO
-        pass
+        p = Projekt(
+            stav=0,
+            typ_projektu=Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID),
+        )
+        p.save()
+        pk = ProjektKatastr(
+            katastr=RuianKatastr.objects.get(id=150), projekt=p, hlavni=True
+        )
+        pk.save()
+
+        ident = get_permanent_project_ident(p)
+        self.assertEqual(ident, "C-202100001")
 
     def test_get_temporary_project_ident(self):
         year = datetime.datetime.now().year

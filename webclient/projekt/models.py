@@ -58,15 +58,25 @@ class Projekt(models.Model):
     planovane_zahajeni = DateRangeField(blank=True, null=True)
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
 
+    def __str__(self):
+        if self.ident_cely:
+            return self.ident_cely
+        else:
+            return "[ident_cely not yet assigned]"
+
     class Meta:
         db_table = "projekt"
         unique_together = (("id", "oznamovatel"),)
 
     def get_main_cadastre(self):
-        for k in self.katastry:
-            if k.hlavni:
-                return k
-        return None
+        main_cadastre = None
+        cadastres = ProjektKatastr.objects.filter(projekt=self.id)
+        logger.debug("Looking for main cadastre in: \n{0}.".format(str(cadastres)))
+        for pk in cadastres:
+            if pk.hlavni:
+                return pk.katastr
+        logger.debug("Main cadastre of the project {0} not found.".format(str(self)))
+        return main_cadastre
 
     def parse_ident_cely(self):
         year = None
@@ -81,7 +91,7 @@ class Projekt(models.Model):
             number = last_part[4:]
             permanent = False if "X-" in self.ident_cely else True
         else:
-            logger.debug("Cannot retrieve year from null ident_cely")
+            logger.debug("Cannot retrieve year from null ident_cely.")
         return permanent, region, year, number
 
 
@@ -89,3 +99,6 @@ class ProjektKatastr(models.Model):
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.CASCADE)
     hlavni = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "P: " + str(self.projekt) + " - K: " + str(self.katastr)

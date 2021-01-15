@@ -150,5 +150,29 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
         },
+        "projekt": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "heslar": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "historie": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "core": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "pian": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "uzivatel": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
     },
 }

@@ -17,8 +17,12 @@ def get_ident_consecutive_number(region: str, year: int) -> int:
         .order_by("-ident_cely")
     )
     # Projects ordered descending will have the ident with the largest consecutive number
-    perm, region, year, number = projects[0].parse_ident_cely()
-    return int(number) + 1
+    if projects:
+        perm, region, year, number = projects[0].parse_ident_cely()
+        number = int(number) + 1
+    else:
+        number = 1
+    return number
 
 
 def get_permanent_project_ident(project: Projekt) -> str:
