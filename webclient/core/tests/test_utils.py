@@ -15,6 +15,8 @@ class UtilsTests(TestCase):
 
     def test_get_cadastre_from_point(self):
 
-        praha_centrum = Point(50.086872, 14.417970)
+        latitude = 50.089616
+        longitude = 14.417222
+        praha_centrum = Point(longitude, latitude)
         katastr = get_cadastre_from_point(praha_centrum)
-        self.assertEqual(katastr, None)
+        self.assertEqual(katastr.nazev, "JOSEFOV")

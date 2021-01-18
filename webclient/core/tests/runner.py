@@ -3,22 +3,22 @@ from django.test.runner import DiscoverRunner as BaseRunner
 from heslar.models import RuianKatastr, RuianKraj, RuianOkres
 
 
-class AMCEMixinRunner(object):
+class AMCRMixinRunner(object):
     def setup_databases(self, *args, **kwargs):
-        temp_return = super(AMCEMixinRunner, self).setup_databases(*args, **kwargs)
+        temp_return = super(AMCRMixinRunner, self).setup_databases(*args, **kwargs)
         print("Setting up my database content ...")
 
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
         okres_praha = RuianOkres(
-            id=162, nazev="Brno-venkov", kraj=kraj_brno, spz="spz", kod=3
+            id=162, nazev="Praha", kraj=kraj_brno, spz="spz", kod=3
         )
         okres_brno_venkov = RuianOkres(
             id=163, nazev="Brno-venkov", kraj=kraj_brno, spz="spz", kod=4
         )
         odrovice = RuianKatastr(
             id=150,
-            nazev="Odrovice",
+            nazev="ODROVICE",
             okres=okres_brno_venkov,
             kod=3,
             aktualni=True,
@@ -40,7 +40,7 @@ class AMCEMixinRunner(object):
         )
         praha = RuianKatastr(
             id=149,
-            nazev="Stare mesto",
+            nazev="JOSEFOV",
             okres=okres_praha,
             kod=3,
             aktualni=True,
@@ -71,8 +71,8 @@ class AMCEMixinRunner(object):
 
     def teardown_databases(self, *args, **kwargs):
         # do somthing
-        return super(AMCEMixinRunner, self).teardown_databases(*args, **kwargs)
+        return super(AMCRMixinRunner, self).teardown_databases(*args, **kwargs)
 
 
-class AMCRTestRunner(AMCEMixinRunner, BaseRunner):
+class AMCRTestRunner(AMCRMixinRunner, BaseRunner):
     pass

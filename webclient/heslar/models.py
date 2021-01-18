@@ -126,6 +126,9 @@ class RuianKatastr(models.Model):
     class Meta:
         db_table = "ruian_katastr"
 
+    def __str__(self):
+        return self.nazev + " (" + self.okres.nazev + ")"
+
 
 class RuianKraj(models.Model):
     nazev = models.TextField(unique=True)

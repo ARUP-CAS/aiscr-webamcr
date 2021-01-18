@@ -15,14 +15,13 @@ def get_mime_type(file_name):
 
 
 def get_cadastre_from_point(point):
-
     query = (
-        "select * from public.ruian_katastr where "
+        "select id, nazev from public.ruian_katastr where "
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
-
-    katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])
-    if len(katastr) > 0:
-        return katastr[0]
-    else:
+    try:
+        katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
+        return katastr
+    except IndexError:
+        logger.debug("Could not find cadastre for pont: " + str(point))
         return None

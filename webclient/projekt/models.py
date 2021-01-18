@@ -71,11 +71,10 @@ class Projekt(models.Model):
     def get_main_cadastre(self):
         main_cadastre = None
         cadastres = ProjektKatastr.objects.filter(projekt=self.id)
-        logger.debug("Looking for main cadastre in: \n{0}.".format(str(cadastres)))
         for pk in cadastres:
             if pk.hlavni:
                 return pk.katastr
-        logger.debug("Main cadastre of the project {0} not found.".format(str(self)))
+        logger.warning("Main cadastre of the project {0} not found.".format(str(self)))
         return main_cadastre
 
     def parse_ident_cely(self):
@@ -91,7 +90,7 @@ class Projekt(models.Model):
             number = last_part[4:]
             permanent = False if "X-" in self.ident_cely else True
         else:
-            logger.debug("Cannot retrieve year from null ident_cely.")
+            logger.warning("Cannot retrieve year from null ident_cely.")
         return permanent, region, year, number
 
 
@@ -102,3 +101,6 @@ class ProjektKatastr(models.Model):
 
     def __str__(self):
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)
+
+    class Meta:
+        db_table = "projekt_katastr"

@@ -2,14 +2,16 @@ import logging
 
 from core import constants as c
 from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ, PROJEKT_RELATION_TYPE
+from core.ident_cely import get_temporary_project_ident
 from core.models import Soubor, SouborVazby
-from core.utils import get_mime_type
+from core.utils import get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
+from projekt.models import ProjektKatastr
 from uzivatel.models import AuthUser
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, UploadFileForm
@@ -41,20 +43,25 @@ def index(request):
             owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
 
             o = form_ozn.save()
-            logger.debug("Saving announcer object: " + str(o))
             p = form_projekt.save(commit=False)
             p.stav = c.PROJEKT_STAV_OZNAMENY
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
-            # TODO assign ident
-            # p.ident_cely =
             p.soubory = sv
             p.historie = hv
-            longitude = request.POST.get("id_longitude")
-            latitude = request.POST.get("id_latitude")
-            # TODO map main cadastre based on the geom
-            p.geom = Point(longitude, latitude)
+            longitude = request.POST.get("longitude")
+            latitude = request.POST.get("latitude")
+            p.geom = Point(float(longitude), float(latitude))
+            katastr = get_cadastre_from_point(p.geom)
             p.save()
+            if katastr is not None:
+                ProjektKatastr(katastr=katastr, projekt=p, hlavni=True).save()
+                p.ident_cely = get_temporary_project_ident(
+                    p, katastr.okres.kraj.rada_id
+                )
+            else:
+                logger.debug("Unknown cadastre location")
+
             Historie(
                 typ_zmeny=OZNAMENI_PROJ,
                 uzivatel=owner,
@@ -65,6 +72,7 @@ def index(request):
             soubor = request.FILES.get("soubor")
             logger.debug("Soubor  : " + str(request.FILES))
             if soubor:
+                # Prejmenovat soubor dle pravidel add CHECKSUM
                 s = Soubor(
                     path=soubor,
                     vazba=sv,
