@@ -41,7 +41,11 @@ class Projekt(models.Model):
     ident_cely = models.TextField(unique=True, blank=True, null=True)
     geom = pgmodels.PointField(blank=True, null=True)
     soubory = models.ForeignKey(
-        SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
+        SouborVazby,
+        on_delete=models.DO_NOTHING,
+        db_column="soubory",
+        blank=True,
+        null=True,
     )
     historie = models.ForeignKey(
         HistorieVazby,

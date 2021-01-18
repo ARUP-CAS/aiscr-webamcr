@@ -10,29 +10,13 @@ from core.ident_cely import (
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from heslar import hesla
-from heslar.models import Heslar, HeslarNazev, RuianKatastr
+from heslar.models import Heslar, RuianKatastr
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt, ProjektKatastr
 
 
 class IdentTests(TestCase):
-
-    # fixtures = ['heslar.json', ]
-
     def setUp(self):
-        hn = HeslarNazev(nazev="Typy projektu")
-        hp = HeslarNazev(nazev="Presnost")
-        ha = HeslarNazev(nazev="heslar_typ_pian")
-        hn.save()
-        hp.save()
-        ha.save()
-        h1 = Heslar(id=hesla.PROJEKT_ZACHRANNY_ID, nazev_heslare=hn)
-        h2 = Heslar(id=854, nazev_heslare=hp)
-        h3 = Heslar(id=1122, nazev_heslare=ha)
-        h1.save()
-        h2.save()
-        h3.save()
-
         kl = Kladyzm(
             gid=1,
             objectid=1,

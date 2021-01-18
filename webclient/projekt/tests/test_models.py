@@ -1,12 +1,21 @@
+from unittest.mock import patch
+
 from django.test import TestCase
-from projekt.models import Projekt
+from projekt.models import Projekt, ProjektKatastr
 
 
 class ProjectModelsTests(TestCase):
-
-    # TODO start writing test after import of the test data
-    def test_get_main_cadastre(self):
+    def setUp(self):
         pass
+
+    # Example how to mock call ProjektKatastr.objects.filter in the get_main_cadastre method
+    @patch(
+        "projekt.models.ProjektKatastr.objects.filter",
+        return_value=ProjektKatastr.objects.none(),
+    )
+    def test_get_main_cadastre_empty(self, mock):
+        main_cadastre = Projekt().get_main_cadastre()
+        self.assertEqual(main_cadastre, None)
 
     def test_parse_ident_cely(self):
         p = Projekt()

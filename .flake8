@@ -8,5 +8,6 @@ exclude =
     .idea,
 	dev.py,
 	local_test.py,
-	production.py
+	production.py,
+	apps.py
 max-complexity = 10

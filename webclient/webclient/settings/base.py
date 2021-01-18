@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     "core",
     "historie",
     "oznameni",
-    "projekt",
+    "projekt.apps.ProjektConfig",
     "heslar",
     "uzivatel",
     "pian",

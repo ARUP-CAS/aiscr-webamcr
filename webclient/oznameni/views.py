@@ -1,16 +1,16 @@
 import logging
 
 from core import constants as c
-from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ, PROJEKT_RELATION_TYPE
+from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ
 from core.ident_cely import get_temporary_project_ident
-from core.models import Soubor, SouborVazby
+from core.models import Soubor
 from core.utils import get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
-from historie.models import Historie, HistorieVazby
+from historie.models import Historie
 from projekt.models import ProjektKatastr
 from uzivatel.models import AuthUser
 
@@ -34,21 +34,11 @@ def index(request):
         if form_ozn.is_valid() and form_projekt.is_valid() and form_file.is_valid():
             logger.debug("Form is valid")
 
-            # Create child objects to the project object
-            sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
-            sv.save()
-            hv = HistorieVazby(typ_vazby=PROJEKT_RELATION_TYPE)
-            hv.save()
-            # Retrieve default user associated with the project
-            owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
-
             o = form_ozn.save()
             p = form_projekt.save(commit=False)
             p.stav = c.PROJEKT_STAV_OZNAMENY
             p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
             p.oznamovatel = o
-            p.soubory = sv
-            p.historie = hv
             longitude = request.POST.get("longitude")
             latitude = request.POST.get("latitude")
             p.geom = Point(float(longitude), float(latitude))
@@ -62,10 +52,11 @@ def index(request):
             else:
                 logger.debug("Unknown cadastre location")
 
+            owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
             Historie(
                 typ_zmeny=OZNAMENI_PROJ,
                 uzivatel=owner,
-                vazba=hv,
+                vazba=p.historie,
             ).save()
             logger.debug("Saving project object: " + str(p))
 
@@ -75,7 +66,7 @@ def index(request):
                 # Prejmenovat soubor dle pravidel add CHECKSUM
                 s = Soubor(
                     path=soubor,
-                    vazba=sv,
+                    vazba=p.soubory,
                     # TODO set correct short name
                     nazev_zkraceny="aaa",
                     nazev_puvodni=soubor.name,
