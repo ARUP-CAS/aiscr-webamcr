@@ -16,6 +16,7 @@ var addPointToPoiLayer = (lat, long, text) => {
 }
 
 map.on('click', function (e) {
+    poi.clearLayers();
 	let corX = e.latlng.lat;
 	let corY = e.latlng.lng;
 	if (map.getZoom() > 15) {
@@ -25,6 +26,11 @@ map.on('click', function (e) {
         //$("#detector_coordinates_y").change();
         addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru')
     } else {
-        map.setView(e.latlng, map.getZoom() + 2)
+        var zoom=2;
+        if(map.getZoom()<10) zoom+=2;
+        else if(map.getZoom()<13) zoom+=1;
+
+        map.setView(e.latlng, map.getZoom() + zoom);
+        //console.log("Your zoom is: "+map.getZoom())
     }
 });
