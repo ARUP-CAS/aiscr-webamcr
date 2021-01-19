@@ -6,6 +6,7 @@ from core.ident_cely import get_temporary_project_ident
 from core.models import Soubor
 from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
@@ -51,7 +52,9 @@ def index(request):
                 )
                 p.save()
             else:
-                logger.debug("Unknown cadastre location")
+                logger.warning(
+                    "Unknown cadastre location for point {}".format(str(p.geom))
+                )
 
             owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
             Historie(
@@ -62,9 +65,8 @@ def index(request):
             soubor = request.FILES.get("soubor")
             if soubor:
                 checksum = calculate_crc_32(soubor)
-                soubor.file.seek(
-                    0
-                )  # After calculating checksum, must move pointer to the beginning
+                # After calculating checksum, must move pointer to the beginning
+                soubor.file.seek(0)
                 old_name = soubor.name
                 soubor.name = checksum + "_" + soubor.name
                 s = Soubor(
@@ -79,8 +81,12 @@ def index(request):
                     size_bytes=soubor.size,
                     typ_souboru=OTHER_PROJECT_FILES,
                 )
-                logger.debug("Saving file object: " + str(s))
-                s.save()
+                try:
+                    logger.debug("Saving file object: " + str(s))
+                    s.save()
+                except IntegrityError:
+                    # TODO how to handle this? Should just ignore?
+                    logger.warning("Could not save file {}".format(s.nazev))
             else:
                 logger.debug("No file attached to the announcement form.")
 
