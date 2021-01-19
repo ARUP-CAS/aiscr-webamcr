@@ -69,3 +69,6 @@ class HistorieVazby(models.Model):
 
     class Meta:
         db_table = "historie_vazby"
+
+    def __str__(self):
+        return "{0} ({1})".format(str(self.id), self.typ_vazby)

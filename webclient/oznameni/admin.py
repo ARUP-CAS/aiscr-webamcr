@@ -1,3 +1,9 @@
-# from django.contrib import admin
+from django.contrib import admin
+from oznameni.models import Oznamovatel
 
-# Register your models here.
+
+class OznamovatelAdmin(admin.ModelAdmin):
+    list_display = ("email", "adresa", "odpovedna_osoba", "oznamovatel", "telefon")
+
+
+admin.site.register(Oznamovatel, OznamovatelAdmin)

@@ -57,7 +57,11 @@ class Projekt(models.Model):
     # organizace = models.ForeignKey(Organizace, models.DO_NOTHING, db_column='organizace', blank=True, null=True)
     oznaceni_stavby = models.TextField(blank=True, null=True)
     oznamovatel = models.ForeignKey(
-        Oznamovatel, models.DO_NOTHING, db_column="oznamovatel", blank=True, null=True
+        Oznamovatel,
+        on_delete=models.DO_NOTHING,
+        db_column="oznamovatel",
+        blank=True,
+        null=True,
     )
     planovane_zahajeni = DateRangeField(blank=True, null=True)
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")

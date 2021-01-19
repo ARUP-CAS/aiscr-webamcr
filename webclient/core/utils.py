@@ -1,5 +1,6 @@
 import logging
 import mimetypes
+import zlib
 
 from heslar.models import RuianKatastr
 
@@ -12,6 +13,14 @@ def get_mime_type(file_name):
     if file_name.endswith(".csv"):
         mime_type = "text/csv"
     return mime_type
+
+
+def calculate_crc_32(file):
+    prev = 0
+    for eachLine in file:
+        prev = zlib.crc32(eachLine, prev)
+    checksum = "%d" % (prev & 0xFFFFFFFF)
+    return checksum
 
 
 def get_cadastre_from_point(point):

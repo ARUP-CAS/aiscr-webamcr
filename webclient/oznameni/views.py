@@ -4,7 +4,7 @@ from core import constants as c
 from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ
 from core.ident_cely import get_temporary_project_ident
 from core.models import Soubor
-from core.utils import get_cadastre_from_point, get_mime_type
+from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
@@ -49,6 +49,7 @@ def index(request):
                 p.ident_cely = get_temporary_project_ident(
                     p, katastr.okres.kraj.rada_id
                 )
+                p.save()
             else:
                 logger.debug("Unknown cadastre location")
 
@@ -58,21 +59,23 @@ def index(request):
                 uzivatel=owner,
                 vazba=p.historie,
             ).save()
-            logger.debug("Saving project object: " + str(p))
-
             soubor = request.FILES.get("soubor")
-            logger.debug("Soubor  : " + str(request.FILES))
             if soubor:
-                # Prejmenovat soubor dle pravidel add CHECKSUM
+                checksum = calculate_crc_32(soubor)
+                soubor.file.seek(
+                    0
+                )  # After calculating checksum, must move pointer to the beginning
+                old_name = soubor.name
+                soubor.name = checksum + "_" + soubor.name
                 s = Soubor(
                     path=soubor,
                     vazba=p.soubory,
-                    # TODO set correct short name
-                    nazev_zkraceny="aaa",
-                    nazev_puvodni=soubor.name,
+                    nazev=soubor.name,
+                    # Short name is new name without checksum
+                    nazev_zkraceny=old_name,
+                    nazev_puvodni=old_name,
                     vlastnik=owner,
-                    # TODO set correct mimetype
-                    mimetype=get_mime_type(soubor.name),
+                    mimetype=get_mime_type(old_name),
                     size_bytes=soubor.size,
                     typ_souboru=OTHER_PROJECT_FILES,
                 )
