@@ -23,6 +23,9 @@ class Heslar(models.Model):
             ("nazev_heslare", "zkratka_en"),
         )
 
+    def __str__(self):
+        return "{0} ({1})".format(self.heslo, self.nazev_heslare.nazev)
+
 
 class HeslarDatace(models.Model):
     obdobi = models.OneToOneField(

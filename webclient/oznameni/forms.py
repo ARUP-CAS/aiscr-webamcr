@@ -150,7 +150,7 @@ class ProjektOznameniForm(forms.ModelForm):
 
 class UploadFileForm(forms.Form):
     soubor = forms.FileField(
-        required=False,
+        required=False, widget=forms.ClearableFileInput(attrs={"multiple": True})
     )
 
     def __init__(self, *args, **kwargs):
