@@ -105,3 +105,20 @@ def index(request):
             "form_captcha": form_captcha,
         },
     )
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import simplejson as json
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def post_poi2kat(request):
+    body = json.loads(request.body.decode('utf-8'))
+    #logger.debug(body)
+    geom = Point(float(body['corY']), float(body['corX']))
+    katastr = get_cadastre_from_point(geom)
+    #logger.debug(katastr)
+    if(len(str(katastr))>0):
+        return JsonResponse({"cadastre":str(katastr)}, status = 200)
+    else:
+        return JsonResponse({"cadastre":""}, status = 200)

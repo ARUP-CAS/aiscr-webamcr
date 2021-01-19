@@ -24,7 +24,18 @@ map.on('click', function (e) {
 		document.getElementById('id_longitude').value = corY
         //$("#detector_coordinates_x").change();
         //$("#detector_coordinates_y").change();
-        addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru')
+        addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/oznameni/get-katastr-from-point');
+        xhr.setRequestHeader('Content-type', 'application/json');
+        //xhr.setRequestHeader('csrfmiddlewaretoken', '{{ csrf_token }}' );
+        xhr.onload = function () {
+            // do something to response
+            console.log(JSON.parse(this.responseText).cadastre);
+            document.getElementById('katastr_name').innerHTML=JSON.parse(this.responseText).cadastre;
+        };
+        xhr.send(JSON.stringify({ 'corY': corY,'corX': corX }))
+
     } else {
         var zoom=2;
         if(map.getZoom()<10) zoom+=2;
