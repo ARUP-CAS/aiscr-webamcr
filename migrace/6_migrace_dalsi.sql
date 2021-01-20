@@ -68,3 +68,4 @@ update historie h set typ_zmeny = 4 from (select his.id as hid from historie his
 delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and (his.typ_zmeny = 7 or his.typ_zmeny=6));
 
 -- Jak vyresit username? Ted je username ident_cely a prihlasovani je udelano skrz email
+alter table auth_user rename column username to ident_cely;
