@@ -4,6 +4,15 @@ ALTER TABLE "soubor" ADD COLUMN "path" varchar(100) DEFAULT 'not specified yet' 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
 ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
 
+ALTER TABLE projekt_katastr add column id serial;
+ALTER TABLE projekt_katastr rename column projekt to projekt_id;
+ALTER TABLE projekt_katastr rename column katastr to katastr_id;
+
+alter table projekt_katastr drop constraint "projekt_katastr_katastr_fk";
+alter table projekt_katastr add constraint projekt_katastr_katastr_fk foreign key (katastr_id) references ruian_katastr(id) on delete cascade;
+alter table projekt_katastr drop constraint "projekt_katastr_projekt_fk";
+alter table projekt_katastr add constraint projekt_katastr_projekt_fk foreign key (projekt_id) references projekt(id) on delete cascade;
+
 ALTER TABLE heslar_nazev RENAME COLUMN heslar to nazev;
 
 -- COMMENT: jak u akci premigrovat historii tranzakci akci kdyz doslo k zjednoduseni stavovych tranzakci
@@ -27,7 +36,7 @@ ALTER TABLE heslar_nazev RENAME COLUMN heslar to nazev;
 -- 1 - zapsani
 -- 2 - odeslani
 -- 3 - archivovani
--- 4 - vraceni COMMENT: bude samostatna tranzakce nebo vzdy stejna?? u projektu je vzdy stejna
+-- 4 - vraceni
 
 -- 4 -> 3
 -- 5 -> 3
@@ -54,6 +63,8 @@ update historie h set typ_zmeny = 2 from (select his.id as hid from historie his
 --VRACENI = 4
 --Takze:
 -- 5 -> 4
--- 6 a 7 smazat
+-- 6 a 7 smazat ?
 update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and his.typ_zmeny=5) as sel where id=sel.hid;
-delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument');
+delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and (his.typ_zmeny = 7 or his.typ_zmeny=6));
+
+-- Jak vyresit username? Ted je username ident_cely a prihlasovani je udelano skrz email
