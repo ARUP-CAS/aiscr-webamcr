@@ -6,7 +6,7 @@ from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 
 
-class AuthUser(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.BooleanField(default=False)

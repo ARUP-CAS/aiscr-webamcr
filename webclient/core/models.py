@@ -1,5 +1,5 @@
 from django.db import models
-from uzivatel.models import AuthUser
+from uzivatel.models import User
 
 from .constants import PROJEKT_RELATION_TYPE, SAMOSTATNY_NALEZ_RELATION_TYPE
 
@@ -22,7 +22,7 @@ class Soubor(models.Model):
     nazev_zkraceny = models.TextField()
     nazev_puvodni = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
-    vlastnik = models.ForeignKey(AuthUser, models.DO_NOTHING, db_column="vlastnik")
+    vlastnik = models.ForeignKey(User, models.DO_NOTHING, db_column="vlastnik")
     nazev = models.TextField(unique=True)
     mimetype = models.TextField()
     size_bytes = models.IntegerField()

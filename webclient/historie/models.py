@@ -19,7 +19,7 @@ from core.constants import (
     ZAPSANI_PROJ,
 )
 from django.db import models
-from uzivatel.models import AuthUser
+from uzivatel.models import User
 
 
 class Historie(models.Model):
@@ -40,9 +40,7 @@ class Historie(models.Model):
 
     datum_zmeny = models.DateTimeField(auto_now_add=True)
     typ_zmeny = models.IntegerField(choices=CHOICES)
-    uzivatel = models.ForeignKey(
-        AuthUser, on_delete=models.CASCADE, db_column="uzivatel"
-    )
+    uzivatel = models.ForeignKey(User, on_delete=models.CASCADE, db_column="uzivatel")
     poznamka = models.TextField(blank=True, null=True)
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"

@@ -1,6 +1,6 @@
 from django.test import TestCase
 from heslar.models import Heslar
-from uzivatel.models import AuthUser, Organizace
+from uzivatel.models import Organizace, User
 
 
 class TestProjektSignals(TestCase):
@@ -15,7 +15,7 @@ class TestProjektSignals(TestCase):
             oao=True,
         )
         huld.save()
-        tester = AuthUser(
+        tester = User(
             password="pbkdf2_sha256$216000$8fyTVvI62PeB$p237Rd85fhMkW6wCjzJIZ1M9J0n1UrsWN+oSotdhPd0=",
             is_superuser=False,
             first_name="Juraj",
@@ -27,8 +27,8 @@ class TestProjektSignals(TestCase):
         )
         tester.save()
         self.assertEqual(tester.ident_cely, "U-000001")
-        print(AuthUser.objects.all())
-        tester2 = AuthUser(
+        print(User.objects.all())
+        tester2 = User(
             password="pbkdf2_sha256$216000$8fyTVvI62PeB$p237Rd85fhMkW6wCjzJIZ1M9J0n1UrsWN+oSotdhPd0=",
             ident_cely="U-000009",
             is_superuser=False,
@@ -41,7 +41,7 @@ class TestProjektSignals(TestCase):
         )
         tester2.save()
         self.assertEqual(tester2.ident_cely, "U-000009")
-        tester3 = AuthUser(
+        tester3 = User(
             password="pbkdf2_sha256$216000$8fyTVvI62PeB$p237Rd85fhMkW6wCjzJIZ1M9J0n1UrsWN+oSotdhPd0=",
             is_superuser=False,
             first_name="Juraj",

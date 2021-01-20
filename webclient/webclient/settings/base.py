@@ -127,7 +127,7 @@ STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
-AUTH_USER_MODEL = "uzivatel.AuthUser"
+AUTH_USER_MODEL = "uzivatel.User"
 
 LOGIN_REDIRECT_URL = "/"
 
