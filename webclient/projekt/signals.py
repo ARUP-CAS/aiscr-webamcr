@@ -12,9 +12,10 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Projekt)
 def create_projekt_vazby(sender, instance, created, **kwargs):
-    logger.debug("Running create_projekt_vazby receiver ...")
     if created:
-        logger.debug("Creating child file and history records")
+        logger.debug(
+            "Creating child file and history records for project " + str(instance)
+        )
         sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         sv.save()
         instance.soubory = sv

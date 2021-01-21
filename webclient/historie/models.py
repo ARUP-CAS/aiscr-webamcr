@@ -1,7 +1,6 @@
 from core.constants import (
     DOKUMENT_RELATION_TYPE,
     EXTERNI_ZDROJ_RELATION_TYPE,
-    LOKALITA_RELATION_TYPE,
     NAVRZENI_KE_ZRUSENI_PROJ,
     OZNAMENI_PROJ,
     PIAN_RELATION_TYPE,
@@ -19,7 +18,7 @@ from core.constants import (
     ZAPSANI_PROJ,
 )
 from django.db import models
-from uzivatel.models import AuthUser
+from uzivatel.models import User
 
 
 class Historie(models.Model):
@@ -39,10 +38,8 @@ class Historie(models.Model):
     )
 
     datum_zmeny = models.DateTimeField(auto_now_add=True)
-    typ_zmeny = models.IntegerField(choices=CHOICES)
-    uzivatel = models.ForeignKey(
-        AuthUser, on_delete=models.CASCADE, db_column="uzivatel"
-    )
+    typ_zmeny = models.TextField(choices=CHOICES)
+    uzivatel = models.ForeignKey(User, on_delete=models.CASCADE, db_column="uzivatel")
     poznamka = models.TextField(blank=True, null=True)
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
@@ -60,12 +57,11 @@ class HistorieVazby(models.Model):
         (SAMOSTATNY_NALEZ_RELATION_TYPE, "Samostatný nález"),
         (UZIVATEL_RELATION_TYPE, "Uživatel"),
         (PIAN_RELATION_TYPE, "Pian"),
-        (LOKALITA_RELATION_TYPE, "Lokalita"),
         (UZIVATEL_SPOLUPRACE_RELATION_TYPE, "Uživatel spolupráce"),
         (EXTERNI_ZDROJ_RELATION_TYPE, "Externí zdroj"),
     )
 
-    typ_vazby = models.TextField(max_length=2, choices=CHOICES)
+    typ_vazby = models.TextField(max_length=24, choices=CHOICES)
 
     class Meta:
         db_table = "historie_vazby"

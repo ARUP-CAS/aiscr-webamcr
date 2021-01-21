@@ -13,7 +13,7 @@ from heslar import hesla
 from heslar.models import Heslar
 from historie.models import Historie
 from projekt.models import ProjektKatastr
-from uzivatel.models import AuthUser
+from uzivatel.models import User
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, UploadFileForm
 
@@ -56,7 +56,7 @@ def index(request):
                     "Unknown cadastre location for point {}".format(str(p.geom))
                 )
 
-            owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
+            owner = get_object_or_404(User, email="amcr@arup.cas.cz")
             Historie(
                 typ_zmeny=OZNAMENI_PROJ,
                 uzivatel=owner,
