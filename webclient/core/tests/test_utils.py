@@ -22,6 +22,6 @@ class UtilsTests(TestCase):
 
     def test_calculate_crc_32(self):
         with open("core/tests/resources/mime.txt", "rb") as file:
-            expected_checksum = "2330013664"  # Decimal
+            expected_checksum = "3775775224"  # Decimal
             checksum = calculate_crc_32(file)
             self.assertEqual(checksum, expected_checksum)
