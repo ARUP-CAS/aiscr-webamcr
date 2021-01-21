@@ -28,7 +28,7 @@ map.on('click', function (e) {
         let xhr = new XMLHttpRequest();
         xhr.open('POST', '/oznameni/get-katastr-from-point');
         xhr.setRequestHeader('Content-type', 'application/json');
-        if (typeof variable !== 'undefined') {
+        if (typeof global_csrftoken !== 'undefined') {
             xhr.setRequestHeader('X-CSRFToken', global_csrftoken );
         }
         xhr.onload = function () {
