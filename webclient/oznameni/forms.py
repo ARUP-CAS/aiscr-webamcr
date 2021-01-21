@@ -138,12 +138,12 @@ class ProjektOznameniForm(forms.ModelForm):
                         HTML('  <label for="id_ku" class="">Katastální území</label>'),
                         Div(
                             HTML(
-                                '<textarea name="ku" cols="40" rows="1" class="textarea form-control"\
-                            id="katastr_name" readonly /></textarea>'
+                                '<textarea name="ku" cols="40" rows="1" class="textarea form-control" '
+                                'id="katastr_name" readonly /></textarea> '
                             ),
                             HTML(
-                                '<small id="hint_id_ku" class="form-text text-muted">\
-                            Katastální území zadanné bodem </small>'
+                                '<small id="hint_id_ku" class="form-text text-muted">Katastální území zadanné bodem '
+                                "</small> "
                             ),
                         ),
                         css_class="form-group",
@@ -164,7 +164,7 @@ class ProjektOznameniForm(forms.ModelForm):
 
 class UploadFileForm(forms.Form):
     soubor = forms.FileField(
-        required=False,
+        required=False, widget=forms.ClearableFileInput(attrs={"multiple": True})
     )
 
     def __init__(self, *args, **kwargs):

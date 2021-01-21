@@ -5,16 +5,18 @@ from core import constants as c
 from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ
 from core.ident_cely import get_temporary_project_ident
 from core.models import Soubor
-from core.utils import get_cadastre_from_point, get_mime_type
+from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
+from django.db import IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
 from historie.models import Historie
 from projekt.models import ProjektKatastr
-from uzivatel.models import AuthUser
+from uzivatel.models import User
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, UploadFileForm
 
@@ -51,35 +53,43 @@ def index(request):
                 p.ident_cely = get_temporary_project_ident(
                     p, katastr.okres.kraj.rada_id
                 )
+                p.save()
             else:
-                logger.debug("Unknown cadastre location")
+                logger.warning(
+                    "Unknown cadastre location for point {}".format(str(p.geom))
+                )
 
-            owner = get_object_or_404(AuthUser, email="amcr@arup.cas.cz")
+            owner = get_object_or_404(User, email="amcr@arup.cas.cz")
             Historie(
                 typ_zmeny=OZNAMENI_PROJ,
                 uzivatel=owner,
                 vazba=p.historie,
             ).save()
-            logger.debug("Saving project object: " + str(p))
-
             soubor = request.FILES.get("soubor")
-            logger.debug("Soubor  : " + str(request.FILES))
             if soubor:
-                # Prejmenovat soubor dle pravidel add CHECKSUM
+                checksum = calculate_crc_32(soubor)
+                # After calculating checksum, must move pointer to the beginning
+                soubor.file.seek(0)
+                old_name = soubor.name
+                soubor.name = checksum + "_" + soubor.name
                 s = Soubor(
                     path=soubor,
                     vazba=p.soubory,
-                    # TODO set correct short name
-                    nazev_zkraceny="aaa",
-                    nazev_puvodni=soubor.name,
+                    nazev=soubor.name,
+                    # Short name is new name without checksum
+                    nazev_zkraceny=old_name,
+                    nazev_puvodni=old_name,
                     vlastnik=owner,
-                    # TODO set correct mimetype
-                    mimetype=get_mime_type(soubor.name),
+                    mimetype=get_mime_type(old_name),
                     size_bytes=soubor.size,
                     typ_souboru=OTHER_PROJECT_FILES,
                 )
-                logger.debug("Saving file object: " + str(s))
-                s.save()
+                try:
+                    logger.debug("Saving file object: " + str(s))
+                    s.save()
+                except IntegrityError:
+                    # TODO how to handle this? Should just ignore?
+                    logger.warning("Could not save file {}".format(s.nazev))
             else:
                 logger.debug("No file attached to the announcement form.")
 
@@ -109,6 +119,7 @@ def index(request):
     )
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def post_poi2kat(request):
     body = json.loads(request.body.decode("utf-8"))
