@@ -12,7 +12,7 @@ class SouborVazby(models.Model):
         (SAMOSTATNY_NALEZ_RELATION_TYPE, "Samostatný nález"),
     )
 
-    typ_vazby = models.TextField(max_length=2, choices=CHOICES)
+    typ_vazby = models.TextField(max_length=24, choices=CHOICES)
 
     class Meta:
         db_table = "soubor_vazby"
