@@ -1,5 +1,6 @@
 import logging
 
+import simplejson as json
 from core import constants as c
 from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ
 from core.ident_cely import get_temporary_project_ident
@@ -7,7 +8,9 @@ from core.models import Soubor
 from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
 from django.contrib.gis.geos import Point
 from django.db import IntegrityError
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
@@ -115,19 +118,16 @@ def index(request):
         },
     )
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import simplejson as json
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def post_poi2kat(request):
-    body = json.loads(request.body.decode('utf-8'))
-    #logger.debug(body)
-    geom = Point(float(body['corY']), float(body['corX']))
+    body = json.loads(request.body.decode("utf-8"))
+    # logger.debug(body)
+    geom = Point(float(body["corY"]), float(body["corX"]))
     katastr = get_cadastre_from_point(geom)
-    #logger.debug(katastr)
-    if(len(str(katastr))>0):
-        return JsonResponse({"cadastre":str(katastr)}, status = 200)
+    # logger.debug(katastr)
+    if len(str(katastr)) > 0:
+        return JsonResponse({"cadastre": str(katastr)}, status=200)
     else:
-        return JsonResponse({"cadastre":""}, status = 200)
+        return JsonResponse({"cadastre": ""}, status=200)
