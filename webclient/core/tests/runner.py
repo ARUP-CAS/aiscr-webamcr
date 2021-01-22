@@ -2,6 +2,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from heslar import hesla
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
+from uzivatel.models import Organizace, User
 
 
 class AMCRMixinRunner(object):
@@ -81,8 +82,27 @@ class AMCRMixinRunner(object):
         Heslar(id=hesla.PROJEKT_ZACHRANNY_ID, nazev_heslare=hn).save()
         Heslar(id=854, nazev_heslare=hp).save()
         Heslar(id=1122, nazev_heslare=ha).save()
-        Heslar(id=1116, nazev_heslare=hto).save()
-        Heslar(id=859, nazev_heslare=hpr).save()
+        typ_muzeum = Heslar(id=1116, heslo="Muzemum", nazev_heslare=hto)
+        zp = Heslar(id=859, nazev_heslare=hpr)
+        Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
+        zp.save()
+        typ_muzeum.save()
+
+        o = Organizace(
+            id=769066,
+            nazev="AMCR Testovaci organizace",
+            nazev_zkraceny="AMCR",
+            typ_organizace=typ_muzeum,
+            zverejneni_pristupnost=zp,
+        )
+        o.save()
+
+        user = User.objects.create_user(
+            email="amcr@arup.cas.cz",
+            password="foo1234!!!",
+            organizace=o,
+        )
+        user.save()
 
         return temp_return
 

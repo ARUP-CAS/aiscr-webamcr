@@ -1,27 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from heslar.models import Heslar, HeslarNazev
 from uzivatel.models import Organizace
 
 
 class UsersManagersTests(TestCase):
     def setUp(self):
-        hn = HeslarNazev(id=39, heslar="testovaci_heslar")
-        hn.save()
-        h = Heslar(
-            id=1120, heslo="ostatní", nazev_heslare=hn, heslo_en="to be translated"
-        )
-        zp = Heslar(id=859, nazev_heslare=hn, heslo_en="to be translated")
-        zp.save()
-        h.save()
-        o = Organizace(
-            id=769066,
-            nazev="Space Systems Czech, s.r.o.",
-            nazev_zkraceny="Testing organizations SSC",
-            typ_organizace=h,
-            zverejneni_pristupnost=zp,
-        )
-        o.save()
+        pass
 
     def test_create_user(self):
         User = get_user_model()

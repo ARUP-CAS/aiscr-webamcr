@@ -42,10 +42,13 @@ ALTER TABLE heslar_nazev RENAME COLUMN heslar to nazev;
 -- 5 -> 3
 -- 8 -> 3
 -- 6 -> 2
+-- COMMENT: TO CO JE VE 3 MUSI JIT DO DOCASNEHO STAVU 111 abch tam mohl dat to co tam ma byt:
+update historie h set typ_zmeny = 111 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=3) as sel where id=sel.hid;
 update historie h set typ_zmeny = 3 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=8) as sel where id=sel.hid;
 update historie h set typ_zmeny = 3 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=5) as sel where id=sel.hid;
 update historie h set typ_zmeny = 3 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=4) as sel where id=sel.hid;
 update historie h set typ_zmeny = 2 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='akce' and his.typ_zmeny=6) as sel where id=sel.hid;
+
 
 --ZAPSANI = 1
 --ODESLANI = 2
@@ -76,7 +79,7 @@ alter table auth_user rename column username to ident_cely;
 update historie_vazby set typ_vazby='archeologicky_zaznam' where typ_vazby='akce' or typ_vazby='lokalita';
 
 -- Jeste jsem zapomel domigrovat tranzakce akci 3 a 7 na 4
-update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=3) as sel where id=sel.hid;
+update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111) as sel where id=sel.hid;
 update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7) as sel where id=sel.hid;
 
 -- Migrace integer IDcek transakci na text
@@ -84,22 +87,33 @@ alter table historie add column typ_zmeny_text text;
 
 --# Projekty
 --OZNAMENI_PROJ: Final = "PX0"  # 0 Tady jde jeno o nove tranzakce protoze nulovych tranzakci se z predchozi databaze moc nezmigorvalo (datetime_born tam nebylo)
---update historie set typ_zmeny_text = 'PX0' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=0);
+update historie set typ_zmeny_text = 'PX0' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=0);
 --SCHVALENI_OZNAMENI_PROJ: Final = "P01"  # 1 Tady je jich nula protoze
---update historie set typ_zmeny_text = 'P01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=1);
+-- COMMENT: Schvaleni je v pripade historie to same jako zapsani
 --ZAPSANI_PROJ: Final = "PX1"  # 1
+update historie set typ_zmeny_text = 'PX1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=1);
 --PRIHLASENI_PROJ: Final = "P12"  # 2
+update historie set typ_zmeny_text = 'PX1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=2);
 --ZAHAJENI_V_TERENU_PROJ: Final = "P23"  # 3
+update historie set typ_zmeny_text = 'P23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=3);
 --UKONCENI_V_TERENU_PROJ: Final = "P34"  # 4
+update historie set typ_zmeny_text = 'P34' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=4);
 --UZAVRENI_PROJ: Final = "P45"  # 5
+update historie set typ_zmeny_text = 'P45' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=5);
 --ARCHIVACE_PROJ: Final = "P56"  # 6
+update historie set typ_zmeny_text = 'P56' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=6);
 --NAVRZENI_KE_ZRUSENI_PROJ: Final = "P*7"  # 7
+update historie set typ_zmeny_text = 'P*7' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=7);
 --RUSENI_PROJ: Final = "P78"  # 8
+update historie set typ_zmeny_text = 'P78' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=8);
 --VRACENI_PROJ: Final = "P-1"  # New
 --# Akce + Lokalita (archeologicke zaznamy)
 --ZAPSANI_AZ: Final = "AZ01"  # 1
+update historie set typ_zmeny_text = 'AZ01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=1);
 --ODESLANI_AZ: Final = "AZ12"  # 2
+update historie set typ_zmeny_text = 'AZ12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=2);
 --ARCHIVACE_AZ: Final = "AZ23"  # 3
+update historie set typ_zmeny_text = 'AZ23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=3);
 --VRACENI_AZ: Final = "AZ-1"  # New
 --# Dokument
 --ZAPSANI_DOK: Final = "D01"  # 1
