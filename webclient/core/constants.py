@@ -20,6 +20,16 @@ AZ_STAV_ARCHIVOVANY: Final = 3
 D_STAV_ZAPSANY: Final = 1
 D_STAV_ODESLANY: Final = 2
 D_STAV_ARCHIVOVANY: Final = 3
+# Samostatny nalezy
+SN_ZAPSANY: Final = 1
+SN_ODESLANY: Final = 2
+SN_POTVRZENY: Final = 3
+SN_ARCHIVOVANY: Final = 4
+# Uzivatel
+# Pian
+PIAN_NEPOTVRZEN: Final = 1
+PAIN_POTVRZEN: Final = 2
+# Uzivatel_spoluprace
 
 # Transakce historie
 # Projekty
@@ -45,10 +55,27 @@ ODESLANI_DOK: Final = "D12"  # 2
 ARCHIVACE_DOK: Final = "D23"  # 3
 VRACENI_DOK: Final = "D-1"  # New
 # Samostatny nalez
+ZAPSANI_SN: Final = "SN01"  # 1
+ODESLANI_SN: Final = "SN12"  # 2
+POTVRZENI_SN: Final = "SN23"  # 3
+ARCHIVACE_SN: Final = "SN34"  # 4
+VRACENI_SN: Final = "SN-1"  # 5
+
 # Uzivatel
 # Pian
+ZAPSANI_PIAN: Final = "PI01"
+POTVRZENI_PIAN: Final = "PI12"
 # Uzivatel_spoluprace
+# TODO domluvit jak se budou resit stavy spoluprace
+# SPOLUPRACE_ZADOST = 1
+# SPOLUPRACE_AKTIVACE = 2
+# SPOLUPRACE_DEAKTIVACE = 3
+# SPOLUPRACE_POTVRZENI = 4
 # Externi_zdroj
+IMPORT_EXT_ZD: Final = "EZ01"  # 1
+ZAPSANI_EXT_ZD: Final = "EZ12"  # 2
+POTVRZENI_EXT_ZD: Final = "EZ23"  # 3
+VRACENI_EXT_ZD: Final = "EZ-1"  # New
 
 IDENTIFIKATOR_DOCASNY_PREFIX: Final = "X-"
 

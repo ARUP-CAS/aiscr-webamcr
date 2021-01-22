@@ -82,6 +82,11 @@ update historie_vazby set typ_vazby='archeologicky_zaznam' where typ_vazby='akce
 update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111) as sel where id=sel.hid;
 update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7) as sel where id=sel.hid;
 
+-- Odstraneni tranzakce AKTUALIZACE z historie samostatnych nalezu
+delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny = 8);
+-- 6 a 7 u SN bude 5
+update historie h set typ_zmeny = 5 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and (his.typ_zmeny=7 or hist.typ_zmeny=6)) as sel where id=sel.hid;
+
 -- Migrace integer IDcek transakci na text
 alter table historie add column typ_zmeny_text text;
 
@@ -115,13 +120,45 @@ update historie set typ_zmeny_text = 'AZ12' where id in (select his.id from hist
 --ARCHIVACE_AZ: Final = "AZ23"  # 3
 update historie set typ_zmeny_text = 'AZ23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=3);
 --VRACENI_AZ: Final = "AZ-1"  # New
+update historie set typ_zmeny_text = 'AZ-1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=4);
 --# Dokument
 --ZAPSANI_DOK: Final = "D01"  # 1
+update historie set typ_zmeny_text = 'D01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and his.typ_zmeny=1);
 --ODESLANI_DOK: Final = "D12"  # 2
+update historie set typ_zmeny_text = 'D12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and his.typ_zmeny=2);
 --ARCHIVACE_DOK: Final = "D23"  # 3
+update historie set typ_zmeny_text = 'D23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and his.typ_zmeny=3);
 --VRACENI_DOK: Final = "D-1"  # New
+update historie set typ_zmeny_text = 'D-1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='dokument' and his.typ_zmeny=4);
+
 --# Samostatny nalez
+--ZAPSANI_SN: Final = "SN01"  # 1
+update historie set typ_zmeny_text = 'SN01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny=1);
+--ODESLANI_SN: Final = "SN12"  # 2
+update historie set typ_zmeny_text = 'SN12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny=2);
+--POTVRZENI_SN: Final = "SN23"  # 3
+update historie set typ_zmeny_text = 'SN23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny=3);
+--ARCHIVACE_SN: Final = "SN34"  # 4
+update historie set typ_zmeny_text = 'SN34' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny=4);
+--VRACENI_SN: Final = "SN-1"  # 5
+update historie set typ_zmeny_text = 'SN-1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny=5);
+
+-- COMMENT: Jak resit stavy uzivatelu??? TEN NEMA SLOUPEC STAV!!!
 --# Uzivatel
+--update historie set typ_zmeny_text = 'SN01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='uzivatel' and his.typ_zmeny=1);
 --# Pian
+--ZAPSANI_PIAN: Final = "PI01"
+update historie set typ_zmeny_text = 'PI01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='pian' and his.typ_zmeny=1);
+--POTVRZENI_PIAN: Final = "PI12"
+update historie set typ_zmeny_text = 'PI12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='pian' and his.typ_zmeny=2);
+-- COMMENT: Tady taky neni sloupcec STAV ale puze prechody. Chtelo by to tady se tomu taky venovat a predelat to na stavy.
 --# Uzivatel_spoluprace
 --# Externi_zdroj
+--IMPORT_EXT_ZD: Final = "EZ01"  # 1
+update historie set typ_zmeny_text = 'EZ01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='externi_zdroj' and his.typ_zmeny=1);
+--ZAPSANI_EXT_ZD: Final = "EZ12"  # 2
+update historie set typ_zmeny_text = 'EZ12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='externi_zdroj' and his.typ_zmeny=2);
+--POTVRZENI_EXT_ZD: Final = "EZ23"  # 3
+update historie set typ_zmeny_text = 'EZ23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='externi_zdroj' and his.typ_zmeny=3);
+--VRACENI_EXT_ZD: Final = "EZ-1"  # New
+-- COMMENT: tohle neni treba migrovat

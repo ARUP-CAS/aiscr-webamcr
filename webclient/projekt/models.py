@@ -75,6 +75,7 @@ class Projekt(models.Model):
     class Meta:
         db_table = "projekt"
         unique_together = (("id", "oznamovatel"),)
+        verbose_name = "projekty"
 
     def get_main_cadastre(self):
         main_cadastre = None

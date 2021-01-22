@@ -13,3 +13,4 @@ class Oznamovatel(models.Model):
 
     class Meta:
         db_table = "oznamovatel"
+        verbose_name = "oznamovatele"
