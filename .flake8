@@ -9,5 +9,6 @@ exclude =
 	dev.py,
 	local_test.py,
 	production.py,
-	apps.py
+	apps.py,
+	*/migrations/*
 max-complexity = 10

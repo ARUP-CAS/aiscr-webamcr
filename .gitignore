@@ -61,6 +61,3 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
-
-# Migrations
-migrations/
