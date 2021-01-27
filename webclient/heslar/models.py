@@ -24,7 +24,7 @@ class Heslar(models.Model):
         )
 
     def __str__(self):
-        return "{0} ({1})".format(self.heslo, self.nazev_heslare.nazev)
+        return self.heslo
 
 
 class HeslarDatace(models.Model):

@@ -8,6 +8,10 @@ ALTER TABLE projekt_katastr add column id serial;
 ALTER TABLE projekt_katastr rename column projekt to projekt_id;
 ALTER TABLE projekt_katastr rename column katastr to katastr_id;
 
+ALTER TABLE archeologicky_zaznam_katastr add column id serial;
+ALTER TABLE archeologicky_zaznam_katastr rename column archeologicky_zaznam to archeologicky_zaznam_id;
+ALTER TABLE archeologicky_zaznam_katastr rename column katastr to katastr_id;
+
 alter table projekt_katastr drop constraint "projekt_katastr_katastr_fk";
 alter table projekt_katastr add constraint projekt_katastr_katastr_fk foreign key (katastr_id) references ruian_katastr(id) on delete cascade;
 alter table projekt_katastr drop constraint "projekt_katastr_projekt_fk";
@@ -162,3 +166,6 @@ update historie set typ_zmeny_text = 'EZ12' where id in (select his.id from hist
 update historie set typ_zmeny_text = 'EZ23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='externi_zdroj' and his.typ_zmeny=3);
 --VRACENI_EXT_ZD: Final = "EZ-1"  # New
 -- COMMENT: tohle neni treba migrovat
+alter table historie rename column typ_zmeny to typ_zmeny_old;
+alter table historie rename column typ_zmeny_text to typ_zmeny;
+alter table historie alter typ_zmeny_old drop not null;

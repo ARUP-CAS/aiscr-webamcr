@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "heslar",
     "uzivatel.apps.UzivatelConfig",
     "pian",
+    "arch_z",
 ]
 
 MIDDLEWARE = [
