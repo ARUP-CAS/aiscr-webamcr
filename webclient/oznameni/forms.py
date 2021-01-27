@@ -2,7 +2,7 @@ import datetime
 import logging
 
 from captcha.fields import ReCaptchaField
-from captcha.widgets import ReCaptchaV2Checkbox
+from captcha.widgets import ReCaptchaV2Invisible
 from core.validators import validate_phone_number
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
@@ -188,4 +188,4 @@ class UploadFileForm(forms.Form):
 
 
 class FormWithCaptcha(forms.Form):
-    captcha = ReCaptchaField(widget=ReCaptchaV2Checkbox)
+    captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)
