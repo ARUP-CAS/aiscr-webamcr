@@ -18,7 +18,8 @@ var addPointToPoiLayer = (lat, long, text) => {
 map.on('click', function (e) {
     poi.clearLayers();
 	let corX = e.latlng.lat;
-	let corY = e.latlng.lng;
+    let corY = e.latlng.lng;
+    if(corY>=12.2401111182 && corY<=18.8531441586 && corX>=48.5553052842 && corX<=51.1172677679)
 	if (map.getZoom() > 15) {
 		document.getElementById('id_latitude').value = corX
 		document.getElementById('id_longitude').value = corY
