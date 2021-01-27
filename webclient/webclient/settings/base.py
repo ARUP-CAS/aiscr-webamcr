@@ -180,5 +180,9 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
         },
+        "arch_z": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
     },
 }

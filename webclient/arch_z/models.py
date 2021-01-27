@@ -1,3 +1,4 @@
+from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
 from django.db import models
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
@@ -8,6 +9,11 @@ from projekt.models import Projekt
 class ArcheologickyZaznam(models.Model):
 
     CHOICES = (("L", "Lokalita"), ("A", "Akce"))
+    STATES = (
+        (AZ_STAV_ZAPSANY, "Zapsán"),
+        (AZ_STAV_ODESLANY, "Odeslán"),
+        (AZ_STAV_ARCHIVOVANY, "Archivován"),
+    )
 
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
     pristupnost = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="pristupnost")
@@ -15,7 +21,7 @@ class ArcheologickyZaznam(models.Model):
     stav_stary = models.SmallIntegerField()
     historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column="historie")
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    stav = models.SmallIntegerField()
+    stav = models.SmallIntegerField(choices=STATES)
     katastry = models.ManyToManyField(
         RuianKatastr, through="ArcheologickyZaznamKatastr"
     )

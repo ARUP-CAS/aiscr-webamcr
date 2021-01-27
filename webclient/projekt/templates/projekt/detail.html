@@ -5,19 +5,19 @@
 
 {% block title %}{% trans "Detail projektu" %}{% endblock %}
 {% block head %}
-<!-- Map imports -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-   crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-   crossorigin="">
-</script>
+    <!-- Map imports -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin="">
+    </script>
 {% endblock %}
 
 {% block content %}
 
-    <h1>{% trans "Projekt" %} {{ projekt.stav }}</h1>
+    <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
 
     <div class="card">
         <div class="card-header">{% trans "Detail" %}</div>
@@ -57,7 +57,7 @@
             </div>
         </div>
     </div>
-    <div class="card mt-2" >
+    <div class="card mt-2">
         <div class="card-header">{% trans "Oznámení" %}</div>
         <div class="card-body">
             <div class="row">
@@ -76,10 +76,33 @@
 
     <!-- TODO Tabulka projektové dokumentace -->
 
-    <div class="card mt-2" >
+    <div class="card mt-2">
         <div class="card-header">{% trans "Archeologické akce" %}</div>
         <div class="card-body">
-            {{ akce }}
+            {% for a in akce %}
+                <div class="row">
+                    <div class="col">{{ a.archeologicky_zaznam.ident_cely }}</div>
+                    <div class="col">
+                        <span class="badge badge-light">{{ a.archeologicky_zaznam.get_stav_display }}</span>
+                    </div>
+                    <div class="col">{{ a.archeologicky_zaznam.pristupnost }}</div>
+                </div>
+                <div class="row">
+                    <div class="col">{{ a.archeologicky_zaznam.katasty }}</div>
+                    <div class="col">{{ a.vedouci }}</div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        {{ a.datum_zahajeni_v }} - {{ a.datum_ukonceni_v }}
+                    </div>
+                    <div class="col">
+                        {{ a.hlavni_typ }} {{ a.vedlejsi_typ }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 

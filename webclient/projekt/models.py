@@ -1,5 +1,16 @@
 import logging
 
+from core.constants import (
+    PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+    PROJEKT_STAV_OZNAMENY,
+    PROJEKT_STAV_PRIHLASENY,
+    PROJEKT_STAV_UKONCENY_V_TERENU,
+    PROJEKT_STAV_UZAVRENY,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+    PROJEKT_STAV_ZAPSANY,
+    PROJEKT_STAV_ZRUSENY,
+)
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
@@ -12,7 +23,20 @@ logger = logging.getLogger(__name__)
 
 
 class Projekt(models.Model):
-    stav = models.SmallIntegerField()
+
+    CHOICES = (
+        (PROJEKT_STAV_OZNAMENY, "Oznámen"),
+        (PROJEKT_STAV_ZAPSANY, "Zapsán"),
+        (PROJEKT_STAV_PRIHLASENY, "Přihlášen"),
+        (PROJEKT_STAV_ZAHAJENY_V_TERENU, "Zahájen v terénu"),
+        (PROJEKT_STAV_UKONCENY_V_TERENU, "Ukončen v terénu"),
+        (PROJEKT_STAV_UZAVRENY, "Uzavřen"),
+        (PROJEKT_STAV_ARCHIVOVANY, "Archivován"),
+        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "Nevržen ke zrušení"),
+        (PROJEKT_STAV_ZRUSENY, "Zrušen"),
+    )
+
+    stav = models.SmallIntegerField(choices=CHOICES)
     typ_projektu = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
