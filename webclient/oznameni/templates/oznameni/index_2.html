@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}Oznámení o stavebním či jiném záměru - Krok 2{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+
+    {% include "components/uvod.html" %}
+    <h2>{% trans "Krok 2/2" %}</h2>
+
+    Projekt {{ ident_cely }}
+    <form action="upload-file" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="fallback">
+            <input name="file" type="file" multiple/>
+        </div>
+    </form>
+
+    <form method="post">
+        {% csrf_token %}
+        <input name="ident_cely" type="hidden" value="{{ ident_cely }}">
+        <button type="submit" class="btn btn-success btn-lg">{% trans "Dokončit oznámení" %}</button>
+    </form>
+
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'dropzone.min.js' %}"></script>
+    <script>
+        Dropzone.autoDiscover = false;
+        window.onload = function () {
+            var dropzoneOptions = {
+                dictDefaultMessage: 'Přiložte dokumentaci',
+                dictInvalidFileType: "Nepodporovaný typ souboru",
+                dictRemoveFile: "Odebrat",
+                dictRemoveFileConfirmation: "Skutečně odebrat soubor?",
+                acceptedFiles: "image/*,application/pdf,.csv,.txt,application/vnd.ms-excel",
+                maxFilesize: 100, // MB
+                addRemoveLinks: true,
+                init: function () {
+                    this.on("success", function (file) {
+                        console.log("success > " + file.name);
+                    });
+                },
+                params: {'projektID': "{{ ident_cely }}" }
+            };
+            var uploader = document.querySelector('#my-awesome-dropzone');
+            var newDropzone = new Dropzone(uploader, dropzoneOptions);
+
+            console.log("Loaded");
+        };
+    </script>
+
+{% endblock %}

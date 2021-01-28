@@ -12,8 +12,8 @@
     <p class="lead">{% translate "V případech, kdy nebudete osloveni oprávněnou organizací ve věci uzavření dohody o provedení záchranného archeologického výzkumu, nic nebrání zahájení zemních prací." %}</p>
     <p class="lead">{% translate "Dovolujeme si však upozornit, že v případě objevení náhodného archeologického nálezu je nadále vaší povinností podle " %}<a href="https://www.zakonyprolidi.cz/cs/1987-20#cast3">§ 176 zákona č. 183/2006 Sb.</a>{% translate " o územním plánování a stavebním řádu oznámit tuto skutečnost neprodleně stavebnímu úřadu a orgánu státní památkové péče a také Archeologickému ústavu nebo nejbližšími muzeu podle § 23 odst. 2 zákona č. 20/1987 Sb. o státní památkové péči v platném znění." %}</p>
     <hr class="my-4">
-    <div class="alert alert-success">{% translate "Oznámený projekt byl úspěšně uložen pod identifikátorem" %} {{ context.ident_cely }}.</div>
-    <p class="lead">{% translate "Na zadaném emailu naleznete rekapitulaci Vašeho oznámení. Potvrzení o oznámení Vám bude odesláno na " %}{{ context.email }}{% translate " po kontrole a schválení oznámení Archeologickým ústavem." %}</p>
+    <div class="alert alert-success">{% translate "Oznámený projekt byl úspěšně uložen pod identifikátorem" %} {{ ident_cely }}.</div>
+    <p class="lead">{% translate "Na zadaném emailu naleznete rekapitulaci Vašeho oznámení. Potvrzení o oznámení Vám bude odesláno na Vámi zadaný email po kontrole a schválení oznámení Archeologickým ústavem." %}</p>
     <p class="lead">{% translate "V případě zadání chybných údajů nás neváhejte kontaktovat na oznameni@arup.cas.cz (Čechy), nebo oznameni@arub.cz (Morava a Slezsko)." %}</p>
     <p class="lead">{% translate "Nyní můžete tuto stránku zavřít nebo oznámit další projekt." %}</p>
     <a class="btn btn-primary btn-lg" href="{% url 'oznameni:index' %}" role="button">{% translate "Oznámit další projekt" %}</a>

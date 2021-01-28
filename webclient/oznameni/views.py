@@ -15,29 +15,24 @@ from django.views.decorators.http import require_http_methods
 from heslar import hesla
 from heslar.models import Heslar
 from historie.models import Historie
-from projekt.models import ProjektKatastr
+from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import User
 
-from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm, UploadFileForm
+from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 
 logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET", "POST"])
 def index(request):
-
-    # TODO rewrite so that multiple files can be uploaded
-    # https://www.brennantymrak.com/articles/django-dynamic-formsets-javascript
-
-    if request.method == "POST":
+    # First step of the form
+    if request.method == "POST" and "oznamovatel" in request.POST:
         form_ozn = OznamovatelForm(request.POST)
         form_projekt = ProjektOznameniForm(request.POST)
-        form_file = UploadFileForm(request.POST, request.FILES)
         form_captcha = FormWithCaptcha(request.POST)
 
-        if form_ozn.is_valid() and form_projekt.is_valid() and form_file.is_valid():
+        if form_ozn.is_valid() and form_projekt.is_valid() and form_captcha.is_valid():
             logger.debug("Form is valid")
-
             o = form_ozn.save()
             p = form_projekt.save(commit=False)
             p.stav = c.PROJEKT_STAV_OZNAMENY
@@ -65,46 +60,22 @@ def index(request):
                 uzivatel=owner,
                 vazba=p.historie,
             ).save()
-            soubor = request.FILES.get("soubor")
-            if soubor:
-                checksum = calculate_crc_32(soubor)
-                # After calculating checksum, must move pointer to the beginning
-                soubor.file.seek(0)
-                old_name = soubor.name
-                soubor.name = checksum + "_" + soubor.name
-                s = Soubor(
-                    path=soubor,
-                    vazba=p.soubory,
-                    nazev=soubor.name,
-                    # Short name is new name without checksum
-                    nazev_zkraceny=old_name,
-                    nazev_puvodni=old_name,
-                    vlastnik=owner,
-                    mimetype=get_mime_type(old_name),
-                    size_bytes=soubor.size,
-                    typ_souboru=OTHER_PROJECT_FILES,
-                )
-                try:
-                    logger.debug("Saving file object: " + str(s))
-                    s.save()
-                except IntegrityError:
-                    # TODO how to handle this? Should just ignore?
-                    logger.warning("Could not save file {}".format(s.nazev))
-            else:
-                logger.debug("No file attached to the announcement form.")
 
             context = {"ident_cely": p.ident_cely, "email": o.email}
-            return render(request, "oznameni/success.html", {"context": context})
+            return render(request, "oznameni/index_2.html", context)
         else:
             logger.debug("One of the forms is not valid")
             logger.debug(form_ozn.errors)
             logger.debug(form_projekt.errors)
-            logger.debug(form_file.errors)
+
+    # Part 2 of the announcement form
+    elif request.method == "POST" and "ident_cely" in request.POST:
+        context = {"ident_cely": request.POST["ident_cely"]}
+        return render(request, "oznameni/success.html", context)
 
     else:
         form_ozn = OznamovatelForm()
         form_projekt = ProjektOznameniForm()
-        form_file = UploadFileForm()
         form_captcha = FormWithCaptcha()
 
     return render(
@@ -113,10 +84,43 @@ def index(request):
         {
             "form_oznamovatel": form_ozn,
             "form_projekt": form_projekt,
-            "form_file": form_file,
             "form_captcha": form_captcha,
         },
     )
+
+
+@require_http_methods(["POST"])
+def post_upload(request):
+    projekt = get_object_or_404(Projekt, ident_cely=request.POST["projektID"])
+    soubor = request.FILES.get("file")
+    if soubor:
+        checksum = calculate_crc_32(soubor)
+        # After calculating checksum, must move pointer to the beginning
+        soubor.file.seek(0)
+        old_name = soubor.name
+        soubor.name = checksum + "_" + soubor.name
+        s = Soubor(
+            path=soubor,
+            vazba=projekt.soubory,
+            nazev=soubor.name,
+            # Short name is new name without checksum
+            nazev_zkraceny=old_name,
+            nazev_puvodni=old_name,
+            vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
+            mimetype=get_mime_type(old_name),
+            size_bytes=soubor.size,
+            typ_souboru=OTHER_PROJECT_FILES,
+        )
+        try:
+            logger.debug("Saving file object: " + str(s))
+            s.save()
+            return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
+        except IntegrityError:
+            logger.warning("Could not save file {}".format(s.nazev))
+    else:
+        logger.warning("No file attached to the announcement form.")
+
+    return JsonResponse({"filename": ""}, status=500)
 
 
 @csrf_exempt

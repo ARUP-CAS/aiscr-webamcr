@@ -29,7 +29,6 @@ class UrlTests(TestCase):
             "oznaceni_stavby": "Zahrada A",
             "souhlas": "on",
             "g-recaptcha-response": "",
-            "save": "Odeslat formulář",
             "latitude": "50.106212483846356",
             "longitude": "14.496384859085085",
         }

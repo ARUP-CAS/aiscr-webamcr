@@ -87,6 +87,12 @@ class ProjektOznameniForm(forms.ModelForm):
     )
     latitude = forms.CharField(widget=forms.HiddenInput())
     longitude = forms.CharField(widget=forms.HiddenInput())
+    katastralni_uzemi = forms.CharField(
+        widget=forms.TextInput(attrs={"readonly": "readonly"}),
+        label=_("Katastrální území"),
+        help_text=_("Katastální území zadané bodem."),
+    )
+    # dalsi_katastry = forms.MultipleChoiceField()
 
     class Meta:
         model = Projekt
@@ -134,20 +140,7 @@ class ProjektOznameniForm(forms.ModelForm):
                     css_class="card-header",
                 ),
                 Div(
-                    Div(
-                        HTML('  <label for="id_ku" class="">Katastální území</label>'),
-                        Div(
-                            HTML(
-                                '<textarea name="ku" cols="40" rows="1" class="textarea form-control" '
-                                'id="katastr_name" readonly /></textarea> '
-                            ),
-                            HTML(
-                                '<small id="hint_id_ku" class="form-text text-muted">Katastální území zadanné bodem '
-                                "</small> "
-                            ),
-                        ),
-                        css_class="form-group",
-                    ),
+                    "katastralni_uzemi",
                     "planovane_zahajeni",
                     "podnet",
                     "lokalizace",
@@ -155,31 +148,6 @@ class ProjektOznameniForm(forms.ModelForm):
                     "oznaceni_stavby",
                     "latitude",
                     "longitude",
-                    css_class="card-body",
-                ),
-                css_class="card",
-            )
-        )
-
-
-class UploadFileForm(forms.Form):
-    soubor = forms.FileField(
-        required=False, widget=forms.ClearableFileInput(attrs={"multiple": True})
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(UploadFileForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False
-
-        self.helper.layout = Layout(
-            Div(
-                Div(
-                    HTML(_("Projektová a jiná dokumentace")),
-                    css_class="card-header",
-                ),
-                Div(
-                    "soubor",
                     css_class="card-body",
                 ),
                 css_class="card",

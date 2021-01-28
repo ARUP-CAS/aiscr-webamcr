@@ -35,7 +35,8 @@ map.on('click', function (e) {
         xhr.onload = function () {
             // do something to response
             console.log(JSON.parse(this.responseText).cadastre);
-            document.getElementById('katastr_name').innerHTML=JSON.parse(this.responseText).cadastre;
+            let uzemi = document.getElementById('id_katastralni_uzemi');
+            uzemi.value=JSON.parse(this.responseText).cadastre;
         };
         xhr.send(JSON.stringify({ 'corY': corY,'corX': corX }))
 
