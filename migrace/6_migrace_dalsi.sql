@@ -3,6 +3,8 @@ ALTER TABLE "soubor" ADD COLUMN "path" varchar(100) DEFAULT 'not specified yet' 
 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
 ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
+-- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 1 na 857)
+ALTER TABLE "archeologicky_zaznam" ALTER COLUMN "pristupnost" SET DEFAULT 857;
 
 ALTER TABLE projekt_katastr add column id serial;
 ALTER TABLE projekt_katastr rename column projekt to projekt_id;
@@ -169,3 +171,6 @@ update historie set typ_zmeny_text = 'EZ23' where id in (select his.id from hist
 alter table historie rename column typ_zmeny to typ_zmeny_old;
 alter table historie rename column typ_zmeny_text to typ_zmeny;
 alter table historie alter typ_zmeny_old drop not null;
+
+-- COMMENT: tenhle sloupec tam nemusi byt, je to jen pro migraci
+alter table archeologicky_zaznam alter column stav_stary drop not null;

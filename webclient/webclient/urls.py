@@ -22,6 +22,7 @@ urlpatterns = [
     path("", include("core.urls")),
     path("oznameni/", include("oznameni.urls")),
     path("projekt/", include("projekt.urls")),
+    path("arch_z/", include("arch_z.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
 

@@ -16,9 +16,11 @@ class ArcheologickyZaznam(models.Model):
     )
 
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
-    pristupnost = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="pristupnost")
+    pristupnost = models.ForeignKey(
+        Heslar, models.DO_NOTHING, db_column="pristupnost", null=True
+    )
     ident_cely = models.TextField(unique=True)
-    stav_stary = models.SmallIntegerField()
+    stav_stary = models.SmallIntegerField(null=True)
     historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column="historie")
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
@@ -86,6 +88,7 @@ class Akce(models.Model):
         models.DO_NOTHING,
         db_column="archeologicky_zaznam",
         primary_key=True,
+        related_name="akce",
     )
     odlozena_nz = models.BooleanField(default=False)
 

@@ -41,10 +41,10 @@ def index(request):
             longitude = request.POST.get("longitude")
             latitude = request.POST.get("latitude")
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
-            p.katastry.add(*[int(i) for i in dalsi_katastry])
             p.geom = Point(float(longitude), float(latitude))
             katastr = get_cadastre_from_point(p.geom)
             p.save()
+            p.katastry.add(*[int(i) for i in dalsi_katastry])
             if katastr is not None:
                 ProjektKatastr(katastr=katastr, projekt=p, hlavni=True).save()
                 p.ident_cely = get_temporary_project_ident(

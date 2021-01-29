@@ -1,3 +1,5 @@
+from arch_z.models import Akce, ArcheologickyZaznam
+from core.constants import AZ_STAV_ZAPSANY
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from heslar import hesla
@@ -86,17 +88,19 @@ class AMCRMixinRunner(object):
         ha = HeslarNazev(nazev="heslar_typ_pian")
         hto = HeslarNazev(nazev="heslar_typ_organizace")
         hpr = HeslarNazev(nazev="heslar_pristupnost")
-        hn.save()
-        hp.save()
-        ha.save()
-        hto.save()
-        hpr.save()
+        hsd = HeslarNazev(nazev="heslar_specifikace_data")
+        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd]
+        for n in nazvy_heslaru:
+            n.save()
+
         Heslar(id=hesla.PROJEKT_ZACHRANNY_ID, nazev_heslare=hn).save()
         Heslar(id=854, nazev_heslare=hp).save()
         Heslar(id=1122, nazev_heslare=ha).save()
+        Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
+        Heslar(id=881, heslo="presne", nazev_heslare=hsd).save()
         typ_muzeum = Heslar(id=1116, heslo="Muzemum", nazev_heslare=hto)
         zp = Heslar(id=859, nazev_heslare=hpr)
-        Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
+
         zp.save()
         typ_muzeum.save()
 
@@ -115,6 +119,15 @@ class AMCRMixinRunner(object):
             organizace=o,
         )
         user.save()
+
+        az = ArcheologickyZaznam(
+            typ_zaznamu="A",
+            ident_cely="C-202000001A",
+            stav=AZ_STAV_ZAPSANY,
+        )
+        az.save()
+        a = Akce(archeologicky_zaznam=az, specifikace_data=Heslar.objects.get(id=881))
+        a.save()
 
         return temp_return
 

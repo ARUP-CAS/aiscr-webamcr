@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Detail archeologického záznamu" %}{% endblock %}
+{% block head %}
+    <!-- Map imports -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin="">
+    </script>
+{% endblock %}
+
+{% block content %}
+
+    <h1>{% trans "Archeologický záznam" %}  <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
+
+    <div class="card">
+        <div class="card-header">{% trans "Detail" %}</div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col">{{ zaznam.akce.hlavni_typ }} {{ zaznam.akce.vedlejsi_typ }}</div>
+                <div class="col">{{ zaznam.pristupnost }}</div>
+                <div class="col">{{ zaznam.akce.datum_zahajeni_v }} - {{ zaznam.akce.datum_ukonceni_v }}</div>
+            </div>
+            <div class="row">
+                <div class="col">{{ zaznam.katastry }}</div>
+                <div class="col">{{ vedouci }}</div>
+            </div>
+            <div class="row">
+                <div class="col">{{ zaznam.uzivatelske_oznaceni }}</div>
+                <div class="col">{{ zaznam.akce.lokalizace_okolnosti }}</div>
+            </div>
+            <div class="row">
+                <div class="col">{{ zaznam.poznamka }}</div>
+            </div>
+            <div class="row">
+                <div class="col">{{ zaznam.ulozeni_nalezu }}</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">{% trans "Dokumenty" %}</div>
+        <div class="card-body">
+            {% for d in dokumenty %}
+                <div class="row">
+                    <div class="col">{{ d.ident_cely }}</div>
+                    <div class="col">
+                        <span class="badge badge-light">{{ d.get_stav_display }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

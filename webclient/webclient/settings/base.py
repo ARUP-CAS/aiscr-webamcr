@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     "heslar",
     "uzivatel.apps.UzivatelConfig",
     "pian",
-    "arch_z",
+    "arch_z.apps.ArchZConfig",
+    "dokument",
 ]
 
 MIDDLEWARE = [
@@ -181,6 +182,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "arch_z": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "dokument": {
             "handlers": ["console"],
             "level": "DEBUG",
         },
