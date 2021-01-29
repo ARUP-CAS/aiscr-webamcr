@@ -40,6 +40,8 @@ def index(request):
             p.oznamovatel = o
             longitude = request.POST.get("longitude")
             latitude = request.POST.get("latitude")
+            dalsi_katastry = form_projekt.cleaned_data["katastry"]
+            p.katastry.add(*[int(i) for i in dalsi_katastry])
             p.geom = Point(float(longitude), float(latitude))
             katastr = get_cadastre_from_point(p.geom)
             p.save()

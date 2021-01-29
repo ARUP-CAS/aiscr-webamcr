@@ -22,6 +22,7 @@ class UrlTests(TestCase):
             "telefon": "722803058",
             "email": "jurajskvarla@yahoo.com",
             "ku": "VYSOČANY (Hlavní město Praha)",
+            "katastry": "150",
             "planovane_zahajeni": "21.01.2021 - 21.01.2021",
             "podnet": "Musime kopat",
             "lokalizace": "U nas na zahrade",

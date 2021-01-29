@@ -8,6 +8,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
+from heslar.models import RuianKatastr
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 
@@ -92,7 +93,12 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("Katastrální území"),
         help_text=_("Katastální území zadané bodem."),
     )
-    # dalsi_katastry = forms.MultipleChoiceField()
+    katastry = forms.MultipleChoiceField(
+        label=_("Další katastry"),
+        required=False,
+        help_text=_("Vyberte případné další katastry dotčené záměrem."),
+        choices=RuianKatastr.objects.all().values_list("id", "nazev"),
+    )
 
     class Meta:
         model = Projekt
@@ -140,7 +146,11 @@ class ProjektOznameniForm(forms.ModelForm):
                     css_class="card-header",
                 ),
                 Div(
-                    "katastralni_uzemi",
+                    Div(
+                        Div("katastralni_uzemi", css_class="col-sm-6"),
+                        Div("katastry", css_class="col-sm-6"),
+                        css_class="row",
+                    ),
                     "planovane_zahajeni",
                     "podnet",
                     "lokalizace",
