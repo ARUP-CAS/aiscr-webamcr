@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block metismenu_includes %}
+    <link rel="stylesheet" href="{% static 'metisMenu.min.css' %}">
+    <script src="{% static 'metisMenu.min.js' %}"></script>
+{% endblock %}
+
+{% block metismenu %}
+    <ul id="metismenu">
+        <li class="mm-active">
+            <a href="#" aria-expanded="true">Menu 1</a>
+            <ul>
+
+            </ul>
+        </li>
+        <li>
+            <a href="#" aria-expanded="false">Menu 2</a>
+            <ul>
+
+            </ul>
+        </li>
+
+    </ul>
+{% endblock %}
+
+{% block metis_script %}
+    <script src="{% static 'metis.js' %}"></script>
+{% endblock %}

@@ -70,6 +70,9 @@ ROOT_URLCONF = "webclient.urls"
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
+    BASE_DIR / "static" / "js",
+    BASE_DIR / "static" / "css",
+    BASE_DIR / "static" / "loga",
 ]
 
 TEMPLATES = [

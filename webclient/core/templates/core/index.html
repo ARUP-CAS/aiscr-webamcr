@@ -1,0 +1,9 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}AMČR Homepage{% endblock %}
+
+{% block content %}
+    Hello {{ user.email }}
+{% endblock %}

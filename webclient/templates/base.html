@@ -17,12 +17,18 @@
 
     <title>{% block title %}{% endblock %}</title>
     {% block head %}{% endblock %}
+    {% block metismenu_includes %}{% endblock %}
 </head>
 <body>
     <div class="container">
+
+    {% block metismenu %}{% endblock %}
+
     {% block content %}{% endblock %}
+
     </div>
 
     {% block script %}{% endblock %}
+    {% block metis_script %}{% endblock %}
 </body>
 </html>
