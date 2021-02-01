@@ -15,6 +15,7 @@ from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
+from django.utils.translation import gettext as _
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from oznameni.models import Oznamovatel
@@ -36,13 +37,14 @@ class Projekt(models.Model):
         (PROJEKT_STAV_ZRUSENY, "Zrušen"),
     )
 
-    stav = models.SmallIntegerField(choices=CHOICES)
-    typ_projektu = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="typ_projektu",
-        related_name="projekty_typy",
+    TYP_PROJEKTU_CHOICES = (
+        (1125, _("průzkum")),
+        (1126, _("badatelský")),
+        (1127, _("záchranný")),
     )
+
+    stav = models.SmallIntegerField(choices=CHOICES)
+    typ_projektu = models.IntegerField(choices=TYP_PROJEKTU_CHOICES)
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
     kulturni_pamatka_popis = models.TextField(blank=True, null=True)

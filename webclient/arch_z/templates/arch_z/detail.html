@@ -17,7 +17,7 @@
 
 {% block content %}
 
-    <h1>{% trans "Archeologický záznam" %}  <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
+    <h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
 
     <div class="card">
         <div class="card-header">{% trans "Detail" %}</div>
@@ -54,7 +54,31 @@
                     <div class="col">
                         <span class="badge badge-light">{{ d.get_stav_display }}</span>
                     </div>
+                    <div class="col">{{ d.typ_dokumentu }}</div>
+                    <div clasd="col">{{ d.soubory.soubor_set|length }}</div>
                 </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">{% trans "Dokumentační jednotky" %}</div>
+        <div class="card-body">
+            {% for j in dokumentacni_jednotky %}
+                <div class="row">
+                    <div class="col">{{ j.ident_cely }}</div>
+                    <div class="col">{{ j.typ }}</div>
+                    <div class="col">{{ j.nazev }}</div>
+                </div>
+                Komponenty:
+                <hr/>
+                {% for k in j.komponenty.komponenta_set.all %}
+                    <div class="row">
+                        <div class="col">{{ k.ident_cely }}</div>
+                        <div class="col">{{ k.obdobi }}</div>
+                        <div class="col">{{ k.areal }}</div>
+                    </div>
+                {% endfor %}
             {% endfor %}
         </div>
     </div>

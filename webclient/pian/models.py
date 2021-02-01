@@ -1,18 +1,26 @@
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
-from heslar.models import Heslar
+from django.utils.translation import gettext as _
 from historie.models import HistorieVazby
 
 
 class Pian(models.Model):
-    presnost = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="presnost",
-        null=False,
-        related_name="pian_presnost",
+
+    TYP_PIAN_CHOICES = (
+        (1122, _("plocha")),
+        (1123, _("linie")),
+        (1124, _("bod")),
     )
-    typ = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="typ", null=False)
+
+    PRESNOST_CHOICES = (
+        (851, _("odchylka stovky metrů")),
+        (852, _("odchylka jednotky metrů")),
+        (853, _("odchylka desítky metrů")),
+        (854, _("poloha podle katastru")),
+    )
+
+    presnost = models.IntegerField(choices=PRESNOST_CHOICES)
+    typ = models.IntegerField(choices=TYP_PIAN_CHOICES)
     geom = pgmodels.GeometryField(null=False)
     buffer = pgmodels.GeometryField(null=False)
     zm10 = models.ForeignKey(

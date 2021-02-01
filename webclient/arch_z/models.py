@@ -1,5 +1,12 @@
-from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
+from core.constants import (
+    AZ_STAV_ARCHIVOVANY,
+    AZ_STAV_ODESLANY,
+    AZ_STAV_ZAPSANY,
+    PRISTUPNOST_CHOICES,
+)
+from core.models import KomponentaVazby
 from django.db import models
+from django.utils.translation import gettext as _
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Pian
@@ -16,9 +23,7 @@ class ArcheologickyZaznam(models.Model):
     )
 
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
-    pristupnost = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="pristupnost", null=True
-    )
+    pristupnost = models.IntegerField(choices=PRISTUPNOST_CHOICES, default=857)
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
     historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column="historie")
@@ -47,14 +52,20 @@ class ArcheologickyZaznamKatastr(models.Model):
 
 
 class Akce(models.Model):
+
+    SPECIFIKACE_DATA_CHOICES = (
+        (876, _("v letech")),
+        (878, _("neznámo")),
+        (877, _("po roce")),
+        (879, _("kolem")),
+        (880, _("v roce")),
+        (881, _("přesně")),
+        (882, _("před rokem")),
+    )
+
     typ = models.CharField(max_length=1, blank=True, null=True)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
-    specifikace_data = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="specifikace_data",
-        related_name="akce_specifikace",
-    )
+    specifikace_data = models.IntegerField(choices=SPECIFIKACE_DATA_CHOICES)
     hlavni_typ = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -97,17 +108,19 @@ class Akce(models.Model):
 
 
 class Lokalita(models.Model):
+
+    TYP_LOKALITY_CHOICES = (
+        (1111, _("krajinný prvek")),
+        (1112, _("nemovitá památka")),
+        (1113, _("letecká archeologie")),
+    )
+
     druh = models.ForeignKey(
         Heslar, models.DO_NOTHING, db_column="druh", related_name="lokality_druhy"
     )
     popis = models.TextField(blank=True, null=True)
     nazev = models.TextField()
-    typ_lokality = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="typ_lokality",
-        related_name="lokality_typy",
-    )
+    typ_lokality = models.IntegerField(choices=TYP_LOKALITY_CHOICES)
     poznamka = models.TextField(blank=True, null=True)
     final_cj = models.BooleanField(default=False)
     zachovalost = models.ForeignKey(
@@ -133,14 +146,29 @@ class Lokalita(models.Model):
 
 
 class DokumentacniJednotka(models.Model):
-    typ = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="typ")
+
+    TYP_DJ_CHOICES = (
+        (1060, _("Část akce")),
+        (1061, _("Sonda")),
+        (1062, _("Nelokalizovaná akce")),
+        (1063, _("Celek akce")),
+        (1064, _("Lokalita")),
+    )
+
+    typ = models.IntegerField(choices=TYP_DJ_CHOICES)
     nazev = models.TextField(blank=True, null=True)
     negativni_jednotka = models.BooleanField()
     ident_cely = models.TextField(unique=True, blank=True, null=True)
     pian = models.ForeignKey(
         Pian, models.DO_NOTHING, db_column="pian", blank=True, null=True
     )
-    #  komponenty = models.ForeignKey(KomponentaVazby, models.DO_NOTHING, db_column='komponenty', blank=True, null=True)
+    komponenty = models.ForeignKey(
+        KomponentaVazby,
+        models.DO_NOTHING,
+        db_column="komponenty",
+        blank=True,
+        null=True,
+    )
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam, models.DO_NOTHING, db_column="archeologicky_zaznam"
     )

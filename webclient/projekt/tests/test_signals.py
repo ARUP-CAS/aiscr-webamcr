@@ -1,6 +1,5 @@
 from django.test import TestCase
-from heslar import hesla
-from heslar.models import Heslar
+from heslar.hesla import PROJEKT_ZACHRANNY_ID
 from projekt.models import Projekt
 
 
@@ -11,7 +10,7 @@ class TestProjektSignals(TestCase):
     def test_create_projekt_vazby(self):
         p = Projekt(
             stav=0,
-            typ_projektu=Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID),
+            typ_projektu=PROJEKT_ZACHRANNY_ID,
         )
         p.save()
         self.assertTrue(p.historie)

@@ -1,5 +1,7 @@
 from typing import Final
 
+from django.utils.translation import gettext as _
+
 # Stavy
 
 # Projekty
@@ -88,6 +90,8 @@ PIAN_RELATION_TYPE: Final = "pian"
 UZIVATEL_SPOLUPRACE_RELATION_TYPE: Final = "uzivatel_spoluprace"
 EXTERNI_ZDROJ_RELATION_TYPE: Final = "externi_zdroj"
 ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: Final = "archeologicky_zaznam"
+DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
+DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
 
 # Typy souboru
 IMPORTED_FILE: Final = "IMPORT"
@@ -99,4 +103,53 @@ OTHER_DOCUMENT_FILES: Final = (
 OTHER_PROJECT_FILES: Final = "OSPD"  # ostatní soubory projektové dokumentace z webu
 ZA_ZL_FILES: Final = (
     "AGDZZ"  # automaticky generované dokumenty z rad ZA a ZL pri archivaci projektu
+)
+
+# CHOICES
+PRISTUPNOST_CHOICES = (
+    (855, _("archeolog")),
+    (856, _("badatel")),
+    (857, _("anonym")),
+    (858, _("administrátor")),
+    (859, _("archivář")),
+)
+
+AKTIVITY_CHOICES = (
+    (1, _("těžba")),
+    (2, _("komunikace")),
+    (3, _("boj")),
+    (4, _("pohřbívání")),
+    (5, _("kult")),
+    (6, _("intruze")),
+    (7, _("výroba")),
+    (8, _("jiný druh aktivity")),
+    (9, _("sídlištní")),
+    (10, _("deponování")),
+)
+
+AUTORSKA_ROLE_CHOICES = ((97, _("editor")), (98, _("autor")))
+
+TYP_EXTERNIHO_ZDROJE_CHOICES = (
+    (1106, _("článek v novinách")),
+    (1107, _("článek v časopise")),
+    (1108, _("kniha")),
+    (1109, _("část knihy")),
+    (1110, _("nepublikovaná zpráva")),
+)
+
+TYP_NALEZU_CHOICES = (
+    (1114, _("objekt")),
+    (1115, _("předmět")),
+)
+
+TYP_VYSKOVY_BOD_CHOICES = (
+    (1146, _("středověk")),
+    (1147, _("industriál")),
+    (1148, _("raný středověk")),
+    (1149, _("dno sondy")),
+    (1150, _("novověk")),
+    (1151, _("podloží")),
+    (1152, _("pravěk")),
+    (1153, _("snížené podloží")),
+    (1154, _("povrch sondy")),
 )

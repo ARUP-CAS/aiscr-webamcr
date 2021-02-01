@@ -1,3 +1,4 @@
+from core.constants import PRISTUPNOST_CHOICES
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
@@ -50,12 +51,8 @@ class Organizace(models.Model):
     )
     oao = models.BooleanField(default=False)
     mesicu_do_zverejneni = models.IntegerField(default=36)
-    zverejneni_pristupnost = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="zverejneni_pristupnost",
-        related_name="pristupne_organizace",
-        default=859,  # V heslari je to zaznam "archivář"
+    zverejneni_pristupnost = models.IntegerField(
+        choices=PRISTUPNOST_CHOICES, default=859
     )
     nazev_zkraceny_en = models.TextField(blank=True, null=True)
     email = models.TextField(blank=True, null=True)
