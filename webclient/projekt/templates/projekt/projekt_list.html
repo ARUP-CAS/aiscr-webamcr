@@ -9,9 +9,7 @@
     <h1>{% trans "Projekty" %}</h1>
     <ul>
         {% for projekt in object_list %}
-            <li>{{ projekt.ident_cely }}</li>
-        {% empty %}
-            <li>No articles yet.</li>
+                <li>{{ projekt.ident_cely }}, {{ projekt.podnet }}, {{ projekt.lokalizace }}, {{ projekt.historie }}, {{ projekt.get_typ_projektu_display }}</li>
         {% endfor %}
     </ul>
 

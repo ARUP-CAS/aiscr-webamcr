@@ -1,6 +1,7 @@
 import logging
 
 from core.constants import (
+    OZNAMENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     PROJEKT_STAV_OZNAMENY,
@@ -10,15 +11,18 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    ZAHAJENI_V_TERENU_PROJ,
 )
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from heslar.models import Heslar, RuianKatastr
-from historie.models import HistorieVazby
+from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +47,7 @@ class Projekt(models.Model):
         (1127, _("záchranný")),
     )
 
-    stav = models.SmallIntegerField(choices=CHOICES)
+    stav = models.SmallIntegerField(choices=CHOICES, default=PROJEKT_STAV_OZNAMENY)
     typ_projektu = models.IntegerField(choices=TYP_PROJEKTU_CHOICES)
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
@@ -103,6 +107,40 @@ class Projekt(models.Model):
         unique_together = (("id", "oznamovatel"),)
         verbose_name = "projekty"
 
+    def set_oznameny(self, oznamovatel):
+        self.stav = PROJEKT_STAV_OZNAMENY
+        self.oznamovatel = oznamovatel
+        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        Historie(
+            typ_zmeny=OZNAMENI_PROJ,
+            uzivatel=owner,
+            vazba=self.historie,
+        ).save()
+
+    def set_zapsany(self):
+        pass
+
+    def set_prihlaseny(self, organizace):
+        pass
+
+    def set_zahajeny_v_terenu(self):
+        pass
+
+    def set_ukoncen_v_terenu(self):
+        pass
+
+    def set_uzavreny(self):
+        pass
+
+    def set_archivovany(self):
+        pass
+
+    def set_navrzen_ke_zruseni(self):
+        pass
+
+    def set_zruseny(self):
+        pass
+
     def get_main_cadastre(self):
         main_cadastre = None
         cadastres = ProjektKatastr.objects.filter(projekt=self.id)
@@ -111,6 +149,13 @@ class Projekt(models.Model):
                 return pk.katastr
         logger.warning("Main cadastre of the project {0} not found.".format(str(self)))
         return main_cadastre
+
+    def get_zahajeni(self):
+        if self.historie is not None:
+            h = self.historie.historie_set.filter(typ_zmeny=ZAHAJENI_V_TERENU_PROJ)
+            if len(h) > 0:
+                return h[0].datum_zmeny
+        return None
 
     def parse_ident_cely(self):
         year = None

@@ -1,3 +1,4 @@
+from datetime import datetime
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -16,6 +17,10 @@ class ProjectModelsTests(TestCase):
     def test_get_main_cadastre_empty(self, mock):
         main_cadastre = Projekt().get_main_cadastre()
         self.assertEqual(main_cadastre, None)
+
+    def test_get_zahajeni(self):
+        datum_zahajeni = Projekt.objects.get(ident_cely="C-202000001").get_zahajeni()
+        self.assertEqual(datum_zahajeni.date(), datetime.now().date())
 
     def test_parse_ident_cely(self):
         p = Projekt()

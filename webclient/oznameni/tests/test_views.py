@@ -22,20 +22,20 @@ class UrlTests(TestCase):
             "telefon": "722803058",
             "email": "jurajskvarla@yahoo.com",
             "katastralni_uzemi": "VYSOČANY (Hlavní město Praha)",
-            "katastry": "149",
             "planovane_zahajeni": "21.01.2021 - 21.01.2021",
             "podnet": "Musime kopat",
             "lokalizace": "U nas na zahrade",
             "parcelni_cislo": "123",
             "oznaceni_stavby": "Zahrada A",
             "souhlas": "on",
-            "g-recaptcha-response": "",
+            "g-recaptcha-response": "03AGdBq27IRpUJzEs-legIVY7uue3HQ",
             "latitude": "50.106212483846356",
             "longitude": "14.496384859085085",
         }
         request = self.factory.post("/oznameni/", data)
         response = index(request)
         self.assertEqual(200, response.status_code)
+        self.assertTrue("error" not in response.content.decode("utf-8"))
 
     def test_post_poi2kat(self):
         josefov = (14.417222, 50.089616)

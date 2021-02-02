@@ -1,8 +1,14 @@
 from arch_z.models import Akce, ArcheologickyZaznam
-from core.constants import AZ_STAV_ZAPSANY
+from core.constants import (
+    AZ_STAV_ZAPSANY,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+    ZAHAJENI_V_TERENU_PROJ,
+)
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
+from historie.models import Historie
+from projekt.models import Projekt
 from uzivatel.models import Organizace, User
 
 
@@ -114,6 +120,19 @@ class AMCRMixinRunner(object):
         az.save()
         a = Akce(archeologicky_zaznam=az, specifikace_data=881)
         a.save()
+
+        # Zahajeny projekt
+        p = Projekt(
+            ident_cely="C-202000001",
+            stav=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+            typ_projektu=1127,
+        )
+        p.save()
+        Historie(
+            typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=p.historie,
+        ).save()
 
         return temp_return
 

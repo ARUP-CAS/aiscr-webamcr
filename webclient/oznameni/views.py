@@ -1,8 +1,7 @@
 import logging
 
 import simplejson as json
-from core import constants as c
-from core.constants import OTHER_PROJECT_FILES, OZNAMENI_PROJ
+from core.constants import OTHER_PROJECT_FILES
 from core.ident_cely import get_temporary_project_ident
 from core.models import Soubor
 from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
@@ -13,8 +12,6 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar import hesla
-from heslar.models import Heslar
-from historie.models import Historie
 from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import User
 
@@ -35,14 +32,14 @@ def index(request):
             logger.debug("Form is valid")
             o = form_ozn.save()
             p = form_projekt.save(commit=False)
-            p.stav = c.PROJEKT_STAV_OZNAMENY
-            p.typ_projektu = Heslar.objects.get(id=hesla.PROJEKT_ZACHRANNY_ID)
-            p.oznamovatel = o
+            p.typ_projektu = hesla.PROJEKT_ZACHRANNY_ID
             longitude = request.POST.get("longitude")
             latitude = request.POST.get("latitude")
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
             p.geom = Point(float(longitude), float(latitude))
             katastr = get_cadastre_from_point(p.geom)
+            p.save()
+            p.set_oznameny(o)
             p.save()
             p.katastry.add(*[int(i) for i in dalsi_katastry])
             if katastr is not None:
@@ -56,19 +53,13 @@ def index(request):
                     "Unknown cadastre location for point {}".format(str(p.geom))
                 )
 
-            owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-            Historie(
-                typ_zmeny=OZNAMENI_PROJ,
-                uzivatel=owner,
-                vazba=p.historie,
-            ).save()
-
             context = {"ident_cely": p.ident_cely, "email": o.email}
             return render(request, "oznameni/index_2.html", context)
         else:
             logger.debug("One of the forms is not valid")
             logger.debug(form_ozn.errors)
             logger.debug(form_projekt.errors)
+            logger.debug(form_captcha.errors)
 
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:
