@@ -33,10 +33,11 @@ def index(request):
             o = form_ozn.save()
             p = form_projekt.save(commit=False)
             p.typ_projektu = hesla.PROJEKT_ZACHRANNY_ID
-            longitude = request.POST.get("longitude")
-            latitude = request.POST.get("latitude")
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
-            p.geom = Point(float(longitude), float(latitude))
+            p.geom = Point(
+                float(request.POST.get("longitude")),
+                float(request.POST.get("latitude")),
+            )
             katastr = get_cadastre_from_point(p.geom)
             p.save()
             p.set_oznameny(o)

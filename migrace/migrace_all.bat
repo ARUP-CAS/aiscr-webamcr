@@ -41,3 +41,8 @@ echo "Migrace stavy akci"
 psql -h 127.0.0.1 -p 5432 -U cz_archeologickamapa_api -d prod_zaloha -f 4_migrace_akce_stavy.sql
 
 #echo "Prehashovani hesel"
+#Tohle je potreba zatim zavolat manualne
+
+#Pak jeste volat dalsi migrace
+# 5_migrace_oznamovatel.sql
+# 6_migrace_dalsi.sql
