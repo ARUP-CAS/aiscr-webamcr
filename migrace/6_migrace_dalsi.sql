@@ -2,6 +2,7 @@
 ALTER TABLE "soubor" ADD COLUMN "path" varchar(100) DEFAULT 'not specified yet' NOT NULL;
 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
+-- TODO nezapomenout kdyz se bude precislovavat
 ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 1 na 857)
 ALTER TABLE "archeologicky_zaznam" ALTER COLUMN "pristupnost" SET DEFAULT 857;
@@ -85,13 +86,14 @@ alter table auth_user rename column username to ident_cely;
 update historie_vazby set typ_vazby='archeologicky_zaznam' where typ_vazby='akce' or typ_vazby='lokalita';
 
 -- Jeste jsem zapomel domigrovat tranzakce akci 3 a 7 na 4
-update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111) as sel where id=sel.hid;
-update historie h set typ_zmeny = 4 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7) as sel where id=sel.hid;
+update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111);
+-- COMMENT: tahle query je nejaka pomala, nevim proc ... :(
+update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7);
 
 -- Odstraneni tranzakce AKTUALIZACE z historie samostatnych nalezu
 delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny = 8);
 -- 6 a 7 u SN bude 5
-update historie h set typ_zmeny = 5 from (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and (his.typ_zmeny=7 or hist.typ_zmeny=6)) as sel where id=sel.hid;
+update historie h set typ_zmeny = 5 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and (his.typ_zmeny=7 or hist.typ_zmeny=6));
 
 -- Migrace integer IDcek transakci na text
 alter table historie add column typ_zmeny_text text;
@@ -104,7 +106,7 @@ update historie set typ_zmeny_text = 'PX0' where id in (select his.id from histo
 --ZAPSANI_PROJ: Final = "PX1"  # 1
 update historie set typ_zmeny_text = 'PX1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=1);
 --PRIHLASENI_PROJ: Final = "P12"  # 2
-update historie set typ_zmeny_text = 'PX1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=2);
+update historie set typ_zmeny_text = 'P12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=2);
 --ZAHAJENI_V_TERENU_PROJ: Final = "P23"  # 3
 update historie set typ_zmeny_text = 'P23' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='projekt' and his.typ_zmeny=3);
 --UKONCENI_V_TERENU_PROJ: Final = "P34"  # 4
