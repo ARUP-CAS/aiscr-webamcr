@@ -39,7 +39,9 @@ def encrypt_passwords(cursor, connection):
 
 
 try:
-    connection = psycopg2.connect(user="", password="", host="", port="", database="")
+    connection = psycopg2.connect(
+        user="", password="", host="", port="5432", database="prod_zaloha"
+    )
 
     cursor = connection.cursor()
     # Print PostgreSQL Connection properties

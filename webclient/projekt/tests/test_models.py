@@ -18,8 +18,10 @@ class ProjectModelsTests(TestCase):
         main_cadastre = Projekt().get_main_cadastre()
         self.assertEqual(main_cadastre, None)
 
-    def test_get_zahajeni(self):
-        datum_zahajeni = Projekt.objects.get(ident_cely="C-202000001").get_zahajeni()
+    def test_get_transaction_zahajeni_date(self):
+        datum_zahajeni = Projekt.objects.get(
+            ident_cely="C-202000001"
+        ).get_transaction_zahajeni_date()
         self.assertEqual(datum_zahajeni.date(), datetime.now().date())
 
     def test_parse_ident_cely(self):

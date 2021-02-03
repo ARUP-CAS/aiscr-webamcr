@@ -37,9 +37,7 @@ def edit(request, ident_cely):
 class ProjektListView(LoginRequiredMixin, ListView):
     model = Projekt
     paginate_by = 50  # if pagination is desired
-    queryset = Projekt.objects.select_related("historie").prefetch_related(
-        "historie__historie_set"
-    )
+    queryset = Projekt.objects.prefetch_related("katastry")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

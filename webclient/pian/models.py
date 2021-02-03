@@ -1,24 +1,10 @@
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
-from django.utils.translation import gettext as _
+from heslar.hesla import PRESNOST_CHOICES, TYP_PIAN_CHOICES
 from historie.models import HistorieVazby
 
 
 class Pian(models.Model):
-
-    TYP_PIAN_CHOICES = (
-        (1122, _("plocha")),
-        (1123, _("linie")),
-        (1124, _("bod")),
-    )
-
-    PRESNOST_CHOICES = (
-        (851, _("odchylka stovky metrů")),
-        (852, _("odchylka jednotky metrů")),
-        (853, _("odchylka desítky metrů")),
-        (854, _("poloha podle katastru")),
-    )
-
     presnost = models.IntegerField(choices=PRESNOST_CHOICES)
     typ = models.IntegerField(choices=TYP_PIAN_CHOICES)
     geom = pgmodels.GeometryField(null=False)

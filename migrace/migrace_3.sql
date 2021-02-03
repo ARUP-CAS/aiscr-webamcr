@@ -120,7 +120,7 @@ insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archi
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_navrzeni_zruseni, 7, odpovedny_pracovnik_navrhu_zruseni, historie from projekt where odpovedny_pracovnik_navrhu_zruseni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zruseni, 8, odpovedny_pracovnik_zruseni, historie from projekt where odpovedny_pracovnik_zruseni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_navrhu_archivace, 5, odpovedny_pracovnik_navrhu_archivace, historie from projekt where odpovedny_pracovnik_navrhu_archivace is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_zahajeni, 3, odpovedny_pracovnik_zahajeni, historie from projekt where odpovedny_pracovnik_zahajeni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_zahajeni, 3, odpovedny_pracovnik_zahajeni, historie from projekt where odpovedny_pracovnik_zahajeni is not null and datum_zapisu_zahajeni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_ukonceni, 4, odpovedny_pracovnik_ukonceni, historie from projekt where odpovedny_pracovnik_ukonceni is not null;
 -- COMMENT: vetsina projektu ma v datetime_born null
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datetime_born, 0, 598610, historie from projekt where datetime_born is not null;

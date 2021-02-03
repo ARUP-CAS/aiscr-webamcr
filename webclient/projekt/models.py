@@ -1,7 +1,10 @@
 import logging
 
 from core.constants import (
+    ARCHIVACE_PROJ,
+    NAVRZENI_KE_ZRUSENI_PROJ,
     OZNAMENI_PROJ,
+    PRIHLASENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     PROJEKT_STAV_OZNAMENY,
@@ -11,6 +14,11 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    RUSENI_PROJ,
+    SCHVALENI_OZNAMENI_PROJ,
+    UKONCENI_V_TERENU_PROJ,
+    UZAVRENI_PROJ,
+    VRACENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
 )
 from core.models import SouborVazby
@@ -18,11 +26,11 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext as _
+from heslar.hesla import TYP_PROJEKTU_CHOICES
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
-from uzivatel.models import User
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +49,6 @@ class Projekt(models.Model):
         (PROJEKT_STAV_ZRUSENY, "Zrušen"),
     )
 
-    TYP_PROJEKTU_CHOICES = (
-        (1125, _("průzkum")),
-        (1126, _("badatelský")),
-        (1127, _("záchranný")),
-    )
-
     stav = models.SmallIntegerField(choices=CHOICES, default=PROJEKT_STAV_OZNAMENY)
     typ_projektu = models.IntegerField(choices=TYP_PROJEKTU_CHOICES)
     lokalizace = models.TextField(blank=True, null=True)
@@ -55,12 +57,9 @@ class Projekt(models.Model):
     parcelni_cislo = models.TextField(blank=True, null=True)
     podnet = models.TextField(blank=True, null=True)
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    # vedouci_projektu = models.ForeignKey(
-    #   Osoba,
-    #   models.DO_NOTHING,
-    #   db_column='vedouci_projektu',
-    #   blank=True, null=True
-    #   )
+    vedouci_projektu = models.ForeignKey(
+        Osoba, models.DO_NOTHING, db_column="vedouci_projektu", blank=True, null=True
+    )
     datum_zahajeni = models.DateField(blank=True, null=True)
     datum_ukonceni = models.DateField(blank=True, null=True)
     planovane_zahajeni_text = models.TextField(blank=True, null=True)
@@ -84,7 +83,9 @@ class Projekt(models.Model):
         blank=True,
         null=True,
     )
-    # organizace = models.ForeignKey(Organizace, models.DO_NOTHING, db_column='organizace', blank=True, null=True)
+    organizace = models.ForeignKey(
+        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+    )
     oznaceni_stavby = models.TextField(blank=True, null=True)
     oznamovatel = models.ForeignKey(
         Oznamovatel,
@@ -117,29 +118,84 @@ class Projekt(models.Model):
             vazba=self.historie,
         ).save()
 
+    def set_schvaleny(self, user):
+        self.stav = PROJEKT_STAV_ZAPSANY
+        Historie(
+            typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+
     def set_zapsany(self):
         pass
 
-    def set_prihlaseny(self, organizace):
-        pass
+    def set_prihlaseny(
+        self, organizace, user, vedouci, pamatka_cislo, pamatka_popis, pamatka
+    ):
+        self.stav = PROJEKT_STAV_PRIHLASENY
+        self.organizace = organizace
+        self.kulturni_pamatka_cislo = pamatka_cislo
+        self.kulturni_pamatka_popis = pamatka_popis
+        self.kulturni_pamatka = pamatka
+        self.vedouci_projektu = vedouci
+        Historie(
+            typ_zmeny=PRIHLASENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
 
-    def set_zahajeny_v_terenu(self):
-        pass
+    def set_zahajeny_v_terenu(self, user, datum_zahajeni):
+        self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
+        self.datum_zahajeni = datum_zahajeni
+        Historie(
+            typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
 
-    def set_ukoncen_v_terenu(self):
-        pass
+    def set_ukoncen_v_terenu(self, user, datum_ukonceni):
+        self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
+        self.datum_ukonceni = datum_ukonceni
+        Historie(
+            typ_zmeny=UKONCENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
 
-    def set_uzavreny(self):
-        pass
+    def set_uzavreny(self, user):
+        self.stav = PROJEKT_STAV_UZAVRENY
+        Historie(
+            typ_zmeny=UZAVRENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
 
-    def set_archivovany(self):
-        pass
+    def set_archivovany(self, user):
+        self.stav = PROJEKT_STAV_ARCHIVOVANY
+        Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie)
 
-    def set_navrzen_ke_zruseni(self):
-        pass
+    def set_navrzen_ke_zruseni(self, user, poznamka):
+        self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+        Historie(
+            typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        )
 
-    def set_zruseny(self):
-        pass
+    def set_zruseny(self, user):
+        self.stav = PROJEKT_STAV_ZRUSENY
+        Historie(typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie)
+
+    def set_vracen(self, user, new_state, poznamka):
+        # TODO check if the new state is reachable from the old state???
+        self.stav = new_state
+        Historie(
+            typ_zmeny=VRACENI_PROJ,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        )
 
     def get_main_cadastre(self):
         main_cadastre = None
@@ -150,7 +206,7 @@ class Projekt(models.Model):
         logger.warning("Main cadastre of the project {0} not found.".format(str(self)))
         return main_cadastre
 
-    def get_zahajeni(self):
+    def get_transaction_zahajeni_date(self):
         if self.historie is not None:
             h = self.historie.historie_set.filter(typ_zmeny=ZAHAJENI_V_TERENU_PROJ)
             if len(h) > 0:

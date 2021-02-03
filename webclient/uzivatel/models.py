@@ -1,8 +1,8 @@
-from core.constants import PRISTUPNOST_CHOICES
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from heslar.hesla import PRISTUPNOST_CHOICES
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 
@@ -68,3 +68,16 @@ class Organizace(models.Model):
 
     class Meta:
         db_table = "organizace"
+
+
+class Osoba(models.Model):
+    jmeno = models.TextField()
+    prijmeni = models.TextField()
+    vypis = models.TextField()
+    vypis_cely = models.TextField()
+    rok_narozeni = models.IntegerField(blank=True, null=True)
+    rok_umrti = models.IntegerField(blank=True, null=True)
+    rodne_prijmeni = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "osoba"

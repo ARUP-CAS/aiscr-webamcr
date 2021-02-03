@@ -1,12 +1,8 @@
-from core.constants import (
-    AZ_STAV_ARCHIVOVANY,
-    AZ_STAV_ODESLANY,
-    AZ_STAV_ZAPSANY,
-    PRISTUPNOST_CHOICES,
-)
+from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
 from core.models import KomponentaVazby
 from django.db import models
 from django.utils.translation import gettext as _
+from heslar.hesla import PRISTUPNOST_CHOICES
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Pian
