@@ -17,7 +17,11 @@
 
 {% block content %}
 
-    <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
+    <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span>
+        <a href="{% url 'projekt:projekt_edit' projekt.ident_cely %}" class="btn btn-success btn-lg">
+        <span class="glyphicon glyphicon-edit"></span> {% trans "Edit" %}
+      </a>
+    </h1>
 
     <div class="card">
         <div class="card-header">{% trans "Detail" %}</div>
