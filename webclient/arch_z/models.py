@@ -1,8 +1,12 @@
 from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
 from core.models import KomponentaVazby
 from django.db import models
-from django.utils.translation import gettext as _
-from heslar.hesla import PRISTUPNOST_CHOICES
+from heslar.hesla import (
+    PRISTUPNOST_CHOICES,
+    SPECIFIKACE_DATA_CHOICES,
+    TYP_DJ_CHOICES,
+    TYP_LOKALITY_CHOICES,
+)
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Pian
@@ -48,16 +52,6 @@ class ArcheologickyZaznamKatastr(models.Model):
 
 
 class Akce(models.Model):
-
-    SPECIFIKACE_DATA_CHOICES = (
-        (876, _("v letech")),
-        (878, _("neznámo")),
-        (877, _("po roce")),
-        (879, _("kolem")),
-        (880, _("v roce")),
-        (881, _("přesně")),
-        (882, _("před rokem")),
-    )
 
     typ = models.CharField(max_length=1, blank=True, null=True)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
@@ -105,12 +99,6 @@ class Akce(models.Model):
 
 class Lokalita(models.Model):
 
-    TYP_LOKALITY_CHOICES = (
-        (1111, _("krajinný prvek")),
-        (1112, _("nemovitá památka")),
-        (1113, _("letecká archeologie")),
-    )
-
     druh = models.ForeignKey(
         Heslar, models.DO_NOTHING, db_column="druh", related_name="lokality_druhy"
     )
@@ -142,14 +130,6 @@ class Lokalita(models.Model):
 
 
 class DokumentacniJednotka(models.Model):
-
-    TYP_DJ_CHOICES = (
-        (1060, _("Část akce")),
-        (1061, _("Sonda")),
-        (1062, _("Nelokalizovaná akce")),
-        (1063, _("Celek akce")),
-        (1064, _("Lokalita")),
-    )
 
     typ = models.IntegerField(choices=TYP_DJ_CHOICES)
     nazev = models.TextField(blank=True, null=True)

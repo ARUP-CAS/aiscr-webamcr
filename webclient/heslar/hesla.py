@@ -7,9 +7,9 @@ PROJEKT_BADATELSKY_ID: Final = 1126
 PROJEKT_ZACHRANNY_ID: Final = 1127
 
 TYP_PROJEKTU_CHOICES = (
-    (1125, _("průzkum")),
-    (1126, _("badatelský")),
-    (1127, _("záchranný")),
+    (PROJEKT_PRUZKUM_ID, _("průzkum")),
+    (PROJEKT_BADATELSKY_ID, _("badatelský")),
+    (PROJEKT_ZACHRANNY_ID, _("záchranný")),
 )
 
 TYP_PIAN_CHOICES = (
@@ -135,4 +135,28 @@ TYP_VYSKOVY_BOD_CHOICES = (
     (1152, _("pravěk")),
     (1153, _("snížené podloží")),
     (1154, _("povrch sondy")),
+)
+
+SPECIFIKACE_DATA_CHOICES = (
+    (876, _("v letech")),
+    (878, _("neznámo")),
+    (877, _("po roce")),
+    (879, _("kolem")),
+    (880, _("v roce")),
+    (881, _("přesně")),
+    (882, _("před rokem")),
+)
+
+TYP_LOKALITY_CHOICES = (
+    (1111, _("krajinný prvek")),
+    (1112, _("nemovitá památka")),
+    (1113, _("letecká archeologie")),
+)
+
+TYP_DJ_CHOICES = (
+    (1060, _("Část akce")),
+    (1061, _("Sonda")),
+    (1062, _("Nelokalizovaná akce")),
+    (1063, _("Celek akce")),
+    (1064, _("Lokalita")),
 )
