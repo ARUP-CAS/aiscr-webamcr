@@ -11,9 +11,38 @@
 {% block content %}
 
     {% include "components/uvod.html" %}
-    <h2>{% trans "Krok 2/2" %}</h2>
 
-    Projekt {{ ident_cely }}
+    <h2>{% trans "Krok 1/2 - popis záměru" %}</h2>
+        <dl class="row">
+        <dt class="col-sm-3">{% trans "Projekt" %}</dt>
+        <dd class="col-sm-9">{{ confirm.ident_cely }}</dd>
+        <dt class="col-sm-3">{% trans "Ozanamovatel" %}</dt>
+        <dd class="col-sm-9">{{ confirm.oznamovatel }}</dd>
+        <dt class="col-sm-3">{% trans "Zástupce oznamovatele" %}</dt>
+        <dd class="col-sm-9">{{ confirm.zastupce }}</dd>
+        <dt class="col-sm-3">{% trans "Adresa" %}</dt>
+        <dd class="col-sm-9">{{ confirm.adresa }}</dd>
+        <dt class="col-sm-3">{% trans "Telefon" %}</dt>
+        <dd class="col-sm-9">{{ confirm.telefon }}</dd>
+        <dt class="col-sm-3">{% trans "Email" %}</dt>
+        <dd class="col-sm-9">{{ confirm.email }}</dd>
+        <dt class="col-sm-3">{% trans "Katastrální území" %}</dt>
+        <dd class="col-sm-9">{{ confirm.katastr }}</dd>
+        <dt class="col-sm-3">{% trans "Další katastry" %}</dt>
+        <dd class="col-sm-9">{{ confirm.dalsi_katastry }}</dd>
+        <dt class="col-sm-3">{% trans "Plánované zahájení" %}</dt>
+        <dd class="col-sm-9">{{ confirm.planovane_zahajeni }}</dd>
+        <dt class="col-sm-3">{% trans "Podnět" %}</dt>
+        <dd class="col-sm-9">{{ confirm.podnet }}</dd>
+        <dt class="col-sm-3">{% trans "Lokalizace" %}</dt>
+        <dd class="col-sm-9">{{ confirm.lokalizace }}</dd>
+        <dt class="col-sm-3">{% trans "Parcelní číslo" %}</dt>
+        <dd class="col-sm-9">{{ confirm.parcelni_cislo }}</dd>
+        <dt class="col-sm-3">{% trans "Označení stavby" %}</dt>
+        <dd class="col-sm-9">{{ confirm.oznaceni_stavby }}</dd>
+    </dl>
+    <h2>{% trans "Krok 2/2 - nahrání dokumentace" %}</h2>
+
     <form action="upload-file" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="fallback">
@@ -47,7 +76,7 @@
                         console.log("success > " + file.name);
                     });
                 },
-                params: {'projektID': "{{ ident_cely }}" }
+                params: {'projektID': "{{ ident_cely }}"}
             };
             var uploader = document.querySelector('#my-awesome-dropzone');
             var newDropzone = new Dropzone(uploader, dropzoneOptions);

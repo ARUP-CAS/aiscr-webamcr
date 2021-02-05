@@ -54,7 +54,23 @@ def index(request):
                     "Unknown cadastre location for point {}".format(str(p.geom))
                 )
 
-            context = {"ident_cely": p.ident_cely, "email": o.email}
+            confirmation = {
+                "oznamovatel": o.oznamovatel,
+                "zastupce": o.odpovedna_osoba,
+                "adresa": o.adresa,
+                "telefon": o.telefon,
+                "email": o.email,
+                "katastr": katastr,
+                "dalsi_katastry": dalsi_katastry,
+                "ident_cely": p.ident_cely,
+                "planovane_zahajeni": p.planovane_zahajeni,
+                "podnet": p.podnet,
+                "lokalizace": p.lokalizace,
+                "parcelni_cislo": p.parcelni_cislo,
+                "oznaceni_stavby": p.oznaceni_stavby,
+            }
+
+            context = {"confirm": confirmation}
             return render(request, "oznameni/index_2.html", context)
         else:
             logger.debug("One of the forms is not valid")
