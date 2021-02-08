@@ -77,61 +77,61 @@ alter table heslar drop constraint heslar_heslo_key;
 -- TODO pridat smazane constraints
 
 -- vlozeni nazvu heslaru
-insert into heslar_nazev(id, heslar) values
--- ('heslar_aktivity'),
-(2, 'heslar_areal_druha'),
-(3, 'heslar_areal_prvni'),
--- ('heslar_autorska_role'),
-(5, 'heslar_dohlednost'),
-(6, 'heslar_druh_lokality_druha'),
-(7, 'heslar_druh_lokality_prvni'),
-(8, 'heslar_format_dokumentu'),
-(9, 'heslar_jazyk_dokumentu'),
-(10, 'heslar_kulturni_pamatka'),
-(11, 'heslar_letiste'),
-(12, 'heslar_material_dokumentu'),
-(13, 'heslar_nahrada'),
-(14, 'heslar_nalezove_okolnosti'),
-(15, 'heslar_obdobi_druha'),
-(16, 'heslar_obdobi_prvni'),
-(17, 'heslar_objekt_druh'),
-(18, 'heslar_objekt_kategorie'),
-(19, 'heslar_pocasi'),
-(20, 'heslar_podnet'),
-(21, 'heslar_posudek'),
-(22, 'heslar_predmet_druh'),
-(23, 'heslar_predmet_kategorie'),
---('heslar_presnost'),
---('heslar_pristupnost'),
---('heslar_rada'),
---('heslar_specifikace_data'),
-(28, 'heslar_specifikace_objektu_druha'),
-(29, 'heslar_specifikace_objektu_prvni'),
-(30, 'heslar_specifikace_predmetu'),
-(31, 'heslar_tvar'),
-(32, 'heslar_typ_akce_druha'),
-(33, 'heslar_typ_akce_prvni'),
---('heslar_typ_dj'),
---('heslar_typ_dokumentu'),
---('heslar_typ_externiho_zdroje'),
---('heslar_typ_lokality'),
---('heslar_typ_nalezu'),
-(39, 'heslar_typ_organizace'),
---('heslar_typ_pian'),
---('heslar_typ_projektu'),
-(42, 'heslar_typ_sondy'),
-(43, 'heslar_typ_udalosti'),
---('heslar_typ_vyskovy_bod'),
-(45, 'heslar_ulozeni_originalu'),
-(46, 'heslar_zachovalost'),
-(47, 'heslar_zeme');
+insert into heslar_nazev(heslar) values
+('heslar_aktivity'),
+('heslar_areal_druha'),
+('heslar_areal_prvni'),
+('heslar_autorska_role'),
+('heslar_dohlednost'),
+('heslar_druh_lokality_druha'),
+('heslar_druh_lokality_prvni'),
+('heslar_format_dokumentu'),
+('heslar_jazyk_dokumentu'),
+('heslar_kulturni_pamatka'),
+('heslar_letiste'),
+('heslar_material_dokumentu'),
+('heslar_nahrada'),
+('heslar_nalezove_okolnosti'),
+('heslar_obdobi_druha'),
+('heslar_obdobi_prvni'),
+('heslar_objekt_druh'),
+('heslar_objekt_kategorie'),
+('heslar_pocasi'),
+('heslar_podnet'),
+('heslar_posudek'),
+('heslar_predmet_druh'),
+('heslar_predmet_kategorie'),
+('heslar_presnost'),
+('heslar_pristupnost'),
+('heslar_rada'),
+('heslar_specifikace_data'),
+('heslar_specifikace_objektu_druha'),
+('heslar_specifikace_objektu_prvni'),
+('heslar_specifikace_predmetu'),
+('heslar_tvar'),
+('heslar_typ_akce_druha'),
+('heslar_typ_akce_prvni'),
+('heslar_typ_dj'),
+('heslar_typ_dokumentu'),
+('heslar_typ_externiho_zdroje'),
+('heslar_typ_lokality'),
+('heslar_typ_nalezu'),
+('heslar_typ_organizace'),
+('heslar_typ_pian'),
+('heslar_typ_projektu'),
+('heslar_typ_sondy'),
+('heslar_typ_udalosti'),
+('heslar_typ_vyskovy_bod'),
+('heslar_ulozeni_originalu'),
+('heslar_zachovalost'),
+('heslar_zeme');
 
 -- vlozeni hodnot COMMENT: v heslari_pristupnost se mapuje jinak vyznam -> heslo
 insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka)
--- select id, 1 as nazev_heslare, nazev, en, poradi, zkratka from heslar_aktivity order by puvodni_id     union
+( select id, 1 as nazev_heslare, nazev, en, poradi, zkratka from heslar_aktivity order by id )    union
 ( select id, 2 as nazev_heslare, nazev, en, poradi, null from heslar_areal_druha order by id )               union
 ( select id, 3 as nazev_heslare, nazev, en, poradi, null from heslar_areal_prvni order by id )              union
--- select id, 4 as nazev_heslare, nazev, en, null, zkratka from heslar_autorska_role              union
+select id, 4 as nazev_heslare, nazev, en, null, zkratka from heslar_autorska_role order by id )              union
 ( select id, 5 as nazev_heslare, nazev, en, poradi, null from heslar_dohlednost order by id)               union
 ( select id, 6 as nazev_heslare, nazev, en, poradi, null from heslar_druh_lokality_druha order by id)        union
 ( select id, 7 as nazev_heslare, nazev, en, poradi, null from heslar_druh_lokality_prvni order by id)        union
@@ -151,30 +151,30 @@ insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka)
 ( select id, 21 as nazev_heslare, nazev, en, poradi, null from heslar_posudek order by id)               union
 ( select id, 22 as nazev_heslare, nazev, en, poradi, null from heslar_predmet_druh  order by id)            union
 ( select id, 23 as nazev_heslare, nazev, en, poradi, null from heslar_predmet_kategorie order by id)        union
--- select id, 24 as nazev_heslare, null, en, null, nazev from heslar_presnost                   union
--- select id, 25 as nazev_heslare, vyznam, en, null, nazev from heslar_pristupnost                union
--- select id, 26 as nazev_heslare, vysvetlivka, en, null, nazev from heslar_rada                       union
--- select id, 27 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_data           union
+( select id, 24 as nazev_heslare, null, en, null, nazev from heslar_presnost order by id )                   union
+( select id, 25 as nazev_heslare, vyznam, en, null, nazev from heslar_pristupnost order by id )               union
+( select id, 26 as nazev_heslare, vysvetlivka, en, null, nazev from heslar_rada order by id )                      union
+( select id, 27 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_data order by id )          union
 ( select id, 28 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_objektu_druha order by id ) union
 ( select id, 29 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_objektu_prvni order by id)  union
 ( select id, 30 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_predmetu order by id )      union
 ( select id, 31 as nazev_heslare, nazev, en, poradi, null from heslar_tvar  order by id)                      union
 ( select id, 32 as nazev_heslare, nazev, en, poradi, null from heslar_typ_akce_druha order by id  )           union
 ( select id, 33 as nazev_heslare, nazev, en, poradi, null from heslar_typ_akce_prvni  order by id )           union
--- select id, 34 as nazev_heslare, nazev, en, poradi, null from heslar_typ_dj                     union
--- select id, 35 as nazev_heslare, nazev, en, poradi, null from heslar_typ_dokumentu              union
--- select id, 36 as nazev_heslare, nazev, en, null, vysvetlivka from heslar_typ_externiho_zdroje       union
--- select id, 37 as nazev_heslare, nazev, en, poradi, nazev_id from heslar_typ_lokality               union
--- select id, 38 as nazev_heslare, null, en, null, nazev from heslar_typ_nalezu                 union
+( select id, 34 as nazev_heslare, nazev, en, poradi, null from heslar_typ_dj order by id )                     union
+( select id, 35 as nazev_heslare, nazev, en, poradi, null from heslar_typ_dokumentu order by id )             union
+( select id, 36 as nazev_heslare, nazev, en, null, vysvetlivka from heslar_typ_externiho_zdroje order by id )      union
+( select id, 37 as nazev_heslare, nazev, en, poradi, nazev_id from heslar_typ_lokality order by id )              union
+( select id, 38 as nazev_heslare, null, en, null, nazev from heslar_typ_nalezu order by id )                union
 ( select id, 39 as nazev_heslare, nazev, en, poradi, null from heslar_typ_organizace order by id )            union
--- select id, 40 as nazev_heslare, nazev, en, null, null from heslar_typ_pian                   union
--- select id, 41 as nazev_heslare, nazev, en, poradi, null from heslar_typ_projektu               union
+( select id, 40 as nazev_heslare, nazev, en, null, null from heslar_typ_pian order by id )                  union
+( select id, 41 as nazev_heslare, nazev, en, poradi, null from heslar_typ_projektu order by id )              union
 ( select id, 42 as nazev_heslare, nazev, en, poradi, null from heslar_typ_sondy  order by id  )               union
 ( select id, 43 as nazev_heslare, nazev, en, poradi, null from heslar_typ_udalosti order by id   )            union
--- select id, 44 as nazev_heslare, nazev, en, poradi, null from heslar_typ_vyskovy_bod            union
+( select id, 44 as nazev_heslare, nazev, en, poradi, null from heslar_typ_vyskovy_bod order by id )           union
 ( select id, 45 as nazev_heslare, nazev, en, poradi, null from heslar_ulozeni_originalu  order by id )        union
 ( select id, 46 as nazev_heslare, null, en, poradi, nazev from heslar_zachovalost order by id )               union
-( select id, 47 as nazev_heslare, nazev, nazev_en, poradi, kod from heslar_zeme);
+( select id, 47 as nazev_heslare, nazev, nazev_en, poradi, kod from heslar_zeme order by id );
 
 -- Pridani popisu u nasledujicich heslaru
 -- heslar_areal_druha
@@ -190,9 +190,9 @@ update heslar set popis = sel.vysvetlivka from (select id, vysvetlivka from hesl
 -- heslar_obdobi_druha
 update heslar set popis = sel.napoveda from (select id, napoveda from heslar_obdobi_druha where napoveda != '') sel where puvodni_id = sel.id and nazev_heslare = 15;
 -- heslar_presnost
--- update heslar set popis = sel.vysvetlivka from (select id, vysvetlivka from heslar_presnost where vysvetlivka != '') sel where puvodni_id = sel.id and nazev_heslare = 24;
+update heslar set popis = sel.vysvetlivka from (select id, vysvetlivka from heslar_presnost where vysvetlivka != '') sel where puvodni_id = sel.id and nazev_heslare = 24;
 -- heslar_specifikace_data
--- update heslar set popis = sel.poznamka from (select id, poznamka from heslar_specifikace_data where poznamka != '') sel where puvodni_id = sel.id and nazev_heslare = 27;
+update heslar set popis = sel.poznamka from (select id, poznamka from heslar_specifikace_data where poznamka != '') sel where puvodni_id = sel.id and nazev_heslare = 27;
 -- heslar_tvar
 update heslar set popis = sel.vysvetlivka from (select id, vysvetlivka from heslar_tvar where vysvetlivka != '') sel where puvodni_id = sel.id and nazev_heslare = 31;
 -- heslar_typ_akce_druha
@@ -253,8 +253,8 @@ insert into heslar_hierarchie(heslo_nadrazene, heslo_podrazene, typ) select hes.
 
 --1. akce.specifikace_data -> heslar (heslar_specifikace_data = 27)
 alter table akce drop constraint akce_specifikace_data_fkey;
---update akce set specifikace_data = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 27) sel where specifikace_data = sel.puvodni;
---alter table akce add constraint akce_specifikace_data_fkey foreign key (specifikace_data) references heslar(id);
+update akce set specifikace_data = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 27) sel where specifikace_data = sel.puvodni;
+alter table akce add constraint akce_specifikace_data_fkey foreign key (specifikace_data) references heslar(id);
 --2. akce.hlavni_typ -> heslar (heslar_typ_akce_druha = 32)
 alter table akce drop constraint akce_hlavni_typ_fkey;
 update akce set hlavni_typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 32) sel where hlavni_typ = sel.puvodni;
@@ -265,8 +265,8 @@ update akce set vedlejsi_typ = sel.new_id from (select id as new_id, puvodni_id 
 alter table akce add constraint akce_vedlejsi_typ_fkey foreign key (vedlejsi_typ) references heslar(id);
 --4. akce.pristupnost -> heslar (heslar_pristupnost = 25)
 alter table akce drop constraint akce_pristupnost_fkey;
---update akce set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
---alter table akce add constraint akce_pristupnost_fkey foreign key (pristupnost) references heslar(id);
+update akce set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
+alter table akce add constraint akce_pristupnost_fkey foreign key (pristupnost) references heslar(id);
 --5. adb.typ_sondy -> heslar (heslar_typ_sondy = 42)
 alter table adb drop constraint archeologicky_dokumentacni_bod_typ_sondy_fkey;
 update adb set typ_sondy = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 42) sel where typ_sondy = sel.puvodni;
@@ -277,16 +277,16 @@ update adb set podnet = sel.new_id from (select id as new_id, puvodni_id as puvo
 alter table adb add constraint adb_podnet_fkey foreign key (podnet) references heslar(id);
 --7. dokument.rada -> heslar (heslar_rada = 26)
 alter table dokument drop constraint dokument_rada_fkey;
---update dokument set rada = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 26) sel where rada = sel.puvodni;
---alter table dokument add constraint dokument_rada_fkey foreign key (rada) references heslar(id);
+update dokument set rada = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 26) sel where rada = sel.puvodni;
+alter table dokument add constraint dokument_rada_fkey foreign key (rada) references heslar(id);
 --8. dokument.typ_dokumentu -> heslar (heslar_typ_dokumentu = 35)
 alter table dokument drop constraint dokument_typ_dokumentu_fkey;
---update dokument set typ_dokumentu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 35) sel where typ_dokumentu = sel.puvodni;
---alter table dokument add constraint dokument_typ_dokumentu_fkey foreign key (typ_dokumentu) references heslar(id);
+update dokument set typ_dokumentu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 35) sel where typ_dokumentu = sel.puvodni;
+alter table dokument add constraint dokument_typ_dokumentu_fkey foreign key (typ_dokumentu) references heslar(id);
 --9. dokument.pristupnost -> heslar (heslar_pristupnost = 25)
 alter table dokument drop constraint dokument_pristupnost_fkey;
---update dokument set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
---alter table dokument add constraint dokument_pristupnost_fkey foreign key (pristupnost) references heslar(id);
+update dokument set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
+alter table dokument add constraint dokument_pristupnost_fkey foreign key (pristupnost) references heslar(id);
 --10. dokument.material_originalu -> heslar (heslar_material_dokumentu = 12)
 alter table dokument drop constraint dokument_material_originalu_fkey;
 update dokument set material_originalu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 12) sel where material_originalu = sel.puvodni;
@@ -325,24 +325,24 @@ update dokument_posudek set posudek = sel.new_id from (select id as new_id, puvo
 alter table dokument_posudek add constraint dokument_posudek_posudek_fkey foreign key (posudek) references heslar(id);
 --19. dokumentacni_jednotka.typ -> heslar (heslar_typ_dj = 34)
 alter table dokumentacni_jednotka drop constraint dj_typ_fkey;
---update dokumentacni_jednotka set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 34) sel where typ = sel.puvodni;
-a--lter table dokumentacni_jednotka add constraint dokumentacni_jednotka_typ_fkey foreign key (typ) references heslar(id);
+update dokumentacni_jednotka set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 34) sel where typ = sel.puvodni;
+alter table dokumentacni_jednotka add constraint dokumentacni_jednotka_typ_fkey foreign key (typ) references heslar(id);
 --20. externi_zdroj.typ -> heslar  (heslar_typ_externiho_zdroje = 36)
 alter table externi_zdroj drop constraint externi_zdroj_typ_fkey;
---update externi_zdroj set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 36) sel where typ = sel.puvodni;
---alter table externi_zdroj add constraint externi_zdroj_typ_fkey foreign key (typ) references heslar(id);
+update externi_zdroj set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 36) sel where typ = sel.puvodni;
+alter table externi_zdroj add constraint externi_zdroj_typ_fkey foreign key (typ) references heslar(id);
 --21. externi_zdroj.typ_dokumentu -> heslar (heslar_typ_dokumentu = 35)
 alter table externi_zdroj drop constraint externi_zdroj_typ_dokumentu_fkey;
---update externi_zdroj set typ_dokumentu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 35) sel where typ_dokumentu = sel.puvodni;
---alter table externi_zdroj add constraint externi_zdroj_typ_dokumentu_fkey foreign key (typ_dokumentu) references heslar(id);
+update externi_zdroj set typ_dokumentu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 35) sel where typ_dokumentu = sel.puvodni;
+alter table externi_zdroj add constraint externi_zdroj_typ_dokumentu_fkey foreign key (typ_dokumentu) references heslar(id);
 --22. heslar_dokument_typ_material_rada.dokument_rada -> heslar (heslar_rada = 26)
 alter table heslar_dokument_typ_material_rada drop constraint heslar_typ_material_rada_heslar_rada_id_fkey;
---update heslar_dokument_typ_material_rada set dokument_rada = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 26) sel where dokument_rada = sel.puvodni;
---alter table heslar_dokument_typ_material_rada add constraint heslar_dokument_typ_material_rada_dokument_rada_fkey foreign key (dokument_rada) references heslar(id);
+update heslar_dokument_typ_material_rada set dokument_rada = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 26) sel where dokument_rada = sel.puvodni;
+alter table heslar_dokument_typ_material_rada add constraint heslar_dokument_typ_material_rada_dokument_rada_fkey foreign key (dokument_rada) references heslar(id);
 --23. heslar_dokument_typ_material_rada.dokument_typ -> heslar (heslar_typ_dokumentu = 35)
 alter table heslar_dokument_typ_material_rada drop constraint heslar_typ_material_rada_heslar_typ_dokumentu_id_fkey;
---update heslar_dokument_typ_material_rada set dokument_typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 35) sel where dokument_typ = sel.puvodni;
---alter table heslar_dokument_typ_material_rada add constraint heslar_dokument_typ_material_rada_dokument_typ_fkey foreign key (dokument_typ) references heslar(id);
+update heslar_dokument_typ_material_rada set dokument_typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 35) sel where dokument_typ = sel.puvodni;
+alter table heslar_dokument_typ_material_rada add constraint heslar_dokument_typ_material_rada_dokument_typ_fkey foreign key (dokument_typ) references heslar(id);
 --24. heslar_dokument_typ_material_rada.dokument_material -> heslar (heslar_material_dokumentu = 12)
 alter table heslar_dokument_typ_material_rada drop constraint heslar_typ_material_rada_heslar_material_dokumentu_id_fkey;
 update heslar_dokument_typ_material_rada set dokument_material = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 12) sel where dokument_material = sel.puvodni;
@@ -357,13 +357,13 @@ update komponenta set areal = sel.new_id from (select id as new_id, puvodni_id a
 alter table komponenta add constraint komponenta_areal_fkey foreign key (areal) references heslar(id);
 --27. komponenta_aktivita.aktivita -> heslar (heslar_aktivity = 1)
 alter table komponenta_aktivita drop constraint komponenta_aktivita_aktivita_fk;
---alter table komponenta_aktivita rename column aktivita to aktivita_old;
---alter table komponenta_aktivita add column aktivita integer;
---update komponenta_aktivita set aktivita = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 1) sel where aktivita_old = sel.puvodni;
---alter table komponenta_aktivita add constraint komponenta_aktivita_aktivita_fkey foreign key (aktivita) references heslar(id);
+alter table komponenta_aktivita rename column aktivita to aktivita_old;
+alter table komponenta_aktivita add column aktivita integer;
+update komponenta_aktivita set aktivita = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 1) sel where aktivita_old = sel.puvodni;
+alter table komponenta_aktivita add constraint komponenta_aktivita_aktivita_fkey foreign key (aktivita) references heslar(id);
 alter table komponenta_aktivita drop constraint komponenta_aktivita_pkey;
 alter table komponenta_aktivita add constraint komponenta_aktivita_pkey primary key (komponenta, aktivita);
---alter table komponenta_aktivita drop column aktivita_old;
+alter table komponenta_aktivita drop column aktivita_old;
 --28. let.letiste_start -> heslar (heslar_letiste = 11)
 alter table let drop constraint let_letiste_start_fkey;
 update let set letiste_start = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 11) sel where letiste_start = sel.puvodni;
@@ -386,12 +386,12 @@ update lokalita set druh = sel.new_id from (select id as new_id, puvodni_id as p
 alter table lokalita add constraint lokalita_druh_fkey foreign key (druh) references heslar(id);
 --33. lokalita.typ_lokality -> heslar (heslar_typ_lokality = 37)
 alter table lokalita drop constraint lokalita_typ_lokality_fkey;
---update lokalita set typ_lokality = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 37) sel where typ_lokality = sel.puvodni;
---alter table lokalita add constraint lokalita_typ_lokality_fkey foreign key (typ_lokality) references heslar(id);
+update lokalita set typ_lokality = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 37) sel where typ_lokality = sel.puvodni;
+alter table lokalita add constraint lokalita_typ_lokality_fkey foreign key (typ_lokality) references heslar(id);
 --34. lokalita.pristupnost -> heslar (heslar_pristupnost = 25)
 alter table lokalita drop constraint lokalita_pristupnost_fkey;
---update lokalita set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
---alter table lokalita add constraint lokalita_pristupnost_fkey foreign key (pristupnost) references heslar(id);
+update lokalita set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
+alter table lokalita add constraint lokalita_pristupnost_fkey foreign key (pristupnost) references heslar(id);
 --35. nalez.druh_nalezu -> heslar (COMMENT: MIGRACE momentalne ukazuje na 2 ruzne heslare, je potreba podle typu nalezu namapovat na spravny zaznam v novem heslari) (heslar_predmet_druh = 22, heslar_objekt_druh = 17)
 update nalez set druh_nalezu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 22) sel where druh_nalezu = sel.puvodni;
 update nalez set druh_nalezu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 17) sel where druh_nalezu = sel.puvodni;
@@ -408,20 +408,20 @@ update organizace set typ_organizace = sel.new_id from (select id as new_id, puv
 alter table organizace add constraint organizace_typ_organizace_fkey foreign key (typ_organizace) references heslar(id);
 --38. organizace.zverejneni_pristupnost -> heslar (heslar_pristupnost = 25)
 alter table organizace drop constraint organizace_published_accessibility_fkey;
---update organizace set zverejneni_pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where zverejneni_pristupnost = sel.puvodni;
---alter table organizace add constraint organizace_zverejneni_pristupnost_fkey foreign key (zverejneni_pristupnost) references heslar(id);
+update organizace set zverejneni_pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where zverejneni_pristupnost = sel.puvodni;
+alter table organizace add constraint organizace_zverejneni_pristupnost_fkey foreign key (zverejneni_pristupnost) references heslar(id);
 --39. pian.presnost -> heslar (heslar_presnost = 24)
 alter table pian drop constraint pian_presnost_fkey;
---update pian set presnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 24) sel where presnost = sel.puvodni;
---alter table pian add constraint pian_presnost_fkey foreign key (presnost) references heslar(id);
+update pian set presnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 24) sel where presnost = sel.puvodni;
+alter table pian add constraint pian_presnost_fkey foreign key (presnost) references heslar(id);
 --40. pian.typ -> heslar (heslar_typ_pian = 40)
 alter table pian drop constraint pian_typ_fkey;
---update pian set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 40) sel where typ = sel.puvodni;
---alter table pian add constraint pian_typ_fkey foreign key (typ) references heslar(id);
+update pian set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 40) sel where typ = sel.puvodni;
+alter table pian add constraint pian_typ_fkey foreign key (typ) references heslar(id);
 --41. projekt.typ_projektu -> heslar (heslar_typ_projektu = 41)
 alter table projekt drop constraint projekt_typ_projektu_fkey;
---update projekt set typ_projektu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 41) sel where typ_projektu = sel.puvodni;
---alter table projekt add constraint projekt_typ_projektu_fkey foreign key (typ_projektu) references heslar(id);
+update projekt set typ_projektu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 41) sel where typ_projektu = sel.puvodni;
+alter table projekt add constraint projekt_typ_projektu_fkey foreign key (typ_projektu) references heslar(id);
 --42. projekt.kulturni_pamatka -> heslar (heslar_kulturni_pamatka = 10)
 alter table projekt drop constraint projekt_kulturni_pamatka_fkey;
 update projekt set kulturni_pamatka = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 10) sel where kulturni_pamatka = sel.puvodni;
@@ -432,8 +432,8 @@ update samostatny_nalez set okolnosti = sel.new_id from (select id as new_id, pu
 alter table samostatny_nalez add constraint samostatny_nalez_okolnosti_fkey foreign key (okolnosti) references heslar(id);
 --44. samostatny_nalez.pristupnost -> heslar (heslar_pristupnost = 25)
 alter table samostatny_nalez drop constraint samostany_nalez_pristupnost_fkey;
---update samostatny_nalez set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
---alter table samostatny_nalez add constraint samostatny_nalez_pristupnost_fkey foreign key (pristupnost) references heslar(id);
+update samostatny_nalez set pristupnost = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 25) sel where pristupnost = sel.puvodni;
+alter table samostatny_nalez add constraint samostatny_nalez_pristupnost_fkey foreign key (pristupnost) references heslar(id);
 --45. samostatny_nalez.obdobi -> heslar (heslar_obdobi_druha = 15)
 alter table samostatny_nalez drop constraint samostany_nalez_obdobi_fkey;
 update samostatny_nalez set obdobi = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 15) sel where obdobi = sel.puvodni;
@@ -452,5 +452,5 @@ update tvar set tvar = sel.new_id from (select id as new_id, puvodni_id as puvod
 alter table tvar add constraint tvar_tvar_fkey foreign key (tvar) references heslar(id);
 --49. vyskovy_bod.typ -> heslar (heslar_typ_vyskovy_bod = 44)
 alter table vyskovy_bod drop constraint vyskovy_bod_typ_fkey;
---update vyskovy_bod set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 44) sel where typ = sel.puvodni;
---alter table vyskovy_bod add constraint vyskovy_bod_typ_fkey foreign key (typ) references heslar(id);
+update vyskovy_bod set typ = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 44) sel where typ = sel.puvodni;
+alter table vyskovy_bod add constraint vyskovy_bod_typ_fkey foreign key (typ) references heslar(id);
