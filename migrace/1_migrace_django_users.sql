@@ -72,8 +72,5 @@ alter table auth_user add constraint auth_user_osoba_fkey foreign key (osoba) re
 
 -- TODO: migrace osob na zaklade jmena a prijmeni
 
--- staff admini
-update auth_user set is_staff = true, is_superuser = true where email = 'juraj.skvarla@spacesystems.cz';
-
 -- TODO Na konec smazani tabulky uzivatel
 --drop table uzivatel;

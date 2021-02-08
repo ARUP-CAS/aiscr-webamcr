@@ -93,7 +93,7 @@ update historie h set typ_zmeny = 4 where id in (select his.id as hid from histo
 -- Odstraneni tranzakce AKTUALIZACE z historie samostatnych nalezu
 delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny = 8);
 -- 6 a 7 u SN bude 5
-update historie h set typ_zmeny = 5 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and (his.typ_zmeny=7 or hist.typ_zmeny=6));
+update historie h set typ_zmeny = 5 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and (his.typ_zmeny=7 or his.typ_zmeny=6));
 
 -- Migrace integer IDcek transakci na text
 alter table historie add column typ_zmeny_text text;
