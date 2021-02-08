@@ -3,7 +3,6 @@ from core.constants import D_STAV_ARCHIVOVANY, D_STAV_ODESLANY, D_STAV_ZAPSANY
 from core.models import KomponentaVazby, SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
-from heslar.hesla import PRISTUPNOST_CHOICES, RADA_CHOICES, TYP_DOKUMENTU_CHOICES
 from heslar.models import Heslar
 from historie.models import HistorieVazby
 from uzivatel.models import Organizace
@@ -18,13 +17,28 @@ class Dokument(models.Model):
     )
 
     # let = models.ForeignKey('Let', models.DO_NOTHING, db_column='let', blank=True, null=True)
-    rada = models.IntegerField(choices=RADA_CHOICES)
-    typ_dokumentu = models.IntegerField(choices=TYP_DOKUMENTU_CHOICES)
+    rada = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="rada",
+        related_name="dokumenty_rady",
+    )
+    typ_dokumentu = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="typ_dokumentu",
+        related_name="dokumenty_typu_dokumentu",
+    )
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace"
     )
     rok_vzniku = models.IntegerField(blank=True, null=True)
-    pristupnost = models.IntegerField(choices=PRISTUPNOST_CHOICES)
+    pristupnost = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="pristupnost",
+        related_name="dokumenty_pristupnosti",
+    )
     material_originalu = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,

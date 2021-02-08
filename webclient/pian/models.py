@@ -1,12 +1,22 @@
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
-from heslar.hesla import PRESNOST_CHOICES, TYP_PIAN_CHOICES
+from heslar.models import Heslar
 from historie.models import HistorieVazby
 
 
 class Pian(models.Model):
-    presnost = models.IntegerField(choices=PRESNOST_CHOICES)
-    typ = models.IntegerField(choices=TYP_PIAN_CHOICES)
+    presnost = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="presnost",
+        related_name="piany_presnosti",
+    )
+    typ = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="typ",
+        related_name="piany_typu",
+    )
     geom = pgmodels.GeometryField(null=False)
     buffer = pgmodels.GeometryField(null=False)
     zm10 = models.ForeignKey(

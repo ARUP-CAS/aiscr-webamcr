@@ -1,12 +1,6 @@
 from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
 from core.models import KomponentaVazby
 from django.db import models
-from heslar.hesla import (
-    PRISTUPNOST_CHOICES,
-    SPECIFIKACE_DATA_CHOICES,
-    TYP_DJ_CHOICES,
-    TYP_LOKALITY_CHOICES,
-)
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Pian
@@ -23,7 +17,13 @@ class ArcheologickyZaznam(models.Model):
     )
 
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
-    pristupnost = models.IntegerField(choices=PRISTUPNOST_CHOICES, default=857)
+    pristupnost = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="pristupnost",
+        related_name="zaznamy_pristupnosti",
+        default=857,
+    )
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
     historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column="historie")
@@ -55,7 +55,12 @@ class Akce(models.Model):
 
     typ = models.CharField(max_length=1, blank=True, null=True)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
-    specifikace_data = models.IntegerField(choices=SPECIFIKACE_DATA_CHOICES)
+    specifikace_data = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="specifikace_data",
+        related_name="akce_specifikace_data",
+    )
     hlavni_typ = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -104,7 +109,12 @@ class Lokalita(models.Model):
     )
     popis = models.TextField(blank=True, null=True)
     nazev = models.TextField()
-    typ_lokality = models.IntegerField(choices=TYP_LOKALITY_CHOICES)
+    typ_lokality = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="typ_lokality",
+        related_name="lokality_typu",
+    )
     poznamka = models.TextField(blank=True, null=True)
     final_cj = models.BooleanField(default=False)
     zachovalost = models.ForeignKey(
@@ -131,7 +141,12 @@ class Lokalita(models.Model):
 
 class DokumentacniJednotka(models.Model):
 
-    typ = models.IntegerField(choices=TYP_DJ_CHOICES)
+    typ = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="typ",
+        related_name="dokumentacni_jednotka_typy",
+    )
     nazev = models.TextField(blank=True, null=True)
     negativni_jednotka = models.BooleanField()
     ident_cely = models.TextField(unique=True, blank=True, null=True)

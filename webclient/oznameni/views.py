@@ -11,7 +11,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from heslar import hesla
+from heslar.hesla import PROJEKT_ZACHRANNY_ID
+from heslar.models import Heslar
 from projekt.models import Projekt, ProjektKatastr
 from uzivatel.models import User
 
@@ -32,7 +33,7 @@ def index(request):
             logger.debug("Form is valid")
             o = form_ozn.save()
             p = form_projekt.save(commit=False)
-            p.typ_projektu = hesla.PROJEKT_ZACHRANNY_ID
+            p.typ_projektu = Heslar.objects.get(pk=PROJEKT_ZACHRANNY_ID)
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
             p.geom = Point(
                 float(request.POST.get("longitude")),

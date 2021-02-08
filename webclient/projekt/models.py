@@ -26,7 +26,6 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.shortcuts import get_object_or_404
-from heslar.hesla import TYP_PROJEKTU_CHOICES
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
@@ -50,7 +49,12 @@ class Projekt(models.Model):
     )
 
     stav = models.SmallIntegerField(choices=CHOICES, default=PROJEKT_STAV_OZNAMENY)
-    typ_projektu = models.IntegerField(choices=TYP_PROJEKTU_CHOICES)
+    typ_projektu = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="typ_projektu",
+        related_name="projekty_typu",
+    )
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
     kulturni_pamatka_popis = models.TextField(blank=True, null=True)
@@ -205,13 +209,6 @@ class Projekt(models.Model):
                 return pk.katastr
         logger.warning("Main cadastre of the project {0} not found.".format(str(self)))
         return main_cadastre
-
-    def get_transaction_zahajeni_date(self):
-        if self.historie is not None:
-            h = self.historie.historie_set.filter(typ_zmeny=ZAHAJENI_V_TERENU_PROJ)
-            if len(h) > 0:
-                return h[0].datum_zmeny
-        return None
 
     def parse_ident_cely(self):
         year = None
