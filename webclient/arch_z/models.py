@@ -85,7 +85,6 @@ class Akce(models.Model):
     datum_zahajeni_v = models.DateField(blank=True, null=True)
     datum_ukonceni_v = models.DateField(blank=True, null=True)
     je_nz = models.BooleanField(default=False)
-    final_cj = models.BooleanField(default=False)
     projekt = models.ForeignKey(
         Projekt, models.DO_NOTHING, db_column="projekt", blank=True, null=True
     )
@@ -117,7 +116,6 @@ class Lokalita(models.Model):
         related_name="lokality_typu",
     )
     poznamka = models.TextField(blank=True, null=True)
-    final_cj = models.BooleanField(default=False)
     zachovalost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,

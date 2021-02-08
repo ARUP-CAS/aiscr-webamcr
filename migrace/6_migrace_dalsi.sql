@@ -180,3 +180,7 @@ alter table archeologicky_zaznam alter column stav_stary drop not null;
 -- V heslari typ_nalezu chybi heslo
 update heslar set heslo = zkratka where nazev_heslare = 38;
 update heslar set heslo = popis where nazev_heslare=24;
+
+-- nepotrebne pole ktere lze odvodit z IDENT_CELY Issue 16
+alter table lokalita drop column final_cj;
+alter table akce drop column final_cj;
