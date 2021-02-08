@@ -131,7 +131,7 @@ insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka)
 ( select id, 1 as nazev_heslare, nazev, en, poradi, zkratka from heslar_aktivity order by id )    union
 ( select id, 2 as nazev_heslare, nazev, en, poradi, null from heslar_areal_druha order by id )               union
 ( select id, 3 as nazev_heslare, nazev, en, poradi, null from heslar_areal_prvni order by id )              union
-select id, 4 as nazev_heslare, nazev, en, null, zkratka from heslar_autorska_role order by id )              union
+( select id, 4 as nazev_heslare, nazev, en, null, zkratka from heslar_autorska_role order by id )              union
 ( select id, 5 as nazev_heslare, nazev, en, poradi, null from heslar_dohlednost order by id)               union
 ( select id, 6 as nazev_heslare, nazev, en, poradi, null from heslar_druh_lokality_druha order by id)        union
 ( select id, 7 as nazev_heslare, nazev, en, poradi, null from heslar_druh_lokality_prvni order by id)        union
