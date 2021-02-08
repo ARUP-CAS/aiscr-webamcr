@@ -176,3 +176,7 @@ alter table historie alter typ_zmeny_old drop not null;
 
 -- COMMENT: tenhle sloupec tam nemusi byt, je to jen pro migraci
 alter table archeologicky_zaznam alter column stav_stary drop not null;
+
+-- V heslari typ_nalezu chybi heslo
+update heslar set heslo = zkratka where nazev_heslare = 38;
+update heslar set heslo = popis where nazev_heslare=24;

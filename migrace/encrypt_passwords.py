@@ -40,7 +40,7 @@ def encrypt_passwords(cursor, connection):
 
 try:
     connection = psycopg2.connect(
-        user="", password="", host="", port="5432", database="prod_zaloha"
+        user="", password="", host="192.168.254.21", port="5432", database="prod_zaloha"
     )
 
     cursor = connection.cursor()

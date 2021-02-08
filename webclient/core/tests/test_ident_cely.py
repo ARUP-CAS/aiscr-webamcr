@@ -9,7 +9,11 @@ from core.ident_cely import (
 )
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
-from heslar.hesla import PROJEKT_ZACHRANNY_ID
+from heslar.hesla import (
+    PRESNOST_DESITKY_METRU_ID,
+    TYP_PIAN_PLOCHA_ID,
+    TYP_PROJEKTU_ZACHRANNY_ID,
+)
 from heslar.models import Heslar, RuianKatastr
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt, ProjektKatastr
@@ -35,8 +39,8 @@ class IdentTests(TestCase):
         kl.save()
         pian = Pian(
             id=1,
-            presnost=Heslar.objects.get(pk=854),
-            typ=Heslar.objects.get(pk=1122),
+            presnost=Heslar.objects.get(pk=PRESNOST_DESITKY_METRU_ID),
+            typ=Heslar.objects.get(pk=TYP_PIAN_PLOCHA_ID),
             geom=GEOSGeometry("0101000020E610000042D35729E77F3040234F91EAF9804840"),
             buffer=GEOSGeometry(
                 "0106000020E610000001000000010300000001000000130000006E6F8E0B8E84304091B2E4D544"
@@ -59,7 +63,7 @@ class IdentTests(TestCase):
     def test_get_permanent_project_ident(self):
         p = Projekt(
             stav=0,
-            typ_projektu=Heslar.objects.get(pk=PROJEKT_ZACHRANNY_ID),
+            typ_projektu=Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID),
         )
         p.save()
         pk = ProjektKatastr(
@@ -88,7 +92,7 @@ class IdentTests(TestCase):
 
     def test_get_ident_consecutive_number(self):
         # Insert some projects to the database
-        zachranny_typ_projektu = Heslar.objects.get(pk=PROJEKT_ZACHRANNY_ID)
+        zachranny_typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
         Projekt(
             stav=0, typ_projektu=zachranny_typ_projektu, ident_cely="M-202000003"
         ).save()

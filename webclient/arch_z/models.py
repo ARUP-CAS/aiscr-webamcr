@@ -1,6 +1,7 @@
 from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
 from core.models import KomponentaVazby
 from django.db import models
+from heslar.hesla import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Pian
@@ -22,7 +23,7 @@ class ArcheologickyZaznam(models.Model):
         models.DO_NOTHING,
         db_column="pristupnost",
         related_name="zaznamy_pristupnosti",
-        default=857,
+        default=PRISTUPNOST_ANONYM_ID,
     )
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)

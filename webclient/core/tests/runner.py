@@ -3,6 +3,12 @@ from core.constants import AZ_STAV_ZAPSANY
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from heslar import hesla
+from heslar.hesla import (
+    PRESNOST_DESITKY_METRU_ID,
+    PRISTUPNOST_ANONYM_ID,
+    TYP_ORGANIZACE_MUZEUM_ID,
+    TYP_PIAN_PLOCHA_ID,
+)
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from uzivatel.models import Organizace, User
 
@@ -93,13 +99,15 @@ class AMCRMixinRunner(object):
         for n in nazvy_heslaru:
             n.save()
 
-        Heslar(id=hesla.PROJEKT_ZACHRANNY_ID, nazev_heslare=hn).save()
-        Heslar(id=854, nazev_heslare=hp).save()
-        Heslar(id=1122, nazev_heslare=ha).save()
+        Heslar(id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn).save()
+        Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp).save()
+        Heslar(id=TYP_PIAN_PLOCHA_ID, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=881, heslo="presne", nazev_heslare=hsd).save()
-        typ_muzeum = Heslar(id=1116, heslo="Muzemum", nazev_heslare=hto)
-        zp = Heslar(id=859, nazev_heslare=hpr)
+        typ_muzeum = Heslar(
+            id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
+        )
+        zp = Heslar(id=PRISTUPNOST_ANONYM_ID, nazev_heslare=hpr)
 
         zp.save()
         typ_muzeum.save()
