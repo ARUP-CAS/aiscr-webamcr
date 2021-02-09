@@ -2,178 +2,153 @@
 {% load i18n %}
 {% load static %}
 
-<!-- {% block metismenu_includes %}
-    <link rel="stylesheet" href="{% static 'metisMenu.min.css' %}">
-    <script src="{% static 'metisMenu.min.js' %}"></script>
-{% endblock %}
-
-{% block metismenu %}
-    <ul id="metismenu">
-        <li><a href="http://localhost:8000/accounts/login/"><span class="material-icons">person</span> Login</a></li>
-        <li class="mm-active">
-            <a href="#" aria-expanded="true">{% trans "Projekty" %}</a>
-            <ul>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Schválit oznámení" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Přihlásit" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Zahájit výzkum" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Ukončit terén" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Spravovat akce" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Uzavřít projekt" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Vybrat projekty" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Naše projekty" %}</a></li>
-                <li><a href="{% url 'projekt:projekt_list' %}">{% trans "Archivovat projekty" %}</a></li>
-            </ul>
-        </li>
-        <li>
-            <a href="#" aria-expanded="false">{% trans "Správa PIAN" %}</a>
-        </li>
-
-    </ul>
-{% endblock %} -->
-
 {% block sidebar %}
-	<div id="sidebar-wrapper">
-		<div class="sidebar-heading">Archeologická mapa ČR</div>
-		<div class="accordion" id="accordionExample">
-			<div class="card">
-				<div class="card-header" id="headingOne">
-					<h2 class="mb-0">
-						<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-							<span class="material-icons">3d_rotation</span> Knihovna 3D
-							<span class="material-icons app-icon-expand">expand_more</span>
-						</button>
-					</h2>
-				</div>
-		
-				<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
-					<div class="card-body">
-						<ul>
-							<li><a href="#" title="">Domů</a></li>
-							<li><a href="#" title="">Zapsat</a></li>
-							<li><a href="#" title="">Moje modely</a></li>
-							<li><a href="#" title="">Vybrat</a></li>
-							<li><a href="#" title="">Spravovat</a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-			<div class="card">
-				<div class="card-header" id="headingTwo">
-					<h2 class="mb-0">
-						<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-							<span class="material-icons">location_on</span> Samostatné nálezy
-							<span class="material-icons app-icon-expand">expand_more</span>
-						</button>
-					</h2>
-				</div>
-				<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
-					<div class="card-body">
-						<ul>
-							<li><a href="#" title="">Domů</a></li>
-							<li><a href="#" title="">Zapsat</a></li>
-							<li><a href="#" title="">Moje nálezy</a></li>
-							<li><a href="#" title="">Vybrat</a></li>
-							<li><a href="#" title="">Spolupráce</a></li>
-							<li><a href="#" title="">Potvrdit</a></li>
-							<li><a href="#" title="">Archivovat</a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-			<div class="card">
-				<div class="card-header" id="headingThree">
-					<h2 class="mb-0">
-						<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-							<span class="material-icons">settings</span> Administrace
-							<span class="material-icons app-icon-expand">expand_more</span>
-						</button>
-					</h2>
-				</div>
-				<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-					<div class="card-body">
-						<ul>
-							<li><a href="#" title="">Uživatelé</a></li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+  <div id="sidebar-wrapper">
+    <div class="sidebar-heading">Archeologická mapa ČR</div>
+    <div class="accordion" id="accordionExample">
+      <div class="card">
+        <div class="card-header" id="headingOne">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                    data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              <span class="material-icons">3d_rotation</span> Knihovna 3D
+              <span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </h2>
+        </div>
+
+        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+          <div class="card-body">
+            <ul>
+              <li><a href="#" title="">Domů</a></li>
+              <li><a href="#" title="">Zapsat</a></li>
+              <li><a href="#" title="">Moje modely</a></li>
+              <li><a href="#" title="">Vybrat</a></li>
+              <li><a href="#" title="">Spravovat</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" id="headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                    data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+              <span class="material-icons">location_on</span> Samostatné nálezy
+              <span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </h2>
+        </div>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+          <div class="card-body">
+            <ul>
+              <li><a href="#" title="">Domů</a></li>
+              <li><a href="#" title="">Zapsat</a></li>
+              <li><a href="#" title="">Moje nálezy</a></li>
+              <li><a href="#" title="">Vybrat</a></li>
+              <li><a href="#" title="">Spolupráce</a></li>
+              <li><a href="#" title="">Potvrdit</a></li>
+              <li><a href="#" title="">Archivovat</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header" id="headingThree">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                    data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+              <span class="material-icons">settings</span> Administrace
+              <span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </h2>
+        </div>
+        <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+          <div class="card-body">
+            <ul>
+              <li><a href="#" title="">Uživatelé</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block navbar %}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-        <button class="btn btn-primary" id="menu-toggle"><span class="material-icons">menu_open</span></button>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <button class="btn btn-primary" id="menu-toggle"><span class="material-icons">menu_open</span></button>
 
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#"><strong>Přihlášen:</strong> petr.kudela@inovatika.cz (Admin)</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+        <li class="nav-item active">
+          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#"><strong>Přihlášen:</strong> petr.kudela@inovatika.cz (Admin)</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
 {% endblock %}
 
 {% block breadcrumb %}
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="#">Home</a></li>
-            <li class="breadcrumb-item"><a href="#">Library</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Data</li>
-        </ol>
-    </nav>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="#">Home</a></li>
+      <li class="breadcrumb-item"><a href="#">Library</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Data</li>
+    </ol>
+  </nav>
 {% endblock %}
-    
+
 {% block footer %}
-    <footer class="bg-light text-center text-lg-start">
-        <div class="p-4">
-            <div class="row">
-                <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-                    <h5 class="text-uppercase">Footer text</h5>
-                    <p>
-                        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
-                        molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
-                        aliquam voluptatem veniam, est atque cumque eum delectus sint!
-                    </p>
-                </div>
-                <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-                    <h5 class="text-uppercase">Footer text</h5>
-                    <p>
-                        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
-                        molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
-                        aliquam voluptatem veniam, est atque cumque eum delectus sint!
-                    </p>
-                </div>
-                <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-                    <h5 class="text-uppercase">Footer text</h5>  
-                    <p>
-                        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
-                        molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
-                        aliquam voluptatem veniam, est atque cumque eum delectus sint!
-                    </p>
-                </div>
-            </div>
+  <footer class="bg-light text-center text-lg-start">
+    <div class="p-4">
+      <div class="row">
+        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
+          <h5 class="text-uppercase">Footer text</h5>
+          <p>
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
+            molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
+            aliquam voluptatem veniam, est atque cumque eum delectus sint!
+          </p>
         </div>
-        <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2)">
-            © 2021 Copyright:
-            <a class="text-dark" href="https://mdbootstrap.com/">AMCR</a>
+        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
+          <h5 class="text-uppercase">Footer text</h5>
+          <p>
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
+            molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
+            aliquam voluptatem veniam, est atque cumque eum delectus sint!
+          </p>
         </div>
-    </footer>
+        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
+          <h5 class="text-uppercase">Footer text</h5>
+          <p>
+            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
+            molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
+            aliquam voluptatem veniam, est atque cumque eum delectus sint!
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2)">
+      © 2021 Copyright:
+      <a class="text-dark" href="https://mdbootstrap.com/">AMCR</a>
+    </div>
+  </footer>
 {% endblock %}
 
 {% block script_sidebar %}
-    <script>
-        $("#menu-toggle").click(function(e) {
-            e.preventDefault();
-            $("#wrapper").toggleClass("toggled");
-        });
-    </script>
+  <script>
+      $("#menu-toggle").click(function (e) {
+          e.preventDefault();
+          $("#wrapper").toggleClass("toggled");
+      });
+  </script>
 {% endblock %}
