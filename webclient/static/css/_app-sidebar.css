@@ -1,0 +1,130 @@
+#wrapper {
+  overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  height: 100%;
+  margin-left: -300px;
+  -webkit-transition: margin .25s ease-out;
+  -moz-transition: margin .25s ease-out;
+  -o-transition: margin .25s ease-out;
+  transition: margin .25s ease-out;
+  overflow-y: auto;
+  background-color:#303741;
+  color: #ffffff;
+  width: 300px;
+}
+
+#sidebar-wrapper .sidebar-heading {
+  padding: 0.875rem 1.25rem;
+  font-size: 1.2rem;
+}
+
+#page-content-wrapper {
+  /* min-width: 100vw; */
+  width: 100%;
+  -webkit-transition: margin .25s ease-out;
+  -moz-transition: margin .25s ease-out;
+  -o-transition: margin .25s ease-out;
+  transition: margin .25s ease-out;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  margin-left: 0;
+}
+
+#wrapper.toggled #page-content-wrapper {
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  #sidebar-wrapper {
+    margin-left: 0;
+  }
+
+  /* #page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+  } */
+
+  #wrapper.toggled #sidebar-wrapper {
+    margin-left: -300px;
+  }
+
+  #page-content-wrapper {
+    margin-left: 300px;
+  }
+}
+
+@media (max-width: 767px) {
+  .navbar {
+    margin-left: 0;
+    -webkit-transition: margin .25s ease-out;
+    -moz-transition: margin .25s ease-out;
+    -o-transition: margin .25s ease-out;
+    transition: margin .25s ease-out;
+  }
+
+  #wrapper.toggled .navbar {
+    margin-left: 300px;
+  }
+}
+
+/* global */
+.btn .material-icons {
+  vertical-align: bottom;
+}
+
+
+/* accordation */
+#sidebar-wrapper .card {
+  background-color: transparent;
+  border: 0;
+  border-top: 1px solid #414b58;
+}
+
+#sidebar-wrapper .card .btn-link {
+  color: white;
+  padding: 0;
+}
+
+#sidebar-wrapper .card .btn-link.collapsed {
+  color: #8d97ad;
+}
+
+#sidebar-wrapper .card .btn-link .app-icon-expand {
+  transition: all 0.4s ease;
+  transform: rotateZ(180deg);
+}
+
+#sidebar-wrapper .card .btn-link.collapsed .app-icon-expand {
+  transition: all 0.4s ease;
+  transform: rotateZ(0deg);
+}
+
+#sidebar-wrapper .card .btn-link .material-icons {
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+#sidebar-wrapper .card .btn-link .material-icons.app-icon-expand {
+  float: right;
+}
+
+#sidebar-wrapper .card .card-body {
+  background-color: #38404b;
+  padding-top: 0.75rem;
+  padding-bottom: 0.1rem;
+}
+
+#sidebar-wrapper .card .card-body ul li {
+  list-style: none;
+  line-height: 32px;
+}
+
+#sidebar-wrapper .card .card-body ul li a {
+  color: #8d97ad;
+}

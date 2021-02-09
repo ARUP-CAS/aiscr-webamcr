@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load compress %} <!-- temp -->
 {% load static %}
 
 {% block sidebar %}
+  <!-- {% compress css %}
+    <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
+  {% endcompress %} -->
+  <link type="text/css" href="/static/static/css/_app-sidebar.css" rel="stylesheet" media="screen">
   <div id="sidebar-wrapper">
     <div class="sidebar-heading">Archeologická mapa ČR</div>
     <div class="accordion" id="accordionExample">
