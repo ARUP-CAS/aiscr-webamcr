@@ -37,18 +37,12 @@
             <div class="container-fluid">
                 {% block content %}{% endblock %}
             </div>
-            
+
             {% block footer %}{% endblock %}
         </div>
 	</div>
 
+    {% block script_sidebar %}{% endblock %}
 	{% block script %}{% endblock %}
-
-	<script>
-		$("#menu-toggle").click(function(e) {
-			e.preventDefault();
-			$("#wrapper").toggleClass("toggled");
-		});
-	</script>
 </body>
 </html>
