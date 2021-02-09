@@ -30,14 +30,25 @@
 <body>
 	<div class="d-flex" id="wrapper">
 		{% block sidebar %}{% endblock %}
+        <div id="page-content-wrapper">
+            {% block navbar %}{% endblock %}
+            {% block breadcrumb %}{% endblock %}
 
-		{% block page-content-wrapper %}{% endblock %}
-		
-		<!-- {% block metismenu %}{% endblock %}
-		{% block content %}{% endblock %} -->
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
+            
+            {% block footer %}{% endblock %}
+        </div>
 	</div>
 
 	{% block script %}{% endblock %}
-	{% block metis_script %}{% endblock %}
+
+	<script>
+		$("#menu-toggle").click(function(e) {
+			e.preventDefault();
+			$("#wrapper").toggleClass("toggled");
+		});
+	</script>
 </body>
 </html>
