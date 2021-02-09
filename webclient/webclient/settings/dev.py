@@ -32,3 +32,6 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     "compressor.finders.CompressorFinder",
 ]
+
+INSTALLED_APPS.insert(0, "livereload")
+MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
