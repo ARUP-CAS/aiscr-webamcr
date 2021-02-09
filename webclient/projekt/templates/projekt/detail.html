@@ -5,106 +5,106 @@
 
 {% block title %}{% trans "Detail projektu" %}{% endblock %}
 {% block head %}
-    <!-- Map imports -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-            crossorigin="">
-    </script>
+  <!-- Map imports -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+          integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+          crossorigin="">
+  </script>
 {% endblock %}
 
 {% block content %}
 
-    <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
+  <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
 
-    <div class="card">
-        <div class="card-header">{% trans "Detail" %}</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col">{{ projekt.typ_projektu }}</div>
-                <div class="col">{{ projekt.planovane_zahajeni }}</div>
-                <div class="col"></div>
-            </div>
-            <div class="row">
-                <div class="col">{{ katastry }}</div>
-                <div class="col">{{ projekt.podnet }}</div>
-            </div>
-            <div class="row">
-                <div class="col">{{ projekt.lokalizace }}</div>
-                <div class="col">{{ projekt.parcelni_cislo }}</div>
-            </div>
-            <hr/>
-            <h2>{% trans "Přihlášení" %}</h2>
-            <div class="row">
-                <div class="col">{{ projekt.organizace }}</div>
-                <div class="col">{{ projekt.kulturni_pamatka }}</div>
-            </div>
-            <div class="row">
-                <div class="col">{{ projekt.vedouci }}</div>
-                <div class="col">{{ projekt.kulturni_pamatka_cislo }}</div>
-            </div>
-            <div class="row">
-                <div class="col">{{ projekt.uzivatelske_oznaceni }}</div>
-                <div class="col">{{ projekt.kulturni_pamatka_popis }}</div>
-            </div>
-            <hr/>
-            <h2>{% trans "Výzkum" %}</h2>
-            <div class="row">
-                <div class="col">{{ projekt.datum_zahajeni }}</div>
-                <div class="col">{{ projekt.datum_ukonceni }}</div>
-            </div>
-        </div>
+  <div class="card">
+    <div class="card-header">{% trans "Detail" %}</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col">{{ projekt.typ_projektu }}</div>
+        <div class="col">{{ projekt.planovane_zahajeni }}</div>
+        <div class="col"></div>
+      </div>
+      <div class="row">
+        <div class="col">{{ katastry }}</div>
+        <div class="col">{{ projekt.podnet }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ projekt.lokalizace }}</div>
+        <div class="col">{{ projekt.parcelni_cislo }}</div>
+      </div>
+      <hr/>
+      <h2>{% trans "Přihlášení" %}</h2>
+      <div class="row">
+        <div class="col">{{ projekt.organizace }}</div>
+        <div class="col">{{ projekt.kulturni_pamatka }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ projekt.vedouci }}</div>
+        <div class="col">{{ projekt.kulturni_pamatka_cislo }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ projekt.uzivatelske_oznaceni }}</div>
+        <div class="col">{{ projekt.kulturni_pamatka_popis }}</div>
+      </div>
+      <hr/>
+      <h2>{% trans "Výzkum" %}</h2>
+      <div class="row">
+        <div class="col">{{ projekt.datum_zahajeni }}</div>
+        <div class="col">{{ projekt.datum_ukonceni }}</div>
+      </div>
     </div>
-    <div class="card mt-2">
-        <div class="card-header">{% trans "Oznámení" %}</div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col">{{ oznamovatel.oznamovatel }}</div>
-                <div class="col">{{ oznamovatel.odpovedna_osoba }}</div>
-            </div>
-            <div class="row">
-                <div class="col">{{ oznamovatel.email }}</div>
-                <div class="col">{{ oznamovatel.telefon }}</div>
-            </div>
-            <div class="row">
-                <div class="col">{{ oznamovatel.adresa }}</div>
-            </div>
-        </div>
+  </div>
+  <div class="card mt-2">
+    <div class="card-header">{% trans "Oznámení" %}</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col">{{ oznamovatel.oznamovatel }}</div>
+        <div class="col">{{ oznamovatel.odpovedna_osoba }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ oznamovatel.email }}</div>
+        <div class="col">{{ oznamovatel.telefon }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ oznamovatel.adresa }}</div>
+      </div>
     </div>
+  </div>
 
-    <!-- TODO Tabulka projektové dokumentace -->
+  <!-- TODO Tabulka projektové dokumentace -->
 
-    <div class="card mt-2">
-        <div class="card-header">{% trans "Archeologické akce" %}</div>
-        <div class="card-body">
-            {% for a in akce %}
-                <div class="row">
-                    <div class="col">{{ a.archeologicky_zaznam.ident_cely }}</div>
-                    <div class="col">
-                        <span class="badge badge-light">{{ a.archeologicky_zaznam.get_stav_display }}</span>
-                    </div>
-                    <div class="col">{{ a.archeologicky_zaznam.pristupnost }}</div>
-                </div>
-                <div class="row">
-                    <div class="col">{{ a.archeologicky_zaznam.katasty }}</div>
-                    <div class="col">{{ a.vedouci }}</div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        {{ a.datum_zahajeni_v }} - {{ a.datum_ukonceni_v }}
-                    </div>
-                    <div class="col">
-                        {{ a.hlavni_typ }} {{ a.vedlejsi_typ }}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</div>
-                </div>
-            {% endfor %}
+  <div class="card mt-2">
+    <div class="card-header">{% trans "Archeologické akce" %}</div>
+    <div class="card-body">
+      {% for a in akce %}
+        <div class="row">
+          <div class="col">{{ a.archeologicky_zaznam.ident_cely }}</div>
+          <div class="col">
+            <span class="badge badge-light">{{ a.archeologicky_zaznam.get_stav_display }}</span>
+          </div>
+          <div class="col">{{ a.archeologicky_zaznam.pristupnost }}</div>
         </div>
+        <div class="row">
+          <div class="col">{{ a.archeologicky_zaznam.katasty }}</div>
+          <div class="col">{{ a.vedouci }}</div>
+        </div>
+        <div class="row">
+          <div class="col">
+            {{ a.datum_zahajeni_v }} - {{ a.datum_ukonceni_v }}
+          </div>
+          <div class="col">
+            {{ a.hlavni_typ }} {{ a.vedlejsi_typ }}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</div>
+        </div>
+      {% endfor %}
     </div>
+  </div>
 
 {% endblock %}
 

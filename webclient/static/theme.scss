@@ -1,0 +1,10 @@
+$primary: #8d97ad;
+
+.container-fluid {
+  min-height: 500px;
+}
+
+@import './bootstrap/bootstrap';
+
+// app styles
+@import 'scss/app-sidebar';

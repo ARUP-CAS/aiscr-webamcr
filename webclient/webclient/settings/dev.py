@@ -8,6 +8,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS += [
     "debug_toolbar",
+    "compressor",
 ]
 
 MIDDLEWARE += [
@@ -23,3 +24,14 @@ CRISPY_FAIL_SILENTLY = not DEBUG
 SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
 
 TEST_RUNNER = "core.tests.runner.AMCRTestRunner"
+
+COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
+
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "compressor.finders.CompressorFinder",
+]
+
+INSTALLED_APPS.insert(0, "livereload")
+MIDDLEWARE.append("livereload.middleware.LiveReloadScript")

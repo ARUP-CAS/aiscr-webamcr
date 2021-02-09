@@ -6,65 +6,65 @@
 {% block title %}Oznámení o stavebním či jiném záměru{% endblock %}
 
 {% block head %}
-    <script>
-        var global_csrftoken = '{{ csrf_token }}';
-    </script>
-    <!-- Map imports -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-            crossorigin="">
-    </script>
-    <!-- Date picker imports -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+  <script>
+      var global_csrftoken = '{{ csrf_token }}';
+  </script>
+  <!-- Map imports -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+          integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+          crossorigin="">
+  </script>
+  <!-- Date picker imports -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
 {% endblock %}
 
 {% block content %}
 
-    {% include "components/uvod.html" %}
+  {% include "components/uvod.html" %}
 
-    <h2>{% trans "Krok 1/2" %}</h2>
+  <h2>{% trans "Krok 1/2" %}</h2>
 
-    <form method="post">
-        {% crispy form_oznamovatel %}
+  <form method="post">
+    {% crispy form_oznamovatel %}
 
-        <small id="hint_id_map"
-               class="form-text text-muted">{% translate "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
-        {% include "map.html" %}
+    <small id="hint_id_map"
+           class="form-text text-muted">{% translate "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
+    {% include "map.html" %}
 
-        {% crispy form_projekt %}
+    {% crispy form_projekt %}
 
-        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky"
-                aria-expanded="false" aria-controls="collapsePodminky">
-            {% translate "Přečíst podmínky" %}
-        </button>
-        <div class="collapse" id="collapsePodminky">
-            <div class="card card-body">
-                {% include "oznameni/podminky.html" %}
-            </div>
-        </div>
+    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky"
+            aria-expanded="false" aria-controls="collapsePodminky">
+      {% translate "Přečíst podmínky" %}
+    </button>
+    <div class="collapse" id="collapsePodminky">
+      <div class="card card-body">
+        {% include "oznameni/podminky.html" %}
+      </div>
+    </div>
 
-        <div class="form-group">
-            <div id="div_id_souhlas" class="custom-control custom-checkbox">
-                <input type="checkbox" name="souhlas" class="checkboxinput custom-control-input" required=""
-                       id="id_souhlas">
-                <label for="id_souhlas" class="custom-control-label requiredField">
-                    {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
-                    <span class="asteriskField">*</span>
-                </label>
-            </div>
-        </div>
+    <div class="form-group">
+      <div id="div_id_souhlas" class="custom-control custom-checkbox">
+        <input type="checkbox" name="souhlas" class="checkboxinput custom-control-input" required=""
+               id="id_souhlas">
+        <label for="id_souhlas" class="custom-control-label requiredField">
+          {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
+          <span class="asteriskField">*</span>
+        </label>
+      </div>
+    </div>
 
-        {{ form_captcha }}
-        <input type="submit" name="save" value="{% translate 'Krok 2' %}" class="btn btn-primary" id="submit-id-save">
-    </form>
+    {{ form_captcha }}
+    <input type="submit" name="save" value="{% translate 'Krok 2' %}" class="btn btn-primary" id="submit-id-save">
+  </form>
 {% endblock %}
 
 {% block script %}
-    <script src="{% static 'map.js' %}"></script>
-    <script src="{% static 'daterangepicker.js' %}"></script>
+  <script src="{% static 'map.js' %}"></script>
+  <script src="{% static 'daterangepicker.js' %}"></script>
 {% endblock %}
