@@ -16,7 +16,7 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar, RuianKatastr
 from pian.models import Kladyzm, Pian
-from projekt.models import Projekt, ProjektKatastr
+from projekt.models import Projekt
 
 
 class IdentTests(TestCase):
@@ -64,12 +64,9 @@ class IdentTests(TestCase):
         p = Projekt(
             stav=0,
             typ_projektu=Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID),
+            hlavni_katastr=RuianKatastr.objects.get(id=150),
         )
         p.save()
-        pk = ProjektKatastr(
-            katastr=RuianKatastr.objects.get(id=150), projekt=p, hlavni=True
-        )
-        pk.save()
 
         ident = get_permanent_project_ident(p)
         self.assertEqual(ident, "C-202100001")

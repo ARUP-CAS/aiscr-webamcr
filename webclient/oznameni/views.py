@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
-from projekt.models import Projekt, ProjektKatastr
+from projekt.models import Projekt
 from uzivatel.models import User
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
@@ -39,21 +39,19 @@ def index(request):
                 float(request.POST.get("longitude")),
                 float(request.POST.get("latitude")),
             )
-            katastr = get_cadastre_from_point(p.geom)
-            p.save()
-            p.set_oznameny(o)
-            p.save()
-            p.katastry.add(*[int(i) for i in dalsi_katastry])
-            if katastr is not None:
-                ProjektKatastr(katastr=katastr, projekt=p, hlavni=True).save()
+            p.hlavni_katastr = get_cadastre_from_point(p.geom)
+            if p.hlavni_katastr is not None:
                 p.ident_cely = get_temporary_project_ident(
-                    p, katastr.okres.kraj.rada_id
+                    p, p.hlavni_katastr.okres.kraj.rada_id
                 )
-                p.save()
             else:
                 logger.warning(
                     "Unknown cadastre location for point {}".format(str(p.geom))
                 )
+            p.save()
+            p.set_oznameny(o)
+            p.save()
+            p.katastry.add(*[int(i) for i in dalsi_katastry])
 
             confirmation = {
                 "oznamovatel": o.oznamovatel,
@@ -61,7 +59,7 @@ def index(request):
                 "adresa": o.adresa,
                 "telefon": o.telefon,
                 "email": o.email,
-                "katastr": katastr,
+                "katastr": p.hlavni_katastr,
                 "dalsi_katastry": dalsi_katastry,
                 "ident_cely": p.ident_cely,
                 "planovane_zahajeni": p.planovane_zahajeni,

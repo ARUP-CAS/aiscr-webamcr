@@ -100,6 +100,14 @@ class Projekt(models.Model):
     )
     planovane_zahajeni = DateRangeField(blank=True, null=True)
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
+    hlavni_katastr = models.ForeignKey(
+        RuianKatastr,
+        on_delete=models.DO_NOTHING,
+        db_column="hlavni_katastr",
+        related_name="projekty_hlavnich_katastru",
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         if self.ident_cely:
@@ -201,15 +209,6 @@ class Projekt(models.Model):
             vazba=self.historie,
         )
 
-    def get_main_cadastre(self):
-        main_cadastre = None
-        cadastres = ProjektKatastr.objects.filter(projekt=self.id)
-        for pk in cadastres:
-            if pk.hlavni:
-                return pk.katastr
-        logger.warning("Main cadastre of the project {0} not found.".format(str(self)))
-        return main_cadastre
-
     def parse_ident_cely(self):
         year = None
         number = None
@@ -230,10 +229,10 @@ class Projekt(models.Model):
 class ProjektKatastr(models.Model):
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.CASCADE)
-    hlavni = models.BooleanField(default=False)
 
     def __str__(self):
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)
 
     class Meta:
+        unique_together = (("projekt", "katastr"),)
         db_table = "projekt_katastr"

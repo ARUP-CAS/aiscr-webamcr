@@ -33,6 +33,14 @@ class ArcheologickyZaznam(models.Model):
     katastry = models.ManyToManyField(
         RuianKatastr, through="ArcheologickyZaznamKatastr"
     )
+    hlavni_katastr = models.ForeignKey(
+        RuianKatastr,
+        on_delete=models.DO_NOTHING,
+        db_column="hlavni_katastr",
+        related_name="zaznamy_hlavnich_katastru",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "archeologicky_zaznam"
@@ -45,7 +53,6 @@ class ArcheologickyZaznamKatastr(models.Model):
     katastr = models.ForeignKey(
         RuianKatastr, on_delete=models.CASCADE, db_column="katastr"
     )
-    hlavni = models.BooleanField(default=False)
 
     class Meta:
         db_table = "archeologicky_zaznam_katastr"
