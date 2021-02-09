@@ -1,7 +1,6 @@
 # Database and venv
 venv/
 db.sqlite3
-migrations/
 
 # Sensitive files
 local_settings.py
