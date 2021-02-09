@@ -244,6 +244,13 @@
 	</div>
 {% endblock %}
 
+<script>
+	$("#menu-toggle").click(function(e) {
+		e.preventDefault();
+		$("#wrapper").toggleClass("toggled");
+	});
+</script>
+
 <!-- {% block metis_script %}
     <script src="{% static 'metis.js' %}"></script>
 {% endblock %} -->
