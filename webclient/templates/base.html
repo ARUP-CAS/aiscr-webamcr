@@ -29,77 +29,7 @@
 </head>
 <body>
 	<div class="d-flex" id="wrapper">
-		  <!-- Sidebar -->
-			<div id="sidebar-wrapper">
-				<div class="sidebar-heading">Archeologická mapa ČR</div>
-				<div class="accordion" id="accordionExample">
-					<div class="card">
-						<div class="card-header" id="headingOne">
-							<h2 class="mb-0">
-								<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-									<span class="material-icons">3d_rotation</span> Knihovna 3D
-									<span class="material-icons app-icon-expand">expand_more</span>
-								</button>
-							</h2>
-						</div>
-				
-						<div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
-							<div class="card-body">
-								<ul>
-									<li><a href="#" title="">Domů</a></li>
-									<li><a href="#" title="">Zapsat</a></li>
-									<li><a href="#" title="">Moje modely</a></li>
-									<li><a href="#" title="">Vybrat</a></li>
-									<li><a href="#" title="">Spravovat</a></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-					<div class="card">
-						<div class="card-header" id="headingTwo">
-							<h2 class="mb-0">
-								<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-									<span class="material-icons">location_on</span> Samostatné nálezy
-									<span class="material-icons app-icon-expand">expand_more</span>
-								</button>
-							</h2>
-						</div>
-						<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
-							<div class="card-body">
-								<ul>
-									<li><a href="#" title="">Domů</a></li>
-									<li><a href="#" title="">Zapsat</a></li>
-									<li><a href="#" title="">Moje nálezy</a></li>
-									<li><a href="#" title="">Vybrat</a></li>
-									<li><a href="#" title="">Spolupráce</a></li>
-									<li><a href="#" title="">Potvrdit</a></li>
-									<li><a href="#" title="">Archivovat</a></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-					<div class="card">
-						<div class="card-header" id="headingThree">
-							<h2 class="mb-0">
-								<button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-									<span class="material-icons">settings</span> Administrace
-									<span class="material-icons app-icon-expand">expand_more</span>
-								</button>
-							</h2>
-						</div>
-						<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
-							<div class="card-body">
-								<ul>
-									<li><a href="#" title="">Uživatelé</a></li>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<!-- /#sidebar-wrapper -->
-		
-		
+		{% block sidebar %}{% endblock %}
 		
 		<!-- {% block metismenu %}{% endblock %}
 
