@@ -13,9 +13,23 @@ $gray-800: #343a40 !default;
 $gray-900: #212529 !default;
 $black:    #000 !default;
 
+// material blue gray pallete
+$blue-gray-50:  #ECEFF1 !default;
+$blue-gray-100: #CFD8DC !default;
+$blue-gray-200: #B0BEC5 !default;
+$blue-gray-300: #90A4AE !default;
+$blue-gray-400: #78909C !default;
+$blue-gray-500: #607D8B !default;
+$blue-gray-600: #546E7A !default;
+$blue-gray-700: #455A64 !default;
+$blue-gray-800: #37474F !default;
+$blue-gray-900: #263238 !default;
+
 //$primary: red;
 
 // sidebar
 $app-sidebar-width: 300px !default;
-$app-sidebar-bg: #303741 !default;
-$app-sidebar-color: $white !default;
+$app-sidebar-bg: $blue-gray-900 !default;
+$app-sidebar-accordion-color: $blue-gray-300 !default;
+$app-sidebar-accordion-color-active: $blue-gray-50 !default;
+$app-sidebar-accordion-body-color: $blue-gray-800 !default;

@@ -3,6 +3,7 @@
 @import 'app-variables';
 @import './bootstrap/bootstrap';
 @import 'app-global';
+@import 'app-mixins';
 
 #sidebar-wrapper {
   position: fixed;
@@ -16,7 +17,6 @@
   transition: margin .25s ease-out;
   overflow-y: auto;
   background-color: $app-sidebar-bg;
-  color: $app-sidebar-color;
   width: $app-sidebar-width;
 
   .sidebar-heading {
@@ -24,19 +24,17 @@
     font-size: 1.2rem;
   }
 
-  // accordation
+  // accordion
   .card {
-    @extend .app-clean-bg;
-    background-color: transparent;
-    border: 0;
-    border-top: 1px solid #414b58;
+    @extend .app-clean-bg, .app-clean-border;
+    border-top: 1px solid $app-sidebar-accordion-body-color !important;
 
     .btn-link {
-      color: white;
+      color: $app-sidebar-accordion-color-active;
       padding: 0;
 
       &.collapsed {
-        color: #8d97ad;
+        @include setLinkColor($app-sidebar-accordion-color);
 
         .app-icon-expand {
           transition: all 0.4s ease;
@@ -59,7 +57,7 @@
     }
 
     .card-body {
-      background-color: #38404b;
+      background-color: $app-sidebar-accordion-body-color;
       padding-top: 0.75rem;
       padding-bottom: 0.1rem;
 

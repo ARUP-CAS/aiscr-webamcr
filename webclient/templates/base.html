@@ -29,13 +29,11 @@
 </head>
 <body>
 <div class="d-flex" id="wrapper">
-  <!-- <h1>Debug {{ user.is_authenticated }} </h1> -->
   {% block sidebar %}{% endblock %}
   <div id="page-content-wrapper">
     {% block navbar %}{% endblock %}
     {% block breadcrumb %}{% endblock %}
 
-    <!-- example how to add class based on url {% if request.path == '/oznameni/' %} container {% endif %} -->
     <div class="container-fluid">
       {% block content %}{% endblock %}
     </div>
