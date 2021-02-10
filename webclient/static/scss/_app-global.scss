@@ -1,1 +1,25 @@
 // --- GLOBAL ---
+
+// cleaners
+.app-clean-bg {
+  background-color: transparent !important;
+}
+
+.app-clean-border {
+  border: none !important;
+}
+
+// material icons behavior in bootstrap elements
+.btn {
+  .material-icons {
+    vertical-align: bottom;
+  }
+}
+
+/* .card {
+  .btn {
+    .material-icons {
+      vertical-align: middle;
+    }
+  }
+} */

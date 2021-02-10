@@ -9,6 +9,9 @@
   <!-- Bootstrap CSS -->
   {% compress css %}
     <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
+    {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}
+      <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">
+    {% endif %}
   {% endcompress %}
   <!-- Material icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
@@ -26,6 +29,7 @@
 </head>
 <body>
 <div class="d-flex" id="wrapper">
+  <!-- <h1>Debug {{ user.is_authenticated }} </h1> -->
   {% block sidebar %}{% endblock %}
   <div id="page-content-wrapper">
     {% block navbar %}{% endblock %}
