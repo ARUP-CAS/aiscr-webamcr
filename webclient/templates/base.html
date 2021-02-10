@@ -31,6 +31,7 @@
     {% block navbar %}{% endblock %}
     {% block breadcrumb %}{% endblock %}
 
+    <!-- example how to add class based on url {% if request.path == '/oznameni/' %} container {% endif %} -->
     <div class="container-fluid">
       {% block content %}{% endblock %}
     </div>
