@@ -3,6 +3,7 @@ import mimetypes
 import zlib
 
 from heslar.models import RuianKatastr
+from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
 
@@ -33,4 +34,17 @@ def get_cadastre_from_point(point):
         return katastr
     except IndexError:
         logger.debug("Could not find cadastre for pont: " + str(point))
+        return None
+
+
+def get_points_from_envelope(left, bottom, right, top):
+    query = (
+        "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng from public.projekt where "
+        "geom && ST_MakeEnvelope(%s, %s, %s, %s,4326)  limit 100"
+    )
+    try:
+        projekty = Projekt.objects.raw(query, [left, bottom, right, top])
+        return projekty
+    except IndexError:
+        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
         return None

@@ -1,14 +1,18 @@
 import logging
 
+import simplejson as json
 from arch_z.models import Akce
+from core.utils import get_points_from_envelope
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
+
+# from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +32,36 @@ def detail(request, ident_cely):
     return render(request, "projekt/detail.html", context)
 
 
+# @csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_point(request):
+    body = json.loads(request.body.decode("utf-8"))
+    # logger.debug(body)
+    projekty = get_points_from_envelope(
+        body["SouthEast"]["lng"],
+        body["SouthEast"]["lat"],
+        body["NorthWest"]["lng"],
+        body["NorthWest"]["lat"],
+    )
+    # logger.debug("pocet projektu: "+str(len(projekty)))
+    back = []
+    for projekt in projekty:
+        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
+        back.append(
+            {
+                "id": projekt.id,
+                "ident_cely": projekt.ident_cely,
+                "lat": projekt.lat,
+                "lng": projekt.lng,
+            }
+        )
+    if len(projekty) > 0:
+        return JsonResponse({"points": back}, status=200)
+    else:
+        return JsonResponse({"points": []}, status=200)
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
@@ -37,9 +71,9 @@ def edit(request, ident_cely):
 class ProjektListView(LoginRequiredMixin, ListView):
     model = Projekt
     paginate_by = 50  # if pagination is desired
-    #queryset = Projekt.objects.select_related("kulturni_pamatka").select_related(
+    # queryset = Projekt.objects.select_related("kulturni_pamatka").select_related(
     #    "typ_projektu"
-    #)
+    # )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

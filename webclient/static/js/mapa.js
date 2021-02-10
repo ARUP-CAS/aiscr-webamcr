@@ -6,7 +6,7 @@ var poi_correct = L.layerGroup();
 var poi_other = L.layerGroup();
 
 
-var button_map_lock=L.easyButton({ 
+var button_map_lock=L.easyButton({
     states: [{
         stateName: 'add-lock',
         icon: 'glyphicon glyphicon-stop',
@@ -23,7 +23,7 @@ var button_map_lock=L.easyButton({
             control.state('add-lock');
         },
         title: 'remove markers'
-      }]    
+      }]
 });
 button_map_lock.addTo(map)
 
@@ -65,28 +65,23 @@ map.addLayer(poi_other);
 
 //adding other points to layer
 var getOtherPoi= ()=>{
-    let points=[
-        [50.2866623899293,14.83060419559479,'Moc zajimave'],
-        [50.28723821959954,14.82906997203827],
-        [50.286528714187945,14.829558134078981],
-        [50.28633676887708,  14.825491905212404],
-        [50.285658098891645,14.833227396011354],
-        [50.287611819646955 ,14.832251071929933]
 
-    ]
-    points.forEach((point) => {       
-        if(map.getBounds().getEast()> point[1] &&  point[1]> map.getBounds().getWest()
-        &&
-        map.getBounds().getSouth()< point[0] &&  point[0]< map.getBounds().getNorth()
-        ){ 
-            if(point.length>2){
-                L.marker([point[0],point[1]]).bindPopup(point[2]).addTo(poi_other)
-            } else {
-                L.marker([point[0],point[1]]).addTo(poi_other)
-            }
-
-        }
-    });
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/projekt/get-points-arround-point');
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken );
+    }
+    xhr.onload = function () {
+        // do something to response
+        poi_other.clearLayers();
+        console.log(poi_sugest.getLayers()[0]._latlng)
+        JSON.parse(this.responseText).points.forEach((point) => {
+            if(poi_sugest.getLayers()[0]._latlng.lat!=point.lat && poi_sugest.getLayers()[0]._latlng.lng !=point.lng)
+            L.marker([point.lat,point.lng]).bindPopup(point.ident_cely).addTo(poi_other)
+        })
+    };
+    xhr.send(JSON.stringify({ 'NorthWest': map.getBounds().getNorthWest(),'SouthEast': map.getBounds().getSouthEast() }))
 }
 
 var addPointToPoiLayer = (lat, long, text) => {
@@ -102,19 +97,10 @@ var addPointOnLoad = (lat, long, text) => {
     } else{
         L.marker([lat, long], {icon: greenIcon}).addTo(poi_sugest);
     }
-    
+
     map.setView([lat, long], 18)
-    getOtherPoi();
+    //getOtherPoi();
 }
-
-
-
-
-//addPointOnLoad(50.28702571184197,14.830008745193483,"Uživatelem zadaná poloha záměru");
-/*
-L.marker([50.2866623899293,14.83060419559479]).bindPopup("Moc zajimave").addTo(poi_other)
-L.marker([50.28723821959954,14.82906997203827]).addTo(poi_other)
-L.marker([50.286528714187945,14.829558134078981]).addTo(poi_other)*/
 
 map.on('zoomend', function() {
     if (map.getZoom() > 10) {
@@ -124,7 +110,7 @@ map.on('zoomend', function() {
 
 map.on('click', function (e) {
         console.log("Your zoom is: "+map.getZoom())
-        
+
         let corX = e.latlng.lat;
         let corY = e.latlng.lng;
         if(corY>=12.2401111182 && corY<=18.8531441586 && corX>=48.5553052842 && corX<=51.1172677679)

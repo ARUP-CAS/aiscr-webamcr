@@ -13,9 +13,9 @@
             integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
             crossorigin="">
     </script>
-        
+
     <script>
-        var global_csrftoken = 'aabbcc';
+        var global_csrftoken = '{{ csrf_token }}';
     </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
@@ -142,7 +142,7 @@
             let coordinates='{{ projekt.geom.coords}}'.slice(1, -1).split(',');
             addPointOnLoad(coordinates[1],coordinates[0],"Uživatelem zadaná poloha záměru");
         </script>
-        
+
     </div>
 
 {% endblock %}

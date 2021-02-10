@@ -29,4 +29,9 @@ urlpatterns = [
     ),
     path("zrusit/<str:ident_cely>", views.zrusit, name="projekt_zrusit"),
     path("vratit/<str:ident_cely>", views.vratit, name="projekt_vratit"),
+    path(
+        "get-points-arround-point",
+        views.post_ajax_get_point,
+        name="post_ajax_get_points",
+    ),
 ]
