@@ -1,10 +1,11 @@
-$primary: #8d97ad;
 
-.container-fluid {
-  min-height: 500px;
-}
+// --- ROOT STYLE ---
+
+@import 'scss/app-variables';
 
 @import './bootstrap/bootstrap';
 
 // app styles
-//@import 'scss/app-sidebar';
+@import 'scss/app-mixins';
+@import 'scss/app-global';
+@import 'scss/app-layout';
