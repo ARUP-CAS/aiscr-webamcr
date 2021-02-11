@@ -130,7 +130,7 @@ class RuianKatastr(models.Model):
         db_table = "ruian_katastr"
 
     def __str__(self):
-        return self.nazev + " (" + self.okres.nazev + ")"
+        return self.nazev
 
 
 class RuianKraj(models.Model):
@@ -143,6 +143,9 @@ class RuianKraj(models.Model):
 
     class Meta:
         db_table = "ruian_kraj"
+
+    def __str__(self):
+        return self.nazev
 
 
 class RuianOkres(models.Model):
@@ -157,3 +160,6 @@ class RuianOkres(models.Model):
 
     class Meta:
         db_table = "ruian_okres"
+
+    def __str__(self):
+        return self.nazev

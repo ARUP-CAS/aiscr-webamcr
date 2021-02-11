@@ -36,13 +36,23 @@ def edit(request, ident_cely):
 
 class ProjektListView(LoginRequiredMixin, ListView):
     model = Projekt
-    paginate_by = 50  # if pagination is desired
-    queryset = Projekt.objects.select_related("kulturni_pamatka").select_related(
-        "typ_projektu"
+    paginate_by = 10  # if pagination is desired
+    queryset = (
+        Projekt.objects.select_related("kulturni_pamatka")
+        .select_related("typ_projektu")
+        .select_related("hlavni_katastr")
+        .select_related("organizace")
+        .select_related("vedouci_projektu")
+        .prefetch_related("hlavni_katastr__okres")
+        .order_by("id")
     )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # context["filter"] = ProjektFilter(
+        #     self.request.GET,
+        #     queryset=self.get_queryset()
+        # )
         return context
 
 

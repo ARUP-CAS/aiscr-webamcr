@@ -81,7 +81,11 @@
     <div class="card-body">
       {% for a in akce %}
         <div class="row">
-          <div class="col">{{ a.archeologicky_zaznam.ident_cely }}</div>
+          <div class="col">
+            <a href="{% url 'arch_z:arch_z_detail' a.archeologicky_zaznam.ident_cely %}">
+              {{ a.archeologicky_zaznam.ident_cely }}
+            </a>
+          </div>
           <div class="col">
             <span class="badge badge-light">{{ a.archeologicky_zaznam.get_stav_display }}</span>
           </div>

@@ -7,11 +7,41 @@
 
 {% block content %}
   <h1>{% trans "Projekty" %}</h1>
-  <ul>
+  <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Ident</th>
+      <th scope="col">Stav</th>
+      <th scope="col">Okres</th>
+      <th scope="col">Katastr</th>
+      <th scope="col">Podnět</th>
+      <th scope="col">Lokalizace</th>
+      <th scope="col">Zahájení</th>
+      <th scope="col">Ukončení</th>
+      <th scope="col">Organizace</th>
+      <th scope="col">Vedoucí</th>
+      <th scope="col">Památka</th>
+      <th scope="col">Typ</th>
+    </tr>
+  </thead>
+  <tbody>
     {% for projekt in object_list %}
-      <li>{{ projekt.ident_cely }}, {{ projekt.kulturni_pamatka }}, {{ projekt.podnet }}, {{ projekt.lokalizace }}, {{ projekt.datum_zahajeni }}, {{ projekt.typ_projektu }}</li>
+      <tr>
+        <td><a href="{% url 'projekt:projekt_detail' projekt.ident_cely %}">{{ projekt.ident_cely }}</a></td>
+        <td>{{ projekt.get_stav_display }}</td>
+        <td>{{ projekt.hlavni_katastr.okres }}</td>
+        <td>{{ projekt.hlavni_katastr }}</td>
+        <td>{{ projekt.podnet }}</td>
+        <td>{{ projekt.lokalizace }}</td>
+        <td>{{ projekt.datum_zahajeni }}</td>
+        <td>{{ projekt.datum_ukonceni }}</td>
+        <td>{{ projekt.organizace }}</td>
+        <td>{{ projekt.vedouci_projektu }}</td>
+        <td>{{ projekt.kulturni_pamatka }}</td>
+        <td>{{ projekt.typ_projektu }}</td>
+      </tr>
     {% endfor %}
-  </ul>
+  </table>
 
   <div class="pagination">
     <span class="step-links">

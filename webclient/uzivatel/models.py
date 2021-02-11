@@ -83,3 +83,6 @@ class Osoba(models.Model):
 
     class Meta:
         db_table = "osoba"
+
+    def __str__(self):
+        return self.vypis
