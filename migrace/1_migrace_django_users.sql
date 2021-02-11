@@ -15,14 +15,18 @@ insert into auth_user(password, is_superuser, username, first_name, last_name, e
 
 -- prirazeni skupiny na zaklade role
 -- 1 = Badatel, 2 = Archeolog, 3 = Archivar COMMNET: muze byt jinak
-insert into auth_group(id, name) values (1, 'Badatel'), (2, 'Archeolog'), (3, 'Archivar');
+insert into auth_group(id, name) values (1, 'Badatel'), (2, 'Archeolog'), (3, 'Archivar'),(4, 'Admin');
 
 -- vlozim si aut_level do auth_user tabulky
 update auth_user set auth_level = sel.lev from (select u.auth_level as lev, u.ident_cely as ident from uzivatel u join auth_user au on au.username = u.ident_cely) as sel where sel.ident = username;
 
 insert into auth_user_groups (user_id, group_id) select id, 1 from auth_user where (auth_level & 1) = 1;
 insert into auth_user_groups (user_id, group_id) select id, 2 from auth_user where (auth_level & 2) = 2;
+insert into auth_user_groups (user_id, group_id) select id, 4 from auth_user where (auth_level & 4) = 4;
 insert into auth_user_groups (user_id, group_id) select id, 3 from auth_user where (auth_level & 16) = 16;
+-- Zbytek uzivatelu kteri maji auth_level 0 nebo nic je potreba nastavit na neaktivnich cca 250 uzivatelu
+update auth_user set is_active = false where auth_level & 1 != 1 and auth_level & 2 != 2 and auth_level & 4 != 4 and auth_level & 16 != 16;
+
 -- TODO: adminum t.j. tem ktery maji mit pravo se prihlasit do admin rozhrani dat staff a pripadit je taky do skupiny ktera administruje vybrane tabulky
 
 -- drop foreign keys na uzivatele a vytvorit je na auth_user

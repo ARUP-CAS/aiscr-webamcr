@@ -1,5 +1,5 @@
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.models import Group, PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from heslar.models import Heslar
@@ -26,6 +26,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, blank=True, null=True)
     sha_1 = models.TextField(blank=True, null=True)
+    hlavni_role = models.ForeignKey(
+        Group,
+        models.DO_NOTHING,
+        db_column="hlavni_role",
+        related_name="uzivatele",
+        null=True,
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

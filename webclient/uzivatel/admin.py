@@ -27,6 +27,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_staff",
                     "is_active",
                     "organizace",
+                    "hlavni_role",
                 ),
             },
         ),
