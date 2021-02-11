@@ -73,7 +73,9 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
     BASE_DIR / "static" / "js",
     BASE_DIR / "static" / "css",
+    BASE_DIR / "static" / "scss",
     BASE_DIR / "static" / "loga",
+    BASE_DIR / "static" / "img",
 ]
 
 TEMPLATES = [

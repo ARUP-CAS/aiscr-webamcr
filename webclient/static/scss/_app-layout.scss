@@ -1,0 +1,27 @@
+// --- LAYOUT ---
+
+#wrapper {
+  overflow-x: hidden;
+}
+
+#page-content-wrapper {
+  /* min-width: 100vw; */
+  width: 100%;
+  -webkit-transition: margin .25s ease-out;
+  -moz-transition: margin .25s ease-out;
+  -o-transition: margin .25s ease-out;
+  transition: margin .25s ease-out;
+}
+
+#page-content-wrapper {
+  .container-fluid {
+    min-height: 800px;
+  }
+}
+
+#wrapper.toggled {
+  #page-content-wrapper {
+    margin-left: 0;
+  }
+}
+

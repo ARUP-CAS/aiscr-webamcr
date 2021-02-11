@@ -1,0 +1,144 @@
+// --- MIXINS ---
+
+// set border
+@mixin set-border($position, $height, $style, $color) {
+  @if ($position == "top") {
+    border-width: #{$height}px 0 0 0; 
+    border-style: solid;
+    border-color: $color;
+  }
+  @else if ($position == "right") {
+    border-width: 0 #{$height}px 0 0; 
+    border-style: solid;
+    border-color: $color;
+  }
+  @else if ($position == "bottom") {
+    border-width: 0 0 #{$height}px 0; 
+    border-style: solid;
+    border-color: $color;
+  }
+  @else if ($position == "left") {
+    border-width: 0 0 0 #{$height}px; 
+    border-style: solid;
+    border-color: $color;	
+  }
+  @else if ($position == "right-left-bottom") {
+    border-width: 0 #{$height}px #{$height}px #{$height}px; 
+    border-style: solid;
+    border-color: $color;	
+  }
+  @else if ($position == "right-bottom") {
+    border-width: 0 #{$height}px #{$height}px 0; 
+    border-style: solid;
+    border-color: $color;	
+  }
+  @else {
+    border-width: #{$height}px #{$height}px #{$height}px #{$height}px; 
+    border-style: solid;
+    border-color: $color;
+  }
+}
+
+
+// set icon size
+@mixin setIcon($size: null, $color: null, $position: null) {
+  @if ($size != null) {
+    font-size: #{$size}px;
+    height: #{$size}px;
+    width: #{$size}px;  
+  }
+  @if ($color != null) {
+    color: $color !important;
+  }
+  @if ($position != null) {
+    vertical-align: $position !important;  
+  }
+  
+}
+
+
+// clearfix
+@mixin cleanfix() {
+  &:before,
+  &:after {
+    content: " "; // 1
+    display: table; // 2
+  }
+  &:after {
+    clear: both;
+  }
+}
+
+
+// set entity color
+@mixin setEntityColor($type) {
+  @each $entity, $color in $entities {
+    @if ($type == ico) {
+      .app-entity-#{$entity} {
+        color: $color !important; 
+      }    
+    }
+    @else if ($type == card) {
+      &.app-entity-#{$entity} {
+        border-left: 4px solid #{$color} !important;
+      }   
+    }
+    @else if ($type == cardInfoBadge) {
+      &.app-entity-#{$entity} {
+        color: $color !important;
+      }   
+    }
+    @else if ($type == home_card) {
+      &.app-entity-#{$entity} {
+        background-color: $color !important;  
+      } 
+    }
+    @else if ($type == facet) {
+      &.#{$entity} {
+        color: $color;
+        background-color: rgba($color, $app-facet-entity-bg-color-opacity);
+
+        &:hover,
+        &.active {
+          color: $app-color-lightnes;
+          border-color: $color;
+          background-color: $color;
+
+          strong {
+            font-weight: 600;
+          }
+
+          .app-fx-wrapper {
+            .app-fx-right {
+              padding-left: 0;
+            }
+          }
+        }
+
+        .app-fx-wrapper {
+          .app-fx-left {
+            background-color: $color;
+
+            .mat-icon {
+              color: $app-color-lightnes !important;
+            }
+          }
+
+          .app-fx-right {
+            border-color: rgba($color, $app-facet-entity-border-color-opacity);
+          }
+        }
+      }    
+    }
+  }
+}
+
+
+// set link color
+@mixin setLinkColor($color) {
+  color: $color;
+
+  &:hover {
+    color: rgba($color, .7);
+  }
+}
