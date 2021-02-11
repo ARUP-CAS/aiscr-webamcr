@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
+from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 
@@ -21,9 +22,12 @@ def detail(request, ident_cely):
     oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
     akce = Akce.objects.filter(projekt=projekt)
 
+    show_oznamovatel = projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
+
     context["projekt"] = projekt
     context["oznamovatel"] = oznamovatel
     context["akce"] = akce
+    context["show"] = {"oznamovatel": show_oznamovatel}
 
     return render(request, "projekt/detail.html", context)
 

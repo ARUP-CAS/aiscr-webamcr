@@ -1,8 +1,11 @@
 import datetime
+import logging
 
 from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
 from heslar.models import RuianKatastr
 from projekt.models import Projekt
+
+logger = logging.getLogger(__name__)
 
 
 def get_region_from_cadastre(cadastre: RuianKatastr) -> str:
@@ -33,6 +36,10 @@ def get_permanent_project_ident(project: Projekt) -> str:
 
 
 def get_temporary_project_ident(project: Projekt, region: str) -> str:
-    year = datetime.datetime.now().year
-    id_number = "{0}".format(str(project.id)).zfill(5)[-5:]
-    return "X-" + region + "-" + str(year) + id_number
+    if project.id is not None:
+        year = datetime.datetime.now().year
+        id_number = "{0}".format(str(project.id)).zfill(5)[-5:]
+        return "X-" + region + "-" + str(year) + id_number
+    else:
+        logger.error("Could not assign temporary identifier to project with Null ID")
+        return None

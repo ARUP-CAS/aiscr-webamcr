@@ -34,8 +34,8 @@
         <td>{{ projekt.hlavni_katastr }}</td>
         <td>{{ projekt.podnet }}</td>
         <td>{{ projekt.lokalizace }}</td>
-        <td>{{ projekt.datum_zahajeni }}</td>
-        <td>{{ projekt.datum_ukonceni }}</td>
+        <td>{{ projekt.datum_zahajeni|date:'Y/m/d' }}</td>
+        <td>{{ projekt.datum_ukonceni|date:'Y/m/d' }}</td>
         <td>{{ projekt.organizace }}</td>
         <td>{{ projekt.vedouci_projektu }}</td>
         <td>{{ projekt.kulturni_pamatka }}</td>

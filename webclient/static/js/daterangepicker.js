@@ -6,7 +6,6 @@ $('input[name="planovane_zahajeni"]').daterangepicker({
         cancelLabel: "Zrušit",
         applyLabel: "Vybrat odhad začátku prací"
     },
-
 });
 
 $('input[name="planovane_zahajeni"]').on('apply.daterangepicker', function(ev, picker) {

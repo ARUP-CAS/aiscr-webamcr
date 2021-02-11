@@ -3,14 +3,26 @@ from core.constants import AZ_STAV_ZAPSANY
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from heslar import hesla
-from heslar.hesla import (
-    PRESNOST_DESITKY_METRU_ID,
-    PRISTUPNOST_ANONYM_ID,
-    TYP_ORGANIZACE_MUZEUM_ID,
-    TYP_PIAN_PLOCHA_ID,
-)
+from heslar.hesla import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from uzivatel.models import Organizace, User
+
+# Konstanty pouzite v testech
+PRESNOST_DESITKY_METRU_ID = 56
+PRESNOST_JEDNOTKY_METRU_ID = 567
+PRESNOST_POLOHA_PODLE_KATASTRU_ID = 1150
+PRESNOST_STOVKY_METRU_ID = 1213
+
+TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
+TYP_ORGANIZACE_MUZEUM_ID = 342
+TYP_ORGANIZACE_TERENNI_PRACOVISTE_ID = 710
+TYP_ORGANIZACE_UNIVERZITA_ID = 487
+TYP_ORGANIZACE_VYZKUMNA_INSTITUCE_ID = 581
+TYP_ORGANIZACE_OSTATNI_ID = 110
+
+TYP_PIAN_PLOCHA_ID = 476
+TYP_PIAN_LINIE_ID = 1206
+TYP_PIAN_BOD_ID = 58
 
 
 def add_middleware_to_request(request, middleware_class):
