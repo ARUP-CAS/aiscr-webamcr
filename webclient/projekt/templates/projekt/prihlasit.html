@@ -1,0 +1,18 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Přihlášení projektu" %}{{ projekt.ident_cely }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Přihlášení projektu " %}{{ projekt.ident_cely }}</h1>
+
+  {% crispy form %}
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}
