@@ -29,9 +29,9 @@
   {% block head %}{% endblock %}
 </head>
 <body class="{{ request.path|url_to_classes }}">
-<div class="d-flex" id="wrapper">
+<div class="d-flex" id="app-wrapper">
   {% block sidebar %}{% endblock %}
-  <div id="page-content-wrapper">
+  <div id="app-page-wrapper">
     {% block navbar %}{% endblock %}
     {% block breadcrumb %}{% endblock %}
 
