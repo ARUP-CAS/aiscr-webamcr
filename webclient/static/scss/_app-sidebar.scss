@@ -5,7 +5,7 @@
 @import 'app-global';
 @import 'app-mixins';
 
-#sidebar-wrapper {
+#app-sidebar-wrapper {
   position: fixed;
   top: 0px;
   left: 0px;
@@ -19,7 +19,7 @@
   background-color: $app-sidebar-bg;
   width: $app-sidebar-width;
 
-  .sidebar-heading {
+  .app-sidebar-heading {
     padding: 0.875rem 1.25rem;
     font-size: 1.2rem;
   }
@@ -77,7 +77,7 @@
 
 #app-wrapper {
   &.toggled {
-    #sidebar-wrapper {
+    #app-sidebar-wrapper {
       margin-left: 0;
     }
   }  
@@ -85,13 +85,13 @@
 
 
 @media (min-width: 768px) {
-  #sidebar-wrapper {
+  #app-sidebar-wrapper {
     margin-left: 0;
   }
 
   #app-wrapper {
     &.toggled {
-      #sidebar-wrapper {
+      #app-sidebar-wrapper {
         margin-left: -#{$app-sidebar-width};
       }
     }
