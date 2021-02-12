@@ -1,5 +1,6 @@
+from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout
+from crispy_forms.layout import HTML, Div, Layout, Submit, Button
 from django import forms
 from django.utils.translation import gettext as _
 from projekt.models import Projekt
@@ -34,7 +35,6 @@ class PrihlaseniProjektForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -47,6 +47,12 @@ class PrihlaseniProjektForm(forms.ModelForm):
                     "kulturni_pamatka_cislo",
                     "kulturni_pamatka_popis",
                     css_class="card-body",
+                ),
+                Div(
+                    FormActions(
+                        Submit('save', 'Přihlásit'),
+                        Button('cancel', 'Zrušit'),
+                    )
                 ),
                 css_class="card",
             )
