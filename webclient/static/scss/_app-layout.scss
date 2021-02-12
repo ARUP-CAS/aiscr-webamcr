@@ -1,26 +1,33 @@
 // --- LAYOUT ---
 
-#wrapper {
+body {
+  &.app-login {
+    background-color: $app-sidebar-bg;
+  }
+}
+
+#app-wrapper {
   overflow-x: hidden;
 }
 
-#page-content-wrapper {
+#app-page-wrapper {
   /* min-width: 100vw; */
   width: 100%;
   -webkit-transition: margin .25s ease-out;
   -moz-transition: margin .25s ease-out;
   -o-transition: margin .25s ease-out;
   transition: margin .25s ease-out;
-}
 
-#page-content-wrapper {
   .container-fluid {
+    @import 'app-login';
+
     min-height: 800px;
   }
 }
 
-#wrapper.toggled {
-  #page-content-wrapper {
+
+#app-wrapper.toggled {
+  #app-page-wrapper {
     margin-left: 0;
   }
 }

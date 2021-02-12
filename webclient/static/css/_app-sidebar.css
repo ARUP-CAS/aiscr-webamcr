@@ -1,4 +1,4 @@
-#wrapper {
+#app-wrapper {
   overflow-x: hidden;
 }
 
@@ -23,7 +23,7 @@
   font-size: 1.2rem;
 }
 
-#page-content-wrapper {
+#app-page-wrapper {
   /* min-width: 100vw; */
   width: 100%;
   -webkit-transition: margin .25s ease-out;
@@ -32,11 +32,11 @@
   transition: margin .25s ease-out;
 }
 
-#wrapper.toggled #sidebar-wrapper {
+#app-wrapper.toggled #sidebar-wrapper {
   margin-left: 0;
 }
 
-#wrapper.toggled #page-content-wrapper {
+#app-wrapper.toggled #app-page-wrapper {
   margin-left: 0;
 }
 
@@ -45,16 +45,16 @@
     margin-left: 0;
   }
 
-  /* #page-content-wrapper {
+  /* #app-page-wrapper {
     min-width: 0;
     width: 100%;
   } */
 
-  #wrapper.toggled #sidebar-wrapper {
+  #app-wrapper.toggled #sidebar-wrapper {
     margin-left: -300px;
   }
 
-  #page-content-wrapper {
+  #app-page-wrapper {
     margin-left: 300px;
   }
 }
@@ -68,7 +68,7 @@
     transition: margin .25s ease-out;
   }
 
-  #wrapper.toggled .navbar {
+  #app-wrapper.toggled .navbar {
     margin-left: 300px;
   }
 }

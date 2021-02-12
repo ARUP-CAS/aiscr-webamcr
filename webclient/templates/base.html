@@ -27,10 +27,10 @@
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
 </head>
-<body>
-<div class="d-flex" id="wrapper">
+<body class="{% if request.path == '/accounts/login/' %} app-login {% endif %}">
+<div class="d-flex" id="app-wrapper">
   {% block sidebar %}{% endblock %}
-  <div id="page-content-wrapper">
+  <div id="app-page-wrapper">
     {% block navbar %}{% endblock %}
     {% block breadcrumb %}{% endblock %}
 

@@ -75,7 +75,7 @@
   }
 }
 
-#wrapper {
+#app-wrapper {
   &.toggled {
     #sidebar-wrapper {
       margin-left: 0;
@@ -89,7 +89,7 @@
     margin-left: 0;
   }
 
-  #wrapper {
+  #app-wrapper {
     &.toggled {
       #sidebar-wrapper {
         margin-left: -#{$app-sidebar-width};
@@ -97,7 +97,7 @@
     }
   }
 
-  #page-content-wrapper {
+  #app-page-wrapper {
     margin-left: $app-sidebar-width;
   }
 }
@@ -111,7 +111,7 @@
     transition: margin .25s ease-out;
   }
 
-  #wrapper {
+  #app-wrapper {
     &.toggled {
       .navbar {
         margin-left: $app-sidebar-width;
