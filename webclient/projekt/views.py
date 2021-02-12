@@ -1,14 +1,18 @@
 import logging
 
 from arch_z.models import Akce
+from core.constants import PROJEKT_STAV_OZNAMENY
+from core.message_constants import PROJEKT_USPESNE_PRIHLASEN
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from oznameni.models import Oznamovatel
+from projekt.forms import PrihlaseniProjektForm
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -63,7 +67,33 @@ class ProjektListView(LoginRequiredMixin, ListView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def prihlasit(request, ident_cely):
-    return HttpResponse("Not implemented yet")
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+
+    if request.method == "POST":
+        form = PrihlaseniProjektForm(request.POST)
+
+        if projekt.stav == PROJEKT_STAV_OZNAMENY:
+
+            if form.is_valid():
+                projekt = form.save(commit=False)
+                projekt.set_prihlaseny(request.user)
+                projekt.save()
+
+                messages.add_message(
+                    request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN
+                )
+
+                return redirect("projekt/detail/", ident_cely)
+            else:
+                logger.debug("The form is not valid")
+                logger.debug(form.errors)
+
+        else:
+            return render(request, "403.html")
+    else:
+        form = PrihlaseniProjektForm()
+
+    return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
 
 @login_required

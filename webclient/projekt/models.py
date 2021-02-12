@@ -26,6 +26,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.shortcuts import get_object_or_404
+from heslar.hesla import HESLAR_KULTURNI_PAMATKA
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
@@ -68,7 +69,12 @@ class Projekt(models.Model):
     datum_ukonceni = models.DateField(blank=True, null=True)
     planovane_zahajeni_text = models.TextField(blank=True, null=True)
     kulturni_pamatka = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="kulturni_pamatka", blank=True, null=True
+        Heslar,
+        models.DO_NOTHING,
+        db_column="kulturni_pamatka",
+        blank=True,
+        null=True,
+        limit_choices_to={"nazev_heslare": HESLAR_KULTURNI_PAMATKA},
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, blank=True, null=True)
@@ -141,15 +147,9 @@ class Projekt(models.Model):
     def set_zapsany(self):
         pass
 
-    def set_prihlaseny(
-        self, organizace, user, vedouci, pamatka_cislo, pamatka_popis, pamatka
-    ):
+    def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
-        self.organizace = organizace
-        self.kulturni_pamatka_cislo = pamatka_cislo
-        self.kulturni_pamatka_popis = pamatka_popis
-        self.kulturni_pamatka = pamatka
-        self.vedouci_projektu = vedouci
+        self.organizace = user.organizace
         Historie(
             typ_zmeny=PRIHLASENI_PROJ,
             uzivatel=user,
