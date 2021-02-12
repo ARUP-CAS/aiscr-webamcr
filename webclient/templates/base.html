@@ -1,5 +1,6 @@
 {% load compress %}
 {% load static %}
+{% load template_filters %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -27,7 +28,7 @@
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{{ request.path|url_to_classes }}">
 <div class="d-flex" id="wrapper">
   {% block sidebar %}{% endblock %}
   <div id="page-content-wrapper">
