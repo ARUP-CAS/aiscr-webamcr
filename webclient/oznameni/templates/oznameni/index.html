@@ -33,14 +33,14 @@
     {% crispy form_oznamovatel %}
 
     <small id="hint_id_map"
-           class="form-text text-muted">{% translate "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
+           class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
     {% include "map.html" %}
 
     {% crispy form_projekt %}
 
     <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky"
             aria-expanded="false" aria-controls="collapsePodminky">
-      {% translate "Přečíst podmínky" %}
+      {% trans "Přečíst podmínky" %}
     </button>
     <div class="collapse" id="collapsePodminky">
       <div class="card card-body">

@@ -13,6 +13,8 @@ $gray-800: #343a40 !default;
 $gray-900: #212529 !default;
 $black:    #000 !default;
 
+$primary: #0d47a1 !default;
+
 // container
 $container-max-width-xl: 1140px !default; 
 
@@ -36,3 +38,6 @@ $app-sidebar-bg: $blue-gray-900 !default;
 $app-sidebar-accordion-color: $blue-gray-300 !default;
 $app-sidebar-accordion-color-active: $blue-gray-50 !default;
 $app-sidebar-accordion-body-color: $blue-gray-800 !default;
+
+// login
+$app-login-form-width: 350px !default;

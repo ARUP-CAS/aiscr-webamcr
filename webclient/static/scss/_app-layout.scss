@@ -3,8 +3,9 @@
 body {
   &.app-login {
     background-color: $app-sidebar-bg;
+    margin-top: 50px;
 
-    &.container-fluid {
+    .container-fluid {
       max-width: $container-max-width-xl;
     }
   }
