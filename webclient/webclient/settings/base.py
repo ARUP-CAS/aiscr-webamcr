@@ -6,14 +6,15 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-secrets = ""
-
+file_path = ""
 if os.path.exists("webclient/settings/secrets.json"):
-    with open(BASE_DIR / "webclient/settings/secrets.json", "r") as f:
-        secrets = json.load(f)
+    file_path = "webclient/settings/secrets.json"
 else:
-    with open(BASE_DIR / "webclient/settings/secrets_test.json", "r") as f:
-        secrets = json.load(f)
+    # This is secrets file for the tests
+    file_path = "webclient/settings/secrets_test.json"
+
+with open(BASE_DIR / file_path, "r") as f:
+    secrets = json.load(f)
 
 
 def get_secret(setting, file=secrets):
