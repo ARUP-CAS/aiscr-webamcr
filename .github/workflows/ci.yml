@@ -41,6 +41,7 @@ jobs:
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal" 
     - name: Make migrations
+      working-directory: ./webclient
       run: |
         python manage.py makemigrations
         python manage.py migrate
