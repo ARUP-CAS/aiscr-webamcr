@@ -43,7 +43,7 @@ jobs:
     - name: Coverage report
       working-directory: ./webclient
       run: |
-        coverage run manage.py test --settings=webclient.settings.local_test
+        coverage run manage.py test --settings=webclient.settings.dev
         coverage report
     - name: Django Testing
       working-directory: ./webclient
