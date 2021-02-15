@@ -31,6 +31,7 @@ jobs:
         pip install -r webclient/webclient/requirements/dev.txt
     - name: Install gdal
       run: |
+        sudo apt-get install -y libgdal-dev locales
         pip install GDAL==3.0.4
     - name: Coverage report
       working-directory: ./webclient
