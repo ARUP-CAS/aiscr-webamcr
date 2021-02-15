@@ -6,6 +6,8 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+secrets = ""
+
 if os.path.exists("webclient/settings/secrets.json"):
     with open(BASE_DIR / "webclient/settings/secrets.json", "r") as f:
         secrets = json.load(f)
