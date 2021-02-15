@@ -20,9 +20,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r webclient/webclient/requirements/dev.txt
     - name: Coverage report
+    - working-directory: ./webclient
       run: |
-        coverage run webclient/manage.py test
+        coverage run manage.py test --settings=webclient.settings.local_test
         coverage report
     - name: Django Testing
+    - working-directory: ./webclient
       run: |
-        python3 webclient/manage.py test
+        python3 manage.py test
