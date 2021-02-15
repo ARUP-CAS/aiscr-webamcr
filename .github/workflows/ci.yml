@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu:focal
+    runs-on: ubuntu-latest
     services:
       postgres: # we need a postgres docker image to be booted a side car service to run the tests that needs a db
         image: postgis/postgis
@@ -39,7 +39,7 @@ jobs:
         C_INCLUDE_PATH: /usr/include/gdal
     - name: Install gdal
       run: |
-        pip install GDAL==3.0.4
+        pip install GDAL==2.2.3
     - name: Coverage report
       working-directory: ./webclient
       run: |
