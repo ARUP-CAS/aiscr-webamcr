@@ -43,7 +43,6 @@ jobs:
     - name: Make migrations
       working-directory: ./webclient
       run: |
-        python manage.py makemigrations --settings=webclient.settings.dev
         python manage.py migrate --settings=webclient.settings.dev
     - name: Coverage report
       working-directory: ./webclient
