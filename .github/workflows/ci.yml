@@ -32,14 +32,14 @@ jobs:
         pip install -r webclient/webclient/requirements/dev.txt
     - name: Install gdal dependencies
       run: |
-        sudo apt-get install -y python3-pip libgdal-dev locales
+        sudo apt-get install -y libgdal-dev locales
         gdal-config --version
       env:
         CPLUS_INCLUDE_PATH: /usr/include/gdal
         C_INCLUDE_PATH: /usr/include/gdal
     - name: Install gdal
       run: |
-        pip install GDAL==2.2.3
+        pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal" 
     - name: Coverage report
       working-directory: ./webclient
       run: |
