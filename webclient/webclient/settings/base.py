@@ -1,12 +1,17 @@
 import json
+import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-with open(BASE_DIR / "webclient/settings/secrets.json", "r") as f:
-    secrets = json.load(f)
+if os.path.exists("webclient/settings/secrets.json"):
+    with open(BASE_DIR / "webclient/settings/secrets.json", "r") as f:
+        secrets = json.load(f)
+else:
+    with open(BASE_DIR / "webclient/settings/secrets_test.json", "r") as f:
+        secrets = json.load(f)
 
 
 def get_secret(setting, file=secrets):
