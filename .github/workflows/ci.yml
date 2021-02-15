@@ -21,8 +21,8 @@ jobs:
         pip install -r webclient/webclient/requirements/dev.txt
     - name: Coverage report
       run: |
-        coverage run manage.py test
+        coverage run webclient/manage.py test
         coverage report
     - name: Django Testing
       run: |
-        python3 manage.py test
+        python3 webclient/manage.py test
