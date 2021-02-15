@@ -1,0 +1,20 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Schválení projektu" %}{{ projekt.ident_cely }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Schválení projektu " %}{{ projekt.ident_cely }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">{% trans "Schválit projekt" %}</button>
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

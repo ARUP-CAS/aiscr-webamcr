@@ -7,13 +7,10 @@ from core.ident_cely import (
     get_region_from_cadastre,
     get_temporary_project_ident,
 )
+from core.tests.runner import PRESNOST_DESITKY_METRU_ID, TYP_PIAN_PLOCHA_ID
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
-from heslar.hesla import (
-    PRESNOST_DESITKY_METRU_ID,
-    TYP_PIAN_PLOCHA_ID,
-    TYP_PROJEKTU_ZACHRANNY_ID,
-)
+from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt

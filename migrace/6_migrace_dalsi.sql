@@ -195,3 +195,4 @@ update auth_user set hlavni_role = 3 where (auth_level & 16) = 16;
 -- Pridani ciziko klice na user_groups
 alter table auth_user add constraint auth_user_hlavni_role foreign key (hlavni_role) references auth_group (id);
 -- TODO pridat NOT NULL na cizy klic kdyz budou mit vsichni role
+alter table projekt alter column historie set not null;

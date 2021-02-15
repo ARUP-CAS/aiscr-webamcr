@@ -37,9 +37,9 @@ def add_middleware_to_response(request, middleware_class):
     return request
 
 
-class AMCRMixinRunner(object):
+class AMCRTestRunner(BaseRunner):
     def setup_databases(self, *args, **kwargs):
-        temp_return = super(AMCRMixinRunner, self).setup_databases(*args, **kwargs)
+        temp_return = super(AMCRTestRunner, self).setup_databases(*args, **kwargs)
         print("Setting up my database content ...")
 
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
@@ -153,8 +153,4 @@ class AMCRMixinRunner(object):
 
     def teardown_databases(self, *args, **kwargs):
         # do somthing
-        return super(AMCRMixinRunner, self).teardown_databases(*args, **kwargs)
-
-
-class AMCRTestRunner(AMCRMixinRunner, BaseRunner):
-    pass
+        return super(AMCRTestRunner, self).teardown_databases(*args, **kwargs)

@@ -1,0 +1,22 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Přidání osoby" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Přidání osoby" %}</h1>
+
+  <form method="POST">
+    {% crispy form %}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    <input type="submit" name="save" value="{% translate 'Přidat osobu' %}" class="btn btn-primary" id="submit-id-save">
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

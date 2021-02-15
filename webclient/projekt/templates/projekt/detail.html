@@ -19,7 +19,21 @@
   <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
 
   <div class="card">
-    <div class="card-header">{% trans "Detail" %}</div>
+    <div class="card-header">
+      {% trans "Detail" %}
+      <div class="btn-group" role="group" aria-label="Basic example">
+        {% if show.vratit_link %}
+          <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}" class="btn btn-secondary">{% trans "Vrátit" %}</a>
+        {% endif %}
+        <a href="/" class="btn btn-warning">{% trans "Navrhnout zrušení" %}</a>
+        {% if show.schvalit_link %}
+          <a href="{% url 'projekt:projekt_schvalit' projekt.ident_cely %}" class="btn btn-secondary">{% trans "Schválit" %}</a>
+        {% endif %}
+        {% if show.prihlasit_link %}
+          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}" class="btn btn-primary">{% trans "Přihlásit" %}</a>
+        {% endif %}
+      </div>
+    </div>
     <div class="card-body">
       <div class="row">
         <div class="col">{{ projekt.typ_projektu }}</div>
@@ -41,7 +55,7 @@
         <div class="col">{{ projekt.kulturni_pamatka }}</div>
       </div>
       <div class="row">
-        <div class="col">{{ projekt.vedouci }}</div>
+        <div class="col">{{ projekt.vedouci_projektu }}</div>
         <div class="col">{{ projekt.kulturni_pamatka_cislo }}</div>
       </div>
       <div class="row">
@@ -57,22 +71,22 @@
     </div>
   </div>
   {% if show.oznamovatel %}
-  <div class="card mt-2">
-    <div class="card-header">{% trans "Oznámení" %}</div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col">{{ oznamovatel.oznamovatel }}</div>
-        <div class="col">{{ oznamovatel.odpovedna_osoba }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ oznamovatel.email }}</div>
-        <div class="col">{{ oznamovatel.telefon }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ oznamovatel.adresa }}</div>
+    <div class="card mt-2">
+      <div class="card-header">{% trans "Oznámení" %}</div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col">{{ oznamovatel.oznamovatel }}</div>
+          <div class="col">{{ oznamovatel.odpovedna_osoba }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ oznamovatel.email }}</div>
+          <div class="col">{{ oznamovatel.telefon }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ oznamovatel.adresa }}</div>
+        </div>
       </div>
     </div>
-  </div>
   {% endif %}
 
   <!-- TODO Tabulka projektové dokumentace -->

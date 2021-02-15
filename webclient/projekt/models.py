@@ -88,10 +88,8 @@ class Projekt(models.Model):
     )
     historie = models.ForeignKey(
         HistorieVazby,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         db_column="historie",
-        blank=True,
-        null=True,
     )
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
@@ -150,6 +148,7 @@ class Projekt(models.Model):
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
         self.organizace = user.organizace
+        logger.debug("Historie: " + str(self.historie))
         Historie(
             typ_zmeny=PRIHLASENI_PROJ,
             uzivatel=user,
@@ -200,7 +199,6 @@ class Projekt(models.Model):
         Historie(typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie)
 
     def set_vracen(self, user, new_state, poznamka):
-        # TODO check if the new state is reachable from the old state???
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_PROJ,

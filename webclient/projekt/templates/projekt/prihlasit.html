@@ -10,7 +10,11 @@
 {% block content %}
   <h1>{% trans "Přihlášení projektu " %}{{ projekt.ident_cely }}</h1>
 
-  {% crispy form %}
+  <form method="POST">
+    {% crispy form %}
+    <input type="submit" name="save" value="{% translate 'Přihlásit projekt' %}" class="btn btn-primary" id="submit-id-save">
+    <a href="{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }} ">{% trans "Nové jméno" %}</a>
+  </form>
 
 {% endblock %}
 
