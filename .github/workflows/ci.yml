@@ -43,8 +43,8 @@ jobs:
     - name: Make migrations
       working-directory: ./webclient
       run: |
-        python manage.py makemigrations
-        python manage.py migrate
+        python manage.py makemigrations --settings=webclient.settings.dev
+        python manage.py migrate --settings=webclient.settings.dev
     - name: Coverage report
       working-directory: ./webclient
       run: |
@@ -53,4 +53,4 @@ jobs:
     - name: Django Testing
       working-directory: ./webclient
       run: |
-        python3 manage.py test
+        python3 manage.py test --settings=webclient.settings.dev
