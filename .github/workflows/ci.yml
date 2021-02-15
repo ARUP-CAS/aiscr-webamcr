@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres: # we need a postgres docker image to be booted a side car service to run the tests that needs a db
-        image: postgis
+        image: postgis/postgis
         env: # the environment variable must match with app/settings.py if block of DATBASES variable otherwise test will fail due to connectivity issue.
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_secretpass
