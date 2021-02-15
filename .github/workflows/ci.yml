@@ -33,6 +33,7 @@ jobs:
     - name: Install gdal dependencies
       run: |
         sudo apt-get install -y python3-pip libgdal-dev locales
+        gdal-config --version
       env:
         CPLUS_INCLUDE_PATH: /usr/include/gdal
         C_INCLUDE_PATH: /usr/include/gdal
