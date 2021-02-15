@@ -40,6 +40,10 @@ jobs:
     - name: Install gdal
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal" 
+    - name: Make migrations
+      run: |
+        python manage.py makemigrations
+        python manage.py migrate
     - name: Coverage report
       working-directory: ./webclient
       run: |
