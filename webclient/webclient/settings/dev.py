@@ -35,3 +35,5 @@ STATICFILES_FINDERS = [
 
 INSTALLED_APPS.insert(0, "livereload")
 MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
+
+STATIC_ROOT = ""
