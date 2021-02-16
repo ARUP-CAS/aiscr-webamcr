@@ -93,9 +93,7 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("Katastrální území"),
         help_text=_("Katastální území zadané bodem."),
     )
-    katastry = forms.MultipleChoiceField(
-
-    )
+    katastry = forms.MultipleChoiceField()
 
     class Meta:
         model = Projekt
@@ -133,11 +131,11 @@ class ProjektOznameniForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
-        self.fields['katastry'] = forms.MultipleChoiceField(
+        self.fields["katastry"] = forms.MultipleChoiceField(
             label=_("Další katastry"),
             required=False,
             help_text=_("Vyberte případné další katastry dotčené záměrem."),
-            choices=RuianKatastr.objects.all().values('id', 'nazev')
+            choices=RuianKatastr.objects.all().values_list("id", "nazev"),
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False

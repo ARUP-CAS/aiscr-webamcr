@@ -32,6 +32,18 @@
         {% if show.prihlasit_link %}
           <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}" class="btn btn-primary">{% trans "Přihlásit" %}</a>
         {% endif %}
+        {% if show.zahajit_teren_link %}
+          <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}" class="btn btn-primary">{% trans "Zahájit výzkum" %}</a>
+        {% endif %}
+        {% if show.ukoncit_teren_link %}
+          <a href="{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}" class="btn btn-primary">{% trans "Ukončit výzkum" %}</a>
+        {% endif %}
+        {% if show.uzavrit_link %}
+          <a href="{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}" class="btn btn-primary">{% trans "Uzavřít" %}</a>
+        {% endif %}
+        {% if show.archivovat_link %}
+          <a href="{% url 'projekt:projekt_archivovat' projekt.ident_cely %}" class="btn btn-primary">{% trans "Archivovat" %}</a>
+        {% endif %}
       </div>
     </div>
     <div class="card-body">

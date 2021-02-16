@@ -26,7 +26,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.shortcuts import get_object_or_404
-from heslar.hesla import HESLAR_KULTURNI_PAMATKA
+from heslar.hesla import HESLAR_KULTURNI_PAMATKA, TYP_DOKUMENTU_NALEZOVA_ZPRAVA
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
@@ -155,18 +155,16 @@ class Projekt(models.Model):
             vazba=self.historie,
         ).save()
 
-    def set_zahajeny_v_terenu(self, user, datum_zahajeni):
+    def set_zahajeny_v_terenu(self, user):
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
-        self.datum_zahajeni = datum_zahajeni
         Historie(
             typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
             uzivatel=user,
             vazba=self.historie,
         ).save()
 
-    def set_ukoncen_v_terenu(self, user, datum_ukonceni):
+    def set_ukoncen_v_terenu(self, user):
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
-        self.datum_ukonceni = datum_ukonceni
         Historie(
             typ_zmeny=UKONCENI_V_TERENU_PROJ,
             uzivatel=user,
@@ -206,6 +204,79 @@ class Projekt(models.Model):
             poznamka=poznamka,
             vazba=self.historie,
         )
+
+    def check_pred_uzavrenim(self):
+        all_events_valid = True
+        reports_present = True
+        has_dj_relation = True
+        each_dj_has_pian = True
+        each_dj_is_valid = True
+
+        # There must be at least one project related event and all of the events must have akce.datum_zahajeni,
+        # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
+        # Related events must have a “vedouci” and “hlavni_katastr” column filled in
+        has_event = len(self.akce_set.all()) > 0
+        for a in self.akce_set.all():
+            if (
+                a.datum_zahajeni is None
+                or a.datum_ukonceni is None
+                or a.lokalizace_okolnosti is None
+                or a.specifikace_data is None
+                or a.hlavni_typ is None
+                or a.hlavni_vedouci is None
+                or a.archeologicky_zaznam.hlavni_katastr is None
+            ):
+                all_events_valid = False
+                logger.debug(
+                    "Akce " + a.archeologicky_zaznam.ident_cely + " nema vsechna data."
+                )
+        for a in self.akce_set.all():
+            # There must be a document of type “nálezová zpráva” attached to each related event,
+            # or akce.je_nz must be true.
+            if (
+                len(
+                    a.archeologicky_zaznam.dokumentcast_set.filter(
+                        dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
+                    )
+                )
+                == 0
+                and not a.je_nz
+            ):
+                reports_present = False
+                logger.debug(
+                    "Akce "
+                    + a.archeologicky_zaznam.ident_cely
+                    + " nema nalezovou zpravu."
+                )
+            # Related events must have at least one valid documentation unit (dokumentační jednotka)
+            # record associated with it.
+            if len(a.archeologicky_zaznam.dokumentacnijednotka_set.all()) == 0:
+                has_dj_relation = False
+                logger.debug(
+                    "Akce "
+                    + a.archeologicky_zaznam.ident_cely
+                    + " nema dokumentacni jednotku."
+                )
+            for dj in a.archeologicky_zaznam.dokumentacnijednotka_set.all():
+                # Each documentation unit must have either associated at least one component or the
+                # documentation unit must be negative.
+                if not dj.negativni_jednotka and len(dj.komponenty) == 0:
+                    each_dj_is_valid = False
+                    logger.debug(
+                        "DJ " + dj.ident_cely + " nema komponentu ani neni negativni."
+                    )
+                # Each documentation unit associated with the project event must have a valid PIAN relation.
+                if dj.pian is None:
+                    each_dj_has_pian = False
+                    logger.debug("DJ " + dj.ident_cely + " nema pian.")
+        return {
+            "has_event": has_event,
+            "all_events_valid": all_events_valid,
+            "reports_present": reports_present,
+            "has_dj_relation": has_dj_relation,
+            "each_dj_has_pian": each_dj_has_pian,
+            "each_dj_is_valid": each_dj_is_valid,
+        }
 
     def parse_ident_cely(self):
         year = None

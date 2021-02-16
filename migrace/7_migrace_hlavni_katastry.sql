@@ -14,3 +14,11 @@ alter table archeologicky_zaznam add constraint archeologicky_zaznam_hlavni_kata
 update archeologicky_zaznam set hlavni_katastr = sel.k from (select archeologicky_zaznam_id as p, katastr_id as k from archeologicky_zaznam_katastr pk where pk.hlavni = true) as sel where sel.p = id;
 delete from archeologicky_zaznam_katastr where hlavni = true;
 alter table archeologicky_zaznam_katastr drop column hlavni;
+
+-- Zmena ulozeni vedouciho akce
+alter table akce add column hlavni_vedouci integer;
+alter table akce add constraint akce_hlavni_vedouci_fkey foreign key (hlavni_vedouci) references osoba(id);
+-- > 66 865 zaznamu
+update akce set hlavni_vedouci = sel.v from (select akce as a, vedouci as v from akce_vedouci av where av.hlavni = true) as sel where sel.a = archeologicky_zaznam;
+delete from akce_vedouci where hlavni = true;
+alter table akce_vedouci drop column hlavni;

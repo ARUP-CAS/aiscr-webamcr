@@ -82,3 +82,77 @@ class PrihlaseniProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+
+class ZahajitVTerenuForm(forms.ModelForm):
+    class Meta:
+        model = Projekt
+        fields = ("datum_zahajeni",)
+        labels = {
+            "datum_zahajeni": _("Datum zahájení prací"),
+        }
+        help_texts = {
+            "datum_zahajeni": _("Lorem ipsum."),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
+        self.fields["datum_zahajeni"].required = True
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    HTML(_("Zahájení výzkumu projektu")),
+                    css_class="card-header",
+                ),
+                Div(
+                    Div(
+                        "datum_zahajeni",
+                        css_class="card-body",
+                    )
+                ),
+                Div(
+                    FormActions(
+                        Submit("save", "Zahájit v terénu"),
+                    )
+                ),
+                css_class="card",
+            )
+        )
+
+
+class UkoncitVTerenuForm(forms.ModelForm):
+    class Meta:
+        model = Projekt
+        fields = ("datum_ukonceni",)
+        labels = {
+            "datum_ukonceni": _("Datum ukončení prací"),
+        }
+        help_texts = {
+            "datum_ukonceni": _("Lorem ipsum."),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(UkoncitVTerenuForm, self).__init__(*args, **kwargs)
+        self.fields["datum_ukonceni"].required = True
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    HTML(_("Ukončení výzkumu projektu")),
+                    css_class="card-header",
+                ),
+                Div(
+                    Div(
+                        "datum_ukonceni",
+                        css_class="card-body",
+                    ),
+                    Div(
+                        FormActions(
+                            Submit("save", "Ukončit v terénu"),
+                        )
+                    ),
+                ),
+                css_class="card",
+            )
+        )

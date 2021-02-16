@@ -1,11 +1,19 @@
-from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
+from core.constants import (
+    ARCHIVACE_AZ,
+    AZ_STAV_ARCHIVOVANY,
+    AZ_STAV_ODESLANY,
+    AZ_STAV_ZAPSANY,
+    ODESLANI_AZ,
+    ZAPSANI_AZ,
+)
 from core.models import KomponentaVazby
 from django.db import models
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar, RuianKatastr
-from historie.models import HistorieVazby
+from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from projekt.models import Projekt
+from uzivatel.models import Organizace, Osoba
 
 
 class ArcheologickyZaznam(models.Model):
@@ -85,6 +93,12 @@ class Akce(models.Model):
         null=True,
         related_name="akce_vedlejsi_typy",
     )
+    hlavni_vedouci = models.ForeignKey(
+        Osoba,
+        on_delete=models.DO_NOTHING,
+        db_column="hlavni_vedouci",
+        null=True,
+    )
     souhrn_upresneni = models.TextField(blank=True, null=True)
     ulozeni_nalezu = models.TextField(blank=True, null=True)
     datum_ukonceni = models.TextField(blank=True, null=True)
@@ -107,6 +121,46 @@ class Akce(models.Model):
 
     class Meta:
         db_table = "akce"
+
+    def set_zapsana(self, user):
+        self.archeologicky_zaznam.stav = AZ_STAV_ZAPSANY
+        # TODO doplnit dalsi pole ktere nebudou v modelform
+        Historie(
+            typ_zmeny=ZAPSANI_AZ,
+            uzivatel=user,
+            vazba=self.archeologicky_zaznam.historie,
+        ).save()
+        self.archeologicky_zaznam.save()
+
+    def set_odeslana(self, user):
+        self.archeologicky_zaznam.stav = AZ_STAV_ODESLANY
+        Historie(
+            typ_zmeny=ODESLANI_AZ,
+            uzivatel=user,
+            vazba=self.archeologicky_zaznam.historie,
+        ).save()
+        self.archeologicky_zaznam.save()
+
+    def set_archivovana(self, user):
+        self.archeologicky_zaznam.stav = AZ_STAV_ARCHIVOVANY
+        Historie(
+            typ_zmeny=ARCHIVACE_AZ,
+            uzivatel=user,
+            vazba=self.archeologicky_zaznam.historie,
+        ).save()
+        self.archeologicky_zaznam.save()
+
+
+class AkceVedouci(models.Model):
+    akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
+    vedouci = models.ForeignKey(Osoba, on_delete=models.DO_NOTHING, db_column="vedouci")
+    organizace = models.ForeignKey(
+        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+    )
+
+    class Meta:
+        db_table = "akce_vedouci"
+        unique_together = (("akce", "vedouci"),)
 
 
 class Lokalita(models.Model):

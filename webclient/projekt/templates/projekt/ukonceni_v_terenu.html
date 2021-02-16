@@ -1,0 +1,29 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Ukončení projektu v terénu " %}{{ projekt.ident_cely }}{% endblock %}
+{% block head %}
+  <!-- Date picker imports -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Ukončení projektu v terénu " %}{{ projekt.ident_cely }}</h1>
+  {% crispy form %}
+
+{% endblock %}
+
+{% block script %}
+  <script>
+      moment.locale('cs');
+      $('input[name="datum_ukonceni"]').daterangepicker({
+          singleDatePicker: true,
+          showDropdowns: true,
+      });
+
+  </script>
+{% endblock %}
