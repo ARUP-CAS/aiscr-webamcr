@@ -43,4 +43,4 @@ jobs:
     - name: Django Testing
       working-directory: ./webclient
       run: |
-        python3 manage.py test --settings=webclient.settings.dev
+        python manage.py test --settings=webclient.settings.dev
