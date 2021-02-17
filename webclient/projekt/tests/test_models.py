@@ -15,3 +15,7 @@ class ProjectModelsTests(TestCase):
         self.assertEqual(p.parse_ident_cely(), (True, "C", "2011", "00001"))
         p.ident_cely = "M-2010100001"
         self.assertEqual(p.parse_ident_cely(), (True, "M", "2010", "100001"))
+
+    def test_check_pred_uzavrenim(self):
+        pass
+        # TODO napsat test na check projektu pred uzavrenim

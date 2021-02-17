@@ -77,8 +77,8 @@
       <hr/>
       <h2>{% trans "Výzkum" %}</h2>
       <div class="row">
-        <div class="col">{{ projekt.datum_zahajeni }}</div>
-        <div class="col">{{ projekt.datum_ukonceni }}</div>
+        <div class="col">{{ projekt.datum_zahajeni|date:'Y/m/d' }}</div>
+        <div class="col">{{ projekt.datum_ukonceni|date:'Y/m/d'  }}</div>
       </div>
     </div>
   </div>
@@ -124,7 +124,7 @@
         </div>
         <div class="row">
           <div class="col">
-            {{ a.datum_zahajeni_v }} - {{ a.datum_ukonceni_v }}
+            {{ a.datum_zahajeni_v|date:'Y/m/d' }} - {{ a.datum_ukonceni_v|date:'Y/m/d' }}
           </div>
           <div class="col">
             {{ a.hlavni_typ }} {{ a.vedlejsi_typ }}

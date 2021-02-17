@@ -10,6 +10,9 @@ PROJEKT_USPESNE_ZAHAJEN_V_TERENU: Final = "Projekt byl úspěšně zahájen v te
 PROJEKT_USPESNE_UKONCEN_V_TERENU: Final = "Projekt byl úspěšně ukončen v terénu."
 PROJEKT_USPESNE_UZAVREN: Final = "Projekt byl úspěšně uzavřen."
 PROJEKT_USPESNE_ARCHIVOVAN: Final = "Projekt byl úspěšně archivován."
+PROJEKT_NELZE_UZAVRIT: Final = (
+    "Projekt nelze uzavřít. Zkontrolujte zda má všechny náležitosti."
+)
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."

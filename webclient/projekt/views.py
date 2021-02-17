@@ -13,6 +13,7 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
 )
 from core.message_constants import (
+    PROJEKT_NELZE_UZAVRIT,
     PROJEKT_USPESNE_ARCHIVOVAN,
     PROJEKT_USPESNE_PRIHLASEN,
     PROJEKT_USPESNE_SCHVALEN,
@@ -49,28 +50,10 @@ def detail(request, ident_cely):
     oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
     akce = Akce.objects.filter(projekt=projekt)
 
-    show_oznamovatel = projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
-    show_prihlasit = projekt.stav == PROJEKT_STAV_ZAPSANY
-    show_vratit = PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY
-    show_schvalit = projekt.stav == PROJEKT_STAV_OZNAMENY
-    show_zahajit = projekt.stav == PROJEKT_STAV_PRIHLASENY
-    show_ukoncit = projekt.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU
-    show_uzavrit = projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU
-    show_archivovat = projekt.stav == PROJEKT_STAV_UZAVRENY
-
     context["projekt"] = projekt
     context["oznamovatel"] = oznamovatel
     context["akce"] = akce
-    context["show"] = {
-        "oznamovatel": show_oznamovatel,
-        "prihlasit_link": show_prihlasit,
-        "vratit_link": show_vratit,
-        "schvalit_link": show_schvalit,
-        "zahajit_teren_link": show_zahajit,
-        "ukoncit_teren_link": show_ukoncit,
-        "uzavrit_link": show_uzavrit,
-        "archivovat_link": show_archivovat,
-    }
+    context["show"] = get_detail_template_shows(projekt)
 
     return render(request, "projekt/detail.html", context)
 
@@ -203,22 +186,27 @@ def uzavrit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if request.method == "POST":
         if projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
-            projekt.set_uzavreny(request.user)
-            projekt.save()
 
             # Check business rules
             result = projekt.check_pred_uzavrenim()
             logger.debug(result)
 
-            # Move all events to state A2
-            akce = Akce.objects.filter(projekt=projekt)
-            for a in akce:
-                if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                    logger.debug("Setting event to state A2")
-                    a.set_odeslana(request.user)
+            if not result:
+                # Move all events to state A2
+                akce = Akce.objects.filter(projekt=projekt)
+                for a in akce:
+                    if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
+                        logger.debug("Setting event to state A2")
+                        a.set_odeslana(request.user)
 
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
-            return redirect("/projekt/detail/" + ident_cely)
+                projekt.set_uzavreny(request.user)
+                projekt.save()
+                messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
+                return redirect("/projekt/detail/" + ident_cely)
+            else:
+                messages.add_message(request, messages.ERROR, result)
+                messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
+                return redirect("/projekt/detail/" + ident_cely)
         else:
             return render(request, "403.html")
     return render(request, "projekt/uzavrit.html", {"projekt": projekt})
@@ -283,3 +271,25 @@ def vratit(request, ident_cely):
     else:
         form = VratitProjektForm()
     return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})
+
+
+def get_detail_template_shows(projekt):
+    show_oznamovatel = projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
+    show_prihlasit = projekt.stav == PROJEKT_STAV_ZAPSANY
+    show_vratit = PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY
+    show_schvalit = projekt.stav == PROJEKT_STAV_OZNAMENY
+    show_zahajit = projekt.stav == PROJEKT_STAV_PRIHLASENY
+    show_ukoncit = projekt.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU
+    show_uzavrit = projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU
+    show_archivovat = projekt.stav == PROJEKT_STAV_UZAVRENY
+    show = {
+        "oznamovatel": show_oznamovatel,
+        "prihlasit_link": show_prihlasit,
+        "vratit_link": show_vratit,
+        "schvalit_link": show_schvalit,
+        "zahajit_teren_link": show_zahajit,
+        "ukoncit_teren_link": show_ukoncit,
+        "uzavrit_link": show_uzavrit,
+        "archivovat_link": show_archivovat,
+    }
+    return show

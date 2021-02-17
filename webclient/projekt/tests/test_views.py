@@ -19,7 +19,3 @@ class UrlTests(TestCase):
 
         with self.assertRaises(Http404, msg="No Projekt matches the given query."):
             detail(request, ident_cely="not_existing_project_ident")
-
-    def test_check_pred_uzavrenim(self):
-        pass
-        # TODO napsat test na check projektu pred uzavrenim
