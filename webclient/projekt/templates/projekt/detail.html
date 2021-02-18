@@ -15,36 +15,48 @@
 {% endblock %}
 
 {% block content %}
-
-  <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
-
-  <div class="card">
-    <div class="card-header">
-      {% trans "Detail" %}
+  <div class="row">
+    <div class="col">
+      <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
+    </div>
+    <div class="col">
       <div class="btn-group" role="group" aria-label="Basic example">
         {% if show.vratit_link %}
-          <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}" class="btn btn-secondary">{% trans "Vrátit" %}</a>
+          <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}"
+             class="btn btn-secondary">{% trans "Vrátit" %}</a>
         {% endif %}
         <a href="/" class="btn btn-warning">{% trans "Navrhnout zrušení" %}</a>
         {% if show.schvalit_link %}
-          <a href="{% url 'projekt:projekt_schvalit' projekt.ident_cely %}" class="btn btn-secondary">{% trans "Schválit" %}</a>
+          <a href="{% url 'projekt:projekt_schvalit' projekt.ident_cely %}"
+             class="btn btn-secondary">{% trans "Schválit" %}</a>
         {% endif %}
         {% if show.prihlasit_link %}
-          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}" class="btn btn-primary">{% trans "Přihlásit" %}</a>
+          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}"
+             class="btn btn-primary">{% trans "Přihlásit" %}</a>
         {% endif %}
         {% if show.zahajit_teren_link %}
-          <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}" class="btn btn-primary">{% trans "Zahájit výzkum" %}</a>
+          <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}"
+             class="btn btn-primary">{% trans "Zahájit výzkum" %}</a>
         {% endif %}
         {% if show.ukoncit_teren_link %}
-          <a href="{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}" class="btn btn-primary">{% trans "Ukončit výzkum" %}</a>
+          <a href="{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}"
+             class="btn btn-primary">{% trans "Ukončit výzkum" %}</a>
         {% endif %}
         {% if show.uzavrit_link %}
-          <a href="{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}" class="btn btn-primary">{% trans "Uzavřít" %}</a>
+          <a href="{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}"
+             class="btn btn-primary">{% trans "Uzavřít" %}</a>
         {% endif %}
         {% if show.archivovat_link %}
-          <a href="{% url 'projekt:projekt_archivovat' projekt.ident_cely %}" class="btn btn-primary">{% trans "Archivovat" %}</a>
+          <a href="{% url 'projekt:projekt_archivovat' projekt.ident_cely %}"
+             class="btn btn-primary">{% trans "Archivovat" %}</a>
         {% endif %}
       </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      {% trans "Detail" %}
+      <div class="float-md-right"><a href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a></div>
     </div>
     <div class="card-body">
       <div class="row">
@@ -78,7 +90,7 @@
       <h2>{% trans "Výzkum" %}</h2>
       <div class="row">
         <div class="col">{{ projekt.datum_zahajeni|date:'Y/m/d' }}</div>
-        <div class="col">{{ projekt.datum_ukonceni|date:'Y/m/d'  }}</div>
+        <div class="col">{{ projekt.datum_ukonceni|date:'Y/m/d' }}</div>
       </div>
     </div>
   </div>

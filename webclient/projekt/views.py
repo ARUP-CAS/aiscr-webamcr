@@ -15,6 +15,7 @@ from core.constants import (
 from core.message_constants import (
     PROJEKT_NELZE_UZAVRIT,
     PROJEKT_USPESNE_ARCHIVOVAN,
+    PROJEKT_USPESNE_EDITOVAN,
     PROJEKT_USPESNE_PRIHLASEN,
     PROJEKT_USPESNE_SCHVALEN,
     PROJEKT_USPESNE_UKONCEN_V_TERENU,
@@ -32,6 +33,7 @@ from django.views.generic import ListView
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from oznameni.models import Oznamovatel
 from projekt.forms import (
+    EditProjektForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
     VratitProjektForm,
@@ -61,7 +63,21 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    return HttpResponse("Not implemented yet")
+    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    if request.method == "POST":
+        form = EditProjektForm(request.POST, instance=projekt)
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_EDITOVAN)
+            return redirect("projekt/detail/" + ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+
+    else:
+        form = EditProjektForm(instance=projekt)
+
+    return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
 
 
 class ProjektListView(LoginRequiredMixin, ListView):
@@ -187,29 +203,34 @@ def uzavrit(request, ident_cely):
     if request.method == "POST":
         if projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
 
-            # Check business rules
-            result = projekt.check_pred_uzavrenim()
-            logger.debug(result)
+            # Move all events to state A2
+            akce = Akce.objects.filter(projekt=projekt)
+            for a in akce:
+                if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
+                    logger.debug("Setting event to state A2")
+                    a.set_odeslana(request.user)
 
-            if not result:
-                # Move all events to state A2
-                akce = Akce.objects.filter(projekt=projekt)
-                for a in akce:
-                    if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                        logger.debug("Setting event to state A2")
-                        a.set_odeslana(request.user)
+            projekt.set_uzavreny(request.user)
+            projekt.save()
+            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
+            return redirect("/projekt/detail/" + ident_cely)
 
-                projekt.set_uzavreny(request.user)
-                projekt.save()
-                messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                messages.add_message(request, messages.ERROR, result)
-                messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
-                return redirect("/projekt/detail/" + ident_cely)
         else:
             return render(request, "403.html")
-    return render(request, "projekt/uzavrit.html", {"projekt": projekt})
+    else:
+        # Check business rules
+        warnings = projekt.check_pred_uzavrenim()
+        logger.debug(warnings)
+        context = {"projekt": projekt}
+        if warnings:
+            context["warnings"] = []
+            messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
+            for key, value in warnings.items():
+                context["warnings"].append((key, value))
+        else:
+            pass
+
+        return render(request, "projekt/uzavrit.html", context)
 
 
 @login_required

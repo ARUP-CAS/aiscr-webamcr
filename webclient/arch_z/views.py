@@ -2,7 +2,7 @@ import logging
 
 from arch_z.models import ArcheologickyZaznam, DokumentacniJednotka
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 
@@ -13,7 +13,13 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
-    zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    zaznam = (
+        ArcheologickyZaznam.objects.select_related("hlavni_katastr")
+        .select_related("akce__vedlejsi_typ")
+        .select_related("akce__hlavni_typ")
+        .select_related("pristupnost")
+        .get(ident_cely=ident_cely)
+    )
     # TODO continue here
     dokumenty = (
         Dokument.objects.filter(

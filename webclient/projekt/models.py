@@ -26,7 +26,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.shortcuts import get_object_or_404
-from heslar.hesla import HESLAR_KULTURNI_PAMATKA
+from heslar.hesla import HESLAR_KULTURNI_PAMATKA, HESLAR_TYP_PROJEKTU
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
@@ -55,6 +55,7 @@ class Projekt(models.Model):
         models.DO_NOTHING,
         db_column="typ_projektu",
         related_name="projekty_typu",
+        limit_choices_to={"nazev_heslare": HESLAR_TYP_PROJEKTU},
     )
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)

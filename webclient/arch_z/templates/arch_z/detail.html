@@ -25,11 +25,11 @@
       <div class="row">
         <div class="col">{{ zaznam.akce.hlavni_typ }} {{ zaznam.akce.vedlejsi_typ }}</div>
         <div class="col">{{ zaznam.pristupnost }}</div>
-        <div class="col">{{ zaznam.akce.datum_zahajeni_v }} - {{ zaznam.akce.datum_ukonceni_v }}</div>
+        <div class="col">{{ zaznam.akce.datum_zahajeni_v|date:'Y/m/d' }} - {{ zaznam.akce.datum_ukonceni_v|date:'Y/m/d' }}</div>
       </div>
       <div class="row">
-        <div class="col">{{ zaznam.katastry }}</div>
-        <div class="col">{{ vedouci }}</div>
+        <div class="col">{{ zaznam.hlavni_katastr }}</div>
+        <div class="col">{{ zaznam.akce.hlavni_vedouci }}</div>
       </div>
       <div class="row">
         <div class="col">{{ zaznam.uzivatelske_oznaceni }}</div>
@@ -37,9 +37,10 @@
       </div>
       <div class="row">
         <div class="col">{{ zaznam.poznamka }}</div>
+        <div class="col">{{ zaznam.akce.je_nz }}</div>
       </div>
       <div class="row">
-        <div class="col">{{ zaznam.ulozeni_nalezu }}</div>
+        <div class="col">{{ zaznam.akce.ulozeni_nalezu }}</div>
       </div>
 
     </div>

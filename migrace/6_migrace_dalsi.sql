@@ -192,7 +192,9 @@ update auth_user set hlavni_role = 1 where (auth_level & 1) = 1;
 update auth_user set hlavni_role = 2 where (auth_level & 2) = 2;
 update auth_user set hlavni_role = 4 where (auth_level & 4) = 4;
 update auth_user set hlavni_role = 3 where (auth_level & 16) = 16;
+-- Vsechni ostatni jsou neaktivni uzivatele
+update auth_user set hlavni_role = 5 where (auth_level & 1 != 1 and auth_level & 2 != 2 and auth_level & 4 != 4 and auth_level & 16 != 16) or auth_level is null;
 -- Pridani ciziko klice na user_groups
 alter table auth_user add constraint auth_user_hlavni_role foreign key (hlavni_role) references auth_group (id);
--- TODO pridat NOT NULL na cizy klic kdyz budou mit vsichni role
+alter table auth_user alter column hlavni_role set not null;
 alter table projekt alter column historie set not null;
