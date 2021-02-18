@@ -3,12 +3,15 @@ import logging
 import simplejson as json
 from core.constants import OTHER_PROJECT_FILES
 from core.ident_cely import get_temporary_project_ident
+from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
 from core.models import Soubor
 from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.db import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
@@ -17,6 +20,7 @@ from projekt.models import Projekt
 from uzivatel.models import User
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
+from .models import Oznamovatel
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +101,26 @@ def index(request):
             "form_captcha": form_captcha,
         },
     )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit(request, pk):
+    oznameni = Oznamovatel.objects.get(id=pk)
+    if request.method == "POST":
+        form = OznamovatelForm(request.POST, instance=oznameni)
+        if form.is_valid():
+            form.save()
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("/projekt/detail/" + oznameni.projekt.ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+
+    else:
+        form = OznamovatelForm(instance=oznameni)
+
+    return render(request, "oznameni/edit.html", {"form": form, "oznameni": oznameni})
 
 
 @require_http_methods(["POST"])

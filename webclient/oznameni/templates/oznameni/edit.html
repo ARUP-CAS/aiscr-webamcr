@@ -1,0 +1,19 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Editace oznamovatele" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Oznamovatel projektu" %} {{ oznameni.projekt.ident_cely }}</h1>
+  <form method="post">
+    {% crispy form %}
+    <input type="submit" name="save" value="{% translate 'Upravit' %}" class="btn btn-primary" id="submit-id-save">
+  </form>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

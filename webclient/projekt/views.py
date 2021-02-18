@@ -15,13 +15,13 @@ from core.constants import (
 from core.message_constants import (
     PROJEKT_NELZE_UZAVRIT,
     PROJEKT_USPESNE_ARCHIVOVAN,
-    PROJEKT_USPESNE_EDITOVAN,
     PROJEKT_USPESNE_PRIHLASEN,
     PROJEKT_USPESNE_SCHVALEN,
     PROJEKT_USPESNE_UKONCEN_V_TERENU,
     PROJEKT_USPESNE_UZAVREN,
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
+    ZAZNAM_USPESNE_EDITOVAN,
 )
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -68,7 +68,7 @@ def edit(request, ident_cely):
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             form.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_EDITOVAN)
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("projekt/detail/" + ident_cely)
         else:
             logger.debug("The form is not valid")

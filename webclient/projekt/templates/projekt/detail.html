@@ -96,7 +96,10 @@
   </div>
   {% if show.oznamovatel %}
     <div class="card mt-2">
-      <div class="card-header">{% trans "Oznámení" %}</div>
+      <div class="card-header">
+        {% trans "Oznámení" %}
+        <div class="float-md-right"><a href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}">{% trans "Upravit" %}</a></div>
+      </div>
       <div class="card-body">
         <div class="row">
           <div class="col">{{ oznamovatel.oznamovatel }}</div>
