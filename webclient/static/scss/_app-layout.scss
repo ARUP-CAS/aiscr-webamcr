@@ -3,6 +3,10 @@
 body {
   &.app-login {
     background-color: $app-sidebar-bg;
+    background-image: url('/static/static/img/login-bg.svg');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
     margin-top: 50px;
 
     .container-fluid {
