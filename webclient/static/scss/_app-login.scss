@@ -4,6 +4,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 3rem;
 
   .app-logo {
     width: 348px;
@@ -13,7 +14,6 @@
   .card {
     width: $app-login-form-width;
     text-align: center;
-    margin-bottom: 3rem;
 
     form {
       input {
@@ -45,10 +45,38 @@
   }
 
   .row {
+    margin-top: $app-gap-double;
+    
     .card {
       @extend .app-full-width;
       text-align: left;
       background-color: rgba(black, .3) !important;
+      height: 100%;
+      
+      .card-header {
+        border-bottom-color: rgba($white, .1);
+        font-size: 1.25rem;
+      }
+
+      .card-body {
+        position: relative;
+
+        .app-sroll-inner {
+          position: absolute;
+          width: calc(100% - 2.5rem);
+          height: calc(100% - 2.5rem);
+          overflow-y: auto;
+          padding-right: 1.5rem;
+
+          strong {
+            color: rgba($white, .7);
+          }
+
+          .app-pipe {
+            border-color: rgba($white, .4);
+          }
+        }
+      }
     }
   }
 }
