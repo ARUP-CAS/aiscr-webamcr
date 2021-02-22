@@ -18,7 +18,7 @@ $primary: #0d47a1 !default;
 // gap
 $app-gap: 15px!important;
 $app-gap-double: 30px!important;
-$app-gap-small: .75rem !important;
+$app-gap-half: 7.5px !important;
 
 // container
 $container-max-width-xl: 1140px !default; 
@@ -46,3 +46,32 @@ $app-sidebar-accordion-body-color: $blue-gray-800 !default;
 
 // login
 $app-login-form-width: 350px !default;
+
+// mq break point
+$xxs: 'only screen and (min-width: 400px) and (max-width: 575px)';
+$xs: 'only screen and (max-width: 575px)';
+$sm: 'only screen and (min-width: 576px) and (max-width: 767px)';
+$md: 'only screen and (min-width: 768px) and (max-width: 991px)';
+$lg: 'only screen and (min-width: 992px) and (max-width: 1199px)';
+$xl: 'only screen and (min-width: 1200px) and (max-width: 5000px)';
+
+$lt-sm: 'only screen and (max-width: 575px)';
+$lt-md:	'only screen and (max-width: 767px)';
+$lt-lg:	'only screen and (max-width: 991px)';
+$lt-xl:	'only screen and (max-width: 1199px)';
+
+$gt-xs:	'only screen and (min-width: 576px)';
+$gt-sm:	'only screen and (min-width: 768px)';
+$gt-md:	'only screen and (min-width: 992px)';
+$gt-lg:	'only screen and (min-width: 1200px)';
+
+// breakpoint
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px
+) !default;
+
+// map-get($grid-breakpoints, "lg") !default;
