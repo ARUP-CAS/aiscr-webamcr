@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 file_path = (
     "webclient/settings/secrets.json"
-    if os.path.exists("webclient/settings/secrets.json")
+    if os.path.exists(BASE_DIR / "webclient/settings/secrets.json")
     else "webclient/settings/secrets_test.json"
 )
 with open(BASE_DIR / file_path, "r") as f:
