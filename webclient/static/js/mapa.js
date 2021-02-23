@@ -29,7 +29,14 @@ button_map_lock.addTo(map)
 
 L.easyButton( 'glyphicon glyphicon-fast-backward', function(){
     poi_correct.clearLayers();
-    map.setView(poi_sugest.getLayers()[0]._latlng, 18);
+    let ll=poi_sugest.getLayers()[0]._latlng;
+    map.setView(ll, 18);
+    try{
+        document.getElementById('id_latitude').value = ll.lat;
+        document.getElementById('id_longitude').value = ll.lng;
+    }catch(e){
+        console.log("Error: Element id_latitude/latitude doesn exists")
+    }
 }).addTo(map)
 
 //https://github.com/pointhi/leaflet-color-markers
@@ -88,7 +95,8 @@ var addPointToPoiLayer = (lat, long, text) => {
     if( global_map_can_edit){
         poi_correct.clearLayers();
         L.marker([lat, long], {icon: redIcon}).bindPopup(text).addTo(poi_correct);
-        console.log(lat+'  '+ long)
+
+        //console.log(lat+'  '+ long)
     }
 }
 var addPointOnLoad = (lat, long, text) => {

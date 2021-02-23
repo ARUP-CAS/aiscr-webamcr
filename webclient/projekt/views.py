@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
 from oznameni.models import Oznamovatel
+from projekt.forms import ProjektForm
 from projekt.models import Projekt
 
 # from django.views.decorators.csrf import csrf_exempt
@@ -65,7 +66,42 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    return HttpResponse("Not implemented yet")
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if request.method == "POST":
+        form_projekt = ProjektForm(request.POST, instance=projekt)
+        if form_projekt.is_valid():
+            logger.debug("Form is valid")
+            logger.debug(request.POST)
+            form_projekt.fields["latitude"].initial = projekt.geom.coords[1]
+            form_projekt.fields["longitude"].initial = projekt.geom.coords[0]
+
+            return render(
+                request,
+                "projekt/edit.html",
+                {
+                    "form_projekt": form_projekt,
+                },
+            )
+        else:
+            logger.debug("form is not valid!")
+            logger.debug(form_projekt.errors)
+
+        return HttpResponse("Post Not implemented yet")
+    elif request.method == "GET":
+
+        form_projekt = ProjektForm(instance=projekt)
+        form_projekt.fields["latitude"].initial = projekt.geom.coords[1]
+        form_projekt.fields["longitude"].initial = projekt.geom.coords[0]
+
+        return render(
+            request,
+            "projekt/edit.html",
+            {
+                "form_projekt": form_projekt,
+            },
+        )
+    else:
+        return HttpResponse("Function Not implemented yet")
 
 
 class ProjektListView(LoginRequiredMixin, ListView):
