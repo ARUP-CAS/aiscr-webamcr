@@ -3,6 +3,8 @@ from typing import Final
 FORM_NOT_VALID: Final = "Forma není validní."
 
 ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
+ZAZNAM_USPESNE_SMAZAN: Final = "Záznam byl úspěšně smazán."
+ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = "Záznam nebyl smazán."
 
 # Projekt
 PROJEKT_USPESNE_PRIHLASEN: Final = "Projekt byl úspěšně přihlášen."

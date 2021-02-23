@@ -56,7 +56,8 @@
   <div class="card">
     <div class="card-header">
       {% trans "Detail" %}
-      <div class="float-md-right"><a href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a></div>
+      <div class="float-md-right"><a
+          href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a></div>
     </div>
     <div class="card-body">
       <div class="row">
@@ -98,7 +99,8 @@
     <div class="card mt-2">
       <div class="card-header">
         {% trans "Oznámení" %}
-        <div class="float-md-right"><a href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}">{% trans "Upravit" %}</a></div>
+        <div class="float-md-right"><a
+            href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}">{% trans "Upravit" %}</a></div>
       </div>
       <div class="card-body">
         <div class="row">
@@ -116,7 +118,38 @@
     </div>
   {% endif %}
 
-  <!-- TODO Tabulka projektové dokumentace -->
+  <div class="card mt-2">
+    <div class="card-header">
+      {% trans "Projektová dokumentace" %}
+      <a href="{% url 'projekt:upload_file' projekt.ident_cely %}">Upload</a>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Název</th>
+          <th scope="col">Typ</th>
+          <th scope="col">Velikost</th>
+          <th scope="col">Datum vytvoření</th>
+          <th scope="col">Smazat</th>
+          <th scope="col">Stáhnout</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for soubor in soubory %}
+          <tr>
+            <td>{{ soubor.nazev }}</td>
+            <td>{{ soubor.mimetype }}</td>
+            <td>{{ soubor.size_bytes }}</td>
+            <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
+            <td><a href="{% url 'projekt:delete_file' soubor.id %}">Smazat</a></td>
+            <td><a href="{% url 'projekt:download_file' soubor.id %}">Stáhnout</a></td>
+
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
 
   <div class="card mt-2">
     <div class="card-header">{% trans "Archeologické akce" %}</div>

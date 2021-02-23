@@ -30,4 +30,7 @@ urlpatterns = [
     ),
     path("zrusit/<str:ident_cely>", views.zrusit, name="projekt_zrusit"),
     path("vratit/<str:ident_cely>", views.vratit, name="projekt_vratit"),
+    path("download_file/<int:pk>", views.download_file, name="download_file"),
+    path("upload_file/<str:ident_cely>", views.upload_file, name="upload_file"),
+    path("delete_file/<int:pk>", views.delete_file, name="delete_file"),
 ]

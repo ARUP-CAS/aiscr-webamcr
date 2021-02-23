@@ -43,7 +43,7 @@
   </dl>
   <h2>{% trans "Krok 2/2 - nahrání dokumentace" %}</h2>
 
-  <form action="upload-file" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
+  <form action="{% url 'oznameni:post_upload' %}" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
       <input name="file" type="file" multiple/>
@@ -60,29 +60,7 @@
 
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
-  <script>
-      Dropzone.autoDiscover = false;
-      window.onload = function () {
-          var dropzoneOptions = {
-              dictDefaultMessage: 'Přiložte dokumentaci',
-              dictInvalidFileType: "Nepodporovaný typ souboru",
-              dictRemoveFile: "Odebrat",
-              dictRemoveFileConfirmation: "Skutečně odebrat soubor?",
-              acceptedFiles: "image/*,application/pdf,.csv,.txt,application/vnd.ms-excel",
-              maxFilesize: 100, // MB
-              addRemoveLinks: true,
-              init: function () {
-                  this.on("success", function (file) {
-                      console.log("success > " + file.name);
-                  });
-              },
-              params: {'projektID': "{{ ident_cely }}"}
-          };
-          var uploader = document.querySelector('#my-awesome-dropzone');
-          var newDropzone = new Dropzone(uploader, dropzoneOptions);
-
-          console.log("Loaded");
-      };
-  </script>
+  <script>var project_id = "{{ ident_cely }}";</script>
+  <script src="{% static 'dz.js' %}"></script>
 
 {% endblock %}

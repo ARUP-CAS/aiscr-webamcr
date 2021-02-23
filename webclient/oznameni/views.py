@@ -125,6 +125,7 @@ def edit(request, pk):
 
 @require_http_methods(["POST"])
 def post_upload(request):
+    logger.debug("Uploading file to project: " + request.POST["projektID"])
     projekt = get_object_or_404(Projekt, ident_cely=request.POST["projektID"])
     soubor = request.FILES.get("file")
     if soubor:

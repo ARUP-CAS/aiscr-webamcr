@@ -1,4 +1,6 @@
 import logging
+import mimetypes
+import os
 from datetime import datetime
 
 from arch_z.models import Akce
@@ -21,12 +23,16 @@ from core.message_constants import (
     PROJEKT_USPESNE_UZAVREN,
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
+    ZAZNAM_USPESNE_SMAZAN,
 )
+from core.models import Soubor
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
@@ -48,13 +54,22 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
-    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    projekt = get_object_or_404(
+        Projekt.objects.select_related(
+            "kulturni_pamatka", "typ_projektu", "vedouci_projektu", "organizace"
+        ).defer("geom"),
+        ident_cely=ident_cely,
+    )
     oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
-    akce = Akce.objects.filter(projekt=projekt)
+    akce = Akce.objects.filter(projekt=projekt).select_related(
+        "archeologicky_zaznam__pristupnost", "hlavni_typ"
+    )
+    soubory = projekt.soubory.soubor_set.all()
 
     context["projekt"] = projekt
     context["oznamovatel"] = oznamovatel
     context["akce"] = akce
+    context["soubory"] = soubory
     context["show"] = get_detail_template_shows(projekt)
 
     return render(request, "projekt/detail.html", context)
@@ -292,6 +307,56 @@ def vratit(request, ident_cely):
     else:
         form = VratitProjektForm()
     return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})
+
+
+@login_required
+@require_http_methods(["GET"])
+def upload_file(request, ident_cely):
+
+    return render(request, "projekt/upload_file.html", {"ident_cely": ident_cely})
+
+
+@login_required
+@require_http_methods(["POST", "GET"])
+def delete_file(request, pk):
+    s = get_object_or_404(Soubor, pk=pk)
+    projekt = s.vazba.projekt_set.all()[0]
+    if request.method == "POST":
+        items_deleted = s.delete()
+        if not items_deleted:
+            # Not sure if 404 is the only correct option
+            logger.debug("Soubor " + str(items_deleted) + " nebyl smazan.")
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            return redirect("/projekt/detail/" + projekt.ident_cely)
+        else:
+            logger.debug("Byl smazán soubor: " + str(items_deleted))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+
+        return redirect("/projekt/detail/" + projekt.ident_cely)
+    else:
+        return render(request, "projekt/delete_file.html", {"soubor": s})
+
+
+@login_required
+@require_http_methods(["GET"])
+def download_file(request, pk):
+    soubor = get_object_or_404(Soubor, id=pk)
+    path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
+    if os.path.exists(path):
+        content_type = mimetypes.guess_type(soubor.path.name)[
+            0
+        ]  # Use mimetypes to get file type
+        response = HttpResponse(soubor.path, content_type=content_type)
+        response["Content-Length"] = str(len(soubor.path))
+        response["Content-Disposition"] = "inline; filename=" + os.path.basename(
+            soubor.nazev
+        )
+        return response
+    else:
+        logger.debug(
+            "File " + str(soubor.nazev) + " does not exists at location " + str(path)
+        )
+    raise Http404
 
 
 def get_detail_template_shows(projekt):

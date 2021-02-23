@@ -161,8 +161,8 @@ class Akce(models.Model):
         # Related events must have a “vedouci” and “hlavni_katastr” column filled in
         result = []
         if (
-            self.datum_zahajeni is None
-            or self.datum_ukonceni is None
+            self.datum_zahajeni_v is None
+            or self.datum_ukonceni_v is None
             or self.lokalizace_okolnosti is None
             or self.specifikace_data is None
             or self.hlavni_typ is None
