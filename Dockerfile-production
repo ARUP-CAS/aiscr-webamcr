@@ -33,13 +33,18 @@ ENV C_INCLUDE_PATH=/usr/include/gdal
 # This will install latest version of GDAL
 RUN pip3 install GDAL==3.0.4
 
+ENV PATH="/scripts:${PATH}"
+
 COPY ./webclient/webclient/requirements .
 
-RUN pip3 install -r dev.txt
+RUN pip3 install -r production.txt
 
 RUN mkdir /code
 COPY ./webclient /code
 WORKDIR /code
+COPY ./scripts /scripts
+
+RUN chmod +x /scripts/*
 
 # Uploaded images
 RUN mkdir -p /vol/web/media

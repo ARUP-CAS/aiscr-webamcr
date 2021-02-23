@@ -7,3 +7,5 @@ simplejson==3.17.2
 django-crispy-forms==1.10.0
 django-recaptcha==2.0.6
 django-filter==2.4.0
+django-compressor==2.4
+django-libsass==0.8

@@ -6,8 +6,11 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-file_path = "webclient/settings/secrets.json" if os.path.exists(
-    "webclient/settings/secrets.json") else "webclient/settings/secrets_test.json"
+file_path = (
+    "webclient/settings/secrets.json"
+    if os.path.exists("webclient/settings/secrets.json")
+    else "webclient/settings/secrets_test.json"
+)
 with open(BASE_DIR / file_path, "r") as f:
     secrets = json.load(f)
 
@@ -48,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "django_filters",
     "crispy_forms",
+    "compressor",
     "captcha",
     "core",
     "historie",
@@ -200,3 +204,10 @@ LOGGING = {
         },
     },
 }
+
+COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "compressor.finders.CompressorFinder",
+]
