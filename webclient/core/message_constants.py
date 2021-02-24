@@ -17,6 +17,9 @@ PROJEKT_USPESNE_ARCHIVOVAN: Final = "Projekt byl úspěšně archivován."
 PROJEKT_NELZE_UZAVRIT: Final = (
     "Projekt nelze uzavřít. Zkontrolujte zda má všechny náležitosti."
 )
+PROJEKT_NELZE_ARCHIVOVAT: Final = (
+    "Projekt nelze archivovat. Zkontrolujte zda má všechny náležitosti."
+)
 
 
 # Osoba

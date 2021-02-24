@@ -27,7 +27,7 @@ SN_ARCHIVOVANY: Final = 4
 # Uzivatel
 # Pian
 PIAN_NEPOTVRZEN: Final = 1
-PAIN_POTVRZEN: Final = 2
+PIAN_POTVRZEN: Final = 2
 # Uzivatel_spoluprace
 
 # Transakce historie

@@ -142,6 +142,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "kulturni_pamatka",
             "kulturni_pamatka_cislo",
             "kulturni_pamatka_popis",
+            "uzivatelske_oznaceni",
         )
         widgets = {
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -152,12 +153,14 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "kulturni_pamatka": _("Kulturní památka"),
             "kulturni_pamatka_cislo": _("Popis"),
             "kulturni_pamatka_popis": _("Číslo"),
+            "uzivatelske_oznaceni": _("Uživatelské označení"),
         }
         help_texts = {
             "vedouci_projektu": _("Lorem ipsum."),
             "kulturni_pamatka": _("Lorem ipsum."),
             "kulturni_pamatka_cislo": _("Lorem ipsum."),
             "kulturni_pamatka_popis": _("Lorem ipsum."),
+            "uzivatelske_oznaceni": _("Lorem ipsum."),
         }
 
     def __init__(self, *args, **kwargs):
@@ -173,6 +176,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
                 Div(
                     Div(
                         "vedouci_projektu",
+                        "uzivatelske_oznaceni",
                         "kulturni_pamatka",
                         "kulturni_pamatka_cislo",
                         "kulturni_pamatka_popis",

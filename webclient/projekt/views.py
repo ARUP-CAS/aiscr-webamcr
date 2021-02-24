@@ -15,6 +15,7 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
 )
 from core.message_constants import (
+    PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_UZAVRIT,
     PROJEKT_USPESNE_ARCHIVOVAN,
     PROJEKT_USPESNE_PRIHLASEN,
@@ -31,13 +32,14 @@ from core.models import Soubor
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
-from django.views.generic import ListView
+from django_filters.views import FilterView
+from django_tables2 import SingleTableMixin
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from oznameni.models import Oznamovatel
+from projekt.filters import ProjektFilter
 from projekt.forms import (
     EditProjektForm,
     PrihlaseniProjektForm,
@@ -46,6 +48,7 @@ from projekt.forms import (
     ZahajitVTerenuForm,
 )
 from projekt.models import Projekt
+from projekt.tables import ProjektTable
 
 logger = logging.getLogger(__name__)
 
@@ -95,26 +98,22 @@ def edit(request, ident_cely):
     return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
 
 
-class ProjektListView(LoginRequiredMixin, ListView):
+class ProjektListView(SingleTableMixin, FilterView):
+    table_class = ProjektTable
     model = Projekt
-    paginate_by = 10  # if pagination is desired
-    queryset = (
-        Projekt.objects.select_related("kulturni_pamatka")
-        .select_related("typ_projektu")
-        .select_related("hlavni_katastr")
-        .select_related("organizace")
-        .select_related("vedouci_projektu")
-        .prefetch_related("hlavni_katastr__okres")
-        .order_by("id")
-    )
+    template_name = "projekt/projekt_list.html"
+    filterset_class = ProjektFilter
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # context["filter"] = ProjektFilter(
-        #     self.request.GET,
-        #     queryset=self.get_queryset()
-        # )
-        return context
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.select_related(
+            "kulturni_pamatka",
+            "typ_projektu",
+            "hlavni_katastr",
+            "organizace",
+            "vedouci_projektu",
+        ).defer("geom")
+        return qs
 
 
 @login_required
@@ -254,6 +253,7 @@ def archivovat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if request.method == "POST":
         if projekt.stav == PROJEKT_STAV_UZAVRENY:
+
             projekt.set_archivovany(request.user)
             projekt.save()
 
@@ -271,6 +271,17 @@ def archivovat(request, ident_cely):
             return redirect("/projekt/detail/" + ident_cely)
         else:
             return render(request, "403.html")
+    else:
+        warnings = projekt.check_pred_archivaci()
+        logger.debug(warnings)
+        context = {"projekt": projekt}
+        if warnings:
+            context["warnings"] = []
+            messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ARCHIVOVAT)
+            for key, value in warnings.items():
+                context["warnings"].append((key, value))
+        else:
+            pass
     return render(request, "projekt/archivovat.html", {"projekt": projekt})
 
 

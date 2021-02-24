@@ -2,6 +2,7 @@ import logging
 
 from core.constants import (
     ARCHIVACE_PROJ,
+    AZ_STAV_ARCHIVOVANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
     OZNAMENI_PROJ,
     PRIHLASENI_PROJ,
@@ -26,6 +27,8 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.db import models
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_KULTURNI_PAMATKA, HESLAR_TYP_PROJEKTU
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
@@ -49,25 +52,39 @@ class Projekt(models.Model):
         (PROJEKT_STAV_ZRUSENY, "Zrušen"),
     )
 
-    stav = models.SmallIntegerField(choices=CHOICES, default=PROJEKT_STAV_OZNAMENY)
+    stav = models.SmallIntegerField(
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stavy")
+    )
     typ_projektu = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_TYP_PROJEKTU},
+        verbose_name=_("Typy projektů"),
     )
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
     kulturni_pamatka_popis = models.TextField(blank=True, null=True)
     parcelni_cislo = models.TextField(blank=True, null=True)
-    podnet = models.TextField(blank=True, null=True)
-    uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    vedouci_projektu = models.ForeignKey(
-        Osoba, models.DO_NOTHING, db_column="vedouci_projektu", blank=True, null=True
+    podnet = models.TextField(blank=True, null=True, verbose_name=_("Podněty"))
+    uzivatelske_oznaceni = models.TextField(
+        blank=True, null=True, verbose_name=_("Uživatelské označení")
     )
-    datum_zahajeni = models.DateField(blank=True, null=True)
-    datum_ukonceni = models.DateField(blank=True, null=True)
+    vedouci_projektu = models.ForeignKey(
+        Osoba,
+        models.DO_NOTHING,
+        db_column="vedouci_projektu",
+        blank=True,
+        null=True,
+        verbose_name=_("Vedoucí projektů"),
+    )
+    datum_zahajeni = models.DateField(
+        blank=True, null=True, verbose_name=_("Data zahájení")
+    )
+    datum_ukonceni = models.DateField(
+        blank=True, null=True, verbose_name=_("Data ukončení")
+    )
     planovane_zahajeni_text = models.TextField(blank=True, null=True)
     kulturni_pamatka = models.ForeignKey(
         Heslar,
@@ -76,9 +93,12 @@ class Projekt(models.Model):
         blank=True,
         null=True,
         limit_choices_to={"nazev_heslare": HESLAR_KULTURNI_PAMATKA},
+        verbose_name=_("Památky"),
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
+    ident_cely = models.TextField(
+        unique=True, blank=True, null=True, verbose_name=_("Identifikátory")
+    )
     geom = pgmodels.PointField(blank=True, null=True)
     soubory = models.ForeignKey(
         SouborVazby,
@@ -95,7 +115,9 @@ class Projekt(models.Model):
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
     )
-    oznaceni_stavby = models.TextField(blank=True, null=True)
+    oznaceni_stavby = models.TextField(
+        blank=True, null=True, verbose_name=_("Označení staveb")
+    )
     oznamovatel = models.OneToOneField(
         Oznamovatel,
         on_delete=models.DO_NOTHING,
@@ -103,7 +125,9 @@ class Projekt(models.Model):
         blank=True,
         null=True,
     )
-    planovane_zahajeni = DateRangeField(blank=True, null=True)
+    planovane_zahajeni = DateRangeField(
+        blank=True, null=True, verbose_name=_("Plánované zahájení")
+    )
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
@@ -112,6 +136,7 @@ class Projekt(models.Model):
         related_name="projekty_hlavnich_katastru",
         null=True,
         blank=True,
+        verbose_name=_("Hlavní katastry"),
     )
 
     def __str__(self):
@@ -206,8 +231,27 @@ class Projekt(models.Model):
             vazba=self.historie,
         )
 
+    def check_pred_archivaci(self):
+        result = {}
+        for akce in self.akce_set.all():
+            if akce.stav != AZ_STAV_ARCHIVOVANY:
+                result[akce.archeologicky_zaznam.ident_cely] = _(
+                    "Akce musí být archivovaná!"
+                )
+        return result
+
+    def check_pred_navrzeni_k_zruseni(self):
+        has_event = len(self.akce_set.all()) > 0
+        if has_event:
+            return {"has_event": _("Projekt před zrušením nesmí mít projektové akce.")}
+        else:
+            return {}
+
     def check_pred_uzavrenim(self):
-        result = {"has_event": len(self.akce_set.all()) > 0}
+        does_not_have_event = len(self.akce_set.all()) == 0
+        result = {}
+        if does_not_have_event:
+            result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
         for a in self.akce_set.all():
             result[a.archeologicky_zaznam.ident_cely] = a.check_pred_odeslanim()
         return result
@@ -227,6 +271,9 @@ class Projekt(models.Model):
         else:
             logger.warning("Cannot retrieve year from null ident_cely.")
         return permanent, region, year, number
+
+    def get_absolute_url(self):
+        return reverse("projekt:projekt_detail", kwargs={"ident_cely": self.ident_cely})
 
 
 class ProjektKatastr(models.Model):
