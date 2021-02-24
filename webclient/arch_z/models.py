@@ -5,7 +5,9 @@ from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
+    D_STAV_ARCHIVOVANY,
     ODESLANI_AZ,
+    PIAN_POTVRZEN,
     ZAPSANI_AZ,
 )
 from core.models import KomponentaVazby
@@ -154,6 +156,25 @@ class Akce(models.Model):
             vazba=self.archeologicky_zaznam.historie,
         ).save()
         self.archeologicky_zaznam.save()
+
+    def check_pred_archivaci(self):
+        # All documents associated with it must be archived
+        result = []
+        for d in self.archeologicky_zaznam.dokumentcast_set.all():
+            if d.stav != D_STAV_ARCHIVOVANY:
+                result.append(
+                    _("Dokument " + d.ident_cely + " musí být nejdřív archivován.")
+                )
+        for dj in self.archeologicky_zaznam.dokumentacnijednotka_set.all():
+            if dj.pian.stav != PIAN_POTVRZEN:
+                result.append(
+                    _(
+                        "Dokumentační jednotka "
+                        + str(dj.ident_cely)
+                        + " má nepotvrzený pian."
+                    )
+                )
+        return result
 
     def check_pred_odeslanim(self):
         # All of the events must have akce.datum_zahajeni,

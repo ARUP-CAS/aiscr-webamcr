@@ -1,10 +1,18 @@
+from core.constants import PIAN_NEPOTVRZEN, PIAN_POTVRZEN
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
+from django.utils.translation import gettext as _
 from heslar.models import Heslar
 from historie.models import HistorieVazby
 
 
 class Pian(models.Model):
+
+    STATES = (
+        (PIAN_NEPOTVRZEN, _("Nepotvrzený")),
+        (PIAN_POTVRZEN, _("Potvrzený")),
+    )
+
     presnost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -37,7 +45,7 @@ class Pian(models.Model):
     historie = models.ForeignKey(
         HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
     )
-    stav = models.SmallIntegerField(null=False)
+    stav = models.SmallIntegerField(null=False, choices=STATES)
 
     class Meta:
         db_table = "pian"

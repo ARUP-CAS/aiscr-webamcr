@@ -11,7 +11,16 @@
 
   <form method="post">
     {% csrf_token %}
-    <button type="submit" class="btn btn-primary">{% trans "Archivovat projekt" %}</button>
+
+    {% if warnings %}
+      <ul>
+        {% for warning in warnings %}
+          <li>{{ warning }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary" {% if warnings %}disabled{% endif %}>{% trans "Archivovat projekt" %}</button>
   </form>
 
 {% endblock %}

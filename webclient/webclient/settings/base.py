@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django_filters",
+    "django_tables2",
     "crispy_forms",
     "compressor",
     "captcha",

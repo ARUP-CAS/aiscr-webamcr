@@ -1,67 +1,21 @@
 {% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
+{% load crispy_forms_tags %}
+{% load render_table from django_tables2 %}
 
 {% block title %}{% trans "Seznam projektu" %}{% endblock %}
 {% block head %}{% endblock %}
 
 {% block content %}
   <h1>{% trans "Projekty" %}</h1>
-  <table class="table">
-  <thead>
-    <tr>
-      <th scope="col">Ident</th>
-      <th scope="col">Stav</th>
-      <th scope="col">Okres</th>
-      <th scope="col">Katastr</th>
-      <th scope="col">Podnět</th>
-      <th scope="col">Lokalizace</th>
-      <th scope="col">Zahájení</th>
-      <th scope="col">Ukončení</th>
-      <th scope="col">Organizace</th>
-      <th scope="col">Vedoucí</th>
-      <th scope="col">Památka</th>
-      <th scope="col">Typ</th>
-      <th scope="col">Uživatelské označení</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for projekt in object_list %}
-      <tr>
-        <td><a href="{% url 'projekt:projekt_detail' projekt.ident_cely %}">{{ projekt.ident_cely }}</a></td>
-        <td>{{ projekt.get_stav_display }}</td>
-        <td>{{ projekt.hlavni_katastr.okres }}</td>
-        <td>{{ projekt.hlavni_katastr }}</td>
-        <td>{{ projekt.podnet }}</td>
-        <td>{{ projekt.lokalizace }}</td>
-        <td>{{ projekt.datum_zahajeni|date:'Y/m/d' }}</td>
-        <td>{{ projekt.datum_ukonceni|date:'Y/m/d' }}</td>
-        <td>{{ projekt.organizace }}</td>
-        <td>{{ projekt.vedouci_projektu }}</td>
-        <td>{{ projekt.kulturni_pamatka }}</td>
-        <td>{{ projekt.typ_projektu }}</td>
-        <td>{{ projekt.uzivatelske_oznaceni }}</td>
-      </tr>
-    {% endfor %}
-  </table>
-
-  <div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-          <a href="?page=1">&laquo; first</a>
-          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-
-      <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-      {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">next</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-      {% endif %}
-    </span>
-  </div>
+  {% if filter %}
+    <form method="get">
+      {{ filter.form|crispy }}
+      <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
+    </form>
+  {% endif %}
+  {% render_table table 'django_tables2/bootstrap4.html' %}
 
 {% endblock %}
 
