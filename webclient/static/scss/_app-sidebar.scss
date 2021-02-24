@@ -27,7 +27,7 @@
   // accordion
   .card {
     @extend .app-clean-bg, .app-clean-border;
-    border-top: 1px solid $app-sidebar-accordion-body-color !important;
+    border-top: 1px solid $app-sidebar-accordion-border-color !important;
 
     .btn-link {
       color: $app-sidebar-accordion-color-active;
@@ -67,7 +67,7 @@
           line-height: 32px;
 
           a {
-            color: #8d97ad;
+            color: $app-sidebar-accordion-color
           }
         }
       }
