@@ -35,14 +35,13 @@ $blue-gray-700: #455A64 !default;
 $blue-gray-800: #37474F !default;
 $blue-gray-900: #263238 !default;
 
-//$primary: red;
-
 // sidebar
 $app-sidebar-width: 300px !default;
 $app-sidebar-bg: #303641 !default;
-$app-sidebar-accordion-color: $blue-gray-300 !default;
-$app-sidebar-accordion-color-active: $blue-gray-50 !default;
-$app-sidebar-accordion-body-color: $blue-gray-800 !default;
+$app-sidebar-accordion-color: rgba($white, .6) !default;
+$app-sidebar-accordion-color-active: $white !default;
+$app-sidebar-accordion-border-color: rgba($white, .07) !default;
+$app-sidebar-accordion-body-color: rgba($white, .03) !default;
 
 // login
 $app-login-form-width: 350px !default;
