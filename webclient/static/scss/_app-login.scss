@@ -25,13 +25,9 @@
         a {
           text-decoration: unset;
 
-          img {
-            width: 27px;
-          
+          .app-flag {          
             &:not(:hover) {
-              filter: grayscale(100%);
-              -webkit-filter: grayscale(100%);
-              opacity: 50%;
+              @extend .app-flag-inactive;
             }
           }
 

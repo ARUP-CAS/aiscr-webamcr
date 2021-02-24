@@ -27,6 +27,8 @@ body {
   -o-transition: margin .25s ease-out;
   transition: margin .25s ease-out;
 
+  @import "app-navbar";
+
   .container-fluid {
     @import 'app-login';
     min-height: 800px;

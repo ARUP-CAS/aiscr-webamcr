@@ -2,8 +2,8 @@
 
 @import 'app-variables';
 @import './bootstrap/bootstrap';
-@import 'app-global';
 @import 'app-mixins';
+@import 'app-global';
 
 #app-sidebar-wrapper {
   position: fixed;
@@ -34,7 +34,7 @@
       padding: 0;
 
       &.collapsed {
-        @include setLinkColor($app-sidebar-accordion-color);
+        @include setLinkColor($app-sidebar-accordion-color, 'd', 30);
 
         .app-icon-expand {
           transition: all 0.4s ease;
@@ -67,7 +67,7 @@
           line-height: 32px;
 
           a {
-            color: $app-sidebar-accordion-color
+            @include setLinkColor($app-sidebar-accordion-color, 'd', 30);
           }
         }
       }

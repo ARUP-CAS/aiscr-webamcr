@@ -108,20 +108,50 @@
 
 {% block navbar %}
   <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-    <button class="btn btn-light" id="menu-toggle"><span class="material-icons">menu_open</span></button>
+    <button class="btn btn-light" id="sidebar-toggle"><span class="material-icons">menu_open</span></button>
 
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMobile"
+            aria-controls="navbarMobile" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <div class="collapse navbar-collapse" id="navbarMobile">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
-        <li class="nav-item active">
-          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        <li class="nav-item d-lg-none d-xl-block">
+          <span class="nav-link">
+            <small>
+              <strong>{% trans "Přihlášen" %}:</strong> {{ user.email }} ({{ user.hlavni_role }})
+            </small>
+          </span>
+        </li>
+        <li class="nav-item d-none d-lg-block d-xl-none">
+          <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-toggle="popover" data-placement="bottom" 
+            data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }})">
+            <span class="material-icons">info</span>
+            {% trans "Informace" %}
+          </a>
+        </li>
+        <li class="nav-item app-pipe"></li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" data-toggle="tooltip" data-placement="top" title="{% trans 'Informace o uživateli' %}">
+            <span class="material-icons">person</span>
+            <span>{% trans "Uživatel" %}</span>
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#"><strong>Přihlášen:</strong> {{ user.email }} ({{ user.hlavni_role }})</a>
+          <a class="nav-link" href="#" data-toggle="tooltip" data-placement="top" title="{% trans 'Odhlásit' %}">
+            <span class="material-icons">logout</span>
+            {% trans "Odhlásit" %}
+          </a>
+        </li>
+        <li class="nav-item app-pipe"></li>
+        <li class="nav-item app-flags">
+          <a class="nav-link app-active" href="#">
+            <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
+          </a>
+          <a class="nav-link" href="#">
+            <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
+          </a>
         </li>
       </ul>
     </div>
@@ -129,13 +159,11 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  <!-- <nav aria-label="breadcrumb">
+  <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="#">Home</a></li>
-      <li class="breadcrumb-item"><a href="#">Library</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Data</li>
+      <li class="breadcrumb-item"><a href="#">Projekty</a></li>
     </ol>
-  </nav> -->
+  </nav>
 {% endblock %}
 
 {% block footer %}
@@ -177,9 +205,13 @@
 
 {% block script_sidebar %}
   <script>
-      $("#menu-toggle").click(function (e) {
-          e.preventDefault();
-          $("#app-wrapper").toggleClass("toggled");
-      });
+    $("#sidebar-toggle").click(function (e) {
+      e.preventDefault();
+      $("#app-wrapper").toggleClass("toggled");
+    });
+    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="popover"]').popover({
+      html : true
+    }); 
   </script>
 {% endblock %}

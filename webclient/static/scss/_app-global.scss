@@ -9,13 +9,21 @@
   border: none !important;
 }
 
+.app-clean-mg {
+  margin: 0 !important;
+}
+
+.app-clean-pd {
+  padding: 0 !important;
+}
+
 // common
 .app-full-width {
   width: 100%;
 }
 
 .app-pipe {
-  border-left: 1px solid $gray-600;
+  border-left: 1px solid $gray-500;
   margin: 0 $app-gap-half;
 
   /* &:last-child {
@@ -23,17 +31,20 @@
   } */
 }
 
-// material icons behavior in bootstrap elements
-.btn {
-  .material-icons {
-    vertical-align: bottom;
-  }
+.app-flag {
+  width: $app-flag-width;
 }
 
-/* .card {
-  .btn {
-    .material-icons {
-      vertical-align: middle;
-    }
+.app-flag-inactive {
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%);
+  opacity: 50%;
+}
+
+// material icons behavior in bootstrap elements
+.btn,
+.nav-link {
+  .material-icons {
+    @include setIcon($position: bottom);
   }
-} */
+}

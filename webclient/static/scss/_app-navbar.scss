@@ -1,0 +1,48 @@
+// --- NAVBAR ---
+
+.navbar {
+  #sidebar-toggle {
+    .material-icons {
+      transition: all 0.4s ease;
+      transform: rotateZ(0deg);
+    }
+    .toggled & {
+      .material-icons {
+        transition: all 0.4s ease;
+        transform: rotateZ(180deg);
+      }
+    }
+  }
+
+  .navbar-nav {
+    .nav-item {
+      &.app-flags {
+        .nav-link {
+          display: inline-block;
+
+          &:first-child {
+            padding-right: 0;
+          }
+
+          &:not(.app-active) {
+            @extend .app-flag-inactive;
+          }
+        }
+      }
+
+      &.app-pipe {
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+        
+        @media #{$lt-lg} {
+          border-left: 0;
+          border-bottom: 1px solid $gray-300;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+        }
+      }
+    }
+  }
+}
+
+
