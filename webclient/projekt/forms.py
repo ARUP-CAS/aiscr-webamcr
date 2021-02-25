@@ -88,10 +88,10 @@ class EditProjektForm(forms.ModelForm):
                     "parcelni_cislo",
                     "oznaceni_stavby",
                     Div(
-                        #Div("latitude", css_class="col-sm-6,"),
-                        #Div("longitude", css_class="col-sm-6"),
-                         Div("latitude", css_class="hidden"),
-                         Div("longitude", css_class="hidden"),
+                        # Div("latitude", css_class="col-sm-6,"),
+                        # Div("longitude", css_class="col-sm-6"),
+                        Div("latitude", css_class="hidden"),
+                        Div("longitude", css_class="hidden"),
                         css_class="row",
                     ),
                     Div(

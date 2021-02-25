@@ -30,13 +30,13 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
 )
 from core.models import Soubor
+from core.utils import get_points_from_envelope
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
-from core.utils import get_points_from_envelope
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
@@ -115,8 +115,8 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    #projekt = Projekt.objects.get(ident_cely=ident_cely)
-    #if request.method == "POST":
+    # projekt = Projekt.objects.get(ident_cely=ident_cely)
+    # if request.method == "POST":
     #    form = EditProjektForm(request.POST, instance=projekt)
     #    if form.is_valid():
     #        form.save()
@@ -126,10 +126,10 @@ def edit(request, ident_cely):
     #        logger.debug("The form is not valid")
     #        logger.debug(form.errors)
     #
-    #else:
+    # else:
     #    form = EditProjektForm(instance=projekt)
 
-    #return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
+    # return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
     projekt = Projekt.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
