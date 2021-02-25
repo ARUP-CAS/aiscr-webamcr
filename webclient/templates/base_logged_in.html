@@ -167,38 +167,56 @@
 {% endblock %}
 
 {% block footer %}
-  <footer class="bg-light text-center text-lg-start">
+  <footer class="text-lg-start app-footer-top">
     <div class="p-4">
       <div class="row">
         <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">Footer text</h5>
+          <h5 class="text-uppercase">{% trans "Licence" %}</h5>
+          <hr />
           <p>
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
-            molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
-            aliquam voluptatem veniam, est atque cumque eum delectus sint!
+            {% trans "Databáze Archeologická mapa České republiky, jejímž autorem je" %}
+            <a href="http://www.arup.cas.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Praha, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}</a> a
+            <a href="http://arub.avcr.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Brno, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}</a>,
+            podléhá licenci <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" title="{% trans 'Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0).' %}">{% trans "Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0)." %}</a>
+            {% trans "Užití dat i metadat podléhá této licenci, pokud není explicitně stanoveno jinak." %}
           </p>
         </div>
         <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">Footer text</h5>
+          <h5 class="text-uppercase">{% trans "Kontakt" %}</h5>
+          <hr />
           <p>
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
-            molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
-            aliquam voluptatem veniam, est atque cumque eum delectus sint!
+            {% trans "Správa dat, uživatelů a podpora pro oblast Čech" %}<br />
+            {% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}<br />
+            <a href="mailto:amcr@arup.cas.cz" title="{% trans 'Napište nám' %}">amcr@arup.cas.cz</a>
+            <hr />
+            {% trans "Správa dat, uživatelů a podpora pro oblast Moravy a Slezska (vč. kraje Vysočina)" %}<br />
+            {% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}<br />
+            <a href="mailto:amcr@arub.cz" title="{% trans 'Napište nám' %}">amcr@arub.cz</a>
           </p>
         </div>
         <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">Footer text</h5>
-          <p>
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Iste atque ea quis
-            molestias. Fugiat pariatur maxime quis culpa corporis vitae repudiandae
-            aliquam voluptatem veniam, est atque cumque eum delectus sint!
+          <h5 class="text-uppercase">{% trans "Partneři" %}</h5>
+          <hr />
+          <p class="app-logos">
+            <a href="" title=""><img src="{% static 'logo-eu.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-msmt.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-aiscr.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-aru.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-arub.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-avcr.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-interreg.png' %}" alt="" /></a>
+            <a href="" title=""><img src="{% static 'logo-huld.png' %}" alt="" /></a>
           </p>
         </div>
       </div>
     </div>
-    <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2)">
-      © 2021 Copyright:
-      <a class="text-dark" href="https://mdbootstrap.com/">AMCR</a>
+    <div class="text-center p-3 app-footer-bottom">
+      <small>
+        © 2021 Copyright
+        <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a>
+        <span class="app-pipe"></span>
+        Verze: 1.1.3
+      </small>
     </div>
   </footer>
 {% endblock %}

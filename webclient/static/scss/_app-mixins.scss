@@ -139,7 +139,6 @@
   color: $color;
 
   &:hover {
-    //color: rgba($color, .7);
     @if ($shade == 'd') {
       color: darken($color, $val);
     } @else if ($shade == 'l') {

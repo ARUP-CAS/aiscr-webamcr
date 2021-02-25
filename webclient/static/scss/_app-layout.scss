@@ -28,10 +28,10 @@ body {
   transition: margin .25s ease-out;
 
   @import "app-navbar";
+  @import 'app-footer';
 
   .container-fluid {
     @import 'app-login';
-    min-height: 800px;
   }
 }
 
@@ -42,3 +42,18 @@ body {
   }
 }
 
+
+// test footer always on bottom page
+html, body, #app-wrapper {
+  height: 100%;
+}
+
+#app-page-wrapper {
+  display: flex;
+  flex-direction: column;
+
+  .container-fluid {
+    flex: 1 0 auto;
+    //background: green;
+  }
+}

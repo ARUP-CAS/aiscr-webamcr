@@ -1,5 +1,17 @@
 // --- FOOTER ---
 
 footer {
+  background-color: $app-footer-top-bg;
+
+  .app-logos {
+    img {
+      max-height: 40px;
+      margin: 0 $app-gap-double $app-gap-double 0;
+    }
+  }
+ 
   
+  .app-footer-bottom {
+    background-color: $app-footer-bottom-bg;
+  }
 }

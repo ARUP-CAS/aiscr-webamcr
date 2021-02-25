@@ -34,7 +34,7 @@
       padding: 0;
 
       &.collapsed {
-        @include setLinkColor($app-sidebar-accordion-color, 'd', 30);
+        @include setLinkColor($app-sidebar-accordion-color, 'l', 10);
 
         .app-icon-expand {
           transition: all 0.4s ease;
@@ -67,7 +67,7 @@
           line-height: 32px;
 
           a {
-            @include setLinkColor($app-sidebar-accordion-color, 'd', 30);
+            @include setLinkColor($app-sidebar-accordion-color, 'l', 10);
           }
         }
       }
