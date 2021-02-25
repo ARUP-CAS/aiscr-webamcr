@@ -9,6 +9,8 @@ from projekt.models import Projekt
 
 
 class EditProjektForm(forms.ModelForm):
+    latitude = forms.FloatField(required=True)
+    longitude = forms.FloatField(required=True)
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
@@ -32,6 +34,8 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis",
             "datum_zahajeni",
             "datum_ukonceni",
+            "latitude",
+            "longitude",
         )
         widgets = {
             "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -83,6 +87,13 @@ class EditProjektForm(forms.ModelForm):
                     "lokalizace",
                     "parcelni_cislo",
                     "oznaceni_stavby",
+                    Div(
+                        #Div("latitude", css_class="col-sm-6,"),
+                        #Div("longitude", css_class="col-sm-6"),
+                         Div("latitude", css_class="hidden"),
+                         Div("longitude", css_class="hidden"),
+                        css_class="row",
+                    ),
                     Div(
                         Div("datum_zahajeni", css_class="col-sm-6"),
                         Div("datum_ukonceni", css_class="col-sm-6"),

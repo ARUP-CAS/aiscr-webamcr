@@ -5,13 +5,28 @@
 {% block title %}{% trans "Detail projektu" %}{% endblock %}
 {% block head %}
   <!-- Map imports -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-        crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-          integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-          crossorigin="">
-  </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin="">
+    </script>
+
+    <script>
+    var global_csrftoken = '{{ csrf_token }}';
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
+    crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -182,6 +197,27 @@
           <div class="col">{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</div>
         </div>
       {% endfor %}
+    </div>
+    <div class="container">
+        <style>
+            #projectMap {
+                width: 100%;
+                height: 473px;
+                border-radius: 5px;
+            }
+        </style>
+        <div id="projectMap"></div>
+        <script src="{% static 'mapa.js' %}"></script>
+        <script>
+            global_map_can_edit=false;
+            button_map_lock.disable();
+            let coordinates='{{ projekt.geom.coords}}'.slice(1, -1).split(',');
+            console.log(coordinates)
+            if(coordinates && coordinates.length>1){
+              addPointOnLoad(coordinates[1],coordinates[0],"Uživatelem zadaná poloha záměru");
+            }
+        </script>
+
     </div>
   </div>
 

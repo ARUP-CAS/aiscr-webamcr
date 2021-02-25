@@ -3,6 +3,7 @@ import mimetypes
 import os
 from datetime import datetime
 
+import simplejson as json
 from arch_z.models import Akce
 from core.constants import (
     AZ_STAV_ZAPSANY,
@@ -32,9 +33,10 @@ from core.models import Soubor
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from core.utils import get_points_from_envelope
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
@@ -49,6 +51,8 @@ from projekt.forms import (
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
+
+# from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
@@ -78,24 +82,88 @@ def detail(request, ident_cely):
     return render(request, "projekt/detail.html", context)
 
 
+# @csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_point(request):
+    body = json.loads(request.body.decode("utf-8"))
+    # logger.debug(body)
+    projekty = get_points_from_envelope(
+        body["SouthEast"]["lng"],
+        body["SouthEast"]["lat"],
+        body["NorthWest"]["lng"],
+        body["NorthWest"]["lat"],
+    )
+    # logger.debug("pocet projektu: "+str(len(projekty)))
+    back = []
+    for projekt in projekty:
+        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
+        back.append(
+            {
+                "id": projekt.id,
+                "ident_cely": projekt.ident_cely,
+                "lat": projekt.lat,
+                "lng": projekt.lng,
+            }
+        )
+    if len(projekty) > 0:
+        return JsonResponse({"points": back}, status=200)
+    else:
+        return JsonResponse({"points": []}, status=200)
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    #projekt = Projekt.objects.get(ident_cely=ident_cely)
+    #if request.method == "POST":
+    #    form = EditProjektForm(request.POST, instance=projekt)
+    #    if form.is_valid():
+    #        form.save()
+    #        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+    #        return redirect("projekt/detail/" + ident_cely)
+    #    else:
+    #        logger.debug("The form is not valid")
+    #        logger.debug(form.errors)
+    #
+    #else:
+    #    form = EditProjektForm(instance=projekt)
+
+    #return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
     projekt = Projekt.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():
+            logger.debug("Form is valid")
+            logger.debug(request.POST)
+            if projekt.geom is not None:
+                form.fields["latitude"].initial = projekt.geom.coords[1]
+                form.fields["longitude"].initial = projekt.geom.coords[0]
+
             form.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("projekt/detail/" + ident_cely)
         else:
-            logger.debug("The form is not valid")
+            logger.debug("The form is not valid!")
             logger.debug(form.errors)
 
-    else:
-        form = EditProjektForm(instance=projekt)
+        return HttpResponse("Post Not implemented yet")
+    elif request.method == "GET":
 
-    return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
+        form = EditProjektForm(instance=projekt)
+        if projekt.geom is not None:
+            form.fields["latitude"].initial = projekt.geom.coords[1]
+            form.fields["longitude"].initial = projekt.geom.coords[0]
+
+        return render(
+            request,
+            "projekt/edit.html",
+            {
+                "form_projekt": form,
+            },
+        )
+    else:
+        return HttpResponse("Function Not implemented yet")
 
 
 class ProjektListView(SingleTableMixin, FilterView):
