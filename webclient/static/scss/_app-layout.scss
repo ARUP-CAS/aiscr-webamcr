@@ -20,7 +20,7 @@ body {
 }
 
 #app-page-wrapper {
-  /* min-width: 100vw; */
+  min-width: 100vh;
   width: 100%;
   -webkit-transition: margin .25s ease-out;
   -moz-transition: margin .25s ease-out;
@@ -39,21 +39,5 @@ body {
 #app-wrapper.toggled {
   #app-page-wrapper {
     margin-left: 0;
-  }
-}
-
-
-// test footer always on bottom page
-html, body, #app-wrapper {
-  height: 100%;
-}
-
-#app-page-wrapper {
-  display: flex;
-  flex-direction: column;
-
-  .container-fluid {
-    flex: 1 0 auto;
-    //background: green;
   }
 }

@@ -135,7 +135,7 @@
 
 
 // set link color
-@mixin setLinkColor($color, $shade, $val) {
+@mixin setLinkColor($color, $shade: none, $val: none, $colorH: none) {
   color: $color;
 
   &:hover {
@@ -143,8 +143,8 @@
       color: darken($color, $val);
     } @else if ($shade == 'l') {
       color: lighten($color, $val);
-    } @else {
-      color: darden($color, $val);
+    } @else if ($shade == none) {
+      color: $colorH;
     }
   }
 }

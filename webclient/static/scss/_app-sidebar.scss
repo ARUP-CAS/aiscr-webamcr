@@ -34,7 +34,7 @@
       padding: 0;
 
       &.collapsed {
-        @include setLinkColor($app-sidebar-accordion-color, 'l', 10);
+        @include setLinkColor($app-sidebar-accordion-color, $colorH: $white);
 
         .app-icon-expand {
           transition: all 0.4s ease;
@@ -67,7 +67,7 @@
           line-height: 32px;
 
           a {
-            @include setLinkColor($app-sidebar-accordion-color, 'l', 10);
+            @include setLinkColor($app-sidebar-accordion-color, $colorH: $white);
           }
         }
       }
@@ -118,4 +118,23 @@
       }
     }
   }
+}
+
+// test footer always on bottom page
+html, body, #app-wrapper {
+  height: 100%;
+}
+
+#app-page-wrapper {
+  display: flex;
+  flex-direction: column;
+
+  .container-fluid {
+    flex: 1 0 auto;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  background-color: red;
 }
