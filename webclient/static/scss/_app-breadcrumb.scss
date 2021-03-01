@@ -2,6 +2,9 @@
 
 nav {
   .breadcrumb {
+    @extend .app-clean-mg;
+    background-color: $app-footer-top-bg;
+
     .breadcrumb-item {
       a {
         @include setEntityColor("card");

@@ -33,6 +33,10 @@ body {
 
   .container-fluid {
     @import 'app-login';
+
+    &.app-content-wrapper {
+      padding: $app-content-wrapper;
+    }
   }
 }
 
