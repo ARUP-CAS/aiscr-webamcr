@@ -9,8 +9,12 @@ body {
     background-position: center 50px;
     padding: $app-login-gap $app-gap;
 
-    .container-fluid {
-      max-width: $container-max-width-xl;
+    #app-page-wrapper {
+      min-width: auto;
+      
+      .container-fluid {
+        max-width: $container-max-width-xl;
+      }
     }
   }
 }

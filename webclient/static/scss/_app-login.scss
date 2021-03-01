@@ -46,10 +46,13 @@
 
   .app-col-desc {
     .app-inner {
+      margin-top: 30px;
+
       @media #{$gt-md} {
         height: 100%;
         border-left: 1px solid $app-login-border-color;
         padding: $app-gap $app-gap-double;
+        margin-top: 0;
       }
 
       hr {
