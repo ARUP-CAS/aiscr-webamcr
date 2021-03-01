@@ -34,6 +34,7 @@ from core.utils import get_points_from_envelope
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -166,7 +167,7 @@ def edit(request, ident_cely):
         return HttpResponse("Function Not implemented yet")
 
 
-class ProjektListView(SingleTableMixin, FilterView):
+class ProjektListView(LoginRequiredMixin, SingleTableMixin, FilterView):
     table_class = ProjektTable
     model = Projekt
     template_name = "projekt/projekt_list.html"
