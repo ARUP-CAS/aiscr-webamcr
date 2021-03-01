@@ -66,9 +66,11 @@ $app-sidebar-accordion-body-color: rgba($white, .03) !default;
 $app-footer-top-bg: rgba(lighten($app-sidebar-bg, 70), .5) !default;
 $app-footer-bottom-bg: lighten($app-sidebar-bg, 70) !default;
 
-
 // login
-$app-login-form-width: 350px !default;
+$app-login-gap: $app-gap-double !default;
+$app-login-desc-color: lighten($app-sidebar-bg, 50) !default;
+$app-login-border-color: rgba($white, .12) !default;
+$app-login-news-max-height: 280px !default;
 
 // mq break point
 $xxs: 'only screen and (min-width: 400px) and (max-width: 575px)';

@@ -5,9 +5,9 @@ body {
     background-color: $app-sidebar-bg;
     background-image: url('/static/static/img/login-bg.svg');
     background-repeat: no-repeat;
-    background-size: contain;
-    background-position: center;
-    padding: $app-gap-double;
+    background-size: 700px;
+    background-position: center 50px;
+    padding: $app-login-gap $app-gap;
 
     .container-fluid {
       max-width: $container-max-width-xl;
