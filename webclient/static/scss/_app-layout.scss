@@ -28,10 +28,15 @@ body {
   transition: margin .25s ease-out;
 
   @import "app-navbar";
+  @import "app-breadcrumb";
   @import 'app-footer';
 
   .container-fluid {
     @import 'app-login';
+
+    &.app-content-wrapper {
+      padding: $app-content-wrapper;
+    }
   }
 }
 

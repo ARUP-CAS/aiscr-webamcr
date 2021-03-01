@@ -15,10 +15,26 @@ $black:    #000 !default;
 
 $primary: #0d47a1 !default;
 
+// entity colors
+$entities: (
+  "dokument": #5882c4,
+  "projekt": #F39225,
+  "akce": #247e4b,
+  "lokalita": #951E7A,
+  "samostatny_nalez": #85140E,
+  "knihovna_3d": #778e98,
+  "let":  #15968c,
+  "ext_zdroj": #E7302A
+);
+
+
 // gap
 $app-gap: 15px !default;
 $app-gap-double: 30px !default;
 $app-gap-half: 7.5px !default;
+
+// content
+$app-content-wrapper: $app-gap !default;
 
 // container
 $container-max-width-xl: 1140px !default; 

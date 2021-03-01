@@ -35,7 +35,7 @@
     {% block navbar %}{% endblock %}
     {% block breadcrumb %}{% endblock %}
 
-    <div class="container-fluid">
+    <div class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}app-content-wrapper{% endif %}">
       {% block content %}{% endblock %}
     </div>
 
