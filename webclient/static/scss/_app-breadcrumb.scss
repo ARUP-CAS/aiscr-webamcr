@@ -1,0 +1,15 @@
+// --- BREADCRUMB ---
+
+nav {
+  .breadcrumb {
+    .breadcrumb-item {
+      a {
+        @include setEntityColor("card");
+        @include setEntityColor("cardInfoBadge");
+        font-size: 20px;
+        font-weight: 500;
+        padding-left: $app-gap;
+      }
+    }
+  }
+}
