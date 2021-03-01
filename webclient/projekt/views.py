@@ -8,23 +8,28 @@ from arch_z.models import Akce
 from core.constants import (
     AZ_STAV_ZAPSANY,
     PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     PROJEKT_STAV_OZNAMENY,
     PROJEKT_STAV_PRIHLASENY,
     PROJEKT_STAV_UKONCENY_V_TERENU,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
+    PROJEKT_STAV_ZRUSENY,
 )
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
+    PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_UZAVRIT,
     PROJEKT_USPESNE_ARCHIVOVAN,
+    PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI,
     PROJEKT_USPESNE_PRIHLASEN,
     PROJEKT_USPESNE_SCHVALEN,
     PROJEKT_USPESNE_UKONCEN_V_TERENU,
     PROJEKT_USPESNE_UZAVREN,
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
+    PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
@@ -45,6 +50,7 @@ from oznameni.models import Oznamovatel
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     EditProjektForm,
+    NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
     VratitProjektForm,
@@ -357,13 +363,62 @@ def archivovat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def navrhnout_ke_zruseni(request, ident_cely):
-    return HttpResponse("Not implemented yet")
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if request.method == "POST":
+        form = NavrhnoutZruseniProjektForm(request.POST)
+        if PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
+            if form.is_valid():
+                duvod = form.cleaned_data["reason"]
+                projekt.set_navrzen_ke_zruseni(request.user, duvod)
+                projekt.save()
+                messages.add_message(
+                    request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
+                )
+                return redirect("/projekt/detail/" + ident_cely)
+            else:
+                logger.debug("The form is not valid")
+                logger.debug(form.errors)
+        else:
+            return render(request, "403.html")
+    else:
+        warnings = projekt.check_pred_navrzeni_k_zruseni()
+        logger.debug(warnings)
+        context = {"projekt": projekt}
+        if warnings:
+            context["warnings"] = []
+            messages.add_message(
+                request, messages.ERROR, PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI
+            )
+            for key, value in warnings.items():
+                context["warnings"].append((key, value))
+        else:
+            pass
+
+        form = NavrhnoutZruseniProjektForm()
+    return render(
+        request, "projekt/navrhnout_zruseni.html", {"form": form, "projekt": projekt}
+    )
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
-    return HttpResponse("Not implemented yet")
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if request.method == "POST":
+        if (
+            projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+            or projekt.stav == PROJEKT_STAV_OZNAMENY
+        ):
+            projekt.set_zruseny(request.user)
+            projekt.save()
+            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
+            return redirect("/projekt/detail/" + ident_cely)
+        else:
+            logger.debug("Stav projektu: " + str(projekt.stav))
+            return render(request, "403.html")
+    else:
+        pass
+    return render(request, "projekt/zrusit.html", {"projekt": projekt})
 
 
 @login_required
@@ -390,9 +445,31 @@ def vratit(request, ident_cely):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def vratit_navrh_zruseni(request, ident_cely):
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if request.method == "POST":
+        form = VratitProjektForm(request.POST)
+        if PROJEKT_STAV_NAVRZEN_KE_ZRUSENI == projekt.stav:
+            if form.is_valid():
+                duvod = form.cleaned_data["reason"]
+                projekt.set_znovu_zapsan(request.user, duvod)
+                projekt.save()
+                messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
+                return redirect("/projekt/detail/" + ident_cely)
+            else:
+                logger.debug("The form is not valid")
+                logger.debug(form.errors)
+        else:
+            return render(request, "403.html")
+    else:
+        form = VratitProjektForm()
+    return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})
+
+
+@login_required
 @require_http_methods(["GET"])
 def upload_file(request, ident_cely):
-
     return render(request, "projekt/upload_file.html", {"ident_cely": ident_cely})
 
 
@@ -448,6 +525,17 @@ def get_detail_template_shows(projekt):
     show_ukoncit = projekt.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU
     show_uzavrit = projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU
     show_archivovat = projekt.stav == PROJEKT_STAV_UZAVRENY
+    show_navrzen_ke_zruseni = projekt.stav not in [
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_ZRUSENY,
+        PROJEKT_STAV_ARCHIVOVANY,
+        PROJEKT_STAV_OZNAMENY,
+    ]
+    show_zrusit = projekt.stav in [
+        PROJEKT_STAV_OZNAMENY,
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+    ]
+    show_znovu_zapsat = projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -457,5 +545,8 @@ def get_detail_template_shows(projekt):
         "ukoncit_teren_link": show_ukoncit,
         "uzavrit_link": show_uzavrit,
         "archivovat_link": show_archivovat,
+        "navrhnout_zruseni_link": show_navrzen_ke_zruseni,
+        "zrusit_link": show_zrusit,
+        "znovu_zapsat_link": show_znovu_zapsat,
     }
     return show

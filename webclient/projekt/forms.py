@@ -145,6 +145,33 @@ class VratitProjektForm(forms.Form):
         )
 
 
+class NavrhnoutZruseniProjektForm(forms.Form):
+    reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    HTML(_("Návrh zrušení projektu")),
+                    css_class="card-header",
+                ),
+                Div(
+                    "reason",
+                    css_class="card-body",
+                ),
+                Div(
+                    FormActions(
+                        Submit("save", "Navrhnout zrušení"),
+                        Button("cancel", "Zrušit"),
+                    )
+                ),
+                css_class="card",
+            )
+        )
+
+
 class PrihlaseniProjektForm(forms.ModelForm):
     class Meta:
         model = Projekt

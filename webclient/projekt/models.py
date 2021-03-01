@@ -19,6 +19,7 @@ from core.constants import (
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
+    VRACENI_NAVRHU_ZRUSENI,
     VRACENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
 )
@@ -226,6 +227,15 @@ class Projekt(models.Model):
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_PROJ,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        )
+
+    def set_znovu_zapsan(self, user, poznamka):
+        self.stav = PROJEKT_STAV_ZAPSANY
+        Historie(
+            typ_zmeny=VRACENI_NAVRHU_ZRUSENI,
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,

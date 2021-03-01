@@ -43,6 +43,7 @@ ARCHIVACE_PROJ: Final = "P56"  # 6
 NAVRZENI_KE_ZRUSENI_PROJ: Final = "P*7"  # 7
 RUSENI_PROJ: Final = "P78"  # 8
 VRACENI_PROJ: Final = "P-1"  # New
+VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 # Akce + Lokalita (archeologicke zaznamy)
 ZAPSANI_AZ: Final = "AZ01"  # 1
 ODESLANI_AZ: Final = "AZ12"  # 2
