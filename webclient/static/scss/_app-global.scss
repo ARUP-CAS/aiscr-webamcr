@@ -22,6 +22,10 @@
   width: 100%;
 }
 
+.app-heading-thin {
+  font-weight: 200 !important;
+}
+
 .app-pipe {
   border-left: 1px solid $gray-500;
   margin: 0 $app-gap-half;

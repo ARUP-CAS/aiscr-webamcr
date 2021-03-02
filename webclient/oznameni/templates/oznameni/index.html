@@ -70,53 +70,55 @@
     </div>
   </div>
 </div> -->
-
-<div id="stepper2" class="bs-stepper">
-  <div class="bs-stepper-header">
-    <div class="step" data-target="#test-nl-1">
-      <button type="button" class="btn step-trigger">
-        <span class="bs-stepper-circle">1</span>
-        <span class="bs-stepper-label">Vyplneni fomulare</span>
-      </button>
-    </div>
-    <div class="line"></div>
-    <div class="step" data-target="#test-nl-2">
-      <div class="btn step-trigger">
-        <span class="bs-stepper-circle">2</span>
-        <span class="bs-stepper-label">Neco</span>
-      </div>
-    </div>
-    <div class="line"></div>
-    <div class="step" data-target="#test-nl-3">
-      <button type="button" class="btn step-trigger">
-        <span class="bs-stepper-circle">3</span>
-        <span class="bs-stepper-label">Odeslani</span>
-      </button>
-    </div>
-  </div>
-  <div class="bs-stepper-content">
-    <div id="test-nl-1" class="content fade">
-      <p class="text-center">Obsah kroku 1</p>
-      <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
-    </div>
-    <div id="test-nl-2" class="content fade">
-      <p class="text-center">Obsah kroku 2</p>
-      <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
-      <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
-    </div>
-    <div id="test-nl-3" class="content fade">
-      <p class="text-center">Obsah kroku 3</p>
-      <!-- <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button> -->
-      <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
-    </div>
-  </div>
-</div>
 <!-- end test -->
 
 
   {% include "components/uvod.html" %}
 
-  <h2>{% trans "Krok 1/2" %}</h2>
+  <!-- stepper -->
+  <div id="stepper2" class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step" data-target="#test-nl-1">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">Vyplneni fomulare</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step" data-target="#test-nl-2">
+        <div class="btn step-trigger">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">Neco</span>
+        </div>
+      </div>
+      <div class="line"></div>
+      <div class="step" data-target="#test-nl-3">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">3</span>
+          <span class="bs-stepper-label">Odeslani</span>
+        </button>
+      </div>
+    </div>
+    <div class="bs-stepper-content">
+      <div id="test-nl-1" class="content fade">
+        <p class="text-center">Obsah kroku 1</p>
+        <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
+      </div>
+      <div id="test-nl-2" class="content fade">
+        <p class="text-center">Obsah kroku 2</p>
+        <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
+        <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
+      </div>
+      <div id="test-nl-3" class="content fade">
+        <p class="text-center">Obsah kroku 3</p>
+        <!-- <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button> -->
+        <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
+      </div>
+    </div>
+  </div>
+  <!-- end stepper-->
+
+  <!-- <h2>{% trans "Krok 1/2" %}</h2> -->
 
   <form method="post">
     {% crispy form_oznamovatel %}

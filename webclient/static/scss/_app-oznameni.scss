@@ -6,7 +6,7 @@
       padding: $app-gap-double;
 
       h1 {
-        font-weight: 200;
+        @extend .app-heading-thin;
       }
 
       .collapse {
