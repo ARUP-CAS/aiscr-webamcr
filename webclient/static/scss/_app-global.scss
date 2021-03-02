@@ -25,10 +25,6 @@
 .app-pipe {
   border-left: 1px solid $gray-500;
   margin: 0 $app-gap-half;
-
-  /* &:last-child {
-    display: none;
-  } */
 }
 
 .app-flag {
@@ -39,6 +35,20 @@
   filter: grayscale(100%);
   -webkit-filter: grayscale(100%);
   opacity: 50%;
+}
+
+.app-btn-show-more {
+  .material-icons {
+    transition: all 0.4s ease;
+    transform: rotateZ(180deg);
+  }
+
+  &.collapsed {
+    .material-icons {
+      transition: all 0.4s ease;
+      transform: rotateZ(0deg);
+    }
+  }
 }
 
 // material icons behavior in bootstrap elements
