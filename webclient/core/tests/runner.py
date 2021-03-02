@@ -111,7 +111,9 @@ class AMCRTestRunner(BaseRunner):
         for n in nazvy_heslaru:
             n.save()
 
-        Heslar(id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn).save()
+        Heslar(
+            id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="zachranny"
+        ).save()
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp).save()
         Heslar(id=TYP_PIAN_PLOCHA_ID, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()

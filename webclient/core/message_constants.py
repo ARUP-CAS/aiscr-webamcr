@@ -26,6 +26,8 @@ PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI = (
     "Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce."
 )
 
+AKCE_USPESNE_ZAPSANA: Final = "Akce úspěšně zapsána."
+
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."

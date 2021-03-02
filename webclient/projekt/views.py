@@ -122,21 +122,7 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    # projekt = Projekt.objects.get(ident_cely=ident_cely)
-    # if request.method == "POST":
-    #    form = EditProjektForm(request.POST, instance=projekt)
-    #    if form.is_valid():
-    #        form.save()
-    #        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-    #        return redirect("projekt/detail/" + ident_cely)
-    #    else:
-    #        logger.debug("The form is not valid")
-    #        logger.debug(form.errors)
-    #
-    # else:
-    #    form = EditProjektForm(instance=projekt)
 
-    # return render(request, "projekt/edit.html", {"form": form, "projekt": projekt})
     projekt = Projekt.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
