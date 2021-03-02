@@ -1,0 +1,21 @@
+// --- OZNAMENI ---
+
+&.app-oznameni {
+  .container-fluid {
+    .jumbotron {
+      padding: $app-gap-double;
+
+      h1 {
+        font-weight: 200;
+      }
+
+      .collapse {
+        p {
+          &:last-child {
+            @extend .app-clean-mg;
+          }
+        }
+      }
+    }
+  }
+}

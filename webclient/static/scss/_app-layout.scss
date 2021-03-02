@@ -1,6 +1,8 @@
 // --- LAYOUT ---
 
 body {
+  @import "app-oznameni";
+  
   &.app-login {
     background-color: $app-sidebar-bg;
     background-image: url('/static/static/img/login-bg.svg');
@@ -11,7 +13,17 @@ body {
 
     #app-page-wrapper {
       min-width: auto;
-      
+
+      .container-fluid {
+        max-width: $container-max-width-xl;
+      }
+    }
+  }
+
+  &.app-oznameni {
+    #app-page-wrapper {
+      min-width: auto;
+
       .container-fluid {
         max-width: $container-max-width-xl;
       }

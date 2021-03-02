@@ -21,9 +21,98 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+
+  <!-- test -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css"/>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
 {% endblock %}
 
 {% block content %}
+
+
+<!-- test -->
+<!-- <div id="stepper1" class="bs-stepper">
+  <div class="bs-stepper-header">
+    <div class="step" data-target="#test-l-1">
+      <button type="button" class="btn step-trigger">
+        <span class="bs-stepper-circle">1</span>
+        <span class="bs-stepper-label">Vyplneni fomulare</span>
+      </button>
+    </div>
+    <div class="line"></div>
+    <div class="step" data-target="#test-l-2">
+      <button type="button" class="btn step-trigger">
+        <span class="bs-stepper-circle">2</span>
+        <span class="bs-stepper-label">Neco</span>
+      </button>
+    </div>
+    <div class="line"></div>
+    <div class="step" data-target="#test-l-3">
+      <button type="button" class="btn step-trigger">
+        <span class="bs-stepper-circle">3</span>
+        <span class="bs-stepper-label">Odeslani</span>
+      </button>
+    </div>
+  </div>
+  <div class="bs-stepper-content">
+    <div id="test-l-1" class="content">
+      <p class="text-center">Obsah kroku 1</p>
+      <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
+    </div>
+    <div id="test-l-2" class="content">
+      <p class="text-center">Obsah kroku 2</p>
+      <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
+    </div>
+    <div id="test-l-3" class="content">
+      <p class="text-center">Obsah kroku 3</p>
+      <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
+      <button class="btn btn-primary" onclick="stepper1.previous()">Predchozi</button>
+    </div>
+  </div>
+</div> -->
+
+<div id="stepper2" class="bs-stepper">
+  <div class="bs-stepper-header">
+    <div class="step" data-target="#test-nl-1">
+      <button type="button" class="btn step-trigger">
+        <span class="bs-stepper-circle">1</span>
+        <span class="bs-stepper-label">Vyplneni fomulare</span>
+      </button>
+    </div>
+    <div class="line"></div>
+    <div class="step" data-target="#test-nl-2">
+      <div class="btn step-trigger">
+        <span class="bs-stepper-circle">2</span>
+        <span class="bs-stepper-label">Neco</span>
+      </div>
+    </div>
+    <div class="line"></div>
+    <div class="step" data-target="#test-nl-3">
+      <button type="button" class="btn step-trigger">
+        <span class="bs-stepper-circle">3</span>
+        <span class="bs-stepper-label">Odeslani</span>
+      </button>
+    </div>
+  </div>
+  <div class="bs-stepper-content">
+    <div id="test-nl-1" class="content fade">
+      <p class="text-center">Obsah kroku 1</p>
+      <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
+    </div>
+    <div id="test-nl-2" class="content fade">
+      <p class="text-center">Obsah kroku 2</p>
+      <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
+      <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
+    </div>
+    <div id="test-nl-3" class="content fade">
+      <p class="text-center">Obsah kroku 3</p>
+      <!-- <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button> -->
+      <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
+    </div>
+  </div>
+</div>
+<!-- end test -->
+
 
   {% include "components/uvod.html" %}
 
@@ -67,4 +156,24 @@
 {% block script %}
   <script src="{% static 'map.js' %}"></script>
   <script src="{% static 'daterangepicker.js' %}"></script>
+  <script>
+    /* var stepper1Node = document.querySelector('#stepper1')
+    var stepper1 = new Stepper(document.querySelector('#stepper1'))
+
+    stepper1Node.addEventListener('show.bs-stepper', function (event) {
+      console.warn('show.bs-stepper', event)
+    })
+    stepper1Node.addEventListener('shown.bs-stepper', function (event) {
+      console.warn('shown.bs-stepper', event)
+    }) */
+
+    var stepper2 = new Stepper(document.querySelector('#stepper2'), {
+      linear: false,
+      animation: true
+    })
+    var stepper3 = new Stepper(document.querySelector('#stepper3'), {
+      animation: true
+    })
+    var stepper4 = new Stepper(document.querySelector('#stepper4'))
+  </script>
 {% endblock %}
