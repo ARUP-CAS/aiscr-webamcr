@@ -1,96 +1,105 @@
 // --- LOGIN ---
 
-.app-login-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - (#{$app-login-gap} * 2));
-  justify-content: center;
+&.app-login {
+  background-color: $app-sidebar-bg;
+  background-image: url('/static/static/img/login-bg.svg');
+  background-repeat: no-repeat;
+  background-size: 700px;
+  background-position: center 50px;
+  padding: $app-login-gap $app-gap;
 
-  .app-logo {
-    width: 100%;
-    margin-bottom: $app-gap-double;
-  }
-
-  .card {
-    @extend .app-clean-border;
-    text-align: center;
-
-    form {
-      h1 {
-        @extend .app-heading-thin;
-      }
-
-      input {
-        &[type="text"], &[type="password"] {
-          @extend .form-control;
+  .app-login-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - (#{$app-login-gap} * 2));
+    justify-content: center;
+  
+    .app-logo {
+      width: 100%;
+      margin-bottom: $app-gap-double;
+    }
+  
+    .card {
+      @extend .app-clean-border;
+      text-align: center;
+  
+      form {
+        h1 {
+          @extend .app-heading-thin;
         }
-      }
-
-      .app-flags {
-        a {
-          text-decoration: unset;
-
-          .app-flag {          
-            &:not(:hover) {
-              @extend .app-flag-inactive;
-            }
+  
+        input {
+          &[type="text"], &[type="password"] {
+            @extend .form-control;
           }
-
-          &:first-child {
-            margin-right: .5rem;
+        }
+  
+        .app-flags {
+          a {
+            text-decoration: unset;
+  
+            .app-flag {          
+              &:not(:hover) {
+                @extend .app-flag-inactive;
+              }
+            }
+  
+            &:first-child {
+              margin-right: .5rem;
+            }
           }
         }
       }
     }
-  }
-
-  .app-col-desc {
-    .app-inner {
-      margin-top: 30px;
-
-      @media #{$gt-md} {
-        height: 100%;
-        border-left: 1px solid $app-login-border-color;
-        padding: $app-gap $app-gap-double;
-        margin-top: 0;
-      }
-
-      hr {
-        border-color: $app-login-border-color; 
-      }
-
-      .card {
-        @extend .app-clean-bg, .app-full-width;
-        color: $app-login-desc-color;
-        text-align: left;
-
-        &.app-news {
-          max-height: $app-login-news-max-height;
-          overflow-y: auto;
+  
+    .app-col-desc {
+      .app-inner {
+        margin-top: 30px;
+  
+        @media #{$gt-md} {
+          height: 100%;
+          border-left: 1px solid $app-login-border-color;
+          padding: $app-gap $app-gap-double;
+          margin-top: 0;
         }
-
-        .card-body {
-          @extend .app-clean-pd;
-          padding-right: $app-gap !important;
-
-          h3 {
-            @extend .app-heading-thin;
-            margin-top: 0;
+  
+        hr {
+          border-color: $app-login-border-color; 
+        }
+  
+        .card {
+          @extend .app-clean-bg, .app-full-width;
+          color: $app-login-desc-color;
+          text-align: left;
+  
+          &.app-news {
+            max-height: $app-login-news-max-height;
+            overflow-y: auto;
           }
-
-          p {
-            &:last-child {
-              margin-bottom: 5px;
-            }
-
-            .app-pipe {
-              border-color: rgba($app-login-desc-color, .4);
+  
+          .card-body {
+            @extend .app-clean-pd;
+            padding-right: $app-gap !important;
+  
+            h3 {
+              @extend .app-heading-thin;
+              margin-top: 0;
             }
   
-            span {
-              &:not(.app-pipe) {
-                font-weight: normal;
-                color: rgba($app-login-desc-color, .6);
+            p {
+              &:last-child {
+                margin-bottom: 5px;
+              }
+  
+              .app-pipe {
+                border-color: rgba($app-login-desc-color, .4);
+              }
+    
+              span {
+                &:not(.app-pipe) {
+                  font-weight: normal;
+                  color: rgba($app-login-desc-color, .6);
+                }
               }
             }
           }
