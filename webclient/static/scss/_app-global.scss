@@ -22,6 +22,18 @@
   width: 100%;
 }
 
+.app-row-gap {
+  margin-bottom: $app-gap;
+}
+
+.app-row-gap-half {
+  margin-bottom: $app-gap-half;
+}
+
+.app-row-gap-double {
+  margin-bottom: $app-gap-double;
+}
+
 .app-heading-thin {
   font-weight: 200 !important;
 }

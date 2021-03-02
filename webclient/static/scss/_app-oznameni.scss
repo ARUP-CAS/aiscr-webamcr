@@ -17,5 +17,21 @@
         }
       }
     }
+
+    form {
+      &.dropzone {
+        border-radius: $border-radius;
+        border: 1px solid $gray-400;
+        background-color: $gray-100;
+        min-height: unset;
+      }
+    }
+
+    .app-footer {
+      .form-check {
+        display: inline-block;
+        margin-left: $app-gap;
+      }
+    }
   }
 }

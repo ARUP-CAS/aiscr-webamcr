@@ -22,114 +22,99 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
 
-  <!-- test -->
+  <!-- Stepper -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css"/>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
 {% endblock %}
 
 {% block content %}
 
-
-<!-- test -->
-<!-- <div id="stepper1" class="bs-stepper">
-  <div class="bs-stepper-header">
-    <div class="step" data-target="#test-l-1">
-      <button type="button" class="btn step-trigger">
-        <span class="bs-stepper-circle">1</span>
-        <span class="bs-stepper-label">Vyplneni fomulare</span>
-      </button>
-    </div>
-    <div class="line"></div>
-    <div class="step" data-target="#test-l-2">
-      <button type="button" class="btn step-trigger">
-        <span class="bs-stepper-circle">2</span>
-        <span class="bs-stepper-label">Neco</span>
-      </button>
-    </div>
-    <div class="line"></div>
-    <div class="step" data-target="#test-l-3">
-      <button type="button" class="btn step-trigger">
-        <span class="bs-stepper-circle">3</span>
-        <span class="bs-stepper-label">Odeslani</span>
-      </button>
-    </div>
-  </div>
-  <div class="bs-stepper-content">
-    <div id="test-l-1" class="content">
-      <p class="text-center">Obsah kroku 1</p>
-      <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
-    </div>
-    <div id="test-l-2" class="content">
-      <p class="text-center">Obsah kroku 2</p>
-      <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
-    </div>
-    <div id="test-l-3" class="content">
-      <p class="text-center">Obsah kroku 3</p>
-      <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
-      <button class="btn btn-primary" onclick="stepper1.previous()">Predchozi</button>
-    </div>
-  </div>
-</div> -->
-<!-- end test -->
-
-
   {% include "components/uvod.html" %}
 
-  <!-- stepper -->
-  <div id="stepper2" class="bs-stepper">
+  <div id="stepper1" class="bs-stepper">
     <div class="bs-stepper-header">
-      <div class="step" data-target="#test-nl-1">
+      <div class="step active" data-target="#test-l-1">
         <button type="button" class="btn step-trigger">
           <span class="bs-stepper-circle">1</span>
-          <span class="bs-stepper-label">Vyplneni fomulare</span>
+          <span class="bs-stepper-label">{% trans "Vytvoření oznámení" %}</span>
         </button>
       </div>
       <div class="line"></div>
-      <div class="step" data-target="#test-nl-2">
-        <div class="btn step-trigger">
-          <span class="bs-stepper-circle">2</span>
-          <span class="bs-stepper-label">Neco</span>
-        </div>
-      </div>
-      <div class="line"></div>
-      <div class="step" data-target="#test-nl-3">
+      <div class="step" data-target="#test-l-2">
         <button type="button" class="btn step-trigger">
-          <span class="bs-stepper-circle">3</span>
-          <span class="bs-stepper-label">Odeslani</span>
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">{% trans "Upload projektové dokumentace" %}</span>
         </button>
       </div>
     </div>
-    <div class="bs-stepper-content">
-      <div id="test-nl-1" class="content fade">
+    <!-- <div class="bs-stepper-content">
+      <div id="test-l-1" class="content">
         <p class="text-center">Obsah kroku 1</p>
-        <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
+        <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
       </div>
-      <div id="test-nl-2" class="content fade">
+      <div id="test-l-2" class="content">
         <p class="text-center">Obsah kroku 2</p>
-        <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button>
-        <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
+        <button class="btn btn-primary" onclick="stepper1.next()">Dalsi</button>
+        <button class="btn btn-primary" onclick="stepper1.previous()">Predchozi</button>
       </div>
-      <div id="test-nl-3" class="content fade">
-        <p class="text-center">Obsah kroku 3</p>
-        <!-- <button class="btn btn-primary" onclick="stepper2.next()">Dalsi</button> -->
-        <button class="btn btn-primary" onclick="stepper2.previous()">Predchozi</button>
-      </div>
-    </div>
+    </div> -->
   </div>
-  <!-- end stepper-->
-
-  <!-- <h2>{% trans "Krok 1/2" %}</h2> -->
 
   <form method="post">
-    {% crispy form_oznamovatel %}
+    <div class="row app-row-gap-double">
+      <div class="col-sm-12">
+        {% crispy form_oznamovatel %}
+      </div>
+    </div>
+    <div class="row app-row-gap-double">
+      <div class="col-sm-6">
+        {% crispy form_projekt %}
+      </div>
+      <div class="col-sm-6">
+        <small id="hint_id_map"class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
+        {% include "map.html" %}
+      </div>
+    </div>
+    <div class="row app-row-gap-double app-footer">
+      <div class="col-sm-12">
+        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#precistPodminky">
+          {% trans "Přečíst podmínky" %} <span class="material-icons">info</span>
+        </button>
+        <div class="form-check" id="div_id_souhlas">
+          <input class="form-check-input" type="checkbox" value="" id="id_souhlas" required="" name="souhlas">
+          <label class="form-check-label requiredField" for="id_souhlas" for="defaultCheck1">
+            {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
+            <span class="asteriskField">*</span>
+          </label>
+        </div>
+        <div class="modal fade" id="precistPodminky" tabindex="-1" aria-labelledby="precistPodminkylLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">{% trans "Podmínky" %}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                {% include "oznameni/podminky.html" %}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Zavřít" %}</button>
+              </div>
+            </div>
+          </div>
+        </div>        
+      </div>
+    </div>
 
-    <small id="hint_id_map"
-           class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
-    {% include "map.html" %}
+    
+    
 
-    {% crispy form_projekt %}
+    
 
-    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky"
+
+    <!-- <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky"
             aria-expanded="false" aria-controls="collapsePodminky">
       {% trans "Přečíst podmínky" %}
     </button>
@@ -137,9 +122,9 @@
       <div class="card card-body">
         {% include "oznameni/podminky.html" %}
       </div>
-    </div>
+    </div> -->
 
-    <div class="form-group">
+    <!-- <div class="form-group">
       <div id="div_id_souhlas" class="custom-control custom-checkbox">
         <input type="checkbox" name="souhlas" class="checkboxinput custom-control-input" required=""
                id="id_souhlas">
@@ -148,7 +133,7 @@
           <span class="asteriskField">*</span>
         </label>
       </div>
-    </div>
+    </div> -->
 
     {{ form_captcha }}
     <input type="submit" name="save" value="{% translate 'Krok 2' %}" class="btn btn-primary" id="submit-id-save">
@@ -158,8 +143,8 @@
 {% block script %}
   <script src="{% static 'map.js' %}"></script>
   <script src="{% static 'daterangepicker.js' %}"></script>
-  <script>
-    /* var stepper1Node = document.querySelector('#stepper1')
+  <!-- <script>
+    var stepper1Node = document.querySelector('#stepper1')
     var stepper1 = new Stepper(document.querySelector('#stepper1'))
 
     stepper1Node.addEventListener('show.bs-stepper', function (event) {
@@ -167,15 +152,6 @@
     })
     stepper1Node.addEventListener('shown.bs-stepper', function (event) {
       console.warn('shown.bs-stepper', event)
-    }) */
-
-    var stepper2 = new Stepper(document.querySelector('#stepper2'), {
-      linear: false,
-      animation: true
     })
-    var stepper3 = new Stepper(document.querySelector('#stepper3'), {
-      animation: true
-    })
-    var stepper4 = new Stepper(document.querySelector('#stepper4'))
-  </script>
+  </script> -->
 {% endblock %}

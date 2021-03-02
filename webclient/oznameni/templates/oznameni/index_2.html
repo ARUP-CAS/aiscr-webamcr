@@ -6,13 +6,105 @@
 
 {% block head %}
   <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
+
+  <!-- bs stepper -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css"/>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
 {% endblock %}
 
 {% block content %}
 
   {% include "components/uvod.html" %}
 
-  <h2>{% trans "Krok 1/2 - popis záměru" %}</h2>
+  <div class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">{% trans "Vytvoření oznámení" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step active">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">{% trans "Upload projektové dokumentace" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <table class="table table-striped table-hover app-row-gap-double">
+    <tbody>
+      <tr>
+        <th scope="row">{% trans "Projekt" %}</th>
+        <td>{{ confirm.ident_cely }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Ozanamovatel" %}</th>
+        <td>{{ confirm.oznamovatel }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Zástupce oznamovatele" %}</th>
+        <td>{{ confirm.zastupce }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Adresa" %}</th>
+        <td>{{ confirm.adresa }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Telefon" %}</th>
+        <td>{{ confirm.telefon }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Email" %}</th>
+        <td>{{ confirm.email }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Katastrální území" %}</th>
+        <td>{{ confirm.katastr }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Další katastry" %}</th>
+        <td>{{ confirm.dalsi_katastry }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Plánované zahájení" %}</th>
+        <td>{{ confirm.planovane_zahajeni }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Podnět" %}</th>
+        <td>{{ confirm.podnet }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Lokalizace" %}</th>
+        <td>{{ confirm.lokalizace }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Parcelní číslo" %}</th>
+        <td>{{ confirm.parcelni_cislo }}</td>
+      </tr>
+      <tr>
+        <th scope="row">{% trans "Označení stavby" %}</th>
+        <td>{{ confirm.oznaceni_stavby }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <form action="{% url 'oznameni:post_upload' %}" class="dropzone app-row-gap-double" id="my-awesome-dropzone" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="fallback">
+      <input name="file" type="file" multiple/>
+    </div>
+  </form>
+
+  <form method="post">
+    {% csrf_token %}
+    <input name="ident_cely" type="hidden" value="{{ ident_cely }}">
+    <button type="submit" class="btn btn-success ">{% trans "Dokončit oznámení" %}</button>
+  </form>
+
+<!--   <h2>{% trans "Krok 1/2 - popis záměru" %}</h2>
   <dl class="row">
     <dt class="col-sm-3">{% trans "Projekt" %}</dt>
     <dd class="col-sm-9">{{ confirm.ident_cely }}</dd>
@@ -54,13 +146,11 @@
     {% csrf_token %}
     <input name="ident_cely" type="hidden" value="{{ ident_cely }}">
     <button type="submit" class="btn btn-success btn-lg">{% trans "Dokončit oznámení" %}</button>
-  </form>
-
+  </form> -->
 {% endblock %}
 
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
   <script>var project_id = "{{ ident_cely }}";</script>
   <script src="{% static 'dz.js' %}"></script>
-
 {% endblock %}
