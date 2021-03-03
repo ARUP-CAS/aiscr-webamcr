@@ -3,7 +3,37 @@
 
 {% block title %}Oznámení o stavebním či jiném záměru{% endblock %}
 
+{% block head %}
+  <!-- stepper -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css"/>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bs-stepper/dist/js/bs-stepper.min.js"></script>
+{% endblock %}
+
 {% block content %}
+  <div class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">{% trans "Vytvoření oznámení" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">{% trans "Upload projektové dokumentace" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step active">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">3</span>
+          <span class="bs-stepper-label">{% trans "Oznámeno" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="jumbotron">
     <h1 class="display-4">{% translate "Děkujeme za provedení zápisu" %}</h1>

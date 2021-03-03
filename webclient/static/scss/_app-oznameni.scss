@@ -25,6 +25,11 @@
         &:hover {
           @extend .app-clean-bg;
         }
+
+        &:focus {
+          box-shadow: none;
+          color: currentColor;
+        }
       }
     }
 
