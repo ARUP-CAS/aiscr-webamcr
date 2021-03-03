@@ -2,11 +2,43 @@
 
 &.app-oznameni {
   .container-fluid {
-    .app-logo {
-      img {
-        max-height: 80px;
-        margin-bottom: $app-gap-double;
+    .app-header {
+      margin-bottom: $app-gap-double;
+
+      .app-left {
+        img {
+          max-height: $app-logo-nosidebar-height;
+        }
       }
+
+      .app-right {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        a {
+          &:first-child {
+            margin-right: $app-gap-double;
+
+            &:not(:hover) {
+              img {
+                opacity: .5;
+              }
+            }  
+          }
+
+          img {
+            max-height: calc(#{$app-logo-nosidebar-height} - 20px);
+          }
+
+          &:not(:hover) {
+            img {
+              filter: grayscale(100%);
+            }
+          }
+        }
+      } 
     }
 
     .jumbotron {

@@ -26,10 +26,8 @@
 {% endblock %}
 
 {% block content %}
-  <div class="app-logo">
-    <img src="{% static 'logo-am-colored.png' %}" alt="" />
-  </div>
 
+  {% include "oznameni/header.html" %}
   {% include "components/uvod.html" %}
 
   <div class="bs-stepper">
