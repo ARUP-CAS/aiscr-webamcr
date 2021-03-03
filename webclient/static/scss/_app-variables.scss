@@ -15,6 +15,8 @@ $black:    #000 !default;
 
 $primary: #0d47a1 !default;
 
+$table-cell-padding-sm: .3rem .75rem;
+
 // entity colors
 $entities: (
   "dokument": #5882c4,
@@ -52,6 +54,9 @@ $blue-gray-900: #263238 !default;
 
 // common
 $app-flag-width: 27px !default;
+$app-form-control-height: auto !default;
+$app-form-control-line-height: 1 !default;
+$app-form-group-mg-bottom: .8rem !default;
 
 // sidebar
 $app-sidebar-width: 300px !default;

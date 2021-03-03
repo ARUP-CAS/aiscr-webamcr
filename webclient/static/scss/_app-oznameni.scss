@@ -27,8 +27,15 @@
         }
 
         &:focus {
-          box-shadow: none;
           color: currentColor;
+        }
+      }
+    }
+
+    .table {
+      tr {
+        th {
+          max-width: 100px;
         }
       }
     }
@@ -38,7 +45,14 @@
         border-radius: $border-radius;
         border: 1px solid $gray-400;
         background-color: $gray-100;
-        min-height: unset;
+        min-height: 180px;
+        display: flex;
+
+        .dz-message {
+          @extend .app-clean-mg;
+          flex: 1;
+          align-self: center;
+        }
       }
     }
 
