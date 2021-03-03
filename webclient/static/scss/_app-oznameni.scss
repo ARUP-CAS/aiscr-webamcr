@@ -1,0 +1,62 @@
+// --- OZNAMENI ---
+
+&.app-oznameni {
+  .container-fluid {
+    .jumbotron {
+      padding: $app-gap-double;
+
+      h1 {
+        @extend .app-heading-thin;
+      }
+
+      .collapse {
+        p {
+          &:last-child {
+            @extend .app-clean-mg;
+          }
+        }
+      }
+    }
+
+    .bs-stepper {
+      .step-trigger {
+        cursor: unset;
+
+        &:hover {
+          @extend .app-clean-bg;
+        }
+
+        &:focus {
+          box-shadow: none;
+          color: currentColor;
+        }
+      }
+    }
+
+    form {
+      &.dropzone {
+        border-radius: $border-radius;
+        border: 1px solid $gray-400;
+        background-color: $gray-100;
+        min-height: unset;
+      }
+    }
+
+    .app-footer {
+      .form-check {
+        display: inline-block;
+        margin-left: $app-gap;
+      }
+
+      .app-captcha {
+        display: none;
+      }
+    }
+  }
+}
+
+.app-modal-podminky {
+  h4 {
+    @extend .app-heading-thin;
+  }
+}

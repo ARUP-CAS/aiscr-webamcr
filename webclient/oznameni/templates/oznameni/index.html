@@ -21,46 +21,96 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+
+  <!-- stepper -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bs-stepper/dist/css/bs-stepper.min.css"/>
 {% endblock %}
 
 {% block content %}
 
   {% include "components/uvod.html" %}
 
-  <h2>{% trans "Krok 1/2" %}</h2>
+  <div class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step active">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">{% trans "Vytvoření oznámení" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">{% trans "Upload projektové dokumentace" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">3</span>
+          <span class="bs-stepper-label">{% trans "Oznámeno" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <form method="post">
-    {% crispy form_oznamovatel %}
-
-    <small id="hint_id_map"
-           class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
-    {% include "map.html" %}
-
-    {% crispy form_projekt %}
-
-    <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapsePodminky"
-            aria-expanded="false" aria-controls="collapsePodminky">
-      {% trans "Přečíst podmínky" %}
-    </button>
-    <div class="collapse" id="collapsePodminky">
-      <div class="card card-body">
-        {% include "oznameni/podminky.html" %}
+    <div class="row app-row-gap-double">
+      <div class="col-sm-12">
+        {% crispy form_oznamovatel %}
       </div>
     </div>
-
-    <div class="form-group">
-      <div id="div_id_souhlas" class="custom-control custom-checkbox">
-        <input type="checkbox" name="souhlas" class="checkboxinput custom-control-input" required=""
-               id="id_souhlas">
-        <label for="id_souhlas" class="custom-control-label requiredField">
-          {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
-          <span class="asteriskField">*</span>
-        </label>
+    <div class="row app-row-gap-double">
+      <div class="col-sm-6">
+        {% crispy form_projekt %}
+      </div>
+      <div class="col-sm-6">
+        <small id="hint_id_map"class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
+        {% include "map.html" %}
       </div>
     </div>
-
-    {{ form_captcha }}
-    <input type="submit" name="save" value="{% translate 'Krok 2' %}" class="btn btn-primary" id="submit-id-save">
+    <div class="row app-row-gap-double app-footer">
+      <div class="col-sm-9">
+        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#precistPodminky">
+          {% trans "Přečíst podmínky" %} <span class="material-icons">info</span>
+        </button>
+        <div class="form-check" id="div_id_souhlas">
+          <input class="form-check-input" type="checkbox" value="" id="id_souhlas" required="" name="souhlas">
+          <label class="form-check-label requiredField" for="id_souhlas" for="defaultCheck1">
+            {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
+            <span class="asteriskField">*</span>
+          </label>
+        </div>
+        <div class="modal fade app-modal-podminky" id="precistPodminky" tabindex="-1" aria-labelledby="precistPodminkylLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable modal-xl">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">{% trans "Informace o zpracování osobních údajů" %}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                {% include "oznameni/podminky.html" %}
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Zavřít" %}</button>
+              </div>
+            </div>
+          </div>
+        </div>        
+      </div>
+      <div class="col-sm-3 text-right">
+        <div class="app-captcha">
+          {{ form_captcha }}
+        </div>
+        <!-- <input type="submit" name="save" value="{% translate 'Přejít na další krok' %}" class="btn btn-primary" id="submit-id-save"> -->
+        <button type="submit" name="save" id="submit-id-save" class="btn btn-primary">
+          {% translate 'Přejít na další krok' %} <span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    </div>
   </form>
 {% endblock %}
 

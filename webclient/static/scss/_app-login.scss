@@ -1,93 +1,107 @@
 // --- LOGIN ---
 
-.app-login-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+&.app-login {
+  background-color: $app-sidebar-bg;
+  background-image: url('/static/static/img/login-bg.svg');
+  background-repeat: no-repeat;
+  background-size: 700px;
+  background-position: center 50px;
+  padding: $app-login-gap $app-gap;
 
-  .app-logo {
-    width: 348px;
-    margin-bottom: $app-gap-double;
-  }
-
-  .card {
-    width: $app-login-form-width;
-    text-align: center;
-
-    form {
-      input {
-        &[type="text"], &[type="password"] {
-          @extend .form-control;
+  .app-login-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - (#{$app-login-gap} * 2));
+    justify-content: center;
+  
+    .app-logo {
+      width: 100%;
+      margin-bottom: $app-gap-double;
+    }
+  
+    .card {
+      @extend .app-clean-border;
+      text-align: center;
+  
+      form {
+        h1 {
+          @extend .app-heading-thin;
         }
-      }
-
-      .app-flags {
-        a {
-          text-decoration: unset;
-
-          .app-flag {          
-            &:not(:hover) {
-              @extend .app-flag-inactive;
+  
+        input {
+          &[type="text"], &[type="password"] {
+            @extend .form-control;
+          }
+        }
+  
+        .app-flags {
+          a {
+            text-decoration: unset;
+  
+            .app-flag {          
+              &:not(:hover) {
+                @extend .app-flag-inactive;
+              }
+            }
+  
+            &:first-child {
+              margin-right: .5rem;
             }
           }
-
-          &:first-child {
-            margin-right: .5rem;
-          }
         }
       }
     }
-  }
-
-  .row {
-    margin-top: $app-gap-double;
-
-    .app-left {
-      @media #{$lt-sm} {
-        margin-bottom: $app-gap-double;
-      }
-    }
-
-    .app-right {
-      @media #{$lt-sm} {
-        .app-sroll-inner {
-          position: relative !important;
-          width: auto !important;
-          height: auto !important;
-          max-height: 300px;
+  
+    .app-col-desc {
+      .app-inner {
+        margin-top: 30px;
+  
+        @media #{$gt-md} {
+          height: 100%;
+          border-left: 1px solid $app-login-border-color;
+          padding: $app-gap $app-gap-double;
+          margin-top: 0;
         }
-      }
-    }
-    
-    
-    .card {
-      @extend .app-full-width;
-      text-align: left;
-      background-color: rgba(black, .3) !important;
-      height: 100%;
-      
-      .card-header {
-        border-bottom-color: rgba($white, .1);
-        font-size: 1.25rem;
-        color: rgba($white, .6);
-      }
-
-      .card-body {
-        position: relative;
-
-        .app-sroll-inner {
-          position: absolute;
-          width: calc(100% - 2.5rem);
-          height: calc(100% - 2.5rem);
-          overflow-y: auto;
-          padding-right: 1.5rem;
-
-          strong {
-            color: rgba($white, .6);
+  
+        hr {
+          border-color: $app-login-border-color; 
+        }
+  
+        .card {
+          @extend .app-clean-bg, .app-full-width;
+          color: $app-login-desc-color;
+          text-align: left;
+  
+          &.app-news {
+            max-height: $app-login-news-max-height;
+            overflow-y: auto;
           }
-
-          .app-pipe {
-            border-color: rgba($white, .4);
+  
+          .card-body {
+            @extend .app-clean-pd;
+            padding-right: $app-gap !important;
+  
+            h3 {
+              @extend .app-heading-thin;
+              margin-top: 0;
+            }
+  
+            p {
+              &:last-child {
+                margin-bottom: 5px;
+              }
+  
+              .app-pipe {
+                border-color: rgba($app-login-desc-color, .4);
+              }
+    
+              span {
+                &:not(.app-pipe) {
+                  font-weight: normal;
+                  color: rgba($app-login-desc-color, .6);
+                }
+              }
+            }
           }
         }
       }

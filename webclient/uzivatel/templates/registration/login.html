@@ -6,58 +6,57 @@
 
 {% block content %}
   <div class="app-login-wrapper">
-    <!-- ready for reopen issue
+    
     <div class="row">
-      <div class="col-lg-4" style="background-color: red;">a</div>
-      <div class="col-lg-4" style="background-color: green;">b</div>
-      <div class="col-lg-4" style="background-color: hotpink;">c</div>
-    </div> -->
-    <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'Archeologická mapa České republiky' %}" class="app-logo">
-    <div class="card">
-      <div class="card-body">
-        <form method="post">
-          <h1 class="h3 mb-3 font-weight-normal">{% trans "Přihlášení" %}</h1>
-          {% csrf_token %}
-          {{ form.as_p }}
-          <div class="mb-3">
-            <a href="#" title="{% trans 'Zapomněli jste heslo' %}?">{% trans "Zapomněli jste heslo" %}?</a>
-          </div>
-          <button class="btn btn-lg btn-primary btn-block" type="submit">{% trans "Přihlásit" %}</button>
-          <p class="mt-3 mb-3 text-muted">
-            {% trans "Nemáte účet" %}?
-            <a href="#" target="_blank" title="{% trans 'Zaregistrovat se' %}">{% trans "Zaregistrovat se" %}</a>
-          </p>
-          <hr />
-          <div class="app-flags">
-            <a href="#" title="{% trans 'Czech' %}">
-              <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
-            </a>
-            <a href="#" title="{% trans 'Engish' %}">
-              <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
-            </a>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="row app-full-width">
-      <div class="col-sm app-left">
-        <div class="card text-white bg-dark">
-          <div class="card-header">
-            {% trans "Popis projektu" %}
-          </div>
+      <div class="col-lg-4">
+        <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'Archeologická mapa České republiky' %}" class="app-logo">
+        <div class="card">
           <div class="card-body">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus luctus massa neque. Nunc suscipit magna dui, quis molestie elit laoreet non. Aenean in tellus ut metus cursus dapibus sit amet sit amet dolor. Nulla lectus orci, fringilla vitae fringilla et, bibendum et nibh. Donec finibus sapien urna, eget laoreet sem tincidunt placerat. Aenean porta leo quis eros aliquam, eu iaculis odio scelerisque. Curabitur sollicitudin feugiat quam.
+            <form method="post">
+              <h1 class="h3 mb-3 font-weight-normal">{% trans "Přihlášení" %}</h1>
+              {% csrf_token %}
+              {{ form.as_p }}
+              <div class="mb-3">
+                <a href="#" title="{% trans 'Zapomněli jste heslo' %}?">{% trans "Zapomněli jste heslo" %}?</a>
+              </div>
+              <button class="btn btn-lg btn-primary btn-block" type="submit">{% trans "Přihlásit" %}</button>
+              <p class="mt-3 mb-3 text-muted">
+                {% trans "Nemáte účet" %}?
+                <a href="#" target="_blank" title="{% trans 'Zaregistrovat se' %}">{% trans "Zaregistrovat se" %}</a>
+              </p>
+              <hr />
+              <div class="app-flags">
+                <a href="#" title="{% trans 'Czech' %}">
+                  <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
+                </a>
+                <a href="#" title="{% trans 'Engish' %}">
+                  <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
+                </a>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-      <div class="col-sm app-right">
-        <div class="card text-white bg-dark">
-          <div class="card-header">
-            {% trans "Novinky" %}
+      <div class="col-lg-8 app-col-desc">
+        <div class="app-inner">
+          <div class="card app-desc">
+            <div class="card-body">
+              <h3>{% trans "Popis projektu" %}</h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus luctus massa neque. Nunc suscipit magna dui, quis molestie elit laoreet non. Aenean in tellus ut metus cursus dapibus sit amet sit amet dolor. Nulla lectus orci, fringilla vitae fringilla et, bibendum et nibh. Donec finibus sapien urna, eget laoreet sem tincidunt placerat. Aenean porta leo quis eros aliquam, eu iaculis odio scelerisque. Curabitur sollicitudin feugiat quam.
+              </p>
+              <p>
+                Phasellus luctus massa neque. Nunc suscipit magna dui, quis molestie elit laoreet non. Aenean in tellus ut metus cursus dapibus sit amet sit amet dolor. Nulla lectus orci, fringilla vitae fringilla et, bibendum et nibh. Donec finibus sapien urna, eget laoreet sem tincidunt placerat. Aenean porta leo quis eros aliquam, eu iaculis odio scelerisque. Curabitur sollicitudin feugiat quam.
+              </p>
+            </div>
           </div>
-          <div class="card-body">
-            <div class="app-sroll-inner">
-              {% include "uzivatel/novinky.html" %}
+          <hr />
+          <div class="card app-news">
+            <div class="card-body">
+              <h3>{% trans "Novinky" %}</h3>
+              <div class="app-sroll-inner">
+                {% include "uzivatel/novinky.html" %}
+              </div>
             </div>
           </div>
         </div>

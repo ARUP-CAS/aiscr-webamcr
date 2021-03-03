@@ -1,16 +1,19 @@
 // --- LAYOUT ---
 
 body {
-  &.app-login {
-    background-color: $app-sidebar-bg;
-    background-image: url('/static/static/img/login-bg.svg');
-    background-repeat: no-repeat;
-    background-size: contain;
-    background-position: center;
-    padding: $app-gap-double;
+  @import 'app-login';
+  @import "app-oznameni";
 
-    .container-fluid {
-      max-width: $container-max-width-xl;
+  &.app-login,
+  &.app-oznameni {
+    padding: $app-login-gap $app-gap;
+
+    #app-page-wrapper {
+      min-width: auto;
+
+      .container-fluid {
+        max-width: $container-max-width-xl;
+      }
     }
   }
 }
@@ -32,14 +35,12 @@ body {
   @import 'app-footer';
 
   .container-fluid {
-    @import 'app-login';
 
     &.app-content-wrapper {
       padding: $app-content-wrapper;
     }
   }
 }
-
 
 #app-wrapper.toggled {
   #app-page-wrapper {
