@@ -5,5 +5,8 @@ from . import views
 app_name = "arch_z"
 
 urlpatterns = [
-    path("detail/<str:ident_cely>", views.detail, name="arch_z_detail"),
+    path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("zapsat/<str:projekt_ident_cely>", views.zapsat, name="zapsat"),
+    # path("odeslat", views.odeslat, name="odeslat"),
+    # path("archivovat", views.archivovat, name="archivovat")
 ]

@@ -24,7 +24,10 @@ class Heslar(models.Model):
         )
 
     def __str__(self):
-        return self.heslo
+        if self.heslo:
+            return self.heslo
+        else:
+            return ""
 
 
 class HeslarDatace(models.Model):
@@ -81,7 +84,7 @@ class HeslarHierarchie(models.Model):
         models.DO_NOTHING,
         db_column="heslo_podrazene",
         primary_key=True,
-        related_name="podrazene",
+        related_name="hierarchie",
     )
     heslo_nadrazene = models.ForeignKey(
         Heslar, models.DO_NOTHING, db_column="heslo_nadrazene", related_name="nadrazene"

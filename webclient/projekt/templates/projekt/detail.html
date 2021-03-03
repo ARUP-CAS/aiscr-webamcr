@@ -82,7 +82,8 @@
     <div class="card-header">
       {% trans "Detail" %}
       <div class="float-md-right"><a
-          href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a></div>
+          href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a>
+      </div>
     </div>
     <div class="card-body">
       <div class="row">
@@ -177,12 +178,17 @@
   </div>
 
   <div class="card mt-2">
-    <div class="card-header">{% trans "Archeologické akce" %}</div>
+    <div class="card-header">
+      {% trans "Archeologické akce" %}
+      <div class="float-md-right"><a
+          href="{% url 'arch_z:zapsat' projekt.ident_cely %}">{% trans "+" %}</a>
+      </div>
+    </div>
     <div class="card-body">
       {% for a in akce %}
         <div class="row">
           <div class="col">
-            <a href="{% url 'arch_z:arch_z_detail' a.archeologicky_zaznam.ident_cely %}">
+            <a href="{% url 'arch_z:detail' a.archeologicky_zaznam.ident_cely %}">
               {{ a.archeologicky_zaznam.ident_cely }}
             </a>
           </div>

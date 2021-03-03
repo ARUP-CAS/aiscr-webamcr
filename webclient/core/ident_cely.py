@@ -1,6 +1,7 @@
 import datetime
 import logging
 
+from arch_z.models import ArcheologickyZaznam
 from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
 from heslar.models import RuianKatastr
 from projekt.models import Projekt
@@ -42,4 +43,24 @@ def get_temporary_project_ident(project: Projekt, region: str) -> str:
         return "X-" + region + "-" + str(year) + id_number
     else:
         logger.error("Could not assign temporary identifier to project with Null ID")
+        return None
+
+
+def get_project_event_ident(project: Projekt) -> str:
+    MAXIMAL_PROJECT_EVENTS: int = 26
+    if project.ident_cely:
+        predicate = project.ident_cely + "%"
+        q = "select id, ident_cely from public.archeologicky_zaznam where ident_cely like %s order by ident_cely desc"
+        idents = ArcheologickyZaznam.objects.raw(q, [predicate])
+        if len(idents) < MAXIMAL_PROJECT_EVENTS:
+            if idents:
+                last_ident = idents[0].ident_cely
+                return project.ident_cely + chr(ord(last_ident[-1]) + 1)
+            else:
+                return project.ident_cely + "A"
+        else:
+            logger.error("Maximal number of project events is 26.")
+            return None
+    else:
+        logger.error("Project is missing ident_cely")
         return None
