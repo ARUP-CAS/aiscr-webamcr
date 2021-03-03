@@ -2,6 +2,13 @@
 
 &.app-oznameni {
   .container-fluid {
+    .app-logo {
+      img {
+        max-height: 80px;
+        margin-bottom: $app-gap-double;
+      }
+    }
+
     .jumbotron {
       padding: $app-gap-double;
 
