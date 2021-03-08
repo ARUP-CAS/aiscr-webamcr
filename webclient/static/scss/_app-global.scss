@@ -73,4 +73,19 @@
   .material-icons {
     @include setIcon($position: bottom);
   }
+
+  &:focus {
+    box-shadow: none !important;
+    outline: none !important;
+  }
+}
+
+// bootstrap rewrite
+.form-control {
+  height: $app-form-control-height;
+  line-height: $app-form-control-line-height;
+}
+
+.form-group {
+  margin-bottom: $app-form-group-mg-bottom;
 }

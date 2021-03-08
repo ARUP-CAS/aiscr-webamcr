@@ -2,6 +2,45 @@
 
 &.app-oznameni {
   .container-fluid {
+    .app-header {
+      margin-bottom: $app-gap-double;
+
+      .app-left {
+        img {
+          max-height: $app-logo-nosidebar-height;
+        }
+      }
+
+      .app-right {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        a {
+          &:first-child {
+            margin-right: $app-gap-double;
+
+            &:not(:hover) {
+              img {
+                opacity: .5;
+              }
+            }  
+          }
+
+          img {
+            max-height: calc(#{$app-logo-nosidebar-height} - 20px);
+          }
+
+          &:not(:hover) {
+            img {
+              filter: grayscale(100%);
+            }
+          }
+        }
+      } 
+    }
+
     .jumbotron {
       padding: $app-gap-double;
 
@@ -27,8 +66,15 @@
         }
 
         &:focus {
-          box-shadow: none;
           color: currentColor;
+        }
+      }
+    }
+
+    .table {
+      tr {
+        th {
+          max-width: 100px;
         }
       }
     }
@@ -38,7 +84,14 @@
         border-radius: $border-radius;
         border: 1px solid $gray-400;
         background-color: $gray-100;
-        min-height: unset;
+        min-height: 180px;
+        display: flex;
+
+        .dz-message {
+          @extend .app-clean-mg;
+          flex: 1;
+          align-self: center;
+        }
       }
     }
 
