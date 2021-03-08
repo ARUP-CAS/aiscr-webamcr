@@ -43,15 +43,15 @@ class CreateAkceForm(forms.ModelForm):
         model = Akce
         fields = (
             "hlavni_vedouci",
-            "datum_zahajeni_v",
-            "datum_ukonceni_v",
+            "datum_zahajeni",
+            "datum_ukonceni",
             "lokalizace_okolnosti",
         )
 
         labels = {
             "hlavni_vedouci": _("Hlavní vedoucí"),
-            "datum_zahajeni_v": _("Datum zahájení"),
-            "datum_ukonceni_v": _("Datum ukončení"),
+            "datum_zahajeni": _("Datum zahájení"),
+            "datum_ukonceni": _("Datum ukončení"),
             "lokalizace_okolnosti": _("Lokalizace okolností"),
         }
 
@@ -67,6 +67,6 @@ class CreateAkceForm(forms.ModelForm):
             required=False,
         )
         self.fields["lokalizace_okolnosti"].required = True
-        self.fields["datum_zahajeni_v"].required = True
+        self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False

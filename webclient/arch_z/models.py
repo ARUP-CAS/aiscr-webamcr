@@ -121,10 +121,8 @@ class Akce(models.Model):
     )
     souhrn_upresneni = models.TextField(blank=True, null=True)
     ulozeni_nalezu = models.TextField(blank=True, null=True)
-    datum_ukonceni = models.TextField(blank=True, null=True)
-    datum_zahajeni = models.TextField(blank=True, null=True)
-    datum_zahajeni_v = models.DateField(blank=True, null=True)
-    datum_ukonceni_v = models.DateField(blank=True, null=True)
+    datum_zahajeni = models.DateField(blank=True, null=True)
+    datum_ukonceni = models.DateField(blank=True, null=True)
     je_nz = models.BooleanField(default=False)
     projekt = models.ForeignKey(
         Projekt, models.DO_NOTHING, db_column="projekt", blank=True, null=True
@@ -195,8 +193,8 @@ class Akce(models.Model):
         # Related events must have a “vedouci” and “hlavni_katastr” column filled in
         result = []
         if (
-            self.datum_zahajeni_v is None
-            or self.datum_ukonceni_v is None
+            self.datum_zahajeni is None
+            or self.datum_ukonceni is None
             or self.lokalizace_okolnosti is None
             or self.specifikace_data is None
             or self.hlavni_typ is None
