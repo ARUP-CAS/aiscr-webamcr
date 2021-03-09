@@ -1,13 +1,19 @@
 import logging
 
-from arch_z.forms import CreateAkceForm, CreateArchZForm
+from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
 from arch_z.models import ArcheologickyZaznam, DokumentacniJednotka
-from core.constants import AZ_STAV_ZAPSANY
+from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
 from core.ident_cely import get_project_event_ident
-from core.message_constants import AKCE_USPESNE_ZAPSANA
+from core.message_constants import (
+    AKCE_USPESNE_ODESLANA,
+    AKCE_USPESNE_VRACENA,
+    AKCE_USPESNE_ZAPSANA,
+    AKCI_NELZE_ODESLAT,
+)
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from heslar.hesla import SPECIFIKACE_DATA_PRESNE
@@ -45,14 +51,65 @@ def detail(request, ident_cely):
     context["zaznam"] = zaznam
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
+    context["show"] = get_detail_template_shows(zaznam)
 
     return render(request, "arch_z/detail.html", context)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
+def odeslat(request, ident_cely):
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if az.stav != AZ_STAV_ZAPSANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        az.set_odeslany(request.user)
+        az.save()
+        messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ODESLANA)
+        return redirect("/arch_z/detail/" + ident_cely)
+    else:
+        warnings = az.akce.check_pred_odeslanim()
+        logger.debug(warnings)
+        context = {"object": az}
+        if warnings:
+            context["warnings"] = warnings
+            messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
+        else:
+            pass
+    return render(request, "arch_z/odeslat.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def archivovat(request, ident_cely):
+    pass
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def vratit(request, ident_cely):
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        form = VratitAkciForm(request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            az.set_vraceny(request.user, az.stav - 1, duvod)
+            az.save()
+            messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)
+            return redirect("/arch_z/detail/" + ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+    else:
+        form = VratitAkciForm()
+    return render(request, "arch_z/vratit.html", {"form": form, "zaznam": az})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely):
-    context = {}
     projekt = Projekt.objects.get(ident_cely=projekt_ident_cely)
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST)
@@ -65,25 +122,44 @@ def zapsat(request, projekt_ident_cely):
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             az.ident_cely = get_project_event_ident(projekt)
             az.save()
-            # TODO continue here
+            az.set_zapsany(request.user)
             akce = form_akce.save(commit=False)
             akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+            # Workaround for multi-layer choicefields. The form returns string, not heslar object.
+            hlavni_typ = form_akce.cleaned_data["hlavni_typ"]
+            vedlejsi_typ = form_akce.cleaned_data["vedlejsi_typ"]
+            if hlavni_typ:
+                akce.hlavni_typ = Heslar.objects.get(pk=int(hlavni_typ))
+            if vedlejsi_typ:
+                akce.vedlejsi_typ = Heslar.objects.get(pk=int(vedlejsi_typ))
             akce.archeologicky_zaznam = az
             akce.projekt = projekt
             akce.save()
 
             messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
+            return redirect("/arch_z/detail/" + az.ident_cely)
 
         else:
             logger.warning("Form is not valid")
             logger.debug(form_az.errors)
             logger.debug(form_akce.errors)
 
-        return redirect("/arch_z/detail/" + az.ident_cely)
     else:
         form_az = CreateArchZForm()
         form_akce = CreateAkceForm()
-        context["formAZ"] = form_az
-        context["formAkce"] = form_akce
 
-    return render(request, "arch_z/create.html", context)
+    return render(
+        request, "arch_z/create.html", {"formAZ": form_az, "formAkce": form_akce}
+    )
+
+
+def get_detail_template_shows(archeologicky_zaznam):
+    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
+    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
+    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
+    show = {
+        "vratit_link": show_vratit,
+        "odeslat_link": show_odeslat,
+        "archivovat_link": show_archivovat,
+    }
+    return show

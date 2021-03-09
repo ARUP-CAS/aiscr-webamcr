@@ -3,15 +3,24 @@ from core.constants import AZ_STAV_ZAPSANY
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from heslar import hesla
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.hesla import (
+    HESLAR_PRISTUPNOST,
+    PRISTUPNOST_ANONYM_ID,
+    TYP_PROJEKTU_ZACHRANNY_ID,
+)
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
-from uzivatel.models import Organizace, User
+from oznameni.models import Oznamovatel
+from projekt.models import Projekt
+from uzivatel.models import Organizace, Osoba, User
 
 # Konstanty pouzite v testech
 PRESNOST_DESITKY_METRU_ID = 56
 PRESNOST_JEDNOTKY_METRU_ID = 567
 PRESNOST_POLOHA_PODLE_KATASTRU_ID = 1150
 PRESNOST_STOVKY_METRU_ID = 1213
+
+SPECIFIKACE_DATA_PRESNE_ID = 881
+HLAVNI_TYP_SONDA_ID = 1234
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -23,6 +32,9 @@ TYP_ORGANIZACE_OSTATNI_ID = 110
 TYP_PIAN_PLOCHA_ID = 476
 TYP_PIAN_LINIE_ID = 1206
 TYP_PIAN_BOD_ID = 58
+
+EL_CHEFE_ID = 666
+KATASTR_ODROVICE_ID = 150
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -51,7 +63,7 @@ class AMCRTestRunner(BaseRunner):
             id=163, nazev="Brno-venkov", kraj=kraj_brno, spz="spz", kod=4
         )
         odrovice = RuianKatastr(
-            id=150,
+            id=KATASTR_ODROVICE_ID,
             nazev="ODROVICE",
             okres=okres_brno_venkov,
             kod=3,
@@ -105,9 +117,10 @@ class AMCRTestRunner(BaseRunner):
         hp = HeslarNazev(nazev="heslar_presnost")
         ha = HeslarNazev(nazev="heslar_typ_pian")
         hto = HeslarNazev(nazev="heslar_typ_organizace")
-        hpr = HeslarNazev(nazev="heslar_pristupnost")
+        hpr = HeslarNazev(id=HESLAR_PRISTUPNOST, nazev="heslar_pristupnost")
         hsd = HeslarNazev(nazev="heslar_specifikace_data")
-        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd]
+        hta = HeslarNazev(nazev="heslar_typ_akce_druha")
+        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta]
         for n in nazvy_heslaru:
             n.save()
 
@@ -117,12 +130,12 @@ class AMCRTestRunner(BaseRunner):
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp).save()
         Heslar(id=TYP_PIAN_PLOCHA_ID, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
-        Heslar(id=881, heslo="presne", nazev_heslare=hsd).save()
+        Heslar(id=SPECIFIKACE_DATA_PRESNE_ID, heslo="presne", nazev_heslare=hsd).save()
+        Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
         typ_muzeum = Heslar(
             id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
         )
         zp = Heslar(id=PRISTUPNOST_ANONYM_ID, nazev_heslare=hpr)
-
         zp.save()
         typ_muzeum.save()
 
@@ -141,15 +154,46 @@ class AMCRTestRunner(BaseRunner):
             organizace=o,
         )
         user.save()
+        # PROJEKT
+        existing_ident = "C-202000001"
+        p = Projekt(
+            typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
+            ident_cely=existing_ident,
+        )
+        oznamovatel = Oznamovatel(
+            email="tester_juraj@example.com",
+            adresa="Nekde 123456",
+            odpovedna_osoba="Juraj Skvarla",
+            oznamovatel="Juraj Skvarla",
+            telefon="+420874521325",
+        )
+        oznamovatel.save()
+        p.oznamovatel = oznamovatel
+        p.save()
 
+        # PROJEKT EVENT
         az = ArcheologickyZaznam(
             typ_zaznamu="A",
             ident_cely="C-202000001A",
             stav=AZ_STAV_ZAPSANY,
         )
         az.save()
-        a = Akce(archeologicky_zaznam=az, specifikace_data=Heslar.objects.get(id=881))
+        a = Akce(
+            archeologicky_zaznam=az,
+            specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE_ID),
+        )
+        a.projekt = p
         a.save()
+
+        # Osoba
+        osoba = Osoba(
+            id=EL_CHEFE_ID,
+            jmeno="Jakub",
+            prijmeni="Škvarla",
+            vypis="J. Škvarla",
+            vypis_cely="Jakub El Chefe Škvarla",
+        )
+        osoba.save()
 
         return temp_return
 

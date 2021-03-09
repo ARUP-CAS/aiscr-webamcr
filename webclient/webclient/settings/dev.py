@@ -8,6 +8,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS += [
     "debug_toolbar",
+    "django_extensions",
 ]
 
 MIDDLEWARE += [
@@ -28,3 +29,6 @@ INSTALLED_APPS.insert(0, "livereload")
 MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 
 STATIC_ROOT = ""
+
+SHELL_PLUS = "plain"
+SHELL_PLUS_PRINT_SQL = False

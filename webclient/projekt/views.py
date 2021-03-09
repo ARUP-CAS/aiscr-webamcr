@@ -40,6 +40,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -122,7 +123,6 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-
     projekt = Projekt.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
@@ -181,14 +181,13 @@ class ProjektListView(LoginRequiredMixin, SingleTableMixin, FilterView):
 @require_http_methods(["GET", "POST"])
 def schvalit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav != PROJEKT_STAV_OZNAMENY:
+        raise PermissionDenied()
     if request.method == "POST":
-        if projekt.stav == PROJEKT_STAV_OZNAMENY:
-            projekt.set_schvaleny(request.user)
-            projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-            return redirect("/projekt/detail/" + ident_cely)
-        else:
-            return render(request, "403.html")
+        projekt.set_schvaleny(request.user)
+        projekt.save()
+        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
+        return redirect("/projekt/detail/" + ident_cely)
     return render(request, "projekt/schvalit.html", {"projekt": projekt})
 
 
@@ -196,22 +195,19 @@ def schvalit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def prihlasit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav != PROJEKT_STAV_ZAPSANY:
+        raise PermissionDenied()
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
-        if projekt.stav == PROJEKT_STAV_ZAPSANY:
-            if form.is_valid():
-                projekt = form.save(commit=False)
-                projekt.set_prihlaseny(request.user)
-                projekt.save()
-                messages.add_message(
-                    request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN
-                )
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                logger.debug("The form is not valid")
-                logger.debug(form.errors)
+        if form.is_valid():
+            projekt = form.save(commit=False)
+            projekt.set_prihlaseny(request.user)
+            projekt.save()
+            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
+            return redirect("/projekt/detail/" + ident_cely)
         else:
-            return render(request, "403.html")
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
     else:
         form = PrihlaseniProjektForm(instance=projekt)
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
@@ -221,22 +217,22 @@ def prihlasit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav != PROJEKT_STAV_PRIHLASENY:
+        raise PermissionDenied()
     if request.method == "POST":
         form = ZahajitVTerenuForm(request.POST, instance=projekt)
-        if projekt.stav == PROJEKT_STAV_PRIHLASENY:
-            if form.is_valid():
-                projekt = form.save(commit=False)
-                projekt.set_zahajeny_v_terenu(request.user)
-                projekt.save()
-                messages.add_message(
-                    request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
-                )
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                logger.debug("The form is not valid")
-                logger.debug(form.errors)
+
+        if form.is_valid():
+            projekt = form.save(commit=False)
+            projekt.set_zahajeny_v_terenu(request.user)
+            projekt.save()
+            messages.add_message(
+                request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
+            )
+            return redirect("/projekt/detail/" + ident_cely)
         else:
-            return render(request, "403.html")
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
     else:
         form = ZahajitVTerenuForm(instance=projekt)
     return render(
@@ -248,22 +244,21 @@ def zahajit_v_terenu(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def ukoncit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
+        raise PermissionDenied()
     if request.method == "POST":
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
-        if projekt.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU:
-            if form.is_valid():
-                projekt = form.save(commit=False)
-                projekt.set_ukoncen_v_terenu(request.user)
-                projekt.save()
-                messages.add_message(
-                    request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
-                )
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                logger.debug("The form is not valid")
-                logger.debug(form.errors)
+        if form.is_valid():
+            projekt = form.save(commit=False)
+            projekt.set_ukoncen_v_terenu(request.user)
+            projekt.save()
+            messages.add_message(
+                request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
+            )
+            return redirect("/projekt/detail/" + ident_cely)
         else:
-            return render(request, "403.html")
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
     else:
         form = UkoncitVTerenuForm(instance=projekt)
     return render(
@@ -275,23 +270,19 @@ def ukoncit_v_terenu(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def uzavrit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
+        raise PermissionDenied()
     if request.method == "POST":
-        if projekt.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
-
-            # Move all events to state A2
-            akce = Akce.objects.filter(projekt=projekt)
-            for a in akce:
-                if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                    logger.debug("Setting event to state A2")
-                    a.set_odeslana(request.user)
-
-            projekt.set_uzavreny(request.user)
-            projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
-            return redirect("/projekt/detail/" + ident_cely)
-
-        else:
-            return render(request, "403.html")
+        # Move all events to state A2
+        akce = Akce.objects.filter(projekt=projekt)
+        for a in akce:
+            if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
+                logger.debug("Setting event to state A2")
+                a.set_odeslana(request.user)
+        projekt.set_uzavreny(request.user)
+        projekt.save()
+        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
+        return redirect("/projekt/detail/" + ident_cely)
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
@@ -312,26 +303,23 @@ def uzavrit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav != PROJEKT_STAV_UZAVRENY:
+        raise PermissionDenied()
     if request.method == "POST":
-        if projekt.stav == PROJEKT_STAV_UZAVRENY:
+        projekt.set_archivovany(request.user)
+        projekt.save()
+        # Removing personal information from the projekt announcement
+        value = "Údaj odstraněn (" + str(datetime.today().date()) + ")"
+        o = projekt.oznamovatel
+        o.oznamovatel = value
+        o.odpovedna_osoba = value
+        o.adresa = value
+        o.telefon = value
+        o.email = value
+        o.save()
 
-            projekt.set_archivovany(request.user)
-            projekt.save()
-
-            # Removing personal information from the projekt announcement
-            value = "Údaj odstraněn (" + str(datetime.today().date()) + ")"
-            o = projekt.oznamovatel
-            o.oznamovatel = value
-            o.odpovedna_osoba = value
-            o.adresa = value
-            o.telefon = value
-            o.email = value
-            o.save()
-
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
-            return redirect("/projekt/detail/" + ident_cely)
-        else:
-            return render(request, "403.html")
+        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
+        return redirect("/projekt/detail/" + ident_cely)
     else:
         warnings = projekt.check_pred_archivaci()
         logger.debug(warnings)
@@ -343,29 +331,28 @@ def archivovat(request, ident_cely):
                 context["warnings"].append((key, value))
         else:
             pass
-    return render(request, "projekt/archivovat.html", {"projekt": projekt})
+    return render(request, "projekt/archivovat.html", context)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def navrhnout_ke_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
+        raise PermissionDenied()
     if request.method == "POST":
         form = NavrhnoutZruseniProjektForm(request.POST)
-        if PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
-            if form.is_valid():
-                duvod = form.cleaned_data["reason"]
-                projekt.set_navrzen_ke_zruseni(request.user, duvod)
-                projekt.save()
-                messages.add_message(
-                    request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
-                )
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                logger.debug("The form is not valid")
-                logger.debug(form.errors)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            projekt.set_navrzen_ke_zruseni(request.user, duvod)
+            projekt.save()
+            messages.add_message(
+                request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
+            )
+            return redirect("/projekt/detail/" + ident_cely)
         else:
-            return render(request, "403.html")
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
         logger.debug(warnings)
@@ -380,28 +367,24 @@ def navrhnout_ke_zruseni(request, ident_cely):
         else:
             pass
 
-        form = NavrhnoutZruseniProjektForm()
-    return render(
-        request, "projekt/navrhnout_zruseni.html", {"form": form, "projekt": projekt}
-    )
+        context["form"] = NavrhnoutZruseniProjektForm()
+    return render(request, "projekt/navrhnout_zruseni.html", context)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if (
+        not projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+        or projekt.stav == PROJEKT_STAV_OZNAMENY
+    ):
+        raise PermissionDenied()
     if request.method == "POST":
-        if (
-            projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
-            or projekt.stav == PROJEKT_STAV_OZNAMENY
-        ):
-            projekt.set_zruseny(request.user)
-            projekt.save()
-            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
-            return redirect("/projekt/detail/" + ident_cely)
-        else:
-            logger.debug("Stav projektu: " + str(projekt.stav))
-            return render(request, "403.html")
+        projekt.set_zruseny(request.user)
+        projekt.save()
+        messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
+        return redirect("/projekt/detail/" + ident_cely)
     else:
         pass
     return render(request, "projekt/zrusit.html", {"projekt": projekt})
@@ -411,20 +394,19 @@ def zrusit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY:
+        raise PermissionDenied()
     if request.method == "POST":
         form = VratitProjektForm(request.POST)
-        if PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY:
-            if form.is_valid():
-                duvod = form.cleaned_data["reason"]
-                projekt.set_vracen(request.user, projekt.stav - 1, duvod)
-                projekt.save()
-                messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                logger.debug("The form is not valid")
-                logger.debug(form.errors)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            projekt.set_vracen(request.user, projekt.stav - 1, duvod)
+            projekt.save()
+            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
+            return redirect("/projekt/detail/" + ident_cely)
         else:
-            return render(request, "403.html")
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
     else:
         form = VratitProjektForm()
     return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})
@@ -434,20 +416,21 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit_navrh_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+
+    if PROJEKT_STAV_NAVRZEN_KE_ZRUSENI != projekt.stav:
+        raise PermissionDenied()
+
     if request.method == "POST":
         form = VratitProjektForm(request.POST)
-        if PROJEKT_STAV_NAVRZEN_KE_ZRUSENI == projekt.stav:
-            if form.is_valid():
-                duvod = form.cleaned_data["reason"]
-                projekt.set_znovu_zapsan(request.user, duvod)
-                projekt.save()
-                messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-                return redirect("/projekt/detail/" + ident_cely)
-            else:
-                logger.debug("The form is not valid")
-                logger.debug(form.errors)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            projekt.set_znovu_zapsan(request.user, duvod)
+            projekt.save()
+            messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
+            return redirect("/projekt/detail/" + ident_cely)
         else:
-            return render(request, "403.html")
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
     else:
         form = VratitProjektForm()
     return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})

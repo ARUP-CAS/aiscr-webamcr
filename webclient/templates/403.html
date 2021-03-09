@@ -1,8 +1,13 @@
+{% extends "base.html" %}
+
 {% load static %}
 {% load i18n %}
 
+{% block title %}{% trans "AMČR - 403" %}{% endblock %}
+{% block head %}
+{% endblock %}
 
-<title>{% trans "AMČR - 403" %}</title>
+{% block content %}
 <h2>{% trans "403" %}</h2>
-<p class="display-4">{% trans "Nemáte dostatečná oprávnění" %}</p>
-<p class="mt-2">{% trans "Na akci nemáte dostatečné uživatelské oprávnění!" %}</p>
+<p class="display-4">{% trans "Přístup zakázán" %}</p>
+{% endblock %}

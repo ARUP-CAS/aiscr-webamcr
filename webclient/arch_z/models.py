@@ -8,6 +8,7 @@ from core.constants import (
     D_STAV_ARCHIVOVANY,
     ODESLANI_AZ,
     PIAN_POTVRZEN,
+    VRACENI_AZ,
     ZAPSANI_AZ,
 )
 from core.models import KomponentaVazby
@@ -69,6 +70,42 @@ class ArcheologickyZaznam(models.Model):
 
     class Meta:
         db_table = "archeologicky_zaznam"
+
+    def set_zapsany(self, user):
+        self.stav = AZ_STAV_ZAPSANY
+        Historie(
+            typ_zmeny=ZAPSANI_AZ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_odeslany(self, user):
+        self.stav = AZ_STAV_ODESLANY
+        Historie(
+            typ_zmeny=ODESLANI_AZ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_archivovany(self, user):
+        self.stav = AZ_STAV_ARCHIVOVANY
+        Historie(
+            typ_zmeny=ARCHIVACE_AZ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_vraceny(self, user, new_state, poznamka):
+        self.stav = new_state
+        Historie(
+            typ_zmeny=VRACENI_AZ,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        )
 
 
 class ArcheologickyZaznamKatastr(models.Model):
@@ -140,34 +177,6 @@ class Akce(models.Model):
     class Meta:
         db_table = "akce"
 
-    def set_zapsana(self, user):
-        self.archeologicky_zaznam.stav = AZ_STAV_ZAPSANY
-        # TODO doplnit dalsi pole ktere nebudou v modelform
-        Historie(
-            typ_zmeny=ZAPSANI_AZ,
-            uzivatel=user,
-            vazba=self.archeologicky_zaznam.historie,
-        ).save()
-        self.archeologicky_zaznam.save()
-
-    def set_odeslana(self, user):
-        self.archeologicky_zaznam.stav = AZ_STAV_ODESLANY
-        Historie(
-            typ_zmeny=ODESLANI_AZ,
-            uzivatel=user,
-            vazba=self.archeologicky_zaznam.historie,
-        ).save()
-        self.archeologicky_zaznam.save()
-
-    def set_archivovana(self, user):
-        self.archeologicky_zaznam.stav = AZ_STAV_ARCHIVOVANY
-        Historie(
-            typ_zmeny=ARCHIVACE_AZ,
-            uzivatel=user,
-            vazba=self.archeologicky_zaznam.historie,
-        ).save()
-        self.archeologicky_zaznam.save()
-
     def check_pred_archivaci(self):
         # All documents associated with it must be archived
         result = []
@@ -234,7 +243,10 @@ class Akce(models.Model):
         for dj in self.archeologicky_zaznam.dokumentacnijednotka_set.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
-            if not dj.negativni_jednotka and len(dj.komponenty) == 0:
+            if (
+                not dj.negativni_jednotka
+                and len(dj.komponenty.komponenta_set.all()) == 0
+            ):
                 result.append(
                     _("Dokumentační jednotka ")
                     + str(dj.ident_cely)

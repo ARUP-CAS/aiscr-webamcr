@@ -7,6 +7,7 @@ app_name = "arch_z"
 urlpatterns = [
     path("detail/<str:ident_cely>", views.detail, name="detail"),
     path("zapsat/<str:projekt_ident_cely>", views.zapsat, name="zapsat"),
-    # path("odeslat", views.odeslat, name="odeslat"),
-    # path("archivovat", views.archivovat, name="archivovat")
+    path("odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
+    path("archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
+    path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
 ]

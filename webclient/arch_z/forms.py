@@ -1,5 +1,7 @@
 from arch_z.models import Akce, ArcheologickyZaznam
+from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import HTML, Button, Div, Layout, Submit
 from django import forms
 from django.utils.translation import gettext as _
 from heslar.models import RuianKatastr
@@ -31,14 +33,12 @@ class CreateArchZForm(forms.ModelForm):
             required=False,
             choices=RuianKatastr.objects.all().values_list("id", "nazev"),
         )
+        self.fields["hlavni_katastr"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
 
 class CreateAkceForm(forms.ModelForm):
-    hlavni_typ = forms.CharField()
-    vedlejsi_typ = forms.CharField()
-
     class Meta:
         model = Akce
         fields = (
@@ -46,6 +46,7 @@ class CreateAkceForm(forms.ModelForm):
             "datum_zahajeni",
             "datum_ukonceni",
             "lokalizace_okolnosti",
+            "ulozeni_nalezu",
         )
 
         labels = {
@@ -53,6 +54,7 @@ class CreateAkceForm(forms.ModelForm):
             "datum_zahajeni": _("Datum zahájení"),
             "datum_ukonceni": _("Datum ukončení"),
             "lokalizace_okolnosti": _("Lokalizace okolností"),
+            "ulozeni_nalezu": _("Uložení nálezu"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -70,3 +72,30 @@ class CreateAkceForm(forms.ModelForm):
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class VratitAkciForm(forms.Form):
+    reason = forms.CharField(label=_("Důvod vrácení"), required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    HTML(_("Vrácení akce")),
+                    css_class="card-header",
+                ),
+                Div(
+                    "reason",
+                    css_class="card-body",
+                ),
+                Div(
+                    FormActions(
+                        Submit("save", "Vrátit"),
+                        Button("cancel", "Zrušit"),
+                    )
+                ),
+                css_class="card",
+            )
+        )
