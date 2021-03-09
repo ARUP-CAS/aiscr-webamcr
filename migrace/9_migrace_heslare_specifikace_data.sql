@@ -1,6 +1,5 @@
 -- Migrace dle issue #36
 
-alter table akce rename column datum_zahajeni to datum_zahajeni_old;
 -- Zaloha sloupcu pred migraci
 alter table akce rename column datum_ukonceni to datum_ukonceni_old;
 alter table akce rename column datum_zahajeni to datum_zahajeni_old;
