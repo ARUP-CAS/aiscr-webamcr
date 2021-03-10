@@ -1,0 +1,9 @@
+from django.urls import path
+
+from . import views
+
+app_name = "dokument"
+
+urlpatterns = [
+    path("detail/<str:ident_cely>", views.detail, name="detail"),
+]

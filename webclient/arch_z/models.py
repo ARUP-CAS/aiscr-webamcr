@@ -180,10 +180,14 @@ class Akce(models.Model):
     def check_pred_archivaci(self):
         # All documents associated with it must be archived
         result = []
-        for d in self.archeologicky_zaznam.dokumentcast_set.all():
-            if d.stav != D_STAV_ARCHIVOVANY:
+        for dc in self.archeologicky_zaznam.dokumentcast_set.all():
+            if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
-                    _("Dokument " + d.ident_cely + " musí být nejdřív archivován.")
+                    _(
+                        "Dokument "
+                        + dc.dokument.ident_cely
+                        + " musí být nejdřív archivován."
+                    )
                 )
         for dj in self.archeologicky_zaznam.dokumentacnijednotka_set.all():
             if dj.pian.stav != PIAN_POTVRZEN:

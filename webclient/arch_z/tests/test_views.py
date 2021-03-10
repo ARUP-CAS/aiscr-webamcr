@@ -8,6 +8,7 @@ from core.tests.runner import (
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
 from uzivatel.models import User
@@ -86,7 +87,5 @@ class UrlTests(TestCase):
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
         request.session.save()
-
-        response = vratit(request, test_ident)
-        self.assertEqual(200, response.status_code)
-        # az = ArcheologickyZaznam.objects.get(ident_cely=test_ident)
+        with self.assertRaises(PermissionDenied, msg=""):
+            vratit(request, ident_cely=test_ident)

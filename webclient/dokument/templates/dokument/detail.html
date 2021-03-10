@@ -1,0 +1,103 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Detail dokumentu" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col">
+      <h1>{% trans "Dokument " %}{{ dokument.ident_cely }} <span
+          class="badge badge-info">{{ dokument.get_stav_display }}</span></h1>
+    </div>
+    <div class="col">
+      <div class="btn-group" role="group" aria-label="Basic example">
+        {#        {% if show.vratit_link %}#}
+        {#          <a href="{% url 'arch_z:vratit' zaznam.ident_cely %}"#}
+        {#             class="btn btn-warning">{% trans "Vrátit" %}</a>#}
+        {#        {% endif %}#}
+        {#        {% if show.odeslat_link %}#}
+        {#          <a href="{% url 'arch_z:odeslat' zaznam.ident_cely %}"#}
+        {#             class="btn btn-primary">{% trans "Odeslat akci" %}</a>#}
+        {#        {% endif %}#}
+        {#        {% if show.archivovat_link %}#}
+        {#          <a href="{% url 'arch_z:archivovat' zaznam.ident_cely %}"#}
+        {#             class="btn btn-primary">{% trans "Archivovat akci" %}</a>#}
+        {#        {% endif %}#}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">{% trans "Detail" %}</div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col">{{ dokument.autori }}</div>
+        <div class="col">{{ dokument.rok_vzniku }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ dokument.typ_dokumentu }}</div>
+        <div class="col">{{ dokument.rada }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ dokument.material_originalu }}</div>
+        <div class="col">{{ dokument.jazyky }}</div>
+        <div class="col">{{ dokument.posudky }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ dokument.organizace }}</div>
+        <div class="col">{{ dokument.pristupnost }}</div>
+        <div class="col">{{ dokument.datum_zverejneni|date:'Y/m/d' }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ dokument.oznaceni_originalu }}</div>
+        <div class="col">{{ dokument.ulozeni_originalu }}</div>
+      </div>
+      <div class="row">
+        <div class="col">{{ dokument.popis }}</div>
+        <div class="col">{{ dokument.poznamka }}</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card mt-2">
+    <div class="card-header">
+      {% trans "Soubory" %}
+{#      <a href="{% url 'dokument:upload_file' dokument.ident_cely %}">Upload</a>#}
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Název</th>
+          <th scope="col">Typ</th>
+          <th scope="col">Velikost</th>
+          <th scope="col">Datum vytvoření</th>
+          <th scope="col">Smazat</th>
+          <th scope="col">Stáhnout</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for soubor in soubory %}
+          <tr>
+            <td>{{ soubor.nazev }}</td>
+            <td>{{ soubor.mimetype }}</td>
+            <td>{{ soubor.size_bytes }}</td>
+            <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
+            <td><a href="">Smazat</a></td>
+            <td><a href="">Stáhnout</a></td>
+
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

@@ -2,12 +2,20 @@ import logging
 
 from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
 from arch_z.models import ArcheologickyZaznam, DokumentacniJednotka
-from core.constants import AZ_STAV_ARCHIVOVANY, AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY
+from core.constants import (
+    AZ_STAV_ARCHIVOVANY,
+    AZ_STAV_ODESLANY,
+    AZ_STAV_ZAPSANY,
+    PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_UZAVRENY,
+)
 from core.ident_cely import get_project_event_ident
 from core.message_constants import (
+    AKCE_USPESNE_ARCHIVOVANA,
     AKCE_USPESNE_ODESLANA,
     AKCE_USPESNE_VRACENA,
     AKCE_USPESNE_ZAPSANA,
+    AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
 )
 from django.contrib import messages
@@ -82,7 +90,25 @@ def odeslat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
-    pass
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if az.stav != AZ_STAV_ODESLANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        # TODO BR-A-5
+        az.set_archivovany(request.user)
+        az.save()
+        messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
+        return redirect("/arch_z/detail/" + ident_cely)
+    else:
+        warnings = az.akce.check_pred_archivaci()
+        logger.debug(warnings)
+        context = {"object": az}
+        if warnings:
+            context["warnings"] = warnings
+            messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
+        else:
+            pass
+    return render(request, "arch_z/archivovat.html", context)
 
 
 @login_required
@@ -95,6 +121,31 @@ def vratit(request, ident_cely):
         form = VratitAkciForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            projekt = az.akce.projekt
+            # BR-A-3
+            if az.stav == AZ_STAV_ODESLANY and projekt is not None:
+                #  Return also project from the states P6 or P5 to P4
+                projekt_stav = projekt.stav
+                if projekt_stav == PROJEKT_STAV_UZAVRENY:
+                    logger.debug(
+                        "Automaticky vracím projekt do stavu " + str(projekt_stav - 1)
+                    )
+                    projekt.set_vracen(
+                        request.user, projekt_stav - 1, "Automatické vrácení projektu"
+                    )
+                    projekt.save()
+                if projekt_stav == PROJEKT_STAV_ARCHIVOVANY:
+                    logger.debug(
+                        "Automaticky vracím projekt do stavu " + str(projekt_stav - 2)
+                    )
+                    projekt.set_vracen(
+                        request.user, projekt_stav - 1, "Automatické vrácení projektu"
+                    )
+                    projekt.save()
+                    projekt.set_vracen(
+                        request.user, projekt_stav - 2, "Automatické vrácení projektu"
+                    )
+                    projekt.save()
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
             messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)

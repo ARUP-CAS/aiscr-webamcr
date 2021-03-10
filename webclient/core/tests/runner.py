@@ -1,10 +1,13 @@
 from arch_z.models import Akce, ArcheologickyZaznam
-from core.constants import AZ_STAV_ZAPSANY
+from core.constants import AZ_STAV_ZAPSANY, D_STAV_ZAPSANY
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
+from dokument.models import Dokument
 from heslar import hesla
 from heslar.hesla import (
+    HESLAR_MATERIAL_DOKUMENTU,
     HESLAR_PRISTUPNOST,
+    HESLAR_TYP_DOKUMENTU,
     PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
@@ -21,6 +24,8 @@ PRESNOST_STOVKY_METRU_ID = 1213
 
 SPECIFIKACE_DATA_PRESNE_ID = 881
 HLAVNI_TYP_SONDA_ID = 1234
+TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
+MATERIAL_DOKUMENTU_DIGI_SOUBOR = 229
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -35,6 +40,7 @@ TYP_PIAN_BOD_ID = 58
 
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
+TESTOVACI_DOKUMENT_ID = 123
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -120,7 +126,11 @@ class AMCRTestRunner(BaseRunner):
         hpr = HeslarNazev(id=HESLAR_PRISTUPNOST, nazev="heslar_pristupnost")
         hsd = HeslarNazev(nazev="heslar_specifikace_data")
         hta = HeslarNazev(nazev="heslar_typ_akce_druha")
-        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta]
+        htd = HeslarNazev(id=HESLAR_TYP_DOKUMENTU, nazev="heslar_typ_dokumentu")
+        hmd = HeslarNazev(
+            id=HESLAR_MATERIAL_DOKUMENTU, nazev="heslar_material_dokumentu"
+        )
+        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd]
         for n in nazvy_heslaru:
             n.save()
 
@@ -132,6 +142,14 @@ class AMCRTestRunner(BaseRunner):
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=SPECIFIKACE_DATA_PRESNE_ID, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
+        Heslar(
+            id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd
+        ).save()
+        Heslar(
+            id=MATERIAL_DOKUMENTU_DIGI_SOUBOR,
+            heslo="digitalni soubor",
+            nazev_heslare=hmd,
+        ).save()
         typ_muzeum = Heslar(
             id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
         )
@@ -194,6 +212,18 @@ class AMCRTestRunner(BaseRunner):
             vypis_cely="Jakub El Chefe Škvarla",
         )
         osoba.save()
+
+        d = Dokument(
+            id=TESTOVACI_DOKUMENT_ID,
+            rada=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
+            typ_dokumentu=Heslar.objects.get(id=TYP_DOKUMENTU_PLAN_SONDY_ID),
+            organizace=o,
+            pristupnost=zp,
+            ident_cely="C-TX-201501985",
+            stav=D_STAV_ZAPSANY,
+            material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR),
+        )
+        d.save()
 
         return temp_return
 

@@ -278,7 +278,7 @@ def uzavrit(request, ident_cely):
         for a in akce:
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
                 logger.debug("Setting event to state A2")
-                a.set_odeslana(request.user)
+                a.archeologicky_zaznam.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)

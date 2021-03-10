@@ -93,7 +93,8 @@
     <div class="card-body">
       {% for d in dokumenty %}
         <div class="row">
-          <div class="col">{{ d.ident_cely }}</div>
+          <div class="col">
+            <a href="{% url 'dokument:detail' d.ident_cely %}">{{ d.ident_cely }}</a></div>
           <div class="col">
             <span class="badge badge-light">{{ d.get_stav_display }}</span>
           </div>

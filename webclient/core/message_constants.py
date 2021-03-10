@@ -28,8 +28,10 @@ PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI = (
 
 AKCE_USPESNE_ZAPSANA: Final = "Akce úspěšně zapsána."
 AKCE_USPESNE_ODESLANA: Final = "Akce úspěšně odeslána."
+AKCE_USPESNE_ARCHIVOVANA: Final = "Akce úspěšně archivovaná."
 AKCE_USPESNE_VRACENA: Final = "Akce úspěšně vrácena."
 AKCI_NELZE_ODESLAT: Final = "Akci nelze odeslat."
+AKCI_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
