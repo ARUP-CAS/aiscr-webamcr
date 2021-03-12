@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     "pian",
     "arch_z.apps.ArchZConfig",
     "dokument",
+    "nalez",
+    "adb",
 ]
 
 MIDDLEWARE = [

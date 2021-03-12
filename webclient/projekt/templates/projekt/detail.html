@@ -150,6 +150,7 @@
       <a href="{% url 'projekt:upload_file' projekt.ident_cely %}">Upload</a>
     </div>
     <div class="card-body">
+      {% if soubory %}
       <table class="table">
         <thead>
         <tr>
@@ -174,6 +175,9 @@
           </tr>
         {% endfor %}
       </table>
+      {% else %}
+        {% trans "Projekt zatím neobsahuje žádnou projektovou dokumentaci." %}
+      {% endif %}
     </div>
   </div>
 
@@ -212,6 +216,8 @@
         <div class="row">
           <div class="col">{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</div>
         </div>
+      {% empty %}
+        {% trans "Projekt zatím neobsahuje žádné projektové akce." %}
       {% endfor %}
     </div>
     <div class="container">

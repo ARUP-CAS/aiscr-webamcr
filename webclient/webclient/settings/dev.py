@@ -31,4 +31,4 @@ MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
 STATIC_ROOT = ""
 
 SHELL_PLUS = "plain"
-SHELL_PLUS_PRINT_SQL = False
+SHELL_PLUS_PRINT_SQL = True

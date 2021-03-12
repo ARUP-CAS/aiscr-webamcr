@@ -1,0 +1,19 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}Smazání projektových akcí{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Skutečně smazat projektovou akci " %}{{ akce.archeologicky_zaznam.ident_cely }}?</h1>
+  <form method="POST">
+    {% csrf_token %}
+      <button type="submit" class="btn btn-primary">{% trans "Smazat akci" %}</button>
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

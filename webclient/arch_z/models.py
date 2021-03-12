@@ -53,7 +53,9 @@ class ArcheologickyZaznam(models.Model):
     )
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
-    historie = models.ForeignKey(HistorieVazby, models.DO_NOTHING, db_column="historie")
+    historie = models.ForeignKey(
+        HistorieVazby, on_delete=models.DO_NOTHING, db_column="historie"
+    )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     katastry = models.ManyToManyField(
@@ -252,7 +254,7 @@ class Akce(models.Model):
                 and len(dj.komponenty.komponenta_set.all()) == 0
             ):
                 result.append(
-                    _("Dokumentační jednotka ")
+                    _("Pozitivní dokumentační jednotka ")
                     + str(dj.ident_cely)
                     + _(" nemá zadanou žádnou komponentu.")
                 )
@@ -340,8 +342,24 @@ class DokumentacniJednotka(models.Model):
         null=True,
     )
     archeologicky_zaznam = models.ForeignKey(
-        ArcheologickyZaznam, models.DO_NOTHING, db_column="archeologicky_zaznam"
+        ArcheologickyZaznam, on_delete=models.CASCADE, db_column="archeologicky_zaznam"
     )
 
     class Meta:
         db_table = "dokumentacni_jednotka"
+
+
+class ExterniOdkaz(models.Model):
+    # externi_zdroj = models.ForeignKey(
+    # ExterniZdroj, models.DO_NOTHING, db_column='externi_zdroj', blank=True, null=True)
+    paginace = models.TextField(blank=True, null=True)
+    archeologicky_zaznam = models.ForeignKey(
+        ArcheologickyZaznam,
+        on_delete=models.CASCADE,
+        db_column="archeologicky_zaznam",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "externi_odkaz"

@@ -1,7 +1,7 @@
 import logging
 
 from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
-from arch_z.models import ArcheologickyZaznam, DokumentacniJednotka
+from arch_z.models import Akce, ArcheologickyZaznam, DokumentacniJednotka
 from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
@@ -17,6 +17,8 @@ from core.message_constants import (
     AKCE_USPESNE_ZAPSANA,
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_USPESNE_SMAZAN,
 )
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -202,6 +204,40 @@ def zapsat(request, projekt_ident_cely):
     return render(
         request, "arch_z/create.html", {"formAZ": form_az, "formAkce": form_akce}
     )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def smazat(request, pk):
+    akce = Akce.objects.get(archeologicky_zaznam=pk)
+    projekt = akce.projekt
+    if request.method == "POST":
+        az = akce.archeologicky_zaznam
+        # Parent records
+        historie = az.historie
+        komponenty_vazby = []
+        for dj in az.dokumentacnijednotka_set.all():
+            if dj.komponenta:
+                komponenty_vazby.append(dj.komponenta)
+
+        resp = akce.delete()
+        resp2 = az.delete()
+        historie.delete()
+
+        # TODO dodelat podle issue #45
+
+        if not resp and resp2:
+            logger.debug("Akce s id " + str(pk) + " nebyla smazána.")
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        else:
+            logger.debug("Byla smazána akce: " + str(pk))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        if projekt:
+            return redirect("/projekt/detail/" + projekt.ident_cely)
+        else:
+            return redirect("/")
+    else:
+        return render(request, "arch_z/smazat.html", {"akce": akce})
 
 
 def get_detail_template_shows(archeologicky_zaznam):

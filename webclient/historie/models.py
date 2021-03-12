@@ -1,4 +1,5 @@
 from core.constants import (
+    ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE,
     ARCHIVACE_AZ,
     ARCHIVACE_DOK,
     ARCHIVACE_PROJ,
@@ -107,6 +108,7 @@ class HistorieVazby(models.Model):
         (PIAN_RELATION_TYPE, "Pian"),
         (UZIVATEL_SPOLUPRACE_RELATION_TYPE, "Uživatel spolupráce"),
         (EXTERNI_ZDROJ_RELATION_TYPE, "Externí zdroj"),
+        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, "Archeologický záznam"),
     )
 
     typ_vazby = models.TextField(max_length=24, choices=CHOICES)
