@@ -11,12 +11,23 @@
   <h1>{% trans "Projekty" %}</h1>
   {% if filter %}
     <form method="get">
-      {{ filter.form|crispy }}
-      <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
+
+      <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false"
+              aria-controls="collapseExample">
+        {% trans "Filtr" %}
+      </button>
+      <div class="collapse" id="filter">
+        <div class="card card-body">
+          {{ filter.form|crispy }}
+          <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
+        </div>
+      </div>
+
     </form>
   {% endif %}
   {% render_table table 'django_tables2/bootstrap4.html' %}
 
 {% endblock %}
 
-{% block script %}{% endblock %}
+{% block script %}
+{% endblock %}
