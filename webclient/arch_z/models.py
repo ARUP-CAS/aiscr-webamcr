@@ -169,7 +169,7 @@ class Akce(models.Model):
     ulozeni_dokumentace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.OneToOneField(
         ArcheologickyZaznam,
-        models.DO_NOTHING,
+        on_delete=models.CASCADE,
         db_column="archeologicky_zaznam",
         primary_key=True,
         related_name="akce",
@@ -340,6 +340,7 @@ class DokumentacniJednotka(models.Model):
         db_column="komponenty",
         blank=True,
         null=True,
+        related_name="dokumentacni_jednotky",
     )
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam, on_delete=models.CASCADE, db_column="archeologicky_zaznam"

@@ -5,7 +5,7 @@ from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from heslar.models import Heslar
 from historie.models import HistorieVazby
-from uzivatel.models import Organizace
+from uzivatel.models import Organizace, Osoba
 
 
 class Dokument(models.Model):
@@ -84,7 +84,9 @@ class DokumentCast(models.Model):
         null=True,
     )
     poznamka = models.TextField(blank=True, null=True)
-    dokument = models.ForeignKey(Dokument, models.DO_NOTHING, db_column="dokument")
+    dokument = models.ForeignKey(
+        Dokument, on_delete=models.CASCADE, db_column="dokument"
+    )
     ident_cely = models.TextField(unique=True)
     komponenty = models.OneToOneField(
         KomponentaVazby,
@@ -98,9 +100,21 @@ class DokumentCast(models.Model):
         db_table = "dokument_cast"
 
 
+class DokumentAutor(models.Model):
+    dokument = models.OneToOneField(
+        Dokument, models.CASCADE, db_column="dokument", primary_key=True
+    )
+    autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
+    poradi = models.IntegerField()
+
+    class Meta:
+        db_table = "dokument_autor"
+        unique_together = (("dokument", "autor"),)
+
+
 class DokumentExtraData(models.Model):
     dokument = models.OneToOneField(
-        Dokument, models.DO_NOTHING, db_column="dokument", primary_key=True
+        Dokument, on_delete=models.CASCADE, db_column="dokument", primary_key=True
     )
     datum_vzniku = models.DateTimeField(blank=True, null=True)
     zachovalost = models.ForeignKey(
@@ -158,3 +172,48 @@ class DokumentExtraData(models.Model):
 
     class Meta:
         db_table = "dokument_extra_data"
+
+
+class DokumentJazyk(models.Model):
+    dokument = models.OneToOneField(
+        Dokument, models.CASCADE, db_column="dokument", primary_key=True
+    )
+    jazyk = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="jazyk")
+
+    class Meta:
+        db_table = "dokument_jazyk"
+        unique_together = (("dokument", "jazyk"),)
+
+
+class DokumentOsoba(models.Model):
+    dokument = models.OneToOneField(
+        Dokument, models.CASCADE, db_column="dokument", primary_key=True
+    )
+    osoba = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="osoba")
+
+    class Meta:
+        db_table = "dokument_osoba"
+        unique_together = (("dokument", "osoba"),)
+
+
+class DokumentPosudek(models.Model):
+    dokument = models.OneToOneField(
+        Dokument, models.CASCADE, db_column="dokument", primary_key=True
+    )
+    posudek = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="posudek")
+
+    class Meta:
+        db_table = "dokument_posudek"
+        unique_together = (("dokument", "posudek"),)
+
+
+class Tvar(models.Model):
+    dokument = models.ForeignKey(
+        Dokument, on_delete=models.CASCADE, db_column="dokument"
+    )
+    tvar = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="tvar")
+    poznamka = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "tvar"
+        unique_together = (("dokument", "tvar", "poznamka"),)

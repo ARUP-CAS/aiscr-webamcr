@@ -13,7 +13,10 @@ from heslar.models import Heslar
 
 class Nalez(models.Model):
     komponenta = models.ForeignKey(
-        Komponenta, on_delete=models.CASCADE, db_column="komponenta"
+        Komponenta,
+        on_delete=models.CASCADE,
+        db_column="komponenta",
+        related_name="nalezy",
     )
     druh_nalezu = models.ForeignKey(
         Heslar,

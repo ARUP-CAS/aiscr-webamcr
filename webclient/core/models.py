@@ -44,12 +44,28 @@ class Komponenta(models.Model):
     poznamka = models.TextField(blank=True, null=True)
     jistota = models.CharField(max_length=1, blank=True, null=True)
     ident_cely = models.TextField(unique=True)
-    vazba = models.ForeignKey(
-        KomponentaVazby, models.DO_NOTHING, db_column="vazba", blank=True, null=True
+    komponenta_vazby = models.ForeignKey(
+        KomponentaVazby,
+        on_delete=models.CASCADE,
+        db_column="komponenta_vazby",
+        related_name="komponenty",
+        blank=True,
+        null=True,
     )
 
     class Meta:
         db_table = "komponenta"
+
+
+class KomponentaAktivita(models.Model):
+    komponenta = models.OneToOneField(
+        Komponenta, models.CASCADE, db_column="komponenta", primary_key=True
+    )
+    aktivita = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="aktivita")
+
+    class Meta:
+        db_table = "komponenta_aktivita"
+        unique_together = (("komponenta", "aktivita"),)
 
 
 class SouborVazby(models.Model):
@@ -76,7 +92,9 @@ class Soubor(models.Model):
     size_bytes = models.IntegerField()
     vytvoreno = models.DateField(auto_now_add=True)
     typ_souboru = models.TextField()
-    vazba = models.ForeignKey(SouborVazby, models.DO_NOTHING, db_column="vazba")
+    vazba = models.ForeignKey(
+        SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
+    )
     path = models.FileField(upload_to="soubory/%Y/%m/%d", default="empty")
 
     class Meta:

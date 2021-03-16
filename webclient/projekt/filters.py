@@ -34,7 +34,8 @@ class ProjektFilter(filters.FilterSet):
         ),
     )
     organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.filter(oao=True),
+        # queryset=Organizace.objects.filter(oao=True),
+        queryset=Organizace.objects.all(),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),

@@ -17,7 +17,6 @@ from core.message_constants import (
     AKCE_USPESNE_ZAPSANA,
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
-    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
 )
 from django.contrib import messages
@@ -214,24 +213,21 @@ def smazat(request, pk):
     if request.method == "POST":
         az = akce.archeologicky_zaznam
         # Parent records
-        historie = az.historie
-        komponenty_vazby = []
+        historie_vazby = az.historie
         for dj in az.dokumentacnijednotka_set.all():
-            if dj.komponenta:
-                komponenty_vazby.append(dj.komponenta)
+            if dj.komponenty:
+                logger.debug(
+                    "Mazani vazby komponent dokumentacni jednotky " + str(dj.ident_cely)
+                )
+                dj.komponenty.delete()
+        historie_vazby.delete()
 
-        resp = akce.delete()
-        resp2 = az.delete()
-        historie.delete()
-
+        az.delete()
         # TODO dodelat podle issue #45
 
-        if not resp and resp2:
-            logger.debug("Akce s id " + str(pk) + " nebyla smazána.")
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-        else:
-            logger.debug("Byla smazána akce: " + str(pk))
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        logger.debug("Byla smazána akce: " + str(pk))
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+
         if projekt:
             return redirect("/projekt/detail/" + projekt.ident_cely)
         else:

@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "dokument",
     "nalez",
     "adb",
+    "neidentakce",
 ]
 
 MIDDLEWARE = [
