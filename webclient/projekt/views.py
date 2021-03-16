@@ -79,7 +79,7 @@ def detail(request, ident_cely):
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
     )
-    soubory = projekt.soubory.soubor_set.all()
+    soubory = projekt.soubory.soubory.all()
 
     context["projekt"] = projekt
     context["oznamovatel"] = oznamovatel
