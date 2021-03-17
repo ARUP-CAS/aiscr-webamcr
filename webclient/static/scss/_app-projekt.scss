@@ -21,5 +21,26 @@
         } 
       }
     }
+
+    .card {
+      .card-header {
+        display: flex;
+        align-items: center;
+
+        .app-left {
+          flex: 1;
+        }
+
+        .app-right {
+          .btn {
+            @extend .btn-secondary, .btn-sm;
+
+            &:last-child {
+              margin-left: $app-gap-half;
+            }
+          }
+        }
+      }
+    }
   }
 }
