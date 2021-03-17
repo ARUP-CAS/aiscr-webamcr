@@ -1,0 +1,25 @@
+// --- PROJEKT---
+
+&.app-projekt {
+  .app-content-wrapper {
+    .app-content-header {
+      .app-controls {
+        .btn-group {
+          &:last-child {
+            margin-left: $app-gap-half;
+          }
+        }
+        
+        .btn {
+          &:not(.dropdown-toggle) {
+            @extend .btn-secondary;
+          }
+          
+          &.dropdown-toggle {
+            @extend .btn-primary;
+          }
+        }
+      }
+    }
+  }
+}
