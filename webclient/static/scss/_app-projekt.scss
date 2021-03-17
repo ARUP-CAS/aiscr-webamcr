@@ -8,17 +8,17 @@
           &:last-child {
             margin-left: $app-gap-half;
           }
-        }
-        
-        .btn {
-          &:not(.dropdown-toggle) {
-            @extend .btn-secondary;
+
+          .btn {
+            &:not(.dropdown-toggle) {
+              @extend .btn-secondary;
+            }
+            
+            &.dropdown-toggle {
+              @extend .btn-primary;
+            }
           }
-          
-          &.dropdown-toggle {
-            @extend .btn-primary;
-          }
-        }
+        } 
       }
     }
   }

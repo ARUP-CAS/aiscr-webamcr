@@ -16,9 +16,6 @@
   <script>
   var global_csrftoken = '{{ csrf_token }}';
   </script>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-  integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-  crossorigin="anonymous"></script>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
   <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
@@ -138,7 +135,7 @@
       </div>
       <div class="line"></div>
       <div class="step active">
-        <button type="button" class="btn step-trigger">
+        <button type="button" class="btn step-trigger" data-toggle="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">
           <span class="bs-stepper-circle">4</span>
           <span class="bs-stepper-label">
             {% trans "Zahájen v terénu" %}
@@ -173,8 +170,7 @@
   <div class="card">
     <div class="card-header">
       {% trans "Detail" %}
-      <div class="float-md-right"><a
-          href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a>
+      <div class="float-md-right"><a href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a>
       </div>
     </div>
     <div class="card-body">
