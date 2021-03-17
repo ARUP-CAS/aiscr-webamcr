@@ -20,21 +20,18 @@
     integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
     crossorigin="anonymous"></script>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-    crossorigin="anonymous"></script> -->
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
     <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
-    <!-- <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"> -->
+
+    <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
 {% endblock %}
 
 {% block content %}
   <div class="row">
-    <div class="col">
+    <div class="col-sm-6">
       <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
     </div>
-    <div class="col">
+    <div class="col-sm-6 text-right">
       <div class="btn-group" role="group" aria-label="Basic example">
         {% if show.vratit_link %}
           <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}"
@@ -78,6 +75,60 @@
       </div>
     </div>
   </div>
+
+  <div class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">{% trans "Oznámený" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">{% trans "Zapsaný" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">3</span>
+          <span class="bs-stepper-label">{% trans "Přihlášený" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step active">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">4</span>
+          <span class="bs-stepper-label">{% trans "Zahájen v terénu" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">5</span>
+          <span class="bs-stepper-label">{% trans "Ukončen v terénu" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">6</span>
+          <span class="bs-stepper-label">{% trans "Uzavřený" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">7</span>
+          <span class="bs-stepper-label">{% trans "Archivovaný" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header">
       {% trans "Detail" %}
