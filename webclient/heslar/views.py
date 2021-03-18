@@ -1,5 +1,14 @@
+from dal import autocomplete
 from heslar.hesla import HESLAR_TYP_AKCE_DRUHA, HESLAR_TYP_AKCE_PRVNI
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKatastr
+
+
+class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = RuianKatastr.objects.all()
+        if self.q:
+            qs = qs.filter(nazev__icontains=self.q)
+        return qs
 
 
 def merge_heslare(first, second):

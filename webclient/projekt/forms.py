@@ -1,6 +1,7 @@
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Button, Div, Layout, Submit
+from dal import autocomplete
 from django import forms
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
@@ -46,6 +47,12 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "datum_zahajeni": forms.DateInput(attrs={"data-provide": "datepicker"}),
             "datum_ukonceni": forms.DateInput(attrs={"data-provide": "datepicker"}),
+            "hlavni_katastr": autocomplete.ModelSelect2(
+                url="heslar:katastr-autocomplete"
+            ),
+            "katastry": autocomplete.ModelSelect2Multiple(
+                url="heslar:katastr-autocomplete"
+            ),
         }
         labels = {
             "typ_projektu": _("Typ projektu"),
