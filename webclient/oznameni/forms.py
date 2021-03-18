@@ -3,6 +3,8 @@ import logging
 
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV2Invisible
+from dal import autocomplete
+
 from core.validators import validate_phone_number
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
@@ -93,7 +95,6 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("Katastrální území"),
         help_text=_("Katastální území zadané bodem."),
     )
-    katastry = forms.MultipleChoiceField()
 
     class Meta:
         model = Projekt
@@ -103,18 +104,23 @@ class ProjektOznameniForm(forms.ModelForm):
             "lokalizace",
             "parcelni_cislo",
             "oznaceni_stavby",
+            "katastry"
         )
         widgets = {
             "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "katastry": autocomplete.ModelSelect2Multiple(
+                url="heslar:katastr-autocomplete"
+            ),
         }
         labels = {
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
             "oznaceni_stavby": _("Označení stavby"),
+            "katastry": _("Další katastry")
         }
         help_texts = {
             "podnet": _(
@@ -127,16 +133,12 @@ class ProjektOznameniForm(forms.ModelForm):
             ),
             "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
             "oznaceni_stavby": _("Lorem ipsum"),
+            "katastry": _("Vyberte případné další katastry dotčené záměrem.")
         }
 
     def __init__(self, *args, **kwargs):
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
-        self.fields["katastry"] = forms.MultipleChoiceField(
-            label=_("Další katastry"),
-            required=False,
-            help_text=_("Vyberte případné další katastry dotčené záměrem."),
-            choices=RuianKatastr.objects.all().values_list("id", "nazev"),
-        )
+        self.fields["katastry"].required = False
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
