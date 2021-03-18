@@ -10,3 +10,4 @@ django-filter==2.4.0
 django-tables2==2.3.4
 django-compressor==2.4
 django-libsass==0.8
+django-autocomplete-light==3.8.2
