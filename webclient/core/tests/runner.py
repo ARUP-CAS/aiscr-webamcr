@@ -51,6 +51,7 @@ TESTOVACI_DOKUMENT_ID = 123
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 
+
 def add_middleware_to_request(request, middleware_class):
     middleware = middleware_class()
     middleware.process_request(request)
