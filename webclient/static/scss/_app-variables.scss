@@ -16,6 +16,10 @@ $black:    #000 !default;
 $primary: #0d47a1 !default;
 $secondary: lighten(#303641, 30) !default;
 
+$border-radius: .25rem !default;
+$border-radius-lg: .3rem !default;
+$border-radius-sm: .2rem !default;
+
 $table-cell-padding-sm: .3rem .75rem;
 
 // entity colors
@@ -48,6 +52,11 @@ $app-form-control-line-height: 1 !default;
 $app-form-group-mg-bottom: .8rem !default;
 $app-logo-sidebar-height: 50px !default;
 $app-logo-nosidebar-height: 60px !default; 
+
+// form card
+$app-form-card-header-height: 50px !default;
+$app-form-card-header-btn-height: 100% !default;
+$app-form-card-header-btn-border-color: $gray-300 !default;
 
 // sidebar
 $app-sidebar-width: 300px !default;

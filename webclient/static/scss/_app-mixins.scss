@@ -73,9 +73,12 @@
 // set entity color
 @mixin setEntityColor($type) {
   @each $entity, $color in $entities {
-    @if ($type == ico) {
-      .app-entity-#{$entity} {
-        color: $color !important; 
+    @if ($type == btn) {
+      &.app-entity-#{$entity} {
+        &:hover {
+          background-color: $color !important;
+          color: $white;
+        }
       }    
     }
     @else if ($type == card) {

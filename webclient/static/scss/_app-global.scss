@@ -9,6 +9,10 @@
   border: none !important;
 }
 
+.app-clean-radius {
+  border-radius: none !important;
+}
+
 .app-clean-mg {
   margin: 0 !important;
 }
@@ -124,3 +128,54 @@
 .form-group {
   margin-bottom: $app-form-group-mg-bottom;
 }
+
+.card {
+  &.app-card-form {
+    //@extend .shadow;
+    margin-bottom: $app-gap;
+
+    .card-header {
+      display: flex;
+      width: 100%;
+      padding: 0 0 0 1.25rem;
+      height: $app-form-card-header-height;
+
+
+      .app-fx {
+        @extend .d-flex;
+        align-items: center;
+
+        &.app-left {
+          flex: 1;
+        }
+
+        &.app-right {
+
+        }
+
+        .btn-group {
+          height: $app-form-card-header-btn-height;
+
+          a {
+            &.btn {
+              @extend .d-flex;
+              align-items: center;
+            }
+          }
+
+          .btn {
+            @include setEntityColor(btn);
+            border-radius: 0;
+            border: 0;
+            border-left: 1px solid $app-form-card-header-btn-border-color;
+
+            &:last-child {
+              border-top-right-radius: $btn-border-radius;
+            }
+          }
+        }             
+      }          
+    }
+  }
+  
+} 

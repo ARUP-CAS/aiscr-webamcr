@@ -229,7 +229,9 @@
       e.preventDefault();
       $("#app-wrapper").toggleClass("toggled");
     });
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[rel="tooltip"]').tooltip({
+      container : 'body'
+    });
     $('[data-toggle="popover"]').popover({
       html : true
     });

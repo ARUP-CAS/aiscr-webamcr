@@ -167,24 +167,29 @@
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <div class="app-left">
+  <div class="card app-card-form">
+    <div class="card-header"> 
+      <div class="app-fx app-left">
         {% trans "Detail" %}
       </div>
-      <div class="app-right">
-        <div class="dropdown-menu" aria-labelledby="others">
-          <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
-          <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
-          <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
-          <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+          </div>
+          <button class="btn app-entity-projekt" type="button" rel="tooltip" data-placement="top" title="{% trans 'Nastavení' %}">
+            <span class="material-icons">settings</span>
+          </button>
+          <button class="btn app-entity-projekt" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+            <span class="material-icons">more_vert</span>
+          </button>
+          <a class="btn app-entity-projekt" href="{% url 'projekt:projekt_edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+            <span class="material-icons">edit</span>
+          </a>
         </div>
-        <button type="button" class="btn" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <span class="material-icons" data-toggle="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">menu</span>
-        </button><!--
-        --><a href="{% url 'projekt:projekt_edit' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
-          <span class="material-icons">edit</span>
-        </a> 
       </div>
     </div>
     <div class="card-body">
@@ -224,15 +229,17 @@
     </div>
   </div>
   {% if show.oznamovatel %}
-    <div class="card mt-2">
+    <div class="card app-card-form">
       <div class="card-header">
-        <div class="app-left">
+        <div class="app-fx app-left">
           {% trans "Oznámení" %}
         </div>
-        <div class="app-right">
-          <a href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
-            <span class="material-icons">edit</span>
-          </a>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-projekt" href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
         </div>
       </div>
       <div class="card-body">
@@ -251,15 +258,17 @@
     </div>
   {% endif %}
 
-  <div class="card mt-2">
+  <div class="card app-card-form">
     <div class="card-header">
-      <div class="app-left">
+      <div class="app-fx app-left">
         {% trans "Projektová dokumentace" %}
       </div>
-      <div class="app-right">
-        <a href="{% url 'projekt:upload_file' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Nahrát dokumentaci' %}">
-          <span class="material-icons">publish</span>
-        </a>
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <a href="{% url 'projekt:upload_file' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Nahrát dokumentaci' %}">
+            <span class="material-icons">publish</span>
+          </a>
+        </div>
       </div>
     </div>
     <div class="card-body">
@@ -294,15 +303,17 @@
     </div>
   </div>
 
-  <div class="card mt-2">
+  <div class="card app-card-form">
     <div class="card-header">
-      <div class="app-left">
+      <div class="app-fx app-left">
         {% trans "Archeologické akce" %}
       </div>
-      <div class="app-right">
-        <a href="{% url 'arch_z:zapsat' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Vložit další akci' %}">
-          <span class="material-icons">add</span>
-        </a>
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <a href="{% url 'arch_z:zapsat' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Vložit další akci' %}">
+            <span class="material-icons">add</span>
+          </a>
+        </div>
       </div>
     </div>
     <div class="card-body">
