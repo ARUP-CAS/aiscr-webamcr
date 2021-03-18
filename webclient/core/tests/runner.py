@@ -15,7 +15,7 @@ from heslar.hesla import (
     HESLAR_TYP_PIAN,
     HESLAR_TYP_PROJEKTU,
     PRISTUPNOST_ANONYM_ID,
-    TYP_PROJEKTU_ZACHRANNY_ID,
+    TYP_PROJEKTU_ZACHRANNY_ID, HESLAR_JAZYK_DOKUMENTU, HESLAR_POSUDEK,
 )
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from oznameni.models import Oznamovatel
@@ -32,6 +32,7 @@ SPECIFIKACE_DATA_PRESNE_ID = 881
 HLAVNI_TYP_SONDA_ID = 1234
 TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
 MATERIAL_DOKUMENTU_DIGI_SOUBOR = 229
+JAZYK_DOKUMENTU_CESTINA_ID = 1256
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -47,7 +48,8 @@ TYP_PIAN_BOD_ID = 58
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
 TESTOVACI_DOKUMENT_ID = 123
-
+AMCR_TESTOVACI_ORGANIZACE_ID = 769066
+ARCHEOLOGICKY_POSUDEK_ID = 1111
 
 def add_middleware_to_request(request, middleware_class):
     middleware = middleware_class()
@@ -136,7 +138,9 @@ class AMCRTestRunner(BaseRunner):
         hmd = HeslarNazev(
             id=HESLAR_MATERIAL_DOKUMENTU, nazev="heslar_material_dokumentu"
         )
-        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd]
+        hjd = HeslarNazev(id=HESLAR_JAZYK_DOKUMENTU, nazev="heslar_jazyk_dokumentu")
+        hpd = HeslarNazev(id=HESLAR_POSUDEK, nazev="heslar_posudek")
+        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd, hjd, hpd]
         for n in nazvy_heslaru:
             n.save()
 
@@ -156,6 +160,8 @@ class AMCRTestRunner(BaseRunner):
             heslo="digitalni soubor",
             nazev_heslare=hmd,
         ).save()
+        Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd).save()
+        Heslar(id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd).save()
         typ_muzeum = Heslar(
             id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
         )
@@ -164,7 +170,7 @@ class AMCRTestRunner(BaseRunner):
         typ_muzeum.save()
 
         o = Organizace(
-            id=769066,
+            id=AMCR_TESTOVACI_ORGANIZACE_ID,
             nazev="AMCR Testovaci organizace",
             nazev_zkraceny="AMCR",
             typ_organizace=typ_muzeum,

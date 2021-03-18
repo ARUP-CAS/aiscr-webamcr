@@ -42,11 +42,10 @@ def edit(request, ident_cely):
         if form.is_valid():
             form.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-            return redirect("/dokument/detail/" + dokument.ident_cely)
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
-
+        return render(request, "dokument/edit.html", {"form": form, "dokument": dokument})
     else:
         form = EditDokumentForm(instance=dokument)
 

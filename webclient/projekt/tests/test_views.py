@@ -1,3 +1,5 @@
+from django.contrib.gis.geos import Point
+
 from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -20,6 +22,10 @@ class UrlTests(TestCase):
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
             ident_cely="M-202212541",
             lokalizace="Je to na zahradce",
+            geom=Point(
+                50.40,
+                15.70,
+            )
         )
         self.oznamovatel = Oznamovatel(
             email="tester@example.com",
@@ -91,4 +97,4 @@ class UrlTests(TestCase):
             Projekt.objects.get(ident_cely=self.projekt.ident_cely).lokalizace
             == nova_lokalizace
         )
-        # TODO test other values
+        # TODO test other values (GEOM)
