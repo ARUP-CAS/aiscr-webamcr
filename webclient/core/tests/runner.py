@@ -6,8 +6,14 @@ from dokument.models import Dokument
 from heslar import hesla
 from heslar.hesla import (
     HESLAR_MATERIAL_DOKUMENTU,
+    HESLAR_PRESNOST,
     HESLAR_PRISTUPNOST,
+    HESLAR_SPECIFIKACE_DATA,
+    HESLAR_TYP_AKCE_DRUHA,
     HESLAR_TYP_DOKUMENTU,
+    HESLAR_TYP_ORGANIZACE,
+    HESLAR_TYP_PIAN,
+    HESLAR_TYP_PROJEKTU,
     PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
@@ -119,13 +125,13 @@ class AMCRTestRunner(BaseRunner):
         odrovice.save()
         praha.save()
 
-        hn = HeslarNazev(nazev="heslar_typ_projektu")
-        hp = HeslarNazev(nazev="heslar_presnost")
-        ha = HeslarNazev(nazev="heslar_typ_pian")
-        hto = HeslarNazev(nazev="heslar_typ_organizace")
+        hn = HeslarNazev(id=HESLAR_TYP_PROJEKTU, nazev="heslar_typ_projektu")
+        hp = HeslarNazev(id=HESLAR_PRESNOST, nazev="heslar_presnost")
+        ha = HeslarNazev(id=HESLAR_TYP_PIAN, nazev="heslar_typ_pian")
+        hto = HeslarNazev(id=HESLAR_TYP_ORGANIZACE, nazev="heslar_typ_organizace")
         hpr = HeslarNazev(id=HESLAR_PRISTUPNOST, nazev="heslar_pristupnost")
-        hsd = HeslarNazev(nazev="heslar_specifikace_data")
-        hta = HeslarNazev(nazev="heslar_typ_akce_druha")
+        hsd = HeslarNazev(id=HESLAR_SPECIFIKACE_DATA, nazev="heslar_specifikace_data")
+        hta = HeslarNazev(id=HESLAR_TYP_AKCE_DRUHA, nazev="heslar_typ_akce_druha")
         htd = HeslarNazev(id=HESLAR_TYP_DOKUMENTU, nazev="heslar_typ_dokumentu")
         hmd = HeslarNazev(
             id=HESLAR_MATERIAL_DOKUMENTU, nazev="heslar_material_dokumentu"

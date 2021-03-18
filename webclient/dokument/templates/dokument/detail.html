@@ -32,7 +32,12 @@
   </div>
 
   <div class="card">
-    <div class="card-header">{% trans "Detail" %}</div>
+    <div class="card-header">
+      {% trans "Detail" %}
+      <div class="float-md-right"><a
+          href="{% url 'dokument:edit' dokument.ident_cely %}">{% trans "Upravit" %}</a>
+      </div>
+    </div>
     <div class="card-body">
       <div class="row">
         <div class="col">{{ dokument.autori }}</div>
@@ -44,8 +49,8 @@
       </div>
       <div class="row">
         <div class="col">{{ dokument.material_originalu }}</div>
-        <div class="col">{{ dokument.jazyky }}</div>
-        <div class="col">{{ dokument.posudky }}</div>
+        <div class="col">Jazyky: {{ dokument.jazyky }}</div>
+        <div class="col">Posudky: {{ dokument.posudky }}</div>
       </div>
       <div class="row">
         <div class="col">{{ dokument.organizace }}</div>

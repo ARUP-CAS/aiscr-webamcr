@@ -6,4 +6,5 @@ app_name = "dokument"
 
 urlpatterns = [
     path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("edit/<str:ident_cely>", views.edit, name="edit"),
 ]

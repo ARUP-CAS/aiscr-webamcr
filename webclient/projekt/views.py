@@ -123,6 +123,10 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    import time
+
+    start = time.time()
+
     projekt = Projekt.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
@@ -135,28 +139,31 @@ def edit(request, ident_cely):
 
             form.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-            return redirect("projekt/detail/" + ident_cely)
         else:
             logger.debug("The form is not valid!")
             logger.debug(form.errors)
 
-        return HttpResponse("Post Not implemented yet")
-    elif request.method == "GET":
-
+        return render(request, "projekt/edit.html", {"form_projekt": form})
+    else:
+        end = time.time()
+        logger.debug("TIME form before: " + str(end - start))
         form = EditProjektForm(instance=projekt)
+        end = time.time()
+        logger.debug("TIME form after: " + str(end - start))
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
 
-        return render(
+        resp = render(
             request,
             "projekt/edit.html",
             {
                 "form_projekt": form,
             },
         )
-    else:
-        return HttpResponse("Function Not implemented yet")
+        end = time.time()
+        logger.debug("TIME: " + str(end - start))
+        return resp
 
 
 class ProjektListView(LoginRequiredMixin, SingleTableMixin, FilterView):

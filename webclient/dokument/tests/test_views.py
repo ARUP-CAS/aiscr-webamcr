@@ -22,3 +22,10 @@ class UrlTests(TestCase):
 
         response = detail(request, ident_cely=existing_dokument)
         self.assertEqual(200, response.status_code)
+
+    def test_get_edit(self):
+        # TODO
+        pass
+
+    def test_post_edit(self):
+        pass

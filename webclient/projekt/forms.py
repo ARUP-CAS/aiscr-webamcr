@@ -2,21 +2,20 @@ from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Button, Div, Layout, Submit
 from django import forms
+from django.forms import HiddenInput
 from django.utils.translation import gettext as _
-from heslar.models import RuianKatastr
 from oznameni.forms import DateRangeField
 from projekt.models import Projekt
 
 
 class EditProjektForm(forms.ModelForm):
-    latitude = forms.FloatField(required=True)
-    longitude = forms.FloatField(required=True)
+    latitude = forms.FloatField(required=True, widget=HiddenInput())
+    longitude = forms.FloatField(required=True, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
         widget=forms.TextInput(attrs={"rows": 1, "cols": 40}),
     )
-    dalsi_katastry = forms.MultipleChoiceField()
 
     class Meta:
         model = Projekt
@@ -36,6 +35,7 @@ class EditProjektForm(forms.ModelForm):
             "datum_ukonceni",
             "latitude",
             "longitude",
+            "katastry",
         )
         widgets = {
             "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -44,11 +44,12 @@ class EditProjektForm(forms.ModelForm):
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "datum_zahajeni": forms.DateInput(attrs={"data-provide": "datepicker"}),
+            "datum_ukonceni": forms.DateInput(attrs={"data-provide": "datepicker"}),
         }
         labels = {
             "typ_projektu": _("Typ projektu"),
             "hlavni_katastr": _("Hlavní katastr"),
-            "planovane_zahajeni": _("Plánované zahájení prací"),
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
@@ -63,11 +64,7 @@ class EditProjektForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
-        self.fields["katastry"] = forms.MultipleChoiceField(
-            label=_("Další katastry"),
-            required=False,
-            choices=RuianKatastr.objects.all().values_list("id", "nazev"),
-        )
+        self.fields["katastry"].required = False
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(

@@ -3,6 +3,15 @@ from core.constants import D_STAV_ARCHIVOVANY, D_STAV_ODESLANY, D_STAV_ZAPSANY
 from core.models import KomponentaVazby, SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
+from heslar.hesla import (
+    HESLAR_JAZYK_DOKUMENTU,
+    HESLAR_MATERIAL_DOKUMENTU,
+    HESLAR_POSUDEK,
+    HESLAR_PRISTUPNOST,
+    HESLAR_RADA,
+    HESLAR_TYP_DOKUMENTU,
+    HESLAR_ULOZENI_ORIGINALU,
+)
 from heslar.models import Heslar
 from historie.models import HistorieVazby
 from uzivatel.models import Organizace, Osoba
@@ -22,12 +31,14 @@ class Dokument(models.Model):
         models.DO_NOTHING,
         db_column="rada",
         related_name="dokumenty_rady",
+        limit_choices_to={"nazev_heslare": HESLAR_RADA},
     )
     typ_dokumentu = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
         db_column="typ_dokumentu",
         related_name="dokumenty_typu_dokumentu",
+        limit_choices_to={"nazev_heslare": HESLAR_TYP_DOKUMENTU},
     )
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace"
@@ -38,12 +49,14 @@ class Dokument(models.Model):
         models.DO_NOTHING,
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
     )
     material_originalu = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
         db_column="material_originalu",
         related_name="dokumenty_materialu",
+        limit_choices_to={"nazev_heslare": HESLAR_MATERIAL_DOKUMENTU},
     )
     popis = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
@@ -54,6 +67,7 @@ class Dokument(models.Model):
         blank=True,
         null=True,
         related_name="dokumenty_ulozeni",
+        limit_choices_to={"nazev_heslare": HESLAR_ULOZENI_ORIGINALU},
     )
     oznaceni_originalu = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
@@ -67,6 +81,16 @@ class Dokument(models.Model):
         HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
     )
     licence = models.TextField(blank=True, null=True)
+    jazyky = models.ManyToManyField(
+        Heslar,
+        through="DokumentJazyk",
+        related_name="dokumenty_jazyku",
+    )
+    posudky = models.ManyToManyField(
+        Heslar,
+        through="DokumentPosudek",
+        related_name="dokumenty_posudku",
+    )
 
     class Meta:
         db_table = "dokument"
@@ -175,14 +199,20 @@ class DokumentExtraData(models.Model):
 
 
 class DokumentJazyk(models.Model):
-    dokument = models.OneToOneField(
-        Dokument, models.CASCADE, db_column="dokument", primary_key=True
+    dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
+    jazyk = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="jazyk",
+        limit_choices_to={"nazev_heslare": HESLAR_JAZYK_DOKUMENTU},
     )
-    jazyk = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="jazyk")
 
     class Meta:
         db_table = "dokument_jazyk"
         unique_together = (("dokument", "jazyk"),)
+
+    def __str__(self):
+        return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
 
 class DokumentOsoba(models.Model):
@@ -197,14 +227,20 @@ class DokumentOsoba(models.Model):
 
 
 class DokumentPosudek(models.Model):
-    dokument = models.OneToOneField(
-        Dokument, models.CASCADE, db_column="dokument", primary_key=True
+    dokument = models.OneToOneField(Dokument, models.CASCADE, db_column="dokument")
+    posudek = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="posudek",
+        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK},
     )
-    posudek = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="posudek")
 
     class Meta:
         db_table = "dokument_posudek"
         unique_together = (("dokument", "posudek"),)
+
+    def __str__(self):
+        return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
 
 class Tvar(models.Model):

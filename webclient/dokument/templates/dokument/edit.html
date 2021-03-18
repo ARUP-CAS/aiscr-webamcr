@@ -1,0 +1,20 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Editace dokumentu" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+    <h1>{% trans "Dokument" %} <span class="badge badge-info">{{ dokument.get_stav_display }}</span></h1>
+
+        {% crispy form %}
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}
