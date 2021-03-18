@@ -80,6 +80,41 @@
   }
 }
 
+// stepper
+.bs-stepper {
+  .bs-stepper-header {
+    align-items: unset;
+
+    .step {
+      &.active {
+        .bs-stepper-label {
+          color: #007BF8;
+        }
+      }
+     
+      .step-trigger {
+        cursor: unset;
+    
+        &:hover {
+          @extend .app-clean-bg;
+        }
+    
+        &:focus {
+          color: currentColor;
+        }
+      }
+
+      .app-stepper-date {
+        display: block;
+        margin-top: -3px;
+        font-weight: normal;
+        color: inherit;
+        font-size: 13px;
+      }
+    }
+  }
+}
+
 // bootstrap rewrite
 .form-control {
   height: $app-form-control-height;

@@ -25,34 +25,31 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
-
 {% endblock %}
 
 {% block content %}
+	<h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
 
-    <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
+	<!--<form method="post">-->
+	{% crispy form_projekt %}
 
-    <!--<form method="post">-->
-        {% crispy form_projekt %}
-
-        <div class="container">
-            <style>
-                #projectMap {
-                    width: 100%;
-                    height: 473px;
-                    border-radius: 5px;
-                }
-            </style>
-            <div id="projectMap"></div>
-        </div>
-
-        <!--<input type="submit" name="save" value="{% translate 'Ulož' %}" class="btn btn-primary" id="submit-id-save">
-    </form>-->
-
+	<div class="container">
+		<style>
+			#projectMap {
+				width: 100%;
+				height: 473px;
+				border-radius: 5px;
+			}
+		</style>
+		<div id="projectMap"></div>
+	</div>
+	<!--<input type="submit" name="save" value="{% translate 'Ulož' %}" class="btn btn-primary" id="submit-id-save">
+			</form>-->
 {% endblock %}
 
 
 {% block script %}
+<<<<<<< HEAD
 <script src="{% static 'mapa.js' %}"></script>
 <script>
     global_map_can_edit=true;
@@ -62,3 +59,14 @@
 </script>
 <script src="{% static 'daterangepicker.js' %}"></script>
 {% endblock %}
+=======
+	<script src="{% static 'mapa.js' %}"></script>
+	<script>
+		global_map_can_edit = true;
+		if (document.getElementById("id_latitude").value > 1) {
+			addPointOnLoad(document.getElementById("id_latitude").value, document.getElementById("id_longitude").value,
+				"Uživatelem zadaná poloha záměru");
+		}
+	</script>
+{% endblock %}
+>>>>>>> 3b4f4a8ce1f17aee18dba63b2290704e20b22ef0

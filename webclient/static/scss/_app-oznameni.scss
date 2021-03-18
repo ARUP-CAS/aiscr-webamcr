@@ -57,20 +57,6 @@
       }
     }
 
-    .bs-stepper {
-      .step-trigger {
-        cursor: unset;
-
-        &:hover {
-          @extend .app-clean-bg;
-        }
-
-        &:focus {
-          color: currentColor;
-        }
-      }
-    }
-
     .table {
       tr {
         th {

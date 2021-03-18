@@ -1,0 +1,46 @@
+// --- PROJEKT---
+
+&.app-projekt {
+  .app-content-wrapper {
+    .app-content-header {
+      .app-controls {
+        .btn-group {
+          &:last-child {
+            margin-left: $app-gap-half;
+          }
+
+          .btn {
+            &:not(.dropdown-toggle) {
+              @extend .btn-secondary;
+            }
+            
+            &.dropdown-toggle {
+              @extend .btn-primary;
+            }
+          }
+        } 
+      }
+    }
+
+    .card {
+      .card-header {
+        display: flex;
+        align-items: center;
+
+        .app-left {
+          flex: 1;
+        }
+
+        .app-right {
+          .btn {
+            @extend .btn-secondary, .btn-sm;
+
+            &:last-child {
+              margin-left: $app-gap-half;
+            }
+          }
+        }
+      }
+    }
+  }
+}

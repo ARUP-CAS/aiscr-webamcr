@@ -5,84 +5,186 @@
 {% block title %}{% trans "Detail projektu" %}{% endblock %}
 {% block head %}
   <!-- Map imports -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-      crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-        crossorigin="">
-    </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin="">
+  </script>
 
-    <script>
-    var global_csrftoken = '{{ csrf_token }}';
-    </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-    crossorigin="anonymous"></script>
+  <script>
+  var global_csrftoken = '{{ csrf_token }}';
+  </script>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-    crossorigin="anonymous"></script> -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
-    <!-- <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"> -->
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
 {% endblock %}
 
 {% block content %}
-  <div class="row">
-    <div class="col">
+  <div class="row app-content-header">
+    <!-- <div class="col-sm-6">
       <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1>
-    </div>
-    <div class="col">
-      <div class="btn-group" role="group" aria-label="Basic example">
+    </div> -->
+    <div class="col-sm-12 text-right app-controls">
+      <div class="btn-group" role="group" aria-label="Stavy">
         {% if show.vratit_link %}
-          <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}"
-             class="btn btn-secondary">{% trans "Vrátit" %}</a>
+          <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">arrow_back</span>
+            {% trans "Vrátit" %}
+          </a>
         {% endif %}
         {% if show.znovu_zapsat_link %}
-          <a href="{% url 'projekt:projekt_vratit_navrh_zruseni' projekt.ident_cely %}"
-             class="btn btn-primary">{% trans "Vrátit do stavu zapsán" %}</a>
+          <a href="{% url 'projekt:projekt_vratit_navrh_zruseni' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">wrap_text</span>
+            {% trans "Vrátit do stavu zapsán" %}
+          </a>
         {% endif %}
         {% if show.navrhnout_zruseni_link %}
-        <a href="{% url 'projekt:projekt_navrhnout_ke_zruseni' projekt.ident_cely %}" class="btn btn-warning">{% trans "Navrhnout zrušení" %}</a>
+        <a href="{% url 'projekt:projekt_navrhnout_ke_zruseni' projekt.ident_cely %}" class="btn">
+          <span class="material-icons">shuffle</span>
+          {% trans "Navrhnout zrušení" %}
+        </a>
         {% endif %}
         {% if show.zrusit_link %}
-          <a href="{% url 'projekt:projekt_zrusit' projekt.ident_cely %}"
-             class="btn btn-warning">{% trans "Zrušit" %}</a>
+          <a href="{% url 'projekt:projekt_zrusit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">block</span>
+            {% trans "Zrušit" %}
+          </a>
         {% endif %}
         {% if show.schvalit_link %}
-          <a href="{% url 'projekt:projekt_schvalit' projekt.ident_cely %}"
-             class="btn btn-secondary">{% trans "Schválit" %}</a>
+          <a href="{% url 'projekt:projekt_schvalit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">done</span>
+            {% trans "Schválit" %}
+          </a>
         {% endif %}
         {% if show.prihlasit_link %}
-          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}"
-             class="btn btn-primary">{% trans "Přihlásit" %}</a>
+          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">login</span>
+            {% trans "Přihlásit" %}
+          </a>
         {% endif %}
         {% if show.zahajit_teren_link %}
-          <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}"
-             class="btn btn-primary">{% trans "Zahájit výzkum" %}</a>
+          <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">outlined_flag</span>
+            {% trans "Zahájit výzkum" %}
+          </a>
         {% endif %}
         {% if show.ukoncit_teren_link %}
-          <a href="{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}"
-             class="btn btn-primary">{% trans "Ukončit výzkum" %}</a>
+          <a href="{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">highlight_off</span>
+            {% trans "Ukončit výzkum" %}
+          </a>
         {% endif %}
         {% if show.uzavrit_link %}
-          <a href="{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}"
-             class="btn btn-primary">{% trans "Uzavřít" %}</a>
+          <a href="{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">arrow_forward</span>
+            {% trans "Uzavřít" %}
+          </a>
         {% endif %}
         {% if show.archivovat_link %}
-          <a href="{% url 'projekt:projekt_archivovat' projekt.ident_cely %}"
-             class="btn btn-primary">{% trans "Archivovat" %}</a>
+          <a href="{% url 'projekt:projekt_archivovat' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">archive</span>
+            {% trans "Archivovat" %}
+          </a>
         {% endif %}
+      </div><!--
+      --><div class="btn-group" role="group" aria-label="{% trans 'Další volby' %}">
+        <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% trans "Další volby" %}
+        </button>
+        <div class="dropdown-menu" aria-labelledby="otherOptions">
+          <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+        </div>
       </div>
     </div>
   </div>
+
+  <div class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">{% trans "Oznámený" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">
+            {% trans "Zapsaný" %}
+            <span class="app-stepper-date">29.06.2020</span>
+          </span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">3</span>
+          <span class="bs-stepper-label">
+            {% trans "Přihlášený" %}
+            <span class="app-stepper-date">29.07.2020</span>
+          </span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step active">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">4</span>
+          <span class="bs-stepper-label">
+            {% trans "Zahájen v terénu" %}
+            <span class="app-stepper-date" data-toggle="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">29.09.2020</span>
+          </span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">5</span>
+          <span class="bs-stepper-label">{% trans "Ukončen v terénu" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">6</span>
+          <span class="bs-stepper-label">{% trans "Uzavřený" %}</span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step">
+        <button type="button" class="btn step-trigger" disabled="disabled">
+          <span class="bs-stepper-circle">7</span>
+          <span class="bs-stepper-label">{% trans "Archivovaný" %}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header">
-      {% trans "Detail" %}
-      <div class="float-md-right"><a
-          href="{% url 'projekt:projekt_edit' projekt.ident_cely %}">{% trans "Upravit" %}</a>
+      <div class="app-left">
+        {% trans "Detail" %}
+      </div>
+      <div class="app-right">
+        <div class="dropdown-menu" aria-labelledby="others">
+          <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+        </div>
+        <button type="button" class="btn" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span class="material-icons" data-toggle="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">menu</span>
+        </button><!--
+        --><a href="{% url 'projekt:projekt_edit' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+          <span class="material-icons">edit</span>
+        </a> 
       </div>
     </div>
     <div class="card-body">
@@ -124,9 +226,14 @@
   {% if show.oznamovatel %}
     <div class="card mt-2">
       <div class="card-header">
-        {% trans "Oznámení" %}
-        <div class="float-md-right"><a
-            href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}">{% trans "Upravit" %}</a></div>
+        <div class="app-left">
+          {% trans "Oznámení" %}
+        </div>
+        <div class="app-right">
+          <a href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+            <span class="material-icons">edit</span>
+          </a>
+        </div>
       </div>
       <div class="card-body">
         <div class="row">
@@ -146,8 +253,14 @@
 
   <div class="card mt-2">
     <div class="card-header">
-      {% trans "Projektová dokumentace" %}
-      <a href="{% url 'projekt:upload_file' projekt.ident_cely %}">Upload</a>
+      <div class="app-left">
+        {% trans "Projektová dokumentace" %}
+      </div>
+      <div class="app-right">
+        <a href="{% url 'projekt:upload_file' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Nahrát dokumentaci' %}">
+          <span class="material-icons">publish</span>
+        </a>
+      </div>
     </div>
     <div class="card-body">
       {% if soubory %}
@@ -183,9 +296,13 @@
 
   <div class="card mt-2">
     <div class="card-header">
-      {% trans "Archeologické akce" %}
-      <div class="float-md-right"><a
-          href="{% url 'arch_z:zapsat' projekt.ident_cely %}">{% trans "+" %}</a>
+      <div class="app-left">
+        {% trans "Archeologické akce" %}
+      </div>
+      <div class="app-right">
+        <a href="{% url 'arch_z:zapsat' projekt.ident_cely %}" class="btn" data-toggle="tooltip" data-placement="top" title="{% trans 'Vložit další akci' %}">
+          <span class="material-icons">add</span>
+        </a>
       </div>
     </div>
     <div class="card-body">

@@ -3,6 +3,7 @@
 body {
   @import 'app-login';
   @import "app-oznameni";
+  @import "app-projekt";
 
   &.app-login,
   &.app-oznameni {
