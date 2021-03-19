@@ -81,12 +81,13 @@ class EditProjektForm(forms.ModelForm):
                 ),
                 Div(
                     Div(
-                        Div("typ_projektu", css_class="col-sm-4"),
-                        Div("hlavni_katastr", css_class="col-sm-4"),
-                        Div("katastry", css_class="col-sm-4"),
+                        Div("typ_projektu", css_class="col-sm-3"),
+                        Div("hlavni_katastr", css_class="col-sm-3"),
+                        Div("katastry", css_class="col-sm-3"),
+                        Div("planovane_zahajeni", css_class="col-sm-3"),
                         css_class="row",
                     ),
-                    "planovane_zahajeni",
+                    #"planovane_zahajeni",
                     "podnet",
                     "lokalizace",
                     "parcelni_cislo",

@@ -2,19 +2,7 @@
 
 nav {
   .breadcrumb {
-    /* @extend .app-clean-mg;
-    background-color: $app-footer-top-bg;
-
-    .breadcrumb-item {
-      a {
-        @include setEntityColor("card");
-        @include setEntityColor("cardInfoBadge");
-        font-size: 20px;
-        font-weight: 500;
-        padding-left: $app-gap;
-      }
-    } */
-    @extend .app-clean-pd;
+    @extend .app-clean-mg, .app-clean-pd;
     list-style: none;
     display: flex;
     height: $app-breadcrumb-height;
