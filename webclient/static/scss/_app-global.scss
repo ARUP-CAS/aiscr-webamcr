@@ -121,8 +121,9 @@
 
 // bootstrap rewrite
 .form-control {
-  height: $app-form-control-height;
-  line-height: $app-form-control-line-height;
+  /* height: $app-form-control-height;
+  line-height: $app-form-control-line-height; */
+  @extend .form-control-sm;
 }
 
 .form-group {

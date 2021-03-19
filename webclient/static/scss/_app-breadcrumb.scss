@@ -2,7 +2,7 @@
 
 nav {
   .breadcrumb {
-    @extend .app-clean-mg;
+    /* @extend .app-clean-mg;
     background-color: $app-footer-top-bg;
 
     .breadcrumb-item {
@@ -12,6 +12,46 @@ nav {
         font-size: 20px;
         font-weight: 500;
         padding-left: $app-gap;
+      }
+    } */
+    @extend .app-clean-pd;
+    list-style: none;
+    display: flex;
+    height: $app-breadcrumb-height;
+    	
+
+    & > li {
+      a {
+        font-size: 20px;
+        font-weight: 500;
+        color: $white;
+        align-self: center;
+      }
+
+      list-style: none;
+      box-sizing: border-box;
+      background-color: $white;
+      position: relative;
+
+
+      &:first-child {
+        background-color: #F39225;
+        color: $white;
+        position: relative;
+        padding: 0 $app-gap;
+        
+        &::after {
+          content: "";
+          display: block;
+          position: absolute;
+          top: 0;
+          right: calc(-#{$app-breadcrumb-height} / 2);
+          width: 0;
+          height: 0;
+          border-top: calc(#{$app-breadcrumb-height} / 2) solid transparent;
+          border-left: calc(#{$app-breadcrumb-height} / 2) solid #F39225;
+          border-bottom: calc(#{$app-breadcrumb-height} / 2) solid transparent;
+        }
       }
     }
   }
