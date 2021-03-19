@@ -7,28 +7,19 @@ nav {
     display: flex;
     height: $app-breadcrumb-height;
     	
-
-    & > li {
-      a {
-        font-size: 20px;
-        font-weight: 500;
-        color: $white;
-        align-self: center;
-      }
-
+    .breadcrumb-item {
+      @include setEntityColor(breadcrumb);
       list-style: none;
       box-sizing: border-box;
       background-color: $white;
       position: relative;
 
-
       &:first-child {
-        background-color: #F39225;
         color: $white;
         position: relative;
         padding: 0 $app-gap;
         
-        &::after {
+        &:after {
           content: "";
           display: block;
           position: absolute;
@@ -37,9 +28,16 @@ nav {
           width: 0;
           height: 0;
           border-top: calc(#{$app-breadcrumb-height} / 2) solid transparent;
-          border-left: calc(#{$app-breadcrumb-height} / 2) solid #F39225;
+          border-left: calc(#{$app-breadcrumb-height} / 2) solid;
           border-bottom: calc(#{$app-breadcrumb-height} / 2) solid transparent;
         }
+      }
+
+      a {
+        font-size: 20px;
+        font-weight: 500;
+        color: $white;
+        align-self: center;
       }
     }
   }

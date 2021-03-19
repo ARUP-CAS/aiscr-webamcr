@@ -73,66 +73,24 @@
 // set entity color
 @mixin setEntityColor($type) {
   @each $entity, $color in $entities {
-    @if ($type == btn) {
+    @if ($type == buttonFormHeader) {
       &.app-entity-#{$entity} {
         &:hover {
           background-color: $color !important;
           color: $white;
         }
       }    
-    }
-    @else if ($type == card) {
+    } @else if ($type == breadcrumb) {
       &.app-entity-#{$entity} {
-        border-left: 4px solid #{$color} !important;
-      }   
-    }
-    @else if ($type == cardInfoBadge) {
-      &.app-entity-#{$entity} {
-        color: $color !important;
-      }   
-    }
-    @else if ($type == home_card) {
-      &.app-entity-#{$entity} {
-        background-color: $color !important;  
-      } 
-    }
-    @else if ($type == facet) {
-      &.#{$entity} {
-        color: $color;
-        background-color: rgba($color, $app-facet-entity-bg-color-opacity);
-
-        &:hover,
-        &.active {
-          color: $app-color-lightnes;
-          border-color: $color;
+        &:first-child {
           background-color: $color;
 
-          strong {
-            font-weight: 600;
-          }
-
-          .app-fx-wrapper {
-            .app-fx-right {
-              padding-left: 0;
-            }
+          &:after {
+            border-left-color: $color;
           }
         }
-
-        .app-fx-wrapper {
-          .app-fx-left {
-            background-color: $color;
-
-            .mat-icon {
-              color: $app-color-lightnes !important;
-            }
-          }
-
-          .app-fx-right {
-            border-color: rgba($color, $app-facet-entity-border-color-opacity);
-          }
-        }
-      }    
-    }
+      }
+    } 
   }
 }
 
