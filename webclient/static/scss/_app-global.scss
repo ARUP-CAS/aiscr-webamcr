@@ -119,6 +119,33 @@
   }
 }
 
+// select fix
+.select2-container--default {
+  .select2-selection {
+    height: 31px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 0.2rem !important;
+
+    .select2-selection__rendered  {
+      line-height: unset !important;
+    }
+
+    .select2-selection__arrow {
+      height: 31px !important;
+    }
+
+    .select2-selection__clear {
+      margin-top: 0 !important;
+    }
+
+    .select2-selection__rendered {
+      .select2-selection__choice {
+        margin-top: 0 !important;
+      }
+    }
+  }
+}
+
 // bootstrap rewrite
 .form-control {
   /* height: $app-form-control-height;
