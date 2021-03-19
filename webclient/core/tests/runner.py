@@ -5,7 +5,9 @@ from django.test.runner import DiscoverRunner as BaseRunner
 from dokument.models import Dokument
 from heslar import hesla
 from heslar.hesla import (
+    HESLAR_JAZYK_DOKUMENTU,
     HESLAR_MATERIAL_DOKUMENTU,
+    HESLAR_POSUDEK,
     HESLAR_PRESNOST,
     HESLAR_PRISTUPNOST,
     HESLAR_SPECIFIKACE_DATA,
@@ -15,7 +17,7 @@ from heslar.hesla import (
     HESLAR_TYP_PIAN,
     HESLAR_TYP_PROJEKTU,
     PRISTUPNOST_ANONYM_ID,
-    TYP_PROJEKTU_ZACHRANNY_ID, HESLAR_JAZYK_DOKUMENTU, HESLAR_POSUDEK,
+    TYP_PROJEKTU_ZACHRANNY_ID,
 )
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from oznameni.models import Oznamovatel
@@ -162,7 +164,9 @@ class AMCRTestRunner(BaseRunner):
             nazev_heslare=hmd,
         ).save()
         Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd).save()
-        Heslar(id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd).save()
+        Heslar(
+            id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd
+        ).save()
         typ_muzeum = Heslar(
             id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
         )

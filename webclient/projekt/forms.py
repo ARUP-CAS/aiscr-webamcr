@@ -5,7 +5,7 @@ from dal import autocomplete
 from django import forms
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
-from oznameni.forms import DateRangeField
+from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 
 
@@ -15,7 +15,7 @@ class EditProjektForm(forms.ModelForm):
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=forms.TextInput(attrs={"rows": 1, "cols": 40}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40}),
     )
 
     class Meta:

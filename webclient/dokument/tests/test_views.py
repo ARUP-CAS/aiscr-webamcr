@@ -1,9 +1,14 @@
-from core.tests.runner import add_middleware_to_request, AMCR_TESTOVACI_ORGANIZACE_ID, MATERIAL_DOKUMENTU_DIGI_SOUBOR, \
-    TYP_DOKUMENTU_PLAN_SONDY_ID, JAZYK_DOKUMENTU_CESTINA_ID, ARCHEOLOGICKY_POSUDEK_ID
+from core.tests.runner import (
+    AMCR_TESTOVACI_ORGANIZACE_ID,
+    ARCHEOLOGICKY_POSUDEK_ID,
+    JAZYK_DOKUMENTU_CESTINA_ID,
+    MATERIAL_DOKUMENTU_DIGI_SOUBOR,
+    TYP_DOKUMENTU_PLAN_SONDY_ID,
+    add_middleware_to_request,
+)
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
-
 from dokument.models import Dokument
 from dokument.views import detail, edit
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
@@ -37,16 +42,16 @@ class UrlTests(TestCase):
 
     def test_post_edit(self):
         data = {
-            'csrfmiddlewaretoken': 'OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm',
-            'organizace': str(AMCR_TESTOVACI_ORGANIZACE_ID),
-            'rok_vzniku': '2019',
-            'material_originalu': str(MATERIAL_DOKUMENTU_DIGI_SOUBOR),
-            'typ_dokumentu': str(TYP_DOKUMENTU_PLAN_SONDY_ID),
-            'pristupnost': str(PRISTUPNOST_ANONYM_ID),
-            'datum_zverejneni': '',
-            'jazyky': str(JAZYK_DOKUMENTU_CESTINA_ID),
-            'posudky': str(ARCHEOLOGICKY_POSUDEK_ID),
-            'save': 'Upravit'
+            "csrfmiddlewaretoken": "OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm",
+            "organizace": str(AMCR_TESTOVACI_ORGANIZACE_ID),
+            "rok_vzniku": "2019",
+            "material_originalu": str(MATERIAL_DOKUMENTU_DIGI_SOUBOR),
+            "typ_dokumentu": str(TYP_DOKUMENTU_PLAN_SONDY_ID),
+            "pristupnost": str(PRISTUPNOST_ANONYM_ID),
+            "datum_zverejneni": "",
+            "jazyky": str(JAZYK_DOKUMENTU_CESTINA_ID),
+            "posudky": str(ARCHEOLOGICKY_POSUDEK_ID),
+            "save": "Upravit",
         }
         request = self.factory.post("/dokument/edit/", data)
         request.user = self.existing_user
@@ -58,6 +63,5 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertTrue(
-            Dokument.objects.get(ident_cely=self.existing_dokument).rok_vzniku
-            == 2019
+            Dokument.objects.get(ident_cely=self.existing_dokument).rok_vzniku == 2019
         )

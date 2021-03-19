@@ -23,7 +23,7 @@ class UtilsTests(TestCase):
     def test_calculate_crc_32(self):
         with open("core/tests/resources/mime.txt", "rb") as file:
             expected_checksum = "3775775224"  # For CRLF
-            other_expected = "2455176644" # For LF
+            other_expected = "2455176644"  # For LF
             checksum = calculate_crc_32(file)
             one = checksum == expected_checksum
             two = checksum == other_expected

@@ -1,9 +1,8 @@
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from heslar.views import RuianKatastrAutocomplete
 
 
 class HeslarTests(TestCase):
-
     def setUp(self):
         self.factory = RequestFactory()
 

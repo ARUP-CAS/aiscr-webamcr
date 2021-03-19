@@ -3,16 +3,15 @@ import logging
 
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV2Invisible
-from dal import autocomplete
-
 from core.validators import validate_phone_number
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
+from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-from heslar.models import RuianKatastr
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
+from psycopg2._range import DateRange
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,23 @@ class DateRangeField(forms.DateField):
         # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
         to_date += datetime.timedelta(days=1)
         return from_date, to_date
+
+
+class DateRangeWidget(forms.TextInput):
+    def format_value(self, value):
+        """
+        Return a value as it should appear when rendered in a template.
+        """
+        if value == "" or value is None:
+            return None
+        if isinstance(value, DateRange):
+            return (
+                value.lower.strftime("%d.%m.%Y")
+                + " - "
+                + value.upper.strftime("%d.%m.%Y")
+            )
+        else:
+            return str(value)
 
 
 class OznamovatelForm(forms.ModelForm):
@@ -104,7 +120,7 @@ class ProjektOznameniForm(forms.ModelForm):
             "lokalizace",
             "parcelni_cislo",
             "oznaceni_stavby",
-            "katastry"
+            "katastry",
         )
         widgets = {
             "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -120,7 +136,7 @@ class ProjektOznameniForm(forms.ModelForm):
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
             "oznaceni_stavby": _("Označení stavby"),
-            "katastry": _("Další katastry")
+            "katastry": _("Další katastry"),
         }
         help_texts = {
             "podnet": _(
@@ -133,7 +149,7 @@ class ProjektOznameniForm(forms.ModelForm):
             ),
             "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
             "oznaceni_stavby": _("Lorem ipsum"),
-            "katastry": _("Vyberte případné další katastry dotčené záměrem.")
+            "katastry": _("Vyberte případné další katastry dotčené záměrem."),
         }
 
     def __init__(self, *args, **kwargs):

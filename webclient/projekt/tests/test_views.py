@@ -1,6 +1,5 @@
-from django.contrib.gis.geos import Point
-
 from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
+from django.contrib.gis.geos import Point
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import Http404
@@ -25,7 +24,7 @@ class UrlTests(TestCase):
             geom=Point(
                 50.40,
                 15.70,
-            )
+            ),
         )
         self.oznamovatel = Oznamovatel(
             email="tester@example.com",
