@@ -2,7 +2,7 @@
 
 nav {
   .breadcrumb {
-    @extend .app-clean-pd;
+    @extend .app-clean-pd, .app-clean-radius;
     margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
     list-style: none;
     display: flex;
