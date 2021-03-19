@@ -3,7 +3,7 @@ import logging
 from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from dokument.forms import EditDokumentForm
 from dokument.models import Dokument
@@ -45,7 +45,9 @@ def edit(request, ident_cely):
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
-        return render(request, "dokument/edit.html", {"form": form, "dokument": dokument})
+        return render(
+            request, "dokument/edit.html", {"form": form, "dokument": dokument}
+        )
     else:
         form = EditDokumentForm(instance=dokument)
 

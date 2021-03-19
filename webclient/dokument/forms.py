@@ -39,16 +39,8 @@ class EditDokumentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EditDokumentForm, self).__init__(*args, **kwargs)
-        # self.fields["jazyky"] = forms.MultipleChoiceField(
-        #     label=_("Jazyky"),
-        #     required=False,
-        #     choices=Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK_DOKUMENTU).values_list("id", "heslo"),
-        # )
-        # self.fields["posudky"] = forms.MultipleChoiceField(
-        #     label=_("Posudky"),
-        #     required=False,
-        #     choices=Heslar.objects.filter(nazev_heslare=HESLAR_POSUDEK).values_list("id", "heslo"),
-        # )
+        self.fields["jazyky"].required = False
+        self.fields["posudky"].required = False
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(

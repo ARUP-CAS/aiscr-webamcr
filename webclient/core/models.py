@@ -93,7 +93,7 @@ class Soubor(models.Model):
     vytvoreno = models.DateField(auto_now_add=True)
     typ_souboru = models.TextField()
     vazba = models.ForeignKey(
-            SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
+        SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
     path = models.FileField(upload_to="soubory/%Y/%m/%d", default="empty")
 

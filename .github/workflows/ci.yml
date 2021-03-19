@@ -39,7 +39,7 @@ jobs:
         C_INCLUDE_PATH: /usr/include/gdal
     - name: Install gdal
       run: |
-        pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal" 
+        pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
     - name: Django Testing
       working-directory: ./webclient
       run: |
