@@ -11,8 +11,6 @@
 .app-color-warning {color: $warning !important;}
 .app-color-danger {color: $danger !important;}
 
-.app-color- {color: $warning;}
-
 // cleaners
 .app-clean-bg {
   background-color: transparent !important;
@@ -23,7 +21,7 @@
 }
 
 .app-clean-radius {
-  border-radius: none !important;
+  border-radius: 0 !important;
 }
 
 .app-clean-mg {
@@ -150,7 +148,13 @@ table {
 
 .form-group {
   margin-bottom: $app-form-group-mg-bottom;
+  
+  label {
+    font-weight: bold;
+    font-size: 0.875rem;
+  }
 }
+
 
 .card {
   &.app-card-form {
@@ -161,6 +165,7 @@ table {
       display: flex;
       width: 100%;
       padding: 0 0 0 1.25rem;
+      font-weight: 300;
       height: $app-form-card-header-height;
 
 
@@ -210,6 +215,5 @@ table {
         }
       }
     }
-  }
-  
+  }  
 } 

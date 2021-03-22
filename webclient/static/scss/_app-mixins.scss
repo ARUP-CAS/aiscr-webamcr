@@ -80,16 +80,6 @@
           color: $white;
         }
       }    
-    } @else if ($type == breadcrumb) {
-      &.app-entity-#{$entity} {
-        &:first-child {
-          background-color: $color;
-
-          &:after {
-            border-left-color: $color;
-          }
-        }
-      }
     } @else if ($type == stepper) {
       &.app-entity-#{$entity} {
         .bs-stepper-circle {
@@ -100,10 +90,35 @@
           color: $color;
         }
       } 
-    } @else if ($type == button) {
+    } @else if ($type == toolbar) {
       &.app-entity-#{$entity} {
-        background-color: $color;
-        color: $white;
+        background-color: rgba($color, .1);
+        /* border-top: 1px solid rgba($color, .2);
+        border-bottom: 1px solid rgba($color, .2); */
+
+        .app-left {
+          .app-entity-title {
+            &:first-child {
+              background-color: $color;
+    
+              &:after {
+                border-left-color: $color;
+              }
+            }
+          }
+        }
+
+        .app-right {
+          .btn {
+            color: $color;
+            border-left-color: rgba($color, .3) !important;
+  
+            &:hover {
+              background-color: $color;
+              color: $white;
+            } 
+          }
+        }
       } 
     }
   }

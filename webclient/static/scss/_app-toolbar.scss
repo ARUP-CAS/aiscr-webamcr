@@ -1,9 +1,9 @@
 // --- BREADCRUMB ---
 
 .app-toolbar {
+  @include setEntityColor(toolbar);
   @extend .d-flex, .pr-3;
-  height: $app-breadcrumb-height;
-  background-color: $gray-200;
+  height: $app-toolbar-height;
   margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
 
   .app-left {
@@ -11,7 +11,6 @@
 
     .app-entity-title {
       @extend .d-flex, .align-items-center;
-      @include setEntityColor(breadcrumb);
       list-style: none;
       box-sizing: border-box;
       background-color: $white;
@@ -27,12 +26,17 @@
           display: block;
           position: absolute;
           top: 0;
-          right: calc(-#{$app-breadcrumb-height} / 2);
+          right: calc(-#{$app-toolbar-height} / 2);
           width: 0;
           height: 0;
-          border-top: calc(#{$app-breadcrumb-height} / 2) solid transparent;
-          border-left: calc(#{$app-breadcrumb-height} / 2) solid;
-          border-bottom: calc(#{$app-breadcrumb-height} / 2) solid transparent;
+          border-top: calc(#{$app-toolbar-height} / 2) solid transparent;
+          border-left: calc(#{$app-toolbar-height} / 2) solid;
+          border-bottom: calc(#{$app-toolbar-height} / 2) solid transparent;
+        }
+
+        .material-icons {
+          @include setIcon($position: text-bottom);
+          @extend .mr-1;
         }
       }
 
@@ -49,64 +53,19 @@
 
     &.app-controls {
       .btn-group {
-        @extend .align-self-center;
-
-        &:last-child {
-          margin-left: $app-gap-half;
-        }
+        @extend .d-flex;
 
         .btn {
-          &:not(.dropdown-toggle) {
-            @extend .btn-secondary;
+          @extend .d-flex, .app-clean-radius, .pl-3, .pr-3;
+          border: 0;
+          align-items: center;
+          border-left: 1px solid;
+
+          .material-icons {
+            @extend .mr-2;
           }
-          
-          @include setEntityColor(button);
         }
       } 
     }
   }
 }
-
-/* nav {
-  .breadcrumb {
-    @extend .app-clean-pd, .app-clean-radius;
-    margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
-    list-style: none;
-    display: flex;
-    height: $app-breadcrumb-height;
-    	
-    .breadcrumb-item {
-      @include setEntityColor(breadcrumb);
-      list-style: none;
-      box-sizing: border-box;
-      background-color: $white;
-      position: relative;
-
-      &:first-child {
-        color: $white;
-        position: relative;
-        padding: 0 $app-gap;
-        
-        &:after {
-          content: "";
-          display: block;
-          position: absolute;
-          top: 0;
-          right: calc(-#{$app-breadcrumb-height} / 2);
-          width: 0;
-          height: 0;
-          border-top: calc(#{$app-breadcrumb-height} / 2) solid transparent;
-          border-left: calc(#{$app-breadcrumb-height} / 2) solid;
-          border-bottom: calc(#{$app-breadcrumb-height} / 2) solid transparent;
-        }
-      }
-
-      a {
-        font-size: 20px;
-        font-weight: 500;
-        color: $white;
-        align-self: center;
-      }
-    }
-  }
-} */
