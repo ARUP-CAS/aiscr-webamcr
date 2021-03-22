@@ -229,6 +229,17 @@ table {
         }             
       }          
     }
+
+    .card-body {
+      .app-note {
+        @extend .text-center, .mt-3;
+        color: $info;
+
+        .material-icons {
+          @include setIcon($position: bottom);
+        }
+      }
+    }
   }
   
 } 
