@@ -2,7 +2,7 @@
 
 &.app-projekt {
   .app-content-wrapper {
-    .app-content-header {
+    /* .app-content-header {
       .app-controls {
         .btn-group {
           &:last-child {
@@ -14,12 +14,10 @@
               @extend .btn-secondary;
             }
             
-            &.dropdown-toggle {
-              @extend .btn-primary;
-            }
+            @include setEntityColor(button);
           }
         } 
       }
-    }
+    } */
   }
 }

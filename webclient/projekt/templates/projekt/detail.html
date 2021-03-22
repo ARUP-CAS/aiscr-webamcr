@@ -26,7 +26,7 @@
 {% block content %}
   {% include "breadcrumb.html" with pagestyle="projekt" header="Projekt" %}
 
-  <div class="row app-content-header">
+<!--   <div class="row app-content-header">
     <div class="col-sm-12 text-right app-controls">
       <div class="btn-group" role="group" aria-label="Stavy">
         {% if show.vratit_link %}
@@ -89,9 +89,9 @@
             {% trans "Archivovat" %}
           </a>
         {% endif %}
-      </div><!--
-      --><div class="btn-group" role="group" aria-label="{% trans 'Další volby' %}">
-        <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      </div>
+      <div class="btn-group" role="group" aria-label="{% trans 'Další volby' %}">
+        <button id="otherOptions" type="button" class="btn dropdown-toggle app-entity-projekt" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           {% trans "Další volby" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
@@ -102,7 +102,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <div class="bs-stepper app-entity-projekt">
     <div class="bs-stepper-header">

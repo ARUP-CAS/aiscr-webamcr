@@ -1,5 +1,10 @@
 // --- GLOBAL ---
 
+// hidde during development
+#djDebug #djShowToolBarButton {
+  display: none;
+}
+
 // colors
 .app-color-success {color: $success !important;}
 .app-color-info {color: $info !important;}

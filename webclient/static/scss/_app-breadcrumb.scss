@@ -1,6 +1,73 @@
 // --- BREADCRUMB ---
 
-nav {
+.app-toolbar {
+  @extend .d-flex, .pr-3;
+  height: $app-breadcrumb-height;
+  background-color: $gray-200;
+  margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
+
+  .app-left {
+    @extend .flex-grow-1, .d-flex;
+
+    .app-entity {
+      @extend .d-flex, .align-items-center;
+      @include setEntityColor(breadcrumb);
+      list-style: none;
+      box-sizing: border-box;
+      background-color: $white;
+      position: relative;
+
+      &:first-child {
+        color: $white;
+        position: relative;
+        padding: 0 $app-gap;
+        
+        &:after {
+          content: "";
+          display: block;
+          position: absolute;
+          top: 0;
+          right: calc(-#{$app-breadcrumb-height} / 2);
+          width: 0;
+          height: 0;
+          border-top: calc(#{$app-breadcrumb-height} / 2) solid transparent;
+          border-left: calc(#{$app-breadcrumb-height} / 2) solid;
+          border-bottom: calc(#{$app-breadcrumb-height} / 2) solid transparent;
+        }
+      }
+
+      a {
+        font-size: 20px;
+        font-weight: 500;
+        color: $white;
+      }
+    }
+  }
+
+  .app-right {
+    @extend .d-flex;
+
+    &.app-controls {
+      .btn-group {
+        @extend .align-self-center;
+
+        &:last-child {
+          margin-left: $app-gap-half;
+        }
+
+        .btn {
+          &:not(.dropdown-toggle) {
+            @extend .btn-secondary;
+          }
+          
+          @include setEntityColor(button);
+        }
+      } 
+    }
+  }
+}
+
+/* nav {
   .breadcrumb {
     @extend .app-clean-pd, .app-clean-radius;
     margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
@@ -42,4 +109,4 @@ nav {
       }
     }
   }
-}
+} */
