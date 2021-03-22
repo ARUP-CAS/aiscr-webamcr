@@ -148,10 +148,11 @@ table {
 
 .form-group {
   margin-bottom: $app-form-group-mg-bottom;
-  
+
   label {
     font-weight: bold;
     font-size: 0.875rem;
+    margin-bottom: $app-form-label-mg-bottom;
   }
 }
 
