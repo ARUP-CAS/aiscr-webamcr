@@ -9,7 +9,7 @@
   .app-left {
     @extend .flex-grow-1, .d-flex;
 
-    .app-entity {
+    .app-entity-title {
       @extend .d-flex, .align-items-center;
       @include setEntityColor(breadcrumb);
       list-style: none;
