@@ -406,8 +406,8 @@
             <td>{{ soubor.size_bytes }}</td>
             <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
             <td>
-              <a href="{% url 'projekt:delete_file' soubor.id %}" class="app-color-danger">
-                <span class="material-icons">delete_forever</span>
+              <a href="{% url 'projekt:delete_file' soubor.id %}">
+                <span class="material-icons app-color-danger">delete_forever</span>
               </a>
             </td>
             <td>
@@ -463,7 +463,7 @@
               <td>{{ a.datum_zahajeni|date:'Y/m/d' }} - {{ a.datum_ukonceni|date:'Y/m/d' }}</td>
               <td>{{ a.hlavni_typ }}, {{ a.vedlejsi_typ }}</td>
               <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</td>
-              <td>{{ a.archeologicky_zaznam.get_stav_display }}</td>
+              <td><div class="badge badge-primary">{{ a.archeologicky_zaznam.get_stav_display }}</div></td>
             </tr>
             {% empty %}
             {% trans "Projekt zatím neobsahuje žádné projektové akce." %}

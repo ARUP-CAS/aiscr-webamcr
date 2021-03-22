@@ -1,10 +1,10 @@
 // --- GLOBAL ---
 
 // colors
-.app-color-success {color: $success;}
-.app-color-info {color: $info;}
-.app-color-warning {color: $warning;}
-.app-color-danger {color: $danger;}
+.app-color-success {color: $success !important;}
+.app-color-info {color: $info !important;}
+.app-color-warning {color: $warning !important;}
+.app-color-danger {color: $danger !important;}
 
 .app-color- {color: $warning;}
 
@@ -103,6 +103,7 @@ table {
 
   .material-icons {
     @include setIcon($position: bottom);
+    color: initial;
   }
 }
 
