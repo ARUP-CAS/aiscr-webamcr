@@ -90,7 +90,17 @@
           }
         }
       }
-    } 
+    } @else if ($type == stepper) {
+      &.app-entity-#{$entity} {
+        .bs-stepper-circle {
+          background-color: $color;
+        }
+
+        .bs-stepper-label {
+          color: $color;
+        }
+      } 
+    }
   }
 }
 
