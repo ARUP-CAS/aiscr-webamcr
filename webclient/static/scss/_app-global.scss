@@ -1,5 +1,13 @@
 // --- GLOBAL ---
 
+// colors
+.app-color-success {color: $success;}
+.app-color-info {color: $info;}
+.app-color-warning {color: $warning;}
+.app-color-danger {color: $danger;}
+
+.app-color- {color: $warning;}
+
 // cleaners
 .app-clean-bg {
   background-color: transparent !important;
@@ -81,6 +89,20 @@
   &:focus {
     box-shadow: none !important;
     outline: none !important;
+  }
+}
+
+table {
+  font-size: $font-size-sm;
+
+  tr {
+    th {
+      vertical-align: top;
+    }
+  }
+
+  .material-icons {
+    @include setIcon($position: bottom);
   }
 }
 

@@ -387,16 +387,16 @@
     </div>
     <div class="card-body">
       {% if soubory %}
-      <table class="table">
+      <table class="table table-striped table-hover table-sm mb-0">
         <thead>
-        <tr>
-          <th scope="col">Název</th>
-          <th scope="col">Typ</th>
-          <th scope="col">Velikost</th>
-          <th scope="col">Datum vytvoření</th>
-          <th scope="col">Smazat</th>
-          <th scope="col">Stáhnout</th>
-        </tr>
+          <tr>
+            <th scope="col">{% trans "Název" %}</th>
+            <th scope="col">{% trans "Typ" %}</th>
+            <th scope="col">{% trans "Velikost" %}</th>
+            <th scope="col">{% trans "Datum vytvoření" %}</th>
+            <th scope="col">{% trans "Smazat" %}</th>
+            <th scope="col">{% trans "Stáhnout" %}</th>
+          </tr>
         </thead>
         <tbody>
         {% for soubor in soubory %}
@@ -405,14 +405,23 @@
             <td>{{ soubor.mimetype }}</td>
             <td>{{ soubor.size_bytes }}</td>
             <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
-            <td><a href="{% url 'projekt:delete_file' soubor.id %}">Smazat</a></td>
-            <td><a href="{% url 'projekt:download_file' soubor.id %}">Stáhnout</a></td>
-
+            <td>
+              <a href="{% url 'projekt:delete_file' soubor.id %}" class="app-color-danger">
+                <span class="material-icons">delete_forever</span>
+              </a>
+            </td>
+            <td>
+              <a href="{% url 'projekt:download_file' soubor.id %}">
+                <span class="material-icons">get_app</span>
+              </a>
+            </td>
           </tr>
         {% endfor %}
       </table>
       {% else %}
-        {% trans "Projekt zatím neobsahuje žádnou projektovou dokumentaci." %}
+        <div class="app-color-info text-center mt-3">
+          {% trans "Projekt zatím neobsahuje žádnou projektovou dokumentaci." %}
+        </div>
       {% endif %}
     </div>
   </div>
@@ -431,7 +440,37 @@
       </div>
     </div>
     <div class="card-body">
-      {% for a in akce %}
+      <table class="table table-striped table-hover table-sm mb-0">
+        <thead>
+          <tr>
+            <th>{% trans "Ident cely" %}</th>
+            <th>{% trans "Přístupnost" %}</th>
+            <th>{% trans "Katastry" %}</th>
+            <th>{% trans "Vedoucí" %}</th>
+            <th>{% trans "Datum" %}</th>
+            <th>{% trans "Typ" %}</th>
+            <th>{% trans "Uživatelské označení" %}</th>
+            <th>{% trans "Stav" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in akce %}
+            <tr>
+              <td> <a href="{% url 'arch_z:detail' a.archeologicky_zaznam.ident_cely %}">{{ a.archeologicky_zaznam.ident_cely }}</a></td>
+              <td>{{ a.archeologicky_zaznam.pristupnost }}</td>
+              <td>{{ a.archeologicky_zaznam.katasty }}</td>
+              <td>{{ a.vedouci }}</td>
+              <td>{{ a.datum_zahajeni|date:'Y/m/d' }} - {{ a.datum_ukonceni|date:'Y/m/d' }}</td>
+              <td>{{ a.hlavni_typ }}, {{ a.vedlejsi_typ }}</td>
+              <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</td>
+              <td>{{ a.archeologicky_zaznam.get_stav_display }}</td>
+            </tr>
+            {% empty %}
+            {% trans "Projekt zatím neobsahuje žádné projektové akce." %}
+          {% endfor %}
+        </tbody>
+      </table>
+      <!-- {% for a in akce %}
         <div class="row">
           <div class="col">
             <a href="{% url 'arch_z:detail' a.archeologicky_zaznam.ident_cely %}">
@@ -460,9 +499,9 @@
         </div>
       {% empty %}
         {% trans "Projekt zatím neobsahuje žádné projektové akce." %}
-      {% endfor %}
+      {% endfor %} -->
     </div>
-    <div class="container">
+    <!-- <div class="container">
         <style>
             #projectMap {
                 width: 100%;
@@ -482,7 +521,7 @@
             }
         </script>
 
-    </div>
+    </div> -->
   </div>
 
 {% endblock %}
