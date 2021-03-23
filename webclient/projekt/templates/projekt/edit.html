@@ -29,22 +29,16 @@
 
 {% block content %}
 	<!-- <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1> -->
-
-	<!--<form method="post">-->
-	{% crispy form_projekt %}
-
-	<div class="container">
-		<style>
-			#projectMap {
+  <style>
+      #projectMap {
 				width: 100%;
 				height: 473px;
 				border-radius: 5px;
 			}
-		</style>
-		<div id="projectMap"></div>
-	</div>
-	<!--<input type="submit" name="save" value="{% translate 'Ulož' %}" class="btn btn-primary" id="submit-id-save">
-			</form>-->
+  </style>
+
+	{% crispy form_projekt %}
+
 {% endblock %}
 
 

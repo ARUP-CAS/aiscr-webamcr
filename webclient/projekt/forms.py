@@ -81,40 +81,52 @@ class EditProjektForm(forms.ModelForm):
                 ),
                 Div(
                     Div(
-                        Div("typ_projektu", css_class="col-sm-3"),
-                        Div("hlavni_katastr", css_class="col-sm-3"),
-                        Div("katastry", css_class="col-sm-3"),
-                        Div("planovane_zahajeni", css_class="col-sm-3"),
+                        Div(
+                            Div(
+                                Div("typ_projektu", css_class="col-sm-3"),
+                                Div("hlavni_katastr", css_class="col-sm-3"),
+                                Div("katastry", css_class="col-sm-3"),
+                                Div("planovane_zahajeni", css_class="col-sm-3"),
+                                css_class="row",
+                            ),
+                            Div(
+                                Div("podnet", css_class="col-sm-3"),
+                                Div("lokalizace", css_class="col-sm-3"),
+                                Div("parcelni_cislo", css_class="col-sm-3"),
+                                Div("oznaceni_stavby", css_class="col-sm-3"),
+                                css_class="row",
+                            ),
+                            Div(
+                                # Div("latitude", css_class="col-sm-6,"),
+                                # Div("longitude", css_class="col-sm-6"),
+                                Div("latitude", css_class="hidden"),
+                                Div("longitude", css_class="hidden"),
+                                css_class="row",
+                            ),
+                            Div(
+                                Div("datum_zahajeni", css_class="col-sm-3"),
+                                Div("datum_ukonceni", css_class="col-sm-3"),
+                                Div("organizace", css_class="col-sm-3"),
+                                Div("kulturni_pamatka", css_class="col-sm-3"),
+                                css_class="row",
+                            ),
+                            Div(
+                                Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
+                                Div("kulturni_pamatka_popis", css_class="col-sm-3"),
+                                css_class="row",
+                            ),
+                            Div(
+                                FormActions(
+                                    Submit("save", "Upravit"),
+                                )
+                            ),
+                            css_class="col-sm-9",
+                        ),
+                        Div(
+                            Div(id="projectMap"),
+                            css_class="col-sm-3",
+                        ),
                         css_class="row",
-                    ),
-                    #"planovane_zahajeni",
-                    "podnet",
-                    "lokalizace",
-                    "parcelni_cislo",
-                    "oznaceni_stavby",
-                    Div(
-                        # Div("latitude", css_class="col-sm-6,"),
-                        # Div("longitude", css_class="col-sm-6"),
-                        Div("latitude", css_class="hidden"),
-                        Div("longitude", css_class="hidden"),
-                        css_class="row",
-                    ),
-                    Div(
-                        Div("datum_zahajeni", css_class="col-sm-6"),
-                        Div("datum_ukonceni", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    Div(
-                        Div("organizace", css_class="col-sm-6"),
-                        Div("kulturni_pamatka", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    "kulturni_pamatka_cislo",
-                    "kulturni_pamatka_popis",
-                    Div(
-                        FormActions(
-                            Submit("save", "Upravit"),
-                        )
                     ),
                     css_class="card-body",
                 ),
