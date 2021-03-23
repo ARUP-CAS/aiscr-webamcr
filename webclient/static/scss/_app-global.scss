@@ -127,9 +127,11 @@ table {
 
 // bootstrap rewrite
 .form-control {
-  /* height: $app-form-control-height;
-  line-height: $app-form-control-line-height; */
   @extend .form-control-sm;
+
+  &.app-ellipsis {
+    text-overflow: ellipsis;
+  }
 }
 
 .form-group {
@@ -139,6 +141,18 @@ table {
     font-weight: bold;
     font-size: 0.875rem;
     margin-bottom: $app-form-label-mg-bottom;
+  }
+
+  .input-group-append {
+    cursor: pointer;
+
+    .input-group-text {
+      @extend .pt-0, .pb-0, .pl-1, .pr-1;
+
+      .material-icons {
+        @include setIcon(18);
+      }
+    }
   }
 }
 
@@ -203,9 +217,7 @@ table {
       }
 
       #projectMap {
-        @extend .w-100, .rounded;
-        height: 300px;
-        //height: 473px;
+        @extend .w-100, .rounded, .h-100;
       }
     }
   }
