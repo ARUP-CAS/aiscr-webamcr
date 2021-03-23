@@ -20,8 +20,10 @@
   width: $app-sidebar-width;
 
   .app-sidebar-heading {
+    @extend .d-flex, .align-items-center;
     padding: 0.875rem 1.25rem;
     font-size: 1.2rem;
+    height: calc((#{$app-toolbar-height} + #{$app-navbar-height}) - 1px);
 
     img {
       max-height: $app-logo-sidebar-height;

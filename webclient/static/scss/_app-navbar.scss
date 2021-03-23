@@ -2,6 +2,7 @@
 
 .navbar {
   @extend .app-clean-bg, .app-clean-border;
+  max-height: $app-navbar-height;
 
   #sidebar-toggle {
     .material-icons {
