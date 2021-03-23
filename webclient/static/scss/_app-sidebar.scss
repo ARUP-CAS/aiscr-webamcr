@@ -20,8 +20,10 @@
   width: $app-sidebar-width;
 
   .app-sidebar-heading {
+    @extend .d-flex, .align-items-center;
     padding: 0.875rem 1.25rem;
     font-size: 1.2rem;
+    height: calc((#{$app-toolbar-height} + #{$app-navbar-height}) - 1px);
 
     img {
       max-height: $app-logo-sidebar-height;
@@ -30,8 +32,12 @@
 
   // accordion
   .card {
-    @extend .app-clean-bg, .app-clean-border;
+    @extend .bg-transparent, .border-0, .rounded-0;
     border-top: 1px solid $app-sidebar-accordion-border-color !important;
+
+    .card-header {
+      @extend .bg-transparent;
+    }
 
     .btn-link {
       color: $app-sidebar-accordion-color-active;
@@ -130,7 +136,7 @@ html, body, #app-wrapper {
 }
 
 #app-page-wrapper {
-  display: flex;
+  @extend .d-flex;
   flex-direction: column;
 
   .container-fluid {

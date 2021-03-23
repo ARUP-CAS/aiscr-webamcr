@@ -1,9 +1,9 @@
 // --- GLOBAL ---
 
 // hidde during development
-//#djDebug #djShowToolBarButton {
-//  display: none;
-//}
+/* #djDebug #djShowToolBarButton {
+  display: none;
+} */
 
 // colors
 .app-color-success {color: $success !important;}
@@ -11,32 +11,7 @@
 .app-color-warning {color: $warning !important;}
 .app-color-danger {color: $danger !important;}
 
-// cleaners
-.app-clean-bg {
-  background-color: transparent !important;
-}
-
-.app-clean-border {
-  border: none !important;
-}
-
-.app-clean-radius {
-  border-radius: 0 !important;
-}
-
-.app-clean-mg {
-  margin: 0 !important;
-}
-
-.app-clean-pd {
-  padding: 0 !important;
-}
-
 // common
-.app-full-width {
-  width: 100%;
-}
-
 .app-row-gap {
   margin-bottom: $app-gap;
 }
@@ -99,8 +74,19 @@ table {
   font-size: $font-size-sm;
 
   tr {
+    // set behavior of the elements in entity table row
+    @include setEntityColor(tableRow);
+
     th {
       vertical-align: top;
+    }
+
+    td {
+      &.app-ident {
+        .material-icons {
+          @include setIcon(18);
+        }
+      }
     }
   }
 
@@ -163,7 +149,7 @@ table {
     margin-bottom: $app-gap;
 
     .card-header {
-      display: flex;
+      @extend .d-flex;
       width: 100%;
       padding: 0 0 0 1.25rem;
       font-weight: 300;

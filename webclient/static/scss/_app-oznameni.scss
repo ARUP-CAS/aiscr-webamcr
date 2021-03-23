@@ -12,10 +12,7 @@
       }
 
       .app-right {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-end;
+        @extend .d-flex, .justify-content-end, .align-items-center;
 
         a {
           &:first-child {
@@ -51,7 +48,7 @@
       .collapse {
         p {
           &:last-child {
-            @extend .app-clean-mg;
+            @extend .m-0;
           }
         }
       }
@@ -67,14 +64,14 @@
 
     form {
       &.dropzone {
+        @extend .d-flex;
         border-radius: $border-radius;
         border: 1px solid $gray-400;
         background-color: $gray-100;
         min-height: 180px;
-        display: flex;
 
         .dz-message {
-          @extend .app-clean-mg;
+          @extend .m-0;
           flex: 1;
           align-self: center;
         }
