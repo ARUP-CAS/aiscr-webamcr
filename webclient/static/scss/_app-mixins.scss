@@ -98,13 +98,15 @@
 
         .app-left {
           .app-entity-title {
-            &:first-child {
-              background-color: $color;
-    
-              &:after {
-                border-left-color: $color;
-              }
+            background-color: $color;
+  
+            &:after {
+              border-left-color: $color;
             }
+          }
+
+          .app-entity-item {
+            color: $color;
           }
         }
 

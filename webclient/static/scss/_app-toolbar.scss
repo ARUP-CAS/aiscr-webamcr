@@ -10,41 +10,44 @@
     @extend .flex-grow-1, .d-flex;
 
     .app-entity-title {
-      @extend .d-flex, .align-items-center;
+      @extend .d-flex, .align-items-center, .mr-5;
       list-style: none;
       box-sizing: border-box;
       background-color: $white;
       position: relative;
-
-      &:first-child {
-        color: $white;
-        position: relative;
-        padding: 0 $app-gap;
-        
-        &:after {
-          content: "";
-          display: block;
-          position: absolute;
-          top: 0;
-          right: calc(-#{$app-toolbar-height} / 2);
-          width: 0;
-          height: 0;
-          border-top: calc(#{$app-toolbar-height} / 2) solid transparent;
-          border-left: calc(#{$app-toolbar-height} / 2) solid;
-          border-bottom: calc(#{$app-toolbar-height} / 2) solid transparent;
-        }
-
-        .material-icons {
-          @include setIcon($position: text-bottom);
-          @extend .mr-1;
-        }
+      color: $white;
+      position: relative;
+      padding: 0 $app-gap;
+      
+      &:after {
+        content: "";
+        display: block;
+        position: absolute;
+        top: 0;
+        right: calc(-#{$app-toolbar-height} / 2);
+        width: 0;
+        height: 0;
+        border-top: calc(#{$app-toolbar-height} / 2) solid transparent;
+        border-left: calc(#{$app-toolbar-height} / 2) solid;
+        border-bottom: calc(#{$app-toolbar-height} / 2) solid transparent;
       }
+
+      .material-icons {
+        @include setIcon($position: text-bottom);
+        @extend .mr-1;
+      }
+
 
       a {
         font-size: 20px;
         font-weight: 500;
         color: $white;
       }
+    }
+
+    .app-entity-item {
+      @extend .align-self-center;
+      font-weight: 600;
     }
   }
 
