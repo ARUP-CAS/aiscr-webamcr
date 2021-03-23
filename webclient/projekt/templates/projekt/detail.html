@@ -63,7 +63,7 @@
           <span class="bs-stepper-circle">4</span>
           <span class="bs-stepper-label">
             {% trans "Zahájen v terénu" %}
-            <span class="app-stepper-date" data-toggle="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">
               {{ history_dates.datum_zahajeni_v_terenu|date:'Y/m/d'|default_if_none:"" }}
             </span>
           </span>
@@ -75,7 +75,7 @@
           <span class="bs-stepper-circle">5</span>
           <span class="bs-stepper-label">
             {% trans "Ukončen v terénu" %}
-            <span class="app-stepper-date">{{ history_dates.datum_ukonceni_v_terenu|date:'Y/m/d'|default_if_none:"" }}</span>
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">{{ history_dates.datum_ukonceni_v_terenu|date:'Y/m/d'|default_if_none:"" }}</span>
           </span>
         </button>
       </div>
@@ -129,95 +129,112 @@
     </div>
     <div class="card-body">
       <div class="row">
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Typ projektu" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.typ_projektu }}" readonly>
+        <div class="col-sm-9">
+          <div class="row">
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Typ projektu" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.typ_projektu }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Hlavní katastr" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.hlavni_katastr }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Katastry" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.katastry }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Plánované zahájení prací" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.planovane_zahajeni }}" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Podnět" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.podnet }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.lokalizace }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Parcelní číslo" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.parcelni_cislo }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Označení stavby" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.uzivatelske_oznaceni }}" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.datum_zahajeni|date:'Y/m/d' }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y/m/d' }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Organizace" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.organizace}}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.pamatkova_ochrana }}" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Rejstříkové číslo USKP" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_cislo }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Název památky" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.nazev_pamatky }}" readonly>
+              </div>
+            </div>
           </div>
         </div>
         <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Hlavní katastr" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.hlavni_katastr }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Katastry" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.katastry }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Plánované zahájení prací" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.planovane_zahajeni }}" readonly>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Podnět" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.podnet }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.lokalizace }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Parcelní číslo" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.parcelni_cislo }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Označení stavby" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.uzivatelske_oznaceni }}" readonly>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.datum_zahajeni|date:'Y/m/d' }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y/m/d' }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Organizace" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.organizace}}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.pamatkova_ochrana }}" readonly>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Rejstříkové číslo USKP" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_cislo }}" readonly>
-          </div>
-        </div>
-        <div class="col-sm-3">
-          <div class="form-group">
-            <label for="formGroupExampleInput">{% trans "Název památky" %}</label>
-            <input class="form-control" type="text" placeholder="{{ projekt.nazev_pamatky }}" readonly>
-          </div>
+          <div id="projectMap"></div>
+          <script src="{% static 'mapa.js' %}"></script>
+          <script>
+              global_map_can_edit=false;
+              button_map_lock.disable();
+              let coordinates='{{ projekt.geom.coords}}'.slice(1, -1).split(',');
+              console.log(coordinates)
+              if(coordinates && coordinates.length>1){
+                addPointOnLoad(coordinates[1],coordinates[0],"Uživatelem zadaná poloha záměru");
+              }
+          </script> 
         </div>
       </div>
     </div>

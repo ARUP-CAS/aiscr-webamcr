@@ -201,6 +201,12 @@ table {
           @include setIcon($position: bottom);
         }
       }
+
+      #projectMap {
+        @extend .w-100, .rounded;
+        height: 300px;
+        //height: 473px;
+      }
     }
   }
 }
