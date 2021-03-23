@@ -119,3 +119,14 @@ class HistorieVazby(models.Model):
 
     def __str__(self):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
+
+    def get_last_transaction_date(self, transaction_type):
+        resp = None
+        tranzakce_list = (
+            self.historie_set.filter(typ_zmeny=transaction_type)
+            .only("datum_zmeny")
+            .order_by("datum_zmeny")
+        )
+        if len(tranzakce_list) > 0:
+            resp = tranzakce_list[0].datum_zmeny
+        return resp

@@ -6,7 +6,10 @@ from datetime import datetime
 import simplejson as json
 from arch_z.models import Akce
 from core.constants import (
+    ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
+    OZNAMENI_PROJ,
+    PRIHLASENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     PROJEKT_STAV_OZNAMENY,
@@ -16,6 +19,10 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    SCHVALENI_OZNAMENI_PROJ,
+    UKONCENI_V_TERENU_PROJ,
+    UZAVRENI_PROJ,
+    ZAHAJENI_V_TERENU_PROJ,
 )
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
@@ -85,6 +92,7 @@ def detail(request, ident_cely):
     context["oznamovatel"] = oznamovatel
     context["akce"] = akce
     context["soubory"] = soubory
+    context["history_dates"] = get_history_dates(projekt.historie)
     context["show"] = get_detail_template_shows(projekt)
 
     return render(request, "projekt/detail.html", context)
@@ -490,6 +498,26 @@ def download_file(request, pk):
             "File " + str(soubor.nazev) + " does not exists at location " + str(path)
         )
     raise Http404
+
+
+def get_history_dates(historie_vazby):
+
+    historie = {
+        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(
+            SCHVALENI_OZNAMENI_PROJ
+        ),
+        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
+        "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
+            ZAHAJENI_V_TERENU_PROJ
+        ),
+        "datum_ukonceni_v_terenu": historie_vazby.get_last_transaction_date(
+            UKONCENI_V_TERENU_PROJ
+        ),
+        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ),
+    }
+    return historie
 
 
 def get_detail_template_shows(projekt):
