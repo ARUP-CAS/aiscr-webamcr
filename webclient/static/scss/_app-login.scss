@@ -9,7 +9,7 @@
   padding: $app-login-gap $app-gap;
 
   .app-login-wrapper {
-    display: flex;
+    @extend .d-flex;
     flex-direction: column;
     min-height: calc(100vh - (#{$app-login-gap} * 2));
     justify-content: center;
@@ -20,7 +20,7 @@
     }
   
     .card {
-      @extend .app-clean-border;
+      @extend .border-0;
       text-align: center;
   
       form {
@@ -68,7 +68,7 @@
         }
   
         .card {
-          @extend .app-clean-bg, .app-full-width;
+          @extend .bg-transparent, .w-100;
           color: $app-login-desc-color;
           text-align: left;
   
@@ -78,7 +78,7 @@
           }
   
           .card-body {
-            @extend .app-clean-pd;
+            @extend .p-0;
             padding-right: $app-gap !important;
   
             h3 {

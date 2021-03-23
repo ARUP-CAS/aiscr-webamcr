@@ -1,7 +1,7 @@
 // --- NAVBAR ---
 
 .navbar {
-  @extend .app-clean-bg, .app-clean-border;
+  @extend .bg-transparent, .border-0, .rounded-0;
   max-height: $app-navbar-height;
 
   #sidebar-toggle {

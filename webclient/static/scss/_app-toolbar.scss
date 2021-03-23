@@ -59,7 +59,7 @@
         @extend .d-flex;
 
         .btn {
-          @extend .d-flex, .app-clean-radius, .pl-3, .pr-3;
+          @extend .d-flex, .rounded-0, .pl-3, .pr-3;
           border: 0;
           align-items: center;
           border-left: 1px solid;

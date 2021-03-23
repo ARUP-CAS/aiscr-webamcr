@@ -32,8 +32,12 @@
 
   // accordion
   .card {
-    @extend .app-clean-bg, .app-clean-border;
+    @extend .bg-transparent, .border-0, .rounded-0;
     border-top: 1px solid $app-sidebar-accordion-border-color !important;
+
+    .card-header {
+      @extend .bg-transparent;
+    }
 
     .btn-link {
       color: $app-sidebar-accordion-color-active;
@@ -132,7 +136,7 @@ html, body, #app-wrapper {
 }
 
 #app-page-wrapper {
-  display: flex;
+  @extend .d-flex;
   flex-direction: column;
 
   .container-fluid {

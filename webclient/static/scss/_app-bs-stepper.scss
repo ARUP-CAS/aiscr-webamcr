@@ -18,7 +18,7 @@
         cursor: unset;
     
         &:hover {
-          @extend .app-clean-bg;
+          @extend .bg-transparent;
         }
     
         &:focus {

@@ -11,32 +11,7 @@
 .app-color-warning {color: $warning !important;}
 .app-color-danger {color: $danger !important;}
 
-// cleaners
-.app-clean-bg {
-  background-color: transparent !important;
-}
-
-.app-clean-border {
-  border: none !important;
-}
-
-.app-clean-radius {
-  border-radius: 0 !important;
-}
-
-.app-clean-mg {
-  margin: 0 !important;
-}
-
-.app-clean-pd {
-  padding: 0 !important;
-}
-
 // common
-.app-full-width {
-  width: 100%;
-}
-
 .app-row-gap {
   margin-bottom: $app-gap;
 }
@@ -163,7 +138,7 @@ table {
     margin-bottom: $app-gap;
 
     .card-header {
-      display: flex;
+      @extend .d-flex;
       width: 100%;
       padding: 0 0 0 1.25rem;
       font-weight: 300;
