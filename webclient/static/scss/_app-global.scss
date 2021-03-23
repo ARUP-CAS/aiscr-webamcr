@@ -1,9 +1,9 @@
 // --- GLOBAL ---
 
 // hidde during development
-#djDebug #djShowToolBarButton {
-  display: none;
-}
+//#djDebug #djShowToolBarButton {
+//  display: none;
+//}
 
 // colors
 .app-color-success {color: $success !important;}
@@ -202,8 +202,8 @@ table {
               border-top-right-radius: $btn-border-radius;
             }
           }
-        }             
-      }          
+        }
+      }
     }
 
     .card-body {
@@ -216,5 +216,5 @@ table {
         }
       }
     }
-  }  
-} 
+  }
+}
