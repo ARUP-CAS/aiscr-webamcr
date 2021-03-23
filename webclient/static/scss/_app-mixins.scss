@@ -122,6 +122,23 @@
           }
         }
       } 
+    } @else if ($type == tableRow) {
+      &.app-entity-#{$entity} {
+        td {
+          a {
+            color: $color !important;
+
+            .material-icons {
+              color: $color;
+            }
+          }
+
+          .badge {
+            background-color: $color;
+            color: $white;
+          }
+        }
+      } 
     }
   }
 }

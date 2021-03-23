@@ -74,8 +74,19 @@ table {
   font-size: $font-size-sm;
 
   tr {
+    // set behavior of the elements in entity table row
+    @include setEntityColor(tableRow);
+
     th {
       vertical-align: top;
+    }
+
+    td {
+      &.app-ident {
+        .material-icons {
+          @include setIcon(18);
+        }
+      }
     }
   }
 
