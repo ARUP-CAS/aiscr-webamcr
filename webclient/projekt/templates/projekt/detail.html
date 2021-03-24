@@ -194,7 +194,20 @@
                 <input class="form-control" type="text" placeholder="{{ projekt.organizace}}" readonly>
               </div>
             </div>
-            <div class="col-sm-4">
+
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <div class="form-group">
+                <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
+                <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
+              </div>
+            </div>
+           <!--  <div class="col-sm-4">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Datum zahájení / ukončení výzkumu" %}</label>
                 <div class="d-flex">
@@ -202,14 +215,14 @@
                   <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
                 </div>
               </div>
-            </div>
-            <div class="col-sm-4">
+            </div> -->
+            <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>
                 <input class="form-control" type="text" placeholder="{{ projekt.pamatkova_ochrana }}" readonly>
               </div>
             </div>
-            <div class="col-sm-4">
+            <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Rejstříkové číslo USKP" %}</label>
                 <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_cislo }}" readonly>

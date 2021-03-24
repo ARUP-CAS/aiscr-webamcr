@@ -39,6 +39,7 @@ body {
   .container-fluid {
 
     &.app-content-wrapper {
+      //@extend .p-3;
       padding: $app-content-wrapper;
       //background-color: $gray-100;
     }

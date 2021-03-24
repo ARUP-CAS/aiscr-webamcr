@@ -70,6 +70,10 @@
   }
 }
 
+.btn {
+  @include setEntityColor(button);
+}
+
 table {
   font-size: $font-size-sm;
 
@@ -95,6 +99,7 @@ table {
     color: initial;
   }
 }
+
 
 // select form control fix
 .select2-container {

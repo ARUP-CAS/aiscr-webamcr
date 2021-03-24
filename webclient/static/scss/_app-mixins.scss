@@ -80,6 +80,16 @@
           color: $white;
         }
       }    
+    } @else if ($type == button) {
+      &.app-entity-#{$entity}-btn {
+        @extend .border-0;
+        background-color: $color;
+        color: $white;
+
+        &:hover {
+          background-color: darken($color, 10);
+        }
+      }    
     } @else if ($type == stepper) {
       &.app-entity-#{$entity} {
         .bs-stepper-circle {

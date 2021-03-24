@@ -6,49 +6,41 @@
 {% block title %}{% trans "Editace projektu" %}{% endblock %}
 
 {% block head %}
-    <script>
-        var global_csrftoken = '{{ csrf_token }}';
-        global_map_can_edit=false;
-    </script>
-     <!-- Map imports -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-            crossorigin="">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+	<script>
+		var global_csrftoken = '{{ csrf_token }}';
+		global_map_can_edit=false;
+	</script>
+		<!-- Map imports -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+		integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+		crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+		integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+		crossorigin="">
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
-    <!-- Date picker imports -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+	<!-- Date picker imports -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
 {% endblock %}
 
 {% block content %}
 	<!-- <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1> -->
-  <style>
-      #projectMap {
-				width: 100%;
-				height: 473px;
-				border-radius: 5px;
-			}
-  </style>
-
+	{% include "toolbar.html" with pagestyle="projekt" header="Projekt" %}
 	{% crispy form_projekt %}
-
 {% endblock %}
 
 
 {% block script %}
 <script src="{% static 'mapa.js' %}"></script>
 <script>
-    global_map_can_edit=true;
-    if(document.getElementById("id_latitude").value>1){
-        addPointOnLoad(document.getElementById("id_latitude").value,document.getElementById("id_longitude").value,"Uživatelem zadaná poloha záměru");
-    }
+	global_map_can_edit=true;
+	if(document.getElementById("id_latitude").value>1){
+			addPointOnLoad(document.getElementById("id_latitude").value,document.getElementById("id_longitude").value,"Uživatelem zadaná poloha záměru");
+	}
 </script>
 <script src="{% static 'daterangepicker.js' %}"></script>
 {% endblock %}

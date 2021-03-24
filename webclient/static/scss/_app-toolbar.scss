@@ -4,7 +4,7 @@
   @include setEntityColor(toolbar);
   @extend .d-flex, .pr-3;
   height: $app-toolbar-height;
-  margin: -#{$app-gap} -#{$app-gap} 0 -#{$app-gap};
+  margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
 
   .app-left {
     @extend .flex-grow-1, .d-flex;

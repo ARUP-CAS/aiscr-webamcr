@@ -76,7 +76,10 @@ class EditProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Editace projektu")),
+                    Div(
+                        HTML(_("Editace projektu")),
+                        css_class="app-fx app-left", 
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -87,38 +90,22 @@ class EditProjektForm(forms.ModelForm):
                                 Div("hlavni_katastr", css_class="col-sm-3"),
                                 Div("katastry", css_class="col-sm-3"),
                                 Div("planovane_zahajeni", css_class="col-sm-3"),
-                                css_class="row",
-                            ),
-                            Div(
-                                Div("podnet", css_class="col-sm-3"),
-                                Div("lokalizace", css_class="col-sm-3"),
-                                Div("parcelni_cislo", css_class="col-sm-3"),
+                                Div("podnet", css_class="col-sm-12"),
+                                Div("lokalizace", css_class="col-sm-12"),
+                                Div("parcelni_cislo", css_class="col-sm-6"),
                                 Div("oznaceni_stavby", css_class="col-sm-3"),
-                                css_class="row",
-                            ),
-                            Div(
-                                # Div("latitude", css_class="col-sm-6,"),
-                                # Div("longitude", css_class="col-sm-6"),
+                                Div("organizace", css_class="col-sm-3"),
                                 Div("latitude", css_class="hidden"),
                                 Div("longitude", css_class="hidden"),
-                                css_class="row",
-                            ),
-                            Div(
                                 Div("datum_zahajeni", css_class="col-sm-3"),
                                 Div("datum_ukonceni", css_class="col-sm-3"),
-                                Div("organizace", css_class="col-sm-3"),
                                 Div("kulturni_pamatka", css_class="col-sm-3"),
-                                css_class="row",
-                            ),
-                            Div(
                                 Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
-                                Div("kulturni_pamatka_popis", css_class="col-sm-3"),
-                                css_class="row",
+                                Div("kulturni_pamatka_popis", css_class="col-sm-6"),
+                                css_class="row",  
                             ),
-                            Div(
-                                FormActions(
-                                    Submit("save", "Upravit"),
-                                )
+                            FormActions(
+                                Submit("save", "Upravit", css_class="app-entity-projekt-btn"),
                             ),
                             css_class="col-sm-9",
                         ),
@@ -130,7 +117,7 @@ class EditProjektForm(forms.ModelForm):
                     ),
                     css_class="card-body",
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
 
