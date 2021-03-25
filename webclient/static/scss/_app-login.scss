@@ -6,17 +6,16 @@
   background-repeat: no-repeat;
   background-size: 700px;
   background-position: center 50px;
-  padding: $app-login-gap $app-gap;
 
   .app-login-wrapper {
     @extend .d-flex;
     flex-direction: column;
-    min-height: calc(100vh - (#{$app-login-gap} * 2));
+    min-height: calc(100vh - (#{$spacer-4} * 2));
     justify-content: center;
   
     .app-logo {
+      @extend .mb-4;
       width: 100%;
-      margin-bottom: $app-gap-double;
     }
   
     .card {
@@ -59,7 +58,7 @@
         @media #{$gt-md} {
           height: 100%;
           border-left: 1px solid $app-login-border-color;
-          padding: $app-gap $app-gap-double;
+          padding: $spacer-3 $spacer-4;
           margin-top: 0;
         }
   
@@ -78,8 +77,7 @@
           }
   
           .card-body {
-            @extend .p-0;
-            padding-right: $app-gap !important;
+            @extend .p-0, .pr-3;
   
             h3 {
               @extend .app-heading-thin;

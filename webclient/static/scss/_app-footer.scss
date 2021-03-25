@@ -5,8 +5,8 @@ footer {
 
   .app-logos {
     img {
+      @extend .mr-4, .mb-4;
       max-height: 40px;
-      margin: 0 $app-gap-double $app-gap-double 0;
     }
   }
  

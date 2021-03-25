@@ -4,7 +4,7 @@
   @include setEntityColor(toolbar);
   @extend .d-flex, .pr-3;
   height: $app-toolbar-height;
-  margin: -#{$app-gap} -#{$app-gap} #{$app-gap} -#{$app-gap};
+  margin: -#{$spacer-3} -#{$spacer-3} #{$spacer-3} -#{$spacer-3};
 
   .app-left {
     @extend .flex-grow-1, .d-flex;
@@ -17,7 +17,7 @@
       position: relative;
       color: $white;
       position: relative;
-      padding: 0 $app-gap;
+      padding: 0 $spacer-3;
       
       &:after {
         content: "";

@@ -7,7 +7,7 @@ body {
 
   &.app-login,
   &.app-oznameni {
-    padding: $app-login-gap $app-gap;
+    padding: $spacer-4 $spacer-3;
 
     #app-page-wrapper {
       min-width: auto;
@@ -39,8 +39,7 @@ body {
   .container-fluid {
 
     &.app-content-wrapper {
-      //@extend .p-3;
-      padding: $app-content-wrapper;
+      @extend .p-3;
       //background-color: $gray-100;
     }
   }

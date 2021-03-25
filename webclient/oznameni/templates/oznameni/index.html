@@ -56,12 +56,12 @@
   </div>
 
   <form method="post">
-    <div class="row app-row-gap-double">
+    <div class="row mb-4">
       <div class="col-sm-12">
         {% crispy form_oznamovatel %}
       </div>
     </div>
-    <div class="row app-row-gap-double">
+    <div class="row mb-4">
       <div class="col-sm-6">
         {% crispy form_projekt %}
       </div>
@@ -70,7 +70,7 @@
         {% include "map.html" %}
       </div>
     </div>
-    <div class="row app-row-gap-double app-footer">
+    <div class="row mb-4 app-footer">
       <div class="col-sm-9">
         <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#precistPodminky">
           {% trans "Přečíst podmínky" %} <span class="material-icons">info</span>

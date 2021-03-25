@@ -12,25 +12,13 @@
 .app-color-danger {color: $danger !important;}
 
 // common
-.app-row-gap {
-  margin-bottom: $app-gap;
-}
-
-.app-row-gap-half {
-  margin-bottom: $app-gap-half;
-}
-
-.app-row-gap-double {
-  margin-bottom: $app-gap-double;
-}
-
 .app-heading-thin {
   font-weight: 200 !important;
 }
 
 .app-pipe {
   border-left: 1px solid $gray-500;
-  margin: 0 $app-gap-half;
+  margin: 0 $spacer-2;
 }
 
 .app-flag {
@@ -188,8 +176,8 @@ table {
 
 .card {
   &.app-card-form {
+    @extend .mb-3;
     //@extend .shadow;
-    margin-bottom: $app-gap;
 
     .card-header {
       @extend .d-flex;

@@ -39,7 +39,7 @@
     </div>
   </div>
 
-  <table class="table table-sm table-striped table-hover app-row-gap-double">
+  <table class="table table-sm table-striped table-hover mb-4">
     <tbody>
       <tr>
         <th scope="row">{% trans "Projekt" %}:</th>
@@ -96,7 +96,7 @@
     </tbody>
   </table>
 
-  <form action="{% url 'oznameni:post_upload' %}" class="dropzone app-row-gap-double" id="my-awesome-dropzone" enctype="multipart/form-data">
+  <form action="{% url 'oznameni:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
       <input name="file" type="file" multiple/>

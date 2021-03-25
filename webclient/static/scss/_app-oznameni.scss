@@ -3,7 +3,7 @@
 &.app-oznameni {
   .container-fluid {
     .app-header {
-      margin-bottom: $app-gap-double;
+      @extend .mb-4;
 
       .app-left {
         img {
@@ -16,7 +16,7 @@
 
         a {
           &:first-child {
-            margin-right: $app-gap-double;
+            @extend .mr-4;
 
             &:not(:hover) {
               img {
@@ -39,7 +39,7 @@
     }
 
     .jumbotron {
-      padding: $app-gap-double;
+      @extend .p-4;
 
       h1 {
         @extend .app-heading-thin;
@@ -80,8 +80,8 @@
 
     .app-footer {
       .form-check {
+        @extend .ml-3;
         display: inline-block;
-        margin-left: $app-gap;
       }
 
       .app-captcha {
