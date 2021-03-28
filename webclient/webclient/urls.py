@@ -22,6 +22,7 @@ urlpatterns = [
     path("", include("core.urls")),
     path("heslar/", include("heslar.urls")),
     path("oznameni/", include("oznameni.urls")),
+    path("pian/", include("pian.urls")),
     path("projekt/", include("projekt.urls")),
     path("arch_z/", include("arch_z.urls")),
     path("uzivatel/", include("uzivatel.urls")),
