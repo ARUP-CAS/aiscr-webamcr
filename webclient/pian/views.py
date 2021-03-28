@@ -12,4 +12,4 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request):
     context = {}
-    return render(request, "pian/detail.html", context)
+    return render(request, "detail.html", context)

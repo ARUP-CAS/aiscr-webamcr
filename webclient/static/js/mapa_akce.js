@@ -336,7 +336,7 @@ var getOtherPoi= ()=>{
         &&
         map.getBounds().getSouth()< point[0] &&  point[0]< map.getBounds().getNorth()
         ){ 
-            pp.push(point[0])
+//            pp.push(point[0])
             if(point.length>2){
                 L.marker([point[0],point[1]]).bindPopup(point[2]).addTo(poi_other)
             } else {
