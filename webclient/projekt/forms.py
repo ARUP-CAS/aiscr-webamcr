@@ -34,6 +34,7 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis",
             "datum_zahajeni",
             "datum_ukonceni",
+            "uzivatelske_oznaceni",
             "latitude",
             "longitude",
             "katastry",
@@ -45,6 +46,7 @@ class EditProjektForm(forms.ModelForm):
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "datum_zahajeni": forms.DateInput(attrs={"data-provide": "datepicker"}),
             "datum_ukonceni": forms.DateInput(attrs={"data-provide": "datepicker"}),
             "hlavni_katastr": autocomplete.ModelSelect2(
@@ -65,6 +67,7 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka": _("Památková ochrana"),
             "kulturni_pamatka_cislo": _("Rejstříkové číslo USKP"),
             "kulturni_pamatka_popis": _("Název památky"),
+            "uzivatelske_oznaceni": _("Uživatelské označení"),
             "datum_zahajeni": _("Datum zahájení výzkumu"),
             "datum_ukonceni": _("Datum ukončení výzkumu"),
         }
@@ -78,7 +81,7 @@ class EditProjektForm(forms.ModelForm):
                 Div(
                     Div(
                         HTML(_("Editace projektu")),
-                        css_class="app-fx app-left", 
+                        css_class="app-fx app-left",
                     ),
                     css_class="card-header",
                 ),
@@ -102,10 +105,15 @@ class EditProjektForm(forms.ModelForm):
                                 Div("kulturni_pamatka", css_class="col-sm-3"),
                                 Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
                                 Div("kulturni_pamatka_popis", css_class="col-sm-6"),
-                                css_class="row",  
+                                Div("uzivatelske_oznaceni", css_class="col-sm-6"),
+                                css_class="row",
                             ),
                             FormActions(
-                                Submit("save", "Upravit", css_class="app-entity-projekt-btn"),
+                                Submit(
+                                    "save",
+                                    "Upravit",
+                                    css_class="app-entity-projekt-btn",
+                                ),
                             ),
                             css_class="col-sm-9",
                         ),
@@ -189,6 +197,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
         widgets = {
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "vedouci_projektu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
         labels = {
             "vedouci_projektu": _("Vedoucí projektu"),
