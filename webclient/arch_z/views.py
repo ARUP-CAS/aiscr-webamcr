@@ -49,12 +49,12 @@ def detail(request, ident_cely):
             dokumentcast__archeologicky_zaznam__ident_cely=ident_cely
         )
         .select_related("soubory")
-        .prefetch_related("soubory__soubor_set")
+        .prefetch_related("soubory__soubory")
     )
     jednotky = (
         DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
         .select_related("komponenty")
-        .prefetch_related("komponenty__komponenta_set")
+        .prefetch_related("komponenty__komponenty")
     )
 
     context["zaznam"] = zaznam

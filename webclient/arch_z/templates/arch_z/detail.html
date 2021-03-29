@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Detail archeologického záznamu" %}{% endblock %}
+{% block title %}{% trans "Detail archeologického záznamu - akce" %}{% endblock %}
 {% block head %}
   <!-- Map imports -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -19,7 +19,7 @@
 
   <div class="row">
     <div class="col">
-      <h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
+      <h1>{% trans "Archeologický záznam - Akce" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
     </div>
     <div class="col">
       <div class="btn-group" role="group" aria-label="Basic example">
@@ -80,7 +80,7 @@
         </div>
         Komponenty:
         <hr/>
-        {% for k in j.komponenty.komponenta_set.all %}
+        {% for k in j.komponenty.komponenty.all %}
           <div class="row">
             <div class="col">{{ k.ident_cely }}</div>
             <div class="col">{{ k.obdobi }}</div>
@@ -102,7 +102,7 @@
             <span class="badge badge-light">{{ d.get_stav_display }}</span>
           </div>
           <div class="col">{{ d.typ_dokumentu }}</div>
-          <div clasd="col">{{ d.soubory.soubor_set|length }}</div>
+          <div clasd="col">{{ d.soubory.soubory|length }}</div>
         </div>
       {% endfor %}
     </div>
