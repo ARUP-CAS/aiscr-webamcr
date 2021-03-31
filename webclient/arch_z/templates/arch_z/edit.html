@@ -1,0 +1,26 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Editace archeologického záznamu" %}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+<h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
+
+<form method="POST">
+
+  {% crispy formAZ %}
+  {% crispy formAkce %}
+  <button type="submit" class="btn btn-primary">{% trans "Edituj" %}</button>
+
+</form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

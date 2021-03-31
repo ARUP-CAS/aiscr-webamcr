@@ -15,3 +15,9 @@ def url_to_classes(value):
         value = value[:-1]
     classes = value.replace("/", " app-")
     return classes
+
+
+@register.filter
+def katastry_to_list(value):
+    list_katastry = ", ".join(value.values_list("nazev", flat=True))
+    return list_katastry

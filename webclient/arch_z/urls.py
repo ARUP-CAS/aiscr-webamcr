@@ -6,6 +6,7 @@ app_name = "arch_z"
 
 urlpatterns = [
     path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("edit/<str:ident_cely>", views.edit, name="edit"),
     path("zapsat/<str:projekt_ident_cely>", views.zapsat, name="zapsat"),
     path("odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
     path("archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),

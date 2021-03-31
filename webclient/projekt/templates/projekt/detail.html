@@ -1,6 +1,7 @@
 {% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
+{% load template_filters %}
 
 {% block title %}{% trans "Detail projektu" %}{% endblock %}
 {% block head %}
@@ -48,7 +49,7 @@
         </button>
       </div>
       <div class="line"></div>
-      <div class="step{% if projekt.stav == 2 %}active app-entity-projekt{% endif %}">
+      <div class="step {% if projekt.stav == 2 %}active app-entity-projekt{% endif %}">
         <button type="button" class="btn step-trigger">
           <span class="bs-stepper-circle">3</span>
           <span class="bs-stepper-label">
@@ -404,8 +405,11 @@
                 </a>
               </td>
               <td>{{ a.archeologicky_zaznam.pristupnost }}</td>
-              <td>{{ a.archeologicky_zaznam.katasty }}</td>
-              <td>{{ a.vedouci }}</td>
+              <td>
+                <strong>{{ a.archeologicky_zaznam.hlavni_katastr }}</strong>
+                {% if a.archeologicky_zaznam.katastry.all %}, {{ a.archeologicky_zaznam.katastry.all|katastry_to_list }}{% endif %}
+              </td>
+              <td>{{ a.hlavni_vedouci }}</td>
               <td>{{ a.datum_zahajeni|date:'Y/m/d' }} - {{ a.datum_ukonceni|date:'Y/m/d' }}</td>
               <td>{{ a.hlavni_typ }}, {{ a.vedlejsi_typ }}</td>
               <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</td>

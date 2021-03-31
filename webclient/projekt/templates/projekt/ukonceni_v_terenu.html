@@ -5,10 +5,6 @@
 
 {% block title %}{% trans "Ukončení projektu v terénu " %}{{ projekt.ident_cely }}{% endblock %}
 {% block head %}
-  <!-- Date picker imports -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
 {% endblock %}
 
 {% block content %}
@@ -18,12 +14,4 @@
 {% endblock %}
 
 {% block script %}
-  <script>
-      moment.locale('cs');
-      $('input[name="datum_ukonceni"]').daterangepicker({
-          singleDatePicker: true,
-          showDropdowns: true,
-      });
-
-  </script>
 {% endblock %}

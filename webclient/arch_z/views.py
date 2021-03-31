@@ -17,6 +17,7 @@ from core.message_constants import (
     AKCE_USPESNE_ZAPSANA,
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
+    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
 from django.contrib import messages
@@ -63,6 +64,32 @@ def detail(request, ident_cely):
     context["show"] = get_detail_template_shows(zaznam)
 
     return render(request, "arch_z/detail.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit(request, ident_cely):
+    zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+    if request.method == "POST":
+        form_az = CreateArchZForm(request.POST, instance=zaznam)
+        form_akce = CreateAkceForm(request.POST, instance=zaznam.akce)
+
+        if form_az.is_valid() and form_akce.is_valid():
+            logger.debug("Form is valid")
+            form_az.save()
+            form_akce.save()
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.warning("Form is not valid")
+            logger.debug(form_az.errors)
+            logger.debug(form_akce.errors)
+    else:
+        form_az = CreateArchZForm(instance=zaznam)
+        form_akce = CreateAkceForm(instance=zaznam.akce)
+
+    return render(
+        request, "arch_z/edit.html", {"formAZ": form_az, "formAkce": form_akce}
+    )
 
 
 @login_required
@@ -174,6 +201,7 @@ def zapsat(request, projekt_ident_cely):
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             az.ident_cely = get_project_event_ident(projekt)
             az.save()
+            form_az.save_m2m()  # This must be called to save many to many (katastry) since we are doing commit = False
             az.set_zapsany(request.user)
             akce = form_akce.save(commit=False)
             akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)

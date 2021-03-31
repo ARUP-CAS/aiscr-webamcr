@@ -14,8 +14,9 @@
 
     {% if warnings %}
       <ul>
+        {% trans "Projekt nelze uzavřít z následujících důvodů:" %}
         {% for warning in warnings %}
-          <li>{{ warning }}</li>
+          <li>{{ warning.1 }}</li>
         {% endfor %}
       </ul>
     {% endif %}

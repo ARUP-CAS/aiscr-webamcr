@@ -2,37 +2,40 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Button, Div, Layout, Submit
+from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-from heslar.models import RuianKatastr
 from heslar.views import heslar_typ_akce_12
 
 
 class CreateArchZForm(forms.ModelForm):
-
-    dalsi_katastry = forms.MultipleChoiceField()
-
     class Meta:
         model = ArcheologickyZaznam
         fields = (
             "hlavni_katastr",
             "pristupnost",
             "uzivatelske_oznaceni",
+            "katastry",
         )
 
         labels = {
             "hlavni_katastr": _("Hlavní katastr"),
             "pristupnost": _("Přístupnost"),
             "uzivatelske_oznaceni": _("Uživatelské označení"),
+            "katastry": _("Další katastry"),
+        }
+        widgets = {
+            "hlavni_katastr": autocomplete.ModelSelect2(
+                url="heslar:katastr-autocomplete"
+            ),
+            "katastry": autocomplete.ModelSelect2Multiple(
+                url="heslar:katastr-autocomplete"
+            ),
         }
 
     def __init__(self, *args, **kwargs):
         super(CreateArchZForm, self).__init__(*args, **kwargs)
-        self.fields["dalsi_katastry"] = forms.MultipleChoiceField(
-            label=_("Další katastry"),
-            required=False,
-            choices=RuianKatastr.objects.all().values_list("id", "nazev"),
-        )
+        self.fields["katastry"].required = False
         self.fields["hlavni_katastr"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -57,15 +60,29 @@ class CreateAkceForm(forms.ModelForm):
             "ulozeni_nalezu": _("Uložení nálezu"),
         }
 
+        widgets = {
+            "hlavni_vedouci": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
+
     def __init__(self, *args, **kwargs):
         super(CreateAkceForm, self).__init__(*args, **kwargs)
         choices = heslar_typ_akce_12()
         self.fields["hlavni_typ"] = forms.CharField(
-            label=_("Hlavní typ"), widget=forms.Select(choices=choices), required=True
+            label=_("Hlavní typ"),
+            widget=forms.Select(
+                choices=choices,
+                attrs={"class": "selectpicker", "data-live-search": "true"},
+            ),
+            required=True,
         )
         self.fields["vedlejsi_typ"] = forms.CharField(
             label=_("Vedlejší typ"),
-            widget=forms.Select(choices=choices),
+            widget=forms.Select(
+                choices=choices,
+                attrs={"class": "selectpicker", "data-live-search": "true"},
+            ),
             required=False,
         )
         self.fields["lokalizace_okolnosti"].required = True

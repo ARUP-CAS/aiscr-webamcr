@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_filters %}
 
 {% block title %}{% trans "Detail archeologického záznamu - akce" %}{% endblock %}
 {% block head %}
@@ -43,7 +44,12 @@
   </div>
 
   <div class="card">
-    <div class="card-header">{% trans "Detail" %}</div>
+    <div class="card-header">
+      {% trans "Detail" %}
+      <a href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+            <span class="material-icons">edit</span>
+      </a>
+    </div>
     <div class="card-body">
       <div class="row">
         <div class="col">{{ zaznam.akce.hlavni_typ }} {{ zaznam.akce.vedlejsi_typ }}</div>
@@ -52,6 +58,7 @@
       </div>
       <div class="row">
         <div class="col">{{ zaznam.hlavni_katastr }}</div>
+        <div class="col">{{ zaznam.katastry.all|katastry_to_list }}</div>
         <div class="col">{{ zaznam.akce.hlavni_vedouci }}</div>
       </div>
       <div class="row">
