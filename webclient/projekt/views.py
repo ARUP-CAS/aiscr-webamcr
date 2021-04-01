@@ -169,6 +169,7 @@ def edit(request, ident_cely):
             "projekt/edit.html",
             {
                 "form_projekt": form,
+                "projekt": projekt
             },
         )
         return resp
