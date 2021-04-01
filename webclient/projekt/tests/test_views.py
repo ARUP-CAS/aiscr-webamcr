@@ -1,14 +1,16 @@
+from core.constants import SN_ZAPSANY
 from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
 from django.contrib.gis.geos import Point
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import Http404
 from django.test import RequestFactory, TestCase
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID, PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from oznameni.models import Oznamovatel
+from pas.models import SamostatnyNalez
 from projekt.models import Projekt
-from projekt.views import detail, edit
+from projekt.views import detail, edit, smazat
 from uzivatel.models import User
 
 
@@ -97,3 +99,20 @@ class UrlTests(TestCase):
             == nova_lokalizace
         )
         # TODO test other values (GEOM)
+
+    def test_get_smazat_check(self):
+        request = self.factory.get("/projekt/smazat/")
+        request.user = self.existing_user
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request = add_middleware_to_request(request, MessageMiddleware)
+        request.session.save()
+
+        response = smazat(request, ident_cely=self.projekt.ident_cely)
+        self.assertTrue("error" not in response.content.decode("utf-8"))
+        self.assertEqual(200, response.status_code)
+
+        # Add samostatny nalez
+        nalez = SamostatnyNalez(projekt=self.projekt, pristupnost=Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID), stav=SN_ZAPSANY)
+        nalez.save()
+        response = smazat(request, ident_cely=self.projekt.ident_cely)
+        self.assertTrue("error" in response.content.decode("utf-8"))

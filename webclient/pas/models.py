@@ -1,3 +1,4 @@
+from core.constants import SN_ZAPSANY, SN_ODESLANY, SN_POTVRZENY, SN_ARCHIVOVANY
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
@@ -16,16 +17,11 @@ from uzivatel.models import Organizace, Osoba
 
 class SamostatnyNalez(models.Model):
 
-    ZAPSANY = 1
-    ODESLANY = 2
-    POTVRZENY = 3
-    ARCHIVOVANY = 4
-
     PAS_STATES = [
-        (ZAPSANY, _("zapsaný")),
-        (ODESLANY, _("odeslaný")),  # Odeslaný
-        (POTVRZENY, _("potvrzený")),  # Potvrzeny
-        (ARCHIVOVANY, _("archivovaný")),
+        (SN_ZAPSANY, _("zapsaný")),
+        (SN_ODESLANY, _("odeslaný")),  # Odeslaný
+        (SN_POTVRZENY, _("potvrzený")),  # Potvrzeny
+        (SN_ARCHIVOVANY, _("archivovaný")),
     ]
 
     evidencni_cislo = models.TextField(blank=True, null=True)
