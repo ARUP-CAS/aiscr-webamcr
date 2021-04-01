@@ -1,6 +1,6 @@
 from arch_z.models import DokumentacniJednotka
 from django.db import models
-from heslar.hesla import HESLAR_PODNET, HESLAR_TYP_SONDY
+from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 
@@ -18,7 +18,7 @@ class Adb(models.Model):
         on_delete=models.DO_NOTHING,
         db_column="typ_sondy",
         related_name="typy_sond_adb",
-        limit_choices_to={"nazev_heslare": HESLAR_TYP_SONDY},
+        limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
         blank=True,
         null=True,
     )
@@ -27,7 +27,7 @@ class Adb(models.Model):
     podnet = models.ForeignKey(
         Heslar,
         on_delete=models.DO_NOTHING,
-        limit_choices_to={"nazev_heslare": HESLAR_PODNET},
+        limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET},
         db_column="podnet",
         blank=True,
         null=True,

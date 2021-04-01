@@ -3,9 +3,9 @@ from django.db import models
 from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
+    HESLAR_OBJEKT_SPECIFIKACE,
     HESLAR_PREDMET_DRUH,
-    HESLAR_SPECIFIKACE_OBJEKTU_DRUHA,
-    HESLAR_SPECIFIKACE_PREDMETU,
+    HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar
 
@@ -29,7 +29,7 @@ class NalezObjekt(models.Model):
         Heslar,
         models.DO_NOTHING,
         db_column="specifikace",
-        limit_choices_to={"nazev_heslare": HESLAR_SPECIFIKACE_OBJEKTU_DRUHA},
+        limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE},
         verbose_name=_("Specifikace"),
         related_name="objekty_specifikace",
         blank=True,
@@ -64,7 +64,7 @@ class NalezPredmet(models.Model):
         Heslar,
         models.DO_NOTHING,
         db_column="specifikace",
-        limit_choices_to={"nazev_heslare": HESLAR_SPECIFIKACE_PREDMETU},
+        limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
         verbose_name=_("Specifikace"),
         related_name="predmety_specifikace",
         blank=True,

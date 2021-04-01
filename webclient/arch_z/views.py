@@ -264,6 +264,13 @@ def smazat(request, pk):
         return render(request, "arch_z/smazat.html", {"akce": akce})
 
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def pripojit_dokument(request, ident_cely):
+    # TODO add implementation
+    return None
+
+
 def get_detail_template_shows(archeologicky_zaznam):
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY

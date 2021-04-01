@@ -5,17 +5,17 @@ from django.test.runner import DiscoverRunner as BaseRunner
 from dokument.models import Dokument
 from heslar import hesla
 from heslar.hesla import (
-    HESLAR_JAZYK_DOKUMENTU,
-    HESLAR_MATERIAL_DOKUMENTU,
-    HESLAR_POSUDEK,
-    HESLAR_PRESNOST,
+    HESLAR_AKCE_TYP,
+    HESLAR_DATUM_SPECIFIKACE,
+    HESLAR_DOKUMENT_MATERIAL,
+    HESLAR_DOKUMENT_TYP,
+    HESLAR_JAZYK,
+    HESLAR_ORGANIZACE_TYP,
+    HESLAR_PIAN_PRESNOST,
+    HESLAR_PIAN_TYP,
+    HESLAR_POSUDEK_TYP,
     HESLAR_PRISTUPNOST,
-    HESLAR_SPECIFIKACE_DATA,
-    HESLAR_TYP_AKCE_DRUHA,
-    HESLAR_TYP_DOKUMENTU,
-    HESLAR_TYP_ORGANIZACE,
-    HESLAR_TYP_PIAN,
-    HESLAR_TYP_PROJEKTU,
+    HESLAR_PROJEKT_TYP,
     PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
@@ -130,19 +130,19 @@ class AMCRTestRunner(BaseRunner):
         odrovice.save()
         praha.save()
 
-        hn = HeslarNazev(id=HESLAR_TYP_PROJEKTU, nazev="heslar_typ_projektu")
-        hp = HeslarNazev(id=HESLAR_PRESNOST, nazev="heslar_presnost")
-        ha = HeslarNazev(id=HESLAR_TYP_PIAN, nazev="heslar_typ_pian")
-        hto = HeslarNazev(id=HESLAR_TYP_ORGANIZACE, nazev="heslar_typ_organizace")
+        hn = HeslarNazev(id=HESLAR_PROJEKT_TYP, nazev="heslar_typ_projektu")
+        hp = HeslarNazev(id=HESLAR_PIAN_PRESNOST, nazev="heslar_presnost")
+        ha = HeslarNazev(id=HESLAR_PIAN_TYP, nazev="heslar_typ_pian")
+        hto = HeslarNazev(id=HESLAR_ORGANIZACE_TYP, nazev="heslar_typ_organizace")
         hpr = HeslarNazev(id=HESLAR_PRISTUPNOST, nazev="heslar_pristupnost")
-        hsd = HeslarNazev(id=HESLAR_SPECIFIKACE_DATA, nazev="heslar_specifikace_data")
-        hta = HeslarNazev(id=HESLAR_TYP_AKCE_DRUHA, nazev="heslar_typ_akce_druha")
-        htd = HeslarNazev(id=HESLAR_TYP_DOKUMENTU, nazev="heslar_typ_dokumentu")
+        hsd = HeslarNazev(id=HESLAR_DATUM_SPECIFIKACE, nazev="heslar_specifikace_data")
+        hta = HeslarNazev(id=HESLAR_AKCE_TYP, nazev="heslar_typ_akce_druha")
+        htd = HeslarNazev(id=HESLAR_DOKUMENT_TYP, nazev="heslar_typ_dokumentu")
         hmd = HeslarNazev(
-            id=HESLAR_MATERIAL_DOKUMENTU, nazev="heslar_material_dokumentu"
+            id=HESLAR_DOKUMENT_MATERIAL, nazev="heslar_material_dokumentu"
         )
-        hjd = HeslarNazev(id=HESLAR_JAZYK_DOKUMENTU, nazev="heslar_jazyk_dokumentu")
-        hpd = HeslarNazev(id=HESLAR_POSUDEK, nazev="heslar_posudek")
+        hjd = HeslarNazev(id=HESLAR_JAZYK, nazev="heslar_jazyk_dokumentu")
+        hpd = HeslarNazev(id=HESLAR_POSUDEK_TYP, nazev="heslar_posudek")
         nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd, hjd, hpd]
         for n in nazvy_heslaru:
             n.save()

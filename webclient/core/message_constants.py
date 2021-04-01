@@ -22,9 +22,10 @@ PROJEKT_NELZE_UZAVRIT: Final = (
 PROJEKT_NELZE_ARCHIVOVAT: Final = (
     "Projekt nelze archivovat. Zkontrolujte zda má všechny náležitosti."
 )
-PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI = (
+PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = (
     "Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce."
 )
+PROJEKT_NELZE_SMAZAT: Final = "Projekt nelze smazat."
 
 AKCE_USPESNE_ZAPSANA: Final = "Akce úspěšně zapsána."
 AKCE_USPESNE_ODESLANA: Final = "Akce úspěšně odeslána."

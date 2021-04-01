@@ -30,7 +30,7 @@ from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_KULTURNI_PAMATKA, HESLAR_TYP_PROJEKTU
+from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from oznameni.models import Oznamovatel
@@ -61,7 +61,7 @@ class Projekt(models.Model):
         models.DO_NOTHING,
         db_column="typ_projektu",
         related_name="projekty_typu",
-        limit_choices_to={"nazev_heslare": HESLAR_TYP_PROJEKTU},
+        limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
         verbose_name=_("Typy projektů"),
     )
     lokalizace = models.TextField(blank=True, null=True)
@@ -93,7 +93,7 @@ class Projekt(models.Model):
         db_column="kulturni_pamatka",
         blank=True,
         null=True,
-        limit_choices_to={"nazev_heslare": HESLAR_KULTURNI_PAMATKA},
+        limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
         verbose_name=_("Památky"),
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
@@ -256,6 +256,16 @@ class Projekt(models.Model):
             return {"has_event": _("Projekt před zrušením nesmí mít projektové akce.")}
         else:
             return {}
+
+    def check_pred_smazanim(self):
+        resp = []
+        has_event = len(self.akce_set.all()) > 0
+        has_individual_finds = len(self.samostatne_nalezy.all()) > 0
+        if has_event:
+            resp.append(_("Projekt před smazáním nesmí mít projektové akce."))
+        if has_individual_finds:
+            resp.append(_("Projekt před smazáním nesmí mít samostatné nálezy."))
+        return resp
 
     def check_pred_uzavrenim(self):
         does_not_have_event = len(self.akce_set.all()) == 0

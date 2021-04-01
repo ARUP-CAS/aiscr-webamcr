@@ -2,7 +2,7 @@ import django_filters as filters
 from core.constants import OZNAMENI_PROJ, SCHVALENI_OZNAMENI_PROJ
 from django.forms import DateInput, SelectMultiple
 from django_filters import DateFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter
-from heslar.hesla import HESLAR_KULTURNI_PAMATKA, HESLAR_TYP_PROJEKTU
+from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
 from heslar.models import Heslar
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
@@ -24,7 +24,7 @@ class ProjektFilter(filters.FilterSet):
     )
 
     typ_projektu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_TYP_PROJEKTU),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
         widget=SelectMultiple(attrs={"class": "selectpicker"}),
     )
     vedouci_projektu = ModelMultipleChoiceFilter(
@@ -41,7 +41,7 @@ class ProjektFilter(filters.FilterSet):
         ),
     )
     kulturni_pamatka = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_KULTURNI_PAMATKA),
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PAMATKOVA_OCHRANA),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),

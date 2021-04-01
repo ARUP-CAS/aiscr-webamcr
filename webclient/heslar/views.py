@@ -1,5 +1,5 @@
 from dal import autocomplete
-from heslar.hesla import HESLAR_TYP_AKCE_DRUHA, HESLAR_TYP_AKCE_PRVNI
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.models import Heslar, RuianKatastr
 
 
@@ -24,12 +24,12 @@ def merge_heslare(first, second):
 
 def heslar_typ_akce_12():
     druha = (
-        Heslar.objects.filter(nazev_heslare=HESLAR_TYP_AKCE_DRUHA)
+        Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP)
         .order_by("razeni")
         .values("id", "hierarchie__heslo_nadrazene", "heslo")
     )
     prvni = (
-        Heslar.objects.filter(nazev_heslare=HESLAR_TYP_AKCE_PRVNI)
+        Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP_KAT)
         .order_by("razeni")
         .values("id", "heslo")
     )

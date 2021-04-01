@@ -27,6 +27,7 @@ from core.constants import (
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
+    PROJEKT_NELZE_SMAZAT,
     PROJEKT_NELZE_UZAVRIT,
     PROJEKT_USPESNE_ARCHIVOVAN,
     PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI,
@@ -53,7 +54,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from oznameni.models import Oznamovatel
 from projekt.filters import ProjektFilter
 from projekt.forms import (
@@ -66,8 +67,6 @@ from projekt.forms import (
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
-
-# from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
@@ -82,15 +81,23 @@ def detail(request, ident_cely):
         ).defer("geom"),
         ident_cely=ident_cely,
     )
-    oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
+    context["projekt"] = projekt
+    typ_projektu = projekt.typ_projektu
+    if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+        oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
+        context["oznamovatel"] = oznamovatel
+    elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
+        context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
+            "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
+        ).all()
+    else:
+        logger.debug("Projekt neni typu zachranny ani pruzkum " + str(typ_projektu))
+
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
     )
-    soubory = projekt.soubory.soubory.all()
-
-    context["projekt"] = projekt
-    context["oznamovatel"] = oznamovatel
     context["akce"] = akce
+    soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
     context["dalsi_katastry"] = ",".join(
         projekt.katastry.all().values_list("nazev", flat=True)
@@ -165,6 +172,26 @@ def edit(request, ident_cely):
             },
         )
         return resp
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def smazat(request, ident_cely):
+    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    if request.method == "POST":
+        resp = projekt.delete()
+        logger.debug("Projekt smazan: " + str(resp))
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        return redirect("projekt:projekt_list")
+    else:
+        warnings = projekt.check_pred_smazanim()
+        logger.debug(warnings)
+        context = {"object": projekt}
+        if warnings:
+            context["warnings"] = warnings
+            messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
+
+        return render(request, "projekt/smazat.html", context)
 
 
 class ProjektListView(LoginRequiredMixin, SingleTableMixin, FilterView):
@@ -533,6 +560,7 @@ def get_detail_template_shows(projekt):
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     ]
     show_znovu_zapsat = projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -545,5 +573,6 @@ def get_detail_template_shows(projekt):
         "navrhnout_zruseni_link": show_navrzen_ke_zruseni,
         "zrusit_link": show_zrusit,
         "znovu_zapsat_link": show_znovu_zapsat,
+        "samostatne_nalezy": show_samostatne_nalezy,
     }
     return show

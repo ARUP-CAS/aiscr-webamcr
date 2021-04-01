@@ -4,13 +4,13 @@ from core.models import KomponentaVazby, SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from heslar.hesla import (
-    HESLAR_JAZYK_DOKUMENTU,
-    HESLAR_MATERIAL_DOKUMENTU,
-    HESLAR_POSUDEK,
+    HESLAR_DOKUMENT_MATERIAL,
+    HESLAR_DOKUMENT_RADA,
+    HESLAR_DOKUMENT_TYP,
+    HESLAR_DOKUMENT_ULOZENI,
+    HESLAR_JAZYK,
+    HESLAR_POSUDEK_TYP,
     HESLAR_PRISTUPNOST,
-    HESLAR_RADA,
-    HESLAR_TYP_DOKUMENTU,
-    HESLAR_ULOZENI_ORIGINALU,
 )
 from heslar.models import Heslar
 from historie.models import HistorieVazby
@@ -31,14 +31,14 @@ class Dokument(models.Model):
         models.DO_NOTHING,
         db_column="rada",
         related_name="dokumenty_rady",
-        limit_choices_to={"nazev_heslare": HESLAR_RADA},
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
     )
     typ_dokumentu = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
         db_column="typ_dokumentu",
         related_name="dokumenty_typu_dokumentu",
-        limit_choices_to={"nazev_heslare": HESLAR_TYP_DOKUMENTU},
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
     )
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace"
@@ -56,7 +56,7 @@ class Dokument(models.Model):
         models.DO_NOTHING,
         db_column="material_originalu",
         related_name="dokumenty_materialu",
-        limit_choices_to={"nazev_heslare": HESLAR_MATERIAL_DOKUMENTU},
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
     )
     popis = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
@@ -67,7 +67,7 @@ class Dokument(models.Model):
         blank=True,
         null=True,
         related_name="dokumenty_ulozeni",
-        limit_choices_to={"nazev_heslare": HESLAR_ULOZENI_ORIGINALU},
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ULOZENI},
     )
     oznaceni_originalu = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
@@ -204,7 +204,7 @@ class DokumentJazyk(models.Model):
         Heslar,
         models.DO_NOTHING,
         db_column="jazyk",
-        limit_choices_to={"nazev_heslare": HESLAR_JAZYK_DOKUMENTU},
+        limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
     )
 
     class Meta:
@@ -232,7 +232,7 @@ class DokumentPosudek(models.Model):
         Heslar,
         models.DO_NOTHING,
         db_column="posudek",
-        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK},
+        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
     )
 
     class Meta:

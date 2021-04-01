@@ -15,9 +15,9 @@ from core.models import KomponentaVazby
 from django.db import models
 from django.utils.translation import gettext as _
 from heslar.hesla import (
+    HESLAR_AKCE_TYP,
+    HESLAR_DATUM_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
-    HESLAR_SPECIFIKACE_DATA,
-    HESLAR_TYP_AKCE_DRUHA,
     PRISTUPNOST_ANONYM_ID,
     TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
 )
@@ -132,7 +132,7 @@ class Akce(models.Model):
         models.DO_NOTHING,
         db_column="specifikace_data",
         related_name="akce_specifikace_data",
-        limit_choices_to={"nazev_heslare": HESLAR_SPECIFIKACE_DATA},
+        limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
@@ -141,7 +141,7 @@ class Akce(models.Model):
         blank=True,
         null=True,
         related_name="akce_hlavni_typy",
-        limit_choices_to={"nazev_heslare": HESLAR_TYP_AKCE_DRUHA},
+        limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
     )
     vedlejsi_typ = models.ForeignKey(
         Heslar,
@@ -150,7 +150,7 @@ class Akce(models.Model):
         blank=True,
         null=True,
         related_name="akce_vedlejsi_typy",
-        limit_choices_to={"nazev_heslare": HESLAR_TYP_AKCE_DRUHA},
+        limit_choices_to={"nazev_heslare": HESLAR_AKCE_TYP},
     )
     hlavni_vedouci = models.ForeignKey(
         Osoba,
