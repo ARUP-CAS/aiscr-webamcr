@@ -157,22 +157,20 @@ def edit(request, ident_cely):
             logger.debug("The form is not valid!")
             logger.debug(form.errors)
 
-        return render(request, "projekt/edit.html", {"form_projekt": form})
     else:
         form = EditProjektForm(instance=projekt)
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
 
-        resp = render(
-            request,
-            "projekt/edit.html",
-            {
-                "form_projekt": form,
-                "projekt": projekt
-            },
-        )
-        return resp
+    return render(
+        request,
+        "projekt/edit.html",
+        {
+            "form_projekt": form,
+            "projekt": projekt
+        },
+    )
 
 
 @login_required
@@ -412,8 +410,8 @@ def navrhnout_ke_zruseni(request, ident_cely):
 def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if (
-        not projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
-        or projekt.stav == PROJEKT_STAV_OZNAMENY
+            not projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+            or projekt.stav == PROJEKT_STAV_OZNAMENY
     ):
         raise PermissionDenied()
     if request.method == "POST":
@@ -522,7 +520,6 @@ def download_file(request, pk):
 
 
 def get_history_dates(historie_vazby):
-
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
