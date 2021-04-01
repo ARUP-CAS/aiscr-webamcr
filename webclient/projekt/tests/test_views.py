@@ -5,7 +5,7 @@ from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import Http404
 from django.test import RequestFactory, TestCase
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID, PRISTUPNOST_ANONYM_ID
+from heslar.hesla import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez
@@ -112,7 +112,11 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
         # Add samostatny nalez
-        nalez = SamostatnyNalez(projekt=self.projekt, pristupnost=Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID), stav=SN_ZAPSANY)
+        nalez = SamostatnyNalez(
+            projekt=self.projekt,
+            pristupnost=Heslar.objects.get(id=PRISTUPNOST_ANONYM_ID),
+            stav=SN_ZAPSANY,
+        )
         nalez.save()
         response = smazat(request, ident_cely=self.projekt.ident_cely)
         self.assertTrue("error" in response.content.decode("utf-8"))

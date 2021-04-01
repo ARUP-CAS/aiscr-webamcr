@@ -1,4 +1,4 @@
-from core.constants import SN_ZAPSANY, SN_ODESLANY, SN_POTVRZENY, SN_ARCHIVOVANY
+from core.constants import SN_ARCHIVOVANY, SN_ODESLANY, SN_POTVRZENY, SN_ZAPSANY
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
