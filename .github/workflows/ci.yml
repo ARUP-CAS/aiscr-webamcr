@@ -32,6 +32,7 @@ jobs:
         pip install -r webclient/webclient/requirements/dev.txt
     - name: Install gdal dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install -y libgdal-dev locales
         gdal-config --version
       env:
