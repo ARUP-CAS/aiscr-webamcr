@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "adb",
     "neidentakce",
     "pas",
+    "komponenta",
 ]
 
 MIDDLEWARE = [

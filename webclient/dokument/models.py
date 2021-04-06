@@ -1,6 +1,6 @@
 from arch_z.models import ArcheologickyZaznam
 from core.constants import D_STAV_ARCHIVOVANY, D_STAV_ODESLANY, D_STAV_ZAPSANY
-from core.models import KomponentaVazby, SouborVazby
+from core.models import SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from heslar.hesla import (
@@ -14,6 +14,7 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from historie.models import HistorieVazby
+from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
 
 

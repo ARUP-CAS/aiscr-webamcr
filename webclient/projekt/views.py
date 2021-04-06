@@ -162,14 +162,10 @@ def edit(request, ident_cely):
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
-
     return render(
         request,
         "projekt/edit.html",
-        {
-            "form_projekt": form,
-            "projekt": projekt
-        },
+        {"form_projekt": form, "projekt": projekt},
     )
 
 
@@ -410,8 +406,8 @@ def navrhnout_ke_zruseni(request, ident_cely):
 def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if (
-            not projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
-            or projekt.stav == PROJEKT_STAV_OZNAMENY
+        not projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+        or projekt.stav == PROJEKT_STAV_OZNAMENY
     ):
         raise PermissionDenied()
     if request.method == "POST":

@@ -1,7 +1,14 @@
 import django_filters as filters
+from arch_z.models import Akce
 from core.constants import OZNAMENI_PROJ, SCHVALENI_OZNAMENI_PROJ
+from django.db.models import Exists, OuterRef
 from django.forms import DateInput, SelectMultiple
-from django_filters import DateFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter
+from django_filters import (
+    BooleanFilter,
+    DateFilter,
+    ModelMultipleChoiceFilter,
+    MultipleChoiceFilter,
+)
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
 from heslar.models import Heslar
 from projekt.models import Projekt
@@ -67,6 +74,21 @@ class ProjektFilter(filters.FilterSet):
         label="Datum schválení do",
         widget=DateInput(attrs={"data-provide": "datepicker"}),
     )
+
+    ma_akce = BooleanFilter(
+        method="filter_has_no_events",
+        label="Nemá projektové akce",
+    )
+
+    def filter_has_no_events(self, queryset, name, value):
+        if value:
+            return queryset.filter(
+                ~Exists(Akce.objects.filter(projekt__id=OuterRef("pk")))
+            )
+        else:
+            return queryset.filter(
+                Exists(Akce.objects.filter(projekt__id=OuterRef("pk")))
+            )
 
     def filter_announced_after(self, queryset, name, value):
         return queryset.filter(historie__historie__typ_zmeny=OZNAMENI_PROJ).filter(

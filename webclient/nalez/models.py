@@ -1,4 +1,3 @@
-from core.models import Komponenta
 from django.db import models
 from django.utils.translation import gettext as _
 from heslar.hesla import (
@@ -8,6 +7,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar
+from komponenta.models import Komponenta
 
 
 class NalezObjekt(models.Model):

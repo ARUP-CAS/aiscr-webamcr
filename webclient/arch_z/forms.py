@@ -5,7 +5,8 @@ from crispy_forms.layout import HTML, Button, Div, Layout, Submit
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-from heslar.views import heslar_typ_akce_12
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.views import heslar_12
 
 
 class CreateArchZForm(forms.ModelForm):
@@ -68,7 +69,7 @@ class CreateAkceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateAkceForm, self).__init__(*args, **kwargs)
-        choices = heslar_typ_akce_12()
+        choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = forms.CharField(
             label=_("Hlavní typ"),
             widget=forms.Select(

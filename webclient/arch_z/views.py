@@ -242,16 +242,16 @@ def smazat(request, pk):
         az = akce.archeologicky_zaznam
         # Parent records
         historie_vazby = az.historie
+        komponenty_jednotek_vazby = []
         for dj in az.dokumentacnijednotka_set.all():
             if dj.komponenty:
-                logger.debug(
-                    "Mazani vazby komponent dokumentacni jednotky " + str(dj.ident_cely)
-                )
-                dj.komponenty.delete()
-        historie_vazby.delete()
-
+                komponenty_jednotek_vazby.append(dj.komponenty)
         az.delete()
-        # TODO dodelat podle issue #45
+
+        historie_vazby.delete()
+        historie_vazby.delete()
+        for komponenta_vazba in komponenty_jednotek_vazby:
+            komponenta_vazba.delete()
 
         logger.debug("Byla smazána akce: " + str(pk))
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -269,6 +269,10 @@ def smazat(request, pk):
 def pripojit_dokument(request, ident_cely):
     # TODO add implementation
     return None
+
+
+def zapsat_dj(request, ident_cely):
+    pass
 
 
 def get_detail_template_shows(archeologicky_zaznam):

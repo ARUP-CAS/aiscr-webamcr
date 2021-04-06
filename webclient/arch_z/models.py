@@ -11,7 +11,6 @@ from core.constants import (
     VRACENI_AZ,
     ZAPSANI_AZ,
 )
-from core.models import KomponentaVazby
 from django.db import models
 from django.utils.translation import gettext as _
 from heslar.hesla import (
@@ -23,6 +22,7 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
+from komponenta.models import KomponentaVazby
 from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
