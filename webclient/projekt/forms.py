@@ -108,13 +108,13 @@ class EditProjektForm(forms.ModelForm):
                                 Div("uzivatelske_oznaceni", css_class="col-sm-6"),
                                 css_class="row",
                             ),
-                            FormActions(
-                                Submit(
-                                    "save",
-                                    "Upravit",
-                                    css_class="app-entity-projekt-btn mb-n3",
-                                ),
-                            ),
+                            #FormActions(
+                             #   Submit(
+                              #      "save",
+                               #     "Upravit",
+                                #    css_class="app-entity-projekt-btn mb-n3",
+                                #),
+                            #),
                             css_class="col-sm-9",
                         ),
                         Div(
