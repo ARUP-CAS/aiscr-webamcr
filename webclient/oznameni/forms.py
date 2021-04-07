@@ -76,26 +76,13 @@ class OznamovatelForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Oznamovatel")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div("oznamovatel", css_class="col-sm-3"),
-                        Div("odpovedna_osoba", css_class="col-sm-3"),
-                        Div("adresa", css_class="col-sm-3"),
-                        Div("telefon", css_class="col-sm-3"),
-                        Div("email", css_class="col-sm-3"),
-                       css_class="row", 
-                    ),                 
-                    css_class="card-body",
-                ),
-                css_class="card app-card-form",
-            )
+                Div("oznamovatel", css_class="col-sm-3"),
+                Div("odpovedna_osoba", css_class="col-sm-3"),
+                Div("adresa", css_class="col-sm-3"),
+                Div("telefon", css_class="col-sm-3"),
+                Div("email", css_class="col-sm-3"),
+                css_class="row", 
+            ),     
         )
         self.helper.form_tag = False
 

@@ -8,10 +8,19 @@
 {% endblock %}
 
 {% block content %}
-  {% include "toolbar_projekt.html" with showcontrols="false" projekt=projekt %}
+  {% include "toolbar_projekt.html" with showcontrols="false" projekt=oznameni.projekt %}
   <form method="post">
-    {% crispy form %}
-    <input type="submit" name="save" value="{% translate 'Upravit' %}" class="btn btn-primary" id="submit-id-save">
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          Oznamovatel
+        </div>
+      </div>
+      <div class="card-body">
+        {% crispy form %}
+        <input type="submit" name="save" value="{% translate 'Upravit' %}" class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
+      </div>
+    </div>
   </form>
 {% endblock %}
 
