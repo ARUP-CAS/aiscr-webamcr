@@ -28,8 +28,7 @@
 {% endblock %}
 
 {% block content %}
-	<!-- <h1>{% trans "Projekt" %} <span class="badge badge-info">{{ projekt.get_stav_display }}</span></h1> -->
-	{% include "toolbar.html" with pagestyle="projekt" header="Projekt" %}
+	{% include "toolbar.html" with pagestyle="projekt" header="Projekt" shownav="false" %}
 	{% crispy form_projekt %}
 {% endblock %}
 
