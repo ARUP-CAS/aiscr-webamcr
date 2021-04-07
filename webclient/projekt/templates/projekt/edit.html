@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block content %}
-	{% include "toolbar.html" with pagestyle="projekt" header="Projekt" shownav="false" %}
+	{% include "toolbar_projekt.html" with showcontrols="false" %}
 	{% crispy form_projekt %}
 {% endblock %}
 
