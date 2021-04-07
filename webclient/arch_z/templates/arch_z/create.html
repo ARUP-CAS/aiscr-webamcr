@@ -8,15 +8,12 @@
 {% endblock %}
 
 {% block content %}
-
-  <h1>{% trans "Nová projektová akce" %}</h1>
-
-  <form method="POST">
-
-  {% crispy formAZ %}
-  {% crispy formAkce %}
-  <button type="submit" class="btn btn-primary">{% trans "Vytovřit akci" %}</button>
-
+{% include "toolbar_akce.html" with showcontrols="false" %}
+  <!-- <h1>{% trans "Nová projektová akce" %}</h1> -->
+  <form method="post">
+    {% crispy formAZ %}
+    {% crispy formAkce %}
+    <button type="submit" class="btn btn-primary app-entity-akce-btn mt-3">{% trans "Vytovřit akci" %}</button>
   </form>
 
 {% endblock %}
