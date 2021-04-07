@@ -18,33 +18,9 @@
 
 {% block content %}
 
-  <div class="row">
-    <div class="col">
-      <h1>{% trans "Archeologický záznam - Akce" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span>
-      </h1>
-      <a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Parent</a>
-      <a href="{% url 'arch_z:smazat' zaznam.id %}">Smazat</a>
-    </div>
-    <div class="col">
-      <div class="btn-group" role="group" aria-label="Basic example">
-        {% if show.vratit_link %}
-          <a href="{% url 'arch_z:vratit' zaznam.ident_cely %}"
-             class="btn btn-warning">{% trans "Vrátit" %}</a>
-        {% endif %}
-        {% if show.odeslat_link %}
-          <a href="{% url 'arch_z:odeslat' zaznam.ident_cely %}"
-             class="btn btn-primary">{% trans "Odeslat akci" %}</a>
-        {% endif %}
-        {% if show.archivovat_link %}
-          <a href="{% url 'arch_z:archivovat' zaznam.ident_cely %}"
-             class="btn btn-primary">{% trans "Archivovat akci" %}</a>
-        {% endif %}
-      </div>
-    </div>
-    <div class="col">
-      <a href="{% url 'arch_z:smazat' zaznam.id %}">{% trans 'Smazat' %}</a>
-    </div>
-  </div>
+  {% include "toolbar_akce.html" with zaznam=zaznam %}
+
+  <a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Parent</a>
 
   <div class="card">
     <div class="card-header">

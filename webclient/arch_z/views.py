@@ -236,8 +236,8 @@ def zapsat(request, projekt_ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def smazat(request, pk):
-    akce = Akce.objects.get(archeologicky_zaznam=pk)
+def smazat(request, ident_cely):
+    akce = Akce.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam
@@ -254,7 +254,7 @@ def smazat(request, pk):
         for komponenta_vazba in komponenty_jednotek_vazby:
             komponenta_vazba.delete()
 
-        logger.debug("Byla smazána akce: " + str(pk))
+        logger.debug("Byla smazána akce: " + str(ident_cely))
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         if projekt:

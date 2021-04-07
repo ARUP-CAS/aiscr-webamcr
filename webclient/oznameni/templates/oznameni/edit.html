@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-  {% include "toolbar_projekt_oznameni.html" with showcontrols="false" %}
+  {% include "toolbar_projekt.html" with showcontrols="false" projekt=projekt %}
   <form method="post">
     {% crispy form %}
     <input type="submit" name="save" value="{% translate 'Upravit' %}" class="btn btn-primary" id="submit-id-save">

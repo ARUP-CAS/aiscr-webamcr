@@ -11,7 +11,7 @@ urlpatterns = [
     path("odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
     path("archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
-    path("smazat/<int:pk>", views.smazat, name="smazat"),
+    path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
     path(
         "pripojit/dokument/<str:ident_cely>",
         views.pripojit_dokument,

@@ -28,7 +28,7 @@
 {% endblock %}
 
 {% block content %}
-	{% include "toolbar_projekt.html" with showcontrols="false" %}
+	{% include "toolbar_projekt.html" with showcontrols="false" projekt=projekt %}
 	<form method="post">
 		{% crispy form_projekt %}
 	</form>
