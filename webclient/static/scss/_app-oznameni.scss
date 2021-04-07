@@ -62,22 +62,6 @@
       }
     }
 
-    form {
-      &.dropzone {
-        @extend .d-flex;
-        border-radius: $border-radius;
-        border: 1px solid $gray-400;
-        background-color: $gray-100;
-        min-height: 180px;
-
-        .dz-message {
-          @extend .m-0;
-          flex: 1;
-          align-self: center;
-        }
-      }
-    }
-
     .app-footer {
       .form-check {
         @extend .ml-3;

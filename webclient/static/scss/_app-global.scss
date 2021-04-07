@@ -88,7 +88,6 @@ table {
   }
 }
 
-
 // select form control fix
 .select2-container {
   min-width: unset !important;
@@ -113,34 +112,22 @@ table {
   }  
 }
 
-/* // select fix
-.select2-container {
-  min-width: unset !important;
+// multiple upload form
+form {
+  &.dropzone {
+    @extend .d-flex;
+    border-radius: $border-radius;
+    border: 1px solid $gray-400;
+    background-color: $gray-100;
+    min-height: 180px;
 
-  .select2-selection {
-    height: 31px !important;
-    border: 1px solid #ced4da !important;
-    border-radius: 0.2rem !important;
-
-    .select2-selection__rendered  {
-      line-height: unset !important;
-    }
-
-    .select2-selection__arrow {
-      height: 31px !important;
-    }
-
-    .select2-selection__clear {
-      margin-top: 0 !important;
-    }
-
-    .select2-selection__rendered {
-      .select2-selection__choice {
-        margin-top: 0 !important;
-      }
+    .dz-message {
+      @extend .m-0;
+      flex: 1;
+      align-self: center;
     }
   }
-} */
+}
 
 // bootstrap rewrite
 .form-control {

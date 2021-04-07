@@ -10,14 +10,14 @@
 
 {% block content %}
   {% include "toolbar_projekt.html" with showcontrols="false" projekt=projekt %}
-  <form action="{% url 'oznameni:post_upload' %}" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
+  <form action="{% url 'oznameni:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
       <input name="file" type="file" multiple/>
     </div>
   </form>
 
-  <a class="btn btn-success" href="{% url 'projekt:detail' ident_cely %}">{% trans "Dokončit" %}</a>
+  <a class="btn btn-success app-entity-projekt-btn" href="{% url 'projekt:detail' ident_cely %}">{% trans "Dokončit" %}</a>
 
 {% endblock %}
 
