@@ -1,11 +1,12 @@
 import datetime
 import logging
 
+from crispy_forms.bootstrap import FormActions
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV2Invisible
 from core.validators import validate_phone_number
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout
+from crispy_forms.layout import HTML, Div, Layout, Submit
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
@@ -77,21 +78,31 @@ class OznamovatelForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Oznamovatel")),
+                    Div(
+                        HTML(_("Oznamovatel")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
-                    "oznamovatel",
-                    "odpovedna_osoba",
-                    "adresa",
                     Div(
-                        Div("telefon", css_class="col-sm-6"),
-                        Div("email", css_class="col-sm-6"),
-                        css_class="row",
+                        Div("oznamovatel", css_class="col-sm-3"),
+                        Div("odpovedna_osoba", css_class="col-sm-3"),
+                        Div("adresa", css_class="col-sm-3"),
+                        Div("telefon", css_class="col-sm-3"),
+                        Div("email", css_class="col-sm-3"),
+                       css_class="row", 
                     ),
+                    FormActions(
+                        Submit(
+                            "save",
+                            "Upravit",
+                            css_class="app-entity-projekt-btn mb-n3",
+                        ),
+                    ),                    
                     css_class="card-body",
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
         self.helper.form_tag = False

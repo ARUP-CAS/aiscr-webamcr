@@ -179,6 +179,10 @@ table {
     @extend .mb-3;
     //@extend .shadow;
 
+    &:last-of-type {
+      @extend .mb-0;
+    }
+
     .card-header {
       @extend .d-flex;
       width: 100%;

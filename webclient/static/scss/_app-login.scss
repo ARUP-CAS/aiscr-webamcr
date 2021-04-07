@@ -14,8 +14,11 @@
     justify-content: center;
   
     .app-logo {
-      @extend .mb-4;
+      @extend .mb-4, .d-flex;
       width: 100%;
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
     }
   
     .card {

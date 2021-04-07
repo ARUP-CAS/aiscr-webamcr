@@ -7,15 +7,17 @@ body {
 
   &.app-login,
   &.app-oznameni {
-    padding: $spacer-4 $spacer-3;
+    &:not(.app-edit) {
+      padding: $spacer-4 $spacer-3;
 
-    #app-page-wrapper {
-      min-width: auto;
+      #app-page-wrapper {
+        min-width: auto;
 
-      .container-fluid {
-        max-width: $container-max-width-xl;
+        .container-fluid {
+          max-width: $container-max-width-xl;
+        }
       }
-    }
+    } 
   }
 }
 
