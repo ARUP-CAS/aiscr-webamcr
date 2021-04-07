@@ -1,12 +1,11 @@
 import datetime
 import logging
 
-from crispy_forms.bootstrap import FormActions
 from captcha.fields import ReCaptchaField
 from captcha.widgets import ReCaptchaV2Invisible
 from core.validators import validate_phone_number
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout, Submit
+from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
@@ -92,14 +91,7 @@ class OznamovatelForm(forms.ModelForm):
                         Div("telefon", css_class="col-sm-3"),
                         Div("email", css_class="col-sm-3"),
                        css_class="row", 
-                    ),
-                    FormActions(
-                        Submit(
-                            "save",
-                            "Upravit",
-                            css_class="app-entity-projekt-btn mb-n3",
-                        ),
-                    ),                    
+                    ),                 
                     css_class="card-body",
                 ),
                 css_class="card app-card-form",

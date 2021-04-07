@@ -128,6 +128,7 @@ class EditProjektForm(forms.ModelForm):
                 css_class="card app-card-form",
             )
         )
+        self.helper.form_tag = False
 
 
 class VratitProjektForm(forms.Form):

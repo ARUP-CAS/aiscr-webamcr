@@ -29,7 +29,9 @@
 
 {% block content %}
 	{% include "toolbar_projekt.html" with showcontrols="false" %}
-	{% crispy form_projekt %}
+	<form method="post">
+		{% crispy form_projekt %}
+	</form>
 {% endblock %}
 
 
