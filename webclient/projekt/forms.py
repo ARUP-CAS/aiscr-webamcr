@@ -112,7 +112,7 @@ class EditProjektForm(forms.ModelForm):
                                 Submit(
                                     "save",
                                     "Upravit",
-                                    css_class="app-entity-projekt-btn",
+                                    css_class="app-entity-projekt-btn mb-n3",
                                 ),
                             ),
                             css_class="col-sm-9",

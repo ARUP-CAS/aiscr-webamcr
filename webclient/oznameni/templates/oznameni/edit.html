@@ -8,10 +8,10 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Oznamovatel projektu" %} {{ oznameni.projekt.ident_cely }}</h1>
+  {% include "toolbar_projekt_oznameni.html" with showcontrols="false" %}
   <form method="post">
     {% crispy form %}
-    <input type="submit" name="save" value="{% translate 'Upravit' %}" class="btn btn-primary" id="submit-id-save">
+    <!-- <input type="submit" name="save" value="{% translate 'Upravit' %}" class="btn btn-primary" id="submit-id-save"> -->
   </form>
 {% endblock %}
 

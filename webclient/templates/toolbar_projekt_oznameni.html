@@ -1,0 +1,87 @@
+{% load i18n %}
+
+<div class="app-toolbar app-entity-projekt">
+  <div class="app-left">
+    <div class="app-entity-title">
+      <a href="#"><span class="material-icons">dynamic_feed</span> Projekt</a>
+    </div>
+    <div class="app-entity-item">
+      {{ oznameni.projekt.ident_cely }}
+    </div>
+  </div>
+  {% if showcontrols == true %}
+    <div class="app-right app-controls">
+      <div class="btn-group app-entity-projekt" role="group">
+        {% if show.vratit_link %}
+          <a href="{% url 'projekt:projekt_vratit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">arrow_back</span>
+            {% trans "Vrátit" %}
+          </a>
+        {% endif %}
+        {% if show.znovu_zapsat_link %}
+          <a href="{% url 'projekt:projekt_vratit_navrh_zruseni' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">wrap_text</span>
+            {% trans "Vrátit do stavu zapsán" %}
+          </a>
+        {% endif %}
+        {% if show.navrhnout_zruseni_link %}
+        <a href="{% url 'projekt:projekt_navrhnout_ke_zruseni' projekt.ident_cely %}" class="btn">
+          <span class="material-icons">shuffle</span>
+          {% trans "Navrhnout zrušení" %}
+        </a>
+        {% endif %}
+        {% if show.zrusit_link %}
+          <a href="{% url 'projekt:projekt_zrusit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">block</span>
+            {% trans "Zrušit" %}
+          </a>
+        {% endif %}
+        {% if show.schvalit_link %}
+          <a href="{% url 'projekt:projekt_schvalit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">done</span>
+            {% trans "Schválit" %}
+          </a>
+        {% endif %}
+        {% if show.prihlasit_link %}
+          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">login</span>
+            {% trans "Přihlásit" %}
+          </a>
+        {% endif %}
+        {% if show.zahajit_teren_link %}
+          <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">outlined_flag</span>
+            {% trans "Zahájit výzkum" %}
+          </a>
+        {% endif %}
+        {% if show.ukoncit_teren_link %}
+          <a href="{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">highlight_off</span>
+            {% trans "Ukončit výzkum" %}
+          </a>
+        {% endif %}
+        {% if show.uzavrit_link %}
+          <a href="{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">arrow_forward</span>
+            {% trans "Uzavřít" %}
+          </a>
+        {% endif %}
+        {% if show.archivovat_link %}
+          <a href="{% url 'projekt:projekt_archivovat' projekt.ident_cely %}" class="btn">
+            <span class="material-icons">archive</span>
+            {% trans "Archivovat" %}
+          </a>
+        {% endif %}
+        <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% trans "Další volby" %}
+        </button>
+        <div class="dropdown-menu" aria-labelledby="otherOptions">
+          <a class="dropdown-item" href="{% url 'projekt:projekt_smazat' projekt.ident_cely %}">{% trans "Smazat projekt" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
