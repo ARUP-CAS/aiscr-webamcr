@@ -1,7 +1,7 @@
 import logging
 
 from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
-from arch_z.models import Akce, ArcheologickyZaznam, DokumentacniJednotka
+from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
@@ -20,6 +20,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
+from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -269,10 +270,6 @@ def smazat(request, pk):
 def pripojit_dokument(request, ident_cely):
     # TODO add implementation
     return None
-
-
-def zapsat_dj(request, ident_cely):
-    pass
 
 
 def get_detail_template_shows(archeologicky_zaznam):

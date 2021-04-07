@@ -22,8 +22,6 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
-from komponenta.models import KomponentaVazby
-from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
 
@@ -318,36 +316,6 @@ class Lokalita(models.Model):
 
     class Meta:
         db_table = "lokalita"
-
-
-class DokumentacniJednotka(models.Model):
-
-    typ = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="typ",
-        related_name="dokumentacni_jednotka_typy",
-    )
-    nazev = models.TextField(blank=True, null=True)
-    negativni_jednotka = models.BooleanField()
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
-    pian = models.ForeignKey(
-        Pian, models.DO_NOTHING, db_column="pian", blank=True, null=True
-    )
-    komponenty = models.ForeignKey(
-        KomponentaVazby,
-        models.DO_NOTHING,
-        db_column="komponenty",
-        blank=True,
-        null=True,
-        related_name="dokumentacni_jednotky",
-    )
-    archeologicky_zaznam = models.ForeignKey(
-        ArcheologickyZaznam, on_delete=models.CASCADE, db_column="archeologicky_zaznam"
-    )
-
-    class Meta:
-        db_table = "dokumentacni_jednotka"
 
 
 class ExterniOdkaz(models.Model):

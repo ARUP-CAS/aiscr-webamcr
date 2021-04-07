@@ -1,4 +1,4 @@
-from arch_z.models import DokumentacniJednotka
+from dj.models import DokumentacniJednotka
 from django.db import models
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP
 from heslar.models import Heslar

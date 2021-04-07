@@ -1,0 +1,60 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Detail komponenty" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+  <div class="row">
+    <h1>{% trans "Komponenta" %} {{ komponenta.ident_cely }}</h1>
+    <a href="{% url 'dj:detail' dj_ident %}">Parent</a>
+    <div class="col">
+      <a href="#">{% trans 'Smazat' %}</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      {% trans "Detail" %}
+      <a href="#" rel="tooltip" data-placement="top"
+         title="{% trans 'Upravit' %}">
+        <span class="material-icons">edit</span>
+      </a>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col">Ident: {{ komponenta.ident_cely }}</div>
+        <div class="col">Obdobi: {{ komponenta.obdobi }}</div>
+        <div class="col">Areal: {{ komponenta.areal }}</div>
+        <div class="col">Datace: {{ komponenta.presna_datace }}</div>
+        <div class="col">Poznamka: {{ komponenta.poznamka }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">{% trans "Nalezy" %} <a href="#">+</a></div>
+    <div class="card-body">
+      <strong>Objekty:</strong>
+      {% for o in nalezy.objekty %}
+        <div class="row">
+              <div class="col">{{ o }}</div>
+            </div>
+      {% endfor %}
+      <strong>Predmety:</strong>
+      {% for p in nalezy.predmety %}
+        <div class="row">
+              <div class="col">  {{ p }}</div>
+            </div>
+      {% endfor %}
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

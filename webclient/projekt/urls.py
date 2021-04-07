@@ -6,10 +6,10 @@ from .views import ProjektListView
 app_name = "projekt"
 
 urlpatterns = [
-    path("detail/<str:ident_cely>", views.detail, name="projekt_detail"),
-    path("edit/<str:ident_cely>", views.edit, name="projekt_edit"),
-    path("smazat/<str:ident_cely>", views.smazat, name="projekt_smazat"),
-    path("list", ProjektListView.as_view(), name="projekt_list"),
+    path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("edit/<str:ident_cely>", views.edit, name="edit"),
+    path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
+    path("list", ProjektListView.as_view(), name="list"),
     path("schvalit/<str:ident_cely>", views.schvalit, name="projekt_schvalit"),
     path("prihlasit/<str:ident_cely>", views.prihlasit, name="projekt_prihlasit"),
     path(

@@ -29,6 +29,8 @@ urlpatterns = [
     path("dokument/", include("dokument.urls")),
     path("nalez/", include("nalez.urls")),
     path("adb/", include("adb.urls")),
+    path("komponenta/", include("komponenta.urls")),
+    path("dj/", include("dj.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
 

@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "neidentakce",
     "pas",
     "komponenta",
+    "dj",
 ]
 
 MIDDLEWARE = [

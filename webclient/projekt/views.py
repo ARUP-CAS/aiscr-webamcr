@@ -177,7 +177,7 @@ def smazat(request, ident_cely):
         resp = projekt.delete()
         logger.debug("Projekt smazan: " + str(resp))
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-        return redirect("projekt:projekt_list")
+        return redirect("/projekt/list")
     else:
         warnings = projekt.check_pred_smazanim()
         logger.debug(warnings)

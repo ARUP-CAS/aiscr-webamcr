@@ -293,7 +293,7 @@ class Projekt(models.Model):
         return permanent, region, year, number
 
     def get_absolute_url(self):
-        return reverse("projekt:projekt_detail", kwargs={"ident_cely": self.ident_cely})
+        return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
 
 class ProjektKatastr(models.Model):

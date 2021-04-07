@@ -22,6 +22,7 @@
     <div class="col">
       <h1>{% trans "Archeologický záznam - Akce" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span>
       </h1>
+      <a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Parent</a>
       <a href="{% url 'arch_z:smazat' zaznam.id %}">Smazat</a>
     </div>
     <div class="col">
@@ -81,26 +82,24 @@
   </div>
 
   <div class="card">
-    <div class="card-header">{% trans "Dokumentační jednotky" %}</div>
+    <div class="card-header">{% trans "Dokumentační jednotky" %}<a href="{% url 'dj:zapsat' zaznam.ident_cely %}">+</a></div>
     <div class="card-body">
       {% for j in dokumentacni_jednotky %}
         <div class="row">
-          <div class="col">Ident: {{ j.ident_cely }}</div>
+          <div class="col"><a href="{% url 'dj:detail' j.ident_cely %}">Ident: {{ j.ident_cely }}</a></div>
           <div class="col">Typ: {{ j.typ }}</div>
           <div class="col">Negativni: {{ j.negativni_jednotka }}</div>
           <div class="col">Pian: {{ j.pian.ident_cely }}</div>
         </div>
-        {% if not j.negativni_jednotka %}
           Komponenty:
-          <hr/>
           {% for k in j.komponenty.komponenty.all %}
             <div class="row">
-              <div class="col">{{ k.ident_cely }}</div>
-              <div class="col">{{ k.obdobi }}</div>
-              <div class="col">{{ k.areal }}</div>
+              <div class="col">Ident komponenty: {{ k.ident_cely }}</div>
+              <div class="col">Obdobi: {{ k.obdobi }}</div>
+              <div class="col">Areal: {{ k.areal }}</div>
             </div>
           {% endfor %}
-        {% endif %}
+        <hr/>
       {% endfor %}
     </div>
   </div>

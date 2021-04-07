@@ -1,0 +1,24 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Nová dokumentační jednotka" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+  <h1>{% trans "Nová dokumentační jednotka" %}</h1>
+
+  <form method="POST">
+
+  {% crispy form %}
+  <button type="submit" class="btn btn-primary">{% trans "Vytovřit jednotku" %}</button>
+
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

@@ -17,5 +17,4 @@ urlpatterns = [
         views.pripojit_dokument,
         name="pripojit_dokument",
     ),
-    path("<str:ident_cely>/zapsat/dj", views.zapsat_dj, name="zapsat_dj"),
 ]
