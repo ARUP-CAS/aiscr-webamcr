@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-
+  {% include "toolbar_projekt.html" with showcontrols="false" projekt=projekt %}
   <form action="{% url 'oznameni:post_upload' %}" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
@@ -17,7 +17,7 @@
     </div>
   </form>
 
-  <a class="btn btn-success btn-lg" href="{% url 'projekt:detail' ident_cely %}">{% trans "Dokončit" %}</a>
+  <a class="btn btn-success" href="{% url 'projekt:detail' ident_cely %}">{% trans "Dokončit" %}</a>
 
 {% endblock %}
 

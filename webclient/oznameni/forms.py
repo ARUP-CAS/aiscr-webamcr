@@ -76,13 +76,26 @@ class OznamovatelForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Div(
-                Div("oznamovatel", css_class="col-sm-3"),
-                Div("odpovedna_osoba", css_class="col-sm-3"),
-                Div("adresa", css_class="col-sm-3"),
-                Div("telefon", css_class="col-sm-3"),
-                Div("email", css_class="col-sm-3"),
-                css_class="row", 
-            ),     
+                Div(
+                    Div(
+                        HTML(_("Oznamovatel")),
+                        css_class="app-fx app-left",
+                    ),
+                    css_class="card-header",
+                ),
+                Div(
+                    Div(
+                        Div("oznamovatel", css_class="col-sm-3"),
+                        Div("odpovedna_osoba", css_class="col-sm-3"),
+                        Div("adresa", css_class="col-sm-3"),
+                        Div("telefon", css_class="col-sm-3"),
+                        Div("email", css_class="col-sm-3"),
+                       css_class="row", 
+                    ),                 
+                    css_class="card-body",
+                ),
+                css_class="card app-card-form",
+            )    
         )
         self.helper.form_tag = False
 
@@ -151,7 +164,10 @@ class ProjektOznameniForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Charakteristika záměru")),
+                    Div(
+                        HTML(_("Charakteristika záměru")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -169,7 +185,7 @@ class ProjektOznameniForm(forms.ModelForm):
                     "longitude",
                     css_class="card-body",
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
 
