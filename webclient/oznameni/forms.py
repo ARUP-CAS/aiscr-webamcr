@@ -91,14 +91,7 @@ class OznamovatelForm(forms.ModelForm):
                         Div("telefon", css_class="col-sm-3"),
                         Div("email", css_class="col-sm-3"),
                        css_class="row", 
-                    ),
-                    FormActions(
-                        Submit(
-                            "save",
-                            "Upravit",
-                            css_class="app-entity-projekt-btn mb-n3",
-                        ),
-                    ),                    
+                    ),                 
                     css_class="card-body",
                 ),
                 css_class="card app-card-form",
