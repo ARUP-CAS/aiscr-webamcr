@@ -32,7 +32,7 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
-            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40})
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 2, "cols": 40})
         }
 
     def __init__(self, *args, **kwargs):
@@ -77,6 +77,8 @@ class CreateAkceForm(forms.ModelForm):
             "hlavni_vedouci": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40})
         }
 
     def __init__(self, *args, **kwargs):
