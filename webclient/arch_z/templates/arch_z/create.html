@@ -11,8 +11,17 @@
 {% include "toolbar_akce.html" with showcontrols="false" %}
   <!-- <h1>{% trans "Nová projektová akce" %}</h1> -->
   <form method="post">
-    {% crispy formAZ %}
-    {% crispy formAkce %}
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Nová projektová akce" %}
+        </div>
+      </div>
+      <div class="card-body">
+        {% crispy formAZ %}
+        {% crispy formAkce %}
+      </div>
+    </div>
     <button type="submit" class="btn btn-primary app-entity-akce-btn mt-3">{% trans "Vytovřit akci" %}</button>
   </form>
 
