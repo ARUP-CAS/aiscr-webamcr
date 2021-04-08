@@ -32,6 +32,7 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40})
         }
 
     def __init__(self, *args, **kwargs):
