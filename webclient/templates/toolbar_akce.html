@@ -6,7 +6,7 @@
       <a href="#"><span class="material-icons">brush</span> Akce</a>
     </div>
     <div class="app-entity-item">
-      {{ zaznam.ident_cely }}
+      {{ zaznam.ident_cely }}<span class="app-pipe"></span><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Zpět na detail projektu</a>
     </div>
   </div>
   {% if showcontrols == true %}
