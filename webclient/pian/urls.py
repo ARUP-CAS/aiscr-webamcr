@@ -5,5 +5,5 @@ from . import views
 app_name = "pian"
 
 urlpatterns = [
-    path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("detail/", views.detail, name="detail"),
 ]

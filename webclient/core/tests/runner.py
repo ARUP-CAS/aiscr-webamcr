@@ -2,6 +2,8 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import AZ_STAV_ZAPSANY, D_STAV_ZAPSANY
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
+
+from dj.models import DokumentacniJednotka
 from dokument.models import Dokument
 from heslar import hesla
 from heslar.hesla import (
@@ -17,7 +19,7 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     PRISTUPNOST_ANONYM_ID,
-    TYP_PROJEKTU_ZACHRANNY_ID,
+    TYP_PROJEKTU_ZACHRANNY_ID, HESLAR_DJ_TYP,
 )
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from oznameni.models import Oznamovatel
@@ -35,6 +37,7 @@ HLAVNI_TYP_SONDA_ID = 1234
 TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
 MATERIAL_DOKUMENTU_DIGI_SOUBOR = 229
 JAZYK_DOKUMENTU_CESTINA_ID = 1256
+TYP_DJ_CELEK_AKCE_ID = 321
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -138,12 +141,11 @@ class AMCRTestRunner(BaseRunner):
         hsd = HeslarNazev(id=HESLAR_DATUM_SPECIFIKACE, nazev="heslar_specifikace_data")
         hta = HeslarNazev(id=HESLAR_AKCE_TYP, nazev="heslar_typ_akce_druha")
         htd = HeslarNazev(id=HESLAR_DOKUMENT_TYP, nazev="heslar_typ_dokumentu")
-        hmd = HeslarNazev(
-            id=HESLAR_DOKUMENT_MATERIAL, nazev="heslar_material_dokumentu"
-        )
+        hmd = HeslarNazev(id=HESLAR_DOKUMENT_MATERIAL, nazev="heslar_material_dokumentu")
+        hdj = HeslarNazev(id=HESLAR_DJ_TYP, nazev="heslar_dj_typ")
         hjd = HeslarNazev(id=HESLAR_JAZYK, nazev="heslar_jazyk_dokumentu")
         hpd = HeslarNazev(id=HESLAR_POSUDEK_TYP, nazev="heslar_posudek")
-        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd, hjd, hpd]
+        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd, hjd, hpd, hdj]
         for n in nazvy_heslaru:
             n.save()
 
@@ -164,6 +166,7 @@ class AMCRTestRunner(BaseRunner):
             nazev_heslare=hmd,
         ).save()
         Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd).save()
+        Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj).save()
         Heslar(
             id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd
         ).save()
@@ -219,6 +222,15 @@ class AMCRTestRunner(BaseRunner):
         )
         a.projekt = p
         a.save()
+
+        # Dokumentacni jednotka akce
+        dj = DokumentacniJednotka(
+            typ=Heslar.objects.get(id=TYP_DJ_CELEK_AKCE_ID),
+            negativni_jednotka=True,
+            ident_cely="C-202000001A-D01"
+        )
+        dj.archeologicky_zaznam = az
+        dj.save()
 
         # Osoba
         osoba = Osoba(

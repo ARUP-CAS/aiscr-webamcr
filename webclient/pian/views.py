@@ -9,6 +9,6 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["GET"])
-def detail(request, ident_cely):
+def detail(request):
     context = {}
     return render(request, "pian/detail.html", context)
