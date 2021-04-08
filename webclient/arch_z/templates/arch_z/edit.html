@@ -9,16 +9,33 @@
 {% endblock %}
 
 {% block content %}
+  {% include "toolbar_akce.html" with showcontrols="false" %}
 
-<h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
+  <form method="post">
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Archeologický záznam" %}
+          <span class="badge badge-info">{{ zaznam.get_stav_display }}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        {% crispy formAZ %}
+        {% crispy formAkce %}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary app-entity-akce-btn mt-3">{% trans "Uložit změny" %}</button>
+  </form>
 
-<form method="POST">
+  <!-- <h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
 
-  {% crispy formAZ %}
-  {% crispy formAkce %}
-  <button type="submit" class="btn btn-primary">{% trans "Edituj" %}</button>
+  <form method="POST">
 
-</form>
+    {% crispy formAZ %}
+    {% crispy formAkce %}
+    <button type="submit" class="btn btn-primary">{% trans "Edituj" %}</button>
+
+  </form> -->
 
 {% endblock %}
 
