@@ -111,8 +111,8 @@ class CreateAkceForm(forms.ModelForm):
                 Div("datum_ukonceni", css_class="col-sm-4"),
                 Div("lokalizace_okolnosti", css_class="col-sm-6"),
                 Div("ulozeni_nalezu", css_class="col-sm-6"),
-                Div("hlavni_typ", css_class="col-sm-4"),
-                Div("vedlejsi_typ", css_class="col-sm-4"),
+                Div("hlavni_typ", css_class="col-sm-3"),
+                Div("vedlejsi_typ", css_class="col-sm-3"),
                 css_class="row",
             ),   
         )
