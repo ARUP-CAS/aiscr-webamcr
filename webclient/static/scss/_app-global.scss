@@ -91,16 +91,16 @@ table {
 // select form control fix
 .select2-container {
   min-width: unset !important;
-  min-height: 31px !important;
+  min-height: $app-form-control-fix-height !important;
 
   .select2-selection {
-    height: 31px !important;
+    height: $app-form-control-fix-height!important;
     border: 1px solid #ced4da !important;
     border-radius: 0.2rem !important;
 
     &.form-control {
       @extend .p-0;
-      min-height: 31px;
+      min-height: $app-form-control-fix-height;
       height: unset !important;
 
       ul {
@@ -110,6 +110,14 @@ table {
       }
     }
   }  
+}
+
+// select bootstrap fix
+.bootstrap-select {
+  .dropdown-toggle {
+    height: $app-form-control-fix-height;
+    padding: 0.1rem 0.5rem;
+  }
 }
 
 // multiple upload form

@@ -20,9 +20,167 @@
 
   {% include "toolbar_akce.html" with zaznam=zaznam %}
 
-  <a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Parent</a>
+  <!-- <a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Parent</a> -->
 
-  <div class="card">
+
+  <div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "Detail" %}
+      </div>
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+          </div>
+          <button class="btn app-entity-akce" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+            <span class="material-icons">more_vert</span>
+          </button>
+          <a class="btn app-entity-akce" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+            <span class="material-icons">edit</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>{% trans "Hlavní katastr" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.hlavni_katastr }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>{% trans "Přístupnost" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.pristupnost }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>{% trans "Další katastry" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.katastry.all|katastry_to_list }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div class="form-group">
+            <label>{% trans "Uživatelské označení" %}</label>
+            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni }}" readonly></textarea>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>{% trans "Hlavní vedoucí" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.hlavni_vedouci }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>{% trans "Datum zahájení" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            <label>{% trans "Datum ukončení" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label>{% trans "Lokalizace okolností" %}</label>
+            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="form-group">
+            <label>{% trans "Uložení nálezu" %}</label>
+            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu }}" readonly></textarea>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <label>{% trans "Hlavní typ" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.hlavni_typ }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <label>{% trans "Vedlejší typ" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.vedlejsi_typ }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <label>{% trans "Poznámka" %}</label>
+            <input class="form-control" type="text" placeholder="{{ zaznam.poznamka }}" readonly>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <label>{% trans "Odeslat ZAA jako NZ" %}</label>
+            <input class="form-control" type="text" placeholder="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "Dokumentační jednotky" %}
+      </div>
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+          </div>
+          <a class="btn app-entity-akce" href="{% url 'dj:zapsat' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
+            <span class="material-icons">add</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      content
+    </div>
+  </div>
+
+  <div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "Dokumenty" %}
+      </div>
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
+            <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+          </div>
+          <a class="btn app-entity-akce" href="{% url 'dj:zapsat' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
+            <span class="material-icons">add</span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      content
+    </div>
+  </div>
+
+  
+  
+
+  <!-- <div class="card">
     <div class="card-header">
       {% trans "Detail" %}
       <a href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip" data-placement="top"
@@ -55,7 +213,7 @@
       </div>
 
     </div>
-  </div>
+  </div> -->
 
   <div class="card">
     <div class="card-header">{% trans "Dokumentační jednotky" %}<a href="{% url 'dj:zapsat' zaznam.ident_cely %}">+</a></div>

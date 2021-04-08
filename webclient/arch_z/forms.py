@@ -32,6 +32,7 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 2, "cols": 40})
         }
 
     def __init__(self, *args, **kwargs):
@@ -42,25 +43,12 @@ class CreateArchZForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Nová projektová akce")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div("hlavni_katastr", css_class="col-sm-4"),
-                        Div("pristupnost", css_class="col-sm-4"),
-                        Div("katastry", css_class="col-sm-4"),
-                        Div("uzivatelske_oznaceni", css_class="col-sm-12"),
-                       css_class="row", 
-                    ),                 
-                    css_class="card-body",
-                ),
-                css_class="card app-card-form",
-            )    
+                Div("hlavni_katastr", css_class="col-sm-4"),
+                Div("pristupnost", css_class="col-sm-4"),
+                Div("katastry", css_class="col-sm-4"),
+                Div("uzivatelske_oznaceni", css_class="col-sm-12"),
+                css_class="row", 
+            ),  
         )
 
         self.helper.form_tag = False
@@ -89,6 +77,8 @@ class CreateAkceForm(forms.ModelForm):
             "hlavni_vedouci": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40})
         }
 
     def __init__(self, *args, **kwargs):
@@ -116,28 +106,15 @@ class CreateAkceForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Vytvorit akci")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div("hlavni_vedouci", css_class="col-sm-4"),
-                        Div("datum_zahajeni", css_class="col-sm-4"),
-                        Div("datum_ukonceni", css_class="col-sm-4"),
-                        Div("lokalizace_okolnosti", css_class="col-sm-6"),
-                        Div("ulozeni_nalezu", css_class="col-sm-6"),
-                        Div("hlavni_typ", css_class="col-sm-4"),
-                        Div("vedlejsi_typ", css_class="col-sm-4"),
-                       css_class="row",
-                    ),                 
-                    css_class="card-body",
-                ),
-                css_class="card app-card-form",
-            )    
+                Div("hlavni_vedouci", css_class="col-sm-4"),
+                Div("datum_zahajeni", css_class="col-sm-4"),
+                Div("datum_ukonceni", css_class="col-sm-4"),
+                Div("lokalizace_okolnosti", css_class="col-sm-6"),
+                Div("ulozeni_nalezu", css_class="col-sm-6"),
+                Div("hlavni_typ", css_class="col-sm-3"),
+                Div("vedlejsi_typ", css_class="col-sm-3"),
+                css_class="row",
+            ),   
         )
 
         self.helper.form_tag = False

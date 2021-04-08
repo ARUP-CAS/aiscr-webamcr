@@ -85,9 +85,9 @@ class OznamovatelForm(forms.ModelForm):
                 ),
                 Div(
                     Div(
-                        Div("oznamovatel", css_class="col-sm-3"),
-                        Div("odpovedna_osoba", css_class="col-sm-3"),
-                        Div("adresa", css_class="col-sm-3"),
+                        Div("oznamovatel", css_class="col-sm-6"),
+                        Div("odpovedna_osoba", css_class="col-sm-6"),
+                        Div("adresa", css_class="col-sm-6"),
                         Div("telefon", css_class="col-sm-3"),
                         Div("email", css_class="col-sm-3"),
                        css_class="row", 
