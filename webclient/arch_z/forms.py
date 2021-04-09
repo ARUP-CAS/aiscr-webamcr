@@ -63,6 +63,8 @@ class CreateAkceForm(forms.ModelForm):
             "datum_ukonceni",
             "lokalizace_okolnosti",
             "ulozeni_nalezu",
+            "souhrn_upresneni",
+            "je_nz"
         )
 
         labels = {
@@ -71,6 +73,8 @@ class CreateAkceForm(forms.ModelForm):
             "datum_ukonceni": _("Datum ukončení"),
             "lokalizace_okolnosti": _("Lokalizace okolností"),
             "ulozeni_nalezu": _("Uložení nálezu"),
+            "souhrn_upresneni": _("Poznámka"),
+            "je_nz": _("Odeslat ZAA jako NZ")
         }
 
         widgets = {
@@ -78,7 +82,8 @@ class CreateAkceForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40})
+            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "souhrn_upresneni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -113,6 +118,8 @@ class CreateAkceForm(forms.ModelForm):
                 Div("ulozeni_nalezu", css_class="col-sm-6"),
                 Div("hlavni_typ", css_class="col-sm-3"),
                 Div("vedlejsi_typ", css_class="col-sm-3"),
+                Div("souhrn_upresneni", css_class="col-sm-3"),
+                Div("je_nz", css_class="col-sm-3"),
                 css_class="row",
             ),   
         )
