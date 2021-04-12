@@ -1,5 +1,5 @@
 from arch_z.models import Akce, ArcheologickyZaznam
-from core.constants import AZ_STAV_ZAPSANY, D_STAV_ZAPSANY
+from core.constants import AZ_STAV_ZAPSANY, D_STAV_ZAPSANY, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 
@@ -22,6 +22,7 @@ from heslar.hesla import (
     TYP_PROJEKTU_ZACHRANNY_ID, HESLAR_DJ_TYP,
 )
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
+from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
@@ -224,12 +225,15 @@ class AMCRTestRunner(BaseRunner):
         a.save()
 
         # Dokumentacni jednotka akce
+        kv = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
+        kv.save()
         dj = DokumentacniJednotka(
             typ=Heslar.objects.get(id=TYP_DJ_CELEK_AKCE_ID),
             negativni_jednotka=True,
             ident_cely="C-202000001A-D01"
         )
         dj.archeologicky_zaznam = az
+        dj.komponenty = kv
         dj.save()
 
         # Osoba

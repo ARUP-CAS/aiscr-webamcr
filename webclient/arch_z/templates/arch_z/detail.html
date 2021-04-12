@@ -142,9 +142,9 @@
             <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
             <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
           </div>
-          <a class="btn app-entity-akce" href="{% url 'dj:zapsat' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
+          <button class="btn app-entity-akce" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
             <span class="material-icons">add</span>
-          </a>
+          </button>
         </div>
       </div>
     </div>
@@ -177,8 +177,8 @@
     </div>
   </div>
 
-  
-  
+
+
 
   <!-- <div class="card">
     <div class="card-header">
@@ -216,23 +216,24 @@
   </div> -->
 
   <div class="card">
-    <div class="card-header">{% trans "Dokumentační jednotky" %}<a href="{% url 'dj:zapsat' zaznam.ident_cely %}">+</a></div>
+    <div class="card-header">{% trans "Dokumentační jednotky" %}
+    </div>
     <div class="card-body">
       {% for j in dokumentacni_jednotky %}
         <div class="row">
-          <div class="col"><a href="{% url 'dj:detail' j.ident_cely %}">Ident: {{ j.ident_cely }}</a></div>
+          <div class="col">Ident: {{ j.ident_cely }}<button onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">Detail</button></div>
           <div class="col">Typ: {{ j.typ }}</div>
           <div class="col">Negativni: {{ j.negativni_jednotka }}</div>
           <div class="col">Pian: {{ j.pian.ident_cely }}</div>
         </div>
-          Komponenty:
-          {% for k in j.komponenty.komponenty.all %}
-            <div class="row">
-              <div class="col">Ident komponenty: {{ k.ident_cely }}</div>
-              <div class="col">Obdobi: {{ k.obdobi }}</div>
-              <div class="col">Areal: {{ k.areal }}</div>
-            </div>
-          {% endfor %}
+        Komponenty:
+        {% for k in j.komponenty.komponenty.all %}
+          <div class="row">
+            <div class="col">Ident komponenty: {{ k.ident_cely }}</div>
+            <div class="col">Obdobi: {{ k.obdobi }}</div>
+            <div class="col">Areal: {{ k.areal }}</div>
+          </div>
+        {% endfor %}
         <hr/>
       {% endfor %}
     </div>
@@ -255,7 +256,72 @@
     </div>
   </div>
 
+  <!-- formy -->
+  <div id="dj_forms">
+    <div id="create_dj_form" style="display: none;">
+      <h3>Nová dokumentační jednotka</h3>
+      <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}">
+        {% crispy dj_form_create %}
+        <button type="submit" class="btn btn-primary">{% trans "Vytovřit jednotku" %}</button>
+      </form>
+    </div>
+
+    {% for j in dj_forms_detail %}
+      <div id="detail_dj_form_{{ j.ident_cely }}" style="display: none;">
+        <h3>Dokumentační jednotka {{ j.ident_cely }}</h3>
+        <button onclick="show_create_komponenta_form('{% url 'komponenta:zapsat' j.ident_cely %}')">Pridat komponentu</button>
+        <form method="POST" action="{% url 'dj:detail' j.ident_cely %}">
+          {% crispy j.form %}
+          <button type="submit" class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
+        </form>
+      </div>
+    {% endfor %}
+
+    <div id="create_komponenta_form" style="display: none;">
+      <h3>Nová komponenta</h3>
+      <form method="POST" action="#" id="create_komponenta_form_id">
+        {% crispy komponenta_form_create %}
+        <button type="submit" class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
+      </form>
+    </div>
+
+    {% for k in komponenta_forms_detail %}
+      <div id="detail_komponenta_form_{{ k.ident_cely }}" style="display: none;">
+        <h3>Komponenta {{ k.ident_cely }}</h3>
+        <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}">
+          {% crispy k.form %}
+          <button type="submit" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
+        </form>
+      </div>
+    {% endfor %}
+
+  </div>
+
 {% endblock %}
 
 {% block script %}
+  <script>
+      let shown_form_id = "";
+      function show_form(form_id) {
+          console.log(form_id)
+          var form = document.getElementById(form_id);
+          console.log(form)
+          if (form.style.display === "none") {
+              // hide the form what was shown
+              if (shown_form_id !== "") {
+                  document.getElementById(shown_form_id).style.display = "none"
+              }
+              // Show desired form
+              form.style.display = "block";
+              shown_form_id = form_id
+          }
+      }
+      function show_create_komponenta_form(url){
+          console.log("show_create_komponenta_form");
+          show_form('create_komponenta_form');
+          var forma = document.getElementById("create_komponenta_form_id");
+          forma.action = url;
+      }
+
+  </script>
 {% endblock %}

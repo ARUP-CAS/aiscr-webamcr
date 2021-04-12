@@ -64,3 +64,36 @@ def get_project_event_ident(project: Projekt) -> str:
     else:
         logger.error("Project is missing ident_cely")
         return None
+
+
+def get_dj_ident(event: ArcheologickyZaznam) -> str:
+    MAXIMAL_EVENT_DJS: int = 99
+    max_count = 0
+    for dj in event.dokumentacni_jednotky.all():
+        last_digits = int(dj.ident_cely[-2:])
+        if max_count < last_digits:
+            max_count = last_digits
+    event_ident = event.ident_cely
+    if max_count < MAXIMAL_EVENT_DJS:
+        ident = event_ident + "-D" + str(max_count + 1).zfill(2)
+        return ident
+    else:
+        logger.error("Maximal number of DJs is 99.")
+        return None
+
+
+def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
+    MAXIMAL_EVENT_DJS: int = 99
+    max_count = 0
+    for dj in event.dokumentacni_jednotky.all():
+        for komponenta in dj.komponenty.komponenty.all():
+            last_digits = int(komponenta.ident_cely[-2:])
+            if max_count < last_digits:
+                max_count = last_digits
+    event_ident = event.ident_cely
+    if max_count < MAXIMAL_EVENT_DJS:
+        ident = event_ident + "-K" + str(max_count + 1).zfill(2)
+        return ident
+    else:
+        logger.error("Maximal number of Komponentas is 99.")
+        return None

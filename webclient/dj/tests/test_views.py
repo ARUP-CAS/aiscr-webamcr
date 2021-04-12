@@ -1,11 +1,4 @@
-from core.tests.runner import (
-    add_middleware_to_request,
-)
-from django.contrib.messages.middleware import MessageMiddleware
-from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
-
-from dj.views import zapsat, detail
 from uzivatel.models import User
 
 

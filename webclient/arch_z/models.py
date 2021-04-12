@@ -237,14 +237,14 @@ class Akce(models.Model):
             )
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
-        if len(self.archeologicky_zaznam.dokumentacnijednotka_set.all()) == 0:
+        if len(self.archeologicky_zaznam.dokumentacni_jednotky.all()) == 0:
             result.append(_("Nemá relaci na dokumentační jednotku."))
             logger.debug(
                 "Akce "
                 + self.archeologicky_zaznam.ident_cely
                 + " nema dokumentacni jednotku."
             )
-        for dj in self.archeologicky_zaznam.dokumentacnijednotka_set.all():
+        for dj in self.archeologicky_zaznam.dokumentacni_jednotky.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
             if (
