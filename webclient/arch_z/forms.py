@@ -1,4 +1,5 @@
 from arch_z.models import Akce, ArcheologickyZaznam
+from core.forms import TwoLevelSelectField
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Button, Div, Layout, Submit
@@ -32,7 +33,7 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
-            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 2, "cols": 40})
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -47,8 +48,8 @@ class CreateArchZForm(forms.ModelForm):
                 Div("pristupnost", css_class="col-sm-4"),
                 Div("katastry", css_class="col-sm-4"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-12"),
-                css_class="row", 
-            ),  
+                css_class="row",
+            ),
         )
 
         self.helper.form_tag = False
@@ -64,7 +65,9 @@ class CreateAkceForm(forms.ModelForm):
             "lokalizace_okolnosti",
             "ulozeni_nalezu",
             "souhrn_upresneni",
-            "je_nz"
+            "je_nz",
+            "hlavni_typ",
+            "vedlejsi_typ",
         )
 
         labels = {
@@ -74,7 +77,7 @@ class CreateAkceForm(forms.ModelForm):
             "lokalizace_okolnosti": _("Lokalizace okolností"),
             "ulozeni_nalezu": _("Uložení nálezu"),
             "souhrn_upresneni": _("Poznámka"),
-            "je_nz": _("Odeslat ZAA jako NZ")
+            "je_nz": _("Odeslat ZAA jako NZ"),
         }
 
         widgets = {
@@ -89,7 +92,7 @@ class CreateAkceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CreateAkceForm, self).__init__(*args, **kwargs)
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
-        self.fields["hlavni_typ"] = forms.CharField(
+        self.fields["hlavni_typ"] = TwoLevelSelectField(
             label=_("Hlavní typ"),
             widget=forms.Select(
                 choices=choices,
@@ -97,7 +100,7 @@ class CreateAkceForm(forms.ModelForm):
             ),
             required=True,
         )
-        self.fields["vedlejsi_typ"] = forms.CharField(
+        self.fields["vedlejsi_typ"] = TwoLevelSelectField(
             label=_("Vedlejší typ"),
             widget=forms.Select(
                 choices=choices,
@@ -121,7 +124,7 @@ class CreateAkceForm(forms.ModelForm):
                 Div("vedlejsi_typ", css_class="col-sm-4"),
                 Div("je_nz", css_class="col-sm-4 d-flex align-items-end"),
                 css_class="row",
-            ),   
+            ),
         )
 
         self.helper.form_tag = False

@@ -12,7 +12,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
-from heslar.models import Heslar
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 
@@ -46,13 +45,6 @@ def zapsat(request, dj_ident_cely):
         komponenta = form.save(commit=False)
         komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
         komponenta.komponenta_vazby = dj.komponenty
-
-        areal = form.cleaned_data["areal"]
-        obdobi = form.cleaned_data["obdobi"]
-        if areal:
-            komponenta.areal = Heslar.objects.get(pk=int(areal))
-        if obdobi:
-            komponenta.obdobi = Heslar.objects.get(pk=int(obdobi))
         komponenta.save()
 
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)

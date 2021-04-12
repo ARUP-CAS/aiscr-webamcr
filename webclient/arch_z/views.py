@@ -229,13 +229,6 @@ def zapsat(request, projekt_ident_cely):
             az.set_zapsany(request.user)
             akce = form_akce.save(commit=False)
             akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
-            # Workaround for multi-layer choicefields. The form returns string, not heslar object.
-            hlavni_typ = form_akce.cleaned_data["hlavni_typ"]
-            vedlejsi_typ = form_akce.cleaned_data["vedlejsi_typ"]
-            if hlavni_typ:
-                akce.hlavni_typ = Heslar.objects.get(pk=int(hlavni_typ))
-            if vedlejsi_typ:
-                akce.vedlejsi_typ = Heslar.objects.get(pk=int(vedlejsi_typ))
             akce.archeologicky_zaznam = az
             akce.projekt = projekt
             akce.save()

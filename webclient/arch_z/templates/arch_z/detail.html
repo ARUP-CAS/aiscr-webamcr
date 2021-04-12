@@ -229,7 +229,7 @@
         Komponenty:
         {% for k in j.komponenty.komponenty.all %}
           <div class="row">
-            <div class="col">Ident komponenty: {{ k.ident_cely }}</div>
+            <div class="col">Ident komponenty: {{ k.ident_cely }}<button onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">Detail</button></div>
             <div class="col">Obdobi: {{ k.obdobi }}</div>
             <div class="col">Areal: {{ k.areal }}</div>
           </div>
