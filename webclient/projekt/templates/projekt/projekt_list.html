@@ -8,25 +8,24 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <h1>{% trans "Projekty" %}</h1>
-  {% if filter %}
-    <form method="get">
+  <div class="app-entity-projekt">
+    {% include "toolbar_projekt.html" with projekt=projekt %}
 
-      <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false"
-              aria-controls="collapseExample">
-        {% trans "Filtr" %}
-      </button>
-      <div class="collapse" id="filter">
-        <div class="card card-body">
-          {{ filter.form|crispy }}
-          <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
+    {% if filter %}
+      <form method="get">
+        <button class="btn btn-primary mb-3 collapsed" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
+          <span class="material-icons">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
+        </button>
+        <div class="collapse mb-3" id="filter">
+          <div class="card card-body">
+            {{ filter.form|crispy }}
+            <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
+          </div>
         </div>
-      </div>
-
-    </form>
-  {% endif %}
-  {% render_table table 'django_tables2/bootstrap4.html' %}
-
+      </form>
+    {% endif %}
+    {% render_table table 'django_tables2/bootstrap4.html' %}
+  </div>
 {% endblock %}
 
 {% block script %}
