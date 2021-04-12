@@ -20,6 +20,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
+from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -29,6 +30,7 @@ from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from heslar.hesla import SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
+from komponenta.forms import CreateKomponentaForm
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -58,6 +60,27 @@ def detail(request, ident_cely):
         .select_related("komponenty")
         .prefetch_related("komponenty__komponenty")
     )
+
+    dj_form_create = CreateDJForm()
+    komponenta_form_create = CreateKomponentaForm()
+    dj_forms_detail = []
+    komponenta_forms_detail = []
+    for jednotka in jednotky:
+        dj_forms_detail.append(
+            {"ident_cely": jednotka.ident_cely, "form": CreateDJForm(instance=jednotka)}
+        )
+        for komponenta in jednotka.komponenty.komponenty.all():
+            komponenta_forms_detail.append(
+                {
+                    "ident_cely": komponenta.ident_cely,
+                    "form": CreateKomponentaForm(instance=komponenta),
+                }
+            )
+
+    context["dj_form_create"] = dj_form_create
+    context["dj_forms_detail"] = dj_forms_detail
+    context["komponenta_form_create"] = komponenta_form_create
+    context["komponenta_forms_detail"] = komponenta_forms_detail
 
     context["zaznam"] = zaznam
     context["dokumenty"] = dokumenty
@@ -206,13 +229,6 @@ def zapsat(request, projekt_ident_cely):
             az.set_zapsany(request.user)
             akce = form_akce.save(commit=False)
             akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
-            # Workaround for multi-layer choicefields. The form returns string, not heslar object.
-            hlavni_typ = form_akce.cleaned_data["hlavni_typ"]
-            vedlejsi_typ = form_akce.cleaned_data["vedlejsi_typ"]
-            if hlavni_typ:
-                akce.hlavni_typ = Heslar.objects.get(pk=int(hlavni_typ))
-            if vedlejsi_typ:
-                akce.vedlejsi_typ = Heslar.objects.get(pk=int(vedlejsi_typ))
             akce.archeologicky_zaznam = az
             akce.projekt = projekt
             akce.save()

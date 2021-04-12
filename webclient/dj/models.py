@@ -30,7 +30,10 @@ class DokumentacniJednotka(models.Model):
         related_name="dokumentacni_jednotky",
     )
     archeologicky_zaznam = models.ForeignKey(
-        ArcheologickyZaznam, on_delete=models.CASCADE, db_column="archeologicky_zaznam"
+        ArcheologickyZaznam,
+        on_delete=models.CASCADE,
+        db_column="archeologicky_zaznam",
+        related_name="dokumentacni_jednotky",
     )
 
     class Meta:

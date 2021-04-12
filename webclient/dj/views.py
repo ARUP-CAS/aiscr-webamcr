@@ -2,12 +2,18 @@ import logging
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
-from core.message_constants import ZAZNAM_USPECNE_VYTVOREN
+from core.ident_cely import get_dj_ident
+from core.message_constants import (
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
+    ZAZNAM_USPECNE_VYTVOREN,
+    ZAZNAM_USPESNE_EDITOVAN,
+)
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
 from komponenta.models import KomponentaVazby
 
@@ -15,42 +21,43 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-@require_http_methods(["GET"])
+@require_http_methods(["POST"])
 def detail(request, ident_cely):
-    context = {}
-    dj = DokumentacniJednotka.objects.select_related("typ").get(ident_cely=ident_cely)
+    dj = DokumentacniJednotka.objects.get(ident_cely=ident_cely)
+    form = CreateDJForm(request.POST, instance=dj)
+    if form.is_valid():
+        logger.debug("Form is valid")
+        dj = form.save()
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+    else:
+        logger.warning("Form is not valid")
+        logger.debug(form.errors)
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
-    context["dj"] = dj
-    context["komponenty"] = dj.komponenty.komponenty.all()
-
-    return render(request, "dj/detail.html", context)
+    return redirect("/arch_z/detail/" + dj.archeologicky_zaznam.ident_cely)
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["POST"])
 def zapsat(request, arch_z_ident_cely):
     az = ArcheologickyZaznam.objects.get(ident_cely=arch_z_ident_cely)
-    if request.method == "POST":
-        form = CreateDJForm(request.POST)
+    form = CreateDJForm(request.POST)
+    if form.is_valid():
+        logger.debug("Form is valid")
+        vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
+        vazba.save()  # TODO rewrite to signals
 
-        if form.is_valid():
-            logger.debug("Form is valid")
-            vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
-            vazba.save()  # TODO rewrite to signals
+        dj = form.save(commit=False)
+        dj.ident_cely = get_dj_ident(az)
+        dj.komponenty = vazba
+        dj.archeologicky_zaznam = az
+        resp = dj.save()
+        logger.debug(resp)
 
-            dj = form.save(commit=False)
-            dj.ident_cely = "IDENT AAA"  # TODO
-            dj.komponenty = vazba
-            dj.archeologicky_zaznam = az
-            dj.save()
-
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)
-            return redirect("/arch_z/detail/" + az.ident_cely)
-
-        else:
-            logger.warning("Form is not valid")
-            logger.debug(form.errors)
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)
     else:
-        form = CreateDJForm()
+        logger.warning("Form is not valid")
+        logger.debug(form.errors)
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    return render(request, "dj/create.html", {"form": form})
+    return redirect("/arch_z/detail/" + az.ident_cely)

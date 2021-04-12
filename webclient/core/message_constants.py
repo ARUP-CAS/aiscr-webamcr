@@ -3,7 +3,9 @@ from typing import Final
 FORM_NOT_VALID: Final = "Forma není validní."
 
 ZAZNAM_USPECNE_VYTVOREN: Final = "Záznam byl úspěšně vytvořen."
+ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = "Záznam se nepovedlo vytvořit."
 ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
+ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = "Záznam se nepovedlo editovat."
 ZAZNAM_USPESNE_SMAZAN: Final = "Záznam byl úspěšně smazán."
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = "Záznam nebyl smazán."
 

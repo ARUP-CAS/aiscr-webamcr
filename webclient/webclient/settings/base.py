@@ -177,6 +177,10 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": True,
         },
+        "historie": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
         "oznameni": {
             "handlers": ["console"],
             "level": "DEBUG",
@@ -186,10 +190,6 @@ LOGGING = {
             "level": "DEBUG",
         },
         "heslar": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        },
-        "historie": {
             "handlers": ["console"],
             "level": "DEBUG",
         },
@@ -210,6 +210,30 @@ LOGGING = {
             "level": "DEBUG",
         },
         "dokument": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "dj": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "komponenta": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "nalez": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "adb": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "pas": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "neident_akce": {
             "handlers": ["console"],
             "level": "DEBUG",
         },
