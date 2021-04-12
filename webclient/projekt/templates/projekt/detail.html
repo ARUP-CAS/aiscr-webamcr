@@ -367,7 +367,7 @@
       </div>
     </div>
 
-    <div class="card app-card-form">
+    <div class="card app-card-form app-card-akce">
       <div class="card-header">
         <div class="app-fx app-left">
           {% trans "Archeologické akce" %}
@@ -385,7 +385,7 @@
         <table class="table table-striped table-hover table-sm mb-0">
           <thead>
             <tr>
-              <th>{% trans "Ident cely" %}</th>
+              <th class="app-ident-cely">{% trans "Ident cely" %}</th>
               <th>{% trans "Přístupnost" %}</th>
               <th>{% trans "Katastry" %}</th>
               <th>{% trans "Vedoucí" %}</th>
@@ -397,8 +397,8 @@
           </thead>
           <tbody>
             {% for a in akce %}
-              <tr class="app-entity-akce">
-                <td class="app-ident">
+              <tr>
+                <td class="app-ident-cely">
                   <a href="{% url 'arch_z:detail' a.archeologicky_zaznam.ident_cely %}">
                     <span class="material-icons">brush</span>
                     {{ a.archeologicky_zaznam.ident_cely }}
@@ -428,7 +428,7 @@
     </div>
 
     {% if show.samostatne_nalezy %}
-    <div class="card app-card-form">
+    <div class="card app-card-form app-card-samostatny_nalez">
       <div class="card-header">
         <div class="app-fx app-left">
           {% trans "Samostatné nálezy" %}
@@ -459,8 +459,8 @@
           </thead>
           <tbody>
             {% for nalez in samostatne_nalezy %}
-              <tr class="app-entity-akce">
-                <td class="app-ident">
+              <tr>
+                <td class="app-ident-cely">
                   <a href="">
                     <span class="material-icons">brush</span>
                     {{ nalez.ident_cely }}

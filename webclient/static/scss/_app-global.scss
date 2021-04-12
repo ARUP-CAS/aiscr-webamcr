@@ -67,14 +67,21 @@ table {
 
   tr {
     // set behavior of the elements in entity table row
-    @include setEntityColor(tableRow);
+    //@include setEntityColor(tableRow);
+    $app-ident-cely: 150px;
 
     th {
       vertical-align: top;
+
+      &.app-ident-cely {
+        width: $app-ident-cely;
+      }
     }
 
     td {
-      &.app-ident {
+      &.app-ident-cely {
+        width: $app-ident-cely;
+
         .material-icons {
           @include setIcon(18);
         }

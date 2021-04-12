@@ -175,6 +175,32 @@
         background-color: $color;
       }
     }
+
+    // card behavior based on entity
+    .app-card-#{$entity} {
+      table {
+        tr {
+          td {
+            &.app-ident-cely {
+              color: $color !important;
+
+              .material-icons {
+                color: $color;
+              }
+
+              a {
+                color: $color;
+              }
+            }
+
+            .badge {
+              background-color: $color;
+              color: $white;
+            }
+          }
+        }
+      }
+    }
   }
 }
 
