@@ -17,12 +17,10 @@
 {% endblock %}
 
 {% block content %}
-
+<div class="app-entity-akce">
   {% include "toolbar_akce.html" with zaznam=zaznam %}
 
   <!-- <a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Parent</a> -->
-
-
   <div class="card app-card-form">
     <div class="card-header">
       <div class="app-fx app-left">
@@ -280,6 +278,7 @@
       {% endfor %}
     </div>
   </div>
+</div>
 
   <!-- formy -->
   <div id="dj_forms">

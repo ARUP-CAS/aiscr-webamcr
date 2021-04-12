@@ -9,34 +9,35 @@
 {% endblock %}
 
 {% block content %}
+  <div class="app-entity-akce">
   {% include "toolbar_akce.html" with showcontrols="false" %}
 
-  <form method="post">
-    <div class="card app-card-form">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Archeologický záznam" %}
-          <span class="badge badge-info">{{ zaznam.get_stav_display }}</span>
+    <form method="post">
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {% trans "Archeologický záznam" %}
+            <span class="badge badge-info">{{ zaznam.get_stav_display }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy formAZ %}
+          {% crispy formAkce %}
         </div>
       </div>
-      <div class="card-body">
-        {% crispy formAZ %}
-        {% crispy formAkce %}
-      </div>
-    </div>
-    <button type="submit" class="btn btn-primary app-entity-akce-btn mt-3">{% trans "Uložit změny" %}</button>
-  </form>
+      <button type="submit" class="btn btn-primary mt-3">{% trans "Uložit změny" %}</button>
+    </form>
 
-  <!-- <h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
+    <!-- <h1>{% trans "Archeologický záznam" %} <span class="badge badge-info">{{ zaznam.get_stav_display }}</span></h1>
 
-  <form method="POST">
+    <form method="POST">
 
-    {% crispy formAZ %}
-    {% crispy formAkce %}
-    <button type="submit" class="btn btn-primary">{% trans "Edituj" %}</button>
+      {% crispy formAZ %}
+      {% crispy formAkce %}
+      <button type="submit" class="btn btn-primary">{% trans "Edituj" %}</button>
 
-  </form> -->
-
+    </form> -->
+  </div>
 {% endblock %}
 
 {% block script %}

@@ -1,45 +1,5 @@
 // --- MIXINS ---
 
-// set border
-@mixin set-border($position, $height, $style, $color) {
-  @if ($position == "top") {
-    border-width: #{$height}px 0 0 0; 
-    border-style: solid;
-    border-color: $color;
-  }
-  @else if ($position == "right") {
-    border-width: 0 #{$height}px 0 0; 
-    border-style: solid;
-    border-color: $color;
-  }
-  @else if ($position == "bottom") {
-    border-width: 0 0 #{$height}px 0; 
-    border-style: solid;
-    border-color: $color;
-  }
-  @else if ($position == "left") {
-    border-width: 0 0 0 #{$height}px; 
-    border-style: solid;
-    border-color: $color;	
-  }
-  @else if ($position == "right-left-bottom") {
-    border-width: 0 #{$height}px #{$height}px #{$height}px; 
-    border-style: solid;
-    border-color: $color;	
-  }
-  @else if ($position == "right-bottom") {
-    border-width: 0 #{$height}px #{$height}px 0; 
-    border-style: solid;
-    border-color: $color;	
-  }
-  @else {
-    border-width: #{$height}px #{$height}px #{$height}px #{$height}px; 
-    border-style: solid;
-    border-color: $color;
-  }
-}
-
-
 // set icon size
 @mixin setIcon($size: null, $color: null, $position: null) {
   @if ($size != null) {
@@ -55,20 +15,6 @@
   }
   
 }
-
-
-// clearfix
-@mixin cleanfix() {
-  &:before,
-  &:after {
-    content: " "; // 1
-    display: table; // 2
-  }
-  &:after {
-    clear: both;
-  }
-}
-
 
 // set entity color
 @mixin setEntityColor($type) {
@@ -103,8 +49,6 @@
     } @else if ($type == toolbar) {
       &.app-entity-#{$entity} {
         background-color: rgba($color, .1);
-        /* border-top: 1px solid rgba($color, .2);
-        border-bottom: 1px solid rgba($color, .2); */
 
         .app-left {
           .app-entity-title {
@@ -149,6 +93,87 @@
           }
         }
       } 
+    }
+  }
+}
+
+// set entity color for all defined elements inside
+@mixin setEntityElementsColor() {
+  @each $entity, $color in $entities {
+    .app-entity-#{$entity} {
+      // toolbar
+      .app-toolbar {
+        background-color: rgba($color, .1);
+
+        .app-left {
+          .app-entity-title {
+            background-color: $color;
+  
+            &:after {
+              border-left-color: $color;
+            }
+          }
+
+          .app-entity-item {
+            color: $color;
+          }
+        }
+
+        .app-right {
+          .btn {
+            color: $color;
+            border-left-color: rgba($color, .3) !important;
+  
+            &:hover {
+              background-color: $color;
+              color: $white;
+            } 
+          }
+        }
+      }
+
+      // stepper
+      .bs-stepper {
+        .step {
+          &.active {
+            .bs-stepper-circle {
+              background-color: $color;
+            }
+    
+            .bs-stepper-label {
+              color: $color;
+            }
+          }
+        }
+      }
+
+      // card header button
+      .card {
+        &.app-card-form  {
+          .card-header {
+            .btn-group {
+              .btn {
+                &:hover {
+                  background-color: $color !important;
+                  color: $white;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // button color
+      .btn-primary {
+        @extend .border-0;
+        background-color: $color;
+      }
+
+      // check box color
+      .custom-control-input:checked ~ .custom-control-label::before {
+        border-color: $color;
+        background-color: $color;
+      }
     }
   }
 }
