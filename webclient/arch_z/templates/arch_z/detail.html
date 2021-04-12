@@ -26,7 +26,8 @@
   <div class="card app-card-form">
     <div class="card-header">
       <div class="app-fx app-left">
-        {% trans "Detail" %}&#160;&#160;|&#160;&#160;<a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Zpět na detail projektu</a>
+        {% trans "Detail" %}&#160;&#160;|&#160;&#160;<a
+          href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}">Zpět na detail projektu</a>
       </div>
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
@@ -36,10 +37,13 @@
             <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
             <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
           </div>
-          <button class="btn app-entity-akce" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+          <button class="btn app-entity-akce" type="button" id="others" type="button" data-toggle="dropdown"
+                  aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top"
+                  title="{% trans 'Další nabídka' %}">
             <span class="material-icons">more_vert</span>
           </button>
-          <a class="btn app-entity-akce" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+          <a class="btn app-entity-akce" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip"
+             data-placement="top" title="{% trans 'Upravit' %}">
             <span class="material-icons">edit</span>
           </a>
         </div>
@@ -68,7 +72,8 @@
         <div class="col-sm-12">
           <div class="form-group">
             <label>{% trans "Uživatelské označení" %}</label>
-            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni }}" readonly></textarea>
+            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni }}"
+                      readonly></textarea>
           </div>
         </div>
         <div class="col-sm-4">
@@ -80,25 +85,29 @@
         <div class="col-sm-4">
           <div class="form-group">
             <label>{% trans "Datum zahájení" %}</label>
-            <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}" readonly>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
+                   readonly>
           </div>
         </div>
         <div class="col-sm-4">
           <div class="form-group">
             <label>{% trans "Datum ukončení" %}</label>
-            <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}" readonly>
+            <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}"
+                   readonly>
           </div>
         </div>
         <div class="col-sm-6">
           <div class="form-group">
             <label>{% trans "Lokalizace okolností" %}</label>
-            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
+            <textarea class="textarea form-control" cols="40" rows="2"
+                      placeholder="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
           </div>
         </div>
         <div class="col-sm-6">
           <div class="form-group">
             <label>{% trans "Uložení nálezu" %}</label>
-            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu }}" readonly></textarea>
+            <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu }}"
+                      readonly></textarea>
           </div>
         </div>
         <div class="col-sm-3">
@@ -122,7 +131,9 @@
         <div class="col-sm-3">
           <div class="form-group">
             <label>{% trans "Odeslat ZAA jako NZ" %}</label>
-            <input class="form-control" type="text" placeholder="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}" readonly>
+            <input class="form-control" type="text"
+                   placeholder="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}"
+                   readonly>
           </div>
         </div>
       </div>
@@ -142,7 +153,8 @@
             <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
             <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
           </div>
-          <button class="btn app-entity-akce" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
+          <button class="btn app-entity-akce" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top"
+                  title="{% trans 'Přidat dokumentační jednotku' %}">
             <span class="material-icons">add</span>
           </button>
         </div>
@@ -166,7 +178,8 @@
             <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
             <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
           </div>
-          <a class="btn app-entity-akce" href="{% url 'dj:zapsat' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
+          <a class="btn app-entity-akce" href="{% url 'dj:zapsat' zaznam.ident_cely %}" rel="tooltip"
+             data-placement="top" title="{% trans 'Přidat dokumentační jednotku' %}">
             <span class="material-icons">add</span>
           </a>
         </div>
@@ -215,27 +228,39 @@
     </div>
   </div> -->
 
-  <div class="card">
-    <div class="card-header">{% trans "Dokumentační jednotky" %}
-    </div>
-    <div class="card-body">
-      {% for j in dokumentacni_jednotky %}
-        <div class="row">
-          <div class="col">Ident: {{ j.ident_cely }}<button onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">Detail</button></div>
-          <div class="col">Typ: {{ j.typ }}</div>
-          <div class="col">Negativni: {{ j.negativni_jednotka }}</div>
-          <div class="col">Pian: {{ j.pian.ident_cely }}</div>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header">{% trans "Dokumentační jednotky" %}
         </div>
-        Komponenty:
-        {% for k in j.komponenty.komponenty.all %}
-          <div class="row">
-            <div class="col">Ident komponenty: {{ k.ident_cely }}<button onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">Detail</button></div>
-            <div class="col">Obdobi: {{ k.obdobi }}</div>
-            <div class="col">Areal: {{ k.areal }}</div>
+        <div class="card-body">
+          <div class="list-group">
+            {% for j in dokumentacni_jednotky %}
+              <div class="list-group">
+                <a href="#"
+                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }}({{ j.typ }})</a>
+                {% for k in j.komponenty.komponenty.all %}
+                  <div class="list-group-item">
+                    <a href="#"
+                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_three_letters }}({{ k.obdobi }}
+                      - {{ k.areal }})</a>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endfor %}
           </div>
-        {% endfor %}
-        <hr/>
-      {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <style>
+          #djMap {
+              width: 100%;
+              height: 473px;
+              border-radius: 5px;
+          }
+      </style>
+      <div id="djMap"></div>
     </div>
   </div>
 
@@ -269,7 +294,8 @@
     {% for j in dj_forms_detail %}
       <div id="detail_dj_form_{{ j.ident_cely }}" style="display: none;">
         <h3>Dokumentační jednotka {{ j.ident_cely }}</h3>
-        <button onclick="show_create_komponenta_form('{% url 'komponenta:zapsat' j.ident_cely %}')">Pridat komponentu</button>
+        <button onclick="show_create_komponenta_form('{% url 'komponenta:zapsat' j.ident_cely %}')">Pridat komponentu
+        </button>
         <form method="POST" action="{% url 'dj:detail' j.ident_cely %}">
           {% crispy j.form %}
           <button type="submit" class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
@@ -300,8 +326,10 @@
 {% endblock %}
 
 {% block script %}
+  <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
       let shown_form_id = "";
+
       function show_form(form_id) {
           console.log(form_id)
           var form = document.getElementById(form_id);
@@ -316,7 +344,8 @@
               shown_form_id = form_id
           }
       }
-      function show_create_komponenta_form(url){
+
+      function show_create_komponenta_form(url) {
           console.log("show_create_komponenta_form");
           show_form('create_komponenta_form');
           var forma = document.getElementById("create_komponenta_form_id");

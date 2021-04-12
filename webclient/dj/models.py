@@ -38,3 +38,4 @@ class DokumentacniJednotka(models.Model):
 
     class Meta:
         db_table = "dokumentacni_jednotka"
+        ordering = ["ident_cely"]

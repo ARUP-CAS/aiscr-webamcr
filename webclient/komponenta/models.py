@@ -55,6 +55,7 @@ class Komponenta(models.Model):
 
     class Meta:
         db_table = "komponenta"
+        ordering = ["ident_cely"]
 
 
 class KomponentaAktivita(models.Model):

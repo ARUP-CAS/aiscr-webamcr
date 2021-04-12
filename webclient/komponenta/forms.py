@@ -31,7 +31,10 @@ class CreateKomponentaForm(forms.ModelForm):
             "aktivity": _("Aktivity"),
         }
 
-        widgets = {}
+        widgets = {
+            "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "presna_datace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+        }
 
     def __init__(self, *args, **kwargs):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)

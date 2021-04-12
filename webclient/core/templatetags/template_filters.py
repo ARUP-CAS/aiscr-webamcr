@@ -21,3 +21,11 @@ def url_to_classes(value):
 def katastry_to_list(value):
     list_katastry = ", ".join(value.values_list("nazev", flat=True))
     return list_katastry
+
+
+@register.filter
+def last_three_letters(value):
+    if len(value) > 3:
+        return value[-3:]
+    else:
+        return value
