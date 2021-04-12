@@ -54,6 +54,7 @@ class CreateKomponentaForm(forms.ModelForm):
         self.fields["aktivity"].queryset = Heslar.objects.filter(
             nazev_heslare=HESLAR_AKTIVITA
         )
+        self.fields["aktivity"].required = False
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(

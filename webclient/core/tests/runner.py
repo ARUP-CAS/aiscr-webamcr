@@ -1,17 +1,23 @@
 from arch_z.models import Akce, ArcheologickyZaznam
-from core.constants import AZ_STAV_ZAPSANY, D_STAV_ZAPSANY, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
+from core.constants import (
+    AZ_STAV_ZAPSANY,
+    D_STAV_ZAPSANY,
+    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
+)
+from dj.models import DokumentacniJednotka
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
-
-from dj.models import DokumentacniJednotka
 from dokument.models import Dokument
 from heslar import hesla
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
+    HESLAR_AREAL,
     HESLAR_DATUM_SPECIFIKACE,
+    HESLAR_DJ_TYP,
     HESLAR_DOKUMENT_MATERIAL,
     HESLAR_DOKUMENT_TYP,
     HESLAR_JAZYK,
+    HESLAR_OBDOBI,
     HESLAR_ORGANIZACE_TYP,
     HESLAR_PIAN_PRESNOST,
     HESLAR_PIAN_TYP,
@@ -19,7 +25,7 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     PRISTUPNOST_ANONYM_ID,
-    TYP_PROJEKTU_ZACHRANNY_ID, HESLAR_DJ_TYP,
+    TYP_PROJEKTU_ZACHRANNY_ID,
 )
 from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
 from komponenta.models import KomponentaVazby
@@ -39,6 +45,8 @@ TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
 MATERIAL_DOKUMENTU_DIGI_SOUBOR = 229
 JAZYK_DOKUMENTU_CESTINA_ID = 1256
 TYP_DJ_CELEK_AKCE_ID = 321
+OBDOBI_STREDNI_PALEOLIT_ID = 336
+AREAL_HRADISTE_ID = 337
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -142,11 +150,30 @@ class AMCRTestRunner(BaseRunner):
         hsd = HeslarNazev(id=HESLAR_DATUM_SPECIFIKACE, nazev="heslar_specifikace_data")
         hta = HeslarNazev(id=HESLAR_AKCE_TYP, nazev="heslar_typ_akce_druha")
         htd = HeslarNazev(id=HESLAR_DOKUMENT_TYP, nazev="heslar_typ_dokumentu")
-        hmd = HeslarNazev(id=HESLAR_DOKUMENT_MATERIAL, nazev="heslar_material_dokumentu")
+        hmd = HeslarNazev(
+            id=HESLAR_DOKUMENT_MATERIAL, nazev="heslar_material_dokumentu"
+        )
         hdj = HeslarNazev(id=HESLAR_DJ_TYP, nazev="heslar_dj_typ")
         hjd = HeslarNazev(id=HESLAR_JAZYK, nazev="heslar_jazyk_dokumentu")
         hpd = HeslarNazev(id=HESLAR_POSUDEK_TYP, nazev="heslar_posudek")
-        nazvy_heslaru = [hn, hp, ha, hto, hpr, hsd, hta, htd, hmd, hjd, hpd, hdj]
+        hok = HeslarNazev(id=HESLAR_OBDOBI, nazev="heslar_obdobi")
+        hak = HeslarNazev(id=HESLAR_AREAL, nazev="heslar_areal")
+        nazvy_heslaru = [
+            hn,
+            hp,
+            ha,
+            hto,
+            hpr,
+            hsd,
+            hta,
+            htd,
+            hmd,
+            hjd,
+            hpd,
+            hdj,
+            hok,
+            hak,
+        ]
         for n in nazvy_heslaru:
             n.save()
 
@@ -177,6 +204,10 @@ class AMCRTestRunner(BaseRunner):
         zp = Heslar(id=PRISTUPNOST_ANONYM_ID, nazev_heslare=hpr)
         zp.save()
         typ_muzeum.save()
+        Heslar(
+            id=OBDOBI_STREDNI_PALEOLIT_ID, heslo="Stredni paleolit", nazev_heslare=hok
+        ).save()
+        Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
 
         o = Organizace(
             id=AMCR_TESTOVACI_ORGANIZACE_ID,
@@ -230,7 +261,7 @@ class AMCRTestRunner(BaseRunner):
         dj = DokumentacniJednotka(
             typ=Heslar.objects.get(id=TYP_DJ_CELEK_AKCE_ID),
             negativni_jednotka=True,
-            ident_cely="C-202000001A-D01"
+            ident_cely="C-202000001A-D01",
         )
         dj.archeologicky_zaznam = az
         dj.komponenty = kv

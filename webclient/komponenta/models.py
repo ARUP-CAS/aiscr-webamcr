@@ -3,7 +3,7 @@ from core.constants import (
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
 )
 from django.db import models
-from heslar.hesla import HESLAR_AKTIVITA
+from heslar.hesla import HESLAR_AKTIVITA, HESLAR_AREAL, HESLAR_OBDOBI
 from heslar.models import Heslar
 
 
@@ -28,6 +28,7 @@ class Komponenta(models.Model):
         blank=True,
         null=True,
         related_name="komponenty_obdobi",
+        limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
     )
     presna_datace = models.TextField(blank=True, null=True)
     areal = models.ForeignKey(
@@ -37,6 +38,7 @@ class Komponenta(models.Model):
         blank=True,
         null=True,
         related_name="komponenty_arealu",
+        limit_choices_to={"nazev_heslare": HESLAR_AREAL},
     )
     poznamka = models.TextField(blank=True, null=True)
     jistota = models.CharField(max_length=1, blank=True, null=True)
