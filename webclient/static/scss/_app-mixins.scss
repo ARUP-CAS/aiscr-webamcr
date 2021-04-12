@@ -170,7 +170,7 @@
 
       // button color
       .btn-primary {
-        @extend .border-0;
+        border-color: $color;
         background-color: $color;
       }
 
