@@ -46,6 +46,7 @@ def zapsat(request, dj_ident_cely):
         komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
         komponenta.komponenta_vazby = dj.komponenty
         komponenta.save()
+        form.save_m2m()  # this must be called to store komponenta_aktivity
 
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)
     else:
