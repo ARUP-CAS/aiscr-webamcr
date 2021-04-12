@@ -101,6 +101,11 @@
 @mixin setEntityElementsColor() {
   @each $entity, $color in $entities {
     .app-entity-#{$entity} {
+      // common
+      .app-entity-color {
+        color: $color;
+      }
+
       // toolbar
       .app-toolbar {
         background-color: rgba($color, .1);
