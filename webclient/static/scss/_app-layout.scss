@@ -43,6 +43,11 @@ body {
     &.app-content-wrapper {
       @extend .p-3;
       //background-color: $gray-100;
+
+
+      // test
+        @include setEntityElementsColor();
+      // test end
     }
   }
 }
