@@ -51,7 +51,8 @@ def zapsat(request, arch_z_ident_cely):
         dj.ident_cely = get_dj_ident(az)
         dj.komponenty = vazba
         dj.archeologicky_zaznam = az
-        dj.save()
+        resp = dj.save()
+        logger.debug(resp)
 
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)
     else:
