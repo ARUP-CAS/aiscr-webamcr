@@ -9,7 +9,7 @@
 
 {% block content %}
   <div class="app-entity-projekt">
-    {% include "toolbar_projekt.html" with showcontrols="false" projekt=oznameni.projekt %}
+    {% include "toolbar_projekt.html" with projekt=oznameni.projekt %}
     <form method="post">
       {% crispy form %}
       <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary mt-3" id="submit-id-save">

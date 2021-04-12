@@ -9,7 +9,7 @@
       {{ zaznam.ident_cely }}{% if showbackdetail %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">Zpět na detail projektu</a>{% endif %}
     </div>
   </div>
-  {% if showcontrols == true %}
+  {% if showcontrols %}
     <div class="app-right app-controls">
       <div class="btn-group app-entity-akce" role="group">
         {% if show.vratit_link %}
