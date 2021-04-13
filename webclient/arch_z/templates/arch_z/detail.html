@@ -315,6 +315,12 @@
           {% crispy k.form %}
           <button type="submit" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
         </form>
+
+        <form method="POST" action="{%  url 'nalez:edit' k.ident_cely %}">
+          {% crispy k.form_nalezy k.helper %}
+          <button type="submit" class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
+        </form>
+
       </div>
     {% endfor %}
 

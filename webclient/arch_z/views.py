@@ -25,12 +25,16 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from heslar.hesla import SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
 from komponenta.forms import CreateKomponentaForm
+from komponenta.models import Komponenta
+from nalez.forms import CreateNalezObjektForm, NalezFormSetHelper
+from nalez.models import NalezObjekt
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -65,6 +69,9 @@ def detail(request, ident_cely):
     komponenta_form_create = CreateKomponentaForm()
     dj_forms_detail = []
     komponenta_forms_detail = []
+    NalezObjektFormset = inlineformset_factory(
+        Komponenta, NalezObjekt, form=CreateNalezObjektForm, extra=1
+    )
     for jednotka in jednotky:
         dj_forms_detail.append(
             {"ident_cely": jednotka.ident_cely, "form": CreateDJForm(instance=jednotka)}
@@ -74,6 +81,8 @@ def detail(request, ident_cely):
                 {
                     "ident_cely": komponenta.ident_cely,
                     "form": CreateKomponentaForm(instance=komponenta),
+                    "form_nalezy": NalezObjektFormset(instance=komponenta),
+                    "helper": NalezFormSetHelper(),
                 }
             )
 
