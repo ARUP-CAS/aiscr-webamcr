@@ -179,6 +179,11 @@
         border-color: $color;
         background-color: $color;
       }
+
+      .badge {
+        background-color: $color;
+        color: $white;
+      }
     }
 
     // card behavior based on entity

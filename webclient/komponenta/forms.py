@@ -61,33 +61,12 @@ class CreateKomponentaForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        Div(
-                            HTML(_("Komponenta")),
-                            css_class="app-fx app-left",
-                        ),
-                        css_class="card-header",
-                    ),
-                    Div(
-                        Div(
-                            Div("obdobi", css_class="col-sm-6"),
-                            Div("presna_datace", css_class="col-sm-6"),
-                            css_class="row",
-                        ),
-                        Div(
-                            Div("areal", css_class="col-sm-6"),
-                            Div("aktivity", css_class="col-sm-6"),
-                            css_class="row",
-                        ),
-                        Div(
-                            Div("poznamka", css_class="col"),
-                            css_class="row",
-                        ),
-                        css_class="card-body",
-                    ),
-                ),
-                css_class="card app-card-form",
-            )
+                Div("obdobi", css_class="col-sm-6"),
+                Div("presna_datace", css_class="col-sm-6"),
+                Div("areal", css_class="col-sm-6"),
+                Div("aktivity", css_class="col-sm-6"),
+                Div("poznamka", css_class="col"),
+                css_class="row",
+            ),               
         )
         self.helper.form_tag = False
