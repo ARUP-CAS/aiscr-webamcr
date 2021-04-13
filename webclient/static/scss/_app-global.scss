@@ -82,7 +82,7 @@ table {
     $app-ident-cely: 150px;
 
     th {
-      vertical-align: top;
+      vertical-align: top !important;
 
       &.app-ident-cely {
         width: $app-ident-cely;
