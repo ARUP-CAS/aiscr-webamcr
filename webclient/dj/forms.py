@@ -26,12 +26,9 @@ class CreateDJForm(forms.ModelForm):
             "nazev": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
 
-    def __init__(self, disabled=True, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(CreateDJForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
-        self.fields["typ"].disabled = disabled
-        self.fields["negativni_jednotka"].disabled = disabled
-        self.fields["nazev"].disabled = disabled
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(

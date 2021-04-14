@@ -86,7 +86,7 @@ def detail(request, ident_cely):
         )
     )
 
-    dj_form_create = CreateDJForm(disabled=False)
+    dj_form_create = CreateDJForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     dj_forms_detail = []
     komponenta_forms_detail = []
