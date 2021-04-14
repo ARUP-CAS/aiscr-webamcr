@@ -53,6 +53,10 @@ class Komponenta(models.Model):
     )
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
 
+    @property
+    def pocet_nalezu(self):
+        return self.objekty.all().count() + self.predmety.all().count()
+
     class Meta:
         db_table = "komponenta"
         ordering = ["ident_cely"]

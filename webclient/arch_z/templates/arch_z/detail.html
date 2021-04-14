@@ -28,10 +28,7 @@
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <div class="dropdown-menu" aria-labelledby="others">
-            <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
-            <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
-            <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
-            <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+            <a class="dropdown-item" href="{% url 'arch_z:smazat' zaznam.ident_cely %}">{% trans "Smazat akci" %}</a>
           </div>
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
             <span class="material-icons">more_vert</span>
@@ -153,13 +150,17 @@
           <div class="list-group">
             {% for j in dokumentacni_jednotky %}
               <div class="list-group">
-                <a href="#"
+                <p>
+                  {% if j.pian %}P{% else %}N{% endif %}
+                  <a href="#"
                    onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }} ({{ j.typ }})</a>
+                  {% if j.pian %}<button class="btn-primary float-right">Ukaž pian</button>{% endif %}
+                </p>
                 {% for k in j.komponenty.komponenty.all %}
                   <div class="list-group-item">
                     <a href="#"
                        onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_three_letters }} ({{ k.obdobi }}
-                      - {{ k.areal }})</a>
+                      - {{ k.areal }}) <span class="badge badge-light float-right">{{ k.pocet_nalezu }}</span></a>
                   </div>
                 {% endfor %}
               </div>
@@ -270,7 +271,6 @@
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <div class="dropdown-menu" aria-labelledby="others">
-            <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
             <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
             <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
             <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
