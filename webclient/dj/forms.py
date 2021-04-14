@@ -35,7 +35,7 @@ class CreateDJForm(forms.ModelForm):
                 Div(
                     Div(
                         Div(
-                            HTML(_("Dokumentační jednotka")),
+                            HTML(_("Detail")),
                             css_class="app-fx app-left",
                         ),
                         css_class="card-header",

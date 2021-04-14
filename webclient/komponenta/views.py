@@ -32,7 +32,11 @@ def detail(request, ident_cely):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(
-        obdobi_choices, areal_choices, request.POST, instance=komponenta
+        obdobi_choices,
+        areal_choices,
+        request.POST,
+        instance=komponenta,
+        prefix=ident_cely,
     )
     if form.is_valid():
         logger.debug("Form is valid")

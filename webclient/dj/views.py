@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     dj = DokumentacniJednotka.objects.get(ident_cely=ident_cely)
-    form = CreateDJForm(request.POST, instance=dj)
+    form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("Form is valid")
         dj = form.save()

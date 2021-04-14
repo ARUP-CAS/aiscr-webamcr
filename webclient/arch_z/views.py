@@ -98,14 +98,20 @@ def detail(request, ident_cely):
     )
     for jednotka in jednotky:
         dj_forms_detail.append(
-            {"ident_cely": jednotka.ident_cely, "form": CreateDJForm(instance=jednotka)}
+            {
+                "ident_cely": jednotka.ident_cely,
+                "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
+            }
         )
         for komponenta in jednotka.komponenty.komponenty.all():
             komponenta_forms_detail.append(
                 {
                     "ident_cely": komponenta.ident_cely,
                     "form": CreateKomponentaForm(
-                        obdobi_choices, areal_choices, instance=komponenta
+                        obdobi_choices,
+                        areal_choices,
+                        instance=komponenta,
+                        prefix=komponenta.ident_cely,
                     ),
                     "form_nalezy": NalezObjektFormset(instance=komponenta),
                     "helper": NalezFormSetHelper(),

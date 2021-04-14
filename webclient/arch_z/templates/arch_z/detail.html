@@ -134,7 +134,7 @@
   <div class="row mb-3">
     <div class="col-sm-4">
       <div class="card app-card-form">
-        <div class="card-header">
+        <div id="karta-dokumentacni-jednotky" class="card-header">
           <div class="app-fx app-left">
             {% trans "Dokumentační jednotky" %}
           </div>
@@ -151,7 +151,7 @@
             {% for j in dokumentacni_jednotky %}
               <div class="list-group">
                 <p>
-                  {% if j.pian %}P{% else %}N{% endif %}
+                  {% if j.negativni_jednotka %}N{% else %}P{% endif %}
                   <a href="#"
                    onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }} ({{ j.typ }})</a>
                   {% if j.pian %}<button class="btn-primary float-right">Ukaž pian</button>{% endif %}
@@ -210,9 +210,6 @@
               <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
                 <span class="material-icons">more_vert</span>
               </button>
-              <!-- <button class="btn" onclick="show_create_komponenta_form('{% url 'komponenta:zapsat' j.ident_cely %}')" rel="tooltip" data-placement="top" title="{% trans 'Přidat komponentu' %}">
-                <span class="material-icons">add</span>
-              </button> -->
             </div>
           </div>
         </div>
@@ -271,9 +268,8 @@
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <div class="dropdown-menu" aria-labelledby="others">
-            <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
-            <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
-            <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
+            <a class="dropdown-item" href="#">{% trans "A" %}</a>
+            <a class="dropdown-item" href="#">{% trans "B" %}</a>
           </div>
           <button class="btn" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokument' %}">
             <span class="material-icons">add</span>
@@ -349,12 +345,21 @@
 {% block script %}
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
+
       let shown_form_id = "";
 
+      function setCookie(name, value, path) {
+          var cookieString = name + '=' + value + ';path=' + path
+          document.cookie = cookieString
+      }
+
+      function getCookie(name) {
+          var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+          return v ? v[2] : null;
+      }
+
       function show_form(form_id) {
-          console.log(form_id)
-          var form = document.getElementById(form_id);
-          console.log(form)
+          let form = document.getElementById(form_id);
           if (form.style.display === "none") {
               // hide the form what was shown
               if (shown_form_id !== "") {
@@ -363,15 +368,25 @@
               // Show desired form
               form.style.display = "block";
               shown_form_id = form_id
+              setCookie("detail-id-shown", form_id, "/arch_z/detail/")
           }
       }
 
       function show_create_komponenta_form(url) {
-          console.log("show_create_komponenta_form");
           show_form('create_komponenta_form');
-          var forma = document.getElementById("create_komponenta_form_id");
+          let forma = document.getElementById("create_komponenta_form_id");
           forma.action = url;
       }
+
+      document.addEventListener('DOMContentLoaded', function (event) {
+          // Focus on detail set by the cookie and display it
+          let detail_to_show = getCookie("detail-id-shown")
+          let element_of_the_detail = document.getElementById(detail_to_show)
+          if (detail_to_show != null && element_of_the_detail != null) {
+              show_form(detail_to_show)
+              document.getElementById(detail_to_show).scrollIntoView()
+          }
+      })
 
   </script>
 {% endblock %}
