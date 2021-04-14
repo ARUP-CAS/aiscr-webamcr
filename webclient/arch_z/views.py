@@ -29,11 +29,22 @@ from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
-from heslar.hesla import SPECIFIKACE_DATA_PRESNE
+from heslar.hesla import (
+    HESLAR_AREAL,
+    HESLAR_AREAL_KAT,
+    HESLAR_OBDOBI,
+    HESLAR_OBDOBI_KAT,
+    HESLAR_OBJEKT_DRUH,
+    HESLAR_OBJEKT_DRUH_KAT,
+    HESLAR_OBJEKT_SPECIFIKACE,
+    HESLAR_OBJEKT_SPECIFIKACE_KAT,
+    SPECIFIKACE_DATA_PRESNE,
+)
 from heslar.models import Heslar
+from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
-from nalez.forms import CreateNalezObjektForm, NalezFormSetHelper
+from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form
 from nalez.models import NalezObjekt
 from projekt.models import Projekt
 
@@ -51,7 +62,12 @@ def detail(request, ident_cely):
         .select_related("pristupnost")
         .get(ident_cely=ident_cely)
     )
-    # TODO continue here
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
+    specifikace_objekt_choices = heslar_12(
+        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
+    )
     dokumenty = (
         Dokument.objects.filter(
             dokumentcast__archeologicky_zaznam__ident_cely=ident_cely
@@ -61,16 +77,24 @@ def detail(request, ident_cely):
     )
     jednotky = (
         DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("komponenty")
-        .prefetch_related("komponenty__komponenty")
+        .select_related("komponenty", "typ")
+        .prefetch_related(
+            "komponenty__komponenty",
+            "komponenty__komponenty__aktivity",
+            "komponenty__komponenty__obdobi",
+            "komponenty__komponenty__areal",
+        )
     )
 
-    dj_form_create = CreateDJForm()
-    komponenta_form_create = CreateKomponentaForm()
+    dj_form_create = CreateDJForm(disabled=False)
+    komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     dj_forms_detail = []
     komponenta_forms_detail = []
     NalezObjektFormset = inlineformset_factory(
-        Komponenta, NalezObjekt, form=CreateNalezObjektForm, extra=1
+        Komponenta,
+        NalezObjekt,
+        form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
+        extra=3,
     )
     for jednotka in jednotky:
         dj_forms_detail.append(
@@ -80,7 +104,9 @@ def detail(request, ident_cely):
             komponenta_forms_detail.append(
                 {
                     "ident_cely": komponenta.ident_cely,
-                    "form": CreateKomponentaForm(instance=komponenta),
+                    "form": CreateKomponentaForm(
+                        obdobi_choices, areal_choices, instance=komponenta
+                    ),
                     "form_nalezy": NalezObjektFormset(instance=komponenta),
                     "helper": NalezFormSetHelper(),
                 }
@@ -112,6 +138,7 @@ def edit(request, ident_cely):
             form_az.save()
             form_akce.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
             logger.warning("Form is not valid")
             logger.debug(form_az.errors)

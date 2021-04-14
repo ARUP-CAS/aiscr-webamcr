@@ -12,6 +12,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
+from heslar.hesla import (
+    HESLAR_AREAL,
+    HESLAR_AREAL_KAT,
+    HESLAR_OBDOBI,
+    HESLAR_OBDOBI_KAT,
+)
+from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 
@@ -22,10 +29,14 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     komponenta = Komponenta.objects.get(ident_cely=ident_cely)
-    form = CreateKomponentaForm(request.POST, instance=komponenta)
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    form = CreateKomponentaForm(
+        obdobi_choices, areal_choices, request.POST, instance=komponenta
+    )
     if form.is_valid():
         logger.debug("Form is valid")
-        komponenta = form.save()
+        form.save()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.warning("Form is not valid")
@@ -39,7 +50,9 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
     dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
-    form = CreateKomponentaForm(request.POST)
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
         komponenta = form.save(commit=False)

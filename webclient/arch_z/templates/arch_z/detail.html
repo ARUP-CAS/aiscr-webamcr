@@ -154,11 +154,11 @@
             {% for j in dokumentacni_jednotky %}
               <div class="list-group">
                 <a href="#"
-                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }}({{ j.typ }})</a>
+                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }} ({{ j.typ }})</a>
                 {% for k in j.komponenty.komponenty.all %}
                   <div class="list-group-item">
                     <a href="#"
-                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_three_letters }}({{ k.obdobi }}
+                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_three_letters }} ({{ k.obdobi }}
                       - {{ k.areal }})</a>
                   </div>
                 {% endfor %}
@@ -251,6 +251,12 @@
             {% crispy k.form %}
             <button type="submit" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
           </form>
+
+          <form method="POST" action="{%  url 'nalez:edit' k.ident_cely %}">
+            {% crispy k.form_nalezy k.helper %}
+            <button type="submit" class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
+          </form>
+
         </div>
       </div>
     {% endfor %}

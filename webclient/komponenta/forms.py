@@ -2,18 +2,11 @@ import logging
 
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout
+from crispy_forms.layout import Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
-from heslar.hesla import (
-    HESLAR_AKTIVITA,
-    HESLAR_AREAL,
-    HESLAR_AREAL_KAT,
-    HESLAR_OBDOBI,
-    HESLAR_OBDOBI_KAT,
-)
+from heslar.hesla import HESLAR_AKTIVITA
 from heslar.models import Heslar
-from heslar.views import heslar_12
 from komponenta.models import Komponenta
 
 logger = logging.getLogger(__name__)
@@ -34,12 +27,13 @@ class CreateKomponentaForm(forms.ModelForm):
         widgets = {
             "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "presna_datace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "aktivity": forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, obdobi_choices, areal_choices, *args, **kwargs):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
-        obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
-        areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("Období"),
             widget=forms.Select(
@@ -67,6 +61,6 @@ class CreateKomponentaForm(forms.ModelForm):
                 Div("aktivity", css_class="col-sm-6"),
                 Div("poznamka", css_class="col"),
                 css_class="row",
-            ),               
+            ),
         )
         self.helper.form_tag = False
