@@ -10,7 +10,7 @@
 {% block content %}
   <div class="app-entity-akce">
     {% include "toolbar_akce.html" %}
-    <form method="post">
+    <form method="post" onsubmit="newProjectActionSubmitBtn.disabled = true; return true;">
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -22,7 +22,7 @@
           {% crispy formAkce %}
         </div>
       </div>
-      <button type="submit" class="btn btn-primary mt-3">{% trans "Vytovřit akci" %}</button>
+      <button type="submit" id="newProjectActionSubmitBtn" class="btn btn-primary mt-3">{% trans "Vytovřit akci" %}</button>
     </form>
   </div>
 {% endblock %}

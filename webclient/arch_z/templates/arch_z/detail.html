@@ -164,6 +164,11 @@
                   </div>
                 {% endfor %}
               </div>
+            {% empty %}
+              <div class="app-note">
+                <span class="material-icons">info</span>
+                {% trans "Akce nemá žádné dokumentační jednotky." %}
+              </div>
             {% endfor %}
           </div>
         </div>
@@ -190,9 +195,9 @@
         </div>
       </div>
       <div class="card-body">
-        <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}">
+        <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}" onsubmit="newDjSubmitButton.disabled = true; return true;">
           {% crispy dj_form_create %}
-          <button type="submit" class="btn btn-primary">{% trans "Vytovřit jednotku" %}</button>
+          <button type="submit" id="newDjSubmitButton" class="btn btn-primary">{% trans "Vytovřit jednotku" %}</button>
         </form>
       </div>
     </div>
@@ -214,9 +219,9 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="{% url 'dj:detail' j.ident_cely %}">
+          <form method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
             {% crispy j.form %}
-            <button type="submit" class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
+            <button type="submit" id="editDjSubmitButton" class="btn btn-primary" >{% trans "Upravit jednotku" %}</button>
           </form>
         </div>
       </div>
@@ -245,14 +250,14 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}">
+          <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
             {% crispy k.form %}
-            <button type="submit" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
+            <button type="submit" id="editKompSubmitButton" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
           </form>
 
-          <form method="POST" action="{%  url 'nalez:edit' k.ident_cely %}">
+          <form method="POST" action="{%  url 'nalez:edit' k.ident_cely %}" onsubmit="editNalezObjektSubmitButton.disabled = true; return true;">
             {% crispy k.form_nalezy k.helper %}
-            <button type="submit" class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
+            <button type="submit" id="editNalezObjektSubmitButton" class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
           </form>
 
         </div>
@@ -292,53 +297,6 @@
     </div>
   </div>
 </div>
-
-  <!-- formy - puvodni po kontrole se cast tohoto zakomentovaneho kodu muze smazat -->
-  <!-- <div id="dj_forms">
-    <div id="create_dj_form" style="display: none;">
-      <h3>Nová dokumentační jednotka</h3>
-      <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}">
-        {% crispy dj_form_create %}
-        <button type="submit" class="btn btn-primary">{% trans "Vytovřit jednotku" %}</button>
-      </form>
-    </div>
-
-    {% for j in dj_forms_detail %}
-      <div id="detail_dj_form_{{ j.ident_cely }}" style="display: none;">
-        <h3>Dokumentační jednotka {{ j.ident_cely }}</h3>
-        <button onclick="show_create_komponenta_form('{% url 'komponenta:zapsat' j.ident_cely %}')">Pridat komponentu
-        </button>
-        <form method="POST" action="{% url 'dj:detail' j.ident_cely %}">
-          {% crispy j.form %}
-          <button type="submit" class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
-        </form>
-      </div>
-    {% endfor %}
-
-    <div id="create_komponenta_form" style="display: none;">
-      <h3>Nová komponenta</h3>
-      <form method="POST" action="#" id="create_komponenta_form_id">
-        {% crispy komponenta_form_create %}
-        <button type="submit" class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
-      </form>
-    </div>
-
-    {% for k in komponenta_forms_detail %}
-      <div id="detail_komponenta_form_{{ k.ident_cely }}" style="display: none;">
-        <h3>Komponenta {{ k.ident_cely }}</h3>
-        <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}">
-          {% crispy k.form %}
-          <button type="submit" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
-        </form>
-
-        <form method="POST" action="{%  url 'nalez:edit' k.ident_cely %}">
-          {% crispy k.form_nalezy k.helper %}
-          <button type="submit" class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
-        </form>
-
-      </div>
-    {% endfor %}
-  </div> -->
 
 {% endblock %}
 

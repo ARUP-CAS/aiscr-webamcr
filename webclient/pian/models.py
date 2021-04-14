@@ -50,6 +50,9 @@ class Pian(models.Model):
     class Meta:
         db_table = "pian"
 
+    def __str__(self):
+        return self.ident_cely + " (" + self.get_stav_display() + ")"
+
 
 class Kladyzm(models.Model):
     gid = models.AutoField(primary_key=True)
