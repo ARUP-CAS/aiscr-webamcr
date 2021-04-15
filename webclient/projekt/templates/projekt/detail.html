@@ -33,7 +33,7 @@
       <div class="bs-stepper-header">
         <div class="step {% if projekt.stav == 0 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">1</span>
+            <span class="bs-stepper-circle">0</span>
             <span class="bs-stepper-label">
               {% trans "Oznámený" %}
               <span class="app-stepper-date">{{ history_dates.datum_oznameni|date:'Y/m/d'|default_if_none:"" }}</span>
@@ -43,7 +43,7 @@
         <div class="line"></div>
         <div class="step {% if projekt.stav == 1 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">2</span>
+            <span class="bs-stepper-circle">1</span>
             <span class="bs-stepper-label">
               {% trans "Zapsaný" %}
               <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
@@ -53,7 +53,7 @@
         <div class="line"></div>
         <div class="step {% if projekt.stav == 2 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">3</span>
+            <span class="bs-stepper-circle">2</span>
             <span class="bs-stepper-label">
               {% trans "Přihlášený" %}
               <span class="app-stepper-date">{{ history_dates.datum_prihlaseni|date:'Y/m/d'|default_if_none:"" }}</span>
@@ -63,7 +63,7 @@
         <div class="line"></div>
         <div class="step {% if projekt.stav == 3 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">4</span>
+            <span class="bs-stepper-circle">3</span>
             <span class="bs-stepper-label">
               {% trans "Zahájen v terénu" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">
@@ -75,7 +75,7 @@
         <div class="line"></div>
         <div class="step {% if projekt.stav == 4 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">5</span>
+            <span class="bs-stepper-circle">4</span>
             <span class="bs-stepper-label">
               {% trans "Ukončen v terénu" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">{{ history_dates.datum_ukonceni_v_terenu|date:'Y/m/d'|default_if_none:"" }}</span>
@@ -85,7 +85,7 @@
         <div class="line"></div>
         <div class="step {% if projekt.stav == 5 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">6</span>
+            <span class="bs-stepper-circle">5</span>
             <span class="bs-stepper-label">
               {% trans "Uzavřený" %}
               <span class="app-stepper-date">{{ history_dates.uzavreni|date:'Y/m/d'|default_if_none:"" }}</span>
@@ -95,7 +95,7 @@
         <div class="line"></div>
         <div class="step {% if projekt.stav == 6 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">7</span>
+            <span class="bs-stepper-circle">6</span>
             <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
               <span class="app-stepper-date">{{ history_dates.archivace|date:'Y/m/d'|default_if_none:"" }}</span>
@@ -209,15 +209,6 @@
                   <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
                 </div>
               </div>
-            <!--  <div class="col-sm-4">
-                <div class="form-group">
-                  <label for="formGroupExampleInput">{% trans "Datum zahájení / ukončení výzkumu" %}</label>
-                  <div class="d-flex">
-                    <input class="form-control mr-2" type="text" placeholder="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
-                    <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
-                  </div>
-                </div>
-              </div> -->
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>

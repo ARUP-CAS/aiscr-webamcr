@@ -3,11 +3,14 @@ import logging
 from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
+    ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
+    ODESLANI_AZ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
+    ZAPSANI_AZ,
 )
 from core.ident_cely import get_project_event_ident
 from core.message_constants import (
@@ -123,6 +126,7 @@ def detail(request, ident_cely):
     context["komponenta_form_create"] = komponenta_form_create
     context["komponenta_forms_detail"] = komponenta_forms_detail
 
+    context["history_dates"] = get_history_dates(zaznam.historie)
     context["zaznam"] = zaznam
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
@@ -328,6 +332,15 @@ def smazat(request, ident_cely):
 def pripojit_dokument(request, ident_cely):
     # TODO add implementation
     return None
+
+
+def get_history_dates(historie_vazby):
+    historie = {
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
+    }
+    return historie
 
 
 def get_detail_template_shows(archeologicky_zaznam):
