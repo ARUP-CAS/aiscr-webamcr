@@ -38,7 +38,14 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": _("Poznámka"),
         }
 
-        widgets = {}
+        # widgets = {
+        #     "autor_popisu": autocomplete.ModelSelect2(
+        #         url="uzivatel:osoba-autocomplete"
+        #     ),
+        #     "autor_revize": autocomplete.ModelSelect2(
+        #         url="uzivatel:osoba-autocomplete"
+        #     ),
+        # }
 
     def __init__(self, *args, **kwargs):
         super(CreateADBForm, self).__init__(*args, **kwargs)

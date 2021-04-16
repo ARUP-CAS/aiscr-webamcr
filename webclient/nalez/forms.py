@@ -1,9 +1,8 @@
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from django import forms
+from django.forms import ChoiceField
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT
-from heslar.views import heslar_12
 from nalez.models import NalezObjekt, NalezPredmet
 
 
@@ -52,30 +51,39 @@ def create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices):
     return CreateNalezObjektForm
 
 
-class CreateNalezPredmetForm(forms.ModelForm):
-    class Meta:
-        model = NalezPredmet
+def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices):
+    class CreateNalezPredmetForm(forms.ModelForm):
+        class Meta:
+            model = NalezPredmet
 
-        fields = ("druh", "specifikace", "pocet", "poznamka")
+            fields = ("druh", "specifikace", "pocet", "poznamka")
 
-        labels = {
-            "pocet": _("Počet"),
-            "poznamka": _("Poznámka"),
-            "specifikace": _("Specifikace"),
-        }
+            labels = {
+                "pocet": _("Počet"),
+                "poznamka": _("Poznámka"),
+            }
 
-        widgets = {
-            "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "pocet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-        }
+            widgets = {
+                "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+                "pocet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            }
 
-    def __init__(self, *args, **kwargs):
-        super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
-        druh_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-        self.fields["druh"] = TwoLevelSelectField(
-            label=_("Druh"),
-            widget=forms.Select(
-                choices=druh_choices,
-                attrs={"class": "selectpicker", "data-live-search": "true"},
-            ),
-        )
+        def __init__(self, *args, **kwargs):
+            super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
+            self.fields["druh"] = TwoLevelSelectField(
+                label=_("Druh"),
+                widget=forms.Select(
+                    choices=druh_projekt_choices,
+                    attrs={"class": "selectpicker", "data-live-search": "true"},
+                ),
+            )
+            self.fields["specifikace"] = ChoiceField(
+                label=_("Specifikace"),
+                choices=specifikce_predmetu_choices,
+            )
+            self.fields["specifikace"].widget.attrs = {
+                "class": "selectpicker",
+                "data-live-search": "true",
+            }
+
+    return CreateNalezPredmetForm

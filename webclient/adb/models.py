@@ -8,10 +8,10 @@ from uzivatel.models import Osoba
 
 class Kladysm5(models.Model):
     gid = models.IntegerField(primary_key=True)
-    id = models.DecimalField(max_digits=65535, decimal_places=65535)
+    id = models.DecimalField(max_digits=1000, decimal_places=1000)
     mapname = models.TextField()
     mapno = models.TextField()
-    podil = models.DecimalField(max_digits=65535, decimal_places=65535)
+    podil = models.DecimalField(max_digits=1000, decimal_places=1000)
     geom = pgmodels.GeometryField(srid=5514)
     cislo = models.TextField()
 

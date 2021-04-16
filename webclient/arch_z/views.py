@@ -42,6 +42,9 @@ from heslar.hesla import (
     HESLAR_OBJEKT_DRUH_KAT,
     HESLAR_OBJEKT_SPECIFIKACE,
     HESLAR_OBJEKT_SPECIFIKACE_KAT,
+    HESLAR_PREDMET_DRUH,
+    HESLAR_PREDMET_DRUH_KAT,
+    HESLAR_PREDMET_SPECIFIKACE,
     SPECIFIKACE_DATA_PRESNE,
     TYP_DJ_SONDA_ID,
 )
@@ -49,8 +52,12 @@ from heslar.models import Heslar
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
-from nalez.forms import NalezFormSetHelper, create_nalez_objekt_form
-from nalez.models import NalezObjekt
+from nalez.forms import (
+    NalezFormSetHelper,
+    create_nalez_objekt_form,
+    create_nalez_predmet_form,
+)
+from nalez.models import NalezObjekt, NalezPredmet
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -70,8 +77,14 @@ def detail(request, ident_cely):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
+    druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(
         HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
+    )
+    specifikce_predmetu_choices = list(
+        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
+            "id", "heslo"
+        )
     )
     dokumenty = (
         Dokument.objects.filter(
@@ -82,12 +95,15 @@ def detail(request, ident_cely):
     )
     jednotky = (
         DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("komponenty", "typ")
+        .select_related("komponenty", "typ", "pian")
         .prefetch_related(
             "komponenty__komponenty",
             "komponenty__komponenty__aktivity",
             "komponenty__komponenty__obdobi",
             "komponenty__komponenty__areal",
+            "komponenty__komponenty__objekty",
+            "komponenty__komponenty__predmety",
+            "adb",
         )
     )
 
@@ -102,12 +118,30 @@ def detail(request, ident_cely):
         form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
         extra=3,
     )
+    NalezPredmetFormset = inlineformset_factory(
+        Komponenta,
+        NalezPredmet,
+        form=create_nalez_predmet_form(
+            druh_predmet_choices, specifikce_predmetu_choices
+        ),
+        extra=3,
+    )
     for jednotka in jednotky:
+        show_adb_add = (
+            jednotka.pian
+            and jednotka.typ.id == TYP_DJ_SONDA_ID
+            and jednotka.adb is None
+        )
         dj_forms_detail.append(
             {
                 "ident_cely": jednotka.ident_cely,
                 "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
-                "show_add_adb": jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID,
+                "show_add_adb": show_adb_add,
+                "adb_form": CreateADBForm(
+                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+                )
+                if jednotka.has_adb()
+                else None,
             }
         )
         for komponenta in jednotka.komponenty.komponenty.all():
@@ -120,7 +154,12 @@ def detail(request, ident_cely):
                         instance=komponenta,
                         prefix=komponenta.ident_cely,
                     ),
-                    "form_nalezy": NalezObjektFormset(instance=komponenta),
+                    "form_nalezy_objekty": NalezObjektFormset(
+                        instance=komponenta, prefix=komponenta.ident_cely + "_o"
+                    ),
+                    "form_nalezy_predmety": NalezPredmetFormset(
+                        instance=komponenta, prefix=komponenta.ident_cely + "_p"
+                    ),
                     "helper": NalezFormSetHelper(),
                 }
             )

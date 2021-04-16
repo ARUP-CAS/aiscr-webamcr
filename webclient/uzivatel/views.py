@@ -5,14 +5,24 @@ from core.message_constants import (
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
 )
+from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 from uzivatel.forms import OsobaForm
+from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
+
+
+class OsobaAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Osoba.objects.all()
+        if self.q:
+            qs = qs.filter(vypis_cely__icontains=self.q)
+        return qs
 
 
 @login_required

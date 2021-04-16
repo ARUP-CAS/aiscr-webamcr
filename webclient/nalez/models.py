@@ -22,7 +22,7 @@ class NalezObjekt(models.Model):
         models.DO_NOTHING,
         db_column="druh",
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH},
-        verbose_name=_("Druh"),
+        verbose_name=_("Druh objektu"),
         related_name="objekty_druhu",
     )
     specifikace = models.ForeignKey(
@@ -30,7 +30,7 @@ class NalezObjekt(models.Model):
         models.DO_NOTHING,
         db_column="specifikace",
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE},
-        verbose_name=_("Specifikace"),
+        verbose_name=_("Specifikace objektu"),
         related_name="objekty_specifikace",
         blank=True,
         null=True,
@@ -57,7 +57,7 @@ class NalezPredmet(models.Model):
         models.DO_NOTHING,
         db_column="druh",
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
-        verbose_name=_("Druh"),
+        verbose_name=_("Druh předmětu"),
         related_name="predmety_druhu",
     )
     specifikace = models.ForeignKey(
@@ -65,7 +65,7 @@ class NalezPredmet(models.Model):
         models.DO_NOTHING,
         db_column="specifikace",
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
-        verbose_name=_("Specifikace"),
+        verbose_name=_("Specifikace předmětu"),
         related_name="predmety_specifikace",
         blank=True,
         null=True,

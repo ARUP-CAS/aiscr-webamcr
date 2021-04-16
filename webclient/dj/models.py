@@ -39,3 +39,11 @@ class DokumentacniJednotka(models.Model):
     class Meta:
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
+
+    def has_adb(self):
+        has_adb = False
+        try:
+            has_adb = self.adb is not None
+        except Exception:
+            pass
+        return has_adb
