@@ -1,7 +1,6 @@
-from core.forms import TwoLevelSelectField
+from core.forms import HeslarChoiceFieldField, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from django import forms
-from django.forms import ChoiceField
 from django.utils.translation import gettext as _
 from nalez.models import NalezObjekt, NalezPredmet
 
@@ -77,9 +76,9 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices)
                     attrs={"class": "selectpicker", "data-live-search": "true"},
                 ),
             )
-            self.fields["specifikace"] = ChoiceField(
+            self.fields["specifikace"] = HeslarChoiceFieldField(
                 label=_("Specifikace"),
-                choices=specifikce_predmetu_choices,
+                choices=[("", "")] + specifikce_predmetu_choices,
             )
             self.fields["specifikace"].widget.attrs = {
                 "class": "selectpicker",

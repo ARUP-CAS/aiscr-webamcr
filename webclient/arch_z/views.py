@@ -127,23 +127,22 @@ def detail(request, ident_cely):
         extra=3,
     )
     for jednotka in jednotky:
+        has_adb = jednotka.has_adb()
         show_adb_add = (
-            jednotka.pian
-            and jednotka.typ.id == TYP_DJ_SONDA_ID
-            and jednotka.adb is None
+            jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb
         )
-        dj_forms_detail.append(
-            {
-                "ident_cely": jednotka.ident_cely,
-                "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
-                "show_add_adb": show_adb_add,
-                "adb_form": CreateADBForm(
-                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely
-                )
-                if jednotka.has_adb()
-                else None,
-            }
-        )
+        dj_form_detail = {
+            "ident_cely": jednotka.ident_cely,
+            "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
+            "show_add_adb": show_adb_add,
+        }
+        if has_adb:
+            dj_form_detail["adb_form"] = CreateADBForm(
+                instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+            )
+            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+            dj_form_detail["show_remove_adb"] = True
+        dj_forms_detail.append(dj_form_detail)
         for komponenta in jednotka.komponenty.komponenty.all():
             komponenta_forms_detail.append(
                 {
