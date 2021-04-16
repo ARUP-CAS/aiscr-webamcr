@@ -25,7 +25,7 @@ class Pian(models.Model):
         db_column="typ",
         related_name="piany_typu",
     )
-    geom = pgmodels.GeometryField(null=False)
+    geom = pgmodels.GeometryField(null=False, srid=4326)
     buffer = pgmodels.GeometryField(null=False)
     zm10 = models.ForeignKey(
         "Kladyzm",

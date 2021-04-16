@@ -1,5 +1,6 @@
 import logging
 
+from adb.forms import CreateADBForm
 from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
@@ -42,6 +43,7 @@ from heslar.hesla import (
     HESLAR_OBJEKT_SPECIFIKACE,
     HESLAR_OBJEKT_SPECIFIKACE_KAT,
     SPECIFIKACE_DATA_PRESNE,
+    TYP_DJ_SONDA_ID,
 )
 from heslar.models import Heslar
 from heslar.views import heslar_12
@@ -91,6 +93,7 @@ def detail(request, ident_cely):
 
     dj_form_create = CreateDJForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
+    adb_form_create = CreateADBForm()
     dj_forms_detail = []
     komponenta_forms_detail = []
     NalezObjektFormset = inlineformset_factory(
@@ -104,6 +107,7 @@ def detail(request, ident_cely):
             {
                 "ident_cely": jednotka.ident_cely,
                 "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
+                "show_add_adb": jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID,
             }
         )
         for komponenta in jednotka.komponenty.komponenty.all():
@@ -123,6 +127,7 @@ def detail(request, ident_cely):
 
     context["dj_form_create"] = dj_form_create
     context["dj_forms_detail"] = dj_forms_detail
+    context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
     context["komponenta_forms_detail"] = komponenta_forms_detail
 

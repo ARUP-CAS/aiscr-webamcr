@@ -1,8 +1,12 @@
 import datetime
 import logging
 
+from adb.models import Adb, Kladysm5
 from arch_z.models import ArcheologickyZaznam
 from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
+from core.exceptions import MaximalIdentNumberError, PianNotInKladysm5Error
+from django.contrib.gis.db.models.functions import Centroid
+from django.contrib.gis.geos import LineString, Point, Polygon
 from heslar.models import RuianKatastr
 from projekt.models import Projekt
 
@@ -97,3 +101,41 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
     else:
         logger.error("Maximal number of Komponentas is 99.")
         return None
+
+
+def get_sm_from_point(point):
+    mapovy_list = Kladysm5.objects.filter(geom__contains=point)
+    if mapovy_list.count() == 1:
+        return mapovy_list
+    else:
+        logger.debug(
+            "Nelze priradit mapovy list Kladysm5 pianu geometrie. Nula nebo >1 vysledku!"
+        )
+        raise PianNotInKladysm5Error(point)
+
+
+def get_adb_ident(pian) -> str:
+    # Get map list
+    point = None
+    if type(pian.geom) == LineString:
+        point = pian.geom.interpolate(0.5)
+    elif type(pian.geom) == Point:
+        point = pian.geom
+    elif type(pian.geom) == Polygon:
+        point = Centroid(pian.geom)
+    else:
+        logger.debug("Neznamy typ geometrie" + str(type(pian.geom)))
+        return None, None
+    sm5 = get_sm_from_point(point)[0]
+    MAXIMAL_ADBS: int = 9999
+    max_count = 0
+    for adb in Adb.objects.all():
+        last_digits = int(adb.ident_cely[-4:])
+        if max_count < last_digits:
+            max_count = last_digits
+    if max_count < MAXIMAL_ADBS:
+        ident = "ADB-" + sm5.mapno + "-" + str(max_count + 1).zfill(4)
+        return ident, sm5
+    else:
+        logger.error("Maximal number of ADBs is 9999.")
+        raise MaximalIdentNumberError(max_count)

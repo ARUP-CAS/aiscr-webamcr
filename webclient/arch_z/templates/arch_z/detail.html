@@ -190,6 +190,7 @@
                   {% if j.negativni_jednotka %}N{% else %}P{% endif %}
                   <a href="#"
                    onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }} ({{ j.typ }})</a>
+                  {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
                   {% if j.pian %}<button class="btn-primary float-right">Ukaž pian</button>{% endif %}
                 </p>
                 {% for k in j.komponenty.komponenty.all %}
@@ -246,7 +247,14 @@
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <div class="dropdown-menu" aria-labelledby="others">
-                <a class="dropdown-item" href="#" onclick="show_create_komponenta_form('{% url 'komponenta:zapsat' j.ident_cely %}')">{% trans 'Přidat komponentu' %}</a>
+                <a class="dropdown-item" href="#" onclick="show_create_child_form('{% url 'komponenta:zapsat' j.ident_cely %}', 'create_komponenta_form')">
+                  {% trans 'Přidat komponentu' %}
+                </a>
+                {% if j.show_add_adb %}
+                  <a class="dropdown-item" href="#" onclick="show_create_child_form('{% url 'adb:zapsat' j.ident_cely %}', 'create_adb_form')">
+                    {% trans 'Přidat ADB' %}
+                  </a>
+                {% endif %}
               </div>
               <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
                 <span class="material-icons">more_vert</span>
@@ -270,9 +278,23 @@
         </div>
       </div>
       <div class="card-body">
-        <form method="POST" action="#" id="create_komponenta_form_id">
+        <form method="POST" action="#" id="create_komponenta_form_id"> <!-- Action is filled using javascript -->
           {% crispy komponenta_form_create %}
           <button type="submit" class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card app-card-form" id="create_adb_form" style="display: none;">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Nový archeologický dokumentační bod" %}
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="#" id="create_adb_form_id"> <!-- Action is filled using javascript -->
+          {% crispy adb_form_create %}
+          <button type="submit" class="btn btn-primary">{% trans "Vytovřit ADB" %}</button>
         </form>
       </div>
     </div>
@@ -366,9 +388,10 @@
           }
       }
 
-      function show_create_komponenta_form(url) {
-          show_form('create_komponenta_form');
-          let forma = document.getElementById("create_komponenta_form_id");
+      // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
+      function show_create_child_form(url, form_id) {
+          show_form(form_id);
+          let forma = document.getElementById(form_id+"_id");
           forma.action = url;
       }
 

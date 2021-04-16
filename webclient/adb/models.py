@@ -1,8 +1,22 @@
 from dj.models import DokumentacniJednotka
+from django.contrib.gis.db import models as pgmodels
 from django.db import models
-from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP
+from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
+
+
+class Kladysm5(models.Model):
+    gid = models.IntegerField(primary_key=True)
+    id = models.DecimalField(max_digits=65535, decimal_places=65535)
+    mapname = models.TextField()
+    mapno = models.TextField()
+    podil = models.DecimalField(max_digits=65535, decimal_places=65535)
+    geom = pgmodels.GeometryField(srid=5514)
+    cislo = models.TextField()
+
+    class Meta:
+        db_table = "kladysm5"
 
 
 class Adb(models.Model):
@@ -11,6 +25,7 @@ class Adb(models.Model):
         models.DO_NOTHING,
         db_column="dokumentacni_jednotka",
         primary_key=True,
+        related_name="adb",
     )
     ident_cely = models.TextField(unique=True)
     typ_sondy = models.ForeignKey(
@@ -47,8 +62,26 @@ class Adb(models.Model):
         Osoba, models.DO_NOTHING, db_column="autor_revize", blank=True, null=True
     )
     rok_revize = models.IntegerField(blank=True, null=True)
-    final_cj = models.BooleanField()
-    # sm5 = models.ForeignKey('Kladysm5', models.DO_NOTHING, db_column='sm5')
+    sm5 = models.ForeignKey(Kladysm5, models.DO_NOTHING, db_column="sm5")
 
     class Meta:
         db_table = "adb"
+
+
+class VyskovyBod(models.Model):
+    adb = models.ForeignKey(
+        Adb, on_delete=models.CASCADE, db_column="adb", related_name="vyskove_body"
+    )
+    ident_cely = models.TextField(unique=True)
+    typ = models.ForeignKey(
+        Heslar,
+        on_delete=models.DO_NOTHING,
+        db_column="typ",
+        related_name="vyskove_body_typu",
+        limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
+    )
+    niveleta = models.FloatField()
+    geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
+
+    class Meta:
+        db_table = "vyskovy_bod"
