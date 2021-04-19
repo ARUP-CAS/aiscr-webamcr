@@ -65,6 +65,8 @@ TESTOVACI_DOKUMENT_ID = 123
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 
+EXISTING_EVENT_IDENT = "C-202000001A"
+
 
 def add_middleware_to_request(request, middleware_class):
     middleware = middleware_class()
@@ -244,7 +246,7 @@ class AMCRTestRunner(BaseRunner):
         # PROJEKT EVENT
         az = ArcheologickyZaznam(
             typ_zaznamu="A",
-            ident_cely="C-202000001A",
+            ident_cely=EXISTING_EVENT_IDENT,
             stav=AZ_STAV_ZAPSANY,
         )
         az.save()

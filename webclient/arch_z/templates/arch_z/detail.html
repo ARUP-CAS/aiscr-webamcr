@@ -329,6 +329,18 @@
           <div class="app-fx app-left">
             {% trans "Komponenta" %} {{ k.ident_cely }}
           </div>
+          <div class="app-fx app-right">
+            <div class="btn-group" role="group">
+              <div class="dropdown-menu" aria-labelledby="others">
+                  <a class="dropdown-item" href="{% url 'komponenta:smazat' k.ident_cely %}">
+                    {% trans 'Smazat Komponentu' %}
+                  </a>
+              </div>
+              <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
         </div>
         <div class="card-body">
           <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editKompSubmitButton.disabled = true; return true;">

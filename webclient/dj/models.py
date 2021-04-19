@@ -21,13 +21,13 @@ class DokumentacniJednotka(models.Model):
     pian = models.ForeignKey(
         Pian, models.DO_NOTHING, db_column="pian", blank=True, null=True
     )
-    komponenty = models.ForeignKey(
+    komponenty = models.OneToOneField(
         KomponentaVazby,
         models.DO_NOTHING,
         db_column="komponenty",
         blank=True,
         null=True,
-        related_name="dokumentacni_jednotky",
+        related_name="dokumentacni_jednotka",
     )
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
