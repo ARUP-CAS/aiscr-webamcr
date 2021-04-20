@@ -5,37 +5,66 @@
 
 {% block title %}{% trans "Detail dokumentu" %}{% endblock %}
 {% block head %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
-  <div class="row">
-    <div class="col">
-      <h1>{% trans "Dokument " %}{{ dokument.ident_cely }} <span
-          class="badge badge-info">{{ dokument.get_stav_display }}</span></h1>
-    </div>
-    <div class="col">
-      <div class="btn-group" role="group" aria-label="Basic example">
-        {#        {% if show.vratit_link %}#}
-        {#          <a href="{% url 'arch_z:vratit' zaznam.ident_cely %}"#}
-        {#             class="btn btn-warning">{% trans "Vrátit" %}</a>#}
-        {#        {% endif %}#}
-        {#        {% if show.odeslat_link %}#}
-        {#          <a href="{% url 'arch_z:odeslat' zaznam.ident_cely %}"#}
-        {#             class="btn btn-primary">{% trans "Odeslat akci" %}</a>#}
-        {#        {% endif %}#}
-        {#        {% if show.archivovat_link %}#}
-        {#          <a href="{% url 'arch_z:archivovat' zaznam.ident_cely %}"#}
-        {#             class="btn btn-primary">{% trans "Archivovat akci" %}</a>#}
-        {#        {% endif %}#}
+  <div class="app-entity-dokument">
+  {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
+
+  <div class="bs-stepper">
+    <div class="bs-stepper-header">
+      <div class="step {% if dokument.stav == 1 %}active{% endif %}">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">1</span>
+          <span class="bs-stepper-label">
+              {% trans "Rozepsaný" %}
+              <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
+            </span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step {% if dokument.stav == 2 %}active{% endif %}">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">2</span>
+          <span class="bs-stepper-label">
+              {% trans "Odeslaný" %}
+              <span class="app-stepper-date">{{ history_dates.datum_odeslani|date:'Y/m/d'|default_if_none:"" }}</span>
+            </span>
+        </button>
+      </div>
+      <div class="line"></div>
+      <div class="step {% if dokument.stav == 3 %}active{% endif %}">
+        <button type="button" class="btn step-trigger">
+          <span class="bs-stepper-circle">3</span>
+          <span class="bs-stepper-label">
+              {% trans "Archivovaný" %}
+              <span class="app-stepper-date">{{ history_dates.datum_archivace|date:'Y/m/d'|default_if_none:"" }}</span>
+            </span>
+        </button>
       </div>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card app-card-form">
     <div class="card-header">
-      {% trans "Detail" %}
-      <div class="float-md-right"><a
-          href="{% url 'dokument:edit' dokument.ident_cely %}">{% trans "Upravit" %}</a>
+      <div class="app-fx app-left">
+        {% trans "Detail" %}
+      </div>
+      <div class="float-md-right">
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="#">{% trans "Smazat dokument" %}</a>
+          </div>
+          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+            <span class="material-icons">more_vert</span>
+          </button>
+          <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
+             data-placement="top" title="{% trans 'Upravit' %}">
+            <span class="material-icons">edit</span>
+          </a>
+        </div>
       </div>
     </div>
     <div class="card-body">
@@ -72,7 +101,7 @@
   <div class="card mt-2">
     <div class="card-header">
       {% trans "Soubory" %}
-{#      <a href="{% url 'dokument:upload_file' dokument.ident_cely %}">Upload</a>#}
+      {#      <a href="{% url 'dokument:upload_file' dokument.ident_cely %}">Upload</a>#}
     </div>
     <div class="card-body">
       <table class="table">

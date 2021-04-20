@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Nový dokument" %}{% endblock %}
+{% block title %}{{ title }} {{ dokument.ident_cely }}{% endblock %}
 {% block head %}
 {% endblock %}
 
@@ -14,14 +14,14 @@
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
-            {% trans "Nový dokument" %}
+            {{ header }} {{ dokument.ident_cely }}
           </div>
         </div>
         <div class="card-body">
           {% crispy formDokument %}
           {% crispy formExtraData %}
           <button type="submit" id="newDocumentSubmitBtn"
-              class="btn btn-primary mt-3">{% trans "Vytovřit dokument" %}</button>
+              class="btn btn-primary mt-3">{{ button }}</button>
         </div>
       </div>
 
@@ -32,21 +32,39 @@
 {% block script %}
 
   <script>
-    // Need to disable options that are not allowed
+
+      function disable_disallowed(selected_value) {
+          let hierarchie = {{ hierarchie }};
+          let allowed_values = hierarchie[selected_value]
+          let material_selectpicker = document.getElementById("id_material_originalu")
+          let material_options = material_selectpicker.getElementsByTagName("option");
+          if (allowed_values) {
+              for (let item of material_options) {
+                  if (!allowed_values.includes(parseInt(item.value))) {
+                      item.disabled = true;
+                  } else {
+                      item.disabled = false;
+                  }
+              }
+          }
+      }
+
+      // Need to disable options that are not allowed if item is selected
       $("#id_typ_dokumentu").on("changed.bs.select",
           function (e, clickedIndex, newValue, oldValue) {
-              let hierarchie = {{ hierarchie }};
-              let allowed_values = hierarchie[this.value]
-              let material_options = document.getElementById("id_material_originalu").getElementsByTagName("option");
-              for (let item of material_options) {
-                if(!allowed_values.includes(parseInt(item.value))){
-                    item.disabled = true;
-                } else {
-                    console.log("Allowed option: " + item.value)
-                }
-              }
+              disable_disallowed(this.value)
+              // Everytime typ_dokumentu is changed, also reset value of the material_originalu
+              $('#id_material_originalu').selectpicker('val', '');
               $('#id_material_originalu').selectpicker('refresh');
           });
+
+      // Check it typ_dokumentu is selected. If it is, on edit all not available materials must be disabled
+      $('#id_typ_dokumentu').on('loaded.bs.select',
+          function (e, clickedIndex, isSelected, previousValue) {
+              disable_disallowed(this.value)
+              $('#id_material_originalu').selectpicker('refresh');
+          });
+
   </script>
 
 {% endblock %}

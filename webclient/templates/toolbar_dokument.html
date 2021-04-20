@@ -3,10 +3,10 @@
 <div class="app-toolbar">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="#"><span class="material-icons">brush</span> Akce</a>
+      <a href="#"><span class="material-icons">brush</span> Dokument</a>
     </div>
     <div class="app-entity-item">
-      {{ d.ident_cely }}{% if showbackdetail %}<span class="app-pipe"></span><a href="{% url 'arch_z:detail' d.dokument_cast.archeologicky_zaznam.ident_cely %}" class="app-entity-color font-weight-normal">Zpět na detail akce/lokality</a>{% endif %}
+      {{ d.ident_cely }}
     </div>
   </div>
   {% if showcontrols %}
@@ -34,7 +34,7 @@
           {% trans "Další volby" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}">{% trans "Smazat dokument" %}</a>
+          <a class="dropdown-item" href="#">{% trans "Smazat dokument" %}</a>
         </div>
       </div>
     </div>

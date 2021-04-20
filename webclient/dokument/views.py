@@ -11,6 +11,7 @@ from core.message_constants import ZAZNAM_USPECNE_VYTVOREN, ZAZNAM_USPESNE_EDITO
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.forms import CreateDokumentExtraDataForm, CreateDokumentForm
 from dokument.models import Dokument, DokumentCast
@@ -44,23 +45,38 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-
     dokument = Dokument.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
-        form = CreateDokumentForm(request.POST, instance=dokument)
-        if form.is_valid():
-            form.save()
+        form_d = CreateDokumentForm(request.POST, instance=dokument)
+        form_extra = CreateDokumentExtraDataForm(
+            request.POST, instance=dokument.extra_data
+        )
+        if form_d.is_valid() and form_extra.is_valid():
+            form_d.save()
+            form_extra.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
             logger.debug("The form is not valid")
-            logger.debug(form.errors)
-        return render(
-            request, "dokument/edit.html", {"form": form, "dokument": dokument}
-        )
+            logger.debug(form_d.errors)
+            logger.debug(form_extra.errors)
     else:
-        form = CreateDokumentForm(instance=dokument)
+        form_d = CreateDokumentForm(instance=dokument)
+        form_extra = CreateDokumentExtraDataForm(instance=dokument)
 
-    return render(request, "dokument/edit.html", {"form": form, "dokument": dokument})
+    return render(
+        request,
+        "dokument/create.html",
+        {
+            "formDokument": form_d,
+            "formExtraData": form_extra,
+            "dokument": dokument,
+            "hierarchie": get_hierarchie_dokument_typ(),
+            "title": _("Editace dokumentu"),
+            "header": _("Editace dokumentu"),
+            "button": _("Edituj dokument"),
+        },
+    )
 
 
 @login_required
@@ -110,6 +126,21 @@ def zapsat(request, arch_z_ident_cely):
         form_d = CreateDokumentForm()
         form_extra = CreateDokumentExtraDataForm()
 
+    return render(
+        request,
+        "dokument/create.html",
+        {
+            "formDokument": form_d,
+            "formExtraData": form_extra,
+            "hierarchie": get_hierarchie_dokument_typ(),
+            "title": _("Nový dokument"),
+            "header": _("Nový dokument"),
+            "button": _("Vytvořit dokument"),
+        },
+    )
+
+
+def get_hierarchie_dokument_typ():
     hierarchie_qs = HeslarHierarchie.objects.filter(
         heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP
     ).values_list("heslo_podrazene", "heslo_nadrazene")
@@ -119,9 +150,4 @@ def zapsat(request, arch_z_ident_cely):
             hierarchie[v[0]].append(v[1])
         else:
             hierarchie[v[0]] = [v[1]]
-
-    return render(
-        request,
-        "dokument/create.html",
-        {"formDokument": form_d, "formExtraData": form_extra, "hierarchie": hierarchie},
-    )
+    return hierarchie

@@ -60,8 +60,7 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = edit(request, self.existing_dokument)
-        self.assertEqual(200, response.status_code)
-        self.assertTrue("error" not in response.content.decode("utf-8"))
+        self.assertEqual(302, response.status_code)
         self.assertTrue(
             Dokument.objects.get(ident_cely=self.existing_dokument).rok_vzniku == 2019
         )

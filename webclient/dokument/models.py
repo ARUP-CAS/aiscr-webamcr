@@ -10,6 +10,7 @@ from core.constants import (
 )
 from core.models import SouborVazby
 from django.contrib.gis.db.models import GeometryField
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
@@ -57,7 +58,7 @@ class Dokument(models.Model):
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace"
     )
-    rok_vzniku = models.IntegerField(blank=True, null=True)
+    rok_vzniku = models.PositiveIntegerField(blank=True, null=True)
     pristupnost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -106,13 +107,11 @@ class Dokument(models.Model):
         Heslar,
         through="DokumentJazyk",
         related_name="dokumenty_jazyku",
-        limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
     )
     posudky = models.ManyToManyField(
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
-        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
     )
     osoby = models.ManyToManyField(
         Osoba,
@@ -191,7 +190,11 @@ class DokumentCast(models.Model):
 
 class DokumentExtraData(models.Model):
     dokument = models.OneToOneField(
-        Dokument, on_delete=models.CASCADE, db_column="dokument", primary_key=True
+        Dokument,
+        on_delete=models.CASCADE,
+        db_column="dokument",
+        primary_key=True,
+        related_name="extra_data",
     )
     datum_vzniku = models.DateTimeField(blank=True, null=True)
     zachovalost = models.ForeignKey(
@@ -247,9 +250,11 @@ class DokumentExtraData(models.Model):
         related_name="extra_data_udalosti",
         limit_choices_to={"nazev_heslare": HESLAR_UDALOST_TYP},
     )
-    rok_od = models.IntegerField(blank=True, null=True)
-    rok_do = models.IntegerField(blank=True, null=True)
-    duveryhodnost = models.IntegerField(blank=True, null=True)
+    rok_od = models.PositiveIntegerField(blank=True, null=True)
+    rok_do = models.PositiveIntegerField(blank=True, null=True)
+    duveryhodnost = models.PositiveIntegerField(
+        blank=True, null=True, validators=[MinValueValidator(1), MaxValueValidator(100)]
+    )
     geom = GeometryField(blank=True, null=True)
 
     class Meta:

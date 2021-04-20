@@ -2,6 +2,8 @@ from crispy_forms.helper import FormHelper
 from django import forms
 from django.utils.translation import gettext as _
 from dokument.models import Dokument, DokumentExtraData
+from heslar.hesla import HESLAR_JAZYK, HESLAR_POSUDEK_TYP
+from heslar.models import Heslar
 
 
 class CreateDokumentExtraDataForm(forms.ModelForm):
@@ -26,7 +28,23 @@ class CreateDokumentExtraDataForm(forms.ModelForm):
             "rok_do",
             "duveryhodnost",
         )
-
+        widgets = {
+            "zachovalost": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "nahrada": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "format": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "zeme": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "udalost_typ": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
         labels = {
             "datum_vzniku": _("Datum vzniku"),
             "zachovalost": _("Zachovalost"),
@@ -58,10 +76,10 @@ class CreateDokumentForm(forms.ModelForm):
         model = Dokument
         fields = (
             "typ_dokumentu",
+            "material_originalu",
             "organizace",
             "rok_vzniku",
             "pristupnost",
-            "material_originalu",
             "popis",
             "poznamka",
             "ulozeni_originalu",
@@ -77,6 +95,24 @@ class CreateDokumentForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "material_originalu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "pristupnost": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "ulozeni_originalu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "jazyky": forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "posudky": forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "osoby": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         }
@@ -96,7 +132,15 @@ class CreateDokumentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CreateDokumentForm, self).__init__(*args, **kwargs)
         self.fields["jazyky"].required = False
+        self.fields["jazyky"].choices = list(
+            Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK).values_list("id", "heslo")
+        )
         self.fields["posudky"].required = False
+        self.fields["posudky"].choices = list(
+            Heslar.objects.filter(nazev_heslare=HESLAR_POSUDEK_TYP).values_list(
+                "id", "heslo"
+            )
+        )
         self.fields["osoby"].required = False
         self.helper = FormHelper(self)
         self.helper.form_tag = False
