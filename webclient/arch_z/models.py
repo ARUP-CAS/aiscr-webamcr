@@ -222,7 +222,7 @@ class Akce(models.Model):
             # or akce.je_nz must be true.
         if (
             len(
-                self.archeologicky_zaznam.dokumentcast_set.filter(
+                self.archeologicky_zaznam.casti_dokumentu.filter(
                     dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
                 )
             )
@@ -247,10 +247,7 @@ class Akce(models.Model):
         for dj in self.archeologicky_zaznam.dokumentacni_jednotky.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
-            if (
-                not dj.negativni_jednotka
-                and len(dj.komponenty.komponenta_set.all()) == 0
-            ):
+            if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
                     _("Pozitivní dokumentační jednotka ")
                     + str(dj.ident_cely)

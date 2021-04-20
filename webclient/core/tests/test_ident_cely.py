@@ -2,12 +2,19 @@ import datetime
 from decimal import Decimal
 
 from core.ident_cely import (
+    get_dokument_rada,
     get_ident_consecutive_number,
     get_permanent_project_ident,
     get_region_from_cadastre,
     get_temporary_project_ident,
 )
-from core.tests.runner import PRESNOST_DESITKY_METRU_ID, TYP_PIAN_PLOCHA_ID
+from core.tests.runner import (
+    MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
+    PRESNOST_DESITKY_METRU_ID,
+    RADA_DOKUMENTU_TEXT_ID,
+    TYP_DOKUMENTU_PLAN_SONDY_ID,
+    TYP_PIAN_PLOCHA_ID,
+)
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
@@ -100,3 +107,9 @@ class IdentTests(TestCase):
         ).save()
         number = get_ident_consecutive_number("M", 2020)
         self.assertEqual(number, 7)
+
+    def test_get_dokument_rada(self):
+        material = Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID)
+        typ = Heslar.objects.get(id=TYP_DOKUMENTU_PLAN_SONDY_ID)
+        rada = get_dokument_rada(typ, material)
+        self.assertEqual(rada.id, RADA_DOKUMENTU_TEXT_ID)

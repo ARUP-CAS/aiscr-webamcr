@@ -2,7 +2,7 @@ from core.tests.runner import (
     AMCR_TESTOVACI_ORGANIZACE_ID,
     ARCHEOLOGICKY_POSUDEK_ID,
     JAZYK_DOKUMENTU_CESTINA_ID,
-    MATERIAL_DOKUMENTU_DIGI_SOUBOR,
+    MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
     add_middleware_to_request,
 )
@@ -45,7 +45,7 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm",
             "organizace": str(AMCR_TESTOVACI_ORGANIZACE_ID),
             "rok_vzniku": "2019",
-            "material_originalu": str(MATERIAL_DOKUMENTU_DIGI_SOUBOR),
+            "material_originalu": str(MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
             "typ_dokumentu": str(TYP_DOKUMENTU_PLAN_SONDY_ID),
             "pristupnost": str(PRISTUPNOST_ANONYM_ID),
             "datum_zverejneni": "",

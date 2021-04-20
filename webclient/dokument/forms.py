@@ -1,29 +1,85 @@
-from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout, Submit
 from django import forms
 from django.utils.translation import gettext as _
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentExtraData
 
 
-class EditDokumentForm(forms.ModelForm):
+class CreateDokumentExtraDataForm(forms.ModelForm):
+    class Meta:
+        model = DokumentExtraData
+        fields = (
+            "datum_vzniku",
+            "zachovalost",
+            "nahrada",
+            "pocet_variant_originalu",
+            "odkaz",
+            "format",
+            "meritko",
+            "vyska",
+            "sirka",
+            "cislo_objektu",
+            "zeme",
+            "region",
+            "udalost",
+            "udalost_typ",
+            "rok_od",
+            "rok_do",
+            "duveryhodnost",
+        )
+
+        labels = {
+            "datum_vzniku": _("Datum vzniku"),
+            "zachovalost": _("Zachovalost"),
+            "nahrada": _("Náhrada"),
+            "pocet_variant_originalu": _("Počet variant originálu"),
+            "odkaz": _("Odkaz"),
+            "format": _("Formát plánu/foto"),
+            "meritko": _("Měřítko plánu"),
+            "vyska": _("Výška plánu"),
+            "sirka": _("Šířka plánu"),
+            "cislo_objektu": _("Objekt/kontext"),
+            "zeme": _("Země"),
+            "region": _("Region"),
+            "udalost": _("Událost"),
+            "udalost_typ": _("Typ události"),
+            "rok_od": _("Rok od"),
+            "rok_do": _("Rok do"),
+            "duveryhodnost": _("Důvěryhodnost"),
+        }
+
+        def __init__(self, *args, **kwargs):
+            super(CreateDokumentExtraDataForm, self).__init__(*args, **kwargs)
+            self.helper = FormHelper(self)
+            self.helper.form_tag = False
+
+
+class CreateDokumentForm(forms.ModelForm):
     class Meta:
         model = Dokument
         fields = (
+            "typ_dokumentu",
             "organizace",
             "rok_vzniku",
+            "pristupnost",
             "material_originalu",
-            "typ_dokumentu",
             "popis",
             "poznamka",
             "ulozeni_originalu",
             "oznaceni_originalu",
-            "pristupnost",
             "datum_zverejneni",
-            "posudky",
+            "licence",
             "jazyky",
+            "posudky",
+            "osoby",
         )
-        widgets = {}
+        widgets = {
+            "typ_dokumentu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "material_originalu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
         labels = {
             "organizace": _("Organizace"),
             "rok_vzniku": _("Rok vzniku"),
@@ -38,51 +94,9 @@ class EditDokumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(EditDokumentForm, self).__init__(*args, **kwargs)
+        super(CreateDokumentForm, self).__init__(*args, **kwargs)
         self.fields["jazyky"].required = False
         self.fields["posudky"].required = False
+        self.fields["osoby"].required = False
         self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div(
-                Div(
-                    HTML(_("Editace dokumentu")),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div("organizace", css_class="col-sm-6"),
-                        Div("rok_vzniku", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    Div(
-                        Div("material_originalu", css_class="col-sm-6"),
-                        Div("typ_dokumentu", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    Div(
-                        Div("popis", css_class="col-sm-6"),
-                        Div("poznamka", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    Div(
-                        Div("ulozeni_originalu", css_class="col-sm-6"),
-                        Div("oznaceni_originalu", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    Div(
-                        Div("pristupnost", css_class="col-sm-6"),
-                        Div("datum_zverejneni", css_class="col-sm-6"),
-                        css_class="row",
-                    ),
-                    "jazyky",
-                    "posudky",
-                    Div(
-                        FormActions(
-                            Submit("save", "Upravit"),
-                        )
-                    ),
-                    css_class="card-body",
-                ),
-                css_class="card",
-            )
-        )
+        self.helper.form_tag = False

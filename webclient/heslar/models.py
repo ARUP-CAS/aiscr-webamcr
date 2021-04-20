@@ -1,5 +1,10 @@
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
+from heslar.hesla import (
+    HESLAR_DOKUMENT_MATERIAL,
+    HESLAR_DOKUMENT_RADA,
+    HESLAR_DOKUMENT_TYP,
+)
 
 
 class Heslar(models.Model):
@@ -22,6 +27,7 @@ class Heslar(models.Model):
             ("nazev_heslare", "zkratka"),
             ("nazev_heslare", "zkratka_en"),
         )
+        ordering = ["razeni"]
 
     def __str__(self):
         if self.heslo:
@@ -57,16 +63,25 @@ class HeslarDatace(models.Model):
 
 class HeslarDokumentTypMaterialRada(models.Model):
     dokument_rada = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="dokument_rada", related_name="rada"
+        Heslar,
+        models.DO_NOTHING,
+        db_column="dokument_rada",
+        related_name="rada",
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
     )
     dokument_typ = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="dokument_typ", related_name="typ"
+        Heslar,
+        models.DO_NOTHING,
+        db_column="dokument_typ",
+        related_name="typ",
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
     )
     dokument_material = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
         db_column="dokument_material",
         related_name="material",
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
     )
     validated = models.SmallIntegerField()
 

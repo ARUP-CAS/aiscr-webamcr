@@ -23,3 +23,10 @@ class DJNemaPianError(Exception):
         self.dj = dj
         self.message = message
         super().__init__(self.dj)
+
+
+class NelzeZjistitRaduError(Exception):
+    def __init__(self, dokument, message="Nelze zjistit radu dokumentu"):
+        self.dokumnet = dokument
+        self.message = message
+        super().__init__(self.dokumnet)

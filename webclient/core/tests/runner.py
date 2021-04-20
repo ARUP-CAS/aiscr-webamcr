@@ -15,6 +15,7 @@ from heslar.hesla import (
     HESLAR_DATUM_SPECIFIKACE,
     HESLAR_DJ_TYP,
     HESLAR_DOKUMENT_MATERIAL,
+    HESLAR_DOKUMENT_RADA,
     HESLAR_DOKUMENT_TYP,
     HESLAR_JAZYK,
     HESLAR_OBDOBI,
@@ -27,7 +28,14 @@ from heslar.hesla import (
     PRISTUPNOST_ANONYM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
-from heslar.models import Heslar, HeslarNazev, RuianKatastr, RuianKraj, RuianOkres
+from heslar.models import (
+    Heslar,
+    HeslarDokumentTypMaterialRada,
+    HeslarNazev,
+    RuianKatastr,
+    RuianKraj,
+    RuianOkres,
+)
 from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
@@ -42,11 +50,12 @@ PRESNOST_STOVKY_METRU_ID = 1213
 SPECIFIKACE_DATA_PRESNE_ID = 881
 HLAVNI_TYP_SONDA_ID = 1234
 TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
-MATERIAL_DOKUMENTU_DIGI_SOUBOR = 229
+MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID = 229
 JAZYK_DOKUMENTU_CESTINA_ID = 1256
 TYP_DJ_CELEK_AKCE_ID = 321
 OBDOBI_STREDNI_PALEOLIT_ID = 336
 AREAL_HRADISTE_ID = 337
+RADA_DOKUMENTU_TEXT_ID = 547
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -61,7 +70,7 @@ TYP_PIAN_BOD_ID = 58
 
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
-TESTOVACI_DOKUMENT_ID = 123
+TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 
@@ -155,6 +164,7 @@ class AMCRTestRunner(BaseRunner):
         hmd = HeslarNazev(
             id=HESLAR_DOKUMENT_MATERIAL, nazev="heslar_material_dokumentu"
         )
+        hdr = HeslarNazev(id=HESLAR_DOKUMENT_RADA, nazev="heslar_rada_dokumentu")
         hdj = HeslarNazev(id=HESLAR_DJ_TYP, nazev="heslar_dj_typ")
         hjd = HeslarNazev(id=HESLAR_JAZYK, nazev="heslar_jazyk_dokumentu")
         hpd = HeslarNazev(id=HESLAR_POSUDEK_TYP, nazev="heslar_posudek")
@@ -175,6 +185,7 @@ class AMCRTestRunner(BaseRunner):
             hdj,
             hok,
             hak,
+            hdr,
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -187,14 +198,20 @@ class AMCRTestRunner(BaseRunner):
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=SPECIFIKACE_DATA_PRESNE_ID, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
-        Heslar(
+        typ_dokumentu_plan = Heslar(
             id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd
-        ).save()
-        Heslar(
-            id=MATERIAL_DOKUMENTU_DIGI_SOUBOR,
+        )
+        material_dokumentu_digi = Heslar(
+            id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
             heslo="digitalni soubor",
             nazev_heslare=hmd,
-        ).save()
+        )
+        rada_dokumentu_text = Heslar(
+            id=RADA_DOKUMENTU_TEXT_ID, heslo="textovy soubor", nazev_heslare=hdr
+        )
+        typ_dokumentu_plan.save()
+        material_dokumentu_digi.save()
+        rada_dokumentu_text.save()
         Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd).save()
         Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj).save()
         Heslar(
@@ -210,6 +227,14 @@ class AMCRTestRunner(BaseRunner):
             id=OBDOBI_STREDNI_PALEOLIT_ID, heslo="Stredni paleolit", nazev_heslare=hok
         ).save()
         Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
+
+        # Zaznamy v HeslarDokumentMaterialRada
+        HeslarDokumentTypMaterialRada(
+            dokument_rada=rada_dokumentu_text,
+            dokument_material=material_dokumentu_digi,
+            dokument_typ=typ_dokumentu_plan,
+            validated=True,
+        ).save()
 
         o = Organizace(
             id=AMCR_TESTOVACI_ORGANIZACE_ID,
@@ -280,14 +305,13 @@ class AMCRTestRunner(BaseRunner):
         osoba.save()
 
         d = Dokument(
-            id=TESTOVACI_DOKUMENT_ID,
-            rada=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
+            rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
             typ_dokumentu=Heslar.objects.get(id=TYP_DOKUMENTU_PLAN_SONDY_ID),
             organizace=o,
             pristupnost=zp,
-            ident_cely="C-TX-201501985",
+            ident_cely=TESTOVACI_DOKUMENT_IDENT,
             stav=D_STAV_ZAPSANY,
-            material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR),
+            material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
         )
         d.save()
 

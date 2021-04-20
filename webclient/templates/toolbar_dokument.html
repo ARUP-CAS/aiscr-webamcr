@@ -1,0 +1,42 @@
+{% load i18n %}
+
+<div class="app-toolbar">
+  <div class="app-left">
+    <div class="app-entity-title">
+      <a href="#"><span class="material-icons">brush</span> Akce</a>
+    </div>
+    <div class="app-entity-item">
+      {{ d.ident_cely }}{% if showbackdetail %}<span class="app-pipe"></span><a href="{% url 'arch_z:detail' d.dokument_cast.archeologicky_zaznam.ident_cely %}" class="app-entity-color font-weight-normal">Zpět na detail akce/lokality</a>{% endif %}
+    </div>
+  </div>
+  {% if showcontrols %}
+    <div class="app-right app-controls">
+      <div class="btn-group app-entity-akce" role="group">
+        {% if show.vratit_link %}
+          <a href="{% url 'dokument:vratit' d.ident_cely %}" class="btn">
+            <span class="material-icons">arrow_back</span>
+            {% trans "Vrátit" %}
+          </a>
+        {% endif %}
+        {% if show.odeslat_link %}
+          <a href="{% url 'dokument:odeslat' d.ident_cely %}" class="btn">
+            <span class="material-icons">flag</span>
+            {% trans "Odeslat" %}
+          </a>
+        {% endif %}
+        {% if show.archivovat_link %}
+          <a href="{% url 'dokument:archivovat' d.ident_cely %}" class="btn">
+            <span class="material-icons">archive</span>
+            {% trans "Archivovat" %}
+          </a>
+        {% endif %}
+        <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% trans "Další volby" %}
+        </button>
+        <div class="dropdown-menu" aria-labelledby="otherOptions">
+          <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}">{% trans "Smazat dokument" %}</a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>

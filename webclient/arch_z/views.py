@@ -87,9 +87,7 @@ def detail(request, ident_cely):
         )
     )
     dokumenty = (
-        Dokument.objects.filter(
-            dokumentcast__archeologicky_zaznam__ident_cely=ident_cely
-        )
+        Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
         .select_related("soubory")
         .prefetch_related("soubory__soubory")
     )

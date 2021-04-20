@@ -13,14 +13,12 @@ logger = logging.getLogger(__name__)
 @receiver(pre_save, sender=Projekt)
 def create_projekt_vazby(sender, instance, **kwargs):
     if instance.pk is None:
-        logger.debug(
-            "Creating history records for archaeological record " + str(instance)
-        )
+        logger.debug("Creating history records for projekt " + str(instance))
         hv = HistorieVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         hv.save()
         instance.historie = hv
         logger.debug(
-            "Creating child file and history records for project " + str(instance)
+            "Creating child file for soubory records for project " + str(instance)
         )
         sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         sv.save()

@@ -4,10 +4,15 @@ import logging
 from adb.models import Adb, Kladysm5
 from arch_z.models import ArcheologickyZaznam
 from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
-from core.exceptions import MaximalIdentNumberError, PianNotInKladysm5Error
+from core.exceptions import (
+    MaximalIdentNumberError,
+    NelzeZjistitRaduError,
+    PianNotInKladysm5Error,
+)
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
-from heslar.models import RuianKatastr
+from dokument.models import Dokument
+from heslar.models import HeslarDokumentTypMaterialRada, RuianKatastr
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -70,6 +75,43 @@ def get_project_event_ident(project: Projekt) -> str:
         return None
 
 
+def get_dokument_rada(typ, material):
+    instances = HeslarDokumentTypMaterialRada.objects.filter(
+        dokument_typ=typ, dokument_material=material
+    )
+    if len(instances) == 1:
+        return instances[0].dokument_rada
+    else:
+        logger.error(
+            "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace typu {} a materialu. {}".format(
+                typ.id, material.id
+            )
+        )
+        raise NelzeZjistitRaduError()
+
+
+def get_dokument_ident(temporary, rada, region):
+    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu]
+    # TODO
+    return "X - spatny ident"
+
+
+def get_cast_dokumentu_ident(dokument: Dokument) -> str:
+    MAXIMUM: int = 99
+    max_count = 0
+    for d in dokument.casti.all():
+        last_digits = int(d.ident_cely[-2:])
+        if max_count < last_digits:
+            max_count = last_digits
+    new_ident = dokument.ident_cely
+    if max_count < MAXIMUM:
+        ident = new_ident + "-D" + str(max_count + 1).zfill(2)
+        return ident
+    else:
+        logger.error("Maximal number of dokument parts is 99.")
+        return None
+
+
 def get_dj_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_EVENT_DJS: int = 99
     max_count = 0
@@ -108,7 +150,7 @@ def get_sm_from_point(point):
     if mapovy_list.count() == 1:
         return mapovy_list
     else:
-        logger.debug(
+        logger.error(
             "Nelze priradit mapovy list Kladysm5 pianu geometrie. Nula nebo >1 vysledku!"
         )
         raise PianNotInKladysm5Error(point)
@@ -124,7 +166,7 @@ def get_adb_ident(pian) -> str:
     elif type(pian.geom) == Polygon:
         point = Centroid(pian.geom)
     else:
-        logger.debug("Neznamy typ geometrie" + str(type(pian.geom)))
+        logger.error("Neznamy typ geometrie" + str(type(pian.geom)))
         return None, None
     sm5 = get_sm_from_point(point)[0]
     MAXIMAL_ADBS: int = 9999

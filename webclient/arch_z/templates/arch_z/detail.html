@@ -390,9 +390,9 @@
             <a class="dropdown-item" href="#">{% trans "A" %}</a>
             <a class="dropdown-item" href="#">{% trans "B" %}</a>
           </div>
-          <button class="btn" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokument' %}">
+          <a class="btn app-entity-projekt" href="{% url 'dokument:zapsat' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokument' %}">
             <span class="material-icons">add</span>
-          </button>
+          </a>
         </div>
       </div>
     </div>

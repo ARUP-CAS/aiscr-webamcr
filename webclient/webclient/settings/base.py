@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     "uzivatel.apps.UzivatelConfig",
     "pian",
     "arch_z.apps.ArchZConfig",
-    "dokument",
+    "dokument.apps.DokumentConfig",
     "nalez",
     "adb",
     "neidentakce",

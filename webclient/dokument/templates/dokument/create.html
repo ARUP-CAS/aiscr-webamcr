@@ -1,0 +1,52 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Nový dokument" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-akce">
+    {% include "toolbar_dokument.html" %}
+    <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {% trans "Nový dokument" %}
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy formDokument %}
+          {% crispy formExtraData %}
+          <button type="submit" id="newDocumentSubmitBtn"
+              class="btn btn-primary mt-3">{% trans "Vytovřit dokument" %}</button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+{% endblock %}
+
+{% block script %}
+
+  <script>
+    // Need to disable options that are not allowed
+      $("#id_typ_dokumentu").on("changed.bs.select",
+          function (e, clickedIndex, newValue, oldValue) {
+              let hierarchie = {{ hierarchie }};
+              let allowed_values = hierarchie[this.value]
+              let material_options = document.getElementById("id_material_originalu").getElementsByTagName("option");
+              for (let item of material_options) {
+                if(!allowed_values.includes(parseInt(item.value))){
+                    item.disabled = true;
+                } else {
+                    console.log("Allowed option: " + item.value)
+                }
+              }
+              $('#id_material_originalu').selectpicker('refresh');
+          });
+  </script>
+
+{% endblock %}

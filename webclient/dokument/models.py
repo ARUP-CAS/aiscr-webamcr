@@ -1,19 +1,32 @@
 from arch_z.models import ArcheologickyZaznam
-from core.constants import D_STAV_ARCHIVOVANY, D_STAV_ODESLANY, D_STAV_ZAPSANY
+from core.constants import (
+    ARCHIVACE_DOK,
+    D_STAV_ARCHIVOVANY,
+    D_STAV_ODESLANY,
+    D_STAV_ZAPSANY,
+    ODESLANI_DOK,
+    VRACENI_DOK,
+    ZAPSANI_DOK,
+)
 from core.models import SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from heslar.hesla import (
+    HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
+    HESLAR_DOKUMENT_NAHRADA,
     HESLAR_DOKUMENT_RADA,
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ULOZENI,
+    HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
     HESLAR_POSUDEK_TYP,
     HESLAR_PRISTUPNOST,
+    HESLAR_UDALOST_TYP,
+    HESLAR_ZEME,
 )
 from heslar.models import Heslar
-from historie.models import HistorieVazby
+from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
 
@@ -72,25 +85,35 @@ class Dokument(models.Model):
     )
     oznaceni_originalu = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
-    final_cj = models.BooleanField(default=False)
+    ident_cely = models.TextField(unique=True)
     datum_zverejneni = models.DateField(blank=True, null=True)
     soubory = models.ForeignKey(
-        SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
+        SouborVazby,
+        models.DO_NOTHING,
+        db_column="soubory",
     )
     historie = models.ForeignKey(
-        HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
+        HistorieVazby,
+        models.DO_NOTHING,
+        db_column="historie",
     )
     licence = models.TextField(blank=True, null=True)
     jazyky = models.ManyToManyField(
         Heslar,
         through="DokumentJazyk",
         related_name="dokumenty_jazyku",
+        limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
     )
     posudky = models.ManyToManyField(
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
+        limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
+    )
+    osoby = models.ManyToManyField(
+        Osoba,
+        through="DokumentOsoba",
+        related_name="dokumenty_osob",
     )
 
     class Meta:
@@ -98,6 +121,42 @@ class Dokument(models.Model):
 
     def __str__(self):
         return self.ident_cely
+
+    def set_zapsany(self, user):
+        self.stav = D_STAV_ZAPSANY
+        Historie(
+            typ_zmeny=ZAPSANI_DOK,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_odeslany(self, user):
+        self.stav = D_STAV_ODESLANY
+        Historie(
+            typ_zmeny=ODESLANI_DOK,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_archivovany(self, user):
+        self.stav = D_STAV_ARCHIVOVANY
+        Historie(
+            typ_zmeny=ARCHIVACE_DOK,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_vraceny(self, user, new_state, poznamka):
+        self.stav = new_state
+        Historie(
+            typ_zmeny=VRACENI_DOK,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        )
 
 
 class DokumentCast(models.Model):
@@ -107,10 +166,11 @@ class DokumentCast(models.Model):
         db_column="archeologicky_zaznam",
         blank=True,
         null=True,
+        related_name="casti_dokumentu",
     )
     poznamka = models.TextField(blank=True, null=True)
     dokument = models.ForeignKey(
-        Dokument, on_delete=models.CASCADE, db_column="dokument"
+        Dokument, on_delete=models.CASCADE, db_column="dokument", related_name="casti"
     )
     ident_cely = models.TextField(unique=True)
     komponenty = models.OneToOneField(
@@ -125,18 +185,6 @@ class DokumentCast(models.Model):
         db_table = "dokument_cast"
 
 
-class DokumentAutor(models.Model):
-    dokument = models.OneToOneField(
-        Dokument, models.CASCADE, db_column="dokument", primary_key=True
-    )
-    autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
-    poradi = models.IntegerField()
-
-    class Meta:
-        db_table = "dokument_autor"
-        unique_together = (("dokument", "autor"),)
-
-
 class DokumentExtraData(models.Model):
     dokument = models.OneToOneField(
         Dokument, on_delete=models.CASCADE, db_column="dokument", primary_key=True
@@ -149,6 +197,7 @@ class DokumentExtraData(models.Model):
         blank=True,
         null=True,
         related_name="extra_data_zachovalosti",
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_ZACHOVALOST},
     )
     nahrada = models.ForeignKey(
         Heslar,
@@ -156,7 +205,8 @@ class DokumentExtraData(models.Model):
         db_column="nahrada",
         blank=True,
         null=True,
-        related_name="extra_data_nahrad",
+        related_name="extra_data_nahrada",
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_NAHRADA},
     )
     pocet_variant_originalu = models.IntegerField(blank=True, null=True)
     odkaz = models.TextField(blank=True, null=True)
@@ -167,6 +217,7 @@ class DokumentExtraData(models.Model):
         blank=True,
         null=True,
         related_name="extra_data_formatu",
+        limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_FORMAT},
     )
     meritko = models.TextField(blank=True, null=True)
     vyska = models.IntegerField(blank=True, null=True)
@@ -179,6 +230,7 @@ class DokumentExtraData(models.Model):
         blank=True,
         null=True,
         related_name="extra_data_zemi",
+        limit_choices_to={"nazev_heslare": HESLAR_ZEME},
     )
     region = models.TextField(blank=True, null=True)
     udalost = models.TextField(blank=True, null=True)
@@ -189,6 +241,7 @@ class DokumentExtraData(models.Model):
         blank=True,
         null=True,
         related_name="extra_data_udalosti",
+        limit_choices_to={"nazev_heslare": HESLAR_UDALOST_TYP},
     )
     rok_od = models.IntegerField(blank=True, null=True)
     rok_do = models.IntegerField(blank=True, null=True)
@@ -197,6 +250,16 @@ class DokumentExtraData(models.Model):
 
     class Meta:
         db_table = "dokument_extra_data"
+
+
+class DokumentAutor(models.Model):
+    dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
+    autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
+    poradi = models.IntegerField()
+
+    class Meta:
+        db_table = "dokument_autor"
+        unique_together = (("dokument", "autor"),)
 
 
 class DokumentJazyk(models.Model):
@@ -217,9 +280,7 @@ class DokumentJazyk(models.Model):
 
 
 class DokumentOsoba(models.Model):
-    dokument = models.OneToOneField(
-        Dokument, models.CASCADE, db_column="dokument", primary_key=True
-    )
+    dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     osoba = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="osoba")
 
     class Meta:
@@ -228,7 +289,7 @@ class DokumentOsoba(models.Model):
 
 
 class DokumentPosudek(models.Model):
-    dokument = models.OneToOneField(Dokument, models.CASCADE, db_column="dokument")
+    dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     posudek = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
