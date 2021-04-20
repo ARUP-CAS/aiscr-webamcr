@@ -7,3 +7,4 @@ class DokumentConfig(AppConfig):
     def ready(self):
         super(DokumentConfig, self).ready()
         # noinspection PyUnresolvedReferences
+        import dokument.signals

@@ -91,11 +91,15 @@ class Dokument(models.Model):
         SouborVazby,
         models.DO_NOTHING,
         db_column="soubory",
+        blank=True,
+        null=True,
     )
     historie = models.ForeignKey(
         HistorieVazby,
         models.DO_NOTHING,
         db_column="historie",
+        blank=True,
+        null=True,
     )
     licence = models.TextField(blank=True, null=True)
     jazyky = models.ManyToManyField(

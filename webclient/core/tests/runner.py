@@ -2,8 +2,9 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
-    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
+    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE, DOKUMENT_RELATION_TYPE,
 )
+from core.models import SouborVazby
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
@@ -36,6 +37,7 @@ from heslar.models import (
     RuianKraj,
     RuianOkres,
 )
+from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
