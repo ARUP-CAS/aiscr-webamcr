@@ -8,7 +8,7 @@ from core.models import SouborVazby
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentExtraData
 from heslar import hesla
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
@@ -316,6 +316,7 @@ class AMCRTestRunner(BaseRunner):
             material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
         )
         d.save()
+        DokumentExtraData(dokument=d).save()
 
         return temp_return
 

@@ -51,7 +51,7 @@ class UrlTests(TestCase):
             "datum_zverejneni": "",
             "jazyky": str(JAZYK_DOKUMENTU_CESTINA_ID),
             "posudky": str(ARCHEOLOGICKY_POSUDEK_ID),
-            "save": "Upravit",
+            'duveryhodnost': "10"
         }
         request = self.factory.post("/dokument/edit/", data)
         request.user = self.existing_user
