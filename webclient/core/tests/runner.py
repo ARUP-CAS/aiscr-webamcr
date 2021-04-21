@@ -2,10 +2,11 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
-    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE, DOKUMENT_RELATION_TYPE,
+    DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
+    ROLE_ADMIN_ID,
 )
-from core.models import SouborVazby
 from dj.models import DokumentacniJednotka
+from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
 from dokument.models import Dokument, DokumentExtraData
@@ -37,7 +38,6 @@ from heslar.models import (
     RuianKraj,
     RuianOkres,
 )
-from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
@@ -238,6 +238,10 @@ class AMCRTestRunner(BaseRunner):
             validated=True,
         ).save()
 
+        # Vlozit role do auth_user
+        admin_group = Group(id=ROLE_ADMIN_ID, name="Admin")
+        admin_group.save()
+
         o = Organizace(
             id=AMCR_TESTOVACI_ORGANIZACE_ID,
             nazev="AMCR Testovaci organizace",
@@ -251,6 +255,7 @@ class AMCRTestRunner(BaseRunner):
             email="amcr@arup.cas.cz",
             password="foo1234!!!",
             organizace=o,
+            hlavni_role=admin_group,
         )
         user.save()
         # PROJEKT
@@ -259,16 +264,16 @@ class AMCRTestRunner(BaseRunner):
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
             ident_cely=existing_ident,
         )
+        p.save()
         oznamovatel = Oznamovatel(
             email="tester_juraj@example.com",
             adresa="Nekde 123456",
             odpovedna_osoba="Juraj Skvarla",
             oznamovatel="Juraj Skvarla",
             telefon="+420874521325",
+            projekt=p,
         )
         oznamovatel.save()
-        p.oznamovatel = oznamovatel
-        p.save()
 
         # PROJEKT EVENT
         az = ArcheologickyZaznam(

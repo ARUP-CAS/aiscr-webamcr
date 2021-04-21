@@ -35,7 +35,7 @@ def index(request):
 
         if form_ozn.is_valid() and form_projekt.is_valid() and form_captcha.is_valid():
             logger.debug("Form is valid")
-            o = form_ozn.save()
+            o = form_ozn.save(commit=False)
             p = form_projekt.save(commit=False)
             p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
@@ -54,7 +54,9 @@ def index(request):
                     "Unknown cadastre location for point {}".format(str(p.geom))
                 )
             p.save()
-            p.set_oznameny(o)
+            o.projekt = p
+            o.save()
+            p.set_oznameny()
             p.save()
             p.katastry.add(*[int(i) for i in dalsi_katastry])
 

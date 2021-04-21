@@ -28,16 +28,16 @@ class UrlTests(TestCase):
                 15.70,
             ),
         )
+        self.projekt.save()
         self.oznamovatel = Oznamovatel(
             email="tester@example.com",
             adresa="Nekde 123",
             odpovedna_osoba="Juraj Skvarla",
             oznamovatel="Juraj Skvarla",
             telefon="+420874521325",
+            projekt=self.projekt,
         )
         self.oznamovatel.save()
-        self.projekt.oznamovatel = self.oznamovatel
-        self.projekt.save()
 
     def test_get_detail_not_found(self):
         request = self.factory.get("/projekt/detail/")

@@ -59,7 +59,6 @@ from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
-from oznameni.models import Oznamovatel
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     EditProjektForm,
@@ -87,8 +86,8 @@ def detail(request, ident_cely):
     context["projekt"] = projekt
     typ_projektu = projekt.typ_projektu
     if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-        oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
-        context["oznamovatel"] = oznamovatel
+        # oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
+        context["oznamovatel"] = projekt.oznamovatel
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"

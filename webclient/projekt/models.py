@@ -33,7 +33,6 @@ from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
-from oznameni.models import Oznamovatel
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -119,13 +118,6 @@ class Projekt(models.Model):
     oznaceni_stavby = models.TextField(
         blank=True, null=True, verbose_name=_("Označení staveb")
     )
-    oznamovatel = models.OneToOneField(
-        Oznamovatel,
-        on_delete=models.DO_NOTHING,
-        db_column="oznamovatel",
-        blank=True,
-        null=True,
-    )
     planovane_zahajeni = DateRangeField(
         blank=True, null=True, verbose_name=_("Plánované zahájení")
     )
@@ -148,12 +140,10 @@ class Projekt(models.Model):
 
     class Meta:
         db_table = "projekt"
-        unique_together = (("id", "oznamovatel"),)
         verbose_name = "projekty"
 
-    def set_oznameny(self, oznamovatel):
+    def set_oznameny(self):
         self.stav = PROJEKT_STAV_OZNAMENY
-        self.oznamovatel = oznamovatel
         owner = get_object_or_404(User, email="amcr@arup.cas.cz")
         Historie(
             typ_zmeny=OZNAMENI_PROJ,

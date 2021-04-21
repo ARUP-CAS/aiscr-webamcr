@@ -1,7 +1,14 @@
 from django.db import models
+from projekt.models import Projekt
 
 
 class Oznamovatel(models.Model):
+    projekt = models.OneToOneField(
+        Projekt,
+        on_delete=models.CASCADE,
+        related_name="oznamovatel",
+        db_column="projekt",
+    )
     email = models.TextField()
     adresa = models.TextField()
     odpovedna_osoba = models.TextField()
