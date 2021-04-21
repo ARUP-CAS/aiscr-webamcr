@@ -19,11 +19,14 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
 )
+from core.decorators import allowed_user_groups
 from core.forms import VratitForm
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
@@ -170,6 +173,7 @@ def edit(request, ident_cely):
 
 
 @login_required
+@allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     projekt = Projekt.objects.get(ident_cely=ident_cely)
