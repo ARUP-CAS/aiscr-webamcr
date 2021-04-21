@@ -131,10 +131,12 @@ def detail(request, ident_cely):
         show_adb_add = (
             jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb
         )
+        show_add_komponenta = not jednotka.negativni_jednotka
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
             "show_add_adb": show_adb_add,
+            "show_add_komponenta": show_add_komponenta,
         }
         if has_adb:
             dj_form_detail["adb_form"] = CreateADBForm(
@@ -383,7 +385,7 @@ def smazat(request, ident_cely):
         else:
             return redirect("/")
     else:
-        return render(request, "arch_z/smazat.html", {"akce": akce})
+        return render(request, "core/smazat.html", {"objekt": akce})
 
 
 @login_required

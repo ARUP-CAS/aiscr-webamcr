@@ -247,9 +247,11 @@
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <div class="dropdown-menu" aria-labelledby="others">
+                {% if j.show_add_komponenta %}
                 <a class="dropdown-item" href="#" onclick="show_create_child_form('{% url 'komponenta:zapsat' j.ident_cely %}', 'create_komponenta_form')">
                   {% trans 'Přidat komponentu' %}
                 </a>
+                {% endif %}
                 {% if j.show_add_adb %}
                   <a class="dropdown-item" href="#" onclick="show_create_child_form('{% url 'adb:zapsat' j.ident_cely %}', 'create_adb_form', 'detail_dj_form_{{ j.ident_cely }}')">
                     {% trans 'Přidat ADB' %}
@@ -260,6 +262,9 @@
                     {% trans 'Smazat ADB' %}
                   </a>
                 {% endif %}
+                <a class="dropdown-item" href="{% url 'dj:smazat' j.ident_cely %}">
+                  {% trans 'Smazat DJ' %}
+                </a>
               </div>
               <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
                 <span class="material-icons">more_vert</span>

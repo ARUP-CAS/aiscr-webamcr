@@ -167,7 +167,7 @@ class Dokument(models.Model):
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložen soubor."))
+            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
         return result
 
 

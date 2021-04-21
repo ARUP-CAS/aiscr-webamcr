@@ -1,0 +1,28 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Smazání objektu" %} {{ objekt.ident_cely }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Smazání objektu" %} {{ objekt.ident_cely }}</h1>
+
+  <form method="post" onsubmit="eraseSubmitBtn.disabled = true; return true;">
+    {% csrf_token %}
+
+    {% if warnings %}
+      <ul>
+        {% for warning in warnings %}
+          <li>{{ warning }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <button type="submit" id="eraseSubmitBtn" class="btn btn-primary" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

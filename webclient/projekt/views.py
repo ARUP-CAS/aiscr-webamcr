@@ -181,12 +181,12 @@ def smazat(request, ident_cely):
     else:
         warnings = projekt.check_pred_smazanim()
         logger.debug(warnings)
-        context = {"object": projekt}
+        context = {"objekt": projekt}
         if warnings:
             context["warnings"] = warnings
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
 
-        return render(request, "projekt/smazat.html", context)
+        return render(request, "core/smazat.html", context)
 
 
 class ProjektListView(LoginRequiredMixin, SingleTableMixin, FilterView):

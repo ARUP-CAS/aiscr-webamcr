@@ -205,21 +205,20 @@ class Akce(models.Model):
         # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
         # Related events must have a “vedouci” and “hlavni_katastr” column filled in
         result = []
-        if (
-            self.datum_zahajeni is None
-            or self.datum_ukonceni is None
-            or self.lokalizace_okolnosti is None
-            or self.specifikace_data is None
-            or self.hlavni_typ is None
-            or self.hlavni_vedouci is None
-            or self.archeologicky_zaznam.hlavni_katastr is None
-        ):
-            result.append(_("Jedno z povinných polí není vyplněno."))
-            logger.debug(
-                "Akce " + self.archeologicky_zaznam.ident_cely + " nema vsechna data."
-            )
-            # There must be a document of type “nálezová zpráva” attached to each related event,
-            # or akce.je_nz must be true.
+        required_fields = [
+            (self.datum_zahajeni, _("Datum zahájení není vyplněn.")),
+            (self.datum_ukonceni, _("Datum ukončení není vyplněn.")),
+            (self.lokalizace_okolnosti, _("Lokalizace okolností není vyplněna.")),
+            (self.specifikace_data, _("Specifikace data není vyplněna.")),
+            (self.hlavni_typ, _("Hlavní typ není vyplněn.")),
+            (self.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
+            (self.archeologicky_zaznam, _("Hlavní katastr není vyplněn.")),
+        ]
+        for req_field in required_fields:
+            if req_field[0] is None:
+                result.append(req_field[1])
+        # There must be a document of type “nálezová zpráva” attached to each related event,
+        # or akce.je_nz must be true.
         if (
             len(
                 self.archeologicky_zaznam.casti_dokumentu.filter(
@@ -230,7 +229,7 @@ class Akce(models.Model):
             and not self.je_nz
         ):
             result.append(_("Nemá nálezovou zprávu."))
-            logger.debug(
+            logger.warning(
                 "Akce "
                 + self.archeologicky_zaznam.ident_cely
                 + " nema nalezovou zpravu."
@@ -238,8 +237,8 @@ class Akce(models.Model):
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.archeologicky_zaznam.dokumentacni_jednotky.all()) == 0:
-            result.append(_("Nemá relaci na dokumentační jednotku."))
-            logger.debug(
+            result.append(_("Nemá žádnou dokumentační jednotku."))
+            logger.warning(
                 "Akce "
                 + self.archeologicky_zaznam.ident_cely
                 + " nema dokumentacni jednotku."

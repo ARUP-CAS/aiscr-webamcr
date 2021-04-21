@@ -95,4 +95,4 @@ def smazat(request, ident_cely):
 
         return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
     else:
-        return render(request, "komponenta/smazat.html", {"komponenta": k})
+        return render(request, "core/smazat.html", {"objekt": k})
