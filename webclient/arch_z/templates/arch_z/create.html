@@ -3,18 +3,18 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Nová projektová akce" %}{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 {% block head %}
 {% endblock %}
 
 {% block content %}
   <div class="app-entity-akce">
     {% include "toolbar_akce.html" %}
-    <form method="post" onsubmit="newProjectActionSubmitBtn.disabled = true; return true;">
+    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
-            {% trans "Nová projektová akce" %}
+            {{ header }}
           </div>
         </div>
         <div class="card-body">
@@ -22,7 +22,7 @@
           {% crispy formAkce %}
         </div>
       </div>
-      <button type="submit" id="newProjectActionSubmitBtn" class="btn btn-primary mt-3">{% trans "Vytovřit akci" %}</button>
+      <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
     </form>
   </div>
 {% endblock %}

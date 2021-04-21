@@ -24,6 +24,7 @@ from core.constants import (
     UZAVRENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
 )
+from core.forms import VratitForm
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
@@ -62,7 +63,6 @@ from projekt.forms import (
     NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
-    VratitProjektForm,
     ZahajitVTerenuForm,
 )
 from projekt.models import Projekt
@@ -427,7 +427,7 @@ def vratit(request, ident_cely):
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY:
         raise PermissionDenied()
     if request.method == "POST":
-        form = VratitProjektForm(request.POST)
+        form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
@@ -438,8 +438,8 @@ def vratit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitProjektForm()
-    return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})
+        form = VratitForm()
+    return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
 
 
 @login_required
@@ -451,7 +451,7 @@ def vratit_navrh_zruseni(request, ident_cely):
         raise PermissionDenied()
 
     if request.method == "POST":
-        form = VratitProjektForm(request.POST)
+        form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             projekt.set_znovu_zapsan(request.user, duvod)
@@ -462,8 +462,8 @@ def vratit_navrh_zruseni(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitProjektForm()
-    return render(request, "projekt/vratit.html", {"form": form, "projekt": projekt})
+        form = VratitForm()
+    return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
 
 
 @login_required

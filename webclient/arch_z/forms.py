@@ -1,8 +1,7 @@
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
-from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Button, Div, Layout, Submit
+from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
@@ -128,30 +127,3 @@ class CreateAkceForm(forms.ModelForm):
         )
 
         self.helper.form_tag = False
-
-
-class VratitAkciForm(forms.Form):
-    reason = forms.CharField(label=_("Důvod vrácení"), required=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div(
-                Div(
-                    HTML(_("Vrácení akce")),
-                    css_class="card-header",
-                ),
-                Div(
-                    "reason",
-                    css_class="card-body",
-                ),
-                Div(
-                    FormActions(
-                        Submit("save", "Vrátit"),
-                        Button("cancel", "Zrušit"),
-                    )
-                ),
-                css_class="card",
-            )
-        )

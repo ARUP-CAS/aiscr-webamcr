@@ -12,6 +12,7 @@ from core.models import SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -160,6 +161,14 @@ class Dokument(models.Model):
             poznamka=poznamka,
             vazba=self.historie,
         )
+        self.save()
+
+    def check_pred_archivaci(self):
+        # At least one soubor must be attached to the dokument
+        result = []
+        if self.soubory.soubory.all().count() == 0:
+            result.append(_("Dokument musí mít alespoň 1 přiložen soubor."))
+        return result
 
 
 class DokumentCast(models.Model):

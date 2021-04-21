@@ -1,19 +1,39 @@
 import logging
 
 from arch_z.models import ArcheologickyZaznam
-from core.constants import D_STAV_ZAPSANY
+from core.constants import (
+    ARCHIVACE_DOK,
+    D_STAV_ARCHIVOVANY,
+    D_STAV_ODESLANY,
+    D_STAV_ZAPSANY,
+    ODESLANI_DOK,
+    ZAPSANI_DOK,
+)
+from core.forms import VratitForm
 from core.ident_cely import (
     get_cast_dokumentu_ident,
     get_dokument_ident,
     get_dokument_rada,
 )
-from core.message_constants import ZAZNAM_USPECNE_VYTVOREN, ZAZNAM_USPESNE_EDITOVAN
+from core.message_constants import (
+    DOKUMENT_NELZE_ARCHIVOVAT,
+    DOKUMENT_USPESNE_ARCHIVOVAN,
+    DOKUMENT_USPESNE_ODESLAN,
+    DOKUMENT_USPESNE_VRACEN,
+    ZAZNAM_USPECNE_VYTVOREN,
+    ZAZNAM_USPESNE_EDITOVAN,
+)
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from dokument.forms import CreateDokumentExtraDataForm, CreateDokumentForm
+from dokument.forms import (
+    CreateDokumentForm,
+    EditDokumentExtraDataForm,
+    EditDokumentForm,
+)
 from dokument.models import Dokument, DokumentCast
 from heslar.hesla import HESLAR_DOKUMENT_TYP
 from heslar.models import HeslarHierarchie
@@ -35,6 +55,9 @@ def detail(request, ident_cely):
     ).get(ident_cely=ident_cely)
 
     context["dokument"] = dokument
+    context["history_dates"] = get_history_dates(dokument.historie)
+    context["show"] = get_detail_template_shows(dokument)
+
     if dokument.soubory:
         context["soubory"] = dokument.soubory.soubory.all()
     else:
@@ -47,8 +70,8 @@ def detail(request, ident_cely):
 def edit(request, ident_cely):
     dokument = Dokument.objects.get(ident_cely=ident_cely)
     if request.method == "POST":
-        form_d = CreateDokumentForm(request.POST, instance=dokument)
-        form_extra = CreateDokumentExtraDataForm(
+        form_d = EditDokumentForm(request.POST, instance=dokument)
+        form_extra = EditDokumentExtraDataForm(
             request.POST, instance=dokument.extra_data
         )
         if form_d.is_valid() and form_extra.is_valid():
@@ -61,8 +84,8 @@ def edit(request, ident_cely):
             logger.debug(form_d.errors)
             logger.debug(form_extra.errors)
     else:
-        form_d = CreateDokumentForm(instance=dokument)
-        form_extra = CreateDokumentExtraDataForm(instance=dokument)
+        form_d = EditDokumentForm(instance=dokument)
+        form_extra = EditDokumentExtraDataForm(instance=dokument)
 
     return render(
         request,
@@ -85,17 +108,17 @@ def zapsat(request, arch_z_ident_cely):
     zaznam = ArcheologickyZaznam.objects.get(ident_cely=arch_z_ident_cely)
     if request.method == "POST":
         form_d = CreateDokumentForm(request.POST)
-        form_extra = CreateDokumentExtraDataForm(request.POST)
+        form_extra = EditDokumentExtraDataForm(request.POST)
 
         if form_d.is_valid() and form_extra.is_valid():
             logger.debug("Form is valid")
             dokument = form_d.save(commit=False)
+            identifikator = form_d.cleaned_data["identifikator"]
             rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
-            # todo region neni vzdy C
             dokument.ident_cely = get_dokument_ident(
-                temporary=True, rada=rada, region="C"
+                temporary=True, rada=rada, region=identifikator
             )
             dokument.rada = rada
             dokument.stav = D_STAV_ZAPSANY
@@ -124,7 +147,7 @@ def zapsat(request, arch_z_ident_cely):
 
     else:
         form_d = CreateDokumentForm()
-        form_extra = CreateDokumentExtraDataForm()
+        form_extra = EditDokumentExtraDataForm()
 
     return render(
         request,
@@ -140,6 +163,72 @@ def zapsat(request, arch_z_ident_cely):
     )
 
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def odeslat(request, ident_cely):
+    d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if d.stav != D_STAV_ZAPSANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        d.set_odeslany(request.user)
+        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
+        return redirect("dokument:detail", ident_cely=ident_cely)
+    else:
+        # warnings = d.check_pred_odeslanim()
+        # logger.debug(warnings)
+        context = {"object": d}
+        # if warnings:
+        #    context["warnings"] = warnings
+        #    messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
+        # else:
+        #    pass
+    return render(request, "dokument/odeslat.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def archivovat(request, ident_cely):
+    d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if d.stav != D_STAV_ODESLANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        d.set_archivovany(request.user)
+        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
+        return redirect("dokument:detail" + ident_cely)
+    else:
+        warnings = d.check_pred_archivaci()
+        logger.debug(warnings)
+        context = {"object": d}
+        if warnings:
+            context["warnings"] = warnings
+            messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
+        else:
+            pass
+    return render(request, "dokument/archivovat.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def vratit(request, ident_cely):
+    d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        form = VratitForm(request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+
+            d.set_vraceny(request.user, d.stav - 1, duvod)
+            messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
+            return redirect("dokument:detail", ident_cely=ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+    else:
+        form = VratitForm()
+    return render(request, "core/vratit.html", {"form": form, "objekt": d})
+
+
 def get_hierarchie_dokument_typ():
     hierarchie_qs = HeslarHierarchie.objects.filter(
         heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP
@@ -151,3 +240,24 @@ def get_hierarchie_dokument_typ():
         else:
             hierarchie[v[0]] = [v[1]]
     return hierarchie
+
+
+def get_history_dates(historie_vazby):
+    historie = {
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK),
+    }
+    return historie
+
+
+def get_detail_template_shows(dokument):
+    show_vratit = dokument.stav > D_STAV_ZAPSANY
+    show_odeslat = dokument.stav == D_STAV_ZAPSANY
+    show_archivovat = dokument.stav == D_STAV_ODESLANY
+    show = {
+        "vratit_link": show_vratit,
+        "odeslat_link": show_odeslat,
+        "archivovat_link": show_archivovat,
+    }
+    return show

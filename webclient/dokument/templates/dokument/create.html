@@ -8,8 +8,8 @@
 {% endblock %}
 
 {% block content %}
-  <div class="app-entity-akce">
-    {% include "toolbar_dokument.html" %}
+  <div class="app-entity-dokument">
+    {% include "toolbar_dokument.html" with d=dokument %}
     <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
       <div class="card app-card-form">
         <div class="card-header">
@@ -38,7 +38,12 @@
           let allowed_values = hierarchie[selected_value]
           let material_selectpicker = document.getElementById("id_material_originalu")
           let material_options = material_selectpicker.getElementsByTagName("option");
-          if (allowed_values) {
+          // Kdyz vyberu prazdnou volbu typu dokumentu, nemuzu kliknout na zadny material
+          if (!allowed_values) {
+              for (let item of material_options) {
+                  item.disabled = true;
+              }
+          } else {
               for (let item of material_options) {
                   if (!allowed_values.includes(parseInt(item.value))) {
                       item.disabled = true;

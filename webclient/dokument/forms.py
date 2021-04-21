@@ -6,7 +6,7 @@ from heslar.hesla import HESLAR_JAZYK, HESLAR_POSUDEK_TYP
 from heslar.models import Heslar
 
 
-class CreateDokumentExtraDataForm(forms.ModelForm):
+class EditDokumentExtraDataForm(forms.ModelForm):
     class Meta:
         model = DokumentExtraData
         fields = (
@@ -66,12 +66,12 @@ class CreateDokumentExtraDataForm(forms.ModelForm):
         }
 
         def __init__(self, *args, **kwargs):
-            super(CreateDokumentExtraDataForm, self).__init__(*args, **kwargs)
+            super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
             self.helper = FormHelper(self)
             self.helper.form_tag = False
 
 
-class CreateDokumentForm(forms.ModelForm):
+class EditDokumentForm(forms.ModelForm):
     class Meta:
         model = Dokument
         fields = (
@@ -130,7 +130,7 @@ class CreateDokumentForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(CreateDokumentForm, self).__init__(*args, **kwargs)
+        super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["jazyky"].required = False
         self.fields["jazyky"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK).values_list("id", "heslo")
@@ -144,3 +144,24 @@ class CreateDokumentForm(forms.ModelForm):
         self.fields["osoby"].required = False
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class CreateDokumentForm(EditDokumentForm):
+    NIC = ""
+    CECHY = "C"
+    MORAVA = "M"
+
+    CHOICES = (
+        (NIC, ""),
+        (CECHY, "Čechy"),
+        (MORAVA, "Morava"),
+    )
+    identifikator = forms.ChoiceField(choices=CHOICES, required=True)
+    field_order = ["identifikator"]
+
+    def __init__(self, *args, **kwargs):
+        super(CreateDokumentForm, self).__init__(*args, **kwargs)
+        self.fields["identifikator"].widget.attrs = {
+            "class": "selectpicker",
+            "data-live-search": "true",
+        }

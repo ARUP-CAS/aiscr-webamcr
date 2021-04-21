@@ -37,6 +37,12 @@ AKCE_USPESNE_VRACENA: Final = "Akce úspěšně vrácena."
 AKCI_NELZE_ODESLAT: Final = "Akci nelze odeslat."
 AKCI_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
 
+DOKUMENT_USPESNE_ODESLAN: Final = "Dokument úspěšně odeslán."
+DOKUMENT_USPESNE_ARCHIVOVAN: Final = "Dokument úspěšně archivován."
+DOKUMENT_USPESNE_VRACEN: Final = "Dokument úspěšně vrácen."
+DOKUMENT_NELZE_ODESLAT: Final = "Dokument nelze odeslat."
+DOKUMENT_NELZE_ARCHIVOVAT: Final = "Dokument nelze archivovat."
+
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
 OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."

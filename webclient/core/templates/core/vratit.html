@@ -1,0 +1,22 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Vrácení objektu " %} {{ objekt.ident_cely }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Vrácení objektu" %} {{ objekt.ident_cely }}</h1>
+
+  <form method="POST" onsubmit="returnSubmitBtn.disabled = true; return true;">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" id="returnSubmitBtn" class="btn btn-primary mt-3">{% trans "Vrátit" %}</button>
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

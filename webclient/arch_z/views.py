@@ -1,7 +1,7 @@
 import logging
 
 from adb.forms import CreateADBForm
-from arch_z.forms import CreateAkceForm, CreateArchZForm, VratitAkciForm
+from arch_z.forms import CreateAkceForm, CreateArchZForm
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_AZ,
@@ -13,6 +13,7 @@ from core.constants import (
     PROJEKT_STAV_UZAVRENY,
     ZAPSANI_AZ,
 )
+from core.forms import VratitForm
 from core.ident_cely import get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
@@ -31,6 +32,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from heslar.hesla import (
@@ -199,7 +201,15 @@ def edit(request, ident_cely):
         form_akce = CreateAkceForm(instance=zaznam.akce)
 
     return render(
-        request, "arch_z/edit.html", {"formAZ": form_az, "formAkce": form_akce}
+        request,
+        "arch_z/create.html",
+        {
+            "formAZ": form_az,
+            "formAkce": form_akce,
+            "title": _("Editace archeologického záznamu"),
+            "header": _("Archeologický záznam"),
+            "button": _("Uložit změny"),
+        },
     )
 
 
@@ -257,7 +267,7 @@ def vratit(request, ident_cely):
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
-        form = VratitAkciForm(request.POST)
+        form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             projekt = az.akce.projekt
@@ -293,8 +303,8 @@ def vratit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitAkciForm()
-    return render(request, "arch_z/vratit.html", {"form": form, "zaznam": az})
+        form = VratitForm()
+    return render(request, "core/vratit.html", {"form": form, "objekt": az})
 
 
 @login_required
@@ -333,7 +343,15 @@ def zapsat(request, projekt_ident_cely):
         form_akce = CreateAkceForm()
 
     return render(
-        request, "arch_z/create.html", {"formAZ": form_az, "formAkce": form_akce}
+        request,
+        "arch_z/create.html",
+        {
+            "formAZ": form_az,
+            "formAkce": form_akce,
+            "title": _("Nová projektová akce"),
+            "header": _("Nová projektová akce"),
+            "button": _("Vytvoř akci"),
+        },
     )
 
 
