@@ -118,7 +118,7 @@ def zapsat(request, arch_z_ident_cely):
                 dokument.typ_dokumentu, dokument.material_originalu
             )
             dokument.ident_cely = get_dokument_ident(
-                temporary=True, rada=rada, region=identifikator
+                temporary=True, rada=rada.zkratka, region=identifikator
             )
             dokument.rada = rada
             dokument.stav = D_STAV_ZAPSANY
@@ -193,8 +193,21 @@ def archivovat(request, ident_cely):
         raise PermissionDenied()
     if request.method == "POST":
         d.set_archivovany(request.user)
+        # Nastav identifikator na permanentny
+        if ident_cely.startswith("X-"):
+            rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
+            d.ident_cely = get_dokument_ident(
+                temporary=False, rada=rada.zkratka, region=ident_cely[2:3]
+            )
+            d.save()
+            logger.debug(
+                "Dokumentu "
+                + ident_cely
+                + " byl prirazen permanentni identifikator "
+                + d.ident_cely
+            )
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        return redirect("dokument:detail" + ident_cely)
+        return redirect("dokument:detail", ident_cely=d.ident_cely)
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)

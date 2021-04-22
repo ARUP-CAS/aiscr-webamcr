@@ -26,7 +26,10 @@ class DJNemaPianError(Exception):
 
 
 class NelzeZjistitRaduError(Exception):
-    def __init__(self, dokument, message="Nelze zjistit radu dokumentu"):
-        self.dokumnet = dokument
+    def __init__(self, message="Nelze zjistit radu dokumentu"):
         self.message = message
-        super().__init__(self.dokumnet)
+
+
+class NeocekavanaRadaError(Exception):
+    def __init__(self, message="Neocekavana rada dokumentu."):
+        self.message = message

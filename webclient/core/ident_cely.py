@@ -1,5 +1,6 @@
 import datetime
 import logging
+from datetime import date
 
 from adb.models import Adb, Kladysm5
 from arch_z.models import ArcheologickyZaznam
@@ -7,6 +8,7 @@ from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
 from core.exceptions import (
     MaximalIdentNumberError,
     NelzeZjistitRaduError,
+    NeocekavanaRadaError,
     PianNotInKladysm5Error,
 )
 from django.contrib.gis.db.models.functions import Centroid
@@ -91,9 +93,35 @@ def get_dokument_rada(typ, material):
 
 
 def get_dokument_ident(temporary, rada, region):
-    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu]
-    # TODO
-    return "X - spatny ident"
+    if rada == "TX" or rada == "DD":
+        # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
+        start = ""
+        if temporary:
+            start = IDENTIFIKATOR_DOCASNY_PREFIX
+        d = Dokument.objects.filter(
+            ident_cely__regex="^"
+            + start
+            + region
+            + "-"
+            + rada
+            + "-"
+            + str(date.today().year)
+            + "\\d{5}$"
+        ).order_by("-ident_cely")
+        if d.count() == 0:
+            return start + region + "-" + rada + "-" + str(date.today().year) + "00001"
+        else:
+            return (
+                start
+                + region
+                + "-"
+                + rada
+                + "-"
+                + str(date.today().year)
+                + str(int(d[0].ident_cely[-5:]) + 1).zfill(5)
+            )
+    else:
+        raise NeocekavanaRadaError("Neocekavana rada dokumentu: " + rada)
 
 
 def get_cast_dokumentu_ident(dokument: Dokument) -> str:

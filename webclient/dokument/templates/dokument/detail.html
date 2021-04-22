@@ -10,127 +10,121 @@
 
 {% block content %}
   <div class="app-entity-dokument">
-  {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
+    {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
 
-  <div class="bs-stepper">
-    <div class="bs-stepper-header">
-      <div class="step {% if dokument.stav == 1 %}active{% endif %}">
-        <button type="button" class="btn step-trigger">
-          <span class="bs-stepper-circle">1</span>
-          <span class="bs-stepper-label">
+    <div class="bs-stepper">
+      <div class="bs-stepper-header">
+        <div class="step {% if dokument.stav == 1 %}active{% endif %}">
+          <button type="button" class="btn step-trigger">
+            <span class="bs-stepper-circle">1</span>
+            <span class="bs-stepper-label">
               {% trans "Rozepsaný" %}
               <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
             </span>
-        </button>
-      </div>
-      <div class="line"></div>
-      <div class="step {% if dokument.stav == 2 %}active{% endif %}">
-        <button type="button" class="btn step-trigger">
-          <span class="bs-stepper-circle">2</span>
-          <span class="bs-stepper-label">
+          </button>
+        </div>
+        <div class="line"></div>
+        <div class="step {% if dokument.stav == 2 %}active{% endif %}">
+          <button type="button" class="btn step-trigger">
+            <span class="bs-stepper-circle">2</span>
+            <span class="bs-stepper-label">
               {% trans "Odeslaný" %}
               <span class="app-stepper-date">{{ history_dates.datum_odeslani|date:'Y/m/d'|default_if_none:"" }}</span>
             </span>
-        </button>
-      </div>
-      <div class="line"></div>
-      <div class="step {% if dokument.stav == 3 %}active{% endif %}">
-        <button type="button" class="btn step-trigger">
-          <span class="bs-stepper-circle">3</span>
-          <span class="bs-stepper-label">
+          </button>
+        </div>
+        <div class="line"></div>
+        <div class="step {% if dokument.stav == 3 %}active{% endif %}">
+          <button type="button" class="btn step-trigger">
+            <span class="bs-stepper-circle">3</span>
+            <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
               <span class="app-stepper-date">{{ history_dates.datum_archivace|date:'Y/m/d'|default_if_none:"" }}</span>
             </span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="card app-card-form">
-    <div class="card-header">
-      <div class="app-fx app-left">
-        {% trans "Detail" %}
-      </div>
-      <div class="float-md-right">
-        <div class="btn-group" role="group">
-          <div class="dropdown-menu" aria-labelledby="others">
-            <a class="dropdown-item" href="#">{% trans "Smazat dokument" %}</a>
-          </div>
-          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-            <span class="material-icons">more_vert</span>
           </button>
-          <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
-             data-placement="top" title="{% trans 'Upravit' %}">
-            <span class="material-icons">edit</span>
-          </a>
         </div>
       </div>
     </div>
-    <div class="card-body">
-      <div class="row">
-        <div class="col">{{ dokument.autori }}</div>
-        <div class="col">{{ dokument.rok_vzniku }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ dokument.typ_dokumentu }}</div>
-        <div class="col">{{ dokument.rada }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ dokument.material_originalu }}</div>
-        <div class="col">Jazyky: {{ dokument.jazyky }}</div>
-        <div class="col">Posudky: {{ dokument.posudky }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ dokument.organizace }}</div>
-        <div class="col">{{ dokument.pristupnost }}</div>
-        <div class="col">{{ dokument.datum_zverejneni|date:'Y/m/d' }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ dokument.oznaceni_originalu }}</div>
-        <div class="col">{{ dokument.ulozeni_originalu }}</div>
-      </div>
-      <div class="row">
-        <div class="col">{{ dokument.popis }}</div>
-        <div class="col">{{ dokument.poznamka }}</div>
-      </div>
 
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        <div class="float-md-right">
+          <div class="btn-group" role="group">
+            <div class="dropdown-menu" aria-labelledby="others">
+              <a class="dropdown-item" href="#">{% trans "Smazat dokument" %}</a>
+            </div>
+            <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+              <span class="material-icons">more_vert</span>
+            </button>
+            <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col">{{ dokument.autori }}</div>
+          <div class="col">{{ dokument.rok_vzniku }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ dokument.typ_dokumentu }}</div>
+          <div class="col">{{ dokument.rada }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ dokument.material_originalu }}</div>
+          <div class="col">Jazyky: {{ dokument.jazyky }}</div>
+          <div class="col">Posudky: {{ dokument.posudky }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ dokument.organizace }}</div>
+          <div class="col">{{ dokument.pristupnost }}</div>
+          <div class="col">{{ dokument.datum_zverejneni|date:'Y/m/d' }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ dokument.oznaceni_originalu }}</div>
+          <div class="col">{{ dokument.ulozeni_originalu }}</div>
+        </div>
+        <div class="row">
+          <div class="col">{{ dokument.popis }}</div>
+          <div class="col">{{ dokument.poznamka }}</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Soubory" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory next_url='/dokument/detail/' ident=dokument.ident_cely %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+          </div>
+        {% endif %}
+      </div>
     </div>
   </div>
-
-  <div class="card mt-2">
-    <div class="card-header">
-      {% trans "Soubory" %}
-      {#      <a href="{% url 'dokument:upload_file' dokument.ident_cely %}">Upload</a>#}
-    </div>
-    <div class="card-body">
-      <table class="table">
-        <thead>
-        <tr>
-          <th scope="col">Název</th>
-          <th scope="col">Typ</th>
-          <th scope="col">Velikost</th>
-          <th scope="col">Datum vytvoření</th>
-          <th scope="col">Smazat</th>
-          <th scope="col">Stáhnout</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for soubor in soubory %}
-          <tr>
-            <td>{{ soubor.nazev }}</td>
-            <td>{{ soubor.mimetype }}</td>
-            <td>{{ soubor.size_bytes }}</td>
-            <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
-            <td><a href="">Smazat</a></td>
-            <td><a href="">Stáhnout</a></td>
-
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-  </div>
-
 {% endblock %}
 
 {% block script %}

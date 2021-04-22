@@ -1,23 +1,18 @@
 import logging
 
 import simplejson as json
-from core.constants import OTHER_PROJECT_FILES
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
-from core.models import Soubor
-from core.utils import calculate_crc_32, get_cadastre_from_point, get_mime_type
+from core.utils import get_cadastre_from_point
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.db import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
-from projekt.models import Projekt
-from uzivatel.models import User
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
@@ -57,7 +52,6 @@ def index(request):
             o.projekt = p
             o.save()
             p.set_oznameny()
-            p.save()
             p.katastry.add(*[int(i) for i in dalsi_katastry])
 
             confirmation = {
@@ -86,6 +80,7 @@ def index(request):
 
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:
+        logger.debug(request.POST)
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
 
@@ -123,41 +118,6 @@ def edit(request, pk):
         form = OznamovatelForm(instance=oznameni)
 
     return render(request, "oznameni/edit.html", {"form": form, "oznameni": oznameni})
-
-
-@require_http_methods(["POST"])
-def post_upload(request):
-    logger.debug("Uploading file to project: " + request.POST["projektID"])
-    projekt = get_object_or_404(Projekt, ident_cely=request.POST["projektID"])
-    soubor = request.FILES.get("file")
-    if soubor:
-        checksum = calculate_crc_32(soubor)
-        # After calculating checksum, must move pointer to the beginning
-        soubor.file.seek(0)
-        old_name = soubor.name
-        soubor.name = checksum + "_" + soubor.name
-        s = Soubor(
-            path=soubor,
-            vazba=projekt.soubory,
-            nazev=soubor.name,
-            # Short name is new name without checksum
-            nazev_zkraceny=old_name,
-            nazev_puvodni=old_name,
-            vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
-            mimetype=get_mime_type(old_name),
-            size_bytes=soubor.size,
-            typ_souboru=OTHER_PROJECT_FILES,
-        )
-        try:
-            logger.debug("Saving file object: " + str(s))
-            s.save()
-            return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
-        except IntegrityError:
-            logger.warning("Could not save file {}".format(s.nazev))
-    else:
-        logger.warning("No file attached to the announcement form.")
-
-    return JsonResponse({"filename": ""}, status=500)
 
 
 @csrf_exempt

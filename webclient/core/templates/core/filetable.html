@@ -1,0 +1,34 @@
+{% load i18n %}
+
+<table class="table table-striped table-hover table-sm mb-0">
+  <thead>
+  <tr>
+    <th scope="col">{% trans "Název" %}</th>
+    <th scope="col">{% trans "Typ" %}</th>
+    <th scope="col">{% trans "Velikost" %}</th>
+    <th scope="col">{% trans "Datum vytvoření" %}</th>
+    <th scope="col">{% trans "Smazat" %}</th>
+    <th scope="col">{% trans "Stáhnout" %}</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for soubor in soubory %}
+    <tr>
+      <td>{{ soubor.nazev }}</td>
+      <td>{{ soubor.mimetype }}</td>
+      <td>{{ soubor.size_bytes }}</td>
+      <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
+      <td>
+        <a href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
+          <span class="material-icons app-color-danger">delete_forever</span>
+        </a>
+      </td>
+      <td>
+        <a href="{% url 'core:download_file' soubor.id %}">
+          <span class="material-icons">get_app</span>
+        </a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

@@ -12,6 +12,7 @@ from core.models import SouborVazby
 from django.contrib.gis.db.models import GeometryField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
@@ -126,6 +127,9 @@ class Dokument(models.Model):
     def __str__(self):
         return self.ident_cely
 
+    def get_absolute_url(self):
+        return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
+
     def set_zapsany(self, user):
         self.stav = D_STAV_ZAPSANY
         Historie(
@@ -160,7 +164,7 @@ class Dokument(models.Model):
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
-        )
+        ).save()
         self.save()
 
     def check_pred_archivaci(self):

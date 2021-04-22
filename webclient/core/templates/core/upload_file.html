@@ -2,27 +2,28 @@
 {% load i18n %}
 {% load static %}
 
-{% block title %}Upload projektových souborů{% endblock %}
+{% block title %}Upload souborů{% endblock %}
 
 {% block head %}
   <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
-  <div class="app-entity-projekt">
-    {% include "toolbar_projekt.html" with projekt=projekt %}
-    <form action="{% url 'oznameni:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
+  <div>
+    <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone"
+          enctype="multipart/form-data">
       {% csrf_token %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
       </div>
     </form>
-    <a class="btn btn-primary app-entity-projekt-btn" href="{% url 'projekt:detail' ident_cely %}">{% trans "Dokončit" %}</a>
+    <a class="btn btn-primary app-entity-soubor-btn"
+       href="{{ back_url }}">{% trans "Dokončit" %}</a>
   </div>
 {% endblock %}
 
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
-  <script>var project_id = "{{ ident_cely }}";</script>
+  <script>var object_id = "{{ ident_cely }}";</script>
   <script src="{% static 'dz.js' %}"></script>
 {% endblock %}

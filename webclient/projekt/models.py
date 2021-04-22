@@ -150,6 +150,7 @@ class Projekt(models.Model):
             uzivatel=owner,
             vazba=self.historie,
         ).save()
+        self.save()
 
     def set_schvaleny(self, user):
         self.stav = PROJEKT_STAV_ZAPSANY
@@ -158,6 +159,7 @@ class Projekt(models.Model):
             uzivatel=user,
             vazba=self.historie,
         ).save()
+        self.save()
 
     def set_zapsany(self):
         pass
@@ -165,12 +167,12 @@ class Projekt(models.Model):
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
         self.organizace = user.organizace
-        logger.debug("Historie: " + str(self.historie))
         Historie(
             typ_zmeny=PRIHLASENI_PROJ,
             uzivatel=user,
             vazba=self.historie,
         ).save()
+        self.save()
 
     def set_zahajeny_v_terenu(self, user):
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
@@ -179,6 +181,7 @@ class Projekt(models.Model):
             uzivatel=user,
             vazba=self.historie,
         ).save()
+        self.save()
 
     def set_ukoncen_v_terenu(self, user):
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
@@ -187,6 +190,7 @@ class Projekt(models.Model):
             uzivatel=user,
             vazba=self.historie,
         ).save()
+        self.save()
 
     def set_uzavreny(self, user):
         self.stav = PROJEKT_STAV_UZAVRENY
@@ -195,6 +199,7 @@ class Projekt(models.Model):
             uzivatel=user,
             vazba=self.historie,
         ).save()
+        self.save()
 
     def set_archivovany(self, user):
         self.stav = PROJEKT_STAV_ARCHIVOVANY

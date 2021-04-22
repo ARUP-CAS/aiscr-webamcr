@@ -105,7 +105,8 @@ class ArcheologickyZaznam(models.Model):
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
-        )
+        ).save()
+        self.save()
 
 
 class ArcheologickyZaznamKatastr(models.Model):

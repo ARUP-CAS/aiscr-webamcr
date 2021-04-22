@@ -5,7 +5,17 @@ window.onload = function () {
         dictInvalidFileType: "Nepodporovaný typ souboru",
         dictRemoveFile: "Odebrat",
         dictRemoveFileConfirmation: "Skutečně odebrat soubor?",
-        acceptedFiles: "image/*,application/pdf,.csv,.txt,application/vnd.ms-excel",
+        acceptedFiles: "image/*," +
+            "application/pdf," +
+            ".csv," +
+            ".txt," +
+            "application/vnd.ms-excel," +
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document," +
+            "application/docx," +
+            "application/pdf," +
+            "text/plain," +
+            "application/msword," +
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         maxFilesize: 100, // MB
         addRemoveLinks: true,
         init: function () {
@@ -13,7 +23,7 @@ window.onload = function () {
                 console.log("success > " + file.name);
             });
         },
-        params: {'projektID': project_id}
+        params: {'objectID': object_id}
     };
     var uploader = document.querySelector('#my-awesome-dropzone');
     var newDropzone = new Dropzone(uploader, dropzoneOptions);

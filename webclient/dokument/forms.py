@@ -2,7 +2,12 @@ from crispy_forms.helper import FormHelper
 from django import forms
 from django.utils.translation import gettext as _
 from dokument.models import Dokument, DokumentExtraData
-from heslar.hesla import HESLAR_JAZYK, HESLAR_POSUDEK_TYP
+from heslar.hesla import (
+    ALLOWED_DOKUMENT_TYPES,
+    HESLAR_DOKUMENT_TYP,
+    HESLAR_JAZYK,
+    HESLAR_POSUDEK_TYP,
+)
 from heslar.models import Heslar
 
 
@@ -141,6 +146,11 @@ class EditDokumentForm(forms.ModelForm):
                 "id", "heslo"
             )
         )
+        self.fields["typ_dokumentu"].choices = list(
+            Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
+            .filter(id__in=ALLOWED_DOKUMENT_TYPES)
+            .values_list("id", "heslo")
+        ) + [("", "")]
         self.fields["osoby"].required = False
         self.helper = FormHelper(self)
         self.helper.form_tag = False

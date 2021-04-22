@@ -96,7 +96,7 @@
     </tbody>
   </table>
 
-  <form action="{% url 'oznameni:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
+  <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
       <input name="file" type="file" multiple/>
@@ -105,53 +105,10 @@
 
   <form method="post">
     {% csrf_token %}
-    <input name="ident_cely" type="hidden" value="{{ ident_cely }}">
+    <input name="ident_cely" type="hidden" value="{{ confirm.ident_cely }}">
     <button type="submit" class="btn btn-success ">{% trans "Dokončit oznámení" %}</button>
   </form>
 
-<!--   <h2>{% trans "Krok 1/2 - popis záměru" %}</h2>
-  <dl class="row">
-    <dt class="col-sm-3">{% trans "Projekt" %}</dt>
-    <dd class="col-sm-9">{{ confirm.ident_cely }}</dd>
-    <dt class="col-sm-3">{% trans "Ozanamovatel" %}</dt>
-    <dd class="col-sm-9">{{ confirm.oznamovatel }}</dd>
-    <dt class="col-sm-3">{% trans "Zástupce oznamovatele" %}</dt>
-    <dd class="col-sm-9">{{ confirm.zastupce }}</dd>
-    <dt class="col-sm-3">{% trans "Adresa" %}</dt>
-    <dd class="col-sm-9">{{ confirm.adresa }}</dd>
-    <dt class="col-sm-3">{% trans "Telefon" %}</dt>
-    <dd class="col-sm-9">{{ confirm.telefon }}</dd>
-    <dt class="col-sm-3">{% trans "Email" %}</dt>
-    <dd class="col-sm-9">{{ confirm.email }}</dd>
-    <dt class="col-sm-3">{% trans "Katastrální území" %}</dt>
-    <dd class="col-sm-9">{{ confirm.katastr }}</dd>
-    <dt class="col-sm-3">{% trans "Další katastry" %}</dt>
-    <dd class="col-sm-9">{{ confirm.dalsi_katastry }}</dd>
-    <dt class="col-sm-3">{% trans "Plánované zahájení" %}</dt>
-    <dd class="col-sm-9">{{ confirm.planovane_zahajeni }}</dd>
-    <dt class="col-sm-3">{% trans "Podnět" %}</dt>
-    <dd class="col-sm-9">{{ confirm.podnet }}</dd>
-    <dt class="col-sm-3">{% trans "Lokalizace" %}</dt>
-    <dd class="col-sm-9">{{ confirm.lokalizace }}</dd>
-    <dt class="col-sm-3">{% trans "Parcelní číslo" %}</dt>
-    <dd class="col-sm-9">{{ confirm.parcelni_cislo }}</dd>
-    <dt class="col-sm-3">{% trans "Označení stavby" %}</dt>
-    <dd class="col-sm-9">{{ confirm.oznaceni_stavby }}</dd>
-  </dl>
-  <h2>{% trans "Krok 2/2 - nahrání dokumentace" %}</h2>
-
-  <form action="{% url 'oznameni:post_upload' %}" class="dropzone" id="my-awesome-dropzone" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div class="fallback">
-      <input name="file" type="file" multiple/>
-    </div>
-  </form>
-
-  <form method="post">
-    {% csrf_token %}
-    <input name="ident_cely" type="hidden" value="{{ ident_cely }}">
-    <button type="submit" class="btn btn-success btn-lg">{% trans "Dokončit oznámení" %}</button>
-  </form> -->
 {% endblock %}
 
 {% block script %}

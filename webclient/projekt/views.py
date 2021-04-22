@@ -1,6 +1,4 @@
 import logging
-import mimetypes
-import os
 from datetime import datetime
 
 import simplejson as json
@@ -28,6 +26,7 @@ from core.constants import (
 )
 from core.decorators import allowed_user_groups
 from core.forms import VratitForm
+from core.ident_cely import get_permanent_project_ident
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
@@ -42,18 +41,15 @@ from core.message_constants import (
     PROJEKT_USPESNE_VRACEN,
     PROJEKT_USPESNE_ZAHAJEN_V_TERENU,
     PROJEKT_USPESNE_ZRUSEN,
-    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Soubor
 from core.utils import get_points_from_envelope
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
@@ -218,9 +214,16 @@ def schvalit(request, ident_cely):
         raise PermissionDenied()
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
+        projekt.ident_cely = get_permanent_project_ident(projekt)
+        logger.debug(
+            "Projektu "
+            + ident_cely
+            + " byl prirazen permanentni ident "
+            + projekt.ident_cely
+        )
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        return redirect("/projekt/detail/" + ident_cely)
+        return redirect("/projekt/detail/" + projekt.ident_cely)
     return render(request, "projekt/schvalit.html", {"projekt": projekt})
 
 
@@ -235,7 +238,6 @@ def prihlasit(request, ident_cely):
         if form.is_valid():
             projekt = form.save(commit=False)
             projekt.set_prihlaseny(request.user)
-            projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
             return redirect("/projekt/detail/" + ident_cely)
         else:
@@ -258,7 +260,6 @@ def zahajit_v_terenu(request, ident_cely):
         if form.is_valid():
             projekt = form.save(commit=False)
             projekt.set_zahajeny_v_terenu(request.user)
-            projekt.save()
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
             )
@@ -284,7 +285,6 @@ def ukoncit_v_terenu(request, ident_cely):
         if form.is_valid():
             projekt = form.save(commit=False)
             projekt.set_ukoncen_v_terenu(request.user)
-            projekt.save()
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
             )
@@ -313,7 +313,6 @@ def uzavrit(request, ident_cely):
                 logger.debug("Setting event to state A2")
                 a.archeologicky_zaznam.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
-        projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return redirect("/projekt/detail/" + ident_cely)
     else:
@@ -467,55 +466,6 @@ def vratit_navrh_zruseni(request, ident_cely):
     else:
         form = VratitForm()
     return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
-
-
-@login_required
-@require_http_methods(["GET"])
-def upload_file(request, ident_cely):
-    return render(request, "projekt/upload_file.html", {"ident_cely": ident_cely})
-
-
-@login_required
-@require_http_methods(["POST", "GET"])
-def delete_file(request, pk):
-    s = get_object_or_404(Soubor, pk=pk)
-    projekt = s.vazba.projekt_set.all()[0]
-    if request.method == "POST":
-        items_deleted = s.delete()
-        if not items_deleted:
-            # Not sure if 404 is the only correct option
-            logger.debug("Soubor " + str(items_deleted) + " nebyl smazan.")
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return redirect("/projekt/detail/" + projekt.ident_cely)
-        else:
-            logger.debug("Byl smazán soubor: " + str(items_deleted))
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-
-        return redirect("/projekt/detail/" + projekt.ident_cely)
-    else:
-        return render(request, "projekt/delete_file.html", {"soubor": s})
-
-
-@login_required
-@require_http_methods(["GET"])
-def download_file(request, pk):
-    soubor = get_object_or_404(Soubor, id=pk)
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
-    if os.path.exists(path):
-        content_type = mimetypes.guess_type(soubor.path.name)[
-            0
-        ]  # Use mimetypes to get file type
-        response = HttpResponse(soubor.path, content_type=content_type)
-        response["Content-Length"] = str(len(soubor.path))
-        response["Content-Disposition"] = "inline; filename=" + os.path.basename(
-            soubor.nazev
-        )
-        return response
-    else:
-        logger.debug(
-            "File " + str(soubor.nazev) + " does not exists at location " + str(path)
-        )
-    raise Http404
 
 
 def get_history_dates(historie_vazby):
