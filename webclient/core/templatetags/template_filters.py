@@ -24,8 +24,8 @@ def katastry_to_list(value):
 
 
 @register.filter
-def last_three_letters(value):
-    if len(value) > 3:
-        return value[-3:]
+def last_x_letters(value, x):
+    if len(value) > x:
+        return value[-x:]
     else:
         return value

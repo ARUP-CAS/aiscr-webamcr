@@ -15,6 +15,7 @@ from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from dokument.models import Dokument
 from heslar.models import HeslarDokumentTypMaterialRada, RuianKatastr
+from pian.models import Pian
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -121,55 +122,59 @@ def get_dokument_ident(temporary, rada, region):
                 + str(int(d[0].ident_cely[-5:]) + 1).zfill(5)
             )
     else:
+        # TODO dodelat dalsi rady
         raise NeocekavanaRadaError("Neocekavana rada dokumentu: " + rada)
 
 
 def get_cast_dokumentu_ident(dokument: Dokument) -> str:
-    MAXIMUM: int = 99
+    MAXIMUM: int = 999
+    last_digit_count = 3
     max_count = 0
     for d in dokument.casti.all():
-        last_digits = int(d.ident_cely[-2:])
+        last_digits = int(d.ident_cely[-last_digit_count:])
         if max_count < last_digits:
             max_count = last_digits
     new_ident = dokument.ident_cely
     if max_count < MAXIMUM:
-        ident = new_ident + "-D" + str(max_count + 1).zfill(2)
+        ident = new_ident + "-D" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of dokument parts is 99.")
+        logger.error("Maximal number of dokument parts is" + str(MAXIMUM))
         return None
 
 
 def get_dj_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_EVENT_DJS: int = 99
+    dj_last_digit_count = 2
     max_count = 0
     for dj in event.dokumentacni_jednotky.all():
-        last_digits = int(dj.ident_cely[-2:])
+        last_digits = int(dj.ident_cely[-dj_last_digit_count:])
         if max_count < last_digits:
             max_count = last_digits
     event_ident = event.ident_cely
     if max_count < MAXIMAL_EVENT_DJS:
-        ident = event_ident + "-D" + str(max_count + 1).zfill(2)
+        ident = event_ident + "-D" + str(max_count + 1).zfill(dj_last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of DJs is 99.")
+        logger.error("Maximal number of DJs is " + str(MAXIMAL_EVENT_DJS))
         return None
 
 
 def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
-    MAXIMAL_EVENT_DJS: int = 99
+    MAXIMAL_KOMPONENTAS: int = 999
+    last_digit_count = 3
     max_count = 0
     for dj in event.dokumentacni_jednotky.all():
         for komponenta in dj.komponenty.komponenty.all():
-            last_digits = int(komponenta.ident_cely[-2:])
+            last_digits = int(komponenta.ident_cely[-last_digit_count:])
             if max_count < last_digits:
                 max_count = last_digits
     event_ident = event.ident_cely
-    if max_count < MAXIMAL_EVENT_DJS:
-        ident = event_ident + "-K" + str(max_count + 1).zfill(2)
+    if max_count < MAXIMAL_KOMPONENTAS:
+        ident = event_ident + "-K" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of Komponentas is 99.")
+        logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
         return None
 
 
@@ -184,8 +189,9 @@ def get_sm_from_point(point):
         raise PianNotInKladysm5Error(point)
 
 
-def get_adb_ident(pian) -> str:
+def get_adb_ident(pian: Pian) -> str:
     # Get map list
+    # Format: [ADB]-[sm5.mapno]-[NUMBER]
     point = None
     if type(pian.geom) == LineString:
         point = pian.geom.interpolate(0.5)
@@ -197,15 +203,17 @@ def get_adb_ident(pian) -> str:
         logger.error("Neznamy typ geometrie" + str(type(pian.geom)))
         return None, None
     sm5 = get_sm_from_point(point)[0]
-    MAXIMAL_ADBS: int = 9999
+    record_list = "ADB-" + sm5.mapno
+    MAXIMAL_ADBS: int = 999999
+    last_digit_count = 6
     max_count = 0
-    for adb in Adb.objects.all():
-        last_digits = int(adb.ident_cely[-4:])
+    for adb in Adb.objects.filter(ident_cely__icontains=record_list):
+        last_digits = int(adb.ident_cely[-last_digit_count:])
         if max_count < last_digits:
             max_count = last_digits
     if max_count < MAXIMAL_ADBS:
-        ident = "ADB-" + sm5.mapno + "-" + str(max_count + 1).zfill(4)
+        ident = record_list + "-" + str(max_count + 1).zfill(last_digit_count)
         return ident, sm5
     else:
-        logger.error("Maximal number of ADBs is 9999.")
+        logger.error("Maximal number of ADBs is " + str(MAXIMAL_ADBS))
         raise MaximalIdentNumberError(max_count)

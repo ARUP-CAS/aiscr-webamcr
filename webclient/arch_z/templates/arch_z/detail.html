@@ -189,14 +189,14 @@
                 <p>
                   {% if j.negativni_jednotka %}N{% else %}P{% endif %}
                   <a href="#"
-                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_three_letters }} ({{ j.typ }})</a>
+                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</a>
                   {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
                   {% if j.pian %}<button class="btn-primary float-right">Ukaž pian</button>{% endif %}
                 </p>
                 {% for k in j.komponenty.komponenty.all %}
                   <div class="list-group-item">
                     <a href="#"
-                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_three_letters }} ({{ k.obdobi }}
+                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }}
                       - {{ k.areal }}) <span class="badge badge-light float-right">{{ k.pocet_nalezu }}</span></a>
                   </div>
                 {% endfor %}
