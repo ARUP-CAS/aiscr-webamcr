@@ -7,6 +7,7 @@ window.onload = function () {
         dictRemoveFileConfirmation: "Skutečně odebrat soubor?",
         acceptedFiles: "image/*," +
             "application/pdf," +
+            ".zip," +
             ".csv," +
             ".txt," +
             "application/vnd.ms-excel," +

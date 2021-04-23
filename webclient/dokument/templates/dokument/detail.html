@@ -54,7 +54,7 @@
         <div class="float-md-right">
           <div class="btn-group" role="group">
             <div class="dropdown-menu" aria-labelledby="others">
-              <a class="dropdown-item" href="#">{% trans "Smazat dokument" %}</a>
+              <a class="dropdown-item" href="{% url 'dokument:smazat' dokument.ident_cely %}">{% trans "Smazat dokument" %}</a>
             </div>
             <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                     aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -94,9 +94,14 @@
           <div class="col">{{ dokument.popis }}</div>
           <div class="col">{{ dokument.poznamka }}</div>
         </div>
-
       </div>
     </div>
+
+    <ul>
+    {% for cast in dokument.casti.all %}
+      <li>{{ cast.ident_cely }}</li>
+    {% endfor %}
+    </ul>
 
     <div class="card app-card-form">
       <div class="card-header">

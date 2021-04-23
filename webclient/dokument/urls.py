@@ -11,4 +11,5 @@ urlpatterns = [
     path("odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
     path("archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
+    path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
 ]

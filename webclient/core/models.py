@@ -35,3 +35,6 @@ class Soubor(models.Model):
 
     class Meta:
         db_table = "soubor"
+
+    def __str__(self):
+        return self.nazev

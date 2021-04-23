@@ -34,7 +34,7 @@
           {% trans "Další volby" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <a class="dropdown-item" href="#">{% trans "Smazat dokument" %}</a>
+          <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}">{% trans "Smazat dokument" %}</a>
         </div>
       </div>
     </div>

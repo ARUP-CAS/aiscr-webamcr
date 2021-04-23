@@ -6,6 +6,7 @@ from core.constants import (
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
+    IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
     ZAPSANI_DOK,
 )
@@ -20,8 +21,10 @@ from core.message_constants import (
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_VRACEN,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPECNE_VYTVOREN,
     ZAZNAM_USPESNE_EDITOVAN,
+    ZAZNAM_USPESNE_SMAZAN,
 )
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -194,7 +197,7 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         d.set_archivovany(request.user)
         # Nastav identifikator na permanentny
-        if ident_cely.startswith("X-"):
+        if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
             d.ident_cely = get_dokument_ident(
                 temporary=False, rada=rada.zkratka, region=ident_cely[2:3]
@@ -206,6 +209,21 @@ def archivovat(request, ident_cely):
                 + " byl prirazen permanentni identifikator "
                 + d.ident_cely
             )
+            # Prejmenuj i dokumentacni jednotky
+            counter = 1
+            for cast in d.casti.all().order_by("ident_cely"):
+                if cast.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+                    old_ident = cast.ident_cely
+                    cast.ident_cely = d.ident_cely + "-D" + str(counter).zfill(2)
+                    cast.save()
+                    logger.debug(
+                        "Casti dokumentu "
+                        + old_ident
+                        + " byl zmenen identifikator na "
+                        + cast.ident_cely
+                    )
+                    counter += 1
+
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         return redirect("dokument:detail", ident_cely=d.ident_cely)
     else:
@@ -240,6 +258,30 @@ def vratit(request, ident_cely):
     else:
         form = VratitForm()
     return render(request, "core/vratit.html", {"form": form, "objekt": d})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def smazat(request, ident_cely):
+    d = Dokument.objects.get(ident_cely=ident_cely)
+    if request.method == "POST":
+
+        historie = d.historie
+        soubory = d.soubory
+        resp1 = d.delete()
+        resp2 = historie.delete()
+        resp3 = soubory.delete()
+
+        if resp1:
+            logger.debug("Dokument byl smazan: " + str(resp1 + resp2 + resp3))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        else:
+            logger.warning("Dokument nebyl smazan: " + str(ident_cely))
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+
+        return redirect("core:home")
+    else:
+        return render(request, "core/smazat.html", {"objekt": d})
 
 
 def get_hierarchie_dokument_typ():

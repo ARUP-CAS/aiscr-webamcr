@@ -125,7 +125,7 @@ class HistorieVazby(models.Model):
         tranzakce_list = (
             self.historie_set.filter(typ_zmeny=transaction_type)
             .only("datum_zmeny")
-            .order_by("datum_zmeny")
+            .order_by("-datum_zmeny")
         )
         if len(tranzakce_list) > 0:
             resp = tranzakce_list[0].datum_zmeny
