@@ -209,7 +209,7 @@ class DokumentExtraData(models.Model):
         primary_key=True,
         related_name="extra_data",
     )
-    datum_vzniku = models.DateTimeField(blank=True, null=True)
+    datum_vzniku = models.DateField(blank=True, null=True)
     zachovalost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,

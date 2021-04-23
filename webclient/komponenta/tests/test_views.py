@@ -40,7 +40,7 @@ class UrlTests(TestCase):
         response = zapsat(request, dj_ident_cely=self.existing_dj)
         self.assertEqual(302, response.status_code)
         self.assertEqual(
-            Komponenta.objects.filter(ident_cely="C-202000001A-K01").count(),
+            Komponenta.objects.filter(ident_cely="C-202000001A-K001").count(),
             1,
         )
 
@@ -50,7 +50,7 @@ class UrlTests(TestCase):
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
         request.session.save()
-        response = smazat(request, ident_cely="C-202000001A-K01")
+        response = smazat(request, ident_cely="C-202000001A-K001")
         self.assertEqual(200, response.status_code)
 
         request = self.factory.post(
@@ -63,9 +63,9 @@ class UrlTests(TestCase):
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
         request.session.save()
-        response = smazat(request, ident_cely="C-202000001A-K01")
+        response = smazat(request, ident_cely="C-202000001A-K001")
         self.assertEqual(302, response.status_code)
         self.assertEqual(
-            Komponenta.objects.filter(ident_cely="C-202000001A-K01").count(),
+            Komponenta.objects.filter(ident_cely="C-202000001A-K001").count(),
             0,
         )

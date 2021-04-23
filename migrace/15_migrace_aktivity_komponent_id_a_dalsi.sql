@@ -24,3 +24,8 @@ alter table oznamovatel alter column projekt set not null;
 
 alter table projekt drop oznamovatel;
 
+-- Zmena typu sloupce datum_vzniku
+alter table dokument_extra_data rename column datum_vzniku to datum_vzniku_ts;
+alter table dokument_extra_data add column datum_vzniku date;
+update dokument_extra_data set datum_vzniku = date(datum_vzniku_ts);
+alter table dokument_extra_data drop column datum_vzniku_ts;
