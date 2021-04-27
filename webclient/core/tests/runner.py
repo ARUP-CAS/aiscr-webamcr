@@ -20,6 +20,7 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_MATERIAL,
     HESLAR_DOKUMENT_RADA,
     HESLAR_DOKUMENT_TYP,
+    HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
     HESLAR_OBDOBI,
     HESLAR_ORGANIZACE_TYP,
@@ -59,6 +60,7 @@ TYP_DJ_CELEK_AKCE_ID = 321
 OBDOBI_STREDNI_PALEOLIT_ID = 336
 AREAL_HRADISTE_ID = 337
 RADA_DOKUMENTU_TEXT_ID = 547
+ZACHOVALOST_30_80_ID = 658
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -173,6 +175,7 @@ class AMCRTestRunner(BaseRunner):
         hpd = HeslarNazev(id=HESLAR_POSUDEK_TYP, nazev="heslar_posudek")
         hok = HeslarNazev(id=HESLAR_OBDOBI, nazev="heslar_obdobi")
         hak = HeslarNazev(id=HESLAR_AREAL, nazev="heslar_areal")
+        hza = HeslarNazev(id=HESLAR_DOKUMENT_ZACHOVALOST, nazev="heslar_zachovalost")
         nazvy_heslaru = [
             hn,
             hp,
@@ -189,6 +192,7 @@ class AMCRTestRunner(BaseRunner):
             hok,
             hak,
             hdr,
+            hza,
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -201,6 +205,7 @@ class AMCRTestRunner(BaseRunner):
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=SPECIFIKACE_DATA_PRESNE_ID, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
+        Heslar(id=ZACHOVALOST_30_80_ID, heslo="30 % az 80 %", nazev_heslare=hza).save()
         typ_dokumentu_plan = Heslar(
             id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd
         )

@@ -88,7 +88,7 @@ def edit(request, ident_cely):
             logger.debug(form_extra.errors)
     else:
         form_d = EditDokumentForm(instance=dokument)
-        form_extra = EditDokumentExtraDataForm(instance=dokument)
+        form_extra = EditDokumentExtraDataForm(instance=dokument.extra_data)
 
     return render(
         request,

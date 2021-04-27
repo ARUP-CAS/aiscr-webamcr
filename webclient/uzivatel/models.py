@@ -77,6 +77,7 @@ class Organizace(models.Model):
 
     class Meta:
         db_table = "organizace"
+        ordering = ["nazev_zkraceny"]
 
 
 class Osoba(models.Model):
@@ -90,6 +91,7 @@ class Osoba(models.Model):
 
     class Meta:
         db_table = "osoba"
+        ordering = ["vypis"]
 
     def __str__(self):
         return self.vypis

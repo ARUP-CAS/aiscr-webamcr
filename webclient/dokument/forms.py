@@ -73,6 +73,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
+        self.fields["odkaz"].widget.attrs["rows"] = 1
+        self.fields["meritko"].widget.attrs["rows"] = 1
+        self.fields["cislo_objektu"].widget.attrs["rows"] = 1
+        self.fields["region"].widget.attrs["rows"] = 1
+        self.fields["udalost"].widget.attrs["rows"] = 1
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -155,10 +160,15 @@ class EditDokumentForm(forms.ModelForm):
             "oznaceni_originalu": _("Označení originálu"),
             "pristupnost": _("Přístupnost"),
             "datum_zverejneni": _("Datum zveřejnění"),
+            "licence": _("Licence"),
         }
 
     def __init__(self, *args, **kwargs):
         super(EditDokumentForm, self).__init__(*args, **kwargs)
+        self.fields["popis"].widget.attrs["rows"] = 1
+        self.fields["poznamka"].widget.attrs["rows"] = 1
+        self.fields["oznaceni_originalu"].widget.attrs["rows"] = 1
+        self.fields["licence"].widget.attrs["rows"] = 1
         self.fields["jazyky"].required = False
         self.fields["jazyky"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK).values_list("id", "heslo")

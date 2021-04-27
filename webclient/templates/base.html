@@ -48,20 +48,21 @@
   {% block sidebar %}{% endblock %}
   <div id="app-page-wrapper">
     {% block navbar %}{% endblock %}
-    
+
     <div
         class="container-fluid {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}app-content-wrapper{% endif %}">
       {% block content %}{% endblock %}
     </div>
 
     {% if messages %}
-    <ul class="messages">
       {% for message in messages %}
-      <li
-          {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}
-      </li>
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
       {% endfor %}
-    </ul>
     {% endif %}
 
     {% block footer %}{% endblock %}
@@ -70,13 +71,13 @@
 
 {% block script_sidebar %}{% endblock %}
 
-<script>
-    $("document").ready($(".dateinput").datepicker({
-        format: "dd.mm.yyyy",
-        language: 'cs',
-        todayHighlight: true,
-    }));
-</script>
+  <script>
+      $("document").ready($(".dateinput").datepicker({
+          format: "dd.mm.yyyy",
+          language: 'cs',
+          todayHighlight: true,
+      }));
+  </script>
 
 {% block script %}
 {% endblock %}

@@ -8,6 +8,7 @@ from core.tests.runner import (
     JAZYK_DOKUMENTU_CESTINA_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
+    ZACHOVALOST_30_80_ID,
     add_middleware_to_request,
 )
 from django.contrib.messages.middleware import MessageMiddleware
@@ -17,6 +18,7 @@ from django.test import RequestFactory, TestCase
 from dokument.models import Dokument
 from dokument.views import archivovat, detail, edit, odeslat
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.models import Heslar
 from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
@@ -96,6 +98,7 @@ class UrlTests(TestCase):
             "jazyky": str(JAZYK_DOKUMENTU_CESTINA_ID),
             "posudky": str(ARCHEOLOGICKY_POSUDEK_ID),
             "duveryhodnost": "10",
+            "zachovalost": str(ZACHOVALOST_30_80_ID),
         }
         request = self.factory.post("/dokument/edit/", data)
         request.user = self.existing_user
@@ -105,6 +108,10 @@ class UrlTests(TestCase):
 
         response = edit(request, self.existing_dokument)
         self.assertEqual(302, response.status_code)
+        updated_dokument = Dokument.objects.get(ident_cely=self.existing_dokument)
+        logger.debug("Zachovalost: " + str(updated_dokument.extra_data.zachovalost))
         self.assertTrue(
-            Dokument.objects.get(ident_cely=self.existing_dokument).rok_vzniku == 2019
+            updated_dokument.rok_vzniku == 2019
+            and updated_dokument.extra_data.zachovalost
+            == Heslar.objects.get(id=ZACHOVALOST_30_80_ID)
         )

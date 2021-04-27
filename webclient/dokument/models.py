@@ -60,7 +60,11 @@ class Dokument(models.Model):
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace"
     )
-    rok_vzniku = models.PositiveIntegerField(blank=True, null=True)
+    rok_vzniku = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1900), MaxValueValidator(2050)],
+    )
     pristupnost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
