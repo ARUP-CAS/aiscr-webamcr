@@ -359,25 +359,20 @@
             </div>
           </div>
           <div class="card-body">
-
-            <div class="row">
-              <div class="col">
-                {% trans "Objekty" %}
-                <form method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezObjektSubmitButton.disabled = true; return true;">
-                  {% crispy k.form_nalezy_objekty k.helper %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezObjektSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit objekty" %}</button>
-                </form>
-              </div>
-              <div class="col">
-                {% trans "Předměty" %}
-                <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPredmetSubmitButton.disabled = true; return true;">
-                  {% crispy k.form_nalezy_predmety k.helper %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezPredmetSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit predmety" %}</button>
-                </form>
-              </div>
-            </div>
+            {% trans "Objekty" %}
+            <form method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}"
+                  onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+              {% crispy k.form_nalezy_objekty k.helper %}
+              <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
+                      class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+            </form>
+            {% trans "Předměty" %}
+            <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}"
+                  onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
+              {% crispy k.form_nalezy_predmety k.helper %}
+              <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
+                      class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+            </form>
           </div>
         </div>
       </div>

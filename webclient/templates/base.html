@@ -39,6 +39,7 @@
           integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
           crossorigin="anonymous"></script>
   <script src="{% static '/js/datepicker-cs.js' %}"></script>
+  <script src="{% static '/js/selectpicker-cs.js' %}"></script>
 
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
@@ -56,7 +57,7 @@
 
     {% if messages %}
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
           {{ message }}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>

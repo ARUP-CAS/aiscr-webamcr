@@ -80,7 +80,8 @@ def edit(request, ident_cely):
         if form_d.is_valid() and form_extra.is_valid():
             form_d.save()
             form_extra.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            if form_d.changed_data or form_extra.changed_data:
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
             logger.debug("The form is not valid")

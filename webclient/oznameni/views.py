@@ -108,7 +108,8 @@ def edit(request, pk):
         form = OznamovatelForm(request.POST, instance=oznameni)
         if form.is_valid():
             form.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            if form.changed_data:
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("/projekt/detail/" + oznameni.projekt.ident_cely)
         else:
             logger.debug("The form is not valid")

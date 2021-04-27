@@ -1,10 +1,18 @@
 import django_filters as filters
 from arch_z.models import Akce
-from core.constants import OZNAMENI_PROJ, SCHVALENI_OZNAMENI_PROJ
+from core.constants import (
+    OBLAST_CECHY,
+    OBLAST_CHOICES,
+    OBLAST_MORAVA,
+    OZNAMENI_PROJ,
+    SCHVALENI_OZNAMENI_PROJ,
+)
 from django.db.models import Exists, OuterRef
-from django.forms import DateInput, SelectMultiple
+from django.forms import DateInput, Select, SelectMultiple
+from django.utils.translation import gettext as _
 from django_filters import (
     BooleanFilter,
+    ChoiceFilter,
     DateFilter,
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
@@ -16,6 +24,12 @@ from uzivatel.models import Organizace, Osoba
 
 
 class ProjektFilter(filters.FilterSet):
+    oblast = ChoiceFilter(
+        choices=OBLAST_CHOICES,
+        label=_("Oblast"),
+        method="filter_by_oblast",
+        widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+    )
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
         widget=SelectMultiple(
@@ -79,6 +93,13 @@ class ProjektFilter(filters.FilterSet):
         method="filter_has_no_events",
         label="Nemá projektové akce",
     )
+
+    def filter_by_oblast(self, queryset, name, value):
+        if value == OBLAST_CECHY:
+            return queryset.filter(ident_cely__contains="C-")
+        if value == OBLAST_MORAVA:
+            return queryset.filter(ident_cely__contains="M-")
+        return queryset
 
     def filter_has_no_events(self, queryset, name, value):
         if value:

@@ -43,7 +43,8 @@ def detail(request, ident_cely):
     if form.is_valid():
         logger.debug("Form is valid")
         form.save()
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        if form.changed_data:
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)

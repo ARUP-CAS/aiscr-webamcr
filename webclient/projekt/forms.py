@@ -10,8 +10,8 @@ from projekt.models import Projekt
 
 
 class EditProjektForm(forms.ModelForm):
-    latitude = forms.FloatField(required=True, widget=HiddenInput())
-    longitude = forms.FloatField(required=True, widget=HiddenInput())
+    latitude = forms.FloatField(required=False, widget=HiddenInput())
+    longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
@@ -35,8 +35,6 @@ class EditProjektForm(forms.ModelForm):
             "datum_zahajeni",
             "datum_ukonceni",
             "uzivatelske_oznaceni",
-            "latitude",
-            "longitude",
             "katastry",
         )
         widgets = {

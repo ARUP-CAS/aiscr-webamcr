@@ -85,6 +85,14 @@ VRACENI_EXT_ZD: Final = "EZ-1"  # New
 
 IDENTIFIKATOR_DOCASNY_PREFIX: Final = "X-"
 
+OBLAST_CECHY = "C"
+OBLAST_MORAVA = "M"
+OBLAST_CHOICES = (
+    (OBLAST_CECHY, "Čechy"),
+    (OBLAST_MORAVA, "Morava"),
+)
+
+
 # Typy vazeb
 PROJEKT_RELATION_TYPE: Final = "projekt"
 DOKUMENT_RELATION_TYPE: Final = "dokument"

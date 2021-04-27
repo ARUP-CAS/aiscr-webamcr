@@ -24,7 +24,7 @@ class DateRangeField(forms.DateField):
         # add one day to the to_date since DateRangePicker has both bounds included 12/30/2020 - 12/30/2020 must be
         # stored as 12/30/2020 - 12/31/2020, since postgres does not include upper bound to the range
         to_date += datetime.timedelta(days=1)
-        return from_date, to_date
+        return DateRange(lower=from_date, upper=to_date)
 
 
 class DateRangeWidget(forms.TextInput):
@@ -35,13 +35,16 @@ class DateRangeWidget(forms.TextInput):
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
-            return (
-                value.lower.strftime("%d.%m.%Y")
-                + " - "
-                + value.upper.strftime("%d.%m.%Y")
-            )
-        else:
-            return str(value)
+            if value.lower and value.upper:
+                return (
+                    value.lower.strftime("%d.%m.%Y")
+                    + " - "
+                    + (value.upper - datetime.timedelta(days=1)).strftime(
+                        "%d.%m.%Y"
+                    )  # Now I must substract one day
+                )
+
+        return str(value)
 
 
 class OznamovatelForm(forms.ModelForm):
@@ -90,12 +93,12 @@ class OznamovatelForm(forms.ModelForm):
                         Div("adresa", css_class="col-sm-6"),
                         Div("telefon", css_class="col-sm-3"),
                         Div("email", css_class="col-sm-3"),
-                       css_class="row", 
-                    ),                 
+                        css_class="row",
+                    ),
                     css_class="card-body",
                 ),
                 css_class="card app-card-form",
-            )    
+            )
         )
         self.helper.form_tag = False
 

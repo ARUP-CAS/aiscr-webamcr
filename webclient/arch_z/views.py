@@ -193,7 +193,8 @@ def edit(request, ident_cely):
             logger.debug("Form is valid")
             form_az.save()
             form_akce.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            if form_az.changed_data or form_akce.changed_data:
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
             logger.warning("Form is not valid")

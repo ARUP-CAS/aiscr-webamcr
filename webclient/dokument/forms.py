@@ -1,3 +1,4 @@
+from core.constants import OBLAST_CHOICES
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
@@ -209,16 +210,8 @@ class EditDokumentForm(forms.ModelForm):
 
 
 class CreateDokumentForm(EditDokumentForm):
-    NIC = ""
-    CECHY = "C"
-    MORAVA = "M"
 
-    CHOICES = (
-        (NIC, ""),
-        (CECHY, "Čechy"),
-        (MORAVA, "Morava"),
-    )
-    identifikator = forms.ChoiceField(choices=CHOICES, required=True)
+    identifikator = forms.ChoiceField(choices=OBLAST_CHOICES, required=True)
 
     def __init__(self, *args, **kwargs):
         super(CreateDokumentForm, self).__init__(*args, **kwargs)

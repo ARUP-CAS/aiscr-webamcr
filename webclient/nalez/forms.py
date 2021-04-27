@@ -13,7 +13,7 @@ class NalezFormSetHelper(FormHelper):
 
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
-def create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices):
+def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices):
     class CreateNalezObjektForm(forms.ModelForm):
         class Meta:
             model = NalezObjekt
@@ -26,8 +26,8 @@ def create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices):
 
         def __init__(
             self,
-            druh_objekt_choices=druh_objekt_choices,
-            specifikace_objekt_choices=specifikace_objekt_choices,
+            druh_objekt_choices=druh_obj_choices,
+            specifikace_objekt_choices=spec_obj_choices,
             *args,
             **kwargs
         ):

@@ -44,7 +44,10 @@ def edit_objekt(request, komp_ident_cely):
     if formset.is_valid():
         logger.debug("Form is valid")
         formset.save()
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        if (
+            formset.has_changed()
+        ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.warning("Form is not valid")
         logger.debug(formset.errors)
@@ -77,7 +80,10 @@ def edit_predmet(request, komp_ident_cely):
     if formset.is_valid():
         logger.debug("Form is valid")
         formset.save()
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        if (
+            formset.has_changed()
+        ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.warning("Form is not valid")
         logger.debug(formset.errors)

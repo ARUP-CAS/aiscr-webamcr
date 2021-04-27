@@ -144,17 +144,26 @@ def edit(request, ident_cely):
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             logger.debug("Form is valid")
-            # logger.debug(request.POST)
             lat = form.cleaned_data["latitude"]
             long = form.cleaned_data["longitude"]
+            # Workaroud to not check if long and lat has been changed, only geom is interesting
+            form.fields["latitude"].initial = lat
+            form.fields["longitude"].initial = long
             p = form.save()
-            if lat and long:
-                p.geom = Point(long, lat)
+            old_geom = p.geom
+            new_geom = Point(long, lat)
+            geom_changed = False
+            if old_geom is None or new_geom.coords != old_geom.coords:
+                p.geom = new_geom
                 p.save()
+                geom_changed = True
                 logger.debug("Geometry successfully updated: " + str(p.geom))
             else:
-                logger.warning("Projekt geom will be empty.")
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+                logger.warning("Projekt geom not updated.")
+            if form.changed_data or geom_changed:
+                logger.debug(form.changed_data)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("projekt:detail", ident_cely=ident_cely)
         else:
             logger.debug("The form is not valid!")
             logger.debug(form.errors)
