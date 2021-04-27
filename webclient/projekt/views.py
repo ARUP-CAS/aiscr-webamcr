@@ -48,6 +48,7 @@ from core.utils import get_points_from_envelope
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -76,13 +77,12 @@ def detail(request, ident_cely):
     projekt = get_object_or_404(
         Projekt.objects.select_related(
             "kulturni_pamatka", "typ_projektu", "vedouci_projektu", "organizace"
-        ).defer("geom"),
+        ),
         ident_cely=ident_cely,
     )
     context["projekt"] = projekt
     typ_projektu = projekt.typ_projektu
     if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-        # oznamovatel = get_object_or_404(Oznamovatel, projekt=projekt)
         context["oznamovatel"] = projekt.oznamovatel
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
@@ -144,12 +144,16 @@ def edit(request, ident_cely):
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             logger.debug("Form is valid")
-            logger.debug(request.POST)
-            if projekt.geom is not None:
-                form.fields["latitude"].initial = projekt.geom.coords[1]
-                form.fields["longitude"].initial = projekt.geom.coords[0]
-
-            form.save()
+            # logger.debug(request.POST)
+            lat = form.cleaned_data["latitude"]
+            long = form.cleaned_data["longitude"]
+            p = form.save()
+            if lat and long:
+                p.geom = Point(long, lat)
+                p.save()
+                logger.debug("Geometry successfully updated: " + str(p.geom))
+            else:
+                logger.warning("Projekt geom will be empty.")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
             logger.debug("The form is not valid!")
@@ -160,6 +164,8 @@ def edit(request, ident_cely):
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
+        else:
+            logger.warning("Projekt geom is empty.")
     return render(
         request,
         "projekt/edit.html",
@@ -508,6 +514,7 @@ def get_detail_template_shows(projekt):
     ]
     show_znovu_zapsat = projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
+    show_pridat_akci = PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -521,5 +528,6 @@ def get_detail_template_shows(projekt):
         "zrusit_link": show_zrusit,
         "znovu_zapsat_link": show_znovu_zapsat,
         "samostatne_nalezy": show_samostatne_nalezy,
+        "pridat_akci": show_pridat_akci,
     }
     return show

@@ -174,6 +174,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "kulturni_pamatka": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
         labels = {
             "vedouci_projektu": _("Vedoucí projektu"),

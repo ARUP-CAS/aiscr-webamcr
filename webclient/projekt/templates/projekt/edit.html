@@ -34,7 +34,7 @@
 			{% crispy form_projekt %}
 			<input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary app-entity-projekt-btn mt-3" id="submit-id-save">
 		</form>
-	</div>	
+	</div>
 {% endblock %}
 
 
@@ -43,8 +43,11 @@
 <script>
 	global_map_can_edit=true;
 	if(document.getElementById("id_latitude").value>1){
+	    console.log("Adding point to map.")
 			addPointOnLoad(document.getElementById("id_latitude").value,document.getElementById("id_longitude").value,"Uživatelem zadaná poloha záměru");
-	}
+	} else {
+	    console.log("Not adding point to map!")
+  }
 </script>
 <script src="{% static 'daterangepicker.js' %}"></script>
 {% endblock %}

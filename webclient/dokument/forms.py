@@ -1,4 +1,5 @@
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
 from dokument.models import Dokument, DokumentExtraData
@@ -70,10 +71,32 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("Důvěryhodnost"),
         }
 
-        def __init__(self, *args, **kwargs):
-            super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
-            self.helper = FormHelper(self)
-            self.helper.form_tag = False
+    def __init__(self, *args, **kwargs):
+        super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("datum_vzniku", css_class="col-sm-4"),
+                Div("zachovalost", css_class="col-sm-4"),
+                Div("nahrada", css_class="col-sm-4"),
+                Div("pocet_variant_originalu", css_class="col-sm-4"),
+                Div("odkaz", css_class="col-sm-12"),
+                Div("format", css_class="col-sm-4"),
+                Div("meritko", css_class="col-sm-4"),
+                Div("vyska", css_class="col-sm-4"),
+                Div("sirka", css_class="col-sm-4"),
+                Div("cislo_objektu", css_class="col-sm-4"),
+                Div("zeme", css_class="col-sm-4"),
+                Div("region", css_class="col-sm-4"),
+                Div("udalost", css_class="col-sm-4"),
+                Div("udalost_typ", css_class="col-sm-4"),
+                Div("rok_od", css_class="col-sm-4"),
+                Div("rok_do", css_class="col-sm-4"),
+                Div("duveryhodnost", css_class="col-sm-4"),
+                css_class="row",
+            ),
+        )
+        self.helper.form_tag = False
 
 
 class EditDokumentForm(forms.ModelForm):
@@ -153,6 +176,25 @@ class EditDokumentForm(forms.ModelForm):
         ) + [("", "")]
         self.fields["osoby"].required = False
         self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("typ_dokumentu", css_class="col-sm-4"),
+                Div("material_originalu", css_class="col-sm-4"),
+                Div("organizace", css_class="col-sm-4"),
+                Div("rok_vzniku", css_class="col-sm-4"),
+                Div("pristupnost", css_class="col-sm-4"),
+                Div("datum_zverejneni", css_class="col-sm-4"),
+                Div("popis", css_class="col-sm-12"),
+                Div("poznamka", css_class="col-sm-12"),
+                Div("oznaceni_originalu", css_class="col-sm-12"),
+                Div("ulozeni_originalu", css_class="col-sm-4"),
+                Div("licence", css_class="col-sm-4"),
+                Div("jazyky", css_class="col-sm-4"),
+                Div("posudky", css_class="col-sm-4"),
+                Div("osoby", css_class="col-sm-4"),
+                css_class="row",
+            ),
+        )
         self.helper.form_tag = False
 
 
@@ -167,7 +209,6 @@ class CreateDokumentForm(EditDokumentForm):
         (MORAVA, "Morava"),
     )
     identifikator = forms.ChoiceField(choices=CHOICES, required=True)
-    field_order = ["identifikator"]
 
     def __init__(self, *args, **kwargs):
         super(CreateDokumentForm, self).__init__(*args, **kwargs)
@@ -175,3 +216,23 @@ class CreateDokumentForm(EditDokumentForm):
             "class": "selectpicker",
             "data-live-search": "true",
         }
+        self.helper.layout = Layout(
+            Div(
+                Div("identifikator", css_class="col-sm-4"),
+                Div("typ_dokumentu", css_class="col-sm-4"),
+                Div("material_originalu", css_class="col-sm-4"),
+                Div("organizace", css_class="col-sm-4"),
+                Div("rok_vzniku", css_class="col-sm-4"),
+                Div("pristupnost", css_class="col-sm-4"),
+                Div("popis", css_class="col-sm-12"),
+                Div("poznamka", css_class="col-sm-12"),
+                Div("oznaceni_originalu", css_class="col-sm-12"),
+                Div("ulozeni_originalu", css_class="col-sm-4"),
+                Div("licence", css_class="col-sm-4"),
+                Div("jazyky", css_class="col-sm-4"),
+                Div("posudky", css_class="col-sm-4"),
+                Div("osoby", css_class="col-sm-4"),
+                Div("datum_zverejneni", css_class="col-sm-4"),
+                css_class="row",
+            ),
+        )

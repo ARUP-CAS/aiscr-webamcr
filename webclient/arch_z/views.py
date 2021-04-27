@@ -11,6 +11,7 @@ from core.constants import (
     ODESLANI_AZ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
+    PROJEKT_STAV_ZAPSANY,
     ZAPSANI_AZ,
 )
 from core.forms import VratitForm
@@ -313,6 +314,13 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely):
     projekt = Projekt.objects.get(ident_cely=projekt_ident_cely)
+
+    # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
+    if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
+        raise PermissionDenied(
+            "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
+        )
+
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST)
         form_akce = CreateAkceForm(request.POST)

@@ -3,6 +3,7 @@ from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
     ROLE_ADMIN_ID,
 )
 from dj.models import DokumentacniJednotka
@@ -263,6 +264,7 @@ class AMCRTestRunner(BaseRunner):
         p = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
             ident_cely=existing_ident,
+            stav=PROJEKT_STAV_ZAHAJENY_V_TERENU,
         )
         p.save()
         oznamovatel = Oznamovatel(

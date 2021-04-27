@@ -241,10 +241,10 @@
             <script>
                 global_map_can_edit=false;
                 button_map_lock.disable();
-                let coordinates='{{ projekt.geom.coords}}'.slice(1, -1).split(',');
+                let coordinates='{{ projekt.geom.coords }}'.slice(1, -1).split(',');
                 console.log(coordinates)
-                if(coordinates && coordinates.length>1){
-                  addPointOnLoad(coordinates[1],coordinates[0],"Uživatelem zadaná poloha záměru");
+                if(coordinates && coordinates.length>1) {
+                    addPointOnLoad(coordinates[1], coordinates[0], "Uživatelem zadaná poloha záměru");
                 }
             </script>
           </div>
@@ -334,9 +334,11 @@
         </div>
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
+            {% if show.pridat_akci %}
             <a class="btn app-entity-projekt" href="{% url 'arch_z:zapsat' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Vložit další akci' %}">
               <span class="material-icons">add</span>
             </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -452,4 +454,5 @@
 {% endblock %}
 
 {% block script %}
+
 {% endblock %}
