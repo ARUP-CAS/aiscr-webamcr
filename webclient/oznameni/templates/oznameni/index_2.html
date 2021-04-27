@@ -96,7 +96,8 @@
     </tbody>
   </table>
 
-  <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
+  <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone"
+        enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
       <input name="file" type="file" multiple/>
@@ -113,6 +114,6 @@
 
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
-  <script>var project_id = "{{ ident_cely }}";</script>
+  <script>var object_id = "{{ confirm.ident_cely }}";</script>
   <script src="{% static 'dz.js' %}"></script>
 {% endblock %}

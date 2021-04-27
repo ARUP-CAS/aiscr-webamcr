@@ -78,7 +78,7 @@
         <div class="form-check" id="div_id_souhlas">
           <input class="form-check-input" type="checkbox" value="" id="id_souhlas" required="" name="souhlas">
           <label class="form-check-label requiredField" for="id_souhlas" for="defaultCheck1">
-            {% translate "Souhlasím s podmínkami o zpracování osobních údajů" %}
+            {% trans "Souhlasím s podmínkami o zpracování osobních údajů" %}
             <span class="asteriskField">*</span>
           </label>
         </div>
@@ -105,9 +105,8 @@
         <div class="app-captcha">
           {{ form_captcha }}
         </div>
-        <!-- <input type="submit" name="save" value="{% translate 'Přejít na další krok' %}" class="btn btn-primary" id="submit-id-save"> -->
         <button type="submit" name="save" id="submit-id-save" class="btn btn-primary">
-          {% translate 'Přejít na další krok' %} <span class="material-icons">arrow_forward</span>
+          {% trans 'Přejít na další krok' %} <span class="material-icons">arrow_forward</span>
         </button>
       </div>
     </div>

@@ -9,7 +9,6 @@ from core.utils import calculate_crc_32, get_mime_type
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import is_safe_url
@@ -109,8 +108,12 @@ def post_upload(request):
     elif documents.exists():
         objekt = documents[0]
     else:
-        raise Http404(
-            "Nelze pripojit soubor k neexistujicimu objektu " + request.POST["objectID"]
+        return JsonResponse(
+            {
+                "error": "Nelze pripojit soubor k neexistujicimu objektu "
+                + request.POST["objectID"]
+            },
+            status=500,
         )
     logger.debug("Soubor bude pripojen k objektu " + objekt.ident_cely)
     soubor = request.FILES.get("file")
@@ -139,7 +142,10 @@ def post_upload(request):
             return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
         else:
             logger.warning("File already exists on the server.")
-            return JsonResponse({"error": "Soubor se stejným jménem na servru již existuje.!"}, status=500)
+            return JsonResponse(
+                {"error": "Soubor se stejným jménem na servru již existuje.!"},
+                status=500,
+            )
     else:
         logger.warning("No file attached to the announcement form.")
 
