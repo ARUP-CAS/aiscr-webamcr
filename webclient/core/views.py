@@ -132,13 +132,15 @@ def post_upload(request):
             size_bytes=soubor.size,
             typ_souboru=OTHER_PROJECT_FILES,
         )
-        try:
+        duplikat = Soubor.objects.filter(nazev=s.nazev)
+        if not duplikat.exists():
             logger.debug("Saving file object: " + str(s))
             s.save()
             return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
-        except IntegrityError:
-            logger.warning("Could not save file {}".format(s.nazev))
+        else:
+            logger.warning("File already exists on the server.")
+            return JsonResponse({"error": "Soubor se stejným jménem na servru již existuje.!"}, status=500)
     else:
         logger.warning("No file attached to the announcement form.")
 
-    return JsonResponse({"filename": ""}, status=500)
+    return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)

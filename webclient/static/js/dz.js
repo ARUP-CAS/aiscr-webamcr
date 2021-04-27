@@ -1,10 +1,8 @@
 Dropzone.autoDiscover = false;
 window.onload = function () {
     var dropzoneOptions = {
-        dictDefaultMessage: 'Přiložte dokumentaci',
-        dictInvalidFileType: "Nepodporovaný typ souboru",
-        dictRemoveFile: "Odebrat",
-        dictRemoveFileConfirmation: "Skutečně odebrat soubor?",
+        dictDefaultMessage: 'Přiložte dokumentaci.',
+        dictInvalidFileType: "Nepodporovaný typ souboru.",
         acceptedFiles: "image/*," +
             "application/pdf," +
             ".zip," +
@@ -18,11 +16,14 @@ window.onload = function () {
             "application/msword," +
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         maxFilesize: 100, // MB
-        addRemoveLinks: true,
         init: function () {
-            this.on("success", function (file) {
+            this.on("success", function (file, response) {
                 console.log("success > " + file.name);
             });
+        },
+        error: function(file, response) {
+            console.log(response);
+            alert(response.error)
         },
         params: {'objectID': object_id}
     };
