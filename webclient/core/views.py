@@ -2,7 +2,11 @@ import logging
 import mimetypes
 import os
 
-from core.constants import OTHER_PROJECT_FILES
+from core.constants import (
+    DOKUMENT_RELATION_TYPE,
+    OTHER_PROJECT_FILES,
+    PROJEKT_RELATION_TYPE,
+)
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.models import Soubor
 from core.utils import calculate_crc_32, get_mime_type
@@ -142,8 +146,20 @@ def post_upload(request):
             return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
         else:
             logger.warning("File already exists on the server.")
+            # Find parent record
+            parent_ident = ""
+            if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
+                parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
+            if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
+                parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
+            # TODO dokoncit az se budou delat samostatne nalezy
+            # if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
+            #    parent_ident = duplikat[0].vazba
             return JsonResponse(
-                {"error": "Soubor se stejným jménem na servru již existuje.!"},
+                {
+                    "error": "Soubor se stejným jménem na servru již existuje a je připojen k záznamu "
+                    + parent_ident
+                },
                 status=500,
             )
     else:

@@ -23,7 +23,13 @@ window.onload = function () {
         },
         error: function(file, response) {
             console.log(response);
-            alert(response.error)
+            if (response.error){
+                alert(response.error)
+            } else {
+                alert(response)
+            }
+            this.removeFile(file);
+
         },
         params: {'objectID': object_id}
     };

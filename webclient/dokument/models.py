@@ -94,19 +94,21 @@ class Dokument(models.Model):
     stav = models.SmallIntegerField(choices=STATES)
     ident_cely = models.TextField(unique=True)
     datum_zverejneni = models.DateField(blank=True, null=True)
-    soubory = models.ForeignKey(
+    soubory = models.OneToOneField(
         SouborVazby,
         models.DO_NOTHING,
         db_column="soubory",
         blank=True,
         null=True,
+        related_name="dokument_souboru",
     )
-    historie = models.ForeignKey(
+    historie = models.OneToOneField(
         HistorieVazby,
         models.DO_NOTHING,
         db_column="historie",
         blank=True,
         null=True,
+        related_name="dokument_historie",
     )
     licence = models.TextField(blank=True, null=True)
     jazyky = models.ManyToManyField(
@@ -289,7 +291,11 @@ class DokumentAutor(models.Model):
 
 
 class DokumentJazyk(models.Model):
-    dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
+    dokument = models.ForeignKey(
+        Dokument,
+        models.CASCADE,
+        db_column="dokument",
+    )
     jazyk = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -315,7 +321,11 @@ class DokumentOsoba(models.Model):
 
 
 class DokumentPosudek(models.Model):
-    dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
+    dokument = models.ForeignKey(
+        Dokument,
+        models.CASCADE,
+        db_column="dokument",
+    )
     posudek = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,

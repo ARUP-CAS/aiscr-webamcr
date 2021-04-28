@@ -18,15 +18,12 @@ class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
-
+        self.lokace_zahradky = Point(50.40, 15.70)
         self.projekt = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
             ident_cely="M-202212541",
             lokalizace="Je to na zahradce",
-            geom=Point(
-                50.40,
-                15.70,
-            ),
+            geom=self.lokace_zahradky,
         )
         self.projekt.save()
         self.oznamovatel = Oznamovatel(
@@ -92,13 +89,11 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = edit(request, self.projekt.ident_cely)
-        self.assertEqual(200, response.status_code)
+        projekt = Projekt.objects.get(ident_cely=self.projekt.ident_cely)
+        self.assertEqual(302, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
-        self.assertTrue(
-            Projekt.objects.get(ident_cely=self.projekt.ident_cely).lokalizace
-            == nova_lokalizace
-        )
-        # TODO test other values (GEOM)
+        self.assertTrue(projekt.lokalizace == nova_lokalizace)
+        self.assertTrue(projekt.geom.coords != self.lokace_zahradky.coords)
 
     def test_get_smazat_check(self):
         request = self.factory.get("/projekt/smazat/")
@@ -119,4 +114,4 @@ class UrlTests(TestCase):
         )
         nalez.save()
         response = smazat(request, ident_cely=self.projekt.ident_cely)
-        self.assertTrue("error" in response.content.decode("utf-8"))
+        self.assertTrue("Projekt nelze smazat." in response.content.decode("utf-8"))

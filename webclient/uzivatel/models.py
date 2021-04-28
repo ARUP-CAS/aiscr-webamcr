@@ -91,7 +91,7 @@ class Osoba(models.Model):
 
     class Meta:
         db_table = "osoba"
-        ordering = ["vypis"]
+        ordering = ["vypis_cely"]
 
     def __str__(self):
-        return self.vypis
+        return self.vypis_cely

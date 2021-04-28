@@ -100,17 +100,19 @@ class Projekt(models.Model):
         unique=True, blank=True, null=True, verbose_name=_("Identifikátory")
     )
     geom = pgmodels.PointField(blank=True, null=True)
-    soubory = models.ForeignKey(
+    soubory = models.OneToOneField(
         SouborVazby,
         on_delete=models.DO_NOTHING,
         db_column="soubory",
         blank=True,
         null=True,
+        related_name="projekt_souboru",
     )
-    historie = models.ForeignKey(
+    historie = models.OneToOneField(
         HistorieVazby,
         on_delete=models.DO_NOTHING,
         db_column="historie",
+        related_name="projekt_historie",
     )
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True

@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_filters %}
 
 {% block title %}{% trans "Detail dokumentu" %}{% endblock %}
 {% block head %}
@@ -78,8 +79,8 @@
         </div>
         <div class="row">
           <div class="col">{{ dokument.material_originalu }}</div>
-          <div class="col">Jazyky: {{ dokument.jazyky }}</div>
-          <div class="col">Posudky: {{ dokument.posudky }}</div>
+          <div class="col">{{ dokument.jazyky.all|hesla_to_list }}</div>
+          <div class="col">{{ dokument.posudky.all|hesla_to_list }}</div>
         </div>
         <div class="row">
           <div class="col">{{ dokument.organizace }}</div>

@@ -1,14 +1,18 @@
 from django.db import models
 from uzivatel.models import User
 
-from .constants import PROJEKT_RELATION_TYPE, SAMOSTATNY_NALEZ_RELATION_TYPE
+from .constants import (
+    DOKUMENT_RELATION_TYPE,
+    PROJEKT_RELATION_TYPE,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
+)
 
 
 class SouborVazby(models.Model):
 
     CHOICES = (
         (PROJEKT_RELATION_TYPE, "Projekt"),
-        (PROJEKT_RELATION_TYPE, "Dokument"),
+        (DOKUMENT_RELATION_TYPE, "Dokument"),
         (SAMOSTATNY_NALEZ_RELATION_TYPE, "Samostatný nález"),
     )
 
