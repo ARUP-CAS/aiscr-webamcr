@@ -255,6 +255,11 @@ form {
       #projectMap {
         @extend .w-100, .rounded, .h-100;
       }
+
+      &.app-card-dokumentacni-jednotka {
+        max-height: 200px;
+        overflow-y: auto;
+      }
     }
   }
 }
