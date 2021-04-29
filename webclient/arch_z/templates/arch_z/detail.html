@@ -189,64 +189,39 @@
           <ul class="list-group">
             {% for j in dokumentacni_jednotky %}
               <li class="list-group-item">
-                <span class="d-flex align-items-center">
-                  <!-- app-disabled | app-confirmed | app-notconfirmed -->
+                <div class="d-flex align-items-center">
                   {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
                     <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip" data-placement="top" title="{% trans 'DJ má potvrzený pian' %}">
-                      <span class="material-icons">gps_fixed</span>
+                      <span class="material-icons">my_location</span>
                     </a>
                   {% elif j.pian.stav == 1 %} <!-- NEPOTVRZENY JE 1 -->
                     <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip" data-placement="top" title="{% trans 'DJ má nepotvrzený pian' %}">
-                      <span class="material-icons">gps_fixed</span>
+                      <span class="material-icons">my_location</span>
                     </a>
                   {% else %}
-                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'DJ nemá pian' %}">gps_not_fixed</span>
+                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'DJ nemá pian' %}">location_disabled</span>
                   {% endif %}
                   <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
                     <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                   </a>
-                </span>
+                </div>
                 {% if j.komponenty.komponenty.all %}
-                  <ul class="list-unstyled app-list-group-in">
+                  <ul class="app-list-group-in">
                     {% for k in j.komponenty.komponenty.all %}
-                      <li class="d-flex align-items-baseline">
-                        <a href="#" class="flex-fill mr-2 app-entity-color" onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
-                          {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
-                        </a>
-                        <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                      <li>
+                        <div class="d-flex align-items-baseline">
+                          <a href="#" class="flex-fill mr-2 app-entity-color" onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
+                            {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+                          </a>
+                          <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                        </div>
                       </li>
                     {% endfor %}
                   </ul>
                 {% endif %}
-                <!-- debug => {{ j.komponenty.komponenty.all }} -->
               </li>
             {% endfor %}
           </ul>
-         <!--  <div class="list-group">
-            {% for j in dokumentacni_jednotky %}
-              <div class="list-group">
-                <p>
-                  {% if j.negativni_jednotka %}N{% else %}P{% endif %}
-                  <a href="#"
-                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</a>
-                  {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
-                  {% if j.pian %}<button class="btn-primary float-right"><span class="material-icons">gps_fixed</span></button>{% endif %}
-                </p>
-                {% for k in j.komponenty.komponenty.all %}
-                  <div class="list-group-item">
-                    <a href="#"
-                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }}
-                      - {{ k.areal }}) <span class="badge badge-light float-right">{{ k.pocet_nalezu }}</span></a>
-                  </div>
-                {% endfor %}
-              </div>
-            {% empty %}
-              <div class="app-note">
-                <span class="material-icons">info</span>
-                {% trans "Akce nemá žádné dokumentační jednotky." %}
-              </div>
-            {% endfor %}
-          </div> -->
         </div>
       </div>
     </div>
