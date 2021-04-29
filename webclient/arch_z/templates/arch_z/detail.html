@@ -186,7 +186,39 @@
           </div>
         </div>
         <div class="card-body">
-          <div class="list-group">
+          <ul class="list-group">
+            {% for j in dokumentacni_jednotky %}
+              <li class="list-group-item">
+                <span class="d-flex align-items-center">
+                  <!-- app-disabled | app-confirmed | app-notconfirmed -->
+                  {% if j.negativni_jednotka %}
+                    <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip" data-placement="top" title="{% trans 'Sonda má potvrzený pian' %}">
+                      <span class="material-icons">gps_fixed</span>
+                    </a>
+                  {% else %}
+                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'Sonda nemá pian' %}">gps_fixed</span>
+                  {% endif %}
+                  <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
+                    <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
+                  </a>
+                </span>
+                {% if j.komponenty.komponenty.all %}
+                  <ul class="list-unstyled app-list-group-in">
+                    {% for k in j.komponenty.komponenty.all %}
+                      <li class="d-flex align-items-baseline">
+                        <a href="#" class="flex-fill mr-2 app-entity-color" onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
+                          {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+                        </a>
+                        <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+                <!-- debug => {{ j.komponenty.komponenty.all }} -->
+              </li>
+            {% endfor %}
+          </ul>
+         <!--  <div class="list-group">
             {% for j in dokumentacni_jednotky %}
               <div class="list-group">
                 <p>
@@ -194,7 +226,7 @@
                   <a href="#"
                    onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</a>
                   {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
-                  {% if j.pian %}<button class="btn-primary float-right">Ukaž pian</button>{% endif %}
+                  {% if j.pian %}<button class="btn-primary float-right"><span class="material-icons">gps_fixed</span></button>{% endif %}
                 </p>
                 {% for k in j.komponenty.komponenty.all %}
                   <div class="list-group-item">
@@ -210,7 +242,7 @@
                 {% trans "Akce nemá žádné dokumentační jednotky." %}
               </div>
             {% endfor %}
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

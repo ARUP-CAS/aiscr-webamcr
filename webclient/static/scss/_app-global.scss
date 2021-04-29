@@ -258,3 +258,23 @@ form {
     }
   }
 }
+
+.list-group {
+  .list-group-item {
+    .material-icons {
+      @include setIcon(20);
+    }
+
+    .app-pian {
+      @include setPianStateColor();
+    }
+
+    .app-list-group-in {
+      margin-left: 30px;
+
+      li {
+        font-size: .9rem;
+      }
+    }
+  }
+}

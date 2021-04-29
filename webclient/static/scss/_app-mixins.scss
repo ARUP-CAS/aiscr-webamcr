@@ -214,6 +214,15 @@
   }
 }
 
+// set pian state color
+@mixin setPianStateColor() {
+  @each $pianState, $color in $pianStates {
+    &.app-#{$pianState} {
+      color: $color;
+    }
+  }
+}
+
 
 // set link color
 @mixin setLinkColor($color, $shade: none, $val: none, $colorH: none) {
