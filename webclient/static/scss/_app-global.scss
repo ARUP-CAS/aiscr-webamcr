@@ -83,10 +83,6 @@ table {
 
     th {
       vertical-align: top !important;
-
-      &.app-ident-cely {
-        width: $app-ident-cely;
-      }
     }
 
     td {
@@ -95,6 +91,12 @@ table {
 
         .material-icons {
           @include setIcon(18);
+        }
+      }
+
+      .app-card-dokument & {
+        &.app-ident-cely {
+          width: 180px;
         }
       }
     }

@@ -384,7 +384,7 @@
   </div>
 
   <!-- dokumenty -->
-  <div class="card app-card-form">
+  <div class="card app-card-form app-card-dokument">
     <div class="card-header">
       <div class="app-fx app-left">
         {% trans "Dokumenty" %}
@@ -402,21 +402,34 @@
       </div>
     </div>
     <div class="card-body">
-      {% for d in dokumenty %}
-        <div class="row">
-          <div class="col">
-            <a href="{% url 'dokument:detail' d.ident_cely %}">{{ d.ident_cely }}</a></div>
-          <div class="col">
-            <span class="badge badge-light">{{ d.get_stav_display }}</span>
-          </div>
-          <div class="col">{{ d.typ_dokumentu }}</div>
-          <div clasd="col">{{ d.soubory.soubory|length }}</div>
-        </div>
-      {% endfor %}
+      <table class="table table-striped table-hover table-sm mb-0">
+        <thead>
+          <tr>
+            <th>{% trans "Identifikátor" %}</th>
+            <th>{% trans "Stav" %}</th>
+            <th>{% trans "Typ dokumentu" %}</th>
+            <th>{% trans "Počet souborů" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in dokumenty %}
+            <tr>
+              <td class="app-ident-cely">
+                <a href="{% url 'dokument:detail' d.ident_cely %}">
+                  <span class="material-icons">description</span>
+                  {{ d.ident_cely }}
+                </a>
+              </td>
+              <td><div class="badge">{{ d.get_stav_display }}</div></td>
+              <td>{{ d.typ_dokumentu }}</td>
+              <td>{{ d.soubory.soubory|length }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block script %}
