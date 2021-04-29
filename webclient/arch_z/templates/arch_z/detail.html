@@ -191,12 +191,16 @@
               <li class="list-group-item">
                 <span class="d-flex align-items-center">
                   <!-- app-disabled | app-confirmed | app-notconfirmed -->
-                  {% if j.negativni_jednotka %}
-                    <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip" data-placement="top" title="{% trans 'Sonda má potvrzený pian' %}">
+                  {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
+                    <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip" data-placement="top" title="{% trans 'DJ má potvrzený pian' %}">
+                      <span class="material-icons">gps_fixed</span>
+                    </a>
+                  {% elif j.pian.stav == 1 %} <!-- NEPOTVRZENY JE 1 -->
+                    <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip" data-placement="top" title="{% trans 'DJ má nepotvrzený pian' %}">
                       <span class="material-icons">gps_fixed</span>
                     </a>
                   {% else %}
-                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'Sonda nemá pian' %}">gps_fixed</span>
+                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'DJ nemá pian' %}">gps_not_fixed</span>
                   {% endif %}
                   <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
                     <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
