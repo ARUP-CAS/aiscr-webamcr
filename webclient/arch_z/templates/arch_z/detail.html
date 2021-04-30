@@ -240,6 +240,7 @@
 
   <!-- forms -->
   <div id="dj_forms" class="mb-3">
+    <!-- dok jednotka -->
     <div class="card app-card-form" id="create_dj_form" style="display: none;">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -312,6 +313,7 @@
       </div>
     {% endfor %}
 
+    <!-- kopmonenta -->
     <div class="card app-card-form" id="create_komponenta_form" style="display: none;">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -351,7 +353,7 @@
             <div class="btn-group" role="group">
               <div class="dropdown-menu" aria-labelledby="others">
                   <a class="dropdown-item" href="{% url 'komponenta:smazat' k.ident_cely %}">
-                    {% trans 'Smazat Komponentu' %}
+                    {% trans 'Smazat komponentu' %}
                   </a>
               </div>
               <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -361,31 +363,29 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editKompSubmitButton.disabled = true; return true;">
+          <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editKompSubmitButton.disabled = true; return true;">
             {% crispy k.form %}
             <button type="submit" id="{{ k.ident_cely }}_editKompSubmitButton" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
           </form>
 
-          <div class="card-header">
-            <div class="app-fx app-left">
-              {% trans "Nálezy" %}
+          <div class="card app-card-form">
+            <div class="card-header">
+              <div class="app-fx app-left">
+                {% trans "Nálezy" %}
+              </div>
             </div>
-          </div>
-          <div class="card-body">
-            {% trans "Objekty" %}
-            <form method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}"
-                  onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
-              {% crispy k.form_nalezy_objekty k.helper %}
-              <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit objekty" %}</button>
-            </form>
-            {% trans "Předměty" %}
-            <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}"
-                  onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
-              {% crispy k.form_nalezy_predmety k.helper %}
-              <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit predmety" %}</button>
-            </form>
+            <div class="card-body">
+              <h5>{% trans "Objekty" %}</h5>
+              <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+                {% crispy k.form_nalezy_objekty k.helper %}
+                <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton" class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+              </form>
+              <h5>{% trans "Předměty" %}</h5>
+              <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
+                {% crispy k.form_nalezy_predmety k.helper %}
+                <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton" class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
