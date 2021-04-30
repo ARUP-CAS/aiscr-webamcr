@@ -26,6 +26,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
+from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -283,6 +284,16 @@ def smazat(request, ident_cely):
         return redirect("core:home")
     else:
         return render(request, "core/smazat.html", {"objekt": d})
+
+
+class DokumentAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return Dokument.objects.none()
+        qs = Dokument.objects.all()
+        if self.q:
+            qs = qs.filter(ident_cely__icontains=self.q)
+        return qs
 
 
 def get_hierarchie_dokument_typ():

@@ -80,6 +80,7 @@ AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 
 EXISTING_EVENT_IDENT = "C-202000001A"
+EXISTING_DOCUMENT_ID = 123654
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -319,6 +320,7 @@ class AMCRTestRunner(BaseRunner):
         osoba.save()
 
         d = Dokument(
+            id=EXISTING_DOCUMENT_ID,
             rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
             typ_dokumentu=Heslar.objects.get(id=TYP_DOKUMENTU_PLAN_SONDY_ID),
             organizace=o,

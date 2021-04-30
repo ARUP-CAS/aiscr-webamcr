@@ -13,8 +13,18 @@ urlpatterns = [
     path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
     path(
-        "pripojit/dokument/<str:ident_cely>",
+        "pripojit/dokument/<str:arch_z_ident_cely>",
         views.pripojit_dokument,
         name="pripojit_dokument",
+    ),
+    path(
+        "pripojit/dokument/<str:arch_z_ident_cely>/<str:proj_ident_cely>",
+        views.pripojit_dokument,
+        name="pripojit_dokument",
+    ),
+    path(
+        "odpojit/dokument/<str:ident_cely>/<str:arch_z_ident_cely>",
+        views.odpojit_dokument,
+        name="odpojit_dokument",
     ),
 ]

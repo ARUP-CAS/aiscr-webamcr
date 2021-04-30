@@ -5,6 +5,7 @@ from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
+from dokument.models import Dokument
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.views import heslar_12
 
@@ -126,4 +127,33 @@ class CreateAkceForm(forms.ModelForm):
             ),
         )
 
+        self.helper.form_tag = False
+
+
+class PripojitDokumentForm(forms.Form):
+
+    dokument = forms.MultipleChoiceField(
+        label=_("Vyberte dokument k připojení"),
+        choices=list(Dokument.objects.all().values_list("id", "ident_cely")),
+        widget=autocomplete.Select2Multiple(url="dokument:dokument-autocomplete"),
+    )
+
+    def __init__(self, projekt=None, *args, **kwargs):
+        super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PripojitProjDocForm(forms.Form):
+    def __init__(self, *args, projekt_docs, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dokument"] = forms.MultipleChoiceField(
+            label=_("Projektové dokumenty k připojení"),
+            required=True,
+            choices=projekt_docs + [("", "")],
+            widget=forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"},
+            ),
+        )
+        self.helper = FormHelper(self)
         self.helper.form_tag = False

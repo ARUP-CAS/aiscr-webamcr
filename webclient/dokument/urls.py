@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .views import DokumentAutocomplete
 
 app_name = "dokument"
 
@@ -12,4 +13,5 @@ urlpatterns = [
     path("archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
+    path("dokumenty/", DokumentAutocomplete.as_view(), name="dokument-autocomplete"),
 ]

@@ -1,7 +1,12 @@
 import logging
 
 from adb.forms import CreateADBForm
-from arch_z.forms import CreateAkceForm, CreateArchZForm
+from arch_z.forms import (
+    CreateAkceForm,
+    CreateArchZForm,
+    PripojitDokumentForm,
+    PripojitProjDocForm,
+)
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_AZ,
@@ -15,7 +20,7 @@ from core.constants import (
     ZAPSANI_AZ,
 )
 from core.forms import VratitForm
-from core.ident_cely import get_project_event_ident
+from core.ident_cely import get_cast_dokumentu_ident, get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
     AKCE_USPESNE_ODESLANA,
@@ -23,6 +28,9 @@ from core.message_constants import (
     AKCE_USPESNE_ZAPSANA,
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
+    DOKUMENT_JIZ_BYL_PRIPOJEN,
+    DOKUMENT_USPESNE_ODPOJEN,
+    DOKUMENT_USPESNE_PRIPOJEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
@@ -32,10 +40,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from dokument.models import Dokument
+from dokument.models import Dokument, DokumentCast
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -93,7 +102,7 @@ def detail(request, ident_cely):
         Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
         .select_related("soubory")
         .prefetch_related("soubory__soubory")
-    )
+    ).order_by("ident_cely")
     jednotky = (
         DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
         .select_related("komponenty", "typ", "pian")
@@ -399,9 +408,99 @@ def smazat(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def pripojit_dokument(request, ident_cely):
-    # TODO add implementation
-    return None
+def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    if request.method == "POST":
+        dokument_ids = request.POST.getlist("dokument")
+        casti_zaznamu = DokumentCast.objects.filter(
+            archeologicky_zaznam__ident_cely=arch_z_ident_cely
+        )
+        for dokument_id in dokument_ids:
+            dokument = get_object_or_404(Dokument, id=dokument_id)
+            relace = casti_zaznamu.filter(dokument__id=dokument_id)
+            if not relace.exists():
+                dc_ident = get_cast_dokumentu_ident(dokument)
+                DokumentCast(
+                    archeologicky_zaznam=az, dokument=dokument, ident_cely=dc_ident
+                ).save()
+                logger.debug(
+                    "K akci "
+                    + str(arch_z_ident_cely)
+                    + " byl pripojen dokument "
+                    + str(dokument.ident_cely)
+                )
+                messages.add_message(
+                    request, messages.SUCCESS, DOKUMENT_USPESNE_PRIPOJEN
+                )
+            else:
+                messages.add_message(
+                    request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
+                )
+        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
+    else:
+        if proj_ident_cely:
+            # Pridavam projektove dokumenty
+            projektove_dokumenty = set()
+            dokumenty_akce = set(
+                Dokument.objects.filter(
+                    casti__archeologicky_zaznam__ident_cely=arch_z_ident_cely
+                )
+            )
+            projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+            for akce in projekt.akce_set.all().exclude(
+                archeologicky_zaznam__ident_cely=arch_z_ident_cely
+            ):
+                for cast in akce.archeologicky_zaznam.casti_dokumentu.all():
+                    if cast.dokument not in dokumenty_akce:
+                        projektove_dokumenty.add(
+                            (cast.dokument.id, cast.dokument.ident_cely)
+                        )
+            form = PripojitProjDocForm(projekt_docs=list(projektove_dokumenty))
+        else:
+            # Pridavam vsechny dokumenty
+            form = PripojitDokumentForm()
+    return render(
+        request, "arch_z/pripojit_dokument.html", {"form": form, "object": az}
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely)
+    remove_orphan = False
+    if len(relace_dokumentu) == 0:
+        raise Http404("Nelze najít zadne relace dokumentu " + str(ident_cely))
+    if len(relace_dokumentu) == 1:
+        orphan_dokument = relace_dokumentu[0].dokument
+        if "X-" in orphan_dokument.ident_cely:
+            remove_orphan = True
+    if request.method == "POST":
+        dokument_cast = relace_dokumentu.filter(
+            archeologicky_zaznam__ident_cely=arch_z_ident_cely
+        )
+        if len(dokument_cast) == 0:
+            raise Http404("Nelze najít relaci mezi zaznamem a dokumentem")
+        resp = dokument_cast[0].delete()
+        logger.debug("Byla smazana cast dokumentu " + str(resp))
+        if remove_orphan:
+            orphan_dokument.delete()
+            logger.debug("Docasny soubor bez relaci odstranen.")
+        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
+        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
+    else:
+        warnings = []
+        if remove_orphan:
+            warnings.append(
+                "Nearchivovaný dokument "
+                + str(orphan_dokument)
+                + " nemá žádnou jinou relaci a odpojením bude automaticky smazán."
+            )
+        return render(
+            request,
+            "arch_z/odpojit_dokument.html",
+            {"object": relace_dokumentu[0], "warnings": warnings},
+        )
 
 
 def get_history_dates(historie_vazby):

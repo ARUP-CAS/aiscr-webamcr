@@ -129,6 +129,7 @@ class Dokument(models.Model):
 
     class Meta:
         db_table = "dokument"
+        ordering = ["ident_cely"]
 
     def __str__(self):
         return self.ident_cely

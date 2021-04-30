@@ -1,0 +1,21 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Připojit dokumenty k akci " %}{{ object.ident_cely }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Připojit dokumenty k akci " %}{{ object.ident_cely }}</h1>
+
+  <form method="post">
+    {% crispy form %}
+			<input type="submit" name="save" value="{% translate 'Připojit dokumenty' %}">
+  </form>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

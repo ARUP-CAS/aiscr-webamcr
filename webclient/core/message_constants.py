@@ -42,6 +42,9 @@ DOKUMENT_USPESNE_ARCHIVOVAN: Final = "Dokument úspěšně archivován."
 DOKUMENT_USPESNE_VRACEN: Final = "Dokument úspěšně vrácen."
 DOKUMENT_NELZE_ODESLAT: Final = "Dokument nelze odeslat."
 DOKUMENT_NELZE_ARCHIVOVAT: Final = "Dokument nelze archivovat."
+DOKUMENT_USPESNE_PRIPOJEN: Final = "Dokument úspěšně připojen."
+DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
+DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."

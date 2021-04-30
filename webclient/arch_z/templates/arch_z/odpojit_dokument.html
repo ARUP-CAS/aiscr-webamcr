@@ -1,0 +1,25 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Odpojení dokumentu " %}{{ object.dokument.ident_cely }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Skutečně odpojit dokument " %}{{ object.dokument.ident_cely }}?</h1>
+
+
+  <form method="post">
+    {% csrf_token %}
+    {% if warnings %}
+      <ul>
+        {% for warning in warnings %}
+          <li>{{ warning }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">{% trans "Odpojit dokument" %}</button>
+  </form>
+
+{% endblock %}
