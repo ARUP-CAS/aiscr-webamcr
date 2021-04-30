@@ -288,27 +288,26 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editDjSubmitButton.disabled = true; return true;">
+          <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editDjSubmitButton.disabled = true; return true;">
             {% crispy j.form %}
-            <button type="submit" id="{{ j.ident_cely }}_editDjSubmitButton" class="btn btn-primary mt-3" >{% trans "Upravit jednotku" %}</button>
+            <button type="submit" id="{{ j.ident_cely }}_editDjSubmitButton" class="btn btn-primary" >{% trans "Upravit jednotku" %}</button>
           </form>
 
           {% if j.adb_form %}
-            <div class="card-header">
-              <div class="app-fx app-left">
-                {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+            <div class="card app-card-form">
+              <div class="card-header">
+                <div class="app-fx app-left">
+                  {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+                </div>
+              </div>
+              <div class="card-body">
+                <form method="POST" action="{% url 'adb:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editAdbSubmitButton.disabled = true; return true;">
+                  {% crispy j.adb_form %}
+                  <button type="submit" id="{{ j.ident_cely }}_editAdbSubmitButton" class="btn btn-primary">{% trans "Upravit ADB" %}</button>
+                </form>
               </div>
             </div>
-
-            <div class="card-body">
-              <form method="POST" action="{% url 'adb:detail' j.ident_cely %}"
-                    onsubmit="{{ j.ident_cely }}_editAdbSubmitButton.disabled = true; return true;">
-                {% crispy j.adb_form %}
-                <button type="submit" id="{{ j.ident_cely }}_editAdbSubmitButton" class="btn btn-primary">{% trans "Upravit ADB" %}</button>
-              </form>
-            </div>
           {% endif %}
-
         </div>
       </div>
     {% endfor %}
