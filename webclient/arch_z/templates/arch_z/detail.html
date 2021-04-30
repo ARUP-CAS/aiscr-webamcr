@@ -185,68 +185,43 @@
             </div>
           </div>
         </div>
-        <div class="card-body">
-          <ul class="list-group">
+        <div class="card-body app-card-dokumentacni-jednotka p-0">
+          <ul class="list-group list-group-flush">
             {% for j in dokumentacni_jednotky %}
               <li class="list-group-item">
-                <span class="d-flex align-items-center">
-                  <!-- app-disabled | app-confirmed | app-notconfirmed -->
+                <div class="d-flex align-items-center">
                   {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
                     <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip" data-placement="top" title="{% trans 'DJ má potvrzený pian' %}">
-                      <span class="material-icons">gps_fixed</span>
+                      <span class="material-icons">my_location</span>
                     </a>
                   {% elif j.pian.stav == 1 %} <!-- NEPOTVRZENY JE 1 -->
                     <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip" data-placement="top" title="{% trans 'DJ má nepotvrzený pian' %}">
-                      <span class="material-icons">gps_fixed</span>
+                      <span class="material-icons">my_location</span>
                     </a>
                   {% else %}
-                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'DJ nemá pian' %}">gps_not_fixed</span>
+                    <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip" data-placement="top" title="{% trans 'DJ nemá pian' %}">location_disabled</span>
                   {% endif %}
                   <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
                     <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                   </a>
-                </span>
+                </div>
                 {% if j.komponenty.komponenty.all %}
-                  <ul class="list-unstyled app-list-group-in">
+                  <ul class="app-list-group-in">
                     {% for k in j.komponenty.komponenty.all %}
-                      <li class="d-flex align-items-baseline">
-                        <a href="#" class="flex-fill mr-2 app-entity-color" onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
-                          {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
-                        </a>
-                        <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                      <li>
+                        <div class="d-flex align-items-baseline">
+                          <a href="#" class="flex-fill mr-2 app-entity-color" onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
+                            {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+                          </a>
+                          <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                        </div>
                       </li>
                     {% endfor %}
                   </ul>
                 {% endif %}
-                <!-- debug => {{ j.komponenty.komponenty.all }} -->
               </li>
             {% endfor %}
           </ul>
-         <!--  <div class="list-group">
-            {% for j in dokumentacni_jednotky %}
-              <div class="list-group">
-                <p>
-                  {% if j.negativni_jednotka %}N{% else %}P{% endif %}
-                  <a href="#"
-                   onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</a>
-                  {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
-                  {% if j.pian %}<button class="btn-primary float-right"><span class="material-icons">gps_fixed</span></button>{% endif %}
-                </p>
-                {% for k in j.komponenty.komponenty.all %}
-                  <div class="list-group-item">
-                    <a href="#"
-                       onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">{{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }}
-                      - {{ k.areal }}) <span class="badge badge-light float-right">{{ k.pocet_nalezu }}</span></a>
-                  </div>
-                {% endfor %}
-              </div>
-            {% empty %}
-              <div class="app-note">
-                <span class="material-icons">info</span>
-                {% trans "Akce nemá žádné dokumentační jednotky." %}
-              </div>
-            {% endfor %}
-          </div> -->
         </div>
       </div>
     </div>
@@ -265,6 +240,7 @@
 
   <!-- forms -->
   <div id="dj_forms" class="mb-3">
+    <!-- dok jednotka -->
     <div class="card app-card-form" id="create_dj_form" style="display: none;">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -313,32 +289,31 @@
           </div>
         </div>
         <div class="card-body">
-
-          <form method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editDjSubmitButton.disabled = true; return true;">
+          <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editDjSubmitButton.disabled = true; return true;">
             {% crispy j.form %}
             <button type="submit" id="{{ j.ident_cely }}_editDjSubmitButton" class="btn btn-primary" >{% trans "Upravit jednotku" %}</button>
           </form>
 
           {% if j.adb_form %}
-            <div class="card-header">
-              <div class="app-fx app-left">
-                {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+            <div class="card app-card-form">
+              <div class="card-header">
+                <div class="app-fx app-left">
+                  {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+                </div>
+              </div>
+              <div class="card-body">
+                <form method="POST" action="{% url 'adb:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editAdbSubmitButton.disabled = true; return true;">
+                  {% crispy j.adb_form %}
+                  <button type="submit" id="{{ j.ident_cely }}_editAdbSubmitButton" class="btn btn-primary">{% trans "Upravit ADB" %}</button>
+                </form>
               </div>
             </div>
-
-            <div class="card-body">
-              <form method="POST" action="{% url 'adb:detail' j.ident_cely %}"
-                    onsubmit="{{ j.ident_cely }}_editAdbSubmitButton.disabled = true; return true;">
-                {% crispy j.adb_form %}
-                <button type="submit" id="{{ j.ident_cely }}_editAdbSubmitButton" class="btn btn-primary">{% trans "Upravit ADB" %}</button>
-              </form>
-            </div>
           {% endif %}
-
         </div>
       </div>
     {% endfor %}
 
+    <!-- kopmonenta -->
     <div class="card app-card-form" id="create_komponenta_form" style="display: none;">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -378,7 +353,7 @@
             <div class="btn-group" role="group">
               <div class="dropdown-menu" aria-labelledby="others">
                   <a class="dropdown-item" href="{% url 'komponenta:smazat' k.ident_cely %}">
-                    {% trans 'Smazat Komponentu' %}
+                    {% trans 'Smazat komponentu' %}
                   </a>
               </div>
               <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -388,31 +363,29 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editKompSubmitButton.disabled = true; return true;">
+          <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editKompSubmitButton.disabled = true; return true;">
             {% crispy k.form %}
             <button type="submit" id="{{ k.ident_cely }}_editKompSubmitButton" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
           </form>
 
-          <div class="card-header">
-            <div class="app-fx app-left">
-              {% trans "Nálezy" %}
+          <div class="card app-card-form">
+            <div class="card-header">
+              <div class="app-fx app-left">
+                {% trans "Nálezy" %}
+              </div>
             </div>
-          </div>
-          <div class="card-body">
-            {% trans "Objekty" %}
-            <form method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}"
-                  onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
-              {% crispy k.form_nalezy_objekty k.helper %}
-              <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit objekty" %}</button>
-            </form>
-            {% trans "Předměty" %}
-            <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}"
-                  onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
-              {% crispy k.form_nalezy_predmety k.helper %}
-              <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit predmety" %}</button>
-            </form>
+            <div class="card-body">
+              <h5>{% trans "Objekty" %}</h5>
+              <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+                {% crispy k.form_nalezy_objekty k.helper %}
+                <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton" class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+              </form>
+              <h5>{% trans "Předměty" %}</h5>
+              <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
+                {% crispy k.form_nalezy_predmety k.helper %}
+                <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton" class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

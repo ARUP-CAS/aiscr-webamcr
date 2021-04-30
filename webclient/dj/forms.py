@@ -28,25 +28,10 @@ class CreateDJForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        Div(
-                            HTML(_("Detail")),
-                            css_class="app-fx app-left",
-                        ),
-                        css_class="card-header",
-                    ),
-                    Div(
-                        Div(
-                            Div("typ", css_class="col-sm-3"),
-                            Div("negativni_jednotka", css_class="col-sm-3"),
-                            Div("nazev", css_class="col-sm-3"),
-                            # Div("pian", css_class="col-sm-3"),
-                            css_class="row",
-                        ),
-                        css_class="card-body",
-                    ),
-                ),
-                css_class="card app-card-form",
-            )
+                Div("typ", css_class="col-sm-4"),
+                Div("nazev", css_class="col-sm-4"),
+                Div("negativni_jednotka", css_class="col-sm-4"),
+                # Div("pian", css_class="col-sm-3"),
+                css_class="row align-items-end",
+            ),              
         )

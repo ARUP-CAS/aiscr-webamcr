@@ -4,6 +4,7 @@ body {
   @import 'app-login';
   @import "app-oznameni";
   @import "app-projekt";
+  @import "app-akce";
 
   &.app-login,
   &.app-oznameni {

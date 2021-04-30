@@ -1,4 +1,5 @@
 from adb.models import Adb
+from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
@@ -37,6 +38,15 @@ class CreateADBForm(forms.ModelForm):
             "rok_revize": _("Rok revize"),
             "poznamka": _("Poznámka"),
         }
+        widgets = {
+            "uzivatelske_oznaceni_sondy": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "trat": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "cislo_popisne": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "stratigraficke_jednotky": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "poznamka": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+        }
+         
 
         # widgets = {
         #     "autor_popisu": autocomplete.ModelSelect2(
@@ -55,18 +65,18 @@ class CreateADBForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("typ_sondy", css_class="col"),
-                Div("uzivatelske_oznaceni_sondy", css_class="col"),
-                Div("trat", css_class="col"),
-                Div("cislo_popisne", css_class="col"),
-                Div("parcelni_cislo", css_class="col"),
-                Div("podnet", css_class="col"),
-                Div("stratigraficke_jednotky", css_class="col"),
-                Div("autor_popisu", css_class="col"),
-                Div("rok_popisu", css_class="col"),
-                Div("autor_revize", css_class="col"),
-                Div("rok_revize", css_class="col"),
-                Div("poznamka", css_class="col"),
+                Div("typ_sondy", css_class="col-sm-3"),
+                Div("uzivatelske_oznaceni_sondy", css_class="col-sm-3"),
+                Div("trat", css_class="col-sm-3"),
+                Div("cislo_popisne", css_class="col-sm-3"),
+                Div("parcelni_cislo", css_class="col-sm-3"),
+                Div("podnet", css_class="col-sm-3"),
+                Div("stratigraficke_jednotky", css_class="col-sm-3"),
+                Div("autor_popisu", css_class="col-sm-3"),
+                Div("rok_popisu", css_class="col-sm-3"),
+                Div("autor_revize", css_class="col-sm-3"),
+                Div("rok_revize", css_class="col-sm-3"),
+                Div("poznamka", css_class="col-sm-3"),
                 css_class="row",
             ),
         )
