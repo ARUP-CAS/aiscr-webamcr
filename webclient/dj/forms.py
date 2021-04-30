@@ -29,8 +29,8 @@ class CreateDJForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("typ", css_class="col-sm-4"),
-                Div("negativni_jednotka", css_class="col-sm-4"),
                 Div("nazev", css_class="col-sm-4"),
+                Div("negativni_jednotka", css_class="col-sm-4"),
                 # Div("pian", css_class="col-sm-3"),
                 css_class="row align-items-end",
             ),              
