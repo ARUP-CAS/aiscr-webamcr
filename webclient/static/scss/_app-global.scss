@@ -90,13 +90,13 @@ table {
         width: $app-ident-cely;
 
         .material-icons {
-          @include setIcon(18);
+          @include setIcon($size:18, $position: sub);
         }
       }
 
       .app-card-dokument & {
         &.app-ident-cely {
-          width: 180px;
+          width: 200px;
         }
       }
     }
@@ -257,7 +257,7 @@ form {
       }
 
       &.app-card-dokumentacni-jednotka {
-        max-height: 200px;
+        max-height: 300px;
         overflow-y: auto;
       }
     }

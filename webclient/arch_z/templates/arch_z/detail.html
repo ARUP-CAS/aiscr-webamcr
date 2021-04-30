@@ -185,8 +185,8 @@
             </div>
           </div>
         </div>
-        <div class="card-body app-card-dokumentacni-jednotka">
-          <ul class="list-group">
+        <div class="card-body app-card-dokumentacni-jednotka p-0">
+          <ul class="list-group list-group-flush">
             {% for j in dokumentacni_jednotky %}
               <li class="list-group-item">
                 <div class="d-flex align-items-center">
@@ -288,10 +288,9 @@
           </div>
         </div>
         <div class="card-body">
-
           <form method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="{{ j.ident_cely }}_editDjSubmitButton.disabled = true; return true;">
             {% crispy j.form %}
-            <button type="submit" id="{{ j.ident_cely }}_editDjSubmitButton" class="btn btn-primary" >{% trans "Upravit jednotku" %}</button>
+            <button type="submit" id="{{ j.ident_cely }}_editDjSubmitButton" class="btn btn-primary mt-3" >{% trans "Upravit jednotku" %}</button>
           </form>
 
           {% if j.adb_form %}
