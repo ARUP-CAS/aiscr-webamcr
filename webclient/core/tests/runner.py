@@ -2,10 +2,12 @@ from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
+    DOKUMENT_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     ROLE_ADMIN_ID,
 )
+from core.models import SouborVazby
 from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
@@ -40,6 +42,7 @@ from heslar.models import (
     RuianKraj,
     RuianOkres,
 )
+from historie.models import HistorieVazby
 from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
@@ -78,7 +81,6 @@ KATASTR_ODROVICE_ID = 150
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
-
 EXISTING_EVENT_IDENT = "C-202000001A"
 EXISTING_DOCUMENT_ID = 123654
 
@@ -318,7 +320,10 @@ class AMCRTestRunner(BaseRunner):
             vypis_cely="Jakub El Chefe Škvarla",
         )
         osoba.save()
-
+        vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+        vazba.save()
+        vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+        vazba_soubory.save()
         d = Dokument(
             id=EXISTING_DOCUMENT_ID,
             rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
@@ -328,6 +333,8 @@ class AMCRTestRunner(BaseRunner):
             ident_cely=TESTOVACI_DOKUMENT_IDENT,
             stav=D_STAV_ZAPSANY,
             material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
+            historie=vazba,
+            soubory=vazba_soubory,
         )
         d.save()
         DokumentExtraData(dokument=d).save()
