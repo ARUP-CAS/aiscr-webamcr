@@ -172,7 +172,7 @@
   <!-- dokumentacni jednotka / mapa -->
   <div class="row mb-3">
     <div class="col-sm-4">
-      <div class="card app-card-form">
+      <div class="card app-card-form app-card-dokumentacni-jednotka">
         <div id="karta-dokumentacni-jednotky" class="card-header">
           <div class="app-fx app-left">
             {% trans "Dokumentační jednotky" %}
@@ -185,7 +185,7 @@
             </div>
           </div>
         </div>
-        <div class="card-body app-card-dokumentacni-jednotka p-0">
+        <div class="card-body p-0">
           <ul class="list-group list-group-flush">
             {% for j in dokumentacni_jednotky %}
               <li class="list-group-item">
@@ -230,6 +230,7 @@
           #djMap {
               width: 100%;
               /* height: 473px; */
+              min-height: 300px;
               height: 100%;
               border-radius: 5px;
           }

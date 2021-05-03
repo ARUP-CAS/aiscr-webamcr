@@ -255,11 +255,15 @@ form {
       #projectMap {
         @extend .w-100, .rounded, .h-100;
       }
+    }
+  }
 
-      &.app-card-dokumentacni-jednotka {
-        max-height: 300px;
-        overflow-y: auto;
-      }
+  &.app-card-dokumentacni-jednotka {
+    min-height: 300px;
+    
+    .card-body {
+      max-height: 300px;
+      overflow-y: auto;
     }
   }
 }
