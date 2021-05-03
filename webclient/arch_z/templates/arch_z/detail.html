@@ -219,6 +219,11 @@
                     {% endfor %}
                   </ul>
                 {% endif %}
+                {% empty %}
+                <div class="app-note">
+                  <span class="material-icons">info</span>
+                  {% trans "Akce nemá žádné dokumentační jednotky." %}
+                </div>
               </li>
             {% endfor %}
           </ul>
