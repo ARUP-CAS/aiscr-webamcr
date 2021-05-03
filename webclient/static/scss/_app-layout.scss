@@ -33,6 +33,7 @@ body {
   -moz-transition: margin .25s ease-out;
   -o-transition: margin .25s ease-out;
   transition: margin .25s ease-out;
+  position: relative;
 
   @import "app-navbar";
   @import "app-toolbar";

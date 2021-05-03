@@ -55,6 +55,14 @@
       {% block content %}{% endblock %}
     </div>
 
+    <!-- for alert development
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      Záznam byl úspěšně vytvořen.
+      <button aria-label="Close" class="close" data-dismiss="alert" type="button">
+        <span aria-hidden="true">×</span>
+       </button>
+    </div> -->
+
     {% if messages %}
       {% for message in messages %}
         <div class="alert alert-{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
@@ -78,6 +86,10 @@
           language: 'cs',
           todayHighlight: true,
       }));
+
+      $(".alert").delay(5000).slideUp(200, function () {
+        $(this).alert('close');
+      });
   </script>
 
 {% block script %}
