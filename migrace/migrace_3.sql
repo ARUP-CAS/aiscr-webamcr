@@ -125,7 +125,7 @@ insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapis
 -- COMMENT: vetsina projektu ma v datetime_born null
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datetime_born, 0, 598610, historie from projekt where datetime_born is not null;
 -- COMMENT: Protoze zaznamy typu 7 v historii chybi je potreba nejdriv vyresit chybu predtim COMMENT: docela dlouhy dotaz
-update historie set poznamka = sel.d from (select p.id, p.odpovedny_pracovnik_navrhu_zruseni, p.duvod_navrzeni_zruseni as d from projekt p join historie h on p.historie = h.vazba where p.odpovedny_pracovnik_navrhu_zruseni is not null) as sel where historie.typ_zmeny = 7;
+--update historie set poznamka = sel.d from (select p.id, p.odpovedny_pracovnik_navrhu_zruseni, p.duvod_navrzeni_zruseni as d from projekt p join historie h on p.historie = h.vazba where p.odpovedny_pracovnik_navrhu_zruseni is not null) as sel where historie.typ_zmeny = 7;
 
 -- Pridat not null
 -- 1. soubor.vytvoreno

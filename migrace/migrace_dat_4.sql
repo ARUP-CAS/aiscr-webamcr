@@ -127,6 +127,7 @@ insert into heslar_nazev(heslar) values
 ('heslar_zeme');
 
 -- vlozeni hodnot COMMENT: v heslari_pristupnost se mapuje jinak vyznam -> heslo
+alter table heslar alter column heslo_en drop not null;
 insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka)
 ( select id, 1 as nazev_heslare, nazev, en, poradi, zkratka from heslar_aktivity order by id )    union
 ( select id, 2 as nazev_heslare, nazev, en, poradi, null from heslar_areal_druha order by id )               union
@@ -174,7 +175,7 @@ insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka)
 ( select id, 44 as nazev_heslare, nazev, en, poradi, null from heslar_typ_vyskovy_bod order by id )           union
 ( select id, 45 as nazev_heslare, nazev, en, poradi, null from heslar_ulozeni_originalu  order by id )        union
 ( select id, 46 as nazev_heslare, null, en, poradi, nazev from heslar_zachovalost order by id )               union
-( select id, 47 as nazev_heslare, nazev, nazev_en, poradi, kod from heslar_zeme order by id );
+( select id, 47 as nazev_heslare, nazev, nazev_en, poradi, kod from heslar_zeme order by id ) order by nazev_heslare, id;
 
 -- Pridani popisu u nasledujicich heslaru
 -- heslar_areal_druha

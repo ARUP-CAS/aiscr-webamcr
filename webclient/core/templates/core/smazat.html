@@ -20,10 +20,15 @@
         </ul>
       {% endif %}
       <button type="submit" id="eraseSubmitBtn" class="btn btn-primary" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
-      <button type="button" class="btn btn-secondary">{% trans "Zpět" %}</button>
+      <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
     </form>
   </div>
 {% endblock %}
 
 {% block script %}
+  <script>
+      function goBack() {
+          window.history.back();
+      }
+  </script>
 {% endblock %}
