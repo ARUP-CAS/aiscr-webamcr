@@ -45,6 +45,14 @@
   }
 }
 
+.app-card-form-shadow {
+  box-shadow: $app-card-form-shadow;
+
+  &:hover {
+    box-shadow: $app-card-form-shadow-hover;
+  }
+}
+
 // material icons behavior in bootstrap elements
 .btn,
 .nav-link {
@@ -203,7 +211,7 @@ form {
       width: 100%;
       padding: 0 0 0 1.25rem;
       font-weight: 300;
-      height: $app-form-card-header-height;
+      height: $app-card-form-header-height;
 
 
       .app-fx {
@@ -219,7 +227,7 @@ form {
         }
 
         .btn-group {
-          height: $app-form-card-header-btn-height;
+          height: $app-card-form-header-btn-height;
 
           a {
             &.btn {
@@ -232,7 +240,7 @@ form {
             //@include setEntityColor(buttonFormHeader);
             border-radius: 0;
             border: 0;
-            border-left: 1px solid $app-form-card-header-btn-border-color;
+            border-left: 1px solid $app-card-form-header-btn-border-color;
 
             &:last-child {
               border-top-right-radius: $btn-border-radius;
@@ -268,10 +276,10 @@ form {
   }
 
   &:not(.app-card-inner) {
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.1);
+    box-shadow: $app-card-form-shadow;
 
     &:hover {
-      box-shadow: 0 0.5rem 1rem rgba(0,0,0,.2);
+      box-shadow: $app-card-form-shadow-hover;
     }
   }
 }
