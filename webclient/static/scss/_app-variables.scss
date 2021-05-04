@@ -73,8 +73,8 @@ $app-sidebar-accordion-body-color: rgba($white, .03) !default;
 $app-toolbar-height: 50px !default;
 
 // footer
-$app-footer-top-bg: rgba(lighten($app-sidebar-bg, 70), .5) !default;
-$app-footer-bottom-bg: lighten($app-sidebar-bg, 70) !default;
+$app-footer-top-bg: rgba(lighten($app-sidebar-bg, 70), .8) !default;
+$app-footer-bottom-bg: lighten($app-sidebar-bg, 65) !default;
 
 // login
 $app-login-desc-color: lighten($app-sidebar-bg, 50) !default;
