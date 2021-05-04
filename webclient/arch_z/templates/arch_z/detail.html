@@ -203,8 +203,8 @@
                   {% endif %}
                   <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
                     <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
-                  </a>
-                  {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
+                    {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
+                  </a>   
                 </div>
                 {% if j.komponenty.komponenty.all %}
                   <ul class="app-list-group-in">
