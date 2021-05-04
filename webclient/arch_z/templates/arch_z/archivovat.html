@@ -9,7 +9,6 @@
 {% block content %}
   <div class="d-flex h-100 flex-column align-items-center justify-content-center">
     <h4 class="mb-3">{% trans "Archivace akce " %} <strong>{{ object.ident_cely }}</strong></h4>
-
     <form method="post">
       {% csrf_token %}
       {% if warnings %}
