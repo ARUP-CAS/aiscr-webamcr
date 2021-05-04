@@ -132,14 +132,13 @@ class CreateAkceForm(forms.ModelForm):
 
 class PripojitDokumentForm(forms.Form):
 
-    dokument = forms.MultipleChoiceField(
-        label=_("Vyberte dokument k připojení"),
-        choices=list(Dokument.objects.all().values_list("id", "ident_cely")),
-        widget=autocomplete.Select2Multiple(url="dokument:dokument-autocomplete"),
-    )
-
     def __init__(self, projekt=None, *args, **kwargs):
         super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
+        self.fields["dokument"] = forms.MultipleChoiceField(
+            label=_("Vyberte dokument k připojení"),
+            choices=list(Dokument.objects.all().values_list("id", "ident_cely")),
+            widget=autocomplete.Select2Multiple(url="dokument:dokument-autocomplete"),
+        )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
