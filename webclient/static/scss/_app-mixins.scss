@@ -93,6 +93,15 @@
           }
         }
       } 
+    } @else if ($type == card) {
+      &.app-entity-#{$entity} {
+        background-color: $color;
+
+        .card-footer {
+          background-color: $white;
+          color: $color;
+        }
+      } 
     }
   }
 }
