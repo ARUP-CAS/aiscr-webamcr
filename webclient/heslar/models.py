@@ -146,6 +146,7 @@ class RuianKatastr(models.Model):
 
     class Meta:
         db_table = "ruian_katastr"
+        ordering = ["nazev"]
 
     def __str__(self):
         return self.nazev

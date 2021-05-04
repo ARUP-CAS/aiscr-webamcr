@@ -72,6 +72,12 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["GET"])
+def index(request):
+    return render(request, "projekt/index.html")
+
+
+@login_required
+@require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
     projekt = get_object_or_404(
