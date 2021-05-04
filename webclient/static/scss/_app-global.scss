@@ -307,11 +307,18 @@ form {
 
 // alert
 .alert {
-  box-shadow: 0px 0px 40px 0px rgba(0,0,0,0.2);
-  border-color: initial;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  left: 50%;
-  transform: translateX(-50%);
+  &.app-alert-floating {
+    box-shadow: 0px 0px 40px 0px rgba(0,0,0,0.2);
+    border-color: initial;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  ul {
+    @extend .m-0, .p-0;
+    list-style-position: inside;
+  }
 }

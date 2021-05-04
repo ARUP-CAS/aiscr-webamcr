@@ -13,14 +13,18 @@
     <form method="post" onsubmit="eraseSubmitBtn.disabled = true; return true;">
       {% csrf_token %}
       {% if warnings %}
-        <ul>
-          {% for warning in warnings %}
-            <li>{{ warning }}</li>
-          {% endfor %}
-        </ul>
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
       {% endif %}
-      <button type="submit" id="eraseSubmitBtn" class="btn btn-primary" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
-      <button type="button" class="btn btn-secondary">{% trans "Zpět" %}</button>
+      <div class="text-center">
+        <button type="submit" id="eraseSubmitBtn" class="btn btn-primary mr-1" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
+        <button type="button" class="btn btn-secondary">{% trans "Zpět" %}</button>
+      </div>
     </form>
   </div>
 {% endblock %}
