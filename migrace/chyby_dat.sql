@@ -45,3 +45,5 @@ update heslar_objekt_druh set en = 'defensive wall' where nazev = 'hradba';
 -- DONE 3. Duplicity v pripade typ_dokumentu_posudek v dokumentech
 -- DONE 4. Duplicity v dokument.autor
 update samostatny_nalez set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace = -1;
+update samostatny_nalez set katastr = null where katastr = -1;
+
