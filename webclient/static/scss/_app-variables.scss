@@ -53,10 +53,12 @@ $app-logo-sidebar-height: 60px !default;
 $app-logo-nosidebar-height: 60px !default;
 $app-form-control-fix-height: 31px !default;
 
-// form card
-$app-form-card-header-height: 40px !default;
-$app-form-card-header-btn-height: 100% !default;
-$app-form-card-header-btn-border-color: $gray-300 !default;
+// card form
+$app-card-form-header-height: 40px !default;
+$app-card-form-header-btn-height: 100% !default;
+$app-card-form-header-btn-border-color: $gray-300 !default;
+$app-card-form-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !default;
+$app-card-form-shadow-hover: 0 0.5rem 1rem rgba(0,0,0,.2) !default;
 
 // navbar
 $app-navbar-height: 56px !default;
@@ -73,8 +75,8 @@ $app-sidebar-accordion-body-color: rgba($white, .03) !default;
 $app-toolbar-height: 50px !default;
 
 // footer
-$app-footer-top-bg: rgba(lighten($app-sidebar-bg, 70), .5) !default;
-$app-footer-bottom-bg: lighten($app-sidebar-bg, 70) !default;
+$app-footer-top-bg: rgba(lighten($app-sidebar-bg, 70), .8) !default;
+$app-footer-bottom-bg: lighten($app-sidebar-bg, 65) !default;
 
 // login
 $app-login-desc-color: lighten($app-sidebar-bg, 50) !default;

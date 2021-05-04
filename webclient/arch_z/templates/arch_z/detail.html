@@ -203,8 +203,8 @@
                   {% endif %}
                   <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
                     <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
-                  </a>
-                  {% if j.adb %}{{ j.adb.ident_cely }}{% endif %}
+                    {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
+                  </a>   
                 </div>
                 {% if j.komponenty.komponenty.all %}
                   <ul class="app-list-group-in">
@@ -231,7 +231,7 @@
         </div>
       </div>
     </div>
-    <div class="col-sm-8">
+    <div class="col-sm-8 pl-0">
       <style>
           #djMap {
               width: 100%;
@@ -241,7 +241,7 @@
               border-radius: 5px;
           }
       </style>
-      <div id="djMap"></div>
+      <div id="djMap" class="app-card-form-shadow"></div>
     </div>
   </div>
 
@@ -302,7 +302,7 @@
           </form>
 
           {% if j.adb_form %}
-            <div class="card app-card-form">
+            <div class="card app-card-form app-card-inner">
               <div class="card-header">
                 <div class="app-fx app-left">
                   {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
@@ -375,7 +375,7 @@
             <button type="submit" id="{{ k.ident_cely }}_editKompSubmitButton" class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
           </form>
 
-          <div class="card app-card-form">
+          <div class="card app-card-form app-card-inner">
             <div class="card-header">
               <div class="app-fx app-left">
                 {% trans "Nálezy" %}

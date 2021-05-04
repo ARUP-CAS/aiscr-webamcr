@@ -7,21 +7,21 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Smazání objektu" %} {{ objekt.ident_cely }}</h1>
+  <div class="d-flex h-100 flex-column align-items-center justify-content-center">
+    <h4 class="mb-3">{% trans "Smazání objektu" %} <strong>{{ objekt.ident_cely }}</strong></h4>
 
-  <form method="post" onsubmit="eraseSubmitBtn.disabled = true; return true;">
-    {% csrf_token %}
-
-    {% if warnings %}
-      <ul>
-        {% for warning in warnings %}
-          <li>{{ warning }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-    <button type="submit" id="eraseSubmitBtn" class="btn btn-primary" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
-  </form>
-
+    <form method="post" onsubmit="eraseSubmitBtn.disabled = true; return true;">
+      {% csrf_token %}
+      {% if warnings %}
+        <ul>
+          {% for warning in warnings %}
+            <li>{{ warning }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      <button type="submit" id="eraseSubmitBtn" class="btn btn-primary" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
+    </form>
+  </div>
 {% endblock %}
 
 {% block script %}
