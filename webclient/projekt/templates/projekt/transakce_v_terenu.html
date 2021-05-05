@@ -3,12 +3,12 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Zahájit projekt " %}{{ projekt.ident_cely }}{% endblock %}
+{% block title %}{{ title }} {{ object.ident_cely }}{% endblock %}
 {% block head %}
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Zahájení výzkumu projektu " %}{{ projekt.ident_cely }}</h1>
+  <h1>{{ header }} {{ object.ident_cely }}</h1>
   {% crispy form %}
 
 {% endblock %}

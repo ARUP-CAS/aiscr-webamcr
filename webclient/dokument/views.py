@@ -187,7 +187,10 @@ def odeslat(request, ident_cely):
         #    messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
         # else:
         #    pass
-    return render(request, "dokument/odeslat.html", context)
+    context["title"] = _("Odeslání dokumentu")
+    context["header"] = _("Odeslání dokumentu")
+    context["button"] = _("Odeslat dokument")
+    return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -237,7 +240,10 @@ def archivovat(request, ident_cely):
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
         else:
             pass
-    return render(request, "dokument/archivovat.html", context)
+    context["title"] = _("Archivace dokumentu")
+    context["header"] = _("Archivace dokumentu")
+    context["button"] = _("Archivovat dokument")
+    return render(request, "core/transakce.html", context)
 
 
 @login_required

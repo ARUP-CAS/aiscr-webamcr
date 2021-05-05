@@ -52,6 +52,7 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
@@ -245,7 +246,13 @@ def schvalit(request, ident_cely):
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         return redirect("/projekt/detail/" + projekt.ident_cely)
-    return render(request, "projekt/schvalit.html", {"projekt": projekt})
+    context = {
+        "object": projekt,
+        "title": _("Schválení projektu"),
+        "header": _("Schválení projektu"),
+        "button": _("Schválit projekt"),
+    }
+    return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -291,7 +298,14 @@ def zahajit_v_terenu(request, ident_cely):
     else:
         form = ZahajitVTerenuForm(instance=projekt)
     return render(
-        request, "projekt/zahajit_v_terenu.html", {"form": form, "projekt": projekt}
+        request,
+        "projekt/transakce_v_terenu.html",
+        {
+            "form": form,
+            "object": projekt,
+            "title": "Zahájení v terénu",
+            "header": "Zahájení v terénu",
+        },
     )
 
 
@@ -316,7 +330,14 @@ def ukoncit_v_terenu(request, ident_cely):
     else:
         form = UkoncitVTerenuForm(instance=projekt)
     return render(
-        request, "projekt/ukonceni_v_terenu.html", {"form": form, "projekt": projekt}
+        request,
+        "projekt/transakce_v_terenu.html",
+        {
+            "form": form,
+            "object": projekt,
+            "title": "Ukončení v terénu",
+            "header": "Ukončení v terénu",
+        },
     )
 
 
@@ -340,7 +361,7 @@ def uzavrit(request, ident_cely):
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
         logger.debug(warnings)
-        context = {"projekt": projekt}
+        context = {"object": projekt}
         if warnings:
             context["warnings"] = []
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
@@ -348,8 +369,11 @@ def uzavrit(request, ident_cely):
                 context["warnings"].append((key, value))
         else:
             pass
+        context["title"] = _("Uzavření projektu")
+        context["header"] = _("Uzavření projektu")
+        context["button"] = _("Uzavřít projekt")
 
-        return render(request, "projekt/uzavrit.html", context)
+        return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -376,7 +400,7 @@ def archivovat(request, ident_cely):
     else:
         warnings = projekt.check_pred_archivaci()
         logger.debug(warnings)
-        context = {"projekt": projekt}
+        context = {"object": projekt}
         if warnings:
             context["warnings"] = []
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ARCHIVOVAT)
@@ -384,7 +408,10 @@ def archivovat(request, ident_cely):
                 context["warnings"].append((key, value))
         else:
             pass
-    return render(request, "projekt/archivovat.html", context)
+    context["title"] = _("Archivace projektu")
+    context["header"] = _("Archivace projektu")
+    context["button"] = _("Archivovat projekt")
+    return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -439,8 +466,13 @@ def zrusit(request, ident_cely):
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
         return redirect("/projekt/detail/" + ident_cely)
     else:
-        pass
-    return render(request, "projekt/zrusit.html", {"projekt": projekt})
+        context = {
+            "object": projekt,
+            "title": _("Zrušení projektu"),
+            "header": _("Zrušení projektu"),
+            "button": _("Zrušit projekt"),
+        }
+    return render(request, "core/transakce.html", context)
 
 
 @login_required

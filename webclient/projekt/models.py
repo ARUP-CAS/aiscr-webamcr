@@ -205,7 +205,8 @@ class Projekt(models.Model):
 
     def set_archivovany(self, user):
         self.stav = PROJEKT_STAV_ARCHIVOVANY
-        Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie)
+        Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
+        self.save()
 
     def set_navrzen_ke_zruseni(self, user, poznamka):
         self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
@@ -214,11 +215,13 @@ class Projekt(models.Model):
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
-        )
+        ).save()
+        self.save()
 
     def set_zruseny(self, user):
         self.stav = PROJEKT_STAV_ZRUSENY
-        Historie(typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie)
+        Historie(typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie).save()
+        self.save()
 
     def set_vracen(self, user, new_state, poznamka):
         self.stav = new_state
@@ -227,7 +230,8 @@ class Projekt(models.Model):
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
-        )
+        ).save()
+        self.save()
 
     def set_znovu_zapsan(self, user, poznamka):
         self.stav = PROJEKT_STAV_ZAPSANY
@@ -236,12 +240,13 @@ class Projekt(models.Model):
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
-        )
+        ).save()
+        self.save()
 
     def check_pred_archivaci(self):
         result = {}
         for akce in self.akce_set.all():
-            if akce.stav != AZ_STAV_ARCHIVOVANY:
+            if akce.archeologicky_zaznam.stav != AZ_STAV_ARCHIVOVANY:
                 result[akce.archeologicky_zaznam.ident_cely] = _(
                     "Akce musí být archivovaná!"
                 )
@@ -270,7 +275,9 @@ class Projekt(models.Model):
         if does_not_have_event:
             result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
         for a in self.akce_set.all():
-            result[a.archeologicky_zaznam.ident_cely] = a.check_pred_odeslanim()
+            akce_warnings = a.check_pred_odeslanim()
+            if akce_warnings:
+                result[_("Akce") + a.archeologicky_zaznam.ident_cely] = akce_warnings
         return result
 
     def parse_ident_cely(self):
