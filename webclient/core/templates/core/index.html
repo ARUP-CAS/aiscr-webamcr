@@ -7,7 +7,7 @@
 {% block content %}
   <div class="row app-cards-row mb-3">
     <div class="col">
-      <div class="card app-card-entity app-entity-projekt" data-toggle="collapse" data-target="#collapseExample">
+      <div class="card app-card-entity app-entity-projekt">
         <div class="card-body">
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
@@ -38,9 +38,54 @@
     </div>
   </div>
 
-  <div class="collapse" id="collapseExample">
-    <div class="card card-body">
+  <div class="app-collapse-projekt collapse">
+    <div class="p-3">
+      <h4>{% trans "Projekty" %}</h4>
+      <hr />
+      Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
       Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
     </div>
   </div>
+
+  <div class="app-collapse-knihovna_3d collapse">
+    <div class="p-3">
+      <h4>{% trans "Knihovna 3D" %}</h4>
+      <hr />
+      Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+    </div>
+  </div>
+
+  <div class="app-collapse-samostatny_nalez collapse">
+    <div class="p-3">
+      <h4>{% trans "Samostatné nálezy" %}</h4>
+      <hr />
+      Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+    </div>
+  </div>
+
+  <script>
+    $(".app-entity-projekt").hover(
+      function() {
+        $('.app-collapse-projekt').collapse('show');
+      }, function() {
+        $('.app-collapse-projekt').collapse('hide');
+      }
+    );
+    $(".app-entity-knihovna_3d").hover(
+      function() {
+        $('.app-collapse-knihovna_3d').collapse('show');
+      }, function() {
+        $('.app-collapse-knihovna_3d').collapse('hide');
+      }
+    );
+    $(".app-entity-samostatny_nalez").hover(
+      function() {
+        $('.app-collapse-samostatny_nalez').collapse('show');
+      }, function() {
+        $('.app-collapse-samostatny_nalez').collapse('hide');
+      }
+    );
+  </script>
 {% endblock %}
