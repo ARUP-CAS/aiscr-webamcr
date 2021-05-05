@@ -5,5 +5,26 @@
 {% block title %}AMČR Homepage{% endblock %}
 
 {% block content %}
-  Hello {{ user.email }}
+  <div class="row">
+    <div class="col-sm-3">
+      <div class="card app-card-entity app-entity-projekt">
+        <div class="card-body">
+          
+        </div>
+        <div class="card-footer">
+          {% trans "Digitílní archiv" %}
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3 pl-0">
+      <div class="card app-card-entity app-entity-dokument">
+        <div class="card-body">
+          body
+        </div>
+        <div class="card-footer">
+          {% trans "Projekty" %}
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
