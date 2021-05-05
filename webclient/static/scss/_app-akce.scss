@@ -1,5 +1,10 @@
-// --- AKCE---
+// --- HOME---
 
-&.app-arch_z {
-  
+&.app-home {
+  .app-cards-row {
+    .col {
+      @extend .pr-0;
+      max-width: 200px;
+    }
+  }
 }

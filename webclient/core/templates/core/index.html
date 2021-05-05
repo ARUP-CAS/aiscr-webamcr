@@ -5,21 +5,31 @@
 {% block title %}AMČR Homepage{% endblock %}
 
 {% block content %}
-  <div class="row">
-    <div class="col-sm-3">
+  <div class="row app-cards-row">
+    <div class="col">
       <div class="card app-card-entity app-entity-projekt">
         <div class="card-body">
-          
+          <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
           {% trans "Digitílní archiv" %}
         </div>
       </div>
     </div>
-    <div class="col-sm-3 pl-0">
-      <div class="card app-card-entity app-entity-dokument">
+    <div class="col">
+      <div class="card app-card-entity app-entity-knihovna_3d">
         <div class="card-body">
-          body
+          <img src="{% static 'logo-am-mark.png' %}" />
+        </div>
+        <div class="card-footer">
+          {% trans "Projekty" %}
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card app-card-entity app-entity-samostatny_nalez">
+        <div class="card-body">
+          <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
           {% trans "Projekty" %}
