@@ -28,7 +28,7 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "Přihlásit" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "Přihlásit projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "Zahájit výzkum" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Ukončit terén" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}">{% trans "Spravovat akce" %}</a></li>

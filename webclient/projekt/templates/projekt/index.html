@@ -5,9 +5,72 @@
 {% block title %}Projekty{% endblock %}
 
 {% block content %}
+  <div class="app-entity-projekt">
+    {% include "toolbar_projekt.html" with projekt=projekt %}
 
-  Projekt homepage
-
+    <div class="row app-entity-cards mb-3">
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}" class="card app-card-entity app-entity-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Zapsat projekt" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}" class="card app-card-entity app-entity-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Přihlásit projekt" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-entity-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Zahájit výzkum" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-entity-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Ukončit terén" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}" class="card app-card-entity app-entity-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Spravovat akce" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-entity-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Uzavřít projekt" %}
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block script %}
