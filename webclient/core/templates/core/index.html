@@ -66,7 +66,7 @@
   </div>
 
   <script>
-    $(".app-entity-projekt").hover(
+    /* $(".app-entity-projekt").hover(
       function() {
         $('.app-collapse-projekt').collapse('show');
       }, function() {
@@ -86,6 +86,26 @@
       }, function() {
         $('.app-collapse-samostatny_nalez').collapse('hide');
       }
-    );
+    ); */
+
+      $(".app-entity-projekt").mouseleave(function(){
+        $(".app-collapse-projekt").hide();
+      });
+      $(".app-entity-projekt").mouseover(function(){
+        $(".app-collapse-projekt").show();
+      });
+      $(".app-entity-knihovna_3d").mouseleave(function(){
+        $(".app-collapse-knihovna_3d").hide();
+      });
+      $(".app-entity-knihovna_3d").mouseover(function(){
+        $(".app-collapse-knihovna_3d").show();
+      });
+      $(".app-entity-samostatny_nalez").mouseleave(function(){
+        $(".app-collapse-samostatny_nalez").hide();
+      });
+      $(".app-entity-samostatny_nalez").mouseover(function(){
+        $(".app-collapse-samostatny_nalez").show();
+      });
+
   </script>
 {% endblock %}
