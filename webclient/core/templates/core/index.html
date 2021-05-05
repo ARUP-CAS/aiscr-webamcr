@@ -5,14 +5,14 @@
 {% block title %}AMČR Homepage{% endblock %}
 
 {% block content %}
-  <div class="row app-cards-row">
+  <div class="row app-cards-row mb-3">
     <div class="col">
-      <div class="card app-card-entity app-entity-projekt">
+      <div class="card app-card-entity app-entity-projekt" data-toggle="collapse" data-target="#collapseExample">
         <div class="card-body">
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Digitílní archiv" %}
+          {% trans "Projekty" %}
         </div>
       </div>
     </div>
@@ -22,7 +22,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Projekty" %}
+          {% trans "Knihovna 3D" %}
         </div>
       </div>
     </div>
@@ -32,9 +32,15 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Projekty" %}
+          {% trans "Samostatné nálezy" %}
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="collapse" id="collapseExample">
+    <div class="card card-body">
+      Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
     </div>
   </div>
 {% endblock %}

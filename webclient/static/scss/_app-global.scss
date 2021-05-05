@@ -302,7 +302,7 @@ form {
         right: 0;
         background-image: url('/static/static/img/bg-vrstevnice.png');
         background-repeat: no-repeat;
-        background-size: 160px;
+        background-size: 180px;
         background-position: right bottom;
         opacity: .3;
       }
@@ -314,20 +314,8 @@ form {
       font-family: museo;
     }
 
-   /*  img {
-      margin-top: 20px;
-      visibility: hidden;
-      width: 80px;
-    }
-
-    &:hover {
-      img {
-        visibility: visible;
-      }
-    } */
-
     img {
-      margin-top: 30px;
+      margin-top: 50px;
       width: 60px;
       transition: transform .5s ease;
       opacity: 0;
@@ -335,7 +323,7 @@ form {
 
     &:hover {
       img {
-        transform: scale(1.2);
+        transform: scale(1.4);
         opacity: unset;
       }
     }
