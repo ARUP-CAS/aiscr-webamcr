@@ -53,12 +53,14 @@ $app-logo-sidebar-height: 60px !default;
 $app-logo-nosidebar-height: 60px !default;
 $app-form-control-fix-height: 31px !default;
 
+// card
+$app-card-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !default;
+$app-card-shadow-hover: 0 0.5rem 1rem rgba(0,0,0,.2) !default;
+
 // card form
 $app-card-form-header-height: 40px !default;
 $app-card-form-header-btn-height: 100% !default;
 $app-card-form-header-btn-border-color: $gray-300 !default;
-$app-card-form-shadow: 0 0.5rem 1rem rgba(0,0,0,.1) !default;
-$app-card-form-shadow-hover: 0 0.5rem 1rem rgba(0,0,0,.2) !default;
 
 // navbar
 $app-navbar-height: 56px !default;
