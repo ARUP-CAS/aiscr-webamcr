@@ -36,7 +36,9 @@
             <span class="bs-stepper-circle">0</span>
             <span class="bs-stepper-label">
               {% trans "Oznámený" %}
-              <span class="app-stepper-date">{{ history_dates.datum_oznameni|date:'Y/m/d'|default_if_none:"" }}</span>
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_oznameni.uzivatel }}">
+                {{ history_dates.datum_oznameni.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
             </span>
           </button>
         </div>
@@ -46,7 +48,9 @@
             <span class="bs-stepper-circle">1</span>
             <span class="bs-stepper-label">
               {% trans "Zapsaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zapsani.uzivatel }}">
+                {{ history_dates.datum_zapsani.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
             </span>
           </button>
         </div>
@@ -56,7 +60,9 @@
             <span class="bs-stepper-circle">2</span>
             <span class="bs-stepper-label">
               {% trans "Přihlášený" %}
-              <span class="app-stepper-date">{{ history_dates.datum_prihlaseni|date:'Y/m/d'|default_if_none:"" }}</span>
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_prihlaseni.uzivatel }}">
+                {{ history_dates.datum_prihlaseni.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
             </span>
           </button>
         </div>
@@ -66,8 +72,8 @@
             <span class="bs-stepper-circle">3</span>
             <span class="bs-stepper-label">
               {% trans "Zahájen v terénu" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">
-                {{ history_dates.datum_zahajeni_v_terenu|date:'Y/m/d'|default_if_none:"" }}
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zahajeni_v_terenu.uzivatel }}">
+                {{ history_dates.datum_zahajeni_v_terenu.datum|date:'Y/m/d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -78,8 +84,8 @@
             <span class="bs-stepper-circle">4</span>
             <span class="bs-stepper-label">
               {% trans "Ukončen v terénu" %}
-              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="Zobrazit vice informaci v tooltipu">
-                {{ history_dates.datum_ukonceni_v_terenu|date:'Y/m/d'|default_if_none:"" }}
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_ukonceni_v_terenu.uzivatel }}">
+                {{ history_dates.datum_ukonceni_v_terenu.datum|date:'Y/m/d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -90,7 +96,9 @@
             <span class="bs-stepper-circle">5</span>
             <span class="bs-stepper-label">
               {% trans "Uzavřený" %}
-              <span class="app-stepper-date">{{ history_dates.datum_uzavreni|date:'Y/m/d'|default_if_none:"" }}</span>
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_uzavreni.uzivatel }}">
+                {{ history_dates.datum_uzavreni.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
             </span>
           </button>
         </div>
@@ -100,7 +108,9 @@
             <span class="bs-stepper-circle">6</span>
             <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_archivace|date:'Y/m/d'|default_if_none:"" }}</span>
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_archivace.uzivatel }}">
+                {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
             </span>
           </button>
         </div>
@@ -114,17 +124,8 @@
         </div>
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <div class="dropdown-menu" aria-labelledby="others">
-              <a class="dropdown-item" href="#">{% trans "Smazat projekt" %}</a>
-              <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
-              <a class="dropdown-item" href="#">{% trans "Expertní list" %}</a>
-              <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
-            </div>
             <button class="btn app-entity-projekt" type="button" rel="tooltip" data-placement="top" title="{% trans 'Nastavení' %}">
               <span class="material-icons">settings</span>
-            </button>
-            <button class="btn app-entity-projekt" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-              <span class="material-icons">more_vert</span>
             </button>
             <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
               <span class="material-icons">edit</span>

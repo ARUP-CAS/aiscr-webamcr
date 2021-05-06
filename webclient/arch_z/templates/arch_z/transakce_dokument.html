@@ -2,12 +2,12 @@
 {% load i18n %}
 {% load static %}
 
-{% block title %}{% trans "Odpojení dokumentu " %}{{ object.dokument.ident_cely }}{% endblock %}
+{% block title %}{{ title }} {{ object.dokument.ident_cely }}{% endblock %}
 {% block head %}
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Skutečně odpojit dokument " %}{{ object.dokument.ident_cely }}?</h1>
+  <h1>{{ header }} {{ object.dokument.ident_cely }}?</h1>
 
 
   <form method="post">
@@ -19,7 +19,7 @@
         {% endfor %}
       </ul>
     {% endif %}
-    <button type="submit" class="btn btn-primary">{% trans "Odpojit dokument" %}</button>
+    <button type="submit" class="btn btn-primary">{{ button }} </button>
   </form>
 
 {% endblock %}

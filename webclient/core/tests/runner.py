@@ -81,6 +81,7 @@ KATASTR_ODROVICE_ID = 150
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
+EXISTING_PROJECT_IDENT = "C-202000001"
 EXISTING_EVENT_IDENT = "C-202000001A"
 EXISTING_DOCUMENT_ID = 123654
 
@@ -268,10 +269,9 @@ class AMCRTestRunner(BaseRunner):
         )
         user.save()
         # PROJEKT
-        existing_ident = "C-202000001"
         p = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
-            ident_cely=existing_ident,
+            ident_cely=EXISTING_PROJECT_IDENT,
             stav=PROJEKT_STAV_ZAHAJENY_V_TERENU,
         )
         p.save()
