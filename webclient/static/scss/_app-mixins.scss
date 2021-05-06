@@ -103,6 +103,16 @@
         }
       }
 
+      // entity card
+      .app-card-entity {
+        background-color: $color;
+
+        .card-footer {
+          background-color: $white;
+          color: $color;
+        }
+      }
+
       // button color
       .btn-primary {
         border-color: $color;

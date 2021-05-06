@@ -10,7 +10,7 @@
 
     <div class="row app-entity-cards mb-3">
       <div class="col">
-        <a href="#" class="card app-card-entity app-card-zapsat-projekt app-entity-projekt"><!-- musi se doplnit link -->
+        <a href="#" class="card app-card-entity app-card-zapsat-projekt"><!-- musi se doplnit link -->
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}" class="card app-card-entity app-card-prihlasit-projekt app-entity-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}" class="card app-card-entity app-card-prihlasit-projekt">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-zahajit-vyzkum app-entity-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-zahajit-vyzkum">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-ukoncit-teren app-entity-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-ukoncit-teren">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -50,7 +50,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}" class="card app-card-entity app-card-spravovat-akce app-entity-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}" class="card app-card-entity app-card-spravovat-akce">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -60,7 +60,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-uzavrit-projekt app-entity-projekt">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-uzavrit-projekt">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
