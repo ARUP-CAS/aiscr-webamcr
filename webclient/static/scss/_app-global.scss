@@ -53,6 +53,10 @@
   }
 }
 
+.app-font-museo {
+  font-family: museo;
+}
+
 // material icons behavior in bootstrap elements
 .btn,
 .nav-link {
@@ -266,6 +270,7 @@ form {
     }
   }
 
+  // dokumentacni jednotka
   &.app-card-dokumentacni-jednotka {
     min-height: 300px;
 
@@ -280,18 +285,6 @@ form {
 
     &:hover {
       box-shadow: $app-card-form-shadow-hover;
-    }
-  }
-
-  &.app-card-entity {
-    @include setEntityColor("card");
-    @extend .h-100, .border-0;
-    min-height: 400px;
-    text-align: center;
-
-    .card-footer {
-      font-size: 20px;
-      font-weight: 300;
     }
   }
 }
