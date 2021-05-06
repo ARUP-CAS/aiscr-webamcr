@@ -30,7 +30,9 @@
           <span class="bs-stepper-circle">1</span>
           <span class="bs-stepper-label">
             {% trans "Rozepsaná" %}
-            <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zapsani.uzivatel }}">
+              {{ history_dates.datum_zapsani.datum|date:'Y/m/d'|default_if_none:"" }}
+            </span>
           </span>
         </button>
       </div>
@@ -40,7 +42,9 @@
           <span class="bs-stepper-circle">2</span>
           <span class="bs-stepper-label">
             {% trans "Odeslaná" %}
-            <span class="app-stepper-date">{{ history_dates.datum_odeslani|date:'Y/m/d'|default_if_none:"" }}</span>
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_odeslani.uzivatel }}">
+              {{ history_dates.datum_odeslani.datum|date:'Y/m/d'|default_if_none:"" }}
+            </span>
           </span>
         </button>
       </div>
@@ -50,7 +54,9 @@
           <span class="bs-stepper-circle">3</span>
           <span class="bs-stepper-label">
             {% trans "Archivovaná" %}
-            <span class="app-stepper-date">{{ history_dates.datum_archivace|date:'Y/m/d'|default_if_none:"" }}</span>
+            <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_archivace.uzivatel }}">
+              {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+            </span>
           </span>
         </button>
       </div>
@@ -204,7 +210,7 @@
                   <a href="#" class="flex-fill app-entity-color" onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
                     <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                     {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
-                  </a>   
+                  </a>
                 </div>
                 {% if j.komponenty.komponenty.all %}
                   <ul class="app-list-group-in">
@@ -408,15 +414,13 @@
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-            <span class="material-icons">more_vert</span>
+            <span class="material-icons">add</span>
           </button>
           <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="{% url 'dokument:zapsat' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
             <a class="dropdown-item" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">{% trans "Připojit existující dokument" %}</a>
-            <a class="dropdown-item" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">{% trans "Připojit existující projektový dokument" %}</a>
+            <a class="dropdown-item" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">{% trans "Připojit existující dokument z projektu" %}</a>
           </div>
-          <a class="btn app-entity-projekt" href="{% url 'dokument:zapsat' zaznam.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Přidat dokument' %}">
-            <span class="material-icons">add</span>
-          </a>
         </div>
       </div>
     </div>

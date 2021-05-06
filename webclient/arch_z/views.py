@@ -504,8 +504,14 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
             )
         return render(
             request,
-            "arch_z/odpojit_dokument.html",
-            {"object": relace_dokumentu[0], "warnings": warnings},
+            "arch_z/transakce_dokument.html",
+            {
+                "object": relace_dokumentu[0],
+                "warnings": warnings,
+                "title": _("Odpojení dokumentu"),
+                "header": _("Odpojení dokumentu"),
+                "button": _("Odpojit dokument"),
+            },
         )
 
 

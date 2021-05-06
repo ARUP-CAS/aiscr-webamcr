@@ -39,6 +39,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from django.db import models
+from django.utils.translation import gettext as _
 from uzivatel.models import User
 
 
@@ -85,10 +86,12 @@ class Historie(models.Model):
         (VRACENI_EXT_ZD, "Vrácení externí zdroj"),
     )
 
-    datum_zmeny = models.DateTimeField(auto_now_add=True)
-    typ_zmeny = models.TextField(choices=CHOICES)
-    uzivatel = models.ForeignKey(User, on_delete=models.CASCADE, db_column="uzivatel")
-    poznamka = models.TextField(blank=True, null=True)
+    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))
+    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"))
+    uzivatel = models.ForeignKey(
+        User, on_delete=models.CASCADE, db_column="uzivatel", verbose_name=_("Uživatel")
+    )
+    poznamka = models.TextField(blank=True, null=True, verbose_name=_("Poznámka"))
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
     )
@@ -121,12 +124,13 @@ class HistorieVazby(models.Model):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type):
-        resp = None
+        resp = {}
         tranzakce_list = (
             self.historie_set.filter(typ_zmeny=transaction_type)
             .only("datum_zmeny")
             .order_by("-datum_zmeny")
         )
         if len(tranzakce_list) > 0:
-            resp = tranzakce_list[0].datum_zmeny
+            resp["datum"] = tranzakce_list[0].datum_zmeny
+            resp["uzivatel"] = tranzakce_list[0].uzivatel
         return resp

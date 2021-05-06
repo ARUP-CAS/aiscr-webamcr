@@ -35,6 +35,7 @@
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}">{% trans "Smazat dokument" %}</a>
+          <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "Historie" %}</a>
         </div>
       </div>
     </div>

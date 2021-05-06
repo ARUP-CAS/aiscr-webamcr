@@ -31,6 +31,7 @@ urlpatterns = [
     path("adb/", include("adb.urls")),
     path("komponenta/", include("komponenta.urls")),
     path("dj/", include("dj.urls")),
+    path("historie/", include("historie.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
 
