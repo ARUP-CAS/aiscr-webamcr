@@ -37,7 +37,8 @@
       </a>
     </div>
   </div>
-  <div class="app-collapse-wrapper">
+
+  <div class="app-card-desc-wrapper">
     <div class="app-collapse-projekt collapse">
       <div class="p-3">
         <h4>{% trans "Projekty" %}</h4>
@@ -68,46 +69,23 @@
   
 
   <script>
-    /* $(".app-entity-projekt").hover(
-      function() {
-        $('.app-collapse-projekt').collapse('show');
-      }, function() {
-        $('.app-collapse-projekt').collapse('hide');
-      }
-    );
-    $(".app-entity-knihovna_3d").hover(
-      function() {
-        $('.app-collapse-knihovna_3d').collapse('show');
-      }, function() {
-        $('.app-collapse-knihovna_3d').collapse('hide');
-      }
-    );
-    $(".app-entity-samostatny_nalez").hover(
-      function() {
-        $('.app-collapse-samostatny_nalez').collapse('show');
-      }, function() {
-        $('.app-collapse-samostatny_nalez').collapse('hide');
-      }
-    ); */
-
       $(".app-entity-projekt").mouseleave(function(){
-        $(".app-collapse-projekt").hide();
+        $(".app-collapse-projekt").hide(100);
       });
       $(".app-entity-projekt").mouseover(function(){
-        $(".app-collapse-projekt").show();
+        $(".app-collapse-projekt").show(100);
       });
       $(".app-entity-knihovna_3d").mouseleave(function(){
-        $(".app-collapse-knihovna_3d").hide();
+        $(".app-collapse-knihovna_3d").hide(100);
       });
       $(".app-entity-knihovna_3d").mouseover(function(){
-        $(".app-collapse-knihovna_3d").show();
+        $(".app-collapse-knihovna_3d").show(100);
       });
       $(".app-entity-samostatny_nalez").mouseleave(function(){
-        $(".app-collapse-samostatny_nalez").hide();
+        $(".app-collapse-samostatny_nalez").hide(100);
       });
       $(".app-entity-samostatny_nalez").mouseover(function(){
-        $(".app-collapse-samostatny_nalez").show();
+        $(".app-collapse-samostatny_nalez").show(100);
       });
-
   </script>
 {% endblock %}
