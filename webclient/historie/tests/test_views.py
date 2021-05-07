@@ -1,9 +1,9 @@
 import logging
 
 from core.tests.runner import (
-    EXISTING_DOCUMENT_ID,
     EXISTING_EVENT_IDENT,
     EXISTING_PROJECT_IDENT,
+    TESTOVACI_DOKUMENT_IDENT,
     add_middleware_to_request,
 )
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -51,5 +51,7 @@ class HistorieTests(TestCase):
         request = add_middleware_to_request(request, SessionMiddleware)
         request.session.save()
 
-        response = DokumentHistorieListView.as_view()(request, id=EXISTING_DOCUMENT_ID)
+        response = DokumentHistorieListView.as_view()(
+            request, ident_cely=TESTOVACI_DOKUMENT_IDENT
+        )
         self.assertEqual(200, response.status_code)

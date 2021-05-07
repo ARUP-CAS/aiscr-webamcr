@@ -202,6 +202,7 @@ class DokumentCast(models.Model):
         db_column="komponenty",
         blank=True,
         null=True,
+        related_name="casti_dokumentu",
     )
 
     class Meta:

@@ -54,13 +54,6 @@
         </div>
         <div class="float-md-right">
           <div class="btn-group" role="group">
-            <div class="dropdown-menu" aria-labelledby="others">
-              <a class="dropdown-item" href="{% url 'dokument:smazat' dokument.ident_cely %}">{% trans "Smazat dokument" %}</a>
-            </div>
-            <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-              <span class="material-icons">more_vert</span>
-            </button>
             <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
                data-placement="top" title="{% trans 'Upravit' %}">
               <span class="material-icons">edit</span>
@@ -98,11 +91,58 @@
       </div>
     </div>
 
-    <ul>
-    {% for cast in dokument.casti.all %}
-      <li>{{ cast.ident_cely }}</li>
-    {% endfor %}
-    </ul>
+    <div class="card app-card-form app-card-casti-dokumentu">
+      <div id="karta-casti-dokumentu" class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Části dokumentu" %}
+        </div>
+        <!--<div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <button class="btn" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top"
+                    title="{% trans 'Přidat část dokumentu' %}">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+        </div>-->
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for dc in dokument.casti.all %}
+            <li class="list-group-item">
+              <div class="d-flex align-items-center">
+                <a href="#" class="flex-fill app-entity-color"
+                   onclick="show_form('detail_dj_form_{{ dc.ident_cely }}')">
+                  <strong>{{ dc.ident_cely|last_x_letters:4 }}</strong>
+                </a>
+                <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
+                    ({{ dc.archeologicky_zaznam.ident_cely }})
+                </a>
+              </div>
+              {% if dc.komponenty.komponenty.all %}
+                <ul class="app-list-group-in">
+                  {% for k in dc.komponenty.komponenty.all %}
+                    <li>
+                      <div class="d-flex align-items-baseline">
+                        <a href="#" class="flex-fill mr-2 app-entity-color"
+                           onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
+                          {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+                        </a>
+                        <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+              {% empty %}
+              <div class="app-note">
+                <span class="material-icons">info</span>
+                {% trans "Dokument nemá žádné části dokumentu" %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
 
     <div class="card app-card-form">
       <div class="card-header">
