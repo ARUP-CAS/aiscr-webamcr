@@ -10,7 +10,7 @@ from heslar.models import Heslar
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
-from projekt.views import detail, edit, smazat
+from projekt.views import create, detail, edit, smazat
 from uzivatel.models import User
 
 
@@ -115,3 +115,23 @@ class UrlTests(TestCase):
         nalez.save()
         response = smazat(request, ident_cely=self.projekt.ident_cely)
         self.assertTrue("Projekt nelze smazat." in response.content.decode("utf-8"))
+
+    def test_post_create_success(self):
+        data = {
+            "csrfmiddlewaretoken": "NYrbj266E2EKwDd9FQ5Nj4mtBRqnxhkWdxVjSfoXePMaDHQ6cfLYiqJKcJ7mhhKH",
+            "typ_projektu": str(TYP_PROJEKTU_ZACHRANNY_ID),
+            "hlavni_katastr": str(KATASTR_ODROVICE_ID),
+            "planovane_zahajeni": "13.03.2021 - 21.03.2021",
+        }
+        request = self.factory.post("/projekt/create/", data)
+        request.user = self.existing_user
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request = add_middleware_to_request(request, MessageMiddleware)
+        request.session.save()
+
+        projects_before = Projekt.objects.all().count()
+        response = create(request)
+        projects_after = Projekt.objects.all().count()
+        self.assertEqual(302, response.status_code)
+        self.assertTrue("error" not in response.content.decode("utf-8"))
+        self.assertTrue(projects_before < projects_after)

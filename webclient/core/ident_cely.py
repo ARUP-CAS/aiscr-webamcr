@@ -41,9 +41,9 @@ def get_ident_consecutive_number(region: str, year: int) -> int:
     return number
 
 
-def get_permanent_project_ident(project: Projekt) -> str:
+def get_permanent_project_ident(hlavni_katastr: RuianKatastr) -> str:
     current_year = datetime.datetime.now().year
-    region = get_region_from_cadastre(project.hlavni_katastr)
+    region = get_region_from_cadastre(hlavni_katastr)
     number = get_ident_consecutive_number(region, current_year)
     return region + "-" + str(current_year) + "{0}".format(number).zfill(5)
 

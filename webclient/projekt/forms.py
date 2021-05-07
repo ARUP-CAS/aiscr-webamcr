@@ -53,6 +53,9 @@ class EditProjektForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
+            "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
         labels = {
             "typ_projektu": _("Typ projektu"),
@@ -106,13 +109,6 @@ class EditProjektForm(forms.ModelForm):
                                 Div("uzivatelske_oznaceni", css_class="col-sm-6"),
                                 css_class="row",
                             ),
-                            # FormActions(
-                            #   Submit(
-                            #      "save",
-                            #     "Upravit",
-                            #    css_class="app-entity-projekt-btn mb-n3",
-                            # ),
-                            # ),
                             css_class="col-sm-9",
                         ),
                         Div(

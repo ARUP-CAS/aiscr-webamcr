@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 import simplejson as json
 from arch_z.models import Akce
@@ -23,6 +22,7 @@ from core.constants import (
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
+    ZAPSANI_PROJ,
 )
 from core.decorators import allowed_user_groups
 from core.forms import VratitForm
@@ -43,6 +43,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import get_points_from_envelope
 from django.contrib import messages
@@ -57,6 +58,7 @@ from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from oznameni.models import Oznamovatel
 from projekt.filters import ProjektFilter
 from projekt.forms import (
     EditProjektForm,
@@ -89,7 +91,7 @@ def detail(request, ident_cely):
     )
     context["projekt"] = projekt
     typ_projektu = projekt.typ_projektu
-    if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+    if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
         context["oznamovatel"] = projekt.oznamovatel
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
@@ -141,6 +143,42 @@ def post_ajax_get_point(request):
         return JsonResponse({"points": back}, status=200)
     else:
         return JsonResponse({"points": []}, status=200)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def create(request):
+    if request.method == "POST":
+        form = EditProjektForm(request.POST)
+        if form.is_valid():
+            logger.debug("Form is valid")
+            lat = form.cleaned_data["latitude"]
+            long = form.cleaned_data["longitude"]
+            p = form.save(commit=False)
+            if long and lat:
+                p.geom = Point(long, lat)
+            p.ident_cely = get_permanent_project_ident(p.hlavni_katastr)
+            p.save()
+            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                # Vytvoreni dummy oznamovatele
+                oznamovatel = Oznamovatel()
+                oznamovatel.set_dummy_data(p)
+                oznamovatel.save()
+            p.set_zapsany(request.user)
+            form.save_m2m()
+
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            return redirect("projekt:detail", ident_cely=p.ident_cely)
+        else:
+            logger.debug("The form is not valid!")
+            logger.debug(form.errors)
+    else:
+        form = EditProjektForm()
+    return render(
+        request,
+        "projekt/edit.html",
+        {"form_projekt": form},
+    )
 
 
 @login_required
@@ -236,7 +274,7 @@ def schvalit(request, ident_cely):
         raise PermissionDenied()
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
-        projekt.ident_cely = get_permanent_project_ident(projekt)
+        projekt.ident_cely = get_permanent_project_ident(projekt.hlavni_katastr)
         logger.debug(
             "Projektu "
             + ident_cely
@@ -386,14 +424,7 @@ def archivovat(request, ident_cely):
         projekt.set_archivovany(request.user)
         projekt.save()
         # Removing personal information from the projekt announcement
-        value = "Údaj odstraněn (" + str(datetime.today().date()) + ")"
-        o = projekt.oznamovatel
-        o.oznamovatel = value
-        o.odpovedna_osoba = value
-        o.adresa = value
-        o.telefon = value
-        o.email = value
-        o.save()
+        projekt.oznamovatel.remove_data()
 
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
         return redirect("/projekt/detail/" + ident_cely)
@@ -522,11 +553,13 @@ def vratit_navrh_zruseni(request, ident_cely):
 
 
 def get_history_dates(historie_vazby):
+    # Transakce do stavu "Zapsan" jsou 2
+    schvaleni = (historie_vazby.get_last_transaction_date(SCHVALENI_OZNAMENI_PROJ),)
+    zapsani = historie_vazby.get_last_transaction_date(ZAPSANI_PROJ)
+
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
-        "datum_zapsani": historie_vazby.get_last_transaction_date(
-            SCHVALENI_OZNAMENI_PROJ
-        ),
+        "datum_zapsani": zapsani if zapsani else schvaleni,
         "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
         "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
             ZAHAJENI_V_TERENU_PROJ
@@ -541,7 +574,10 @@ def get_history_dates(historie_vazby):
 
 
 def get_detail_template_shows(projekt):
-    show_oznamovatel = projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
+    show_oznamovatel = (
+        projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
+        and projekt.has_oznamovatel()
+    )
     show_prihlasit = projekt.stav == PROJEKT_STAV_ZAPSANY
     show_vratit = PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY
     show_schvalit = projekt.stav == PROJEKT_STAV_OZNAMENY

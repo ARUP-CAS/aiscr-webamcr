@@ -22,9 +22,9 @@ from core.message_constants import (
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_VRACEN,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
-    ZAZNAM_USPECNE_VYTVOREN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
 from dal import autocomplete
 from django.contrib import messages
@@ -142,7 +142,7 @@ def zapsat(request, arch_z_ident_cely):
             extra_data.dokument = dokument
             extra_data.save()
 
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
 
         else:

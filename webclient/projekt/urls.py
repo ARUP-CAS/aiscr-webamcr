@@ -8,6 +8,7 @@ app_name = "projekt"
 urlpatterns = [
     path("", views.index, name="index"),
     path("detail/<str:ident_cely>", views.detail, name="detail"),
+    path("create", views.create, name="create"),
     path("edit/<str:ident_cely>", views.edit, name="edit"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
     path("list", ProjektListView.as_view(), name="list"),

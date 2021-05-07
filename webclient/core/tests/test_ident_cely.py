@@ -72,7 +72,7 @@ class IdentTests(TestCase):
         )
         p.save()
 
-        ident = get_permanent_project_ident(p)
+        ident = get_permanent_project_ident(p.hlavni_katastr)
         self.assertEqual(ident, "C-202100001")
 
     def test_get_temporary_project_ident(self):

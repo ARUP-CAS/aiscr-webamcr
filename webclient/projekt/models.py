@@ -22,10 +22,12 @@ from core.constants import (
     VRACENI_NAVRHU_ZRUSENI,
     VRACENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
+    ZAPSANI_PROJ,
 )
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -163,8 +165,10 @@ class Projekt(models.Model):
         ).save()
         self.save()
 
-    def set_zapsany(self):
-        pass
+    def set_zapsany(self, user):
+        self.stav = PROJEKT_STAV_ZAPSANY
+        Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
+        self.save()
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
@@ -295,6 +299,14 @@ class Projekt(models.Model):
         else:
             logger.warning("Cannot retrieve year from null ident_cely.")
         return permanent, region, year, number
+
+    def has_oznamovatel(self):
+        has_oznamovatel = False
+        try:
+            has_oznamovatel = self.oznamovatel is not None
+        except ObjectDoesNotExist:
+            pass
+        return has_oznamovatel
 
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})

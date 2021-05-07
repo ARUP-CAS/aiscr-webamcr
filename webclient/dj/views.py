@@ -7,9 +7,9 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPECNE_VYTVOREN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_USPESNE_VYTVOREN,
 )
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -57,7 +57,7 @@ def zapsat(request, arch_z_ident_cely):
         resp = dj.save()
         logger.debug(resp)
 
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPECNE_VYTVOREN)
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
