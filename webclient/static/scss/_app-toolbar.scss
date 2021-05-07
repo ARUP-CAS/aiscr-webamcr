@@ -1,7 +1,6 @@
 // --- BREADCRUMB ---
 
 .app-toolbar {
-  //@include setEntityColor(toolbar);
   @extend .d-flex, .pr-3;
   height: $app-toolbar-height;
   margin: -#{$spacer-3} -#{$spacer-3} #{$spacer-3} -#{$spacer-3};

@@ -19,81 +19,7 @@
 // set entity color
 @mixin setEntityColor($type) {
   @each $entity, $color in $entities {
-    @if ($type == buttonFormHeader) {
-      &.app-entity-#{$entity} {
-        &:hover {
-          background-color: $color !important;
-          color: $white;
-        }
-      }    
-    } @else if ($type == button) {
-      &.app-entity-#{$entity}-btn {
-        @extend .border-0;
-        background-color: $color;
-        color: $white;
-
-        &:hover {
-          background-color: darken($color, 10);
-        }
-      }    
-    } @else if ($type == stepper) {
-      &.app-entity-#{$entity} {
-        .bs-stepper-circle {
-          background-color: $color;
-        }
-
-        .bs-stepper-label {
-          color: $color;
-        }
-      } 
-    } @else if ($type == toolbar) {
-      &.app-entity-#{$entity} {
-        background-color: rgba($color, .1);
-
-        .app-left {
-          .app-entity-title {
-            background-color: $color;
-  
-            &:after {
-              border-left-color: $color;
-            }
-          }
-
-          .app-entity-item {
-            color: $color;
-          }
-        }
-
-        .app-right {
-          .btn {
-            color: $color;
-            border-left-color: rgba($color, .3) !important;
-  
-            &:hover {
-              background-color: $color;
-              color: $white;
-            } 
-          }
-        }
-      } 
-    } @else if ($type == tableRow) {
-      &.app-entity-#{$entity} {
-        td {
-          a {
-            color: $color !important;
-
-            .material-icons {
-              color: $color;
-            }
-          }
-
-          .badge {
-            background-color: $color;
-            color: $white;
-          }
-        }
-      } 
-    } @else if ($type == card) {
+    @if ($type == card) {
       &.app-entity-#{$entity} {
         background-color: $color;
 
@@ -174,6 +100,16 @@
               }
             }
           }
+        }
+      }
+
+      // entity card
+      .app-card-entity {
+        background-color: $color;
+
+        .card-footer {
+          background-color: $white;
+          color: $color;
         }
       }
 

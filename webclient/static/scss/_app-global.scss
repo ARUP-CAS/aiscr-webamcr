@@ -45,11 +45,11 @@
   }
 }
 
-.app-card-form-shadow {
-  box-shadow: $app-card-form-shadow;
+.app-card-shadow {
+  box-shadow: $app-card-shadow;
 
   &:hover {
-    box-shadow: $app-card-form-shadow-hover;
+    box-shadow: $app-card-shadow-hover;
   }
 }
 
@@ -71,7 +71,6 @@
 }
 
 .btn {
-  //@include setEntityColor(button);
   &.collapsed {
     .app-icon-expand {
       transition: all 0.4s ease;
@@ -89,8 +88,6 @@ table {
   font-size: $font-size-sm;
 
   tr {
-    // set behavior of the elements in entity table row
-    //@include setEntityColor(tableRow);
     $app-ident-cely: 150px;
 
     th {
@@ -241,7 +238,6 @@ form {
           }
 
           .btn {
-            //@include setEntityColor(buttonFormHeader);
             border-radius: 0;
             border: 0;
             border-left: 1px solid $app-card-form-header-btn-border-color;
@@ -268,6 +264,14 @@ form {
         @extend .w-100, .rounded, .h-100;
       }
     }
+
+    &:not(.app-card-inner) {
+      box-shadow: $app-card-shadow;
+  
+      &:hover {
+        box-shadow: $app-card-shadow-hover;
+      }
+    }
   }
 
   // dokumentacni jednotka
@@ -277,14 +281,6 @@ form {
     .card-body {
       max-height: 300px;
       overflow-y: auto;
-    }
-  }
-
-  &:not(.app-card-inner) {
-    box-shadow: $app-card-form-shadow;
-
-    &:hover {
-      box-shadow: $app-card-form-shadow-hover;
     }
   }
 }
