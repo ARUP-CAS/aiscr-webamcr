@@ -273,6 +273,7 @@ class AMCRTestRunner(BaseRunner):
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
             ident_cely=EXISTING_PROJECT_IDENT,
             stav=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+            hlavni_katastr=praha,
         )
         p.save()
         oznamovatel = Oznamovatel(

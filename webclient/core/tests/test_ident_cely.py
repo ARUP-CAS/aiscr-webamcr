@@ -9,6 +9,7 @@ from core.ident_cely import (
     get_temporary_project_ident,
 )
 from core.tests.runner import (
+    KATASTR_ODROVICE_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     PRESNOST_DESITKY_METRU_ID,
     RADA_DOKUMENTU_TEXT_ID,
@@ -94,16 +95,26 @@ class IdentTests(TestCase):
     def test_get_ident_consecutive_number(self):
         # Insert some projects to the database
         zachranny_typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
+        katastr_odrovice = RuianKatastr.objects.get(id=KATASTR_ODROVICE_ID)
         Projekt(
-            stav=0, typ_projektu=zachranny_typ_projektu, ident_cely="M-202000003"
+            stav=0,
+            typ_projektu=zachranny_typ_projektu,
+            ident_cely="M-202000003",
+            hlavni_katastr=katastr_odrovice,
         ).save()
         Projekt(
-            stav=0, typ_projektu=zachranny_typ_projektu, ident_cely="M-202000002"
+            stav=0,
+            typ_projektu=zachranny_typ_projektu,
+            ident_cely="M-202000002",
+            hlavni_katastr=katastr_odrovice,
         ).save()
         number = get_ident_consecutive_number("M", 2020)
         self.assertEqual(number, 4)
         Projekt(
-            stav=0, typ_projektu=zachranny_typ_projektu, ident_cely="M-202000006"
+            stav=0,
+            typ_projektu=zachranny_typ_projektu,
+            ident_cely="M-202000006",
+            hlavni_katastr=katastr_odrovice,
         ).save()
         number = get_ident_consecutive_number("M", 2020)
         self.assertEqual(number, 7)

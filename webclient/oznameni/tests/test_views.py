@@ -29,8 +29,8 @@ class UrlTests(TestCase):
             "oznaceni_stavby": "Zahrada A",
             "souhlas": "on",
             "g-recaptcha-response": "03AGdBq27IRpUJzEs-legIVY7uue3HQ",
-            "latitude": "50.106212483846356",
-            "longitude": "14.496384859085085",
+            "latitude": "50.089616",
+            "longitude": "14.417222",
         }
         request = self.factory.post("/oznameni/", data)
         response = index(request)

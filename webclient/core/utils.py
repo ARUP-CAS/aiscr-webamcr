@@ -31,9 +31,17 @@ def get_cadastre_from_point(point):
     )
     try:
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
+        logger.debug(
+            "Point: "
+            + str(point[0])
+            + ", "
+            + str(point[1])
+            + " cadastre: "
+            + str(type(katastr))
+        )
         return katastr
     except IndexError:
-        logger.debug("Could not find cadastre for pont: " + str(point))
+        logger.error("Could not find cadastre for pont: " + str(point))
         return None
 
 

@@ -39,6 +39,7 @@ def index(request):
                 float(request.POST.get("latitude")),
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
+            logger.debug(p)
             p.save()
             if p.hlavni_katastr is not None:
                 p.ident_cely = get_temporary_project_ident(

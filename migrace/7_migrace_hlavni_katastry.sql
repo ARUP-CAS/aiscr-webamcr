@@ -5,6 +5,7 @@ alter table projekt add constraint projekt_hlavni_katastr_fkey foreign key (hlav
 update projekt set hlavni_katastr = sel.k from (select projekt_id as p, katastr_id as k from projekt_katastr pk where pk.hlavni = true) as sel where sel.p = id;
 delete from projekt_katastr where hlavni = true;
 alter table projekt_katastr drop column hlavni;
+alter table projekt alter column hlavni_katastr set not null;
 
 
 -- Zmena ulozeni hlavniho katastru u archeologickeho zaznamu
