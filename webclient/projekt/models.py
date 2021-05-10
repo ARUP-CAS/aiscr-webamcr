@@ -131,8 +131,6 @@ class Projekt(models.Model):
         on_delete=models.DO_NOTHING,
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
-        null=True,
-        blank=True,
         verbose_name=_("Hlavní katastry"),
     )
 

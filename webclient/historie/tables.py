@@ -13,9 +13,10 @@ class HistorieTable(tables.Table):
             "poznamka",
         )
 
-    @staticmethod
-    def render_datum_zmeny(value):
-        if value:
-            return value.strftime("%Y/%m/%d, %H:%M:%S")
-        else:
-            return "—"
+    # TODO: This form of printing does not respect django timezone
+    # @staticmethod
+    # def render_datum_zmeny(value):
+    #     if value:
+    #         return value.strftime("%Y/%m/%d, %H:%M:%S")
+    #     else:
+    #         return "—"

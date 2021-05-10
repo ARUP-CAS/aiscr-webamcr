@@ -137,7 +137,7 @@ def post_upload(request):
             vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
             mimetype=get_mime_type(old_name),
             size_bytes=soubor.size,
-            typ_souboru=OTHER_PROJECT_FILES,
+            typ_souboru=OTHER_PROJECT_FILES,  # TODO jak pridelovat spravny typ souboru??
         )
         duplikat = Soubor.objects.filter(nazev=s.nazev)
         if not duplikat.exists():

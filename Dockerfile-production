@@ -7,20 +7,17 @@ FROM ubuntu:focal
 RUN apt-get update
 #RUN apt-get upgrade -y
 
-ENV TZ 'GB'
-RUN echo $TZ > /etc/timezone && \
-    apt-get install -y tzdata && \
-    rm /etc/localtime && \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-    dpkg-reconfigure -f noninteractive tzdata && \
-    apt-get clean
+ENV TZ 'Europe/Prague'
+RUN echo $TZ > /etc/timezone
+RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install GDAL dependencies
+RUN apt-get update
 RUN apt-get install -y python3-pip libgdal-dev locales
 
 # Ensure locales configured correctly
-RUN locale-gen en_GB.UTF-8
-ENV LC_ALL='en_GB.utf8'
+RUN locale-gen docker.utf8
+ENV LC_ALL='cs_CZ.utf8'
 
 # Set python aliases for python3
 RUN echo 'alias python=python3' >> ~/.bashrc
