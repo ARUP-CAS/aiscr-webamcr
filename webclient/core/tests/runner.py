@@ -7,7 +7,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     ROLE_ADMIN_ID,
 )
-from core.models import SouborVazby
+from core.models import ProjektSekvence, SouborVazby
 from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
@@ -102,6 +102,15 @@ class AMCRTestRunner(BaseRunner):
     def setup_databases(self, *args, **kwargs):
         temp_return = super(AMCRTestRunner, self).setup_databases(*args, **kwargs)
         print("Setting up my database content ...")
+
+        # Sekvence pro identifikatory
+        # Projekt
+        sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
+        projektove_sekvence = []
+        for rok in sekvence_roku:
+            projektove_sekvence.append(ProjektSekvence(rada="C", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(rada="M", rok=rok, sekvence=1))
+        ProjektSekvence.objects.bulk_create(projektove_sekvence)
 
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)

@@ -42,3 +42,20 @@ class Soubor(models.Model):
 
     def __str__(self):
         return self.nazev
+
+
+class ProjektSekvence(models.Model):
+    rada = models.CharField(max_length=1)
+    rok = models.IntegerField()
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "projekt_sekvence"
+
+
+# class AdbSekvence(models.Model):
+#     kladysm5 = models.OneToOneField(Kladysm5, models.DO_NOTHING)
+#     sekvence = models.IntegerField()
+#
+#     class Meta:
+#         db_table = 'adb_sekvence'

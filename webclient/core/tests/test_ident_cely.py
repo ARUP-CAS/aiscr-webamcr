@@ -1,13 +1,8 @@
 import datetime
 from decimal import Decimal
 
-from core.ident_cely import (
-    get_dokument_rada,
-    get_ident_consecutive_number,
-    get_permanent_project_ident,
-    get_region_from_cadastre,
-    get_temporary_project_ident,
-)
+from core.ident_cely import get_dokument_rada, get_temporary_project_ident
+from core.models import ProjektSekvence
 from core.tests.runner import (
     KATASTR_ODROVICE_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
@@ -73,8 +68,9 @@ class IdentTests(TestCase):
         )
         p.save()
 
-        ident = get_permanent_project_ident(p.hlavni_katastr)
-        self.assertEqual(ident, "C-202100001")
+        p.set_permanent_ident_cely()
+        p.save()
+        self.assertEqual(p.ident_cely, "C-202100001")
 
     def test_get_temporary_project_ident(self):
         year = datetime.datetime.now().year
@@ -88,36 +84,29 @@ class IdentTests(TestCase):
         ident = get_temporary_project_ident(p, region)
         self.assertEqual(ident, "X-M-" + str(year) + "00000")
 
-    def test_get_region_from_cadastre(self):
-        region = get_region_from_cadastre(RuianKatastr.objects.get(id=150))
-        self.assertEqual(region, "C")
-
-    def test_get_ident_consecutive_number(self):
+    def test_get_permanent_ident(self):
         # Insert some projects to the database
+        year = datetime.datetime.now().year
         zachranny_typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
         katastr_odrovice = RuianKatastr.objects.get(id=KATASTR_ODROVICE_ID)
         Projekt(
             stav=0,
             typ_projektu=zachranny_typ_projektu,
-            ident_cely="M-202000003",
+            ident_cely="C-X-202000003",
             hlavni_katastr=katastr_odrovice,
         ).save()
-        Projekt(
+        p = Projekt(
             stav=0,
             typ_projektu=zachranny_typ_projektu,
-            ident_cely="M-202000002",
+            ident_cely="C-X-202000002",
             hlavni_katastr=katastr_odrovice,
-        ).save()
-        number = get_ident_consecutive_number("M", 2020)
-        self.assertEqual(number, 4)
-        Projekt(
-            stav=0,
-            typ_projektu=zachranny_typ_projektu,
-            ident_cely="M-202000006",
-            hlavni_katastr=katastr_odrovice,
-        ).save()
-        number = get_ident_consecutive_number("M", 2020)
-        self.assertEqual(number, 7)
+        )
+        p.save()
+        p.set_permanent_ident_cely()
+        self.assertEqual(p.ident_cely, "C-" + str(year) + "00001")
+        s = ProjektSekvence.objects.filter(rok=year).filter(rada="C")[0]
+        # Over ze se sekvence inkrementla
+        self.assertEqual(s.sekvence, 2)
 
     def test_get_dokument_rada(self):
         material = Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID)

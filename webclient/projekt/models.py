@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from core.constants import (
@@ -24,7 +25,7 @@ from core.constants import (
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
 )
-from core.models import SouborVazby
+from core.models import ProjektSekvence, SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
@@ -305,6 +306,42 @@ class Projekt(models.Model):
         except ObjectDoesNotExist:
             pass
         return has_oznamovatel
+
+    def set_permanent_ident_cely(self):
+        current_year = datetime.datetime.now().year
+        region = self.hlavni_katastr.okres.kraj.rada_id
+        logger.debug(
+            "Region " + region + " of the cadastry: " + str(self.hlavni_katastr)
+        )
+        sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
+            0
+        ]
+
+        perm_ident_cely = (
+            region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+        )
+        # Loop through all of the idents that have been imported
+        while True:
+            if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
+                sequence.sekvence += 1
+                logger.warning(
+                    "Ident "
+                    + perm_ident_cely
+                    + " already exists, trying next number "
+                    + str(sequence.sekvence)
+                )
+                perm_ident_cely = (
+                    region
+                    + "-"
+                    + str(current_year)
+                    + "{0}".format(sequence.sekvence).zfill(5)
+                )
+            else:
+                break
+        self.ident_cely = perm_ident_cely
+        sequence.sekvence += 1
+        sequence.save()
+        self.save()
 
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})

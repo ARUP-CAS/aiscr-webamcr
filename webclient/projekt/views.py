@@ -26,7 +26,6 @@ from core.constants import (
 )
 from core.decorators import allowed_user_groups
 from core.forms import VratitForm
-from core.ident_cely import get_permanent_project_ident
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
@@ -157,7 +156,7 @@ def create(request):
             p = form.save(commit=False)
             if long and lat:
                 p.geom = Point(long, lat)
-            p.ident_cely = get_permanent_project_ident(p.hlavni_katastr)
+            p.set_permanent_ident_cely()
             p.save()
             if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Vytvoreni dummy oznamovatele
@@ -274,7 +273,7 @@ def schvalit(request, ident_cely):
         raise PermissionDenied()
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
-        projekt.ident_cely = get_permanent_project_ident(projekt.hlavni_katastr)
+        projekt.set_permanent_ident_cely()
         logger.debug(
             "Projektu "
             + ident_cely

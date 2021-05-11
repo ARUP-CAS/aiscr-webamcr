@@ -14,38 +14,11 @@ from core.exceptions import (
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from dokument.models import Dokument
-from heslar.models import HeslarDokumentTypMaterialRada, RuianKatastr
+from heslar.models import HeslarDokumentTypMaterialRada
 from pian.models import Pian
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
-
-
-def get_region_from_cadastre(cadastre: RuianKatastr) -> str:
-    return cadastre.okres.kraj.rada_id
-
-
-def get_ident_consecutive_number(region: str, year: int) -> int:
-    matching_string = region + "-" + str(year)
-    projects = (
-        Projekt.objects.filter(ident_cely__contains=matching_string)
-        .exclude(ident_cely__contains=IDENTIFIKATOR_DOCASNY_PREFIX)
-        .order_by("-ident_cely")
-    )
-    # Projects ordered descending will have the ident with the largest consecutive number
-    if projects:
-        perm, region, year, number = projects[0].parse_ident_cely()
-        number = int(number) + 1
-    else:
-        number = 1
-    return number
-
-
-def get_permanent_project_ident(hlavni_katastr: RuianKatastr) -> str:
-    current_year = datetime.datetime.now().year
-    region = get_region_from_cadastre(hlavni_katastr)
-    number = get_ident_consecutive_number(region, current_year)
-    return region + "-" + str(current_year) + "{0}".format(number).zfill(5)
 
 
 def get_temporary_project_ident(project: Projekt, region: str) -> str:
