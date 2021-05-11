@@ -9,6 +9,7 @@ RUN apt-get update
 
 ENV TZ 'Europe/Prague'
 RUN echo $TZ > /etc/timezone
+RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install GDAL dependencies
