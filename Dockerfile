@@ -7,7 +7,6 @@ FROM ubuntu:focal
 RUN apt-get update
 #RUN apt-get upgrade -y
 
-
 ENV TZ 'Europe/Prague'
 RUN echo $TZ > /etc/timezone
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata

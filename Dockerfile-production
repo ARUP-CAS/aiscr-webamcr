@@ -16,7 +16,7 @@ RUN apt-get update
 RUN apt-get install -y python3-pip libgdal-dev locales
 
 # Ensure locales configured correctly
-RUN locale-gen docker.utf8
+RUN locale-gen cs_CZ.utf8
 ENV LC_ALL='cs_CZ.utf8'
 
 # Set python aliases for python3
