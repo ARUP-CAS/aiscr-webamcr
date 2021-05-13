@@ -108,7 +108,7 @@ DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
 # Typy souboru
 IMPORTED_FILE: Final = "IMPORT"
 GENERATED_NOTIFICATION: Final = "AGPO"  # automaticky generována projektová oznameni
-PHOTO_DOCUMENTATION: Final = "FDN"  # fotodokumentace
+PHOTO_DOCUMENTATION: Final = "FDN"  # fotodokumentace - samostatne nalezy
 OTHER_DOCUMENT_FILES: Final = (
     "OSD"  # ostatní soubory dokumentace pri zápisu nového dokumentu
 )

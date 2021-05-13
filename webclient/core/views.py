@@ -5,7 +5,7 @@ import os
 from core.constants import (
     DOKUMENT_RELATION_TYPE,
     OTHER_PROJECT_FILES,
-    PROJEKT_RELATION_TYPE,
+    PROJEKT_RELATION_TYPE, OTHER_DOCUMENT_FILES,
 )
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.models import Soubor
@@ -104,13 +104,17 @@ def upload_file_dokument(request, ident_cely):
 
 @require_http_methods(["POST"])
 def post_upload(request):
-    logger.debug("Uploading file to project: " + request.POST["objectID"])
+    logger.debug("Uploading file to object: " + request.POST["objectID"])
     projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
     documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
+    typ_souboru = ""
     if projects.exists():
         objekt = projects[0]
+        typ_souboru = OTHER_PROJECT_FILES
     elif documents.exists():
         objekt = documents[0]
+        typ_souboru = OTHER_DOCUMENT_FILES
+    # TODO dokoncit upload samostatnych nalezu (FOTODOKUMENTACE)
     else:
         return JsonResponse(
             {
@@ -119,7 +123,6 @@ def post_upload(request):
             },
             status=500,
         )
-    logger.debug("Soubor bude pripojen k objektu " + objekt.ident_cely)
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
@@ -137,7 +140,7 @@ def post_upload(request):
             vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
             mimetype=get_mime_type(old_name),
             size_bytes=soubor.size,
-            typ_souboru=OTHER_PROJECT_FILES,  # TODO jak pridelovat spravny typ souboru??
+            typ_souboru=typ_souboru,
         )
         duplikat = Soubor.objects.filter(nazev=s.nazev)
         if not duplikat.exists():
@@ -146,7 +149,7 @@ def post_upload(request):
             return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
         else:
             logger.warning("File already exists on the server.")
-            # Find parent record
+            # Find parent record and send it to the user
             parent_ident = ""
             if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
                 parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
