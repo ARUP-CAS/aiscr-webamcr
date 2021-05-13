@@ -20,6 +20,7 @@
           <div class="card card-body">
             {{ filter.form|crispy }}
             <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
+            <a href="{% url 'projekt:list' %}">{% trans "Smazat filtr" %}</a>
           </div>
         </div>
       </form>

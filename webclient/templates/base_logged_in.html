@@ -27,6 +27,8 @@
         <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
+              <li><a href="{% url 'projekt:index' %}">{% trans "Domů" %}</a></li>
+              <li><a href="{% url 'projekt:create' %}">{% trans "Zapsat" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "Přihlásit projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "Zahájit výzkum" %}</a></li>
@@ -227,6 +229,17 @@
     $('[data-toggle="popover"]').popover({
       html : true
     });
+  </script>
+
+  <script>
+      // Open sidebar based on the url i am viewing
+      $(document).ready(function () {
+          if (window.location.href.indexOf("projekt") > -1) {
+              $('#collapseProjekty').collapse('show')
+          }
+          // TODO colapsovani dalsich casti
+      });
+
   </script>
 
 {% endblock %}

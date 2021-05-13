@@ -509,7 +509,7 @@ def zrusit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY:
+    if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
         form = VratitForm(request.POST)
@@ -578,7 +578,7 @@ def get_detail_template_shows(projekt):
         and projekt.has_oznamovatel()
     )
     show_prihlasit = projekt.stav == PROJEKT_STAV_ZAPSANY
-    show_vratit = PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_OZNAMENY
+    show_vratit = PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY
     show_schvalit = projekt.stav == PROJEKT_STAV_OZNAMENY
     show_zahajit = projekt.stav == PROJEKT_STAV_PRIHLASENY
     show_ukoncit = projekt.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU

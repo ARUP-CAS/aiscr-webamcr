@@ -12,6 +12,7 @@ from core.constants import (
 from django.forms import DateInput, Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
+    CharFilter,
     ChoiceFilter,
     DateFilter,
     ModelMultipleChoiceFilter,
@@ -31,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 class ProjektFilter(filters.FilterSet):
+
+    ident_cely = CharFilter(lookup_expr="icontains")
 
     oblast = ChoiceFilter(
         choices=OBLAST_CHOICES,
@@ -61,6 +64,14 @@ class ProjektFilter(filters.FilterSet):
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
+
+    # hlavni_katastr = MultipleChoiceFilter(
+    #     choices=RuianKatastr.objects.all().values_list("id", "nazev"),
+    #     label=_("Katastry"),
+    #     widget=SelectMultiple(
+    #         attrs={"class": "selectpicker", "data-live-search": "true"}
+    #     ),
+    # )
 
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
@@ -192,6 +203,7 @@ class ProjektFilter(filters.FilterSet):
 
     class Meta:
         model = Projekt
-        fields = {
-            "ident_cely": ["icontains"],
-        }
+        fields = [
+            "ident_cely",
+            # "hlavni_katastr",
+        ]
