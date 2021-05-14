@@ -57,9 +57,10 @@ from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
-from oznameni.models import Oznamovatel
+from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
+    CreateProjekForm,
     EditProjektForm,
     NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
@@ -148,35 +149,51 @@ def post_ajax_get_point(request):
 @require_http_methods(["GET", "POST"])
 def create(request):
     if request.method == "POST":
-        form = EditProjektForm(request.POST)
-        if form.is_valid():
+        form_projekt = CreateProjekForm(request.POST)
+        form_oznamovatel = OznamovatelForm(request.POST)
+        if form_projekt.is_valid():
             logger.debug("Form is valid")
-            lat = form.cleaned_data["latitude"]
-            long = form.cleaned_data["longitude"]
-            p = form.save(commit=False)
+            lat = form_projekt.cleaned_data["latitude"]
+            long = form_projekt.cleaned_data["longitude"]
+            p = form_projekt.save(commit=False)
             if long and lat:
                 p.geom = Point(long, lat)
             p.set_permanent_ident_cely()
             p.save()
-            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-                # Vytvoreni dummy oznamovatele
-                oznamovatel = Oznamovatel()
-                oznamovatel.set_dummy_data(p)
-                oznamovatel.save()
             p.set_zapsany(request.user)
-            form.save_m2m()
-
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-            return redirect("projekt:detail", ident_cely=p.ident_cely)
+            form_projekt.save_m2m()
+            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                # Vytvoreni oznamovatele
+                if form_oznamovatel.is_valid():
+                    oznamovatel = form_oznamovatel.save(commit=False)
+                    oznamovatel.projekt = p
+                    oznamovatel.save()
+                    messages.add_message(
+                        request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
+                    )
+                    return redirect("projekt:detail", ident_cely=p.ident_cely)
+                else:
+                    logger.debug("The form oznamovatel is not valid!")
+                    logger.debug(form_oznamovatel.errors)
+            else:
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
-            logger.debug("The form is not valid!")
-            logger.debug(form.errors)
+            logger.debug("The form projekt is not valid!")
+            logger.debug(form_projekt.errors)
     else:
-        form = EditProjektForm()
+        form_projekt = CreateProjekForm()
+        form_oznamovatel = OznamovatelForm()
     return render(
         request,
-        "projekt/edit.html",
-        {"form_projekt": form},
+        "projekt/create.html",
+        {
+            "form_projekt": form_projekt,
+            "form_oznamovatel": form_oznamovatel,
+            "title": _("Zápis projektu"),
+            "header": _("Zápis projektu"),
+            "button": _("Zapsat projekt"),
+        },
     )
 
 

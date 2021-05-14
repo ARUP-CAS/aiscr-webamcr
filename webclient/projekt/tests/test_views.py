@@ -123,6 +123,14 @@ class UrlTests(TestCase):
             "typ_projektu": str(TYP_PROJEKTU_ZACHRANNY_ID),
             "hlavni_katastr": str(KATASTR_ODROVICE_ID),
             "planovane_zahajeni": "13.03.2021 - 21.03.2021",
+            "podnet": "Tralala",
+            "lokalizace": "Helelelle",
+            "parcelni_cislo": 123,
+            "oznamovatel": "Nekdo",
+            "odpovedna_osoba": "Nekdo jiny",
+            "adresa": "123 street",
+            "telefon": "+420587456321",
+            "email": "tester@tester.tester",
         }
         request = self.factory.post("/projekt/create/", data)
         request.user = self.existing_user
@@ -136,3 +144,14 @@ class UrlTests(TestCase):
         self.assertEqual(302, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertTrue(projects_before < projects_after)
+
+    def test_get_create_success(self):
+        request = self.factory.get("/projekt/create")
+        request.user = self.existing_user
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request = add_middleware_to_request(request, MessageMiddleware)
+        request.session.save()
+
+        response = create(request)
+        self.assertEqual(200, response.status_code)
+        self.assertTrue("error" not in response.content.decode("utf-8"))

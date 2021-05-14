@@ -1,0 +1,92 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+  <script>
+		var global_csrftoken = '{{ csrf_token }}';
+		global_map_can_edit=false;
+	</script>
+		<!-- Map imports -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+		integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+		crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+		integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+		crossorigin="">
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+	<!-- Date picker imports -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment-with-locales.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-projekt">
+    {% include "toolbar_projekt.html" %}
+    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {{ header }}
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy form_projekt %}
+          <div id="id_oznamvatel_form">
+            {% crispy form_oznamovatel %}
+          </div>
+        </div>
+      </div>
+      <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script src="{% static 'mapa.js' %}"></script>
+  <script>
+      global_map_can_edit = true;
+      if (document.getElementById("id_latitude").value > 1) {
+          console.log("Adding point to map.")
+          addPointOnLoad(document.getElementById("id_latitude").value, document.getElementById("id_longitude").value, "Uživatelem zadaná poloha záměru");
+      } else {
+          console.log("Not adding point to map!")
+      }
+  </script>
+  <script>
+      $(document).ready(function () {
+          const selectElement = document.getElementById('id_typ_projektu');
+          const ZACHRANNY_OPTION = 1
+
+          function makeFieldDisabled(field, disabled){
+              $(field).prop('readonly', disabled);
+              $(field).prop('required', !disabled);
+          }
+
+          function makeOznamovatelDisabled(disabled){
+              makeFieldDisabled('#id_odpovedna_osoba', disabled)
+              makeFieldDisabled('#id_oznamovatel', disabled)
+              makeFieldDisabled('#id_adresa', disabled)
+              makeFieldDisabled('#id_telefon', disabled)
+              makeFieldDisabled('#id_email', disabled)
+          }
+
+          // On change pak podle toho co je vybrano
+          $(selectElement).on('changed.bs.select', function (e, clickedIndex) {
+              if (clickedIndex != ZACHRANNY_OPTION) {
+                  makeOznamovatelDisabled(true)
+              } else {
+                  makeOznamovatelDisabled(false)
+              }
+              $('.selectpicker').selectpicker('refresh');
+          });
+      })
+  </script>
+  <script src="{% static 'daterangepicker.js' %}"></script>
+{% endblock %}
