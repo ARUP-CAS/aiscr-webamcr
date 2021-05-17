@@ -180,6 +180,7 @@ def get_adb_ident(pian: Pian) -> str:
     MAXIMAL_ADBS: int = 999999
     last_digit_count = 6
     max_count = 0
+    # TODO rewrite so that max_count is from adb_sekvence.sekvence
     for adb in Adb.objects.filter(ident_cely__icontains=record_list):
         last_digits = int(adb.ident_cely[-last_digit_count:])
         if max_count < last_digits:

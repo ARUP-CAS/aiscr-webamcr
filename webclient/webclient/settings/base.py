@@ -246,3 +246,8 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     "compressor.finders.CompressorFinder",
 ]
+
+EMAIL_HOST = "192.168.254.17"
+EMAIL_PORT = "25"
+EAMIL_USE_TLS = True
+EMAIL_USE_SSL = False
