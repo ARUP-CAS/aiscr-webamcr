@@ -2,6 +2,7 @@ import logging
 
 from dal import autocomplete
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from pian.models import Pian
@@ -16,7 +17,7 @@ def detail(request):
     return render(request, "pian/detail.html", context)
 
 
-class PianAutocomplete(autocomplete.Select2QuerySetView):
+class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Pian.objects.all()
         if self.q:

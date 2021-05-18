@@ -1,5 +1,7 @@
 import logging
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 from core.message_constants import (
     FORM_NOT_VALID,
     OSOBA_JIZ_EXISTUJE,
@@ -17,7 +19,7 @@ from uzivatel.models import Osoba
 logger = logging.getLogger(__name__)
 
 
-class OsobaAutocomplete(autocomplete.Select2QuerySetView):
+class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Osoba.objects.all()
         if self.q:
