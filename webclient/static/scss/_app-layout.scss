@@ -6,7 +6,7 @@ body {
   @import "app-projekt";
   @import "app-akce";
 
-  &.app-login,
+  &.app-accounts,
   &.app-oznameni {
     &:not(.app-edit) {
       padding: $spacer-4 $spacer-3;
