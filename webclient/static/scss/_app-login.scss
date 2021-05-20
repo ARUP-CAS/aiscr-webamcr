@@ -31,7 +31,7 @@
         }
   
         input {
-          &[type="text"], &[type="password"] {
+          &[type="text"], &[type="password"], &[type="email"] {
             @extend .form-control;
           }
         }
