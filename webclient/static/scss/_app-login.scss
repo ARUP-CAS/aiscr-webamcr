@@ -24,10 +24,14 @@
     .card {
       @extend .border-0;
       text-align: center;
+
+      h1 {
+        @extend .app-heading-thin;
+      }
   
       form {
-        h1 {
-          @extend .app-heading-thin;
+        ul {
+          @extend .text-left;
         }
   
         input {
