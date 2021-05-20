@@ -88,7 +88,7 @@ update historie_vazby set typ_vazby='archeologicky_zaznam' where typ_vazby='akce
 -- Jeste jsem zapomel domigrovat tranzakce akci 3 a 7 na 4
 update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111);
 -- COMMENT: tahle query je nejaka pomala, nevim proc ... :(
-update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7);
+--update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7);
 
 -- Odstraneni tranzakce AKTUALIZACE z historie samostatnych nalezu
 delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny = 8);
