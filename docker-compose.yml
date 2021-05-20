@@ -7,7 +7,7 @@ services:
     command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
       - ./webclient:/code
-      # - C:/tmp_media:/vol/web
+      - ./vol/web:/vol/web
     ports:
       - "8000:8000"
     environment:
