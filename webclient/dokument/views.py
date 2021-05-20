@@ -38,7 +38,7 @@ from dokument.forms import (
     EditDokumentExtraDataForm,
     EditDokumentForm,
 )
-from dokument.models import Dokument, DokumentCast
+from dokument.models import Dokument, DokumentCast, DokumentExtraData
 from heslar.hesla import HESLAR_DOKUMENT_TYP
 from heslar.models import HeslarHierarchie
 
@@ -73,11 +73,14 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     dokument = Dokument.objects.get(ident_cely=ident_cely)
+    if not dokument.has_extra_data():
+        extra_data = DokumentExtraData(dokument=dokument)
+        extra_data.save()
+    else:
+        extra_data = dokument.extra_data
     if request.method == "POST":
         form_d = EditDokumentForm(request.POST, instance=dokument)
-        form_extra = EditDokumentExtraDataForm(
-            request.POST, instance=dokument.extra_data
-        )
+        form_extra = EditDokumentExtraDataForm(request.POST, instance=extra_data)
         if form_d.is_valid() and form_extra.is_valid():
             form_d.save()
             form_extra.save()
@@ -90,7 +93,7 @@ def edit(request, ident_cely):
             logger.debug(form_extra.errors)
     else:
         form_d = EditDokumentForm(instance=dokument)
-        form_extra = EditDokumentExtraDataForm(instance=dokument.extra_data)
+        form_extra = EditDokumentExtraDataForm(instance=extra_data)
 
     return render(
         request,

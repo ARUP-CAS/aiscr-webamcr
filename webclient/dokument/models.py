@@ -10,6 +10,7 @@ from core.constants import (
 )
 from core.models import SouborVazby
 from django.contrib.gis.db.models import GeometryField
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.urls import reverse
@@ -180,6 +181,14 @@ class Dokument(models.Model):
         if self.soubory.soubory.all().count() == 0:
             result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
         return result
+
+    def has_extra_data(self):
+        has_extra_data = False
+        try:
+            has_extra_data = self.extra_data is not None
+        except ObjectDoesNotExist:
+            pass
+        return has_extra_data
 
 
 class DokumentCast(models.Model):
