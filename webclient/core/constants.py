@@ -116,3 +116,17 @@ OTHER_PROJECT_FILES: Final = "OSPD"  # ostatní soubory projektové dokumentace 
 ZA_ZL_FILES: Final = (
     "AGDZZ"  # automaticky generované dokumenty z rad ZA a ZL pri archivaci projektu
 )
+
+KLADYZM10 = 1
+KLADYZM25 = 2
+KLADYZM50 = 3
+KLADYZM100 = 4
+KLADYZM200 = 5
+
+KLADYZM_KATEGORIE = (
+    (KLADYZM10, "1:10 000"),
+    (KLADYZM25, "1:25 000"),
+    (KLADYZM50, "1:50 000"),
+    (KLADYZM100, "1:100 000"),
+    (KLADYZM200, "1:200 000"),
+)

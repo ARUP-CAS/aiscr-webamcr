@@ -9,6 +9,7 @@ alter table dokument alter column ident_cely set not null;
 
 update heslar set heslo = zkratka where nazev_heslare = 9;
 update heslar set heslo = popis where nazev_heslare=46 or nazev_heslare=13;
+update heslar set heslo = popis where nazev_heslare = 24;
 
 
 ALTER TABLE dokument_osoba add column id serial;
@@ -29,3 +30,6 @@ alter table dokument_extra_data rename column datum_vzniku to datum_vzniku_ts;
 alter table dokument_extra_data add column datum_vzniku date;
 update dokument_extra_data set datum_vzniku = date(datum_vzniku_ts);
 alter table dokument_extra_data drop column datum_vzniku_ts;
+
+-- Odstraneni sloupce pian.buffer
+alter table pian drop column buffer;

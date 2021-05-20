@@ -215,6 +215,7 @@ class AMCRTestRunner(BaseRunner):
         ).save()
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp).save()
         Heslar(id=TYP_PIAN_PLOCHA_ID, nazev_heslare=ha).save()
+        Heslar(id=TYP_PIAN_BOD_ID, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=SPECIFIKACE_DATA_PRESNE_ID, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()

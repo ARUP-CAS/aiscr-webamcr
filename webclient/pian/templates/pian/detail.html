@@ -1,8 +1,9 @@
 {% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
+{% load crispy_forms_tags %}
 
-{% block title %}{% trans "Detail akce" %}{% endblock %}
+{% block title %}{% trans "Pian" %}{% endblock %}
 {% block head %}
   <!-- Map imports -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -37,31 +38,36 @@
 {% endblock %}
 
 {% block content %}
-  <div>
-    <style>
-        #projectMap {
-            width: 100%;
-            height: 473px;
-            border-radius: 5px;
-        }
-    </style>
-    <div id="projectMap"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-            crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <div>
+      <style>
+          #projectMap {
+              width: 100%;
+              height: 473px;
+              border-radius: 5px;
+          }
+      </style>
+      <div id="projectMap"></div>
+    </div>
 
-    <script src="{% static 'mapa_akce.js' %}"></script>
-    <!--<script>
-          //global_map_can_edit=true;
-          //button_map_lock.disable();
-    </script>         -->
-  </div>
+    <form method="post" onsubmit="submitBtn.disabled = true; return true;">
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {% trans "Pian" %}
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy form %}
+        </div>
+      </div>
+      <button type="submit" id="submitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+    </form>
 
 {% endblock %}
 
 {% block script %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+  <script src="{% static 'mapa_akce.js' %}"></script>
 {% endblock %}
