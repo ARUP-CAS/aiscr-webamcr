@@ -23,17 +23,17 @@ class UrlTests(TestCase):
             "presnost": str(PRESNOST_DESITKY_METRU_ID),
             "typ": str(TYP_PIAN_BOD_ID),
             "stav": "2",
-            "geom": "SRID=4326;POINT (13.21198546245427 50.58080006469174)",
+            "geom": "SRID=4326;POINT (14.4268084 50.0846009)",
         }
-
         request = self.factory.post("/pian/create/", data)
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
         request.session.save()
+        request.META["HTTP_REFERER"] = "/arch_z/detail/C-202000001A"
 
         pian_count_before = Pian.objects.all().count()
-        response = create(request)
+        response = create(request, self.existing_dj)
         pian_count_after = Pian.objects.all().count()
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(302, response.status_code)
         self.assertTrue(pian_count_before < pian_count_after)

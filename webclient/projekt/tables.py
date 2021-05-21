@@ -6,10 +6,11 @@ from .models import Projekt
 class ProjektTable(tables.Table):
 
     ident_cely = tables.Column(linkify=True)
+    stav = tables.Column(attrs={"td": {"class": ".info"}})
 
     class Meta:
         model = Projekt
-        template_name = "django_tables2/bootstrap4.html"
+        template_name = "projekt/bootstrap4_table.html"
         fields = (
             "ident_cely",
             "stav",

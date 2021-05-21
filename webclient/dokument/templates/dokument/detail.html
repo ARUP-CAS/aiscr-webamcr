@@ -160,8 +160,8 @@
             <div class="form-group">
               <label>{% trans "Osoby" %}</label>
               <div class="input-group">
-                <input class="form-control app-ellipsis" type="text" placeholder="{{ dokument.osoby }}" readonly><!--toto nefunguje dokument.osoby.all|hesla_to_list-->
-                <div class="input-group-append" data-toggle="popover" data-placement="top" data-content="<strong>{% trans 'Seznam osob' %}:</strong> {{ dokument.osoby }}">
+                <input class="form-control app-ellipsis" type="text" placeholder="{{ dokument.osoby.all|osoby_to_list }}" readonly>
+                <div class="input-group-append" data-toggle="popover" data-placement="top" data-content="<strong>{% trans 'Seznam osob' %}:</strong> {{ dokument.osoby.all|osoby_to_list   }}">
                   <span class="input-group-text">
                     <span class="material-icons">info</span>
                   </span>

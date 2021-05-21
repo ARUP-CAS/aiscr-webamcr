@@ -1,5 +1,6 @@
 import logging
 
+import crispy_forms
 import django_filters as filters
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -9,6 +10,7 @@ from core.constants import (
     OZNAMENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
 )
+from crispy_forms.layout import Layout
 from django.forms import DateInput, Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
@@ -207,3 +209,35 @@ class ProjektFilter(filters.FilterSet):
             "ident_cely",
             # "hlavni_katastr",
         ]
+
+    def __init__(self, *args, **kwargs):
+        super(ProjektFilter, self).__init__(*args, **kwargs)
+        self.helper = ProjektFilterFormHelper()
+
+
+class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
+    form_method = "GET"
+    layout = Layout(
+        "ident_cely",
+        "oblast",
+        "typ_projektu",
+        "kraj",
+        "okres",
+        "stav",
+        "datum_zahajeni",
+        "datum_ukonceni",
+        "vedouci_projektu",
+        "organizace",
+        "kulturni_pamatka",
+        "datum_oznameni_od",
+        "datum_oznameni_do",
+        "datum_schvaleni_od",
+        "datum_schvaleni_do",
+        "akce_hlavni_vedouci",
+        "akce_datum_zahajeni",
+        "akce_datum_ukonceni",
+        "hlavni_typ_akce",
+        "pristupnost_akce",
+        "stav_akce",
+    )
+    form_tag = False

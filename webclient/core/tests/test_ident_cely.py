@@ -25,7 +25,7 @@ class IdentTests(TestCase):
             gid=1,
             objectid=1,
             kategorie=1,
-            cislo="01",
+            cislo="03",
             nazev="Vejprty",
             natoceni=Decimal(8.78330000000),
             shape_leng=Decimal(341204.736390),
