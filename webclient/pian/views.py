@@ -27,25 +27,25 @@ from pian.models import Kladyzm, Pian
 logger = logging.getLogger(__name__)
 
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def detail(request, ident_cely=None):
-    pian = Pian.objects.get(ident_cely=ident_cely)
-    if request.method == "POST":
-        form = PianCreateForm(request.POST, instance=pian)
-        if form.is_valid():
-            logger.debug("Form is valid")
-            pian = form.save()
-            if form.changed_data:
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-        else:
-            logger.warning("Form is not valid")
-            logger.debug(form.errors)
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-    else:
-        form = PianCreateForm(instance=pian)
-
-    return render(request, "pian/detail.html", {"form": form})
+# @login_required
+# @require_http_methods(["GET", "POST"])
+# def detail(request, ident_cely=None):
+#     pian = Pian.objects.get(ident_cely=ident_cely)
+#     if request.method == "POST":
+#         form = PianCreateForm(request.POST, instance=pian)
+#         if form.is_valid():
+#             logger.debug("Form is valid")
+#             pian = form.save()
+#             if form.changed_data:
+#                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+#         else:
+#             logger.warning("Form is not valid")
+#             logger.debug(form.errors)
+#             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+#     else:
+#         form = PianCreateForm(instance=pian)
+#
+#     return render(request, "pian/detail.html", {"form": form})
 
 
 @login_required
