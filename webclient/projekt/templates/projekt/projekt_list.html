@@ -17,27 +17,25 @@
           <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
             <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
           </button>
+          <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div>
           <a href="{% url 'projekt:list' %}" class="btn btn-danger">
             <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
           </a>
-        </div> 
+        </div>
         <div class="collapse mb-3" id="filter">
           <div class="card app-card-form">
             <div class="card-body">
-              {{ filter.form|crispy }}
+              {% crispy filter.form filter.helper %}
               <button type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {% trans "Vybrat projekty" %}
               </button>
-             <!--  <a href="{% url 'projekt:list' %}" class="btn btn-danger">
-                <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
-              </a> -->
             </div>
           </div>
         </div>
       </form>
     {% endif %}
     <div class="app-table-list-wrapper">
-      {% render_table table 'django_tables2/bootstrap4.html' %}
+      {% render_table table 'projekt/bootstrap4_table.html' %}
     </div>
   </div>
 {% endblock %}

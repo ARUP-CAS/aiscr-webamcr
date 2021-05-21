@@ -80,12 +80,6 @@
       </div>
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
-          <div class="dropdown-menu" aria-labelledby="others">
-            <a class="dropdown-item" href="{% url 'arch_z:smazat' zaznam.ident_cely %}">{% trans "Smazat akci" %}</a>
-          </div>
-          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-            <span class="material-icons">more_vert</span>
-          </button>
           <a class="btn" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip"
              data-placement="top" title="{% trans 'Upravit' %}">
             <span class="material-icons">edit</span>
@@ -354,9 +348,9 @@
         </div>
       </div>
       <div class="card-body">
-        <form method="POST" action="#" id="create_komponenta_form_id"> <!-- Action is filled using javascript -->
+        <form method="POST" action="#" id="create_komponenta_form_id" onsubmit="{{ j.ident_cely }}_createCompotSubmitButton.disabled = true; return true;"> <!-- Action is filled using javascript -->
           {% crispy komponenta_form_create %}
-          <button type="submit" class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
+          <button type="submit" id="{{ j.ident_cely }}_createCompotSubmitButton" class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
         </form>
       </div>
     </div>
@@ -368,9 +362,9 @@
         </div>
       </div>
       <div class="card-body">
-        <form method="POST" action="#" id="create_adb_form_id"> <!-- Action is filled using javascript -->
+        <form method="POST" action="#" id="create_adb_form_id" onsubmit="{{ j.ident_cely }}_createAdbSubmitButton.disabled = true; return true;"> <!-- Action is filled using javascript -->
           {% crispy adb_form_create %}
-          <button type="submit" class="btn btn-primary">{% trans "Vytovřit ADB" %}</button>
+          <button type="submit" id="{{ j.ident_cely }}_createAdbSubmitButton" class="btn btn-primary">{% trans "Vytovřit ADB" %}</button>
         </form>
       </div>
     </div>
@@ -382,9 +376,9 @@
         </div>
       </div>
       <div class="card-body">
-        <form method="POST" action="#" id="create_pian_form_id"> <!-- Action is filled using javascript -->
+        <form method="POST" action="#" id="create_pian_form_id" onsubmit="{{ j.ident_cely }}_createPianSubmitButton.disabled = true; return true;"> <!-- Action is filled using javascript -->
           {% crispy pian_form_create %}
-          <button type="submit" class="btn btn-primary">{% trans "Vytovřit pian" %}</button>
+          <button type="submit" id="{{ j.ident_cely }}_createPianSubmitButton" class="btn btn-primary">{% trans "Vytovřit pian" %}</button>
         </form>
       </div>
     </div>
