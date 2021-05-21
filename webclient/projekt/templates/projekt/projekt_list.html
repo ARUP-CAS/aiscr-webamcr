@@ -18,7 +18,7 @@
         </button>
         <div class="collapse mb-3" id="filter">
           <div class="card card-body">
-            {{ filter.form|crispy }}
+            {% crispy filter.form filter.helper %}
             <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
             <a href="{% url 'projekt:list' %}">{% trans "Smazat filtr" %}</a>
           </div>

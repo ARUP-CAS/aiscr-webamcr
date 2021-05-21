@@ -49,3 +49,7 @@ DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
 OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
+
+# Pian
+PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
+PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."

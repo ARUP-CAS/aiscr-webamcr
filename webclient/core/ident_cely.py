@@ -9,6 +9,7 @@ from core.exceptions import (
     MaximalIdentNumberError,
     NelzeZjistitRaduError,
     NeocekavanaRadaError,
+    NeznamaGeometrieError,
     PianNotInKladysm5Error,
 )
 from django.contrib.gis.db.models.functions import Centroid
@@ -174,7 +175,7 @@ def get_adb_ident(pian: Pian) -> str:
         point = Centroid(pian.geom)
     else:
         logger.error("Neznamy typ geometrie" + str(type(pian.geom)))
-        return None, None
+        raise NeznamaGeometrieError()
     sm5 = get_sm_from_point(point)[0]
     record_list = "ADB-" + sm5.mapno
     MAXIMAL_ADBS: int = 999999

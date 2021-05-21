@@ -70,6 +70,7 @@ from nalez.forms import (
     create_nalez_predmet_form,
 )
 from nalez.models import NalezObjekt, NalezPredmet
+from pian.forms import PianCreateForm
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -118,6 +119,7 @@ def detail(request, ident_cely):
     )
 
     dj_form_create = CreateDJForm()
+    pian_form_create = PianCreateForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     adb_form_create = CreateADBForm()
     dj_forms_detail = []
@@ -142,11 +144,14 @@ def detail(request, ident_cely):
             jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb
         )
         show_add_komponenta = not jednotka.negativni_jednotka
+        show_add_pian = False if jednotka.pian else True
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
+            "show_add_pian": show_add_pian,
+            "show_remove_pian": not show_add_pian,
         }
         if has_adb:
             dj_form_detail["adb_form"] = CreateADBForm(
@@ -176,6 +181,7 @@ def detail(request, ident_cely):
             )
 
     context["dj_form_create"] = dj_form_create
+    context["pian_form_create"] = pian_form_create
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
