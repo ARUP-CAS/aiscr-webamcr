@@ -16,6 +16,7 @@
         <button class="btn btn-primary mb-3 collapsed" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
           <span class="material-icons">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
         </button>
+        <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div>
         <div class="collapse mb-3" id="filter">
           <div class="card card-body">
             {% crispy filter.form filter.helper %}

@@ -32,6 +32,12 @@ def hesla_to_list(value):
 
 
 @register.filter
+def osoby_to_list(value):
+    list_hesla = "; ".join(value.values_list("vypis_cely", flat=True))
+    return list_hesla
+
+
+@register.filter
 def render_daterange(value):
     if value == "" or value is None:
         return None
