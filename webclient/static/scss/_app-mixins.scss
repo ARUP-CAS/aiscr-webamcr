@@ -129,6 +129,16 @@
         background-color: $color;
         color: $white;
       }
+
+      // table list
+      .app-table-list-wrapper {
+        .table {
+          @extend .table-striped, .table-hover;
+          a {
+            color: $color;
+          }
+        }
+      }
     }
 
     // card behavior based on entity
