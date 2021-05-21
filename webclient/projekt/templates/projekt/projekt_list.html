@@ -13,19 +13,32 @@
 
     {% if filter %}
       <form method="get">
-        <button class="btn btn-primary mb-3 collapsed" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
-          <span class="material-icons">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
-        </button>
+        <div class="mb-3">
+          <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
+            <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
+          </button>
+          <a href="{% url 'projekt:list' %}" class="btn btn-danger">
+            <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
+          </a>
+        </div> 
         <div class="collapse mb-3" id="filter">
-          <div class="card card-body">
-            {{ filter.form|crispy }}
-            <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
-            <a href="{% url 'projekt:list' %}">{% trans "Smazat filtr" %}</a>
+          <div class="card app-card-form">
+            <div class="card-body">
+              {{ filter.form|crispy }}
+              <button type="submit" class="btn btn-primary">
+                <span class="material-icons">check</span> {% trans "Vybrat projekty" %}
+              </button>
+             <!--  <a href="{% url 'projekt:list' %}" class="btn btn-danger">
+                <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
+              </a> -->
+            </div>
           </div>
         </div>
       </form>
     {% endif %}
-    {% render_table table 'django_tables2/bootstrap4.html' %}
+    <div class="app-table-list-wrapper">
+      {% render_table table 'django_tables2/bootstrap4.html' %}
+    </div>
   </div>
 {% endblock %}
 
