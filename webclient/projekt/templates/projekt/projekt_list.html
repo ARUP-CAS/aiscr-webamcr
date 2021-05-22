@@ -14,13 +14,15 @@
     {% if filter %}
       <form method="get">
         <div class="mb-3">
-          <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
-            <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
+          <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter"
+                  aria-expanded="false" aria-controls="collapseExample">
+            <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span
+              class="material-icons app-icon-expand">expand_more</span>
           </button>
-          <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div>
-          <a href="{% url 'projekt:list' %}" class="btn btn-danger">
+          <a href="{% url 'projekt:list' %}" class="btn btn-danger" id="id-cancel-filter-link" style="display: none">
             <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
           </a>
+          <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div>
         </div>
         <div class="collapse mb-3" id="filter">
           <div class="card app-card-form">
@@ -42,5 +44,131 @@
 
 {% block script %}
   <script>
+      $(document).ready(function () {
+
+          const STAV_OZNAMENY = '0'
+          const STAV_ZAPSANY = '1'
+          const STAV_PRIHLASENY = '2'
+          const STAV_ZAHAJEN = '3'
+          const STAV_UKONCEN = '4'
+          const STAV_UZAVREN = '5'
+
+          setPageHeader();
+
+          function setHeader(header) {
+              document.getElementById('id-app-entity-item').innerHTML = header;
+          }
+
+          function listMatch(required, actual) {
+              if (actual.length === required.length && actual.every(function (value, index) {
+                  return value === required[index]
+              })) {
+                  return true;
+              } else {
+                  return false;
+              }
+          }
+
+          function hasOnlySchvalitOznameni(actualParams, actualValues) {
+              if (listMatch(['stav'], actualParams) && listMatch([STAV_OZNAMENY], actualValues)) {
+                  setHeader("Schválit oznámení")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyPrihlasitProjekt(actualParams, actualValues) {
+              if (listMatch(['stav'], actualParams) && listMatch([STAV_ZAPSANY], actualValues)) {
+                  setHeader("Přihlásit projekt")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyZahajitVyzkum(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_PRIHLASENY], actualValues)) {
+                  setHeader("Zahájit výzkum")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyUkoncitTeren(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_ZAHAJEN], actualValues)) {
+                  setHeader("Ukončit terén")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlySpravovatAkce(actualParams, actualValues) {
+              if (listMatch(['stav', 'stav', 'organizace'], actualParams) && listMatch([STAV_ZAHAJEN, STAV_UKONCEN], actualValues)) {
+                  setHeader("Spravovat akce")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyUzavritProjekt(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_UKONCEN], actualValues)) {
+                  setHeader("Uzavřít projekt")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyVybratProjekty(actualParams, actualValues) {
+              if (listMatch([], actualParams) && listMatch([], actualValues)) {
+                  setHeader("Vybrat projekty")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyNaseProjekty(actualParams, actualValues) {
+              if (listMatch(['organizace'], actualParams) && listMatch(['{{ user.organizace.id }}'], actualValues)) {
+                  setHeader("Naše projekty")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyArchivovatProjekty(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_UZAVREN], actualValues)) {
+                  setHeader("Ukončit terén")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function setPageHeader() {
+              const queryString = window.location.search;
+              const urlParams = new URLSearchParams(queryString);
+              const keys = Array.from(urlParams.keys());
+              const values = Array.from(urlParams.values());
+              if (!(hasOnlySchvalitOznameni(keys, values) ||
+                  hasOnlyPrihlasitProjekt(keys, values) ||
+                  hasOnlyZahajitVyzkum(keys, [urlParams.get('stav')]) ||
+                  hasOnlyUkoncitTeren(keys, [urlParams.get('stav')]) ||
+                  hasOnlySpravovatAkce(keys, urlParams.getAll('stav')) ||
+                  hasOnlyUzavritProjekt(keys, [urlParams.get('stav')]) ||
+                  hasOnlyVybratProjekty(keys, values) ||
+                  hasOnlyNaseProjekty(keys, values) ||
+                  hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])
+              )) {
+                  setHeader("Vybrané projekty")
+                  document.getElementById('id-cancel-filter-link').style.display = "block";
+              }
+          }
+      });
   </script>
 {% endblock %}
