@@ -15,16 +15,11 @@
 
           .table {
             @extend .table-hover; // .table-striped
-            width: 100%;
-            $width: 30px;
-            $height: 30px;
 
             thead {
               tr {
                 th {
                   @extend .border-0;
-                  min-width: $width;
-                  overflow: hidden;
 
                   &.asc {
                     .app-orderable-wrapper {
@@ -55,11 +50,21 @@
               }
             }
 
-            tbody {
-              tr {
-                td {
-                  min-width: $width;
-                  overflow: hidden;
+            tr {
+              td {
+                padding: .5rem .75rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                min-width: 100%;
+                max-width: 120px;
+          
+                &.ident_cely {
+                
+                }
+
+                &.podnet {
+                  max-width: 130px;
                 }
               }
             }
