@@ -15,15 +15,13 @@
     {% if filter %}
       <form method="get">
         <div class="mb-3">
-          <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter"
-                  aria-expanded="false" aria-controls="collapseExample">
-            <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span
-              class="material-icons app-icon-expand">expand_more</span>
+          <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
+            <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
           </button>
           <a href="{% url 'projekt:list' %}" class="btn btn-danger" id="id-cancel-filter-link" style="display: none">
             <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
           </a>
-          <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div>
+          <!-- <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div> -->
         </div>
         <div class="collapse mb-3" id="filter">
           <div class="card app-card-form">
@@ -172,7 +170,7 @@
                   hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])
               )) {
                   setHeader("Vybrané projekty")
-                  document.getElementById('id-cancel-filter-link').style.display = "block";
+                  document.getElementById('id-cancel-filter-link').style.display = "inline-block";
               }
           }
       });
