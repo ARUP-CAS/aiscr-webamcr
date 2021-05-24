@@ -117,6 +117,12 @@
       .btn-primary {
         border-color: $color;
         background-color: $color;
+
+        &:hover {
+          $link-hover-color: darken($color, 10);
+          border-color: $link-hover-color;
+          background-color: $link-hover-color;
+        }
       }
 
       // check box color
