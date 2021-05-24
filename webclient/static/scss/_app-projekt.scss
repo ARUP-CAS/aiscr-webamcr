@@ -25,6 +25,32 @@
                   @extend .border-0;
                   min-width: $width;
                   overflow: hidden;
+
+                  &.asc {
+                    .app-orderable-wrapper {
+                      &:before {
+                        content: 'arrow_upward';
+                      }
+                    } 
+                  }
+
+                  &.desc {
+                    .app-orderable-wrapper {
+                      &:before {
+                        content: 'arrow_downward';
+                      }
+                    } 
+                  }
+
+                  .app-orderable-wrapper {
+                    @extend .d-flex;
+
+                    &:before {
+                      @extend .mr-1;
+                      font-family: "Material Icons";
+                      color: $white;
+                    }
+                  }
                 }
               }
             }
