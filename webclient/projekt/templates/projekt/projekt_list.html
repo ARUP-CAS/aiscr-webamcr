@@ -69,7 +69,7 @@
       </form>
     {% endif %}
     <div class="app-table-list-wrapper">
-      {% render_table table 'projekt/bootstrap4_table.html' %}
+      {% render_table table 'projekt/bootstrap4.html' %}
     </div>
   </div>
 {% endblock %}
@@ -202,5 +202,9 @@
               }
           }
       });
+  </script>
+  <script
+      type="text/javascript"
+      src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
   </script>
 {% endblock %}

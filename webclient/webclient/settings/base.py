@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "django_filters",
     "django_tables2",
+    'django_tables2_column_shifter',
     "crispy_forms",
     "compressor",
     "captcha",
