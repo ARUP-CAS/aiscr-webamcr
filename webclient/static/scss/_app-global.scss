@@ -119,7 +119,8 @@ table {
 
 // select form control fix
 .select2-container {
-  min-width: unset !important;
+  //min-width: unset !important; commented because there was bug, which sent Juraj by skype 
+  min-width: 100% !important;
   min-height: $app-form-control-fix-height !important;
 
   .select2-selection {

@@ -52,7 +52,7 @@
 
             tr {
               td {
-                padding: .5rem .75rem;
+                padding: .5rem .5rem;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -60,7 +60,7 @@
                 max-width: 120px;
           
                 &.ident_cely {
-                
+                  min-width: 130px;
                 }
 
                 &.podnet {
