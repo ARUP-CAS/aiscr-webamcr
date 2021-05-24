@@ -139,9 +139,18 @@
       // table list
       .app-table-list-wrapper {
         .table {
-          @extend .table-striped, .table-hover;
-          a {
-            color: $color;
+          thead {
+            background-color: $color !important;
+      
+            a {
+              color: $white;
+            }
+          }
+
+          tbody {
+            a {
+              color: $color;
+            }
           }
         }
       }
