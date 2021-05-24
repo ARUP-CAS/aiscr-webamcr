@@ -14,16 +14,47 @@
 
     {% if filter %}
       <form method="get">
-        <div class="mb-3">
-          <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter"
-                  aria-expanded="false" aria-controls="collapseExample">
-            <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span
-              class="material-icons app-icon-expand">expand_more</span>
-          </button>
-          <a href="{% url 'projekt:list' %}" class="btn btn-danger" id="id-cancel-filter-link" style="display: none">
-            <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
-          </a>
-          <div>{% trans "Počet nalezených projektů: " %}{{ table.rows|length }}</div>
+        <div class="mb-3 d-flex flex-row align-items-center justify-content-between">
+          <div class="app-left">
+            <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
+              <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+            <a href="{% url 'projekt:list' %}" class="btn btn-danger" id="id-cancel-filter-link" style="display: none">
+              <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
+            </a>
+          </div>
+          <div class="app-middle text-muted">
+            {% trans "Počet nalezených projektů: " %}<strong>{{ table.rows|length }}</strong>
+          </div>
+          <div class="app-right">
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-primary">
+                <span class="material-icons app-icon-expand">expand_more</span>
+              </button>
+              <div class="btn-group" role="group">
+                <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení slouců' %}">
+                  <span class="material-icons">table_chart</span>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
+                  <a href="#" class="dropdown-item">Sloupec 1</a>
+                  <a href="#" class="dropdown-item">Sloupec 2</a>
+                  <a href="#" class="dropdown-item">Sloupec 3</a>
+                </div>
+              </div>        
+              <div class="btn-group" role="group">
+                <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Stáhnout soubor' %}">
+                  <span class="material-icons">download</span>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDropDownload">
+                  {% for format in export_formats %}
+                    <a href="{% export_url format %}" class="dropdown-item">
+                      {% trans "Stáhnout" %} <code>.{{ format }}</code>
+                    </a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="collapse mb-3" id="filter">
           <div class="card app-card-form">
@@ -37,11 +68,6 @@
         </div>
       </form>
     {% endif %}
-    {% for format in export_formats %}
-      <a href="{% export_url format %}">
-        {% trans "Stáhnout" %} <code>.{{ format }}</code>
-      </a>
-    {% endfor %}
     <div class="app-table-list-wrapper">
       {% render_table table 'projekt/bootstrap4.html' %}
     </div>
@@ -172,7 +198,7 @@
                   hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])
               )) {
                   setHeader("Vybrané projekty")
-                  document.getElementById('id-cancel-filter-link').style.display = "block";
+                  document.getElementById('id-cancel-filter-link').style.display = "inline-block";
               }
           }
       });
