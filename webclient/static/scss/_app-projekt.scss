@@ -2,6 +2,14 @@
 
 &.app-projekt {
   .app-content-wrapper {
-    
+    .app-entity-projekt {
+      height: calc(100% - 108px);
+
+      .app-table-list-wrapper {
+        overflow: auto;
+        min-height: 100%;
+        max-height: 500px;
+      }
+    }
   }
 }
