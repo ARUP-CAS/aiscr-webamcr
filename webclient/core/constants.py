@@ -1,5 +1,7 @@
 from typing import Final
 
+from django.utils.translation import gettext as _
+
 # Stavy
 # Projekty
 PROJEKT_STAV_OZNAMENY: Final = 0
@@ -92,6 +94,9 @@ OBLAST_CHOICES = (
     (OBLAST_MORAVA, "Morava"),
 )
 
+CESKY = "cs"
+ANGLICKY = "en"
+JAZYKY = ((CESKY, _("Česky")), (ANGLICKY, _("Anglicky")))
 
 # Typy vazeb
 PROJEKT_RELATION_TYPE: Final = "projekt"

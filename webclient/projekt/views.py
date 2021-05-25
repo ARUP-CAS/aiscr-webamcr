@@ -270,6 +270,7 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
     model = Projekt
     template_name = "projekt/projekt_list.html"
     filterset_class = ProjektFilter
+    paginate_by = 100
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

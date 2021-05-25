@@ -10,6 +10,8 @@ from core.constants import (
     KLADYZM50,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     ROLE_ADMIN_ID,
+    ROLE_BADATEL_ID,
+    ROLE_NEAKTIVNI_UZIVATEL_ID,
 )
 from core.models import ProjektSekvence, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -299,6 +301,10 @@ class AMCRTestRunner(BaseRunner):
         # Vlozit role do auth_user
         admin_group = Group(id=ROLE_ADMIN_ID, name="Admin")
         admin_group.save()
+        badatel_group = Group(id=ROLE_BADATEL_ID, name="Badatel")
+        badatel_group.save()
+        neaktivni = Group(id=ROLE_NEAKTIVNI_UZIVATEL_ID, name="Neaktivni uzivatel")
+        neaktivni.save()
 
         o = Organizace(
             id=AMCR_TESTOVACI_ORGANIZACE_ID,
