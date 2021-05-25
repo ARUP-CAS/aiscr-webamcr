@@ -325,6 +325,13 @@ form {
   }
 }
 
+// tooltip
+.tooltip {
+  a {
+    color: $white;
+  }
+}
+
 // list wrapper
 .app-table-list-wrapper {
   overflow: auto;
