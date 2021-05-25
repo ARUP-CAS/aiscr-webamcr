@@ -35,10 +35,10 @@
                 <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení slouců' %}">
                   <span class="material-icons">table_chart</span>
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="btnGroupDropTable">
+                <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
                   {% for column in table.columns %}
                     {% if column.attrs.td.class in table.get_column_default_show %}
-                      <li class="btn-shift-column dropdown-item"
+                      <a class="btn-shift-column dropdown-item"
                           data-td-class="{{ column.attrs.td.class }}"
                           data-state="on"
                           {% if not forloop.last %} style="border-bottom:1px solid #ccc;" {% endif %}
@@ -56,9 +56,9 @@
                             class="ico uncheck"
                         />
                         {{ column.header }}
-                      </li>
+                      </a>
                     {% else %}
-                      <li class="btn-shift-column dropdown-item"
+                      <a class="btn-shift-column dropdown-item"
                           data-td-class="{{ column.attrs.td.class }}"
                           data-state="off"
                           {% if not forloop.last %} style="border-bottom:1px solid #ccc;" {% endif %}
@@ -76,10 +76,10 @@
                             class="ico uncheck"
                         />
                         {{ column.header }}
-                      </li>
+                      </a>
                     {% endif %}
                   {% endfor %}
-                </ul>
+                </div>
               </div>        
               <div class="btn-group" role="group">
                 <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Stáhnout soubor' %}">

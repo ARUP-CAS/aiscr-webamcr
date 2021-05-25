@@ -171,6 +171,15 @@
           }
         }
       }
+
+      // dropdown
+      .dropdown-menu {
+        .dropdown-item {
+          &:active {
+            background-color: $color;
+          }
+        }
+      }
     }
 
     // card behavior based on entity
