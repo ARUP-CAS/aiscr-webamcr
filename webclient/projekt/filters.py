@@ -10,7 +10,7 @@ from core.constants import (
     OZNAMENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
 )
-from crispy_forms.layout import Layout
+from crispy_forms.layout import Layout, Div 
 from django.forms import DateInput, Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
@@ -218,26 +218,29 @@ class ProjektFilter(filters.FilterSet):
 class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
     layout = Layout(
-        "ident_cely",
-        "oblast",
-        "typ_projektu",
-        "kraj",
-        "okres",
-        "stav",
-        "datum_zahajeni",
-        "datum_ukonceni",
-        "vedouci_projektu",
-        "organizace",
-        "kulturni_pamatka",
-        "datum_oznameni_od",
-        "datum_oznameni_do",
-        "datum_schvaleni_od",
-        "datum_schvaleni_do",
-        "akce_hlavni_vedouci",
-        "akce_datum_zahajeni",
-        "akce_datum_ukonceni",
-        "hlavni_typ_akce",
-        "pristupnost_akce",
-        "stav_akce",
+        Div(
+            Div("ident_cely", css_class="col-sm-6"),
+            Div("oblast", css_class="col-sm-6"),
+            Div("typ_projektu", css_class="col-sm-6"),
+            Div("kraj", css_class="col-sm-6"),
+            Div("okres", css_class="col-sm-6"),
+            Div("stav", css_class="col-sm-6"),
+            Div("datum_zahajeni", css_class="col-sm-6"),
+            Div("datum_ukonceni", css_class="col-sm-6"),
+            Div("vedouci_projektu", css_class="col-sm-6"),
+            Div("organizace", css_class="col-sm-6"),
+            Div("kulturni_pamatka", css_class="col-sm-6"),
+            Div("datum_oznameni_od", css_class="col-sm-6"),
+            Div("datum_oznameni_do", css_class="col-sm-6"),
+            Div("datum_schvaleni_od", css_class="col-sm-6"),
+            Div("datum_schvaleni_do", css_class="col-sm-6"),
+            Div("akce_hlavni_vedouci", css_class="col-sm-6"),
+            Div("akce_datum_zahajeni", css_class="col-sm-6"),
+            Div("akce_datum_ukonceni", css_class="col-sm-6"),
+            Div("hlavni_typ_akce", css_class="col-sm-6"),
+            Div("pristupnost_akce", css_class="col-sm-6"),
+            Div("stav_akce", css_class="col-sm-6"),
+            css_class="row",
+        ),
     )
     form_tag = False

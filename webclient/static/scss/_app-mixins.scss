@@ -154,6 +154,32 @@
           }
         }
       }
+
+      // pagination
+      .pagination {
+        .page-item {
+          &.active {
+            .page-link {
+              background-color: $color;
+              border: $color;
+              color: $white;
+            }
+          }
+
+          .page-link {
+            color: $color;
+          }
+        }
+      }
+
+      // dropdown
+      .dropdown-menu {
+        .dropdown-item {
+          &:active {
+            background-color: $color;
+          }
+        }
+      }
     }
 
     // card behavior based on entity
