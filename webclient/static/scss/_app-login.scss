@@ -39,6 +39,24 @@
             @extend .form-control;
           }
         }
+
+        // in register -> /accounts/register/
+        .form-group {
+          label {
+            font-weight: normal;
+            font-size: inherit;
+            margin-bottom: .5rem;
+          }
+
+          #hint_id_password1,
+          #hint_id_password2 {
+            @extend .mt-2;
+
+            ul {
+              @extend .mb-0;
+            }
+          }
+        }
   
         .app-flags {
           a {

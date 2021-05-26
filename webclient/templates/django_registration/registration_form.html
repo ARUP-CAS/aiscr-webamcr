@@ -8,7 +8,61 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Registrace nového uživatele" %}</h1>
+  <div class="app-login-wrapper">
+    <div class="row">
+      <div class="col-lg-4">
+        <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'Archeologická mapa České republiky' %}" class="app-logo">
+        <div class="card">
+          <div class="card-body">
+            <form method="POST" class="form-group" onsubmit="registerSumbitButton.disabled = true; return true;" class="mb-0">
+              {% crispy form %}
+              <button id="registerSumbitButton" type="submit" class="btn btn-primary btn-block">{% trans "Zaregistrovat" %}</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8 app-col-desc">
+        <div class="app-inner">
+          <div class="card app-desc">
+            <div class="card-body">
+              <h3>{% trans "Registrace nového uživatele" %}</h3>
+              <p>
+                {% trans "Vítejte v informačním systému Archeologická mapa ČR! K dispozici zde dostáváte nejúplnější přehled o archeologických výzkumech, nálezech a lokalitách na našem území a zároveň nástroj ke správě těchto dat. Údaje jsou průběžně poskytovány, doplňovány a editovány širokou obcí odborníků, a proto správci databáze nemají plnou odpovědnost za její obsah." %}
+                {% trans "Poskytovaná data slouží k vědeckému výzkumu, ochraně památek a poznávání kulturního dědictví naší země a nesmí být zneužívána k nelegální činnosti. Upozorňujeme, že podle zákona jsou veškeré archeologické nálezy majetkem státu či kraje a jakýkoliv archeologický výzkum (včetně povrchových sběrů a průzkumu detektorem kovů) smějí provádět jen oprávněné organizace a osoby s nimi spolupracující (v Čechách / na Moravě a ve Slezsku)." %}
+                {% trans "Správci AMČR vycházejí z přesvědčení, že informace o archeologickém dědictví patří veřejnosti. Poskytované informace podléhají mezinárodní licenci CC-BY-NC, která umožňuje data volně používat pod podmínkou uvedení zdroje a nekomerčního využití dat. Jako zdroj informací uvádějte „Archeologická mapa ČR“ a identifikátor konkrétního záznamu (je-li to možné)." %}
+                {% trans "Přejeme vám úspěšnou práci a radost z poznávání archeologického dědictví!" %}
+              </p>
+              <p>
+                Phasellus luctus massa neque. Nunc suscipit magna dui, quis molestie elit laoreet non. Aenean in tellus ut metus cursus dapibus sit amet sit amet dolor. Nulla lectus orci, fringilla vitae fringilla et, bibendum et nibh. Donec finibus sapien urna, eget laoreet sem tincidunt placerat. Aenean porta leo quis eros aliquam, eu iaculis odio scelerisque. Curabitur sollicitudin feugiat quam.
+              </p>
+            </div>
+          </div>
+          <hr />
+          <div class="card app-news">
+            <div class="card-body">
+              <h3>{% trans "Jak probíhá registrace uživatele?" %}</h3>
+              <div class="app-sroll-inner">
+                <ul>
+                  <li>{% trans "Nejprve musíte vyplnit a odeslat výše zobrazený formulář." %}</li>
+                  <li>{% trans "Na uvedený email zašleme ověřovací zprávu. Tu je třeba otevřít a kliknout v ní na obsažený odkaz." %}</li>
+                  <li>{% trans "Tím dochází k vytvoření uživatelského účtu, ten je ovšem v neaktivním stavu." %}</li>
+                  <li>{% trans "Systém automaticky kontaktuje správce systému (tj. ARUP), který má právo váš účet aktivovat." %}</li>
+                  <li>{% trans "Po aktivaci účtu vám zašleme informační email." %}</li>
+                  <li>{% trans "Následně se budete moci přihlásit." %}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+<!--   <h1>{% trans "Registrace nového uživatele" %}</h1>
 
 
 
@@ -32,7 +86,7 @@
   <form method="POST" class="form-group" onsubmit="registerSumbitButton.disabled = true; return true;">
     {% crispy form %}
     <button id="registerSumbitButton" type="submit" class="btn btn-success">{% trans "Zaregistrovat" %}</button>
-  </form>
+  </form> -->
 
 {% endblock %}
 
