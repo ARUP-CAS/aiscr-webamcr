@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
+from uzivatel.views import UserRegistrationView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -32,6 +33,12 @@ urlpatterns = [
     path("komponenta/", include("komponenta.urls")),
     path("dj/", include("dj.urls")),
     path("historie/", include("historie.urls")),
+    path(
+        "accounts/register/",
+        UserRegistrationView.as_view(),
+        name="django_registration_register",
+    ),
+    path("accounts/", include("django_registration.backends.activation.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
 

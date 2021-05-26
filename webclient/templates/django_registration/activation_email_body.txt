@@ -1,0 +1,6 @@
+Děkujeme za registraci na stránce {{ site.domain }}.
+Pro potvrzení vašeho emailu prosím klikněte na následující odkaz:
+
+http://{{ site.domain }}{% url 'django_registration_activate' activation_key %}
+
+Tato stránka expiruje za {{ expiration_days }} dní{{ expiration_days|pluralize }}.

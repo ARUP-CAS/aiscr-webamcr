@@ -1,18 +1,29 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .forms import AuthUserChangeForm, AuthUserCreationForm
+from .forms import AuthUserCreationForm
 from .models import User
 
 
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
-    form = AuthUserChangeForm
+    # form = AuthUserChangeForm
     model = User
     list_display = ("email", "is_staff", "is_active", "organizace", "ident_cely")
     list_filter = ("is_staff", "is_active", "organizace")
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (
+            None,
+            {
+                "fields": (
+                    "email",
+                    "password",
+                    "organizace",
+                    "ident_cely",
+                    "hlavni_role",
+                )
+            },
+        ),
         ("Permissions", {"fields": ("is_staff", "is_active")}),
     )
     add_fieldsets = (

@@ -53,8 +53,9 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "django_filters",
     "django_tables2",
-    'django_tables2_column_shifter',
+    "django_tables2_column_shifter",
     "crispy_forms",
+    "django_registration",
     "compressor",
     "captcha",
     "core",
@@ -248,7 +249,11 @@ STATICFILES_FINDERS = [
     "compressor.finders.CompressorFinder",
 ]
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "192.168.254.17"
 EMAIL_PORT = "25"
 EAMIL_USE_TLS = True
 EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
+
+ACCOUNT_ACTIVATION_DAYS = 10

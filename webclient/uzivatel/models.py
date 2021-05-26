@@ -1,5 +1,7 @@
+from core.constants import CESKY, JAZYKY, ROLE_NEAKTIVNI_UZIVATEL_ID
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
+from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from heslar.models import Heslar
@@ -7,6 +9,7 @@ from uzivatel.managers import CustomUserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.BooleanField(default=False)
@@ -15,7 +18,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=150)
     email = models.CharField(max_length=254, unique=True)
     is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
     # osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
     auth_level = models.IntegerField(blank=True, null=True)
@@ -24,14 +27,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     # historie = models.ForeignKey('HistorieVazby', models.DO_NOTHING, db_column='historie', blank=True, null=True)
     email_potvrzen = models.TextField(blank=True, null=True)
-    jazyk = models.CharField(max_length=15, blank=True, null=True)
+    jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
     hlavni_role = models.ForeignKey(
         Group,
         models.DO_NOTHING,
         db_column="hlavni_role",
         related_name="uzivatele",
-        null=True,
+        default=ROLE_NEAKTIVNI_UZIVATEL_ID,
     )
 
     USERNAME_FIELD = "email"
@@ -49,6 +52,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             + " ("
             + str(self.organizace)
             + ")"
+        )
+
+    def email_user(self, *args, **kwargs):
+        send_mail(
+            "{}".format(args[0]),
+            "{}".format(args[1]),
+            "{}".format(args[2]),
+            [self.email],
+            fail_silently=False,
         )
 
     class Meta:
