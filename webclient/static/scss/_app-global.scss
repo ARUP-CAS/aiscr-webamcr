@@ -335,8 +335,7 @@ form {
 // list wrapper
 .app-table-list-wrapper {
   overflow: auto;
-  min-height: 100%;
-  max-height: 500px;
+  max-height: calc(100vh - 570px);
 
   .table-container {
     overflow: unset;
