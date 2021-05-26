@@ -163,51 +163,8 @@
 {% endblock %}
 
 {% block footer %}
-  <footer class="text-lg-start app-footer-top">
-    <!-- commented base on issue -> https://github.com/ARUP-CAS/aiscr-webamcr/issues/74
-    <div class="p-4">
-      <div class="row">
-        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">{% trans "Licence" %}</h5>
-          <hr />
-          <p>
-            {% trans "Databáze Archeologická mapa České republiky, jejímž autorem je" %}
-            <a href="http://www.arup.cas.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Praha, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}</a> a
-            <a href="http://arub.avcr.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Brno, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}</a>,
-            podléhá licenci <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" title="{% trans 'Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0).' %}">{% trans "Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0)." %}</a>
-            {% trans "Užití dat i metadat podléhá této licenci, pokud není explicitně stanoveno jinak." %}
-          </p>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">{% trans "Kontakt" %}</h5>
-          <hr />
-          <p>
-            {% trans "Správa dat, uživatelů a podpora pro oblast Čech" %}<br />
-            {% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}<br />
-            <a href="mailto:amcr@arup.cas.cz" title="{% trans 'Napište nám' %}">amcr@arup.cas.cz</a>
-            <hr />
-            {% trans "Správa dat, uživatelů a podpora pro oblast Moravy a Slezska (vč. kraje Vysočina)" %}<br />
-            {% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}<br />
-            <a href="mailto:amcr@arub.cz" title="{% trans 'Napište nám' %}">amcr@arub.cz</a>
-          </p>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">{% trans "Partneři" %}</h5>
-          <hr />
-          <p class="app-logos">
-            <a href="" title=""><img src="{% static 'logo-eu.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-msmt.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-aiscr.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-aru.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-arub.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-avcr.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-interreg.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-huld.png' %}" alt="" /></a>
-          </p>
-        </div>
-      </div>
-    </div> -->
-    <div class="d-flex justify-content-between p-3 app-footer-bottom">
+  <footer class="text-lg-start">
+    <div class="d-flex justify-content-between p-3 app-footer-wrapper">
       <div>
         <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "Licence" %}</a><span class="app-pipe"></span><!--
         --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "Kontakt" %}</a><span class="app-pipe"></span><!--
