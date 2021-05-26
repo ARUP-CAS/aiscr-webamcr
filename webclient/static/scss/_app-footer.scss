@@ -1,17 +1,21 @@
 // --- FOOTER ---
 
 footer {
-  background-color: $app-footer-top-bg;
+  /* background-color: $app-footer-top-bg;
 
   .app-logos {
     img {
       @extend .mr-4, .mb-4;
       max-height: 40px;
     }
-  }
+  } */
  
-  
   .app-footer-bottom {
     background-color: $app-footer-bottom-bg;
+    color: $gray-600;
+
+    a {
+      @include setLinkColor($gray-800, d, 20);
+    }
   }
 }

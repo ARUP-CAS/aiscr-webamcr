@@ -1,0 +1,28 @@
+{% load i18n %}
+{% load static %}
+
+<div class="modal fade app-modal-partneri" id="footerPartneri" tabindex="-1" aria-labelledby="footerPartnerilLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Partneři" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body app-logos mt-4">
+        <a href="https://opvvv.msmt.cz/" title="{% trans 'Operační program Výzkum, vývoj a vzdělávání' %}" target="_blank"><img src="{% static 'logo-eu.png' %}" alt="" /></a>
+        <a href="https://www.msmt.cz/" title="{% trans 'Ministerstvo školství, mládeže a tělovýchovy České republiky' %}" target="_blank"><img src="{% static 'logo-msmt.png' %}" alt="" /></a>
+        <a href="" title="{% trans '' %}" target="_blank"><img src="{% static 'logo-aiscr.png' %}" alt="" /></a>
+        <a href="" title="{% trans '' %}" target="_blank"><img src="{% static 'logo-aru.png' %}" alt="" /></a>
+        <a href="" title="{% trans '' %}" target="_blank"><img src="{% static 'logo-arub.png' %}" alt="" /></a>
+        <a href="" title="{% trans '' %}" target="_blank"><img src="{% static 'logo-avcr.png' %}" alt="" /></a>
+        <a href="" title="{% trans '' %}" target="_blank"><img src="{% static 'logo-interreg.png' %}" alt="" /></a>
+        <a href="" title="{% trans '' %}" target="_blank"><img src="{% static 'logo-huld.png' %}" alt="" /></a>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Zavřít" %}</button>
+      </div>
+    </div>
+  </div>
+</div>

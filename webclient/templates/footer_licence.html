@@ -1,0 +1,24 @@
+{% load i18n %}
+
+<div class="modal fade app-modal-licence" id="footerLicence" tabindex="-1" aria-labelledby="footerLicencelLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Licence" %}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {% trans "Databáze Archeologická mapa České republiky, jejímž autorem je" %}
+        <a href="http://www.arup.cas.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Praha, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}</a> a
+        <a href="http://arub.avcr.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Brno, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}</a>,
+        podléhá licenci <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" title="{% trans 'Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0).' %}">{% trans "Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0)." %}</a>
+        {% trans "Užití dat i metadat podléhá této licenci, pokud není explicitně stanoveno jinak." %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Zavřít" %}</button>
+      </div>
+    </div>
+  </div>
+</div>

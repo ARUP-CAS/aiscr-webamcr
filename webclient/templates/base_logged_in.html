@@ -164,6 +164,7 @@
 
 {% block footer %}
   <footer class="text-lg-start app-footer-top">
+    <!-- commented base on issue -> https://github.com/ARUP-CAS/aiscr-webamcr/issues/74
     <div class="p-4">
       <div class="row">
         <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
@@ -205,16 +206,25 @@
           </p>
         </div>
       </div>
-    </div>
-    <div class="text-center p-3 app-footer-bottom">
-      <small>
-        © 2021 Copyright
-        <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a>
-        <span class="app-pipe"></span>
-        Verze: 1.1.3
-      </small>
+    </div> -->
+    <div class="d-flex justify-content-between p-3 app-footer-bottom">
+      <div>
+        <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "Licence" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "Kontakt" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerPartneri">{% trans "Partneři" %}</a>
+      </div>
+      <div>
+        <small>
+          © 2021 Copyright
+          <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a><span class="app-pipe"></span>Verze: 1.1.3
+        </small>
+      </div>
     </div>
   </footer>
+
+  {% include "footer_licence.html" %}
+  {% include "footer_kontakt.html" %}
+  {% include "footer_partneri.html" %}
 {% endblock %}
 
 {% block script_sidebar %}
