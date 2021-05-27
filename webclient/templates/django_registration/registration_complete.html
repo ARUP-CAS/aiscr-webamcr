@@ -8,10 +8,21 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Registrace nového uživatele" %}</h1>
-
-  {% trans "Na uvedený email byla odeslána ověřovací zpráva. Pokračujte prosím kliknutím na odkaz obsažený v této zprávě." %}
-
+  <div class="app-login-wrapper">
+    <div class="row justify-content-center">
+      <div class="col-lg-4">
+        <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'Archeologická mapa České republiky' %}" class="app-logo">
+        <div class="card">
+          <div class="card-body">
+            <h1 class="h3 mb-3 font-weight-normal">{% trans "Registrace nového uživatele" %}</h1>
+            <p class="mt-3 mb-0 text-left text-muted">
+              {% trans "Na uvedený email byla odeslána ověřovací zpráva. Pokračujte prosím kliknutím na odkaz obsažený v této zprávě." %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block script %}
