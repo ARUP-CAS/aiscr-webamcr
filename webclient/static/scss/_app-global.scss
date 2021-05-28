@@ -332,69 +332,100 @@ form {
   }
 }
 
-// list wrapper
-.app-table-list-wrapper {
-  overflow: auto;
-  max-height: calc(100vh - 248px);
+// table list
+.app-table-list-container {
+  @extend .d-flex, .flex-column, .h-100; 
 
-  .table-container {
-    overflow: unset;
+  .app-table-list-wrapper {
+    flex: 1 0 auto;
+    position: relative;
 
-    .table {
-      @extend .table-hover; // .table-striped
+    .app-table-list-inner {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      overflow: auto;
 
-      thead {
-        tr {
-          th {
-            @extend .border-0;
-
-            &.asc {
-              .app-orderable-wrapper {
-                &:before {
-                  content: 'arrow_upward';
+      .table-container {
+        overflow: unset;
+    
+        .table {
+          @extend .table-hover; // .table-striped
+    
+          thead {
+            tr {
+              th {
+                @extend .border-0;
+                padding: .5rem .5rem;
+    
+                &.asc {
+                  .app-orderable-wrapper {
+                    &:before {
+                      content: 'arrow_upward';
+                    }
+                  } 
                 }
-              } 
-            }
-
-            &.desc {
-              .app-orderable-wrapper {
-                &:before {
-                  content: 'arrow_downward';
+    
+                &.desc {
+                  .app-orderable-wrapper {
+                    &:before {
+                      content: 'arrow_downward';
+                    }
+                  } 
                 }
-              } 
-            }
-
-            .app-orderable-wrapper {
-              @extend .d-flex;
-
-              &:before {
-                @extend .mr-1;
-                font-family: "Material Icons";
-                color: $white;
+    
+                .app-orderable-wrapper {
+                  @extend .d-flex;
+    
+                  &:before {
+                    @extend .mr-1;
+                    font-family: "Material Icons";
+                    color: $white;
+                  }
+                }
               }
             }
           }
-        }
-      }
-
-      tr {
-        td {
-          padding: .5rem .5rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          min-width: 100%;
-          max-width: 120px;
     
-          &.ident_cely {
-            min-width: 130px;
-          }
-
-          &.podnet {
-            max-width: 130px;
+          tr {
+            td {
+              @extend .border-top-0, .border-bottom;
+              padding: .4rem .5rem;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              min-width: 100%;
+              max-width: 120px;
+        
+              &.ident_cely {
+                min-width: 130px;
+              }
+    
+              &.podnet {
+                max-width: 130px;
+              }
+            }
           }
         }
       }
     }
   }
 }
+
+// test
+/* .app-table-list-container {
+  @extend .d-flex, .flex-column, .h-100;
+
+  .app-table-list-wrapper-test {
+    flex: 1 0 auto;
+    position: relative;
+
+    .app-table-list-inner {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      overflow: auto;
+      background-color: red;
+    }
+  }
+} */
