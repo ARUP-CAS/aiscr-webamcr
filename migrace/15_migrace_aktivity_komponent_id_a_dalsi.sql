@@ -33,3 +33,7 @@ alter table dokument_extra_data drop column datum_vzniku_ts;
 
 -- Odstraneni sloupce pian.buffer
 alter table pian drop column buffer;
+
+alter table auth_user add column telefon text;
+update auth_user au set telefon = sel.tel from (select email, telefon as tel from uzivatel) sel where sel.email = au.email;
+

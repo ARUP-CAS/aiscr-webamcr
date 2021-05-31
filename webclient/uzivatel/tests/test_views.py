@@ -29,7 +29,7 @@ class TestUzivatel(TestCase):
         }
         request = self.factory.post("/uzivatel/osoba/create/", data)
         request.user = User.objects.get(email="amcr@arup.cas.cz")
-
+        request = add_middleware_to_request(request, SessionMiddleware)
         request.session.save()
 
         response = create_osoba(request)

@@ -15,6 +15,7 @@ class AuthUserCreationForm(RegistrationForm):
             "first_name",
             "last_name",
             "email",
+            "telefon",
             "organizace",
             "password1",
             "password2",
@@ -26,12 +27,14 @@ class AuthUserCreationForm(RegistrationForm):
             "email": _("Email"),
             "organizace": _("Organizace"),
             "password1": _("Heslo"),
+            "telefon": _("Telefon")
         }
 
         widgets = {
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "telefon": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -43,7 +46,7 @@ class AuthUserCreationForm(RegistrationForm):
 class AuthUserChangeForm(UserChangeForm):
     class Meta:
         model = User
-        fields = ("email", "organizace", "jazyk", "ident_cely")
+        fields = ("email", "organizace", "jazyk", "ident_cely", "telefon")
 
 
 class OsobaForm(forms.ModelForm):

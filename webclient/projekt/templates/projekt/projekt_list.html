@@ -19,18 +19,12 @@
             <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
               <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
             </button>
-            <a href="{% url 'projekt:list' %}" class="btn btn-danger" id="id-cancel-filter-link" style="display: none">
-              <span class="material-icons">clear</span> {% trans "Smazat filtr" %}
-            </a>
           </div>
           <div class="app-middle text-muted">
             {% trans "Počet nalezených projektů: " %}<strong>{{ table.rows|length }}</strong>
           </div>
           <div class="app-right">
             <div class="btn-group" role="group">
-              <!-- <button type="button" class="btn btn-primary">
-                <span class="material-icons app-icon-expand">expand_more</span>
-              </button> -->
               <div class="btn-group" role="group">
                 <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení slouců' %}">
                   <span class="material-icons">table_chart</span>
@@ -239,8 +233,7 @@
                   hasOnlyNaseProjekty(keys, values) ||
                   hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])
               )) {
-                  setHeader("Vybrané projekty")
-                  document.getElementById('id-cancel-filter-link').style.display = "inline-block";
+                  setHeader("Projekty podle filtru")
               }
           }
       });

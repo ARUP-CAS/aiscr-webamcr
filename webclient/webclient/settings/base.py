@@ -257,3 +257,5 @@ EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
+
+AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
