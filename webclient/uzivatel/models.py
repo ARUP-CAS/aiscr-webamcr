@@ -4,6 +4,8 @@ from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
+
+from core.validators import validate_phone_number
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 
@@ -29,6 +31,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
+    telefon = models.TextField(blank=True, null=True, validators=[validate_phone_number])
     hlavni_role = models.ForeignKey(
         Group,
         models.DO_NOTHING,
