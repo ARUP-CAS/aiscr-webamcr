@@ -45,6 +45,9 @@
   <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
   <script src="/static/static/autocomplete_light/select2.js"></script>
   <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+  <script>
+    var global_csrftoken = '{{ csrf_token }}';
+  </script>
 {% endblock %}
 
 {% block content %}
@@ -112,7 +115,7 @@
         <div class="col-sm-4">
           <div class="form-group">
             <label>{% trans "Hlavní katastr" %}</label>
-            <input class="form-control" type="text" placeholder="{{ zaznam.hlavni_katastr }}" readonly>
+            <input id="main_cadastre_id" class="form-control" type="text" placeholder="{{ zaznam.hlavni_katastr }}" readonly>
           </div>
         </div>
         <div class="col-sm-4">
@@ -540,10 +543,35 @@
               }
               setCookie("detail-id-shown", form_to_show_next, "/arch_z/detail/")
           }
+          if(form_id.includes("detail_dj_form_")){
+            pian_id=form_id.replace("detail_dj_form_","")
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/arch_z/akce-get-katastr');
+            xhr.setRequestHeader('Content-type', 'application/json');
+            if (typeof global_csrftoken !== 'undefined') {
+                xhr.setRequestHeader('X-CSRFToken', global_csrftoken );
+            } else {
+              console.log("neni X-CSRFToken token")
+            }
+            xhr.onload = function () {
+                rs=JSON.parse(this.responseText)
+                map.setView([rs.lat,rs.lng], rs.zoom)
+            };
+            xhr.send(JSON.stringify(
+              {
+                'cadastre': document.getElementById("main_cadastre_id").placeholder,
+                'pian': pian_id,
+              }))
+
+
+
+          }
       }
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {
+        //console.log("show_create_child_form"+" "+form_id+" "+form_to_show_next);
+
           show_form(form_id, form_to_show_next);
           let forma = document.getElementById(form_id+"_id");
           forma.action = url;

@@ -27,4 +27,5 @@ urlpatterns = [
         views.odpojit_dokument,
         name="odpojit_dokument",
     ),
+    path("akce-get-katastr", views.post_akce2kat, name="post_akce2kat"),
 ]

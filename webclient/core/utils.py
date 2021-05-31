@@ -2,6 +2,7 @@ import logging
 import mimetypes
 import zlib
 
+from dj.models import DokumentacniJednotka
 from heslar.models import RuianKatastr
 from projekt.models import Projekt
 
@@ -42,6 +43,36 @@ def get_cadastre_from_point(point):
         return katastr
     except IndexError:
         logger.error("Could not find cadastre for pont: " + str(point))
+        return None
+
+
+def get_centre_from_akce(katastr, pian):
+    query = (
+        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng from public.ruian_katastr where "
+        "nazev=%s and aktualni='t' limit 1"
+    )
+    try:
+        logger.debug(query)
+        bod = RuianKatastr.objects.raw(query, [katastr])[0]
+        bod.zoom = 14
+        if len(pian) > 1:
+            dj = DokumentacniJednotka.objects.get(ident_cely=pian)
+            if dj.pian:
+                try:
+                    if isinstance(dj.pian.geom[0], float):
+                        bod.lat = dj.pian.geom[1]
+                        bod.lng = dj.pian.geom[0]
+                        bod.zoom = 19
+                    else:
+                        bod.lat = dj.pian.geom[0][1]
+                        bod.lng = dj.pian.geom[0][0]
+                        bod.zoom = 19
+                except Exception as e:
+                    logger.error("Pian error: " + pian + " " + e)
+
+        return bod
+    except IndexError:
+        logger.error("Could not find cadastre: " + str(katastr) + " with pian: " + pian)
         return None
 
 

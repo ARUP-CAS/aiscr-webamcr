@@ -1,5 +1,6 @@
 import logging
 
+import simplejson as json
 from adb.forms import CreateADBForm
 from arch_z.forms import (
     CreateAkceForm,
@@ -34,13 +35,14 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
+from core.utils import get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -540,3 +542,21 @@ def get_detail_template_shows(archeologicky_zaznam):
         "archivovat_link": show_archivovat,
     }
     return show
+
+
+@require_http_methods(["POST"])
+def post_akce2kat(request):
+    body = json.loads(request.body.decode("utf-8"))
+    logger.debug(body)
+    katastr_name = body["cadastre"]
+    pian_ident_cely = body["pian"]
+    # geom = Point(float(body["corY"]), float(body["corX"]))
+    poi = get_centre_from_akce(katastr_name, pian_ident_cely)
+    # logger.debug(katastr)
+    if len(str(poi)) > 0:
+        return JsonResponse(
+            {"lat": str(poi.lat), "lng": str(poi.lng), "zoom": str(poi.zoom)},
+            status=200,
+        )
+    else:
+        return JsonResponse({"corY": "", "corX": "", "zoom": ""}, status=200)
