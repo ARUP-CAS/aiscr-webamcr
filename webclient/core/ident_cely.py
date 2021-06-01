@@ -163,6 +163,24 @@ def get_sm_from_point(point):
         raise PianNotInKladysm5Error(point)
 
 
+def get_pian_ident(zm50, approved) -> str:
+    MAXIMAL_PIANS: int = 99999
+    last_digit_count = 5
+    max_count = 0
+    prefix = "P" if approved else "N"
+    start = prefix + "-" + str(zm50.objectid).zfill(4) + "-"
+    for pian in Pian.objects.filter(ident_cely__startswith=start).all():
+        last_digits = int(pian.ident_cely[-last_digit_count:])
+        if max_count < last_digits:
+            max_count = last_digits
+    if max_count < MAXIMAL_PIANS:
+        ident = start + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of pians is " + str(MAXIMAL_PIANS))
+        return None
+
+
 def get_adb_ident(pian: Pian) -> str:
     # Get map list
     # Format: [ADB]-[sm5.mapno]-[NUMBER]

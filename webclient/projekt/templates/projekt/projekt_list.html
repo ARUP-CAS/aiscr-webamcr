@@ -74,9 +74,9 @@
                     {% endif %}
                   {% endfor %}
                 </div>
-              </div>        
+              </div>
               <div class="btn-group" role="group">
-                <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Stáhnout soubor' %}">
+                <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Export výběru (při výběru většího množství záznamů může trvat delší dobu)' %}">
                   <span class="material-icons">download</span>
                 </button>
                 <div class="dropdown-menu" aria-labelledby="btnGroupDropDownload">
@@ -104,7 +104,7 @@
     {% endif %}
     <div class="app-table-list-wrapper">
       <div class="app-table-list-inner">
-        {% render_table table 'projekt/bootstrap4.html' %}     
+        {% render_table table 'projekt/bootstrap4.html' %}
       </div>
     </div>
   </div>

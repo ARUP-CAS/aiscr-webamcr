@@ -671,7 +671,7 @@ class Kladyzm(models.Model):
     natoceni = models.DecimalField(max_digits=65535, decimal_places=65535)
     shape_leng = models.DecimalField(max_digits=65535, decimal_places=65535)
     shape_area = models.DecimalField(max_digits=65535, decimal_places=65535)
-    the_geom = models.GeometryField(srid=0)
+    the_geom = models.GeometryField(srid=4326)
 
     class Meta:
         managed = False

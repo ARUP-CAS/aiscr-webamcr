@@ -65,7 +65,7 @@ class Kladyzm(models.Model):
     natoceni = models.DecimalField(max_digits=12, decimal_places=11)
     shape_leng = models.DecimalField(max_digits=12, decimal_places=6)
     shape_area = models.DecimalField(max_digits=12, decimal_places=2)
-    the_geom = pgmodels.GeometryField()
+    the_geom = pgmodels.GeometryField(srid=102067)
 
     class Meta:
         db_table = "kladyzm"

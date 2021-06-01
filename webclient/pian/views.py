@@ -2,6 +2,7 @@ import logging
 
 from core.constants import KLADYZM10, KLADYZM50
 from core.exceptions import NeznamaGeometrieError
+from core.ident_cely import get_pian_ident
 from core.message_constants import (
     PIAN_USPESNE_ODPOJEN,
     PIAN_USPESNE_SMAZAN,
@@ -13,6 +14,7 @@ from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext as _
@@ -68,21 +70,30 @@ def create(request, dj_ident_cely):
         # Assign base map references
         if type(pian.geom) == Point:
             pian.typ = Heslar.objects.get(id=GEOMETRY_BOD)
+            point = pian.geom
         elif type(pian.geom) == LineString:
             pian.typ = Heslar.objects.get(id=GEOMETRY_LINIE)
+            point = pian.geom.interpolate(0.5)
         elif type(pian.geom) == Polygon:
             pian.typ = Heslar.objects.get(id=GEOMETRY_PLOCHA)
+            point = Centroid(pian.geom)
         else:
             raise NeznamaGeometrieError()
-        zm10s = Kladyzm.objects.filter(kategorie=KLADYZM10).filter(
-            the_geom__contains=pian.geom
+        logger.debug("GEOM: " + str(form.data["geom"]))
+        zm10s = (
+            Kladyzm.objects.filter(kategorie=KLADYZM10)
+            .exclude(objectid=1094)
+            .filter(the_geom__contains=point)
         )
-        zm50s = Kladyzm.objects.filter(kategorie=KLADYZM50).filter(
-            the_geom__contains=pian.geom
+        zm50s = (
+            Kladyzm.objects.filter(kategorie=KLADYZM50)
+            .exclude(objectid=1094)
+            .filter(the_geom__contains=point)
         )
         if zm10s.count() == 1 and zm50s.count() == 1:
             pian.zm10 = zm10s[0]
             pian.zm50 = zm50s[0]
+            pian.ident_cely = get_pian_ident(zm50s[0], False)
             pian.save()
             dj.pian = pian
             dj.save()
@@ -99,6 +110,11 @@ def create(request, dj_ident_cely):
         logger.warning(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
+    # return render(
+    #     request,
+    #     "core/upload_file.html",
+    #     {"ident_cely": "asdasd", "back_url": "asdasd"},
+    # )
     return redirect(request.META.get("HTTP_REFERER"))
 
 
