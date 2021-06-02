@@ -501,19 +501,6 @@
           <div class="app-fx app-left">
             {% trans "Pian" %} {{ p.ident_cely }}
           </div>
-          <div class="app-fx app-right">
-            <div class="btn-group" role="group">
-              <div class="dropdown-menu" aria-labelledby="others">
-                <a class="dropdown-item" href="#">
-                  {% trans 'Smazat pian' %}
-                </a>
-              </div>
-              <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                      aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-                <span class="material-icons">more_vert</span>
-              </button>
-            </div>
-          </div>
         </div>
         <div class="card-body">
           <form class="mb-3" method="POST" action="{% url 'pian:detail' p.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">

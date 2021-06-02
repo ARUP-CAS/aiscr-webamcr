@@ -274,7 +274,7 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xls"]
+        context["export_formats"] = ["csv", "json", "xlsx"]
         return context
 
     def get_queryset(self):

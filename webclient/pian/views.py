@@ -1,6 +1,6 @@
 import logging
 
-from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN
+from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN, PIAN_NEPOTVRZEN
 from core.exceptions import NeznamaGeometrieError
 from core.ident_cely import get_pian_ident
 from core.message_constants import (
@@ -57,7 +57,7 @@ def detail(request, ident_cely):
 def odpojit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
-    delete_pian = True if pian_djs.count() < 2 else False
+    delete_pian = True if pian_djs.count() < 2 and dj.pian.stav == PIAN_NEPOTVRZEN else False
     pian = dj.pian
     if request.method == "POST":
         dj.pian = None
@@ -158,11 +158,6 @@ def create(request, dj_ident_cely):
         logger.warning(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    # return render(
-    #     request,
-    #     "core/upload_file.html",
-    #     {"ident_cely": "asdasd", "back_url": "asdasd"},
-    # )
     return redirect(request.META.get("HTTP_REFERER"))
 
 
