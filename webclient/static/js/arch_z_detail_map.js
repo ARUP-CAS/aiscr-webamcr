@@ -332,7 +332,7 @@ function geomToText(){
             //addLogText('im an instance of L marker');
             console.log(layer)
             let latlngs=layer.getLatLng()
-            text="POINT("+latlngs.lng+" "+latlngs.lat+")"
+            text="POINT("+latlngs.lat+" "+latlngs.lng+")"
         }
         else if (layer instanceof L.Polygon) {
             //addLogText('im an instance of L polygon');
@@ -342,11 +342,11 @@ function geomToText(){
             for (var i = 0; i < latlngs.length; i++) {
                 for(var j=0; j< latlngs[i].length;j++){
                     coordinates.push([latlngs[i][j].lat, latlngs[i][j].lng])
-                    text +=( latlngs[i][j].lng+" "+latlngs[i][j].lat) + ", ";
+                    text +=( latlngs[i][j].lat+" "+latlngs[i][j].lng) + ", ";
                 }
             }
             // Musi koncit na zacatek
-            text += coordinates[0][1] + " " + coordinates[0][0]
+            text += coordinates[0][0] + " " + coordinates[0][1]
             text +="))"
         }
         else if (layer instanceof L.Polyline) {
@@ -358,7 +358,7 @@ function geomToText(){
                 if(it>0) text +=","
 
                 it++;
-                text +=( coordinates[i].lng+" "+coordinates[i].lat);
+                text +=( coordinates[i].lat+" "+coordinates[i].lng);
             }
             text +=")"
         }
