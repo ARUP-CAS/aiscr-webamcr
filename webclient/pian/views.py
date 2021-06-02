@@ -1,10 +1,11 @@
 import logging
 
-from core.constants import KLADYZM10, KLADYZM50
+from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN
 from core.exceptions import NeznamaGeometrieError
 from core.ident_cely import get_pian_ident
 from core.message_constants import (
     PIAN_USPESNE_ODPOJEN,
+    PIAN_USPESNE_POTVRZEN,
     PIAN_USPESNE_SMAZAN,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_VYTVOREN,
@@ -47,13 +48,36 @@ def odpojit(request, dj_ident_cely):
     else:
         context = {
             "objekt": pian,
-            "header": _("Skutečně odpojit pian")
+            "header": _("Skutečně odpojit pian ")
             + pian.ident_cely
             + _(" z dokumentační jednotky ")
             + dj.ident_cely
             + "?",
             "title": _("Odpojení pianu"),
             "button": _("Odpojit pian"),
+        }
+
+        return render(request, "core/transakce.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def potvrdit(request, dj_ident_cely):
+    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    pian = dj.pian
+    if request.method == "POST":
+        pian.stav = PIAN_POTVRZEN
+        pian.ident_cely = get_pian_ident(pian.zm50, True)
+        pian.save()
+        logger.debug("Pian potvrzen: " + pian.ident_cely)
+        messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
+        return redirect("arch_z:detail", ident_cely=dj.archeologicky_zaznam.ident_cely)
+    else:
+        context = {
+            "objekt": pian,
+            "header": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
+            "title": _("Potvrzení pianu"),
+            "button": _("Potvrdit pian"),
         }
 
         return render(request, "core/transakce.html", context)

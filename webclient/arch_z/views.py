@@ -15,6 +15,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     ODESLANI_AZ,
+    PIAN_NEPOTVRZEN,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
@@ -147,6 +148,9 @@ def detail(request, ident_cely):
         )
         show_add_komponenta = not jednotka.negativni_jednotka
         show_add_pian = False if jednotka.pian else True
+        show_approve_pian = (
+            True if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN else False
+        )
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
@@ -154,6 +158,7 @@ def detail(request, ident_cely):
             "show_add_komponenta": show_add_komponenta,
             "show_add_pian": show_add_pian,
             "show_remove_pian": not show_add_pian,
+            "show_approve_pian": show_approve_pian,
         }
         if has_adb:
             dj_form_detail["adb_form"] = CreateADBForm(
@@ -399,12 +404,10 @@ def smazat(request, ident_cely):
         # Parent records
         historie_vazby = az.historie
         komponenty_jednotek_vazby = []
-        for dj in az.dokumentacnijednotka_set.all():
+        for dj in az.dokumentacni_jednotky_akce.all():
             if dj.komponenty:
                 komponenty_jednotek_vazby.append(dj.komponenty)
         az.delete()
-
-        historie_vazby.delete()
         historie_vazby.delete()
         for komponenta_vazba in komponenty_jednotek_vazby:
             komponenta_vazba.delete()

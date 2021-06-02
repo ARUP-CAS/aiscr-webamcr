@@ -19,7 +19,12 @@ class DokumentacniJednotka(models.Model):
     negativni_jednotka = models.BooleanField()
     ident_cely = models.TextField(unique=True, blank=True, null=True)
     pian = models.ForeignKey(
-        Pian, models.DO_NOTHING, db_column="pian", blank=True, null=True
+        Pian,
+        models.DO_NOTHING,
+        db_column="pian",
+        blank=True,
+        null=True,
+        related_name="dokumentacni_jednotky_pianu",
     )
     komponenty = models.OneToOneField(
         KomponentaVazby,
@@ -33,7 +38,7 @@ class DokumentacniJednotka(models.Model):
         ArcheologickyZaznam,
         on_delete=models.CASCADE,
         db_column="archeologicky_zaznam",
-        related_name="dokumentacni_jednotky",
+        related_name="dokumentacni_jednotky_akce",
     )
 
     class Meta:
