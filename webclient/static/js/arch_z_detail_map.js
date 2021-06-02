@@ -307,7 +307,7 @@ if(global_map_can_edit){
 
         let corX = e.layer._latlng.lat;
         let corY = e.layer._latlng.lng;
-        addPointToPoiLayer(corX, corY, 'Navržrný PIAN',la);
+        addPointToPoiLayer(corX, corY, 'Navržený PIAN',la);
     } else{
         drawnItems.clearLayers();
         //gm_correct.clearLayers();
