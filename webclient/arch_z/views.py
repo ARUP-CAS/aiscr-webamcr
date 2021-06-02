@@ -127,6 +127,7 @@ def detail(request, ident_cely):
     adb_form_create = CreateADBForm()
     dj_forms_detail = []
     komponenta_forms_detail = []
+    pian_forms_detail = []
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
@@ -153,11 +154,13 @@ def detail(request, ident_cely):
         )
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
+            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
             "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
             "show_add_pian": show_add_pian,
             "show_remove_pian": not show_add_pian,
+            "show_uprav_pian": not show_add_pian,
             "show_approve_pian": show_approve_pian,
         }
         if has_adb:
@@ -167,6 +170,16 @@ def detail(request, ident_cely):
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
             dj_form_detail["show_remove_adb"] = True
         dj_forms_detail.append(dj_form_detail)
+        if jednotka.pian:
+            pian_forms_detail.append(
+                {
+                    "ident_cely": jednotka.pian.ident_cely,
+                    "center_point": "",
+                    "form": PianCreateForm(
+                        instance=jednotka.pian, prefix=jednotka.pian.ident_cely
+                    ),
+                }
+            )
         for komponenta in jednotka.komponenty.komponenty.all():
             komponenta_forms_detail.append(
                 {
@@ -193,6 +206,7 @@ def detail(request, ident_cely):
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
     context["komponenta_forms_detail"] = komponenta_forms_detail
+    context["pian_forms_detail"] = pian_forms_detail
 
     context["history_dates"] = get_history_dates(zaznam.historie)
     context["zaznam"] = zaznam

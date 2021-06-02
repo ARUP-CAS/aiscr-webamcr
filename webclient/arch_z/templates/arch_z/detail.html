@@ -332,6 +332,12 @@
                       {% trans 'Potvrdit pian' %}
                     </a>
                   {% endif %}
+                  {% if j.show_uprav_pian %}
+                    <a class="dropdown-item" href="#"
+                       onclick="show_form('detail_pian_form_{{ j.pian_ident_cely }}', 'detail_pian_form_{{ j.pian_ident_cely }}')">
+                      {% trans 'Upravit pian' %}
+                    </a>
+                  {% endif %}
                   {% if j.show_remove_pian %}
                     <a class="dropdown-item" href="{% url 'pian:odpojit' j.ident_cely %}">
                       {% trans 'Odpojit pian' %}
@@ -360,10 +366,9 @@
             </div>
           </div>
           <div class="card-body">
-            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
-                  onsubmit="{{ j.ident_cely }}_editDjSubmitButton.disabled = true; return true;">
+            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
               {% crispy j.form %}
-              <button type="submit" id="{{ j.ident_cely }}_editDjSubmitButton"
+              <button type="submit" id="editDjSubmitButton"
                       class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
             </form>
 
@@ -375,10 +380,9 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <form method="POST" action="{% url 'adb:detail' j.ident_cely %}"
-                        onsubmit="{{ j.ident_cely }}_editAdbSubmitButton.disabled = true; return true;">
+                  <form method="POST" action="{% url 'adb:detail' j.ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
                     {% crispy j.adb_form %}
-                    <button type="submit" id="{{ j.ident_cely }}_editAdbSubmitButton"
+                    <button type="submit" id="editAdbSubmitButton"
                             class="btn btn-primary">{% trans "Upravit ADB" %}</button>
                   </form>
                 </div>
@@ -396,11 +400,10 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="#" id="create_komponenta_form_id"
-                onsubmit="{{ j.ident_cely }}_createCompotSubmitButton.disabled = true; return true;">
+          <form method="POST" action="#" id="create_komponenta_form_id" onsubmit="createCompotSubmitButton.disabled = true; return true;">
             <!-- Action is filled using javascript -->
             {% crispy komponenta_form_create %}
-            <button type="submit" id="{{ j.ident_cely }}_createCompotSubmitButton"
+            <button type="submit" id="createCompotSubmitButton"
                     class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
           </form>
         </div>
@@ -413,11 +416,10 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="#" id="create_adb_form_id"
-                onsubmit="{{ j.ident_cely }}_createAdbSubmitButton.disabled = true; return true;">
+          <form method="POST" action="#" id="create_adb_form_id" onsubmit="createAdbSubmitButton.disabled = true; return true;">
             <!-- Action is filled using javascript -->
             {% crispy adb_form_create %}
-            <button type="submit" id="{{ j.ident_cely }}_createAdbSubmitButton"
+            <button type="submit" id="createAdbSubmitButton"
                     class="btn btn-primary">{% trans "Vytovřit ADB" %}</button>
           </form>
         </div>
@@ -430,11 +432,10 @@
           </div>
         </div>
         <div class="card-body">
-          <form method="POST" action="#" id="create_pian_form_id"
-                onsubmit="{{ j.ident_cely }}_createPianSubmitButton.disabled = true; return true;">
+          <form method="POST" action="#" id="create_pian_form_id" onsubmit="createPianSubmitButton.disabled = true; return true;">
             <!-- Action is filled using javascript -->
             {% crispy pian_form_create %}
-            <button type="submit" id="{{ j.ident_cely }}_createPianSubmitButton"
+            <button type="submit" id="createPianSubmitButton"
                     class="btn btn-primary">{% trans "Vytovřit pian" %}</button>
           </form>
         </div>
@@ -462,10 +463,9 @@
             </div>
           </div>
           <div class="card-body">
-            <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}"
-                  onsubmit="{{ k.ident_cely }}_editKompSubmitButton.disabled = true; return true;">
+            <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
               {% crispy k.form %}
-              <button type="submit" id="{{ k.ident_cely }}_editKompSubmitButton"
+              <button type="submit" id="editKompSubmitButton"
                       class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
             </form>
 
@@ -477,15 +477,13 @@
               </div>
               <div class="card-body">
                 <h5>{% trans "Objekty" %}</h5>
-                <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}"
-                      onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+                <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
                   {% crispy k.form_nalezy_objekty k.helper %}
                   <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
                           class="btn btn-primary">{% trans "Upravit objekty" %}</button>
                 </form>
                 <h5>{% trans "Předměty" %}</h5>
-                <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}"
-                      onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
+                <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
                   {% crispy k.form_nalezy_predmety k.helper %}
                   <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
                           class="btn btn-primary">{% trans "Upravit predmety" %}</button>
@@ -496,6 +494,37 @@
         </div>
       {% endfor %}
     </div>
+
+    {% for p in pian_forms_detail %}
+      <div class="card app-card-form" id="detail_pian_form_{{ p.ident_cely }}" style="display: none;">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {% trans "Pian" %} {{ p.ident_cely }}
+          </div>
+          <div class="app-fx app-right">
+            <div class="btn-group" role="group">
+              <div class="dropdown-menu" aria-labelledby="others">
+                <a class="dropdown-item" href="#">
+                  {% trans 'Smazat pian' %}
+                </a>
+              </div>
+              <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                      aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form class="mb-3" method="POST" action="{% url 'pian:detail' p.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">
+            {% crispy p.form %}
+            <button type="submit" id="editPianButton"
+                    class="btn btn-primary">{% trans "Upravit pian" %}</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
 
     <!-- dokumenty -->
     <div class="card app-card-form app-card-dokument">
@@ -613,8 +642,6 @@
                       'cadastre': document.getElementById("main_cadastre_id").placeholder,
                       'pian': pian_id,
                   }))
-
-
           }
       }
 

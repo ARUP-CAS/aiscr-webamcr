@@ -7,7 +7,9 @@ from core.message_constants import (
     PIAN_USPESNE_ODPOJEN,
     PIAN_USPESNE_POTVRZEN,
     PIAN_USPESNE_SMAZAN,
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
+    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from dal import autocomplete
@@ -26,6 +28,28 @@ from pian.forms import PianCreateForm
 from pian.models import Kladyzm, Pian
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+@require_http_methods(["POST"])
+def detail(request, ident_cely):
+    pian = Pian.objects.get(ident_cely=ident_cely)
+    form = PianCreateForm(
+        request.POST,
+        instance=pian,
+        prefix=ident_cely,
+    )
+    if form.is_valid():
+        logger.debug("Form is valid")
+        form.save()
+        if form.changed_data:
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+    else:
+        logger.warning("Form is not valid")
+        logger.debug(form.errors)
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+
+    return redirect(request.META.get("HTTP_REFERER"))
 
 
 @login_required
