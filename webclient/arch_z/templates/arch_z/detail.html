@@ -556,6 +556,9 @@
             xhr.onload = function () {
                 rs=JSON.parse(this.responseText)
                 map.setView([rs.lat,rs.lng], rs.zoom)
+                if(rs.zoom==19){
+                  addPointToPoiLayerWithForce(rs.lat,rs.lng,pian_id,gm_correct)
+                }
             };
             xhr.send(JSON.stringify(
               {
