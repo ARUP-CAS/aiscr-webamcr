@@ -4,7 +4,7 @@ from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms import inlineformset_factory
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def edit_objekt(request, komp_ident_cely):
-    komponenta = Komponenta.objects.get(ident_cely=komp_ident_cely)
+    komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(
         HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
@@ -59,7 +59,7 @@ def edit_objekt(request, komp_ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def edit_predmet(request, komp_ident_cely):
-    komponenta = Komponenta.objects.get(ident_cely=komp_ident_cely)
+    komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
     specifikce_predmetu_choices = list(
         Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(

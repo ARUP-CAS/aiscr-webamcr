@@ -83,12 +83,12 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
-    zaznam = (
+    zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
         .select_related("akce__vedlejsi_typ")
         .select_related("akce__hlavni_typ")
-        .select_related("pristupnost")
-        .get(ident_cely=ident_cely)
+        .select_related("pristupnost"),
+        ident_cely=ident_cely,
     )
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
@@ -220,7 +220,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+    zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST, instance=zaznam)
         form_akce = CreateAkceForm(request.POST, instance=zaznam.akce)
@@ -356,7 +356,7 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely):
-    projekt = Projekt.objects.get(ident_cely=projekt_ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
 
     # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
     if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
@@ -411,7 +411,7 @@ def zapsat(request, projekt_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    akce = Akce.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
+    akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam

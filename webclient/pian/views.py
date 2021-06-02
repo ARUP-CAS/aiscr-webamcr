@@ -19,7 +19,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
-    pian = Pian.objects.get(ident_cely=ident_cely)
+    pian = get_object_or_404(Pian, dent_cely=ident_cely)
     form = PianCreateForm(
         request.POST,
         instance=pian,
@@ -55,7 +55,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
     delete_pian = True if pian_djs.count() < 2 else False
     pian = dj.pian
@@ -87,7 +87,7 @@ def odpojit(request, dj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def potvrdit(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if request.method == "POST":
         pian.stav = PIAN_POTVRZEN
@@ -110,7 +110,7 @@ def potvrdit(request, dj_ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def create(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")

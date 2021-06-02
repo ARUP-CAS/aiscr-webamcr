@@ -201,7 +201,7 @@ def create(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -248,7 +248,7 @@ def edit(request, ident_cely):
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if request.method == "POST":
         resp = projekt.delete()
         logger.debug("Projekt smazan: " + str(resp))
