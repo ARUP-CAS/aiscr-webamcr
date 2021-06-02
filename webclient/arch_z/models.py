@@ -190,7 +190,7 @@ class Akce(models.Model):
                         + " musí být nejdřív archivován."
                     )
                 )
-        for dj in self.archeologicky_zaznam.dokumentacni_jednotky.all():
+        for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             if dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
@@ -237,14 +237,14 @@ class Akce(models.Model):
             )
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
-        if len(self.archeologicky_zaznam.dokumentacni_jednotky.all()) == 0:
+        if len(self.archeologicky_zaznam.dokumentacni_jednotky_akce.all()) == 0:
             result.append(_("Nemá žádnou dokumentační jednotku."))
             logger.warning(
                 "Akce "
                 + self.archeologicky_zaznam.ident_cely
                 + " nema dokumentacni jednotku."
             )
-        for dj in self.archeologicky_zaznam.dokumentacni_jednotky.all():
+        for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
