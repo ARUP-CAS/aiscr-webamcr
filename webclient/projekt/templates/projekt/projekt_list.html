@@ -42,12 +42,14 @@
                             alt="loader"
                             style="width:20px; height:20px; margin-right:5px; opacity:0.7;"
                             class="ico check"
+                            id="ico_check_{{ column.name }}"
                         />
                         <img
                             src="{% static "django_tables2_column_shifter/img/uncheck.png" %}"
                             alt="loader"
                             style="width:20px; height:20px; margin-right:5px; display: none; opacity:0.7;"
                             class="ico uncheck"
+                            id="ico_uncheck_{{ column.name }}"
                         />
                         {{ column.header }}
                       </a>
@@ -62,12 +64,14 @@
                             alt="loader"
                             style="width:20px; height:20px; margin-right:5px; display:none; opacity:0.7;"
                             class="ico check"
+                            id="ico_check_{{ column.name }}"
                         />
                         <img
                             src="{% static "django_tables2_column_shifter/img/uncheck.png" %}"
                             alt="loader"
                             style="width:20px; height:20px; margin-right:5px; opacity:0.7;"
                             class="ico uncheck"
+                            id="ico_uncheck_{{ column.name }}"
                         />
                         {{ column.header }}
                       </a>
@@ -235,6 +239,52 @@
               )) {
                   setHeader("Projekty podle filtru")
               }
+          }
+
+          const getCookie = (name) => {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  let cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      let cookie = jQuery.trim(cookies[i]);
+                      // Does this cookie string begin with the name we want?
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+
+          const zmen_status_sloupce = (sloupec, zmena) => {
+              fetch('odebrat-sloupec-z-vychozich', {
+                  method: 'POST',
+                  credentials: 'same-origin',
+                  headers: {
+                      "X-CSRFToken": getCookie("csrftoken"),
+                      "Accept": "application/json",
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      "sloupec": sloupec,
+                      "zmena": zmena,
+                  })
+              });
+          };
+
+          const userSelection = document.getElementsByClassName('ico check');
+
+          for (let i = 0; i < userSelection.length; i++) {
+              const sloupec = userSelection[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
+              userSelection[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "skryj"));
+          }
+
+          const userSelection2 = document.getElementsByClassName('ico uncheck');
+
+          for (let i = 0; i < userSelection2.length; i++) {
+              const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
+              userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
           }
       });
   </script>
