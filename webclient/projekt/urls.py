@@ -43,4 +43,9 @@ urlpatterns = [
         views.post_ajax_get_point,
         name="post_ajax_get_points",
     ),
+    path(
+        "odebrat-sloupec-z-vychozich",
+        views.odebrat_sloupec_z_vychozich,
+        name="odebrat_sloupec_z_vychozich",
+    )
 ]

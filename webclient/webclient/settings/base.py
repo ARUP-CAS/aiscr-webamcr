@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django.contrib.sessions.backends.signed_cookies",
     "django_filters",
     "django_tables2",
     "django_tables2_column_shifter",
@@ -158,6 +159,8 @@ AUTH_USER_MODEL = "uzivatel.User"
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 LOGGING = {
     "version": 1,
