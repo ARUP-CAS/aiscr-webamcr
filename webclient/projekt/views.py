@@ -50,7 +50,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -263,6 +263,27 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
 
         return render(request, "core/smazat.html", context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def odebrat_sloupec_z_vychozich(request):
+    if request.method == "POST":
+        if "projekt_vychozi_skryte_sloupce" not in request.session:
+            request.session["projekt_vychozi_skryte_sloupce"] = []
+        sloupec = json.loads(request.body.decode('utf8'))["sloupec"]
+        zmena = json.loads(request.body.decode('utf8'))["zmena"]
+        skryte_sloupce = request.session["projekt_vychozi_skryte_sloupce"]
+        if zmena == "zobraz":
+            try:
+                skryte_sloupce.remove(sloupec)
+            except ValueError as err:
+                logger.error(f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}")
+                HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
+        else:
+            skryte_sloupce.append(sloupec)
+        request.session.modified = True
+    return HttpResponse("Odebráno")
 
 
 class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
