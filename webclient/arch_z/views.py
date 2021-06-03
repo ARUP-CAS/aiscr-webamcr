@@ -160,7 +160,7 @@ def detail(request, ident_cely):
             "show_add_komponenta": show_add_komponenta,
             "show_add_pian": show_add_pian,
             "show_remove_pian": not show_add_pian,
-            "show_uprav_pian": jednotka.pian and jednotka.pina.stav == PIAN_NEPOTVRZEN,
+            "show_uprav_pian": jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN,
             "show_approve_pian": show_approve_pian,
         }
         if has_adb:
