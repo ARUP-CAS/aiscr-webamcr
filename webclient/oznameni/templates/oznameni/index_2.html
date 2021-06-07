@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load static %}
+{% load template_filters %}
 
 {% block title %}Oznámení o stavebním či jiném záměru - Krok 2{% endblock %}
 
@@ -71,11 +72,11 @@
       </tr>
       <tr>
         <th scope="row">{% trans "Další katastry" %}:</th>
-        <td>{{ confirm.dalsi_katastry }}</td>
+        <td>{{ confirm.dalsi_katastry|katastry_to_list }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "Plánované zahájení" %}:</th>
-        <td>{{ confirm.planovane_zahajeni }}</td>
+        <td>{{ confirm.planovane_zahajeni|render_daterange }}</td>
       </tr>
       <tr>
         <th scope="row">{% trans "Podnět" %}:</th>

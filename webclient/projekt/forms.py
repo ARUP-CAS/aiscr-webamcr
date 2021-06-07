@@ -108,7 +108,7 @@ class EditProjektForm(forms.ModelForm):
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
     )
 
     class Meta:

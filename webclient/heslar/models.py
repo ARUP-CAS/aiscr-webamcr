@@ -149,7 +149,7 @@ class RuianKatastr(models.Model):
         ordering = ["nazev"]
 
     def __str__(self):
-        return self.nazev
+        return self.nazev + " (" + self.okres.nazev + ")"
 
 
 class RuianKraj(models.Model):
