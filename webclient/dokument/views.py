@@ -21,11 +21,13 @@ from core.message_constants import (
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_VRACEN,
+    VYBERTE_PROSIM_POLOHU,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.utils import get_cadastre_from_point
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -35,12 +37,19 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.forms import (
     CreateDokumentForm,
+    CreateModelDokumentForm,
+    CreateModelExtraDataForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
 )
 from dokument.models import Dokument, DokumentCast, DokumentExtraData
-from heslar.hesla import HESLAR_DOKUMENT_TYP
-from heslar.models import HeslarHierarchie
+from heslar.hesla import (
+    DOKUMENT_RADA_DATA_3D,
+    HESLAR_DOKUMENT_TYP,
+    MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
+    PRISTUPNOST_BADATEL_ID,
+)
+from heslar.models import Heslar, HeslarHierarchie
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +58,17 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
-    dokument = Dokument.objects.select_related(
-        "soubory",
-        "organizace",
-        "material_originalu",
-        "typ_dokumentu",
-        "rada",
-        "pristupnost",
-    ).get(ident_cely=ident_cely)
+    dokument = get_object_or_404(
+        Dokument.objects.select_related(
+            "soubory",
+            "organizace",
+            "material_originalu",
+            "typ_dokumentu",
+            "rada",
+            "pristupnost",
+        ),
+        ident_cely=ident_cely,
+    )
 
     context["dokument"] = dokument
     context["history_dates"] = get_history_dates(dokument.historie)
@@ -167,6 +179,68 @@ def zapsat(request, arch_z_ident_cely):
             "title": _("Nový dokument"),
             "header": _("Nový dokument"),
             "button": _("Vytvořit dokument"),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def create_model_3D(request):
+    if request.method == "POST":
+        form_d = CreateModelDokumentForm(request.POST)
+        form_extra = CreateModelExtraDataForm(request.POST)
+
+        if form_d.is_valid() and form_extra.is_valid():
+            logger.debug("Form is valid")
+            dokument = form_d.save(commit=False)
+            dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D)
+            dokument.material_originalu = Heslar.objects.get(
+                id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
+            )
+            point = form_extra.cleaned_data["geom"]
+            logger.debug(point)
+            region = get_cadastre_from_point(point).okres.kraj.rada_id
+            dokument.ident_cely = get_dokument_ident(
+                temporary=True, rada="3D", region=region
+            )
+            dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_BADATEL_ID)
+            dokument.stav = D_STAV_ZAPSANY
+            dokument.save()
+            dokument.set_zapsany(request.user)
+
+            # Vytvorit defaultni cast dokumentu
+            DokumentCast(
+                dokument=dokument,
+                ident_cely=get_cast_dokumentu_ident(dokument),
+            ).save()
+
+            form_d.save_m2m()
+            extra_data = form_extra.save(commit=False)
+            extra_data.dokument = dokument
+            extra_data.save()
+
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+
+        else:
+            logger.warning("Form is not valid")
+            logger.debug(form_d.errors)
+            logger.debug(form_extra.errors)
+            if "geom" in form_extra.errors:
+                messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
+    else:
+        form_d = CreateModelDokumentForm()
+        form_extra = CreateModelExtraDataForm()
+
+    return render(
+        request,
+        "dokument/create_model_3D.html",
+        {
+            "formDokument": form_d,
+            "formExtraData": form_extra,
+            "title": _("Nový model 3D"),
+            "header": _("Nový model 3D"),
+            "button": _("Vytvořit model"),
         },
     )
 

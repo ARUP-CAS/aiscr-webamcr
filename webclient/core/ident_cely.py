@@ -68,7 +68,7 @@ def get_dokument_rada(typ, material):
 
 
 def get_dokument_ident(temporary, rada, region):
-    if rada == "TX" or rada == "DD":
+    if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
         start = ""
         if temporary:

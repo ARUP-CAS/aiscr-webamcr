@@ -1,0 +1,31 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-dokument">
+    {% include "toolbar_dokument.html" %}
+    <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {{ header }}
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy formDokument %}
+          {% crispy formExtraData %}
+        </div>
+      </div>
+      <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

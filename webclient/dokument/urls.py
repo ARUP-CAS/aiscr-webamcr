@@ -14,4 +14,6 @@ urlpatterns = [
     path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
     path("dokumenty/", DokumentAutocomplete.as_view(), name="dokument-autocomplete"),
+    # MODELY3D
+    path("create/model", views.create_model_3D, name="create-model-3D"),
 ]

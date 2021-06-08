@@ -9,7 +9,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.models import SouborVazby
-from django.contrib.gis.db.models import GeometryField
+from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -285,7 +285,7 @@ class DokumentExtraData(models.Model):
     duveryhodnost = models.PositiveIntegerField(
         blank=True, null=True, validators=[MinValueValidator(1), MaxValueValidator(100)]
     )
-    geom = GeometryField(blank=True, null=True)
+    geom = PointField(blank=True, null=True, srid=4326)
 
     class Meta:
         db_table = "dokument_extra_data"
