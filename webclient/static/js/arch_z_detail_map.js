@@ -372,7 +372,7 @@ function geomToText(){
 var addPointToPoiLayer = (lat, long, text,lai) => {
     if( global_map_can_edit){
         L.marker([lat, long], {icon: redIcon}).bindPopup(text).addTo(drawnItems);
-        console.log(lat+" "+long)
+
     }
 }
 

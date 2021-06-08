@@ -551,11 +551,16 @@ def post_akce2kat(request):
     katastr_name = body["cadastre"]
     pian_ident_cely = body["pian"]
     # geom = Point(float(body["corY"]), float(body["corX"]))
-    poi = get_centre_from_akce(katastr_name, pian_ident_cely)
+    [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
     # logger.debug(katastr)
     if len(str(poi)) > 0:
         return JsonResponse(
-            {"lat": str(poi.lat), "lng": str(poi.lng), "zoom": str(poi.zoom)},
+            {
+                "lat": str(poi.lat),
+                "lng": str(poi.lng),
+                "zoom": str(poi.zoom),
+                "geom": str(geom),
+            },
             status=200,
         )
     else:

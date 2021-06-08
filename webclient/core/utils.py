@@ -46,31 +46,47 @@ def get_cadastre_from_point(point):
         return None
 
 
+def get_centre_point(bod, geom):
+    try:
+        [x0, x1, xlength] = [0.0, 0.0, 1]
+        bod.zoom = 19
+        if isinstance(geom[0], float):
+            [x0, x1, xlength] = [geom[0], geom[0], 1]
+        elif isinstance(geom[0][0], float):
+            for i in range(0, len(geom)):
+                [x0, x1, xlength] = [
+                    x0 + geom[i][0],
+                    x1 + geom[i][1],
+                    len(geom),
+                ]
+        else:
+            for i in range(0, len(geom[0])):
+                [x0, x1, xlength] = [
+                    x0 + geom[0][i][0],
+                    x1 + geom[0][i][1],
+                    len(geom[0]),
+                ]
+            bod.lat = x1 / xlength
+            bod.lng = x0 / xlength
+        return [bod, geom]
+    except Exception as e:
+        logger.error("Pian error: " + e)
+
+
 def get_centre_from_akce(katastr, pian):
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng from public.ruian_katastr where "
         "nazev=%s and aktualni='t' limit 1"
     )
     try:
-        logger.debug(query)
         bod = RuianKatastr.objects.raw(query, [katastr])[0]
+        geom = ""
         bod.zoom = 14
         if len(pian) > 1:
             dj = DokumentacniJednotka.objects.get(ident_cely=pian)
             if dj.pian:
-                try:
-                    if isinstance(dj.pian.geom[0], float):
-                        bod.lat = dj.pian.geom[1]
-                        bod.lng = dj.pian.geom[0]
-                        bod.zoom = 19
-                    else:
-                        bod.lat = dj.pian.geom[0][1]
-                        bod.lng = dj.pian.geom[0][0]
-                        bod.zoom = 19
-                except Exception as e:
-                    logger.error("Pian error: " + pian + " " + e)
-
-        return bod
+                [bod, geom] = get_centre_point(bod, dj.pian.geom)
+        return [bod, geom]
     except IndexError:
         logger.error("Could not find cadastre: " + str(katastr) + " with pian: " + pian)
         return None
