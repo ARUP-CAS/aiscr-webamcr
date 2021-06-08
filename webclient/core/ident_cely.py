@@ -121,7 +121,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_EVENT_DJS: int = 99
     dj_last_digit_count = 2
     max_count = 0
-    for dj in event.dokumentacni_jednotky.all():
+    for dj in event.dokumentacni_jednotky_akce.all():
         last_digits = int(dj.ident_cely[-dj_last_digit_count:])
         if max_count < last_digits:
             max_count = last_digits
@@ -138,7 +138,7 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
     max_count = 0
-    for dj in event.dokumentacni_jednotky.all():
+    for dj in event.dokumentacni_jednotky_akce.all():
         for komponenta in dj.komponenty.komponenty.all():
             last_digits = int(komponenta.ident_cely[-last_digit_count:])
             if max_count < last_digits:

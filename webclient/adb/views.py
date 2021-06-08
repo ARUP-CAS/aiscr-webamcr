@@ -15,7 +15,7 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
-    adb = Adb.objects.get(ident_cely=ident_cely)
+    adb = get_object_or_404(Adb, ident_cely=ident_cely)
     form = CreateADBForm(
         request.POST,
         instance=adb,
@@ -46,7 +46,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = CreateADBForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
@@ -70,7 +70,7 @@ def zapsat(request, dj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    adb = Adb.objects.get(ident_cely=ident_cely)
+    adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
         arch_z_ident_cely = adb.dokumentacni_jednotka.archeologicky_zaznam.ident_cely
         resp = adb.delete()

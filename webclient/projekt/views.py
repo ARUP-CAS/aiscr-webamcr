@@ -50,7 +50,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -201,7 +201,7 @@ def create(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -248,7 +248,7 @@ def edit(request, ident_cely):
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if request.method == "POST":
         resp = projekt.delete()
         logger.debug("Projekt smazan: " + str(resp))
@@ -265,6 +265,29 @@ def smazat(request, ident_cely):
         return render(request, "core/smazat.html", context)
 
 
+@login_required
+@require_http_methods(["POST"])
+def odebrat_sloupec_z_vychozich(request):
+    if request.method == "POST":
+        if "projekt_vychozi_skryte_sloupce" not in request.session:
+            request.session["projekt_vychozi_skryte_sloupce"] = []
+        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
+        zmena = json.loads(request.body.decode("utf8"))["zmena"]
+        skryte_sloupce = request.session["projekt_vychozi_skryte_sloupce"]
+        if zmena == "zobraz":
+            try:
+                skryte_sloupce.remove(sloupec)
+            except ValueError:
+                logger.error(
+                    f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
+                )
+                HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
+        else:
+            skryte_sloupce.append(sloupec)
+        request.session.modified = True
+    return HttpResponse("Odebráno")
+
+
 class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
     table_class = ProjektTable
     model = Projekt
@@ -274,7 +297,7 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xls"]
+        context["export_formats"] = ["csv", "json", "xlsx"]
         return context
 
     def get_queryset(self):
@@ -509,10 +532,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    if (
-        not projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
-        or projekt.stav == PROJEKT_STAV_OZNAMENY
-    ):
+    if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
         raise PermissionDenied()
     if request.method == "POST":
         projekt.set_zruseny(request.user)

@@ -107,7 +107,7 @@ class ProjektOznameniForm(forms.ModelForm):
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=forms.TextInput(attrs={"rows": 1, "cols": 40}),
+        widget=forms.TextInput(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("Termín plánovaného zahájení realizace záměru."),
     )
     latitude = forms.CharField(widget=forms.HiddenInput())

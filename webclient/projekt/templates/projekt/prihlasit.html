@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Přihlášení projektu" %}{{ projekt.ident_cely }}{% endblock %}
+{% block title %}{% trans "Přihlášení projektu " %}{{ projekt.ident_cely }}{% endblock %}
 {% block head %}
 {% endblock %}
 
@@ -13,7 +13,8 @@
   <form method="POST">
     {% crispy form %}
     <input type="submit" name="save" value="{% translate 'Přihlásit projekt' %}" class="btn btn-primary" id="submit-id-save">
-    <a href="{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }} ">{% trans "Nové jméno" %}</a>
+    <a class="btn btn-light" href="{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }} ">{% trans "Nové jméno" %}</a>
+    <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "Zpět" %}</button>
   </form>
 
 {% endblock %}

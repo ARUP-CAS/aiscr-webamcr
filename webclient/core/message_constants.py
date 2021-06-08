@@ -52,4 +52,5 @@ OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
 
 # Pian
 PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
+PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
 PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."

@@ -1,6 +1,6 @@
 from crispy_forms.bootstrap import FormActions
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Button, Div, Layout, Submit
+from crispy_forms.layout import HTML, Div, Layout, Submit
 from dal import autocomplete
 from django import forms
 from django.forms import HiddenInput
@@ -108,7 +108,7 @@ class EditProjektForm(forms.ModelForm):
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
     )
 
     class Meta:
@@ -240,8 +240,10 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                 Div(
                     FormActions(
                         Submit("save", "Navrhnout zrušení"),
-                        Button("cancel", "Zrušit"),
-                    )
+                        HTML(
+                            '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
+                        ),
+                    ),
                 ),
                 css_class="card",
             )
@@ -339,6 +341,9 @@ class ZahajitVTerenuForm(forms.ModelForm):
                 Div(
                     FormActions(
                         Submit("save", "Zahájit v terénu"),
+                        HTML(
+                            '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
+                        ),
                     )
                 ),
                 css_class="card",
@@ -375,6 +380,9 @@ class UkoncitVTerenuForm(forms.ModelForm):
                     Div(
                         FormActions(
                             Submit("save", "Ukončit v terénu"),
+                            HTML(
+                                '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
+                            ),
                         )
                     ),
                 ),

@@ -124,13 +124,13 @@
         <li class="nav-item d-lg-none d-xl-block">
           <span class="nav-link">
             <small>
-              <strong>{% trans "Přihlášen" %}:</strong> {{ user.email }} ({{ user.hlavni_role }})
+              <strong>{% trans "Přihlášen" %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
             </small>
           </span>
         </li>
         <li class="nav-item d-none d-lg-block d-xl-none">
           <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-toggle="popover" data-placement="bottom"
-            data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }})">
+            data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <span class="material-icons">info</span>
             {% trans "Informace" %}
           </a>
@@ -173,7 +173,7 @@
       <div>
         <small>
           © 2021 Copyright
-          <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a><span class="app-pipe"></span>Verze: 1.1.3
+          <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a><span class="app-pipe"></span>Verze: 1.0.0
         </small>
       </div>
     </div>

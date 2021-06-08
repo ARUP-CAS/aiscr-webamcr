@@ -12,7 +12,7 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import (
     HESLAR_AREAL,
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
-    komponenta = Komponenta.objects.get(ident_cely=ident_cely)
+    komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(
@@ -56,7 +56,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
@@ -80,7 +80,7 @@ def zapsat(request, dj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    k = Komponenta.objects.get(ident_cely=ident_cely)
+    k = get_object_or_404(Komponenta, ident_cely=ident_cely)
     if request.method == "POST":
         arch_z_ident_cely = (
             k.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely

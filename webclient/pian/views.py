@@ -1,12 +1,15 @@
 import logging
 
-from core.constants import KLADYZM10, KLADYZM50
+from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN, PIAN_NEPOTVRZEN
 from core.exceptions import NeznamaGeometrieError
 from core.ident_cely import get_pian_ident
 from core.message_constants import (
     PIAN_USPESNE_ODPOJEN,
+    PIAN_USPESNE_POTVRZEN,
     PIAN_USPESNE_SMAZAN,
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
+    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from dal import autocomplete
@@ -16,7 +19,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
@@ -28,11 +31,33 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@require_http_methods(["POST"])
+def detail(request, ident_cely):
+    pian = get_object_or_404(Pian, dent_cely=ident_cely)
+    form = PianCreateForm(
+        request.POST,
+        instance=pian,
+        prefix=ident_cely,
+    )
+    if form.is_valid():
+        logger.debug("Form is valid")
+        form.save()
+        if form.changed_data:
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+    else:
+        logger.warning("Form is not valid")
+        logger.debug(form.errors)
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+
+    return redirect(request.META.get("HTTP_REFERER"))
+
+
+@login_required
 @require_http_methods(["GET", "POST"])
 def odpojit(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
-    delete_pian = True if pian_djs.count() < 2 else False
+    delete_pian = True if pian_djs.count() < 2 and dj.pian.stav == PIAN_NEPOTVRZEN else False
     pian = dj.pian
     if request.method == "POST":
         dj.pian = None
@@ -47,7 +72,7 @@ def odpojit(request, dj_ident_cely):
     else:
         context = {
             "objekt": pian,
-            "header": _("Skutečně odpojit pian")
+            "header": _("Skutečně odpojit pian ")
             + pian.ident_cely
             + _(" z dokumentační jednotky ")
             + dj.ident_cely
@@ -60,9 +85,32 @@ def odpojit(request, dj_ident_cely):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def potvrdit(request, dj_ident_cely):
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+    pian = dj.pian
+    if request.method == "POST":
+        pian.stav = PIAN_POTVRZEN
+        pian.ident_cely = get_pian_ident(pian.zm50, True)
+        pian.save()
+        logger.debug("Pian potvrzen: " + pian.ident_cely)
+        messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
+        return redirect("arch_z:detail", ident_cely=dj.archeologicky_zaznam.ident_cely)
+    else:
+        context = {
+            "objekt": pian,
+            "header": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
+            "title": _("Potvrzení pianu"),
+            "button": _("Potvrdit pian"),
+        }
+
+        return render(request, "core/transakce.html", context)
+
+
+@login_required
 @require_http_methods(["POST"])
 def create(request, dj_ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=dj_ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
@@ -110,11 +158,6 @@ def create(request, dj_ident_cely):
         logger.warning(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    # return render(
-    #     request,
-    #     "core/upload_file.html",
-    #     {"ident_cely": "asdasd", "back_url": "asdasd"},
-    # )
     return redirect(request.META.get("HTTP_REFERER"))
 
 

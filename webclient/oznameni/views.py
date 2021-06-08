@@ -53,7 +53,7 @@ def index(request):
             o.projekt = p
             o.save()
             p.set_oznameny()
-            p.katastry.add(*[int(i) for i in dalsi_katastry])
+            p.katastry.add(*[i for i in dalsi_katastry])
 
             confirmation = {
                 "oznamovatel": o.oznamovatel,

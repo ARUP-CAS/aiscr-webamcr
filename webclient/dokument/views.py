@@ -72,7 +72,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    dokument = Dokument.objects.get(ident_cely=ident_cely)
+    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     if not dokument.has_extra_data():
         extra_data = DokumentExtraData(dokument=dokument)
         extra_data.save()
@@ -113,7 +113,7 @@ def edit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zapsat(request, arch_z_ident_cely):
-    zaznam = ArcheologickyZaznam.objects.get(ident_cely=arch_z_ident_cely)
+    zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if request.method == "POST":
         form_d = CreateDokumentForm(request.POST)
         form_extra = EditDokumentExtraDataForm(request.POST)
@@ -274,7 +274,7 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    d = Dokument.objects.get(ident_cely=ident_cely)
+    d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if request.method == "POST":
 
         historie = d.historie
