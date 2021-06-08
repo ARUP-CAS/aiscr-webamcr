@@ -304,12 +304,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "geom": OSMWidget(
-                attrs={
-                    "default_lat": 50.05,
-                    "default_lon": 14.05,
-                    "default_zoom": 6,
-                    "template_name": "dokument/openlayers-osm.html",
-                }
+                attrs={"default_lat": 50.05, "default_lon": 14.05, "default_zoom": 6}
             ),
         }
         labels = {
@@ -317,7 +312,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "format": _("Formát"),
             "duveryhodnost": _("Důvěryhodnost"),
             "geom": _("Lokalizace (Vyberte prosím polohu)"),
-            "odkaz": _("Odkaz"),
+            "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -325,6 +320,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["datum_vzniku"].required = True
         self.fields["geom"].required = True
+        self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
         self.fields["format"].required = True
         self.fields["format"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)

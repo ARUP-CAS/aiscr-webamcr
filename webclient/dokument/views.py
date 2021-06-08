@@ -6,10 +6,12 @@ from core.constants import (
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
     D_STAV_ZAPSANY,
+    DOKUMENT_CAST_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
     ZAPSANI_DOK,
 )
+from core.exceptions import UnexpectedDataRelations
 from core.forms import VratitForm
 from core.ident_cely import (
     get_cast_dokumentu_ident,
@@ -45,11 +47,18 @@ from dokument.forms import (
 from dokument.models import Dokument, DokumentCast, DokumentExtraData
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
+    HESLAR_AREAL,
+    HESLAR_AREAL_KAT,
     HESLAR_DOKUMENT_TYP,
+    HESLAR_OBDOBI,
+    HESLAR_OBDOBI_KAT,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     PRISTUPNOST_BADATEL_ID,
 )
 from heslar.models import Heslar, HeslarHierarchie
+from heslar.views import heslar_12
+from komponenta.forms import CreateKomponentaForm
+from komponenta.models import Komponenta, KomponentaVazby
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +88,39 @@ def detail(request, ident_cely):
     else:
         context["soubory"] = None
     return render(request, "dokument/detail.html", context)
+
+
+@login_required
+@require_http_methods(["GET"])
+def detail_model_3D(request, ident_cely):
+    context = {}
+    dokument = get_object_or_404(
+        Dokument.objects.select_related(
+            "soubory",
+            "organizace",
+            "extra_data__format",
+            "typ_dokumentu",
+        ),
+        ident_cely=ident_cely,
+    )
+    casti = dokument.casti.all()
+    if casti.count() != 1:
+        logger.error("Model ma mit jednu cast dokumentu: " + str(casti.count()))
+        raise UnexpectedDataRelations()
+    komponenty = casti[0].komponenty.komponenty.all()
+    if komponenty.count() != 1:
+        logger.error("Model ma mit jednu komponentu: " + str(komponenty.count()))
+        raise UnexpectedDataRelations()
+    context["dokument"] = dokument
+    context["komponenta"] = komponenty[0]
+    context["history_dates"] = get_history_dates(dokument.historie)
+    context["show"] = get_detail_template_shows(dokument)
+    logger.debug(context)
+    if dokument.soubory:
+        context["soubory"] = dokument.soubory.soubory.all()
+    else:
+        context["soubory"] = None
+    return render(request, "dokument/detail_model_3D.html", context)
 
 
 @login_required
@@ -186,19 +228,23 @@ def zapsat(request, arch_z_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create_model_3D(request):
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     if request.method == "POST":
         form_d = CreateModelDokumentForm(request.POST)
         form_extra = CreateModelExtraDataForm(request.POST)
+        form_komponenta = CreateKomponentaForm(
+            obdobi_choices, areal_choices, request.POST
+        )
 
-        if form_d.is_valid() and form_extra.is_valid():
-            logger.debug("Form is valid")
+        if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
+            logger.debug("Forms are valid")
             dokument = form_d.save(commit=False)
             dokument.rada = Heslar.objects.get(id=DOKUMENT_RADA_DATA_3D)
             dokument.material_originalu = Heslar.objects.get(
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
             )
             point = form_extra.cleaned_data["geom"]
-            logger.debug(point)
             region = get_cadastre_from_point(point).okres.kraj.rada_id
             dokument.ident_cely = get_dokument_ident(
                 temporary=True, rada="3D", region=region
@@ -207,37 +253,46 @@ def create_model_3D(request):
             dokument.stav = D_STAV_ZAPSANY
             dokument.save()
             dokument.set_zapsany(request.user)
-
             # Vytvorit defaultni cast dokumentu
-            DokumentCast(
+            kv = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+            kv.save()
+            dc = DokumentCast(
                 dokument=dokument,
                 ident_cely=get_cast_dokumentu_ident(dokument),
-            ).save()
-
+                komponenty=kv,
+            )
+            dc.save()
             form_d.save_m2m()
             extra_data = form_extra.save(commit=False)
             extra_data.dokument = dokument
             extra_data.save()
 
+            komponenta = form_komponenta.save(commit=False)
+            komponenta.komponenta_vazby = dc.komponenty
+            komponenta.ident_cely = dokument.ident_cely + "-K001"
+            komponenta.save()
+
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-            return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+            return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
 
         else:
             logger.warning("Form is not valid")
             logger.debug(form_d.errors)
             logger.debug(form_extra.errors)
+            logger.debug(form_komponenta.errors)
             if "geom" in form_extra.errors:
                 messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
     else:
         form_d = CreateModelDokumentForm()
         form_extra = CreateModelExtraDataForm()
-
+        form_komponenta = CreateKomponentaForm(obdobi_choices, areal_choices)
     return render(
         request,
         "dokument/create_model_3D.html",
         {
             "formDokument": form_d,
             "formExtraData": form_extra,
+            "formKomponenta": form_komponenta,
             "title": _("Nový model 3D"),
             "header": _("Nový model 3D"),
             "button": _("Vytvořit model"),
@@ -254,7 +309,10 @@ def odeslat(request, ident_cely):
     if request.method == "POST":
         d.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
-        return redirect("dokument:detail", ident_cely=ident_cely)
+        if "3D" in ident_cely:
+            return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+        else:
+            return redirect("dokument:detail", ident_cely=ident_cely)
     else:
         # warnings = d.check_pred_odeslanim()
         # logger.debug(warnings)
@@ -333,10 +391,12 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-
             d.set_vraceny(request.user, d.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
-            return redirect("dokument:detail", ident_cely=ident_cely)
+            if "3D" in ident_cely:
+                return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+            else:
+                return redirect("dokument:detail", ident_cely=ident_cely)
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -356,6 +416,12 @@ def smazat(request, ident_cely):
         resp1 = d.delete()
         resp2 = historie.delete()
         resp3 = soubory.delete()
+
+        # Kdyz mazu dokument ktery reprezentuje 3D model, mazu i komponenty
+        if "3D" in d.ident_cely:
+            for k in Komponenta.objects.filter(ident_cely__startswith=d.ident_cely):
+                logger.debug("Mazu komponentu modelu 3D: " + str(k.ident_cely))
+                k.delete()
 
         if resp1:
             logger.debug("Dokument byl smazan: " + str(resp1 + resp2 + resp3))

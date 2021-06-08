@@ -1,0 +1,182 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{% trans "Detail dokumentu" %}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-dokument">
+    {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
+
+    {% include "state_component_document.html" with dokument=dokument %}
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Typ dokumentu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.typ_dokumentu }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Organizace" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.organizace }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Popis" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.popis }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Poznámka" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.poznamka }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Označení originálu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.oznaceni_originalu }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Osoby" %}</label>
+              <div class="input-group">
+                <input class="form-control app-ellipsis" type="text"
+                       placeholder="{{ dokument.osoby.all|osoby_to_list }}" readonly>
+                <div class="input-group-append" data-toggle="popover" data-placement="top"
+                     data-content="<strong>{% trans 'Seznam osob' %}:</strong> {{ dokument.osoby.all|osoby_to_list }}">
+                  <span class="input-group-text">
+                    <span class="material-icons">info</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Datum vzniku" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.datum_vzniku|date:'Y/m/d' }}"
+                     readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Odkaz" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.odkaz }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Důvěryhodnost" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.duveryhodnost }}" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Popis obsahu" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label>{% trans "Období" %}</label>
+              <input class="form-control" type="text" placeholder="{{ komponenta.obdobi }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label>{% trans "Přesná datace" %}</label>
+              <input class="form-control" type="text" placeholder="{{ komponenta.presna_datace }}" readonly>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label>{% trans "Areál" %}</label>
+              <input class="form-control" type="text" placeholder="{{ komponenta.areal }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label>{% trans "Aktivity" %}</label>
+              <input class="form-control" type="text" placeholder="{{ komponenta.aktivity.all|hesla_to_list }}"
+                     readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Soubory" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory next_url='/dokument/detail/' ident=dokument.ident_cely %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

@@ -16,7 +16,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase
 from dokument.models import Dokument
-from dokument.views import archivovat, detail, edit, odeslat
+from dokument.views import archivovat, create_model_3D, detail, edit, odeslat
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from uzivatel.models import User
@@ -38,6 +38,16 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = detail(request, ident_cely=self.existing_dokument)
+        self.assertEqual(200, response.status_code)
+
+    def test_get_create_model3D(self):
+        request = self.factory.get("/dokument/create/model")
+        request.user = self.existing_user
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request = add_middleware_to_request(request, MessageMiddleware)
+        request.session.save()
+
+        response = create_model_3D(request)
         self.assertEqual(200, response.status_code)
 
     def test_get_edit(self):

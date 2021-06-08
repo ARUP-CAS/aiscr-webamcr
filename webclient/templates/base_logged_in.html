@@ -56,7 +56,7 @@
           <div class="card-body">
             <ul>
               <li><a href="#" title="">{% trans "Domů" %}</a></li>
-              <li><a href="#" title="">{% trans "Zapsat" %}</a></li>
+              <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "Zapsat" %}</a></li>
               <li><a href="#" title="">{% trans "Moje modely" %}</a></li>
               <li><a href="#" title="">{% trans "Vybrat" %}</a></li>
               <li><a href="#" title="">{% trans "Spravovat" %}</a></li>
@@ -204,6 +204,8 @@
       $(document).ready(function () {
           if (window.location.href.indexOf("projekt") > -1) {
               $('#collapseProjekty').collapse('show')
+          } else if (window.location.href.indexOf("dokument") > -1) {
+              $('#collapse3d').collapse('show')
           }
           // TODO colapsovani dalsich casti
       });

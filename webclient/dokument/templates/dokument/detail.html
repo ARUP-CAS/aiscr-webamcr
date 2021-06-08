@@ -13,39 +13,7 @@
   <div class="app-entity-dokument">
     {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
 
-    <div class="bs-stepper">
-      <div class="bs-stepper-header">
-        <div class="step {% if dokument.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">1</span>
-            <span class="bs-stepper-label">
-              {% trans "Rozepsaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
-            </span>
-          </button>
-        </div>
-        <div class="line"></div>
-        <div class="step {% if dokument.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">2</span>
-            <span class="bs-stepper-label">
-              {% trans "Odeslaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_odeslani|date:'Y/m/d'|default_if_none:"" }}</span>
-            </span>
-          </button>
-        </div>
-        <div class="line"></div>
-        <div class="step {% if dokument.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">3</span>
-            <span class="bs-stepper-label">
-              {% trans "Archivovaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_archivace|date:'Y/m/d'|default_if_none:"" }}</span>
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
+    {% include "state_component_document.html" with dokument=dokument %}
 
     <div class="card app-card-form">
       <div class="card-header">

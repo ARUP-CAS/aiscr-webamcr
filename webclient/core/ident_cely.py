@@ -152,6 +152,24 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
         return None
 
 
+def get_dokument_komponenta_ident(dokument: Dokument) -> str:
+    MAXIMAL_KOMPONENTAS: int = 999
+    last_digit_count = 3
+    max_count = 0
+    for dc in dokument.casti.all():
+        for komponenta in dc.komponenty.komponenty.all():
+            last_digits = int(komponenta.ident_cely[-last_digit_count:])
+            if max_count < last_digits:
+                max_count = last_digits
+    ident = dokument.ident_cely
+    if max_count < MAXIMAL_KOMPONENTAS:
+        ident = ident + "-K" + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
+        return None
+
+
 def get_sm_from_point(point):
     mapovy_list = Kladysm5.objects.filter(geom__contains=point)
     if mapovy_list.count() == 1:
