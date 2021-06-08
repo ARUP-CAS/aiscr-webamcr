@@ -36,7 +36,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.utils import get_centre_from_akce
+from core.utils import get_all_pians_in_cadastre, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -561,6 +561,29 @@ def get_detail_template_shows(archeologicky_zaznam):
     return show
 
 
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_pians(request):
+    body = json.loads(request.body.decode("utf-8"))
+    logger.debug("get-pians")
+    pians = get_all_pians_in_cadastre(body["cadastre"])
+    logger.debug("get-pians-pocet pianu: " + str(len(pians)))
+    back = []
+    for pian in pians:
+        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
+        back.append(
+            {
+                "id": pian.id,
+                "ident_cely": pian.ident_cely,
+                "geom": pian.geometry,
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back}, status=200)
+    else:
+        return JsonResponse({"points": []}, status=200)
+
+
 @require_http_methods(["POST"])
 def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
@@ -568,6 +591,9 @@ def post_akce2kat(request):
     katastr_name = body["cadastre"]
     pian_ident_cely = body["pian"]
     # geom = Point(float(body["corY"]), float(body["corX"]))
+    logger.debug("++++++++++++")
+    logger.debug(katastr_name)
+    logger.debug(pian_ident_cely)
     [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
     # logger.debug(katastr)
     if len(str(poi)) > 0:
@@ -581,4 +607,4 @@ def post_akce2kat(request):
             status=200,
         )
     else:
-        return JsonResponse({"corY": "", "corX": "", "zoom": ""}, status=200)
+        return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)

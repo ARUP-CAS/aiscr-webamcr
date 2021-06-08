@@ -4,6 +4,7 @@ import zlib
 
 from dj.models import DokumentacniJednotka
 from heslar.models import RuianKatastr
+from pian.models import Pian
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -75,8 +76,9 @@ def get_centre_point(bod, geom):
 
 def get_centre_from_akce(katastr, pian):
     query = (
-        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng from public.ruian_katastr where "
-        "nazev=%s and aktualni='t' limit 1"
+        "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
+        " from public.ruian_katastr where "
+        " upper(nazev_stary)=upper(%s) and aktualni='t' limit 1"
     )
     try:
         bod = RuianKatastr.objects.raw(query, [katastr])[0]
@@ -84,7 +86,7 @@ def get_centre_from_akce(katastr, pian):
         bod.zoom = 14
         if len(pian) > 1:
             dj = DokumentacniJednotka.objects.get(ident_cely=pian)
-            if dj.pian:
+            if dj.pian and dj.pian.geom:
                 [bod, geom] = get_centre_point(bod, dj.pian.geom)
         return [bod, geom]
     except IndexError:
@@ -94,7 +96,8 @@ def get_centre_from_akce(katastr, pian):
 
 def get_points_from_envelope(left, bottom, right, top):
     query = (
-        "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng from public.projekt where "
+        "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng "
+        " from public.projekt where "
         "geom && ST_MakeEnvelope(%s, %s, %s, %s,4326)  limit 100"
     )
     try:
@@ -102,4 +105,19 @@ def get_points_from_envelope(left, bottom, right, top):
         return projekty
     except IndexError:
         logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+def get_all_pians_in_cadastre(katastr):
+    query = (
+        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry from public.pian pian "
+        " join public.ruian_katastr ruian "
+        " on ST_Contains(ruian.hranice,pian.geom ) "
+        " where pian.geom is not null and ruian.aktualni='t' and ruian.nazev_stary=%s limit 100"
+    )
+    try:
+        pians = Pian.objects.raw(query, [katastr])
+        return pians
+    except Exception:
+        logger.debug("No pians in cadastre: %s", katastr)
         return None

@@ -628,6 +628,20 @@
                       'cadastre': document.getElementById("main_cadastre_id").placeholder,
                       'pian': pian_id,
                   }))
+
+              let xhr2 = new XMLHttpRequest();
+              xhr2.open('POST', '/arch_z/get-pians-in-cadastre');
+              xhr2.setRequestHeader('Content-type', 'application/json');
+              if (typeof global_csrftoken !== 'undefined') {
+                  xhr2.setRequestHeader('X-CSRFToken', global_csrftoken);
+              }
+              xhr2.onload = function () {
+
+              };
+              xhr2.send(JSON.stringify(
+                  {
+                      'cadastre': document.getElementById("main_cadastre_id").placeholder,
+                  }))
           }
       }
 
