@@ -65,6 +65,12 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["GET"])
+def index_model_3D(request):
+    return render(request, "dokument/index_model_3D.html")
+
+
+@login_required
+@require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
     dokument = get_object_or_404(
