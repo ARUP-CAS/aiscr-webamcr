@@ -33,10 +33,15 @@ from core.utils import get_cadastre_from_point
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+from django_filters.views import FilterView
+from django_tables2 import SingleTableMixin
+from django_tables2.export import ExportMixin
+from dokument.filters import DokumentFilter
 from dokument.forms import (
     CreateDokumentForm,
     CreateModelDokumentForm,
@@ -45,6 +50,7 @@ from dokument.forms import (
     EditDokumentForm,
 )
 from dokument.models import Dokument, DokumentCast, DokumentExtraData
+from dokument.tables import DokumentTable
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
     HESLAR_AREAL,
@@ -127,6 +133,27 @@ def detail_model_3D(request, ident_cely):
     else:
         context["soubory"] = None
     return render(request, "dokument/detail_model_3D.html", context)
+
+
+class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
+    table_class = DokumentTable
+    model = Dokument
+    template_name = "dokument/dokument_list.html"
+    filterset_class = DokumentFilter
+    paginate_by = 100
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = ["csv", "json", "xlsx"]
+        return context
+
+    def get_queryset(self):
+        # Only allow to view 3D models
+        qs = super().get_queryset().filter(ident_cely__contains="3D")
+        qs = qs.select_related(
+            "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+        )
+        return qs
 
 
 @login_required
