@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "compressor",
     "captcha",
     "core",
+    "ez",
     "historie",
     "oznameni",
     "projekt.apps.ProjektConfig",
@@ -199,6 +200,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "core": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "ez": {
             "handlers": ["console"],
             "level": "DEBUG",
         },

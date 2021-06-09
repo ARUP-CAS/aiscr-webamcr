@@ -308,6 +308,7 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
             "hlavni_katastr",
             "organizace",
             "vedouci_projektu",
+            "hlavni_katastr__okres",
         ).defer("geom")
         return qs
 

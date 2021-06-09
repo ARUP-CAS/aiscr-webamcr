@@ -136,6 +136,10 @@ class Dokument(models.Model):
         return self.ident_cely
 
     def get_absolute_url(self):
+        if "3D" in self.ident_cely:
+            return reverse(
+                "dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely}
+            )
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_zapsany(self, user):
