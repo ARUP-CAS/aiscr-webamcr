@@ -75,7 +75,7 @@ update dokument_cast d set komponenty = sub.rn from (select id, row_number() OVE
 update dokumentacni_jednotka d set komponenty = sub.rn from (select id, (select count(*) from dokument_cast) + row_number() OVER (order by id) as rn from dokumentacni_jednotka) sub where d.id = sub.id;
 
 -- dropnu foreign key sloupce jednotka_dokument na dokument_cast
-alter table komponenta_dokument drop constraint komponenta_dokument_nova_jednotka_dokumentu_fkey;
+alter table komponenta_dokument drop constraint komponenta_dokument_jednotka_dokument_fkey;
 -- nastavim aby sloupec jednotka_dokument ukazoval na stejnou vazbu v tabulce komponenta_vazby jako ukazuje sloupec komponenty z tabulky dokument_cast
 update komponenta_dokument s set jednotka_dokument = d.komponenty from (select id, komponenty from dokument_cast) d where d.id = s.jednotka_dokument;
 -- nastavim aby komponenta.vazba ukazovala na vazbu ktera patri zaznamu dokumentacni_jednotka COMMENT: 199 komponenta neukazuje na dokumentacni_jednotku ale nevim kam

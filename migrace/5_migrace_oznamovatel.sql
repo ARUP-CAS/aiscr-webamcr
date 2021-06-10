@@ -28,13 +28,6 @@ ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_check CHECK (not (oznamov
 -- Nezachranny projekt nemuze mit oznamovatele
 ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_null_check CHECK (not ((typ_projektu = 1125 or typ_projektu = 1126) and oznamovatel IS NOT NULL));
 
--- Uklid sloupcu
-alter table projekt drop column oznamovatel_text;
-alter table projekt drop column adresa;
-alter table projekt drop column email;
-alter table projekt drop column odpovedna_osoba;
-alter table projekt drop column telefon;
-
 -- Zmena typu sloupce planovane_zahajeni z textu na daterange
 alter table projekt rename column planovane_zahajeni to planovane_zahajeni_text;
 alter table projekt add column planovane_zahajeni daterange;

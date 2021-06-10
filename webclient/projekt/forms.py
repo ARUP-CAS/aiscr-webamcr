@@ -9,13 +9,13 @@ from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 
 
-class CreateProjekForm(forms.ModelForm):
+class CreateProjektForm(forms.ModelForm):
     latitude = forms.FloatField(required=False, widget=HiddenInput())
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
     )
 
     class Meta:
@@ -55,7 +55,7 @@ class CreateProjekForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(CreateProjekForm, self).__init__(*args, **kwargs)
+        super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True
