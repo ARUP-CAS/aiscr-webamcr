@@ -1,0 +1,96 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{% trans "Detail dokumentu" %}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-dokument">
+    {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
+
+    {% include "state_component_document.html" with dokument=dokument %}
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <form>
+          {% crispy formDokument %}
+          {% crispy formExtraData %}
+          {% crispy formKomponenta %}
+        </form>
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Bližší specifikace obsahu (předměty a objekty)" %}
+        </div>
+      </div>
+      <div class="card-body">
+        <h5>{% trans "Objekty" %}</h5>
+        <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' komponenta.ident_cely %}"
+              onsubmit="editNalezOSubmitButton.disabled = true; return true;">
+          {% crispy formset.objekt formset.helper %}
+          <button type="submit" id="editNalezOSubmitButton"
+                  class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+        </form>
+        <h5>{% trans "Předměty" %}</h5>
+        <form method="POST" action="{% url 'nalez:edit_predmet' komponenta.ident_cely %}"
+              onsubmit="editNalezPSubmitButton.disabled = true; return true;">
+          {% crispy formset.predmet formset.helper %}
+          <button type="submit" id="editNalezPSubmitButton"
+                  class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Náhledy 3D modelu / Obrázky s texturou" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory next_url='/dokument/detail/' ident=dokument.ident_cely %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

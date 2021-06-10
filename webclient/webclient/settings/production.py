@@ -1,6 +1,6 @@
 from .base import *
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "192.168.254.24"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "192.168.254.24", "192.168.254.30"]
 
 RECAPTCHA_PUBLIC_KEY = "6LcgsmQaAAAAAPqzAQkryJGl34AWzU3DsN9Pyf__"
 RECAPTCHA_PRIVATE_KEY = get_secret("RECAPTCHA_PRIVATE_KEY")

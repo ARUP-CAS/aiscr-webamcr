@@ -55,11 +55,10 @@
         <div id="collapse3d" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="#" title="">{% trans "Domů" %}</a></li>
-              <li><a href="#" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="#" title="">{% trans "Moje modely" %}</a></li>
-              <li><a href="#" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="#" title="">{% trans "Spravovat" %}</a></li>
+              <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "Domů" %}</a></li>
+              <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "Zapsat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?vlastnik={{ user.id }}" title="">{% trans "Moje modely" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "Vybrat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -124,13 +123,13 @@
         <li class="nav-item d-lg-none d-xl-block">
           <span class="nav-link">
             <small>
-              <strong>{% trans "Přihlášen" %}:</strong> {{ user.email }} ({{ user.hlavni_role }})
+              <strong>{% trans "Přihlášen" %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
             </small>
           </span>
         </li>
         <li class="nav-item d-none d-lg-block d-xl-none">
           <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-toggle="popover" data-placement="bottom"
-            data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }})">
+            data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <span class="material-icons">info</span>
             {% trans "Informace" %}
           </a>
@@ -163,58 +162,25 @@
 {% endblock %}
 
 {% block footer %}
-  <footer class="text-lg-start app-footer-top">
-    <div class="p-4">
-      <div class="row">
-        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">{% trans "Licence" %}</h5>
-          <hr />
-          <p>
-            {% trans "Databáze Archeologická mapa České republiky, jejímž autorem je" %}
-            <a href="http://www.arup.cas.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Praha, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}</a> a
-            <a href="http://arub.avcr.cz/" target="_blank" title="{% trans 'Archeologický ústav AV ČR, Brno, v. v. i.' %}">{% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}</a>,
-            podléhá licenci <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" title="{% trans 'Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0).' %}">{% trans "Creative Commons Uveďte původ - Neužívejte komerčně 4.0 Mezinárodní (CC BY-NC 4.0)." %}</a>
-            {% trans "Užití dat i metadat podléhá této licenci, pokud není explicitně stanoveno jinak." %}
-          </p>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">{% trans "Kontakt" %}</h5>
-          <hr />
-          <p>
-            {% trans "Správa dat, uživatelů a podpora pro oblast Čech" %}<br />
-            {% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}<br />
-            <a href="mailto:amcr@arup.cas.cz" title="{% trans 'Napište nám' %}">amcr@arup.cas.cz</a>
-            <hr />
-            {% trans "Správa dat, uživatelů a podpora pro oblast Moravy a Slezska (vč. kraje Vysočina)" %}<br />
-            {% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}<br />
-            <a href="mailto:amcr@arub.cz" title="{% trans 'Napište nám' %}">amcr@arub.cz</a>
-          </p>
-        </div>
-        <div class="col-lg-4 col-md-12 mb-4 mb-md-0">
-          <h5 class="text-uppercase">{% trans "Partneři" %}</h5>
-          <hr />
-          <p class="app-logos">
-            <a href="" title=""><img src="{% static 'logo-eu.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-msmt.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-aiscr.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-aru.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-arub.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-avcr.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-interreg.png' %}" alt="" /></a>
-            <a href="" title=""><img src="{% static 'logo-huld.png' %}" alt="" /></a>
-          </p>
-        </div>
+  <footer class="text-lg-start">
+    <div class="d-flex justify-content-between p-3 app-footer-wrapper">
+      <div>
+        <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "Licence" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "Kontakt" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerPartneri">{% trans "Partneři" %}</a>
+      </div>
+      <div>
+        <small>
+          © 2021 Copyright
+          <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a><span class="app-pipe"></span>Verze: 1.0.0
+        </small>
       </div>
     </div>
-    <div class="text-center p-3 app-footer-bottom">
-      <small>
-        © 2021 Copyright
-        <a class="text-dark" href="https://mdbootstrap.com/">AMČR</a>
-        <span class="app-pipe"></span>
-        Verze: 1.1.3
-      </small>
-    </div>
   </footer>
+
+  {% include "footer_licence.html" %}
+  {% include "footer_kontakt.html" %}
+  {% include "footer_partneri.html" %}
 {% endblock %}
 
 {% block script_sidebar %}
@@ -224,7 +190,8 @@
       $("#app-wrapper").toggleClass("toggled");
     });
     $('[rel="tooltip"]').tooltip({
-      container : 'body'
+      container : 'body',
+      html : true
     });
     $('[data-toggle="popover"]').popover({
       html : true
@@ -236,6 +203,8 @@
       $(document).ready(function () {
           if (window.location.href.indexOf("projekt") > -1) {
               $('#collapseProjekty').collapse('show')
+          } else if (window.location.href.indexOf("dokument") > -1) {
+              $('#collapse3d').collapse('show')
           }
           // TODO colapsovani dalsich casti
       });

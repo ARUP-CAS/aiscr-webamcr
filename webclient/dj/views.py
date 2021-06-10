@@ -15,7 +15,7 @@ from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from komponenta.models import KomponentaVazby
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("Form is valid")
@@ -43,7 +43,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, arch_z_ident_cely):
-    az = ArcheologickyZaznam.objects.get(ident_cely=arch_z_ident_cely)
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     form = CreateDJForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
@@ -69,7 +69,7 @@ def zapsat(request, arch_z_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    dj = DokumentacniJednotka.objects.get(ident_cely=ident_cely)
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     arch_z_ident_cely = dj.archeologicky_zaznam.ident_cely
     if request.method == "POST":
         resp = dj.delete()

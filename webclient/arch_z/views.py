@@ -1,5 +1,6 @@
 import logging
 
+import simplejson as json
 from adb.forms import CreateADBForm
 from arch_z.forms import (
     CreateAkceForm,
@@ -14,6 +15,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     ODESLANI_AZ,
+    PIAN_NEPOTVRZEN,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
@@ -34,13 +36,14 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
+from core.utils import get_all_pians_in_cadastre, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -70,6 +73,7 @@ from nalez.forms import (
     create_nalez_predmet_form,
 )
 from nalez.models import NalezObjekt, NalezPredmet
+from pian.forms import PianCreateForm
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -79,12 +83,12 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
-    zaznam = (
+    zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
         .select_related("akce__vedlejsi_typ")
         .select_related("akce__hlavni_typ")
-        .select_related("pristupnost")
-        .get(ident_cely=ident_cely)
+        .select_related("pristupnost"),
+        ident_cely=ident_cely,
     )
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
@@ -118,10 +122,12 @@ def detail(request, ident_cely):
     )
 
     dj_form_create = CreateDJForm()
+    pian_form_create = PianCreateForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     adb_form_create = CreateADBForm()
     dj_forms_detail = []
     komponenta_forms_detail = []
+    pian_forms_detail = []
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
@@ -142,11 +148,20 @@ def detail(request, ident_cely):
             jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb
         )
         show_add_komponenta = not jednotka.negativni_jednotka
+        show_add_pian = False if jednotka.pian else True
+        show_approve_pian = (
+            True if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN else False
+        )
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
+            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
             "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
+            "show_add_pian": show_add_pian,
+            "show_remove_pian": not show_add_pian,
+            "show_uprav_pian": jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN,
+            "show_approve_pian": show_approve_pian,
         }
         if has_adb:
             dj_form_detail["adb_form"] = CreateADBForm(
@@ -155,6 +170,16 @@ def detail(request, ident_cely):
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
             dj_form_detail["show_remove_adb"] = True
         dj_forms_detail.append(dj_form_detail)
+        if jednotka.pian:
+            pian_forms_detail.append(
+                {
+                    "ident_cely": jednotka.pian.ident_cely,
+                    "center_point": "",
+                    "form": PianCreateForm(
+                        instance=jednotka.pian, prefix=jednotka.pian.ident_cely
+                    ),
+                }
+            )
         for komponenta in jednotka.komponenty.komponenty.all():
             komponenta_forms_detail.append(
                 {
@@ -176,10 +201,12 @@ def detail(request, ident_cely):
             )
 
     context["dj_form_create"] = dj_form_create
+    context["pian_form_create"] = pian_form_create
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
     context["komponenta_forms_detail"] = komponenta_forms_detail
+    context["pian_forms_detail"] = pian_forms_detail
 
     context["history_dates"] = get_history_dates(zaznam.historie)
     context["zaznam"] = zaznam
@@ -193,7 +220,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
-    zaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+    zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST, instance=zaznam)
         form_akce = CreateAkceForm(request.POST, instance=zaznam.akce)
@@ -329,7 +356,7 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely):
-    projekt = Projekt.objects.get(ident_cely=projekt_ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
 
     # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
     if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
@@ -384,19 +411,17 @@ def zapsat(request, projekt_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    akce = Akce.objects.get(archeologicky_zaznam__ident_cely=ident_cely)
+    akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam
         # Parent records
         historie_vazby = az.historie
         komponenty_jednotek_vazby = []
-        for dj in az.dokumentacnijednotka_set.all():
+        for dj in az.dokumentacni_jednotky_akce.all():
             if dj.komponenty:
                 komponenty_jednotek_vazby.append(dj.komponenty)
         az.delete()
-
-        historie_vazby.delete()
         historie_vazby.delete()
         for komponenta_vazba in komponenty_jednotek_vazby:
             komponenta_vazba.delete()
@@ -534,3 +559,52 @@ def get_detail_template_shows(archeologicky_zaznam):
         "archivovat_link": show_archivovat,
     }
     return show
+
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_pians(request):
+    body = json.loads(request.body.decode("utf-8"))
+    logger.debug("get-pians")
+    pians = get_all_pians_in_cadastre(body["cadastre"])
+    logger.debug("get-pians-pocet pianu: " + str(len(pians)))
+    back = []
+    for pian in pians:
+        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
+        back.append(
+            {
+                "id": pian.id,
+                "ident_cely": pian.ident_cely,
+                "geom": pian.geometry,
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back}, status=200)
+    else:
+        return JsonResponse({"points": []}, status=200)
+
+
+@require_http_methods(["POST"])
+def post_akce2kat(request):
+    body = json.loads(request.body.decode("utf-8"))
+    logger.debug(body)
+    katastr_name = body["cadastre"]
+    pian_ident_cely = body["pian"]
+    # geom = Point(float(body["corY"]), float(body["corX"]))
+    logger.debug("++++++++++++")
+    logger.debug(katastr_name)
+    logger.debug(pian_ident_cely)
+    [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
+    # logger.debug(katastr)
+    if len(str(poi)) > 0:
+        return JsonResponse(
+            {
+                "lat": str(poi.lat),
+                "lng": str(poi.lng),
+                "zoom": str(poi.zoom),
+                "geom": str(geom),
+            },
+            status=200,
+        )
+    else:
+        return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)

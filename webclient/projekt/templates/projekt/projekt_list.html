@@ -3,33 +3,293 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load render_table from django_tables2 %}
+{% load export_url from django_tables2 %}
 
 {% block title %}{% trans "Seznam projektu" %}{% endblock %}
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-projekt">
+  <div class="app-entity-projekt app-table-list-container">
     {% include "toolbar_projekt.html" with projekt=projekt %}
 
     {% if filter %}
       <form method="get">
-        <button class="btn btn-primary mb-3 collapsed" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
-          <span class="material-icons">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
-        </button>
+        <div class="mb-3 d-flex flex-row align-items-center justify-content-between">
+          <div class="app-left">
+            <button class="btn btn-primary collapsed mr-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
+              <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </div>
+          <div class="app-middle text-muted">
+            {% trans "Počet nalezených projektů: " %}<strong>{{ table.rows|length }}</strong>
+          </div>
+          <div class="app-right">
+            <div class="btn-group" role="group">
+              <div class="btn-group" role="group">
+                <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení sloupců' %}">
+                  <span class="material-icons">table_chart</span>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
+                  {% for column in table.columns %}
+                    {% if column.attrs.td.class in table.get_column_default_show %}
+                      <a class="btn-shift-column dropdown-item"
+                          data-td-class="{{ column.attrs.td.class }}"
+                          data-state="on"
+                          {% if not forloop.last %} style="border-bottom:1px solid #ccc;" {% endif %}
+                          data-table-class-container="{{ table.uniq_table_class_name }}">
+                        <img
+                            src="{% static "django_tables2_column_shifter/img/check.png" %}"
+                            alt="loader"
+                            style="width:20px; height:20px; margin-right:5px; opacity:0.7;"
+                            class="ico check"
+                            id="ico_check_{{ column.name }}"
+                        />
+                        <img
+                            src="{% static "django_tables2_column_shifter/img/uncheck.png" %}"
+                            alt="loader"
+                            style="width:20px; height:20px; margin-right:5px; display: none; opacity:0.7;"
+                            class="ico uncheck"
+                            id="ico_uncheck_{{ column.name }}"
+                        />
+                        {{ column.header }}
+                      </a>
+                    {% else %}
+                      <a class="btn-shift-column dropdown-item"
+                          data-td-class="{{ column.attrs.td.class }}"
+                          data-state="off"
+                          {% if not forloop.last %} style="border-bottom:1px solid #ccc;" {% endif %}
+                          data-table-class-container="{{ table.uniq_table_class_name }}">
+                        <img
+                            src="{% static "django_tables2_column_shifter/img/check.png" %}"
+                            alt="loader"
+                            style="width:20px; height:20px; margin-right:5px; display:none; opacity:0.7;"
+                            class="ico check"
+                            id="ico_check_{{ column.name }}"
+                        />
+                        <img
+                            src="{% static "django_tables2_column_shifter/img/uncheck.png" %}"
+                            alt="loader"
+                            style="width:20px; height:20px; margin-right:5px; opacity:0.7;"
+                            class="ico uncheck"
+                            id="ico_uncheck_{{ column.name }}"
+                        />
+                        {{ column.header }}
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="btn-group" role="group">
+                <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Export výběru (při výběru většího množství záznamů může trvat delší dobu)' %}">
+                  <span class="material-icons">download</span>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="btnGroupDropDownload">
+                  {% for format in export_formats %}
+                    <a href="{% export_url format %}" class="dropdown-item">
+                      {% trans "Stáhnout" %} <code>.{{ format }}</code>
+                    </a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="collapse mb-3" id="filter">
-          <div class="card card-body">
-            {{ filter.form|crispy }}
-            <button type="submit" class="btn btn-primary">{% trans "Vybrat projekty" %}</button>
-            <a href="{% url 'projekt:list' %}">{% trans "Smazat filtr" %}</a>
+          <div class="card app-card-form">
+            <div class="card-body">
+              {% crispy filter.form filter.helper %}
+              <button type="submit" class="btn btn-primary">
+                <span class="material-icons">check</span> {% trans "Vybrat projekty" %}
+              </button>
+            </div>
           </div>
         </div>
       </form>
     {% endif %}
-    {% render_table table 'django_tables2/bootstrap4.html' %}
+    <div class="app-table-list-wrapper">
+      <div class="app-table-list-inner">
+        {% render_table table 'projekt/bootstrap4.html' %}
+      </div>
+    </div>
   </div>
 {% endblock %}
 
 {% block script %}
   <script>
+      $(document).ready(function () {
+
+          const STAV_OZNAMENY = '0'
+          const STAV_ZAPSANY = '1'
+          const STAV_PRIHLASENY = '2'
+          const STAV_ZAHAJEN = '3'
+          const STAV_UKONCEN = '4'
+          const STAV_UZAVREN = '5'
+
+          setPageHeader();
+
+          function setHeader(header) {
+              document.getElementById('id-app-entity-item').innerHTML = header;
+          }
+
+          function listMatch(required, actual) {
+              if (actual.length === required.length && actual.every(function (value, index) {
+                  return value === required[index]
+              })) {
+                  return true;
+              } else {
+                  return false;
+              }
+          }
+
+          function hasOnlySchvalitOznameni(actualParams, actualValues) {
+              if (listMatch(['stav'], actualParams) && listMatch([STAV_OZNAMENY], actualValues)) {
+                  setHeader("Schválit oznámení")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyPrihlasitProjekt(actualParams, actualValues) {
+              if (listMatch(['stav'], actualParams) && listMatch([STAV_ZAPSANY], actualValues)) {
+                  setHeader("Přihlásit projekt")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyZahajitVyzkum(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_PRIHLASENY], actualValues)) {
+                  setHeader("Zahájit výzkum")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyUkoncitTeren(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_ZAHAJEN], actualValues)) {
+                  setHeader("Ukončit terén")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlySpravovatAkce(actualParams, actualValues) {
+              if (listMatch(['stav', 'stav', 'organizace'], actualParams) && listMatch([STAV_ZAHAJEN, STAV_UKONCEN], actualValues)) {
+                  setHeader("Spravovat akce")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyUzavritProjekt(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_UKONCEN], actualValues)) {
+                  setHeader("Uzavřít projekt")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyVybratProjekty(actualParams, actualValues) {
+              if (listMatch([], actualParams) && listMatch([], actualValues)) {
+                  setHeader("Vybrat projekty")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyNaseProjekty(actualParams, actualValues) {
+              if (listMatch(['organizace'], actualParams) && listMatch(['{{ user.organizace.id }}'], actualValues)) {
+                  setHeader("Naše projekty")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyArchivovatProjekty(actualParams, actualValues) {
+              if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_UZAVREN], actualValues)) {
+                  setHeader("Ukončit terén")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function setPageHeader() {
+              const queryString = window.location.search;
+              const urlParams = new URLSearchParams(queryString);
+              const keys = Array.from(urlParams.keys());
+              const values = Array.from(urlParams.values());
+              if (!(hasOnlySchvalitOznameni(keys, values) ||
+                  hasOnlyPrihlasitProjekt(keys, values) ||
+                  hasOnlyZahajitVyzkum(keys, [urlParams.get('stav')]) ||
+                  hasOnlyUkoncitTeren(keys, [urlParams.get('stav')]) ||
+                  hasOnlySpravovatAkce(keys, urlParams.getAll('stav')) ||
+                  hasOnlyUzavritProjekt(keys, [urlParams.get('stav')]) ||
+                  hasOnlyVybratProjekty(keys, values) ||
+                  hasOnlyNaseProjekty(keys, values) ||
+                  hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])
+              )) {
+                  setHeader("Projekty podle filtru")
+              }
+          }
+
+          const getCookie = (name) => {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  let cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      let cookie = jQuery.trim(cookies[i]);
+                      // Does this cookie string begin with the name we want?
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+
+          const zmen_status_sloupce = (sloupec, zmena) => {
+              fetch("{% url 'projekt:odebrat_sloupec_z_vychozich' %}", {
+                  method: 'POST',
+                  credentials: 'same-origin',
+                  headers: {
+                      "X-CSRFToken": getCookie("csrftoken"),
+                      "Accept": "application/json",
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      "sloupec": sloupec,
+                      "zmena": zmena,
+                  })
+              });
+          };
+
+          const userSelection = document.getElementsByClassName('ico check');
+
+          for (let i = 0; i < userSelection.length; i++) {
+              const sloupec = userSelection[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
+              userSelection[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "skryj"));
+          }
+
+          const userSelection2 = document.getElementsByClassName('ico uncheck');
+
+          for (let i = 0; i < userSelection2.length; i++) {
+              const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
+              userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
+          }
+      });
+  </script>
+  <script
+      type="text/javascript"
+      src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
   </script>
 {% endblock %}

@@ -7,13 +7,12 @@ from pian.models import Pian
 
 class PianCreateForm(forms.ModelForm):
 
-    geom = GeometryField(required=False, widget=HiddenInput())
+    geom = GeometryField(required=True, widget=HiddenInput())
 
     class Meta:
         model = Pian
-        fields = ("presnost", "typ", "stav", "geom")
-        widgets = {"stav": forms.RadioSelect()}
-        labels = {"presnost": _("Přesnost"), "typ": _("Typ"), "stav": _("Stav")}
+        fields = ("presnost", "geom")
+        labels = {"presnost": _("Přesnost")}
 
     def __init__(self, *args, **kwargs):
         super(PianCreateForm, self).__init__(*args, **kwargs)

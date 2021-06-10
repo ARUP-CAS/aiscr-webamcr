@@ -1,11 +1,17 @@
+from decimal import Decimal
+
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
     DOKUMENT_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
+    KLADYZM10,
+    KLADYZM50,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     ROLE_ADMIN_ID,
+    ROLE_BADATEL_ID,
+    ROLE_NEAKTIVNI_UZIVATEL_ID,
 )
 from core.models import ProjektSekvence, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -45,6 +51,7 @@ from heslar.models import (
 from historie.models import HistorieVazby
 from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
+from pian.models import Kladyzm
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
 
@@ -74,7 +81,7 @@ TYP_ORGANIZACE_OSTATNI_ID = 110
 
 TYP_PIAN_PLOCHA_ID = 476
 TYP_PIAN_LINIE_ID = 1206
-TYP_PIAN_BOD_ID = 58
+TYP_PIAN_BOD_ID = 1124
 
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
@@ -250,6 +257,40 @@ class AMCRTestRunner(BaseRunner):
         ).save()
         Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
 
+        kl10 = Kladyzm(
+            gid=2,
+            objectid=2,
+            kategorie=KLADYZM10,
+            cislo="01",
+            nazev="Praha",
+            natoceni=Decimal(8.78330000000),
+            shape_leng=Decimal(341204.736390),
+            shape_area=Decimal(7189599966.71),
+            the_geom=GEOSGeometry(
+                "0106000020B38E01000100000001030000000100000005000000C0C9ED"
+                "A718E828C180504AA34C7E2EC1808369E65D0726C1003986AD3FE42EC1E00477941C5426C1C0FA78"
+                "B3849830C140CFBDB2203E29C1D04EA8B0E66430C1C0C9EDA718E828C180504AA34C7E2EC1",
+                srid=102067,
+            ),
+        )
+        kl10.save()
+        kl50 = Kladyzm(
+            gid=3,
+            objectid=3,
+            kategorie=KLADYZM50,
+            cislo="02",
+            nazev="Praha",
+            natoceni=Decimal(8.78330000000),
+            shape_leng=Decimal(341204.736390),
+            shape_area=Decimal(7189599966.71),
+            the_geom=GEOSGeometry(
+                "0106000020B38E01000100000001030000000100000005000000C0C9ED"
+                "A718E828C180504AA34C7E2EC1808369E65D0726C1003986AD3FE42EC1E00477941C5426C1C0FA78"
+                "B3849830C140CFBDB2203E29C1D04EA8B0E66430C1C0C9EDA718E828C180504AA34C7E2EC1"
+            ),
+        )
+        kl50.save()
+
         # Zaznamy v HeslarDokumentMaterialRada
         HeslarDokumentTypMaterialRada(
             dokument_rada=rada_dokumentu_text,
@@ -261,6 +302,10 @@ class AMCRTestRunner(BaseRunner):
         # Vlozit role do auth_user
         admin_group = Group(id=ROLE_ADMIN_ID, name="Admin")
         admin_group.save()
+        badatel_group = Group(id=ROLE_BADATEL_ID, name="Badatel")
+        badatel_group.save()
+        neaktivni = Group(id=ROLE_NEAKTIVNI_UZIVATEL_ID, name="Neaktivni uzivatel")
+        neaktivni.save()
 
         o = Organizace(
             id=AMCR_TESTOVACI_ORGANIZACE_ID,

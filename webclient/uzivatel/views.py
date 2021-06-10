@@ -1,7 +1,5 @@
 import logging
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-
 from core.message_constants import (
     FORM_NOT_VALID,
     OSOBA_JIZ_EXISTUJE,
@@ -10,10 +8,13 @@ from core.message_constants import (
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
-from uzivatel.forms import OsobaForm
+from django_registration.backends.activation.views import RegistrationView
+from uzivatel.forms import AuthUserCreationForm, OsobaForm
 from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
@@ -60,3 +61,8 @@ def create_osoba(request):
         form = OsobaForm()
 
     return render(request, "uzivatel/create_osoba.html", {"form": form})
+
+
+class UserRegistrationView(RegistrationView):
+    form_class = AuthUserCreationForm
+    success_url = reverse_lazy("django_registration_complete")

@@ -27,4 +27,10 @@ urlpatterns = [
         views.odpojit_dokument,
         name="odpojit_dokument",
     ),
+    path("akce-get-katastr", views.post_akce2kat, name="post_akce2kat"),
+    path(
+        "get-pians-in-cadastre",
+        views.post_ajax_get_pians,
+        name="post_ajax_get_pians",
+    ),
 ]

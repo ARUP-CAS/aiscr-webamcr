@@ -13,39 +13,7 @@
   <div class="app-entity-dokument">
     {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
 
-    <div class="bs-stepper">
-      <div class="bs-stepper-header">
-        <div class="step {% if dokument.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">1</span>
-            <span class="bs-stepper-label">
-              {% trans "Rozepsaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_zapsani|date:'Y/m/d'|default_if_none:"" }}</span>
-            </span>
-          </button>
-        </div>
-        <div class="line"></div>
-        <div class="step {% if dokument.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">2</span>
-            <span class="bs-stepper-label">
-              {% trans "Odeslaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_odeslani|date:'Y/m/d'|default_if_none:"" }}</span>
-            </span>
-          </button>
-        </div>
-        <div class="line"></div>
-        <div class="step {% if dokument.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
-            <span class="bs-stepper-circle">3</span>
-            <span class="bs-stepper-label">
-              {% trans "Archivovaný" %}
-              <span class="app-stepper-date">{{ history_dates.datum_archivace|date:'Y/m/d'|default_if_none:"" }}</span>
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
+    {% include "state_component_document.html" with dokument=dokument %}
 
     <div class="card app-card-form">
       <div class="card-header">
@@ -63,89 +31,214 @@
       </div>
       <div class="card-body">
         <div class="row">
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Autoři" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.autori }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Rok vzniku" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.rok_vzniku }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Typ dokumentu" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.typ_dokumentu }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Řada" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.rada }}" readonly>
-            </div>
-          </div>
-
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Materiál originálu" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.material_originalu }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Jazyky" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.jazyky.all|hesla_to_list }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Posudky" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.posudky.all|hesla_to_list }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Organizace" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.organizace }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Rok vzniku" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.rok_vzniku }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Přístupnost" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.pristupnost }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum zveřejnění" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.datum_zverejneni|date:'Y/m/d' }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Označení originálu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.oznaceni_originalu }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Uložení originálu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.ulozeni_originalu }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
+          <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Popis" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.popis }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
               <input class="form-control" type="text" placeholder="{{ dokument.poznamka }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Označení originálu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.oznaceni_originalu }}" readonly>
+            </div>
+          </div>
+
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Uložení originálu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.ulozeni_originalu }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Licence" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.licence }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Jazyky" %}</label>
+              <div class="input-group">
+                <input class="form-control app-ellipsis" type="text" placeholder="{{ dokument.jazyky.all|hesla_to_list }}" readonly>
+                <div class="input-group-append" data-toggle="popover" data-placement="top" data-content="<strong>{% trans 'Seznam jazyků' %}:</strong> {{ dokument.jazyky.all|hesla_to_list }}">
+                  <span class="input-group-text">
+                    <span class="material-icons">info</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Posudky" %}</label>
+              <div class="input-group">
+                <input class="form-control app-ellipsis" type="text" placeholder="{{ dokument.posudky.all|hesla_to_list }}" readonly>
+                <div class="input-group-append" data-toggle="popover" data-placement="top" data-content="<strong>{% trans 'Seznam posudků' %}:</strong> {{ dokument.posudky.all|hesla_to_list }}">
+                  <span class="input-group-text">
+                    <span class="material-icons">info</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Osoby" %}</label>
+              <div class="input-group">
+                <input class="form-control app-ellipsis" type="text" placeholder="{{ dokument.osoby.all|osoby_to_list }}" readonly>
+                <div class="input-group-append" data-toggle="popover" data-placement="top" data-content="<strong>{% trans 'Seznam osob' %}:</strong> {{ dokument.osoby.all|osoby_to_list   }}">
+                  <span class="input-group-text">
+                    <span class="material-icons">info</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Datum vzniku" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.datum_vzniku|date:'Y/m/d' }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Zachovalost" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.zachovalost }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Náhrada" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.nahrada }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Počet variant originálu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.pocet_variant_originalu }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Odkaz" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.odkaz }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Formát plánu/foto" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.format }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Měřítko plánu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.meritko }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Výška plánu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.vyska }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Šířka plánu" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.sirka }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Objekt/kontext" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.cislo_objektu }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Země" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.zeme }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Region" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.region }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Událost" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.udalost }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Typ události" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.udalost_typ }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Rok od" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.rok_od}}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Rok do" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.rok_do }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Důvěryhodnost" %}</label>
+              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.duveryhodnost }}" readonly>
             </div>
           </div>
         </div>
@@ -157,26 +250,17 @@
         <div class="app-fx app-left">
           {% trans "Části dokumentu" %}
         </div>
-        <!--<div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <button class="btn" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top"
-                    title="{% trans 'Přidat část dokumentu' %}">
-              <span class="material-icons">add</span>
-            </button>
-          </div>
-        </div>-->
       </div>
       <div class="card-body p-0">
         <ul class="list-group list-group-flush">
           {% for dc in dokument.casti.all %}
             <li class="list-group-item">
               <div class="d-flex align-items-center">
-                <a href="#" class="flex-fill app-entity-color"
-                   onclick="show_form('detail_dj_form_{{ dc.ident_cely }}')">
+                <a href="#" class="app-entity-color mr-1" onclick="show_form('detail_dj_form_{{ dc.ident_cely }}')">
                   <strong>{{ dc.ident_cely|last_x_letters:4 }}</strong>
                 </a>
                 <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
-                    ({{ dc.archeologicky_zaznam.ident_cely }})
+                  ({{ dc.archeologicky_zaznam.ident_cely }})
                 </a>
               </div>
               {% if dc.komponenty.komponenty.all %}

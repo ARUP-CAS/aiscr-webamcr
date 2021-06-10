@@ -33,3 +33,13 @@ class NelzeZjistitRaduError(Exception):
 class NeocekavanaRadaError(Exception):
     def __init__(self, message="Neocekavana rada dokumentu."):
         self.message = message
+
+
+class NeznamaGeometrieError(Exception):
+    def __init__(self, message="Neocekavana geometrie pianu."):
+        self.message = message
+
+
+class UnexpectedDataRelations(Exception):
+    def __init__(self, message="Duplicitni nebo chybejici relace."):
+        self.message = message

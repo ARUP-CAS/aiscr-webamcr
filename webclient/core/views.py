@@ -4,8 +4,9 @@ import os
 
 from core.constants import (
     DOKUMENT_RELATION_TYPE,
+    OTHER_DOCUMENT_FILES,
     OTHER_PROJECT_FILES,
-    PROJEKT_RELATION_TYPE, OTHER_DOCUMENT_FILES,
+    PROJEKT_RELATION_TYPE,
 )
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.models import Soubor
@@ -83,7 +84,7 @@ def download_file(request, pk):
 @login_required
 @require_http_methods(["GET"])
 def upload_file_projekt(request, ident_cely):
-    projekt = Projekt.objects.get(ident_cely=ident_cely)
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     return render(
         request,
         "core/upload_file.html",
@@ -94,7 +95,7 @@ def upload_file_projekt(request, ident_cely):
 @login_required
 @require_http_methods(["GET"])
 def upload_file_dokument(request, ident_cely):
-    d = Dokument.objects.get(ident_cely=ident_cely)
+    d = get_object_or_404(Dokument, ident_cely=ident_cely)
     return render(
         request,
         "core/upload_file.html",

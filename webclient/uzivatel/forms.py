@@ -1,22 +1,52 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.contrib.auth.forms import UserChangeForm
 from django.utils.translation import gettext_lazy as _
+from django_registration.forms import RegistrationForm
 
 from .models import Osoba, User
 
 
-class AuthUserCreationForm(UserCreationForm):
-    class Meta(UserCreationForm):
+class AuthUserCreationForm(RegistrationForm):
+    class Meta(RegistrationForm):
         model = User
-        fields = ("email", "organizace", "jazyk")
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "telefon",
+            "organizace",
+            "password1",
+            "password2",
+        )
+
+        labels = {
+            "first_name": _("Jméno"),
+            "last_name": _("Přijmení"),
+            "email": _("Email"),
+            "organizace": _("Organizace"),
+            "password1": _("Heslo"),
+            "telefon": _("Telefon")
+        }
+
+        widgets = {
+            "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "telefon": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(AuthUserCreationForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
 
 
 class AuthUserChangeForm(UserChangeForm):
     class Meta:
         model = User
-        fields = ("email", "organizace", "jazyk")
+        fields = ("email", "organizace", "jazyk", "ident_cely", "telefon")
 
 
 class OsobaForm(forms.ModelForm):

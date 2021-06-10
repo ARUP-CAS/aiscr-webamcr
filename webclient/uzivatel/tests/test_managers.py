@@ -15,7 +15,7 @@ class UsersManagersTests(TestCase):
             organizace=Organizace.objects.get(id=769066),
         )
         self.assertEqual(user.email, "normal@user.com")
-        self.assertTrue(user.is_active)
+        self.assertTrue(not user.is_active)
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
         with self.assertRaises(TypeError):

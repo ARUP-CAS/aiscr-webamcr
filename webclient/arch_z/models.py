@@ -13,6 +13,7 @@ from core.constants import (
 )
 from django.db import models
 from django.utils.translation import gettext as _
+from ez.models import ExterniZdroj
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_DATUM_SPECIFIKACE,
@@ -190,7 +191,7 @@ class Akce(models.Model):
                         + " musí být nejdřív archivován."
                     )
                 )
-        for dj in self.archeologicky_zaznam.dokumentacni_jednotky.all():
+        for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             if dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
@@ -237,14 +238,14 @@ class Akce(models.Model):
             )
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
-        if len(self.archeologicky_zaznam.dokumentacni_jednotky.all()) == 0:
+        if len(self.archeologicky_zaznam.dokumentacni_jednotky_akce.all()) == 0:
             result.append(_("Nemá žádnou dokumentační jednotku."))
             logger.warning(
                 "Akce "
                 + self.archeologicky_zaznam.ident_cely
                 + " nema dokumentacni jednotku."
             )
-        for dj in self.archeologicky_zaznam.dokumentacni_jednotky.all():
+        for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
@@ -316,8 +317,14 @@ class Lokalita(models.Model):
 
 
 class ExterniOdkaz(models.Model):
-    # externi_zdroj = models.ForeignKey(
-    # ExterniZdroj, models.DO_NOTHING, db_column='externi_zdroj', blank=True, null=True)
+    externi_zdroj = models.ForeignKey(
+        ExterniZdroj,
+        models.DO_NOTHING,
+        db_column="externi_zdroj",
+        blank=True,
+        null=True,
+        related_name="externi_odkazy_zdroje",
+    )
     paginace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
@@ -325,6 +332,7 @@ class ExterniOdkaz(models.Model):
         db_column="archeologicky_zaznam",
         blank=True,
         null=True,
+        related_name="externi_odkazy",
     )
 
     class Meta:

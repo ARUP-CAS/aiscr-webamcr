@@ -45,7 +45,13 @@ DOKUMENT_NELZE_ARCHIVOVAT: Final = "Dokument nelze archivovat."
 DOKUMENT_USPESNE_PRIPOJEN: Final = "Dokument úspěšně připojen."
 DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
 DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
+VYBERTE_PROSIM_POLOHU: Final = "Vyberte prosím lokalizaci na mapě."
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
 OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
+
+# Pian
+PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
+PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
+PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."

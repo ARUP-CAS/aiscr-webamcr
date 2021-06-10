@@ -51,12 +51,16 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django.contrib.sessions.backends.signed_cookies",
     "django_filters",
     "django_tables2",
+    "django_tables2_column_shifter",
     "crispy_forms",
+    "django_registration",
     "compressor",
     "captcha",
     "core",
+    "ez",
     "historie",
     "oznameni",
     "projekt.apps.ProjektConfig",
@@ -157,6 +161,8 @@ AUTH_USER_MODEL = "uzivatel.User"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -194,6 +200,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "core": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "ez": {
             "handlers": ["console"],
             "level": "DEBUG",
         },
@@ -247,7 +257,13 @@ STATICFILES_FINDERS = [
     "compressor.finders.CompressorFinder",
 ]
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "192.168.254.17"
 EMAIL_PORT = "25"
 EAMIL_USE_TLS = True
 EMAIL_USE_SSL = False
+DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
+
+ACCOUNT_ACTIVATION_DAYS = 10
+
+AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]

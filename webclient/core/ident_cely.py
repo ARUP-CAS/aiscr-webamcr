@@ -9,6 +9,7 @@ from core.exceptions import (
     MaximalIdentNumberError,
     NelzeZjistitRaduError,
     NeocekavanaRadaError,
+    NeznamaGeometrieError,
     PianNotInKladysm5Error,
 )
 from django.contrib.gis.db.models.functions import Centroid
@@ -66,15 +67,12 @@ def get_dokument_rada(typ, material):
         raise NelzeZjistitRaduError()
 
 
-def get_dokument_ident(temporary, rada, region):
-    if rada == "TX" or rada == "DD":
+def get_temp_dokument_ident(rada, region):
+    if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        start = ""
-        if temporary:
-            start = IDENTIFIKATOR_DOCASNY_PREFIX
         d = Dokument.objects.filter(
             ident_cely__regex="^"
-            + start
+            + IDENTIFIKATOR_DOCASNY_PREFIX
             + region
             + "-"
             + rada
@@ -83,10 +81,18 @@ def get_dokument_ident(temporary, rada, region):
             + "\\d{5}$"
         ).order_by("-ident_cely")
         if d.count() == 0:
-            return start + region + "-" + rada + "-" + str(date.today().year) + "00001"
+            return (
+                IDENTIFIKATOR_DOCASNY_PREFIX
+                + region
+                + "-"
+                + rada
+                + "-"
+                + str(date.today().year)
+                + "00001"
+            )
         else:
             return (
-                start
+                IDENTIFIKATOR_DOCASNY_PREFIX
                 + region
                 + "-"
                 + rada
@@ -120,7 +126,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_EVENT_DJS: int = 99
     dj_last_digit_count = 2
     max_count = 0
-    for dj in event.dokumentacni_jednotky.all():
+    for dj in event.dokumentacni_jednotky_akce.all():
         last_digits = int(dj.ident_cely[-dj_last_digit_count:])
         if max_count < last_digits:
             max_count = last_digits
@@ -137,7 +143,7 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
     max_count = 0
-    for dj in event.dokumentacni_jednotky.all():
+    for dj in event.dokumentacni_jednotky_akce.all():
         for komponenta in dj.komponenty.komponenty.all():
             last_digits = int(komponenta.ident_cely[-last_digit_count:])
             if max_count < last_digits:
@@ -145,6 +151,24 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
     event_ident = event.ident_cely
     if max_count < MAXIMAL_KOMPONENTAS:
         ident = event_ident + "-K" + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
+        return None
+
+
+def get_dokument_komponenta_ident(dokument: Dokument) -> str:
+    MAXIMAL_KOMPONENTAS: int = 999
+    last_digit_count = 3
+    max_count = 0
+    for dc in dokument.casti.all():
+        for komponenta in dc.komponenty.komponenty.all():
+            last_digits = int(komponenta.ident_cely[-last_digit_count:])
+            if max_count < last_digits:
+                max_count = last_digits
+    ident = dokument.ident_cely
+    if max_count < MAXIMAL_KOMPONENTAS:
+        ident = ident + "-K" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
         logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
@@ -162,6 +186,24 @@ def get_sm_from_point(point):
         raise PianNotInKladysm5Error(point)
 
 
+def get_pian_ident(zm50, approved) -> str:
+    MAXIMAL_PIANS: int = 99999
+    last_digit_count = 5
+    max_count = 0
+    prefix = "P" if approved else "N"
+    start = prefix + "-" + str(zm50.objectid).zfill(4) + "-"
+    for pian in Pian.objects.filter(ident_cely__startswith=start).all():
+        last_digits = int(pian.ident_cely[-last_digit_count:])
+        if max_count < last_digits:
+            max_count = last_digits
+    if max_count < MAXIMAL_PIANS:
+        ident = start + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of pians is " + str(MAXIMAL_PIANS))
+        return None
+
+
 def get_adb_ident(pian: Pian) -> str:
     # Get map list
     # Format: [ADB]-[sm5.mapno]-[NUMBER]
@@ -174,7 +216,7 @@ def get_adb_ident(pian: Pian) -> str:
         point = Centroid(pian.geom)
     else:
         logger.error("Neznamy typ geometrie" + str(type(pian.geom)))
-        return None, None
+        raise NeznamaGeometrieError()
     sm5 = get_sm_from_point(point)[0]
     record_list = "ADB-" + sm5.mapno
     MAXIMAL_ADBS: int = 999999

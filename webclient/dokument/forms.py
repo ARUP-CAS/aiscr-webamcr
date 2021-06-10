@@ -2,13 +2,16 @@ from core.constants import OBLAST_CHOICES
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
+from django.contrib.gis.forms import OSMWidget
 from django.utils.translation import gettext as _
 from dokument.models import Dokument, DokumentExtraData
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
+    HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_TYP,
     HESLAR_JAZYK,
     HESLAR_POSUDEK_TYP,
+    MODEL_3D_DOKUMENT_TYPES,
 )
 from heslar.models import Heslar
 
@@ -239,3 +242,110 @@ class CreateDokumentForm(EditDokumentForm):
                 css_class="row",
             ),
         )
+
+
+class CreateModelDokumentForm(forms.ModelForm):
+    class Meta:
+        model = Dokument
+        fields = (
+            "typ_dokumentu",
+            "organizace",
+            "oznaceni_originalu",
+            "popis",
+            "poznamka",
+            "autori",
+        )
+        widgets = {
+            "typ_dokumentu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "autori": forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
+        labels = {
+            "typ_dokumentu": _("Typ dokumentu"),
+            "organizace": _("Organizace"),
+            "oznaceni_originalu": _("Označení originálu"),
+            "popis": _("Popis"),
+            "poznamka": _("Poznámka"),
+            "autori": _("Autoři"),
+        }
+
+    def __init__(self, *args, readonly=False, **kwargs):
+        super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
+        self.fields["popis"].widget.attrs["rows"] = 1
+        self.fields["popis"].required = True
+        self.fields["poznamka"].widget.attrs["rows"] = 1
+        self.fields["oznaceni_originalu"].widget.attrs["rows"] = 1
+        self.fields["typ_dokumentu"].choices = list(
+            Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
+            .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
+            .values_list("id", "heslo")
+        ) + [("", "")]
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("typ_dokumentu", css_class="col-sm-6"),
+                Div("organizace", css_class="col-sm-6"),
+                Div("oznaceni_originalu", css_class="col-sm-6"),
+                Div("autori", css_class="col-sm-6"),
+                Div("popis", css_class="col-sm-12"),
+                Div("poznamka", css_class="col-sm-12"),
+                css_class="row",
+            ),
+        )
+        self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+
+
+class CreateModelExtraDataForm(forms.ModelForm):
+    class Meta:
+        model = DokumentExtraData
+        fields = ("format", "datum_vzniku", "duveryhodnost", "geom", "odkaz")
+        widgets = {
+            "format": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "geom": OSMWidget(
+                attrs={"default_lat": 50.05, "default_lon": 14.05, "default_zoom": 6}
+            ),
+        }
+        labels = {
+            "datum_vzniku": _("Datum vzniku"),
+            "format": _("Formát"),
+            "duveryhodnost": _("Důvěryhodnost"),
+            "geom": _("Lokalizace (Vyberte prosím polohu)"),
+            "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
+        }
+
+    def __init__(self, *args, readonly=False, **kwargs):
+        super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
+        self.fields["odkaz"].widget.attrs["rows"] = 1
+        self.fields["datum_vzniku"].required = True
+        self.fields["geom"].required = True
+        self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
+        self.fields["format"].required = True
+        self.fields["format"].choices = list(
+            Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
+            .filter(heslo__startswith="3D")
+            .values_list("id", "heslo")
+        ) + [("", "")]
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("datum_vzniku", css_class="col-sm-4"),
+                Div("format", css_class="col-sm-4"),
+                Div("duveryhodnost", css_class="col-sm-4"),
+                Div("odkaz", css_class="col-sm-12"),
+                Div("geom", css_class="col-sm-12"),
+                css_class="row",
+            ),
+        )
+        self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
