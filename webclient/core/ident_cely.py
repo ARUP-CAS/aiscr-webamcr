@@ -67,15 +67,12 @@ def get_dokument_rada(typ, material):
         raise NelzeZjistitRaduError()
 
 
-def get_dokument_ident(temporary, rada, region):
+def get_temp_dokument_ident(rada, region):
     if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        start = ""
-        if temporary:
-            start = IDENTIFIKATOR_DOCASNY_PREFIX
         d = Dokument.objects.filter(
             ident_cely__regex="^"
-            + start
+            + IDENTIFIKATOR_DOCASNY_PREFIX
             + region
             + "-"
             + rada
@@ -84,10 +81,18 @@ def get_dokument_ident(temporary, rada, region):
             + "\\d{5}$"
         ).order_by("-ident_cely")
         if d.count() == 0:
-            return start + region + "-" + rada + "-" + str(date.today().year) + "00001"
+            return (
+                IDENTIFIKATOR_DOCASNY_PREFIX
+                + region
+                + "-"
+                + rada
+                + "-"
+                + str(date.today().year)
+                + "00001"
+            )
         else:
             return (
-                start
+                IDENTIFIKATOR_DOCASNY_PREFIX
                 + region
                 + "-"
                 + rada

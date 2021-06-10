@@ -253,12 +253,16 @@ class CreateModelDokumentForm(forms.ModelForm):
             "oznaceni_originalu",
             "popis",
             "poznamka",
+            "autori",
         )
         widgets = {
             "typ_dokumentu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "autori": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         }
@@ -268,9 +272,10 @@ class CreateModelDokumentForm(forms.ModelForm):
             "oznaceni_originalu": _("Označení originálu"),
             "popis": _("Popis"),
             "poznamka": _("Poznámka"),
+            "autori": _("Autoři"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, readonly=False, **kwargs):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["popis"].required = True
@@ -284,15 +289,18 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("typ_dokumentu", css_class="col-sm-4"),
-                Div("organizace", css_class="col-sm-4"),
-                Div("oznaceni_originalu", css_class="col-sm-4"),
+                Div("typ_dokumentu", css_class="col-sm-6"),
+                Div("organizace", css_class="col-sm-6"),
+                Div("oznaceni_originalu", css_class="col-sm-6"),
+                Div("autori", css_class="col-sm-6"),
                 Div("popis", css_class="col-sm-12"),
                 Div("poznamka", css_class="col-sm-12"),
                 css_class="row",
             ),
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
@@ -315,7 +323,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, readonly=False, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["datum_vzniku"].required = True
@@ -339,3 +347,5 @@ class CreateModelExtraDataForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly

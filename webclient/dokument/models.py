@@ -1,3 +1,6 @@
+import datetime
+import logging
+
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_DOK,
@@ -8,6 +11,7 @@ from core.constants import (
     VRACENI_DOK,
     ZAPSANI_DOK,
 )
+from core.exceptions import UnexpectedDataRelations
 from core.models import SouborVazby
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
@@ -33,6 +37,8 @@ from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
+
+logger = logging.getLogger(__name__)
 
 
 class Dokument(models.Model):
@@ -127,6 +133,9 @@ class Dokument(models.Model):
         through="DokumentOsoba",
         related_name="dokumenty_osob",
     )
+    autori = models.ManyToManyField(
+        Osoba, through="DokumentAutor", related_name="dokumenty_autoru"
+    )
 
     class Meta:
         db_table = "dokument"
@@ -193,6 +202,47 @@ class Dokument(models.Model):
         except ObjectDoesNotExist:
             pass
         return has_extra_data
+
+    def get_komponenta(self):
+        if "3D" in self.ident_cely:
+            try:
+                return self.casti.all()[0].komponenty.komponenty.all()[0]
+            except Exception as ex:
+                logger.error(ex)
+                raise UnexpectedDataRelations("Neleze ziskat komponentu modelu 3D.")
+        else:
+            return None
+
+    def set_permanent_ident_cely(self, rada):
+        current_year = datetime.datetime.now().year
+        sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
+            0
+        ]
+        perm_ident_cely = (
+            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+        )
+        # Loop through all of the idents that have been imported
+        while True:
+            if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
+                sequence.sekvence += 1
+                logger.warning(
+                    "Ident "
+                    + perm_ident_cely
+                    + " already exists, trying next number "
+                    + str(sequence.sekvence)
+                )
+                perm_ident_cely = (
+                    rada
+                    + "-"
+                    + str(current_year)
+                    + "{0}".format(sequence.sekvence).zfill(5)
+                )
+            else:
+                break
+        self.ident_cely = perm_ident_cely
+        sequence.sekvence += 1
+        sequence.save()
+        self.save()
 
 
 class DokumentCast(models.Model):
@@ -298,7 +348,7 @@ class DokumentExtraData(models.Model):
 class DokumentAutor(models.Model):
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
-    poradi = models.IntegerField()
+    poradi = models.IntegerField(null=True)
 
     class Meta:
         db_table = "dokument_autor"
@@ -366,3 +416,12 @@ class Tvar(models.Model):
     class Meta:
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
+
+
+class DokumentSekvence(models.Model):
+    rada = models.CharField(max_length=4)
+    rok = models.IntegerField()
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "dokument_sekvence"

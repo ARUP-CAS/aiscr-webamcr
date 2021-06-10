@@ -57,9 +57,8 @@
             <ul>
               <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?vlastnik={{ user }}" title="">{% trans "Moje modely" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?vlastnik={{ user.id }}" title="">{% trans "Moje modely" %}</a></li>
               <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="#" title="">{% trans "Spravovat" %}</a></li>
             </ul>
           </div>
         </div>

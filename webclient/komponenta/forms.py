@@ -15,11 +15,10 @@ logger = logging.getLogger(__name__)
 class CreateKomponentaForm(forms.ModelForm):
     class Meta:
         model = Komponenta
-        fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
+        fields = ("presna_datace", "jistota", "aktivity", "obdobi", "areal")
 
         labels = {
             "presna_datace": _("Přesná datace"),
-            "poznamka": _("Poznámka"),
             "jistota": _("Jistota"),
             "aktivity": _("Aktivity"),
         }
@@ -32,7 +31,7 @@ class CreateKomponentaForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, obdobi_choices, areal_choices, *args, **kwargs):
+    def __init__(self, obdobi_choices, areal_choices, *args, readonly=False, **kwargs):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("Období"),
@@ -59,8 +58,9 @@ class CreateKomponentaForm(forms.ModelForm):
                 Div("presna_datace", css_class="col-sm-6"),
                 Div("areal", css_class="col-sm-6"),
                 Div("aktivity", css_class="col-sm-6"),
-                Div("poznamka", css_class="col"),
                 css_class="row",
             ),
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly

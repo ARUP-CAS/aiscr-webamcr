@@ -25,7 +25,6 @@ class DokumentFilter(filters.FilterSet):
     )
 
     organizace = ModelMultipleChoiceFilter(
-        # queryset=Organizace.objects.filter(oao=True),
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
@@ -42,7 +41,7 @@ class DokumentFilter(filters.FilterSet):
     )
 
     vlastnik = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
+        queryset=User.objects.select_related("organizace").all(),
         field_name="historie__historie__uzivatel",
         label="Vlastník",
         widget=SelectMultiple(
@@ -74,7 +73,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("extra_data__duveryhodnost", css_class="col-sm-6"),
             Div("popis", css_class="col-sm-6"),
             Div("organizace", css_class="col-sm-6"),
-            Div("obdobi", css_class="col-sm-6"),
+            # Div("obdobi", css_class="col-sm-6"),
             Div("vlastnik", css_class="col-sm-6"),
             css_class="row",
         ),

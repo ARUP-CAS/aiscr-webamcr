@@ -116,177 +116,100 @@
 
 {% block script %}
   <script>
-      {#$(document).ready(function () {#}
-      {##}
-      {#    const STAV_OZNAMENY = '0'#}
-      {#    const STAV_ZAPSANY = '1'#}
-      {#    const STAV_PRIHLASENY = '2'#}
-      {#    const STAV_ZAHAJEN = '3'#}
-      {#    const STAV_UKONCEN = '4'#}
-      {#    const STAV_UZAVREN = '5'#}
-      {##}
-      {#    setPageHeader();#}
-      {##}
-      {#    function setHeader(header) {#}
-      {#        document.getElementById('id-app-entity-item').innerHTML = header;#}
-      {#    }#}
-      {##}
-      {#    function listMatch(required, actual) {#}
-      {#        if (actual.length === required.length && actual.every(function (value, index) {#}
-      {#            return value === required[index]#}
-      {#        })) {#}
-      {#            return true;#}
-      {#        } else {#}
-      {#            return false;#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlySchvalitOznameni(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav'], actualParams) && listMatch([STAV_OZNAMENY], actualValues)) {#}
-      {#            setHeader("Schválit oznámení")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyPrihlasitProjekt(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav'], actualParams) && listMatch([STAV_ZAPSANY], actualValues)) {#}
-      {#            setHeader("Přihlásit projekt")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyZahajitVyzkum(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_PRIHLASENY], actualValues)) {#}
-      {#            setHeader("Zahájit výzkum")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyUkoncitTeren(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_ZAHAJEN], actualValues)) {#}
-      {#            setHeader("Ukončit terén")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlySpravovatAkce(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav', 'stav', 'organizace'], actualParams) && listMatch([STAV_ZAHAJEN, STAV_UKONCEN], actualValues)) {#}
-      {#            setHeader("Spravovat akce")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyUzavritProjekt(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_UKONCEN], actualValues)) {#}
-      {#            setHeader("Uzavřít projekt")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyVybratProjekty(actualParams, actualValues) {#}
-      {#        if (listMatch([], actualParams) && listMatch([], actualValues)) {#}
-      {#            setHeader("Vybrat projekty")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyNaseProjekty(actualParams, actualValues) {#}
-      {#        if (listMatch(['organizace'], actualParams) && listMatch(['{{ user.organizace.id }}'], actualValues)) {#}
-      {#            setHeader("Naše projekty")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function hasOnlyArchivovatProjekty(actualParams, actualValues) {#}
-      {#        if (listMatch(['stav', 'organizace'], actualParams) && listMatch([STAV_UZAVREN], actualValues)) {#}
-      {#            setHeader("Ukončit terén")#}
-      {#            return true#}
-      {#        } else {#}
-      {#            return false#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    function setPageHeader() {#}
-      {#        const queryString = window.location.search;#}
-      {#        const urlParams = new URLSearchParams(queryString);#}
-      {#        const keys = Array.from(urlParams.keys());#}
-      {#        const values = Array.from(urlParams.values());#}
-      {#        if (!(hasOnlySchvalitOznameni(keys, values) ||#}
-      {#            hasOnlyPrihlasitProjekt(keys, values) ||#}
-      {#            hasOnlyZahajitVyzkum(keys, [urlParams.get('stav')]) ||#}
-      {#            hasOnlyUkoncitTeren(keys, [urlParams.get('stav')]) ||#}
-      {#            hasOnlySpravovatAkce(keys, urlParams.getAll('stav')) ||#}
-      {#            hasOnlyUzavritProjekt(keys, [urlParams.get('stav')]) ||#}
-      {#            hasOnlyVybratProjekty(keys, values) ||#}
-      {#            hasOnlyNaseProjekty(keys, values) ||#}
-      {#            hasOnlyArchivovatProjekty(keys, [urlParams.get('stav')])#}
-      {#        )) {#}
-      {#            setHeader("Projekty podle filtru")#}
-      {#        }#}
-      {#    }#}
-      {##}
-      {#    const getCookie = (name) => {#}
-      {#        let cookieValue = null;#}
-      {#        if (document.cookie && document.cookie !== '') {#}
-      {#            let cookies = document.cookie.split(';');#}
-      {#            for (let i = 0; i < cookies.length; i++) {#}
-      {#                let cookie = jQuery.trim(cookies[i]);#}
-      {#                // Does this cookie string begin with the name we want?#}
-      {#                if (cookie.substring(0, name.length + 1) === (name + '=')) {#}
-      {#                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));#}
-      {#                    break;#}
-      {#                }#}
-      {#            }#}
-      {#        }#}
-      {#        return cookieValue;#}
-      {#    }#}
-      {##}
-      {#    const zmen_status_sloupce = (sloupec, zmena) => {#}
-      {#        fetch('odebrat-sloupec-z-vychozich', {#}
-      {#            method: 'POST',#}
-      {#            credentials: 'same-origin',#}
-      {#            headers: {#}
-      {#                "X-CSRFToken": getCookie("csrftoken"),#}
-      {#                "Accept": "application/json",#}
-      {#                'Content-Type': 'application/json'#}
-      {#            },#}
-      {#            body: JSON.stringify({#}
-      {#                "sloupec": sloupec,#}
-      {#                "zmena": zmena,#}
-      {#            })#}
-      {#        });#}
-      {#    };#}
-      {##}
-      {#    const userSelection = document.getElementsByClassName('ico check');#}
-      {##}
-      {#    for (let i = 0; i < userSelection.length; i++) {#}
-      {#        const sloupec = userSelection[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")#}
-      {#        userSelection[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "skryj"));#}
-      {#    }#}
-      {##}
-      {#    const userSelection2 = document.getElementsByClassName('ico uncheck');#}
-      {##}
-      {#    for (let i = 0; i < userSelection2.length; i++) {#}
-      {#        const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")#}
-      {#        userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));#}
-      {#    }#}
-      {#});#}
+      $(document).ready(function () {
+
+          setPageHeader();
+
+          function setHeader(header) {
+              document.getElementById('id-app-entity-item').innerHTML = header;
+          }
+
+          function listMatch(required, actual) {
+              if (actual.length === required.length && actual.every(function (value, index) {
+                  return value === required[index]
+              })) {
+                  return true;
+              } else {
+                  return false;
+              }
+          }
+
+          function hasOnlyVybratModely(actualParams, actualValues) {
+              if (listMatch([], actualParams) && listMatch([], actualValues)) {
+                  setHeader("Vybrat modely 3D")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function hasOnlyVlastnik(actualParams, actualValues) {
+              if (listMatch(['vlastnik'], actualParams) && listMatch(['{{ user.id }}'], actualValues)) {
+                  setHeader("Moje modely")
+                  return true
+              } else {
+                  return false
+              }
+          }
+
+          function setPageHeader() {
+              const queryString = window.location.search;
+              const urlParams = new URLSearchParams(queryString);
+              const keys = Array.from(urlParams.keys());
+              const values = Array.from(urlParams.values());
+              if (!(hasOnlyVlastnik(keys, values) ||
+                    hasOnlyVybratModely(keys, values)
+              )) {
+                  setHeader("Modely podle filtru")
+              }
+          }
+
+          const getCookie = (name) => {
+              let cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  let cookies = document.cookie.split(';');
+                  for (let i = 0; i < cookies.length; i++) {
+                      let cookie = jQuery.trim(cookies[i]);
+                      // Does this cookie string begin with the name we want?
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+
+          const zmen_status_sloupce = (sloupec, zmena) => {
+              fetch('odebrat-sloupec-z-vychozich', {
+                  method: 'POST',
+                  credentials: 'same-origin',
+                  headers: {
+                      "X-CSRFToken": getCookie("csrftoken"),
+                      "Accept": "application/json",
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      "sloupec": sloupec,
+                      "zmena": zmena,
+                  })
+              });
+          };
+
+          const userSelection = document.getElementsByClassName('ico check');
+
+          for (let i = 0; i < userSelection.length; i++) {
+              const sloupec = userSelection[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
+              userSelection[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "skryj"));
+          }
+
+          const userSelection2 = document.getElementsByClassName('ico uncheck');
+
+          for (let i = 0; i < userSelection2.length; i++) {
+              const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
+              userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
+          }
+      });
   </script>
   <script
       type="text/javascript"

@@ -22,7 +22,7 @@
         </div>
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
+            <a class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
                data-placement="top" title="{% trans 'Upravit' %}">
               <span class="material-icons">edit</span>
             </a>
@@ -30,128 +30,42 @@
         </div>
       </div>
       <div class="card-body">
-        <div class="row">
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Typ dokumentu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.typ_dokumentu }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.organizace }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="form-group">
-              <label>{% trans "Popis" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.popis }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="form-group">
-              <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.poznamka }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="form-group">
-              <label>{% trans "Označení originálu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.oznaceni_originalu }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Osoby" %}</label>
-              <div class="input-group">
-                <input class="form-control app-ellipsis" type="text"
-                       placeholder="{{ dokument.osoby.all|osoby_to_list }}" readonly>
-                <div class="input-group-append" data-toggle="popover" data-placement="top"
-                     data-content="<strong>{% trans 'Seznam osob' %}:</strong> {{ dokument.osoby.all|osoby_to_list }}">
-                  <span class="input-group-text">
-                    <span class="material-icons">info</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Datum vzniku" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.datum_vzniku|date:'Y/m/d' }}"
-                     readonly>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="form-group">
-              <label>{% trans "Odkaz" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.odkaz }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Důvěryhodnost" %}</label>
-              <input class="form-control" type="text" placeholder="{{ dokument.extra_data.duveryhodnost }}" readonly>
-            </div>
-          </div>
-        </div>
+        <form>
+          {% crispy formDokument %}
+          {% crispy formExtraData %}
+          {% crispy formKomponenta %}
+        </form>
       </div>
     </div>
 
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Popis obsahu" %}
-        </div>
-        <div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <a class="btn" href="" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
-              <span class="material-icons">edit</span>
-            </a>
-          </div>
+          {% trans "Bližší specifikace obsahu (předměty a objekty)" %}
         </div>
       </div>
       <div class="card-body">
-        <div class="row">
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label>{% trans "Období" %}</label>
-              <input class="form-control" type="text" placeholder="{{ komponenta.obdobi }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label>{% trans "Přesná datace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ komponenta.presna_datace }}" readonly>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label>{% trans "Areál" %}</label>
-              <input class="form-control" type="text" placeholder="{{ komponenta.areal }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="form-group">
-              <label>{% trans "Aktivity" %}</label>
-              <input class="form-control" type="text" placeholder="{{ komponenta.aktivity.all|hesla_to_list }}"
-                     readonly>
-            </div>
-          </div>
-        </div>
+        <h5>{% trans "Objekty" %}</h5>
+        <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' komponenta.ident_cely %}"
+              onsubmit="editNalezOSubmitButton.disabled = true; return true;">
+          {% crispy formset.objekt formset.helper %}
+          <button type="submit" id="editNalezOSubmitButton"
+                  class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+        </form>
+        <h5>{% trans "Předměty" %}</h5>
+        <form method="POST" action="{% url 'nalez:edit_predmet' komponenta.ident_cely %}"
+              onsubmit="editNalezPSubmitButton.disabled = true; return true;">
+          {% crispy formset.predmet formset.helper %}
+          <button type="submit" id="editNalezPSubmitButton"
+                  class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+        </form>
       </div>
     </div>
 
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Soubory" %}
+          {% trans "Náhledy 3D modelu / Obrázky s texturou" %}
         </div>
         <div class="app-fx app-right">
           <div class="btn-group" role="group">

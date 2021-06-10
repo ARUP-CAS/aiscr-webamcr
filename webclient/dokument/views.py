@@ -15,8 +15,8 @@ from core.exceptions import UnexpectedDataRelations
 from core.forms import VratitForm
 from core.ident_cely import (
     get_cast_dokumentu_ident,
-    get_dokument_ident,
     get_dokument_rada,
+    get_temp_dokument_ident,
 )
 from core.message_constants import (
     DOKUMENT_NELZE_ARCHIVOVAT,
@@ -29,12 +29,12 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import get_cadastre_from_point
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -58,6 +58,13 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_TYP,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
+    HESLAR_OBJEKT_DRUH,
+    HESLAR_OBJEKT_DRUH_KAT,
+    HESLAR_OBJEKT_SPECIFIKACE,
+    HESLAR_OBJEKT_SPECIFIKACE_KAT,
+    HESLAR_PREDMET_DRUH,
+    HESLAR_PREDMET_DRUH_KAT,
+    HESLAR_PREDMET_SPECIFIKACE,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     PRISTUPNOST_BADATEL_ID,
 )
@@ -65,6 +72,12 @@ from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaVazby
+from nalez.forms import (
+    NalezFormSetHelper,
+    create_nalez_objekt_form,
+    create_nalez_predmet_form,
+)
+from nalez.models import NalezObjekt, NalezPredmet
 
 logger = logging.getLogger(__name__)
 
@@ -123,8 +136,50 @@ def detail_model_3D(request, ident_cely):
     if komponenty.count() != 1:
         logger.error("Model ma mit jednu komponentu: " + str(komponenty.count()))
         raise UnexpectedDataRelations()
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
+    druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
+    specifikace_objekt_choices = heslar_12(
+        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
+    )
+    specifikce_predmetu_choices = list(
+        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
+            "id", "heslo"
+        )
+    )
+    NalezObjektFormset = inlineformset_factory(
+        Komponenta,
+        NalezObjekt,
+        form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
+        extra=2,
+    )
+    NalezPredmetFormset = inlineformset_factory(
+        Komponenta,
+        NalezPredmet,
+        form=create_nalez_predmet_form(
+            druh_predmet_choices, specifikce_predmetu_choices
+        ),
+        extra=2,
+    )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
+    context["formDokument"] = CreateModelDokumentForm(instance=dokument, readonly=True)
+    context["formExtraData"] = CreateModelExtraDataForm(
+        instance=dokument.extra_data, readonly=True
+    )
+    context["formKomponenta"] = CreateKomponentaForm(
+        obdobi_choices, areal_choices, instance=komponenty[0], readonly=True
+    )
+    context["formset"] = {
+        "objekt": NalezObjektFormset(
+            instance=komponenty[0], prefix=komponenty[0].ident_cely + "_o"
+        ),
+        "predmet": NalezPredmetFormset(
+            instance=komponenty[0], prefix=komponenty[0].ident_cely + "_p"
+        ),
+        "helper": NalezFormSetHelper(),
+    }
     context["history_dates"] = get_history_dates(dokument.historie)
     context["show"] = get_detail_template_shows(dokument)
     logger.debug(context)
@@ -199,6 +254,60 @@ def edit(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
+def edit_model_3D(request, ident_cely):
+    dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    if request.method == "POST":
+        form_d = CreateModelDokumentForm(request.POST, instance=dokument)
+        form_extra = CreateModelExtraDataForm(
+            request.POST, instance=dokument.extra_data
+        )
+        form_komponenta = CreateKomponentaForm(
+            obdobi_choices,
+            areal_choices,
+            request.POST,
+            instance=dokument.get_komponenta(),
+        )
+        if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
+            form_d.save()
+            form_extra.save()
+            form_komponenta.save()
+            if (
+                form_d.changed_data
+                or form_extra.changed_data
+                or form_komponenta.changed_data
+            ):
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form_d.errors)
+            logger.debug(form_extra.errors)
+            logger.debug(form_komponenta.errors)
+    else:
+        form_d = CreateModelDokumentForm(instance=dokument)
+        form_extra = CreateModelExtraDataForm(instance=dokument.extra_data)
+        form_komponenta = CreateKomponentaForm(
+            obdobi_choices, areal_choices, instance=dokument.get_komponenta()
+        )
+
+    return render(
+        request,
+        "dokument/create_model_3D.html",
+        {
+            "formDokument": form_d,
+            "formExtraData": form_extra,
+            "formKomponenta": form_komponenta,
+            "title": _("Editace modelu 3D"),
+            "header": _("Editace modelu 3D"),
+            "button": _("Upravit model"),
+        },
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
 def zapsat(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if request.method == "POST":
@@ -212,8 +321,8 @@ def zapsat(request, arch_z_ident_cely):
             rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
-            dokument.ident_cely = get_dokument_ident(
-                temporary=True, rada=rada.zkratka, region=identifikator
+            dokument.ident_cely = get_temp_dokument_ident(
+                rada=rada.zkratka, region=identifikator
             )
             dokument.rada = rada
             dokument.stav = D_STAV_ZAPSANY
@@ -277,11 +386,7 @@ def create_model_3D(request):
             dokument.material_originalu = Heslar.objects.get(
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
             )
-            point = form_extra.cleaned_data["geom"]
-            region = get_cadastre_from_point(point).okres.kraj.rada_id
-            dokument.ident_cely = get_dokument_ident(
-                temporary=True, rada="3D", region=region
-            )
+            dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C")
             dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_BADATEL_ID)
             dokument.stav = D_STAV_ZAPSANY
             dokument.save()
@@ -372,9 +477,7 @@ def archivovat(request, ident_cely):
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
-            d.ident_cely = get_dokument_ident(
-                temporary=False, rada=rada.zkratka, region=ident_cely[2:3]
-            )
+            d.set_permanent_ident_cely(ident_cely[2:3] + "-" + rada.zkratka)
             d.save()
             logger.debug(
                 "Dokumentu "
@@ -397,8 +500,20 @@ def archivovat(request, ident_cely):
                     )
                     counter += 1
 
+            if "3D" in d.ident_cely:
+                komponenta = d.get_komponenta()
+                logger.debug(
+                    "Aktualizace identifikatoru komponenty modelu 3D: "
+                    + str(komponenta.ident_cely)
+                )
+                komponenta.ident_cely = d.ident_cely + "-K001"
+                komponenta.save()
+
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        return redirect("dokument:detail", ident_cely=d.ident_cely)
+        if "3D" in ident_cely:
+            return redirect("dokument:detail-model-3D", ident_cely=d.ident_cely)
+        else:
+            return redirect("dokument:detail", ident_cely=d.ident_cely)
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)

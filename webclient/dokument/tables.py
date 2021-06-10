@@ -12,14 +12,16 @@ class DokumentTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
 
-    # def get_column_default_show(self):
-    #     self.column_default_show = list(self.columns.columns.keys())
-    #     if "projekt_vychozi_skryte_sloupce" in self.request.session:
-    #         columns_to_hide = set(self.request.session["projekt_vychozi_skryte_sloupce"])
-    #         for column in columns_to_hide:
-    #             if column is not None and column in self.column_default_show:
-    #                 self.column_default_show.remove(column)
-    #     return super(ProjektTable, self).get_column_default_show()
+    def get_column_default_show(self):
+        self.column_default_show = list(self.columns.columns.keys())
+        if "projekt_vychozi_skryte_sloupce" in self.request.session:
+            columns_to_hide = set(
+                self.request.session["projekt_vychozi_skryte_sloupce"]
+            )
+            for column in columns_to_hide:
+                if column is not None and column in self.column_default_show:
+                    self.column_default_show.remove(column)
+        return super(DokumentTable, self).get_column_default_show()
 
     class Meta:
         model = Dokument
@@ -28,7 +30,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
             "ident_cely",
             "stav",
             "typ_dokumentu",
-            "organizace",
+            "organizace__nazev_zkraceny",
             "popis",
             "extra_data__datum_vzniku",
             "extra_data__format",
