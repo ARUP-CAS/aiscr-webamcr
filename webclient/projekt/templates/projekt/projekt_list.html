@@ -258,7 +258,7 @@
           }
 
           const zmen_status_sloupce = (sloupec, zmena) => {
-              fetch('odebrat-sloupec-z-vychozich', {
+              fetch("{% url 'projekt:odebrat_sloupec_z_vychozich' %}", {
                   method: 'POST',
                   credentials: 'same-origin',
                   headers: {
