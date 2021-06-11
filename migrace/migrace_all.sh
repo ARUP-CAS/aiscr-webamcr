@@ -65,3 +65,6 @@ echo "!!!Zbyva prehashovani hesel je potreba udelat manualne!!!"
 
 #echo "This is only for development, comment out for production"
 #psql -d prod_zaloha -f import_testovacich_uctu.sql
+
+# hashovani hesel
+python3 encrypt_passwords.py
