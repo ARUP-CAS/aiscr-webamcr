@@ -17,7 +17,8 @@ alter table heslar_odkaz drop constraint heslar_odkaz_heslo_fkey;
 alter table historie drop constraint historie_vazba_fkey;
 alter table dokument_cast drop constraint jednotka_dokument_dokument_fkey;
 alter table komponenta_aktivita drop constraint komponenta_aktivita_komponenta_fk;
-alter table komponenta drop constraint komponenta_komponenta_vazby_fkey;
+alter table komponenta drop constraint komponenta_vazba_fkey;
+alter table komponenta alter column vazba rename to komponenta_vazby;
 alter table lokalita drop constraint lokalita_archeologicky_zaznam_fkey;
 alter table nalez drop constraint nalez_komponenta_fkey;
 alter table neident_akce drop constraint neident_akce_dokument_cast_fkey;
@@ -59,4 +60,3 @@ alter table vyskovy_bod add constraint vyskovy_bod_adb_fkey foreign key (adb) re
 -- SET NULL ON DELETE
 alter table dokument_cast drop constraint dokument_cast_archeologicky_zaznam_fkey;
 alter table dokument_cast add constraint dokument_cast_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam) references archeologicky_zaznam(id) on delete set null;
-
