@@ -31,8 +31,8 @@ echo "Migrace stavy akci"
 psql -d prod_zaloha -f 4_migrace_akce_stavy.sql
 echo "Migrace oznamovatele do dalsi tabulky"
 psql -d prod_zaloha -f 5_migrace_oznamovatel.sql
-echo "Migrace Dalsi-2"
-psql -d prod_zaloha -f 6_migrace_dalsi-2.sql
+echo "Migrace Dalsi"
+psql -d prod_zaloha -f 6_migrace_dalsi.sql
 echo "7"
 psql -d prod_zaloha -f 7_migrace_hlavni_katastry.sql
 echo "8"
