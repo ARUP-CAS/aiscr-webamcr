@@ -18,7 +18,7 @@ alter table historie drop constraint historie_vazba_fkey;
 alter table dokument_cast drop constraint jednotka_dokument_dokument_fkey;
 alter table komponenta_aktivita drop constraint komponenta_aktivita_komponenta_fk;
 alter table komponenta drop constraint komponenta_vazba_fkey;
-alter table komponenta alter column vazba rename to komponenta_vazby;
+alter table komponenta rename column vazba to komponenta_vazby;
 alter table lokalita drop constraint lokalita_archeologicky_zaznam_fkey;
 alter table nalez drop constraint nalez_komponenta_fkey;
 alter table neident_akce drop constraint neident_akce_dokument_cast_fkey;
