@@ -58,7 +58,8 @@ psql -d prod_zaloha -f 17_migrace_ident_projekt.sql
 echo "18"
 psql -d prod_zaloha -f 18_migrace_mix.sql
 
-echo "!!!Zbyva prehashovani hesel je potreba udelat manualne!!!"
+# hashovani hesel
+python3 encrypt_passwords.py
 
 #echo "Migrace mazani" TOHLE ZAVOLAT MANULANE
 #psql -d prod_zaloha -f migrace_mazani.sql
