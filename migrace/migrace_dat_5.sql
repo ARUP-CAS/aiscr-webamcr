@@ -9,13 +9,23 @@ update nalez_dokument set komponenta_new_id = sel.kid from (select k.id as kid, 
 update nalez_dokument set specifikace = null where specifikace = -1;
 
 -- ted premapuji reference na heslare
-update nalez_dokument set druh_nalezu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 22) sel where druh_nalezu = sel.puvodni;
--- COMMENT: zda se ze druh_nalezu je vzdy z heslare 22
-update nalez_dokument set druh_nalezu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 17) sel where druh_nalezu = sel.puvodni;
+-- SPATNE: update nalez_dokument set druh_nalezu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 22) sel where druh_nalezu = sel.puvodni;
+-- COMMENT: zda se ze druh_nalezu je vzdy z heslare 22 - ANO PROTOZE TO BYLO BLBE
+-- SPATNE: update nalez_dokument set druh_nalezu = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 17) sel where druh_nalezu = sel.puvodni;
+
+-- DOBRE:
+UPDATE nalez_dokument AS n SET druh_nalezu = h.id FROM heslar AS h WHERE h.puvodni_id = n.druh_nalezu and h.nazev_heslare = 22 and n.typ_nalezu = 2;
+UPDATE nalez_dokument AS n SET druh_nalezu = h.id FROM heslar AS h WHERE h.puvodni_id = n.druh_nalezu and h.nazev_heslare = 17 and n.typ_nalezu = 1;
+
 alter table nalez_dokument add constraint nalez_dokument_druh_nalezu_fkey foreign key (druh_nalezu) references heslar(id);
 -- COMMENT: 199 specifikaci je z heslare 28 a 1 z 30
-update nalez_dokument set specifikace = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 28) sel where specifikace = sel.puvodni;
-update nalez_dokument set specifikace = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 30) sel where specifikace = sel.puvodni;
+-- SPATNE: update nalez_dokument set specifikace = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 28) sel where specifikace = sel.puvodni;
+-- SPATNE: update nalez_dokument set specifikace = sel.new_id from (select id as new_id, puvodni_id as puvodni from heslar where nazev_heslare = 30) sel where specifikace = sel.puvodni;
+
+-- DOBRE:
+UPDATE nalez_dokument AS n SET specifikace = h.id FROM heslar AS h WHERE h.puvodni_id = n.specifikace and h.nazev_heslare = 30 and n.typ_nalezu = 2;
+UPDATE nalez_dokument AS n SET specifikace = h.id FROM heslar AS h WHERE h.puvodni_id = n.specifikace and h.nazev_heslare = 28 and n.typ_nalezu = 1;
+
 alter table nalez_dokument add constraint nalez_dokument_specifikace_fkey foreign key (specifikace) references heslar(id);
 
 -- zmigruju zaznamy z tabulky nalez_dokument do nalez (opet nove id-cka)
