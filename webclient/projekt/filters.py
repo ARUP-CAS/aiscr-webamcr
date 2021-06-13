@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 import crispy_forms
 import django_filters as filters
@@ -117,7 +118,11 @@ class ProjektFilter(filters.FilterSet):
 
     planovane_zahajeni = DateFromToRangeFilter(
         method="filter_planovane_zahajeni",
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(
+            attrs={
+                "type": "date",
+            }
+        ),
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
@@ -262,14 +267,35 @@ class ProjektFilter(filters.FilterSet):
     )
 
     def filter_planovane_zahajeni(self, queryset, name, value):
-        rng = DateRange(
-            lower=value.strftime("%m/%d/%Y"), upper=value.stop.strftime("%m/%d/%Y")
-        )
+        if value.start and value.stop:
+            rng = DateRange(
+                lower=value.start.strftime("%m/%d/%Y"),
+                upper=value.stop.strftime("%m/%d/%Y"),
+            )
+        elif value.start and not value.stop:
+            rng = DateRange(
+                lower=value.start.strftime("%m/%d/%Y"),
+                upper=datetime.date.today().strftime("%m/%d/%Y"),
+            )
+        elif value.stop and not value.start:
+            rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
+        else:
+            rng = DateRange(
+                lower="01/01/1900", upper=datetime.date.today().strftime("%m/%d/%Y")
+            )
         return queryset.filter(planovane_zahajeni__overlap=rng)
 
     def filter_termin_odevzdani_nz(self, queryset, name, value):
+        if value.start:
+            start = value.start
+        else:
+            start = datetime.strptime("01/01/1900", "%m/%d/%Y").date()
+        if value.stop:
+            stop = value.stop
+        else:
+            stop = datetime.date.today()
         return queryset.filter(
-            termin_odevzdani_nz__gte=value.start, termin_odevzdani_nz__lte=value.stop
+            termin_odevzdani_nz__gte=start, termin_odevzdani_nz__lte=stop
         )
 
     def filter_popisne_udaje_akce(self, queryset, name, value):

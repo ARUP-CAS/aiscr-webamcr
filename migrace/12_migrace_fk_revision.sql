@@ -31,7 +31,7 @@ alter table vyskovy_bod drop constraint vyskovy_bod_adb_fkey;
 
 alter table akce add constraint akce_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam) references archeologicky_zaznam(id) on delete cascade;
 alter table akce_vedouci add constraint akce_vedouci_akce_fkey foreign key (akce) references akce(archeologicky_zaznam) on delete cascade;
-alter table archeologicky_zaznam_katastr add constraint archeologicky_zaznam_katastr_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam) references archeologicky_zaznam(id) on delete cascade;
+alter table archeologicky_zaznam_katastr add constraint archeologicky_zaznam_katastr_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam_id) references archeologicky_zaznam(id) on delete cascade;
 alter table dokument_autor add constraint dokument_autor_dokument_fkey foreign key (dokument) references dokument(id) on delete cascade;
 alter table dokument_jazyk add constraint dokument_jazyk_dokument_fkey foreign key (dokument) references dokument(id) on delete cascade;
 alter table dokument_posudek add constraint dokument_posudek_dokument_fkey foreign key (dokument) references dokument(id) on delete cascade;
