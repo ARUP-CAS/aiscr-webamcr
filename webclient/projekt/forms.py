@@ -135,7 +135,7 @@ class EditProjektForm(forms.ModelForm):
             "typ_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -157,6 +157,7 @@ class EditProjektForm(forms.ModelForm):
         labels = {
             "typ_projektu": _("Typ projektu"),
             "hlavni_katastr": _("Hlavní katastr"),
+            "katastry": _("Další katastry"),
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
@@ -189,12 +190,16 @@ class EditProjektForm(forms.ModelForm):
                             Div(
                                 Div("typ_projektu", css_class="col-sm-3"),
                                 Div("hlavni_katastr", css_class="col-sm-3"),
-                                Div("katastry", css_class="col-sm-3"),
-                                Div("planovane_zahajeni", css_class="col-sm-3"),
+                                Div("katastry", css_class="col-sm-6"),
                                 Div("podnet", css_class="col-sm-12"),
                                 Div("lokalizace", css_class="col-sm-12"),
-                                Div("parcelni_cislo", css_class="col-sm-6"),
-                                Div("oznaceni_stavby", css_class="col-sm-3"),
+                                Div("parcelni_cislo", css_class="col-sm-12"),
+                                Div("oznaceni_stavby", css_class="col-sm-6"),
+                                Div("planovane_zahajeni", css_class="col-sm-3"),
+                                Div(
+                                    
+                                    css_class="col-sm-12"
+                                ),
                                 Div("organizace", css_class="col-sm-3"),
                                 Div("latitude", css_class="hidden"),
                                 Div("longitude", css_class="hidden"),
