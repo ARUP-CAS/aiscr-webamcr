@@ -21,6 +21,8 @@ from django.test.runner import DiscoverRunner as BaseRunner
 from dokument.models import Dokument, DokumentExtraData
 from heslar import hesla
 from heslar.hesla import (
+    GEOMETRY_BOD,
+    GEOMETRY_PLOCHA,
     HESLAR_AKCE_TYP,
     HESLAR_AREAL,
     HESLAR_DATUM_SPECIFIKACE,
@@ -78,10 +80,6 @@ TYP_ORGANIZACE_TERENNI_PRACOVISTE_ID = 710
 TYP_ORGANIZACE_UNIVERZITA_ID = 487
 TYP_ORGANIZACE_VYZKUMNA_INSTITUCE_ID = 581
 TYP_ORGANIZACE_OSTATNI_ID = 110
-
-TYP_PIAN_PLOCHA_ID = 476
-TYP_PIAN_LINIE_ID = 1206
-TYP_PIAN_BOD_ID = 1124
 
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
@@ -221,8 +219,8 @@ class AMCRTestRunner(BaseRunner):
             id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="zachranny"
         ).save()
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp).save()
-        Heslar(id=TYP_PIAN_PLOCHA_ID, nazev_heslare=ha).save()
-        Heslar(id=TYP_PIAN_BOD_ID, nazev_heslare=ha).save()
+        Heslar(id=GEOMETRY_PLOCHA, nazev_heslare=ha).save()
+        Heslar(id=GEOMETRY_BOD, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=SPECIFIKACE_DATA_PRESNE, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()

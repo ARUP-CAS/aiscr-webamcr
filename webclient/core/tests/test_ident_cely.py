@@ -4,12 +4,12 @@ from decimal import Decimal
 from core.ident_cely import get_dokument_rada, get_temporary_project_ident
 from core.models import ProjektSekvence
 from core.tests.runner import (
+    GEOMETRY_PLOCHA,
     KATASTR_ODROVICE_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     PRESNOST_DESITKY_METRU_ID,
     RADA_DOKUMENTU_TEXT_ID,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
-    TYP_PIAN_PLOCHA_ID,
 )
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
@@ -40,7 +40,7 @@ class IdentTests(TestCase):
         pian = Pian(
             id=1,
             presnost=Heslar.objects.get(pk=PRESNOST_DESITKY_METRU_ID),
-            typ=Heslar.objects.get(pk=TYP_PIAN_PLOCHA_ID),
+            typ=Heslar.objects.get(pk=GEOMETRY_PLOCHA),
             geom=GEOSGeometry("0101000020E610000042D35729E77F3040234F91EAF9804840"),
             zm10=kl,
             zm50=kl,
