@@ -7,4 +7,3 @@ class PasConfig(AppConfig):
     def ready(self):
         super(PasConfig, self).ready()
         # noinspection PyUnresolvedReferences
-        import pas.signals
