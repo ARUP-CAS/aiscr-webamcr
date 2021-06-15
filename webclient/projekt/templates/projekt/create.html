@@ -60,6 +60,7 @@
 {% block script %}
   <script src="{% static 'mapa.js' %}"></script>
   <script src="{% static 'dropzone.min.js' %}"></script>
+  <script>var object_id = "{{ confirm.ident_cely }}";</script>
   <script src="{% static 'dz.js' %}"></script>
   <script>
       global_map_can_edit = true;
