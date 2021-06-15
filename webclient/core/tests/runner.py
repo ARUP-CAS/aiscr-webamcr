@@ -38,6 +38,7 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     PRISTUPNOST_ANONYM_ID,
+    SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
 from heslar.models import (
@@ -61,7 +62,6 @@ PRESNOST_JEDNOTKY_METRU_ID = 567
 PRESNOST_POLOHA_PODLE_KATASTRU_ID = 1150
 PRESNOST_STOVKY_METRU_ID = 1213
 
-SPECIFIKACE_DATA_PRESNE_ID = 881
 HLAVNI_TYP_SONDA_ID = 1234
 TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
 MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID = 229
@@ -224,7 +224,7 @@ class AMCRTestRunner(BaseRunner):
         Heslar(id=TYP_PIAN_PLOCHA_ID, nazev_heslare=ha).save()
         Heslar(id=TYP_PIAN_BOD_ID, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
-        Heslar(id=SPECIFIKACE_DATA_PRESNE_ID, heslo="presne", nazev_heslare=hsd).save()
+        Heslar(id=SPECIFIKACE_DATA_PRESNE, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
         Heslar(id=ZACHOVALOST_30_80_ID, heslo="30 % az 80 %", nazev_heslare=hza).save()
         typ_dokumentu_plan = Heslar(
@@ -350,7 +350,7 @@ class AMCRTestRunner(BaseRunner):
         az.save()
         a = Akce(
             archeologicky_zaznam=az,
-            specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE_ID),
+            specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
         )
         a.projekt = p
         a.save()

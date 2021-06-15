@@ -112,10 +112,12 @@ class ArcheologickyZaznam(models.Model):
 
 class ArcheologickyZaznamKatastr(models.Model):
     archeologicky_zaznam = models.ForeignKey(
-        ArcheologickyZaznam, on_delete=models.CASCADE, db_column="archeologicky_zaznam"
+        ArcheologickyZaznam,
+        on_delete=models.CASCADE,
+        db_column="archeologicky_zaznam_id",
     )
     katastr = models.ForeignKey(
-        RuianKatastr, on_delete=models.CASCADE, db_column="katastr"
+        RuianKatastr, on_delete=models.CASCADE, db_column="katastr_id"
     )
 
     class Meta:

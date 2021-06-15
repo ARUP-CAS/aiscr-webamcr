@@ -27,3 +27,10 @@ insert into dokument_sekvence (id, rada, rok, sekvence) values
 (13, 'C-DD', 2023, 1),
 (14, 'M-DD', 2023, 1),
 (15, 'C-3D', 2023, 1);
+
+update auth_user set is_superuser = true where email = 'novak@arup.cas.cz';
+update auth_user set is_staff = true where email = 'novak@arup.cas.cz';
+
+alter table samostatny_nalez ALTER id SET DEFAULT nextval('samostatny_nalez_seq');
+ALTER SEQUENCE samostatny_nalez_seq OWNED BY samostatny_nalez.id;
+SELECT setval('samostatny_nalez_seq', (SELECT MAX(id) from samostatny_nalez), TRUE);

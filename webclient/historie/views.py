@@ -33,3 +33,11 @@ class DokumentHistorieListView(HistorieListView):
         return self.model.objects.filter(
             vazba__dokument_historie__ident_cely=dokument_ident
         ).order_by("-id")
+
+
+class SamostatnyNalezHistorieListView(HistorieListView):
+    def get_queryset(self):
+        sn_ident = self.kwargs["ident_cely"]
+        return self.model.objects.filter(
+            vazba__sn_historie__ident_cely=sn_ident
+        ).order_by("-id")

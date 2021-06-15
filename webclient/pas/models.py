@@ -1,16 +1,24 @@
-from core.constants import SN_ARCHIVOVANY, SN_ODESLANY, SN_POTVRZENY, SN_ZAPSANY
+from core.constants import (
+    SN_ARCHIVOVANY,
+    SN_ODESLANY,
+    SN_POTVRZENY,
+    SN_ZAPSANY,
+    ZAPSANI_SN,
+)
 from core.models import SouborVazby
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
+    TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, RuianKatastr
-from historie.models import HistorieVazby
+from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
 
@@ -30,6 +38,7 @@ class SamostatnyNalez(models.Model):
         models.DO_NOTHING,
         db_column="projekt",
         related_name="samostatne_nalezy",
+        limit_choices_to={"typ_projektu": TYP_PROJEKTU_PRUZKUM_ID},
     )
     katastr = models.ForeignKey(
         RuianKatastr,
@@ -100,8 +109,25 @@ class SamostatnyNalez(models.Model):
         SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
     )
     historie = models.ForeignKey(
-        HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
+        HistorieVazby,
+        models.DO_NOTHING,
+        db_column="historie",
+        blank=True,
+        null=True,
+        related_name="sn_historie",
     )
+
+    def set_zapsany(self, user):
+        self.stav = SN_ZAPSANY
+        Historie(
+            typ_zmeny=ZAPSANI_SN,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def get_absolute_url(self):
+        return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     class Meta:
         db_table = "samostatny_nalez"

@@ -1,0 +1,69 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{% trans "Detail samostatného nálezu" %}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-samostatny_nalez">
+    {% include "toolbar_pas.html" with sn=sn  showcontrols=True %}
+    {% include "pas/state_component_pas.html" with sn=sn %}
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="#" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <form>
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Fotografie" %}
+        </div>
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-dokument" href="#"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory next_url='/pas/detail/' ident=sn.ident_cely %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Samostatný nález zatím neobsahuje žádné fotografie." %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

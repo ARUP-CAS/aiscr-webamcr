@@ -25,6 +25,7 @@ urlpatterns = [
     path("oznameni/", include("oznameni.urls")),
     path("pian/", include("pian.urls")),
     path("projekt/", include("projekt.urls")),
+    path("pas/", include("pas.urls")),
     path("arch_z/", include("arch_z.urls")),
     path("uzivatel/", include("uzivatel.urls")),
     path("dokument/", include("dokument.urls")),

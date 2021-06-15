@@ -72,7 +72,7 @@ INSTALLED_APPS = [
     "nalez",
     "adb",
     "neidentakce",
-    "pas",
+    "pas.apps.PasConfig",
     "komponenta",
     "dj",
 ]

@@ -16,6 +16,7 @@ from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from dokument.models import Dokument
 from heslar.models import HeslarDokumentTypMaterialRada
+from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 
@@ -201,6 +202,22 @@ def get_pian_ident(zm50, approved) -> str:
         return ident
     else:
         logger.error("Maximal number of pians is " + str(MAXIMAL_PIANS))
+        return None
+
+
+def get_sn_ident(projekt: Projekt) -> str:
+    MAXIMAL_FINDS: int = 99999
+    last_digit_count = 5
+    max_count = 0
+    for nalez in SamostatnyNalez.objects.filter(projekt=projekt).all():
+        last_digits = int(nalez.ident_cely[-last_digit_count:])
+        if max_count < last_digits:
+            max_count = last_digits
+    if max_count < MAXIMAL_FINDS:
+        ident = projekt.ident_cely + "-N" + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of SN is " + str(MAXIMAL_FINDS))
         return None
 
 
