@@ -258,20 +258,15 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Návrh zrušení projektu")),
+                    Div(
+                        HTML(_("Návrh zrušení projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     "reason",
                     css_class="card-body",
-                ),
-                Div(
-                    FormActions(
-                        Submit("save", "Navrhnout zrušení"),
-                        HTML(
-                            '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
-                        ),
-                    ),
                 ),
                 css_class="card",
             )
