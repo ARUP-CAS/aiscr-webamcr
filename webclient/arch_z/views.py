@@ -575,7 +575,7 @@ def post_ajax_get_pians(request):
             {
                 "id": pian.id,
                 "ident_cely": pian.ident_cely,
-                "geom": pian.geometry,
+                "geom": pian.geometry.replace(", ", ","),
             }
         )
     if len(pians) > 0:
@@ -590,10 +590,7 @@ def post_akce2kat(request):
     logger.debug(body)
     katastr_name = body["cadastre"]
     pian_ident_cely = body["pian"]
-    # geom = Point(float(body["corY"]), float(body["corX"]))
-    logger.debug("++++++++++++")
-    logger.debug(katastr_name)
-    logger.debug(pian_ident_cely)
+
     [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
     # logger.debug(katastr)
     if len(str(poi)) > 0:
@@ -602,7 +599,7 @@ def post_akce2kat(request):
                 "lat": str(poi.lat),
                 "lng": str(poi.lng),
                 "zoom": str(poi.zoom),
-                "geom": str(geom),
+                "geom": str(geom).split(";")[1].replace(", ", ","),
             },
             status=200,
         )
