@@ -379,26 +379,34 @@ var addPointToPoiLayer = (lat, long, text,lai) => {
 var addPointToPoiLayerWithForce = (lat, long, text,lai) => {
         L.marker([lat, long], {icon: redIcon,zIndexOffset:1000}).bindPopup(text).addTo(drawnItems);
 }
-var addPointToPoiLayerWithForceG =(st_text,layer,text) => {
+var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
     if(st_text.includes("POLYGON")){
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
-            console.log(i)
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
         L.polygon(coor).addTo(drawnItems);
-        console.log(coor)
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
-            console.log(i)
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
         L.polyline(coor).addTo(layer);
-        console.log(coor)
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
         L.marker([i.split(" ")[1], i.split(" ")[0]], {icon: greenIcon}).bindPopup(text).addTo(layer);
 
+    }
+    if(overview && coor.length>1){
+        x0=0.0;
+        x1=0.0
+        c0=0
+        console.log(coor)
+        for(const i of coor){
+            x0=x0+parseFloat(i[0])
+            x1=x1+parseFloat(i[1])
+            c0=c0+1
+        }
+        L.marker([x0/c0,x1/c0], {icon: greenIcon}).bindPopup(text).addTo(layer);
     }
 }
 
@@ -409,13 +417,11 @@ var addPianFromKadastre =(st_text,text) => {
                 coor.push([i.split(" ")[0],i.split(" ")[1]])
         })
         L.polygon(coor).addTo(poi_other);
-        console.log(coor)
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[0],i.split(" ")[1]])
         })
         L.polyline(coor).addTo(poi_other);
-        console.log(coor)
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
         L.marker([i.split(" ")[0], i.split(" ")[1]], {icon: greenIcon}).bindPopup(text).addTo(poi_other);

@@ -640,13 +640,9 @@
               xhr2.onload = function () {
                 poi_other.clearLayers();
                 let res=JSON.parse(this.responseText).points
-               // poi_other.setZIndexOffset(2000);
-
-
 
                 res.forEach((i)=>{
-                  //console.log("ident_cely: "+i.ident_cely)
-                  addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely)
+                  addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
 
                   //gm_correct.bringToFront()
                 })
