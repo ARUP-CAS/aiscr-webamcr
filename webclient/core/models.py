@@ -53,6 +53,21 @@ class ProjektSekvence(models.Model):
         db_table = "projekt_sekvence"
 
 
+class OpravneniPohledu(models.Model):
+    OPRAVNENI_MOZNOSTI = [
+        ("NIC", "Žádné záznamy"),
+        ("VLASTNI", "Vlastní záznamy"),
+        ("ORG", "Záznamy stejné organizace"),
+        ("VŠE", "Všechny záznamy"),
+    ]
+
+    STAV_MOZNOSTI = [
+        ("DO", "Od začátku do vybraného stavu"),
+        ("STAV", "V přesně vybraném stavu"),
+        ("OD", "Od vybraného stavu dále")
+    ]
+
+
 # class AdbSekvence(models.Model):
 #     kladysm5 = models.OneToOneField(Kladysm5, models.DO_NOTHING)
 #     sekvence = models.IntegerField()
