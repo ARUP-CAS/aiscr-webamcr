@@ -91,8 +91,8 @@
   }
 
   &.app-btn-in-form {
-    @extend .btn-light, .ml-2, .d-flex, .btn-sm;
-    height: 31px;
+    @extend .btn-primary, .ml-2, .d-flex, .btn-sm, .align-items-center;
+    height: 32px;
     margin-bottom: .8rem;
   }
 }
