@@ -57,6 +57,13 @@
   font-family: museo;
 }
 
+.app-divider-label {
+  @extend .small, .pb-1;
+  display: inline-block;
+  color: $gray-600;
+  font-weight: 500;
+}
+
 // material icons behavior in bootstrap elements
 .btn,
 .nav-link {
@@ -429,13 +436,3 @@ form {
     }
   }
 } */
-
-
-.testik {
-  @extend .small;
-  background-color: rgba(0, 0, 0, 0.1);
-  color: $gray-600;
-  padding: 3px 10px;
-  //padding: 0 0 10px 0;
-  font-weight: 500;
-}
