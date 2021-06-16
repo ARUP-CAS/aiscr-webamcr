@@ -57,6 +57,13 @@
   font-family: museo;
 }
 
+.app-divider-label {
+  @extend .small, .pb-1;
+  display: inline-block;
+  color: $gray-600;
+  font-weight: 500;
+}
+
 // material icons behavior in bootstrap elements
 .btn,
 .nav-link {
@@ -81,6 +88,12 @@
   .app-icon-expand {
     transition: all 0.4s ease;
     transform: rotateZ(180deg);
+  }
+
+  &.app-btn-in-form {
+    @extend .btn-primary, .ml-2, .d-flex, .btn-sm, .align-items-center;
+    height: 32px;
+    margin-bottom: .8rem;
   }
 }
 
@@ -429,13 +442,3 @@ form {
     }
   }
 } */
-
-
-.testik {
-  @extend .small;
-  background-color: rgba(0, 0, 0, 0.1);
-  color: $gray-600;
-  padding: 3px 10px;
-  //padding: 0 0 10px 0;
-  font-weight: 500;
-}

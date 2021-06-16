@@ -202,28 +202,7 @@ class EditProjektForm(forms.ModelForm):
                                 Div("lokalizace", css_class="col-sm-12"),
                                 Div("parcelni_cislo", css_class="col-sm-12"),
                                 Div("oznaceni_stavby", css_class="col-sm-6"),
-                                Div("planovane_zahajeni", css_class="col-sm-3"),
-                                Div(
-                                    #HTML(_("<span class=\"testik\">Toto je test</span>")),
-                                    HTML(_("<hr />")),
-                                    css_class="col-sm-12"
-                                ),
-                                Div("vedouci_projektu", css_class="col-sm-4"),
-                                Div("organizace", css_class="col-sm-4"),
-                                Div("uzivatelske_oznaceni", css_class="col-sm-4"),
-                                Div("kulturni_pamatka", css_class="col-sm-3"),
-                                Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
-                                Div("kulturni_pamatka_popis", css_class="col-sm-6"),
-                                Div("latitude", css_class="hidden"),
-                                Div("longitude", css_class="hidden"),
-                                Div(
-                                    #HTML(_("<span class=\"testik\">Toto je test</span>")),
-                                    HTML(_("<hr />")),
-                                    css_class="col-sm-12"
-                                ),
-                                Div("datum_zahajeni", css_class="col-sm-4"),
-                                Div("datum_ukonceni", css_class="col-sm-4"),
-                                #Div("termin_odevzdani", css_class="col-sm-4"),          
+                                Div("planovane_zahajeni", css_class="col-sm-3"),         
                                 css_class="row",
                             ),
                             css_class="col-sm-9",
@@ -232,6 +211,34 @@ class EditProjektForm(forms.ModelForm):
                             Div(id="projectMap"),
                             css_class="col-sm-3",
                         ),
+                        css_class="row",
+                    ),
+                    Div(
+                        Div(
+                            HTML(_("<span class=\"app-divider-label\">Přihlášení projektu</span>")),
+                            HTML(_("<hr class=\"mt-0\" />")),
+                            css_class="col-sm-12"
+                        ),
+                        Div(
+                            Div("vedouci_projektu", css_class="flex-fill"),
+                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
+                            css_class="col-sm-4 d-flex align-items-end"
+                        ),
+                        Div("organizace", css_class="col-sm-4"),
+                        Div("uzivatelske_oznaceni", css_class="col-sm-4"),
+                        Div("kulturni_pamatka", css_class="col-sm-3"),
+                        Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
+                        Div("kulturni_pamatka_popis", css_class="col-sm-6"),
+                        Div("latitude", css_class="hidden"),
+                        Div("longitude", css_class="hidden"),
+                        Div(
+                            HTML(_("<span class=\"app-divider-label\">Terenní část</span>")),
+                            HTML(_("<hr class=\"mt-0\" />")),
+                            css_class="col-sm-12"
+                        ),
+                        Div("datum_zahajeni", css_class="col-sm-4"),
+                        Div("datum_ukonceni", css_class="col-sm-4"),
+                        #Div("termin_odevzdani", css_class="col-sm-4"),          
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -251,20 +258,15 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Návrh zrušení projektu")),
+                    Div(
+                        HTML(_("Návrh zrušení projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     "reason",
                     css_class="card-body",
-                ),
-                Div(
-                    FormActions(
-                        Submit("save", "Navrhnout zrušení"),
-                        HTML(
-                            '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
-                        ),
-                    ),
                 ),
                 css_class="card",
             )
