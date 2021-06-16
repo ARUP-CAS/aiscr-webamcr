@@ -221,8 +221,7 @@ class EditProjektForm(forms.ModelForm):
                         ),
                         Div(
                             Div("vedouci_projektu", css_class="flex-fill"),
-                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\"><span class=\"material-icons\">add</span></a>")),
-                            #"vedouci_projektu", 
+                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
                             css_class="col-sm-4 d-flex align-items-end"
                         ),
                         Div("organizace", css_class="col-sm-4"),
