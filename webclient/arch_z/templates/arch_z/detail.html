@@ -620,7 +620,9 @@
                   map.setView([rs.lat, rs.lng], rs.zoom)
                   if (rs.zoom == 19) {
                       addPointToPoiLayerWithForce(rs.lat, rs.lng, pian_id, gm_correct)
-                      console.log(pian_id);
+                     // console.log(rs.geom)
+                      addPointToPoiLayerWithForceG(rs.geom,gm_correct)
+                     // console.log("pian id: "+pian_id);
                   }
               };
               xhr.send(JSON.stringify(
@@ -636,6 +638,21 @@
                   xhr2.setRequestHeader('X-CSRFToken', global_csrftoken);
               }
               xhr2.onload = function () {
+                poi_other.clearLayers();
+                let res=JSON.parse(this.responseText).points
+               // poi_other.setZIndexOffset(2000);
+
+
+
+                res.forEach((i)=>{
+                  //console.log("ident_cely: "+i.ident_cely)
+                  addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely)
+
+                  //gm_correct.bringToFront()
+                })
+
+
+
 
               };
               xhr2.send(JSON.stringify(

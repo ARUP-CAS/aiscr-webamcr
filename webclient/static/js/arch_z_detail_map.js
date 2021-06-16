@@ -26,7 +26,7 @@ cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/til
 
 var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
-var poi_other = L.markerClusterGroup();
+var poi_other = L.layerGroup(); //L.markerClusterGroup();
 
 //var map = L.map('djMap').setView([49.84, 15.17], 7);
 //var poi = L.layerGroup();
@@ -377,7 +377,50 @@ var addPointToPoiLayer = (lat, long, text,lai) => {
 }
 
 var addPointToPoiLayerWithForce = (lat, long, text,lai) => {
-        L.marker([lat, long], {icon: redIcon}).bindPopup(text).addTo(drawnItems);
+        L.marker([lat, long], {icon: redIcon,zIndexOffset:1000}).bindPopup(text).addTo(drawnItems);
+}
+var addPointToPoiLayerWithForceG =(st_text,layer,text) => {
+    let coor=[]
+    if(st_text.includes("POLYGON")){
+        st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
+            console.log(i)
+            coor.push([i.split(" ")[1],i.split(" ")[0]])
+        })
+        L.polygon(coor).addTo(drawnItems);
+        console.log(coor)
+    }else if(st_text.includes("LINESTRING")){
+        st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
+            console.log(i)
+            coor.push([i.split(" ")[1],i.split(" ")[0]])
+        })
+        L.polyline(coor).addTo(layer);
+        console.log(coor)
+    } else if(st_text.includes("POINT")){
+        let i=st_text.split("(")[1].split(")")[0];
+        L.marker([i.split(" ")[1], i.split(" ")[0]], {icon: greenIcon}).bindPopup(text).addTo(layer);
+
+    }
+}
+
+var addPianFromKadastre =(st_text,text) => {
+    let coor=[]
+    if(st_text.includes("POLYGON")){
+        st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
+                coor.push([i.split(" ")[0],i.split(" ")[1]])
+        })
+        L.polygon(coor).addTo(poi_other);
+        console.log(coor)
+    }else if(st_text.includes("LINESTRING")){
+        st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
+            coor.push([i.split(" ")[0],i.split(" ")[1]])
+        })
+        L.polyline(coor).addTo(poi_other);
+        console.log(coor)
+    } else if(st_text.includes("POINT")){
+        let i=st_text.split("(")[1].split(")")[0];
+        L.marker([i.split(" ")[0], i.split(" ")[1]], {icon: greenIcon}).bindPopup(text).addTo(poi_other);
+
+    }
 }
 
 function addLogText(text) {

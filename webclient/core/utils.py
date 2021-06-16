@@ -113,7 +113,7 @@ def get_all_pians_in_cadastre(katastr):
         "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry from public.pian pian "
         " join public.ruian_katastr ruian "
         " on ST_Contains(ruian.hranice,pian.geom ) "
-        " where pian.geom is not null and ruian.aktualni='t' and ruian.nazev_stary=%s limit 100"
+        " where pian.geom is not null and ruian.aktualni='t' and ruian.nazev_stary!=%s limit 100"
     )
     try:
         pians = Pian.objects.raw(query, [katastr])
