@@ -259,9 +259,11 @@
                 <a href="#" class="app-entity-color mr-1" onclick="show_form('detail_dj_form_{{ dc.ident_cely }}')">
                   <strong>{{ dc.ident_cely|last_x_letters:4 }}</strong>
                 </a>
-                <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
-                  ({{ dc.archeologicky_zaznam.ident_cely }})
-                </a>
+                {% if dc.archeologicky_zaznam %}
+                  <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
+                    ({{ dc.archeologicky_zaznam.ident_cely }})
+                  </a>
+                {% endif %}
               </div>
               {% if dc.komponenty.komponenty.all %}
                 <ul class="app-list-group-in">

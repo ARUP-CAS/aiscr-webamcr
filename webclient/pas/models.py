@@ -15,6 +15,7 @@ from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
+    HESLAR_PRISTUPNOST,
     TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar, RuianKatastr
@@ -49,7 +50,7 @@ class SamostatnyNalez(models.Model):
         related_name="samostatne_nalezy",
     )
     lokalizace = models.TextField(blank=True, null=True)
-    hloubka = models.IntegerField(blank=True, null=True)
+    hloubka = models.PositiveIntegerField(blank=True, null=True)
     okolnosti = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -60,7 +61,12 @@ class SamostatnyNalez(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
     )
     geom = pgmodels.PointField(blank=True, null=True)
-    pristupnost = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="pristupnost")
+    pristupnost = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="pristupnost",
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+    )
     obdobi = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,

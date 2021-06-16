@@ -16,6 +16,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.utils import get_cadastre_from_point
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -51,6 +52,7 @@ def create(request):
             sn = form.save(commit=False)
             sn.ident_cely = get_sn_ident(sn.projekt)
             sn.stav = SN_ZAPSANY
+            sn.katastr = get_cadastre_from_point(sn.geom)
             sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
             sn.save()
             sn.set_zapsany(request.user)
@@ -89,6 +91,7 @@ def detail(request, ident_cely):
             "druh_nalezu",
             "specifikace",
             "predano_organizace",
+            "historie",
         ),
         ident_cely=ident_cely,
     )
