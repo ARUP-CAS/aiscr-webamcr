@@ -11,7 +11,7 @@ from core.constants import (
     OZNAMENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
 )
-from crispy_forms.layout import Div, Layout
+from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q
 from django.forms import DateInput, Select, SelectMultiple
 from django.utils.translation import gettext as _
@@ -171,7 +171,7 @@ class ProjektFilter(filters.FilterSet):
     akce_hlavni_katastr = CharFilter(
         field_name="akce__archeologicky_zaznam__hlavni_katastr",
         lookup_expr="nazev__icontains",
-        label=_("Hlavní katastr akce obsahuje"),
+        label=_("Hlavní katastr"),
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -263,7 +263,7 @@ class ProjektFilter(filters.FilterSet):
     zdroj_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__externi_odkazy__externi_zdroj__ident_cely",
         lookup_expr="icontains",
-        label="Ident externího odkazu obsahuje",
+        label="Ident externího zdroje",
     )
 
     def filter_planovane_zahajeni(self, queryset, name, value):
@@ -371,41 +371,64 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
     layout = Layout(
         Div(
-            Div("ident_cely", css_class="col-sm-6"),
-            Div("oblast", css_class="col-sm-6"),
-            Div("typ_projektu", css_class="col-sm-6"),
-            Div("hlavni_katastr", css_class="col-sm-6"),
-            Div("popisne_udaje", css_class="col-sm-6"),
-            Div("kraj", css_class="col-sm-6"),
-            Div("okres", css_class="col-sm-6"),
-            Div("stav", css_class="col-sm-6"),
-            Div("planovane_zahajeni", css_class="col-sm-6"),
-            Div("datum_zahajeni", css_class="col-sm-6"),
-            Div("datum_ukonceni", css_class="col-sm-6"),
-            Div("vedouci_projektu", css_class="col-sm-6"),
-            Div("termin_odevzdani_nz", css_class="col-sm-6"),
-            Div("organizace", css_class="col-sm-6"),
-            Div("kulturni_pamatka", css_class="col-sm-6"),
-            Div("datum_oznameni_od", css_class="col-sm-6"),
-            Div("datum_oznameni_do", css_class="col-sm-6"),
-            Div("datum_schvaleni_od", css_class="col-sm-6"),
-            Div("datum_schvaleni_do", css_class="col-sm-6"),
-            Div("akce_ident_obsahuje", css_class="col-sm-6"),
+            Div("ident_cely", css_class="col-sm-2"),
+            Div("typ_projektu", css_class="col-sm-2"),
+            Div("stav", css_class="col-sm-2"),
+            Div("organizace", css_class="col-sm-2"),
+            Div("vedouci_projektu", css_class="col-sm-2"),
+            Div("kulturni_pamatka", css_class="col-sm-2"),
+            Div("hlavni_katastr", css_class="col-sm-2"),
+            Div("okres", css_class="col-sm-2"),
+            Div("kraj", css_class="col-sm-2"),
+            Div("oblast", css_class="col-sm-2"),
+            Div("popisne_udaje", css_class="col-sm-4"),
+            Div("planovane_zahajeni", css_class="col-sm-4"),
+            Div("datum_zahajeni", css_class="col-sm-4"),
+            Div("datum_ukonceni", css_class="col-sm-4"),
+            Div("termin_odevzdani_nz", css_class="col-sm-4"),
+
+            Div(
+                HTML(_("<span class=\"app-divider-label\">Výběr podle historie</span>")),
+                HTML(_("<hr class=\"mt-0\" />")),
+                css_class="col-sm-12"
+            ),
+            # zde chybi field zmena stavu
+            Div("datum_oznameni_od", css_class="col-sm-2"),
+            Div("datum_oznameni_do", css_class="col-sm-2"),
+            Div("datum_schvaleni_od", css_class="col-sm-2"),
+            Div("datum_schvaleni_do", css_class="col-sm-2"),
+            # zde chybi field uzivatel
+
+             Div(
+                HTML(_("<span class=\"app-divider-label\">Výběr podle akcí</span>")),
+                HTML(_("<hr class=\"mt-0\" />")),
+                css_class="col-sm-12"
+            ),
+            Div("akce_ident_obsahuje", css_class="col-sm-2"),
+            Div("hlavni_typ_akce", css_class="col-sm-2"),
+            Div("stav_akce", css_class="col-sm-2"),
+            Div("akce_hlavni_vedouci_organizace", css_class="col-sm-2"),
+            Div("akce_hlavni_vedouci", css_class="col-sm-2"),
+            Div("pristupnost_akce", css_class="col-sm-2"),
+
+            Div("akce_hlavni_katastr", css_class="col-sm-2"),
+            Div("akce_okres", css_class="col-sm-2"),
+            Div("akce_kraj", css_class="col-sm-2"),
             Div("akce_popisne_udaje", css_class="col-sm-6"),
-            Div("akce_zjisteni", css_class="col-sm-6"),
-            Div("akce_hlavni_vedouci", css_class="col-sm-6"),
-            Div("akce_datum_zahajeni", css_class="col-sm-6"),
-            Div("akce_datum_ukonceni", css_class="col-sm-6"),
-            Div("hlavni_typ_akce", css_class="col-sm-6"),
-            Div("pristupnost_akce", css_class="col-sm-6"),
-            Div("stav_akce", css_class="col-sm-6"),
-            Div("pian_ident_obsahuje", css_class="col-sm-6"),
-            Div("dokument_ident_obsahuje", css_class="col-sm-6"),
-            Div("zdroj_ident_obsahuje", css_class="col-sm-6"),
-            Div("akce_hlavni_katastr", css_class="col-sm-6"),
-            Div("akce_okres", css_class="col-sm-6"),
-            Div("akce_kraj", css_class="col-sm-6"),
-            Div("akce_hlavni_vedouci_organizace", css_class="col-sm-6"),
+            
+            Div("akce_datum_zahajeni", css_class="col-sm-4"),
+            Div("akce_datum_ukonceni", css_class="col-sm-4"),
+            Div("akce_zjisteni", css_class="col-sm-2"),
+            # chybi pole ZAA jako NZ
+
+            Div(
+                HTML(_("<span class=\"app-divider-label\">Výběr podle souvisejících záznamů</span>")),
+                HTML(_("<hr class=\"mt-0\" />")),
+                css_class="col-sm-12"
+            ),
+            Div("dokument_ident_obsahuje", css_class="col-sm-2"),
+            Div("pian_ident_obsahuje", css_class="col-sm-2"),
+            Div("zdroj_ident_obsahuje", css_class="col-sm-2"),
             css_class="row",
         ),
     )
