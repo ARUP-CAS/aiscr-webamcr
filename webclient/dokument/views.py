@@ -152,7 +152,7 @@ def detail_model_3D(request, ident_cely):
         Komponenta,
         NalezObjekt,
         form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
-        extra=2,
+        extra=1,
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
@@ -160,7 +160,7 @@ def detail_model_3D(request, ident_cely):
         form=create_nalez_predmet_form(
             druh_predmet_choices, specifikce_predmetu_choices
         ),
-        extra=2,
+        extra=1,
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]

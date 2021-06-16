@@ -132,7 +132,7 @@ def detail(request, ident_cely):
         Komponenta,
         NalezObjekt,
         form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
-        extra=3,
+        extra=1,
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
@@ -140,7 +140,7 @@ def detail(request, ident_cely):
         form=create_nalez_predmet_form(
             druh_predmet_choices, specifikce_predmetu_choices
         ),
-        extra=3,
+        extra=1,
     )
     for jednotka in jednotky:
         has_adb = jednotka.has_adb()
