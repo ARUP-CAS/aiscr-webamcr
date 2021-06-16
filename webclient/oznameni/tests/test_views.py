@@ -47,4 +47,4 @@ class UrlTests(TestCase):
         response = post_poi2kat(request)
         self.assertEqual(200, response.status_code)
         data = json.loads(response.content)
-        self.assertEqual(data["cadastre"], "JOSEFOV")
+        self.assertEqual(data["cadastre"], "JOSEFOV (Praha)")

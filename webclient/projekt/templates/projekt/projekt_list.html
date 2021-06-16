@@ -26,7 +26,7 @@
           <div class="app-right">
             <div class="btn-group" role="group">
               <div class="btn-group" role="group">
-                <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení slouců' %}">
+                <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení sloupců' %}">
                   <span class="material-icons">table_chart</span>
                 </button>
                 <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
@@ -258,7 +258,7 @@
           }
 
           const zmen_status_sloupce = (sloupec, zmena) => {
-              fetch('odebrat-sloupec-z-vychozich', {
+              fetch("{% url 'projekt:odebrat_sloupec_z_vychozich' %}", {
                   method: 'POST',
                   credentials: 'same-origin',
                   headers: {
@@ -286,7 +286,9 @@
               const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
               userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
           }
+
       });
+
   </script>
   <script
       type="text/javascript"

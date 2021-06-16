@@ -1,0 +1,168 @@
+{% extends "base_logged_in.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Samostatné nálezy{% endblock %}
+
+{% block content %}
+  <div class="app-entity-samostatny_nalez">
+    {% include "toolbar_pas.html" %}
+
+    <div class="row app-entity-cards mb-3">
+      <div class="col">
+        <a href="{% url 'pas:create' %}" class="card app-card-entity app-card-zapsat-nalez">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Zapsat nález" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-nalezy">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Moje nálezy" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'pas:list' %}" class="card app-card-entity app-card-vybrat">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Vybrat" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="#" class="card app-card-entity app-card-spoluprace">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Spolupráce" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" class="card app-card-entity app-card-potvrdit">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Potvrdit" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'pas:list' %}?stav=3" class="card app-card-entity app-card-archivovat">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Archivovat" %}
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-card-desc-wrapper">
+    <div class="app-collapse-zapsat-nalez collapse">
+      <div class="p-3">
+        <h4>{% trans "Zapsat nález" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+    <div class="app-collapse-moje-nalezy collapse">
+      <div class="p-3">
+        <h4>{% trans "Moje nálezy" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+    <div class="app-collapse-vybrat collapse">
+      <div class="p-3">
+        <h4>{% trans "Vybrat" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+  <div class="app-collapse-spoluprace collapse">
+      <div class="p-3">
+        <h4>{% trans "Spolupráce" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+  <div class="app-collapse-potvrdit collapse">
+      <div class="p-3">
+        <h4>{% trans "Potvrdit" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+  <div class="app-collapse-archivovat collapse">
+      <div class="p-3">
+        <h4>{% trans "Archivovat" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // show / hide card description
+    $(".app-card-zapsat-nalez").mouseleave(function(){
+      $(".app-collapse-zapsat-nalez").hide(100);
+    });
+    $(".app-card-zapsat-nalez").mouseover(function(){
+      $(".app-collapse-zapsat-nalez").show(100);
+    });
+    $(".app-card-moje-nalezy").mouseleave(function(){
+      $(".app-collapse-moje-nalezy").hide(100);
+    });
+    $(".app-card-moje-nalezy").mouseover(function(){
+      $(".app-collapse-moje-nalezy").show(100);
+    });
+    $(".app-card-vybrat").mouseleave(function(){
+      $(".app-collapse-vybrat").hide(100);
+    });
+    $(".app-card-vybrat").mouseover(function(){
+      $(".app-collapse-vybrat").show(100);
+    });
+    $(".app-card-spoluprace").mouseleave(function(){
+      $(".app-collapse-spoluprace").hide(100);
+    });
+    $(".app-card-spoluprace").mouseover(function(){
+      $(".app-collapse-spoluprace").show(100);
+    });
+    $(".app-card-potvrdit").mouseleave(function(){
+      $(".app-collapse-potvrdit").hide(100);
+    });
+    $(".app-card-potvrdit").mouseover(function(){
+      $(".app-collapse-potvrdit").show(100);
+    });
+    $(".app-card-archivovat").mouseleave(function(){
+      $(".app-collapse-archivovat").hide(100);
+    });
+    $(".app-card-archivovat").mouseover(function(){
+      $(".app-collapse-archivovat").show(100);
+    });
+</script>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

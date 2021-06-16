@@ -1,11 +1,8 @@
-from core.tests.runner import (
-    PRESNOST_DESITKY_METRU_ID,
-    TYP_PIAN_BOD_ID,
-    add_middleware_to_request,
-)
+from core.tests.runner import PRESNOST_DESITKY_METRU_ID, add_middleware_to_request
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
+from heslar.hesla import GEOMETRY_BOD
 from pian.models import Pian
 from pian.views import create
 from uzivatel.models import User
@@ -21,7 +18,7 @@ class UrlTests(TestCase):
         data = {
             "csrfmiddlewaretoken": "EnxpCIUt1PwHXwqP7FOtsaMGqlZJFQsIFy0fdKAjiBdInnJNBt2Fluk0Rl9DnC9t",
             "presnost": str(PRESNOST_DESITKY_METRU_ID),
-            "typ": str(TYP_PIAN_BOD_ID),
+            "typ": str(GEOMETRY_BOD),
             "stav": "2",
             "geom": "SRID=4326;POINT (14.4268084 50.0846009)",
         }

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "compressor",
     "captcha",
     "core",
+    "ez",
     "historie",
     "oznameni",
     "projekt.apps.ProjektConfig",
@@ -71,7 +72,7 @@ INSTALLED_APPS = [
     "nalez",
     "adb",
     "neidentakce",
-    "pas",
+    "pas.apps.PasConfig",
     "komponenta",
     "dj",
 ]
@@ -199,6 +200,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "core": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "ez": {
             "handlers": ["console"],
             "level": "DEBUG",
         },

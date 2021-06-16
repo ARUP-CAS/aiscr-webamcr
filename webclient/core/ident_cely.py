@@ -16,6 +16,7 @@ from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from dokument.models import Dokument
 from heslar.models import HeslarDokumentTypMaterialRada
+from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 
@@ -67,15 +68,12 @@ def get_dokument_rada(typ, material):
         raise NelzeZjistitRaduError()
 
 
-def get_dokument_ident(temporary, rada, region):
-    if rada == "TX" or rada == "DD":
+def get_temp_dokument_ident(rada, region):
+    if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        start = ""
-        if temporary:
-            start = IDENTIFIKATOR_DOCASNY_PREFIX
         d = Dokument.objects.filter(
             ident_cely__regex="^"
-            + start
+            + IDENTIFIKATOR_DOCASNY_PREFIX
             + region
             + "-"
             + rada
@@ -84,10 +82,18 @@ def get_dokument_ident(temporary, rada, region):
             + "\\d{5}$"
         ).order_by("-ident_cely")
         if d.count() == 0:
-            return start + region + "-" + rada + "-" + str(date.today().year) + "00001"
+            return (
+                IDENTIFIKATOR_DOCASNY_PREFIX
+                + region
+                + "-"
+                + rada
+                + "-"
+                + str(date.today().year)
+                + "00001"
+            )
         else:
             return (
-                start
+                IDENTIFIKATOR_DOCASNY_PREFIX
                 + region
                 + "-"
                 + rada
@@ -152,6 +158,24 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
         return None
 
 
+def get_dokument_komponenta_ident(dokument: Dokument) -> str:
+    MAXIMAL_KOMPONENTAS: int = 999
+    last_digit_count = 3
+    max_count = 0
+    for dc in dokument.casti.all():
+        for komponenta in dc.komponenty.komponenty.all():
+            last_digits = int(komponenta.ident_cely[-last_digit_count:])
+            if max_count < last_digits:
+                max_count = last_digits
+    ident = dokument.ident_cely
+    if max_count < MAXIMAL_KOMPONENTAS:
+        ident = ident + "-K" + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
+        return None
+
+
 def get_sm_from_point(point):
     mapovy_list = Kladysm5.objects.filter(geom__contains=point)
     if mapovy_list.count() == 1:
@@ -178,6 +202,22 @@ def get_pian_ident(zm50, approved) -> str:
         return ident
     else:
         logger.error("Maximal number of pians is " + str(MAXIMAL_PIANS))
+        return None
+
+
+def get_sn_ident(projekt: Projekt) -> str:
+    MAXIMAL_FINDS: int = 99999
+    last_digit_count = 5
+    max_count = 0
+    for nalez in SamostatnyNalez.objects.filter(projekt=projekt).all():
+        last_digits = int(nalez.ident_cely[-last_digit_count:])
+        if max_count < last_digits:
+            max_count = last_digits
+    if max_count < MAXIMAL_FINDS:
+        ident = projekt.ident_cely + "-N" + str(max_count + 1).zfill(last_digit_count)
+        return ident
+    else:
+        logger.error("Maximal number of SN is " + str(MAXIMAL_FINDS))
         return None
 
 

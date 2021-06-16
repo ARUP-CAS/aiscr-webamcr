@@ -61,7 +61,7 @@ class OznamovatelForm(forms.ModelForm):
         }
         labels = {
             "oznamovatel": _("Oznamovatel"),
-            "odpovedna_osoba": _("Zástupce oznamovatele"),
+            "odpovedna_osoba": _("Pověřená osoba oznamovatele"),
             "telefon": _("Telefon"),
             "email": _("Email"),
             "adresa": _("Adresa oznamovatele"),
@@ -114,7 +114,7 @@ class ProjektOznameniForm(forms.ModelForm):
     longitude = forms.CharField(widget=forms.HiddenInput())
     katastralni_uzemi = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": "readonly"}),
-        label=_("Katastrální území"),
+        label=_("Hlavní katastr"),
         help_text=_("Katastální území zadané bodem."),
     )
 
@@ -129,9 +129,9 @@ class ProjektOznameniForm(forms.ModelForm):
             "katastry",
         )
         widgets = {
-            "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -154,13 +154,16 @@ class ProjektOznameniForm(forms.ModelForm):
                 "název polní trati, místní název  apod.). "
             ),
             "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
-            "oznaceni_stavby": _("Lorem ipsum"),
+            "oznaceni_stavby": _("Identifikační číslo stavby podle stavebního nebo jiného úřadu. Číslo jednací nebo spisová značka."),
             "katastry": _("Vyberte případné další katastry dotčené záměrem."),
         }
 
     def __init__(self, *args, **kwargs):
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
+        self.fields["podnet"].required = True
+        self.fields["lokalizace"].required = True
+        self.fields["parcelni_cislo"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
@@ -175,8 +178,8 @@ class ProjektOznameniForm(forms.ModelForm):
                 ),
                 Div(
                     Div(
-                        Div("katastralni_uzemi", css_class="col-sm-6"),
-                        Div("katastry", css_class="col-sm-6"),
+                        Div("katastralni_uzemi", css_class="col-sm-12"),
+                        Div("katastry", css_class="col-sm-12"),
                         css_class="row",
                     ),
                     "planovane_zahajeni",

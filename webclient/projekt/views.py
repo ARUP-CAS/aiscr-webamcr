@@ -61,7 +61,7 @@ from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
-    CreateProjekForm,
+    CreateProjektForm,
     EditProjektForm,
     NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
@@ -150,7 +150,7 @@ def post_ajax_get_point(request):
 @require_http_methods(["GET", "POST"])
 def create(request):
     if request.method == "POST":
-        form_projekt = CreateProjekForm(request.POST)
+        form_projekt = CreateProjektForm(request.POST)
         form_oznamovatel = OznamovatelForm(request.POST)
         if form_projekt.is_valid():
             logger.debug("Form is valid")
@@ -183,7 +183,7 @@ def create(request):
             logger.debug("The form projekt is not valid!")
             logger.debug(form_projekt.errors)
     else:
-        form_projekt = CreateProjekForm()
+        form_projekt = CreateProjektForm()
         form_oznamovatel = OznamovatelForm()
     return render(
         request,
@@ -308,6 +308,7 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
             "hlavni_katastr",
             "organizace",
             "vedouci_projektu",
+            "hlavni_katastr__okres",
         ).defer("geom")
         return qs
 

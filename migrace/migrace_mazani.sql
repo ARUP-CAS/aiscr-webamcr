@@ -376,3 +376,10 @@ drop sequence heslar_zeme_id_seq;
 -- tabulky:
 --1. mass_storage
 drop table mass_storage;
+
+-- Uklid sloupcu
+alter table projekt drop column oznamovatel_text;
+alter table projekt drop column adresa;
+alter table projekt drop column email;
+alter table projekt drop column odpovedna_osoba;
+alter table projekt drop column telefon;

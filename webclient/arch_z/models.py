@@ -13,6 +13,7 @@ from core.constants import (
 )
 from django.db import models
 from django.utils.translation import gettext as _
+from ez.models import ExterniZdroj
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_DATUM_SPECIFIKACE,
@@ -111,10 +112,12 @@ class ArcheologickyZaznam(models.Model):
 
 class ArcheologickyZaznamKatastr(models.Model):
     archeologicky_zaznam = models.ForeignKey(
-        ArcheologickyZaznam, on_delete=models.CASCADE, db_column="archeologicky_zaznam"
+        ArcheologickyZaznam,
+        on_delete=models.CASCADE,
+        db_column="archeologicky_zaznam_id",
     )
     katastr = models.ForeignKey(
-        RuianKatastr, on_delete=models.CASCADE, db_column="katastr"
+        RuianKatastr, on_delete=models.CASCADE, db_column="katastr_id"
     )
 
     class Meta:
@@ -316,8 +319,14 @@ class Lokalita(models.Model):
 
 
 class ExterniOdkaz(models.Model):
-    # externi_zdroj = models.ForeignKey(
-    # ExterniZdroj, models.DO_NOTHING, db_column='externi_zdroj', blank=True, null=True)
+    externi_zdroj = models.ForeignKey(
+        ExterniZdroj,
+        models.DO_NOTHING,
+        db_column="externi_zdroj",
+        blank=True,
+        null=True,
+        related_name="externi_odkazy_zdroje",
+    )
     paginace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
@@ -325,6 +334,7 @@ class ExterniOdkaz(models.Model):
         db_column="archeologicky_zaznam",
         blank=True,
         null=True,
+        related_name="externi_odkazy",
     )
 
     class Meta:

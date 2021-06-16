@@ -9,13 +9,13 @@ from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 
 
-class CreateProjekForm(forms.ModelForm):
+class CreateProjektForm(forms.ModelForm):
     latitude = forms.FloatField(required=False, widget=HiddenInput())
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
     )
 
     class Meta:
@@ -34,7 +34,7 @@ class CreateProjekForm(forms.ModelForm):
             "typ_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -48,6 +48,7 @@ class CreateProjekForm(forms.ModelForm):
         labels = {
             "typ_projektu": _("Typ projektu"),
             "hlavni_katastr": _("Hlavní katastr"),
+            "katastry": _("Další katastry"),
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
@@ -55,7 +56,7 @@ class CreateProjekForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super(CreateProjekForm, self).__init__(*args, **kwargs)
+        super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True
@@ -76,12 +77,12 @@ class CreateProjekForm(forms.ModelForm):
                             Div(
                                 Div("typ_projektu", css_class="col-sm-3"),
                                 Div("hlavni_katastr", css_class="col-sm-3"),
-                                Div("katastry", css_class="col-sm-3"),
-                                Div("planovane_zahajeni", css_class="col-sm-3"),
+                                Div("katastry", css_class="col-sm-6"),
                                 Div("podnet", css_class="col-sm-12"),
                                 Div("lokalizace", css_class="col-sm-12"),
-                                Div("parcelni_cislo", css_class="col-sm-6"),
-                                Div("oznaceni_stavby", css_class="col-sm-3"),
+                                Div("parcelni_cislo", css_class="col-sm-12"),
+                                Div("oznaceni_stavby", css_class="col-sm-6"),
+                                Div("planovane_zahajeni", css_class="col-sm-3"),
                                 Div("latitude", css_class="hidden"),
                                 Div("longitude", css_class="hidden"),
                                 css_class="row",
@@ -121,6 +122,7 @@ class EditProjektForm(forms.ModelForm):
             "lokalizace",
             "parcelni_cislo",
             "oznaceni_stavby",
+            "vedouci_projektu",
             "organizace",
             "kulturni_pamatka",
             "kulturni_pamatka_cislo",
@@ -129,12 +131,13 @@ class EditProjektForm(forms.ModelForm):
             "datum_ukonceni",
             "uzivatelske_oznaceni",
             "katastry",
+            #"termin_odevzdani",
         )
         widgets = {
             "typ_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "podnet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
@@ -149,6 +152,9 @@ class EditProjektForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
+             "vedouci_projektu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -156,10 +162,12 @@ class EditProjektForm(forms.ModelForm):
         labels = {
             "typ_projektu": _("Typ projektu"),
             "hlavni_katastr": _("Hlavní katastr"),
+            "katastry": _("Další katastry"),
             "podnet": _("Podnět"),
             "lokalizace": _("Lokalizace"),
             "parcelni_cislo": _("Parcelní číslo"),
             "oznaceni_stavby": _("Označení stavby"),
+            "vedouci_projektu": _("Vedoucí projektu"),
             "organizace": _("Organizace"),
             "kulturni_pamatka": _("Památková ochrana"),
             "kulturni_pamatka_cislo": _("Rejstříkové číslo USKP"),
@@ -167,6 +175,7 @@ class EditProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("Uživatelské označení"),
             "datum_zahajeni": _("Datum zahájení výzkumu"),
             "datum_ukonceni": _("Datum ukončení výzkumu"),
+            #"termin_odevzdani": _("Termín odevzdání"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -188,21 +197,12 @@ class EditProjektForm(forms.ModelForm):
                             Div(
                                 Div("typ_projektu", css_class="col-sm-3"),
                                 Div("hlavni_katastr", css_class="col-sm-3"),
-                                Div("katastry", css_class="col-sm-3"),
-                                Div("planovane_zahajeni", css_class="col-sm-3"),
+                                Div("katastry", css_class="col-sm-6"),
                                 Div("podnet", css_class="col-sm-12"),
                                 Div("lokalizace", css_class="col-sm-12"),
-                                Div("parcelni_cislo", css_class="col-sm-6"),
-                                Div("oznaceni_stavby", css_class="col-sm-3"),
-                                Div("organizace", css_class="col-sm-3"),
-                                Div("latitude", css_class="hidden"),
-                                Div("longitude", css_class="hidden"),
-                                Div("datum_zahajeni", css_class="col-sm-3"),
-                                Div("datum_ukonceni", css_class="col-sm-3"),
-                                Div("kulturni_pamatka", css_class="col-sm-3"),
-                                Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
-                                Div("kulturni_pamatka_popis", css_class="col-sm-6"),
-                                Div("uzivatelske_oznaceni", css_class="col-sm-6"),
+                                Div("parcelni_cislo", css_class="col-sm-12"),
+                                Div("oznaceni_stavby", css_class="col-sm-6"),
+                                Div("planovane_zahajeni", css_class="col-sm-3"),         
                                 css_class="row",
                             ),
                             css_class="col-sm-9",
@@ -211,6 +211,34 @@ class EditProjektForm(forms.ModelForm):
                             Div(id="projectMap"),
                             css_class="col-sm-3",
                         ),
+                        css_class="row",
+                    ),
+                    Div(
+                        Div(
+                            HTML(_("<span class=\"app-divider-label\">Přihlášení projektu</span>")),
+                            HTML(_("<hr class=\"mt-0\" />")),
+                            css_class="col-sm-12"
+                        ),
+                        Div(
+                            Div("vedouci_projektu", css_class="flex-fill"),
+                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
+                            css_class="col-sm-4 d-flex align-items-end"
+                        ),
+                        Div("organizace", css_class="col-sm-4"),
+                        Div("uzivatelske_oznaceni", css_class="col-sm-4"),
+                        Div("kulturni_pamatka", css_class="col-sm-3"),
+                        Div("kulturni_pamatka_cislo", css_class="col-sm-3"),
+                        Div("kulturni_pamatka_popis", css_class="col-sm-6"),
+                        Div("latitude", css_class="hidden"),
+                        Div("longitude", css_class="hidden"),
+                        Div(
+                            HTML(_("<span class=\"app-divider-label\">Terenní část</span>")),
+                            HTML(_("<hr class=\"mt-0\" />")),
+                            css_class="col-sm-12"
+                        ),
+                        Div("datum_zahajeni", css_class="col-sm-4"),
+                        Div("datum_ukonceni", css_class="col-sm-4"),
+                        #Div("termin_odevzdani", css_class="col-sm-4"),          
                         css_class="row",
                     ),
                     css_class="card-body",

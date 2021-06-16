@@ -18,7 +18,7 @@ CREATE TABLE nalez_predmet(
 
 insert into nalez_objekt(komponenta, druh, specifikace, pocet, poznamka) select n.komponenta, n.druh_nalezu, n.specifikace, n.pocet, n.poznamka from nalez n join heslar h on h.id = n.druh_nalezu where h.nazev_heslare = 17; -- objekt druh
 
-insert into nalez_objekt(komponenta, druh, specifikace, pocet, poznamka) select n.komponenta, n.druh_nalezu, n.specifikace, n.pocet, n.poznamka from nalez n join heslar h on h.id = n.druh_nalezu where h.nazev_heslare = 22; -- predmet druh
+insert into nalez_predmet(komponenta, druh, specifikace, pocet, poznamka) select n.komponenta, n.druh_nalezu, n.specifikace, n.pocet, n.poznamka from nalez n join heslar h on h.id = n.druh_nalezu where h.nazev_heslare = 22; -- predmet druh
 
 alter table nalez_objekt add constraint nalez_objekt_komponenta_fkey foreign key (komponenta) references komponenta(id) on delete cascade;
 alter table nalez_predmet add constraint nalez_predmet_komponenta_fkey foreign key (komponenta) references komponenta(id) on delete cascade;

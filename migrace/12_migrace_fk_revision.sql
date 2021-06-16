@@ -17,7 +17,8 @@ alter table heslar_odkaz drop constraint heslar_odkaz_heslo_fkey;
 alter table historie drop constraint historie_vazba_fkey;
 alter table dokument_cast drop constraint jednotka_dokument_dokument_fkey;
 alter table komponenta_aktivita drop constraint komponenta_aktivita_komponenta_fk;
-alter table komponenta drop constraint komponenta_komponenta_vazby_fkey;
+alter table komponenta drop constraint komponenta_vazba_fkey;
+alter table komponenta rename column vazba to komponenta_vazby;
 alter table lokalita drop constraint lokalita_archeologicky_zaznam_fkey;
 alter table nalez drop constraint nalez_komponenta_fkey;
 alter table neident_akce drop constraint neident_akce_dokument_cast_fkey;
@@ -30,7 +31,7 @@ alter table vyskovy_bod drop constraint vyskovy_bod_adb_fkey;
 
 alter table akce add constraint akce_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam) references archeologicky_zaznam(id) on delete cascade;
 alter table akce_vedouci add constraint akce_vedouci_akce_fkey foreign key (akce) references akce(archeologicky_zaznam) on delete cascade;
-alter table archeologicky_zaznam_katastr add constraint archeologicky_zaznam_katastr_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam) references archeologicky_zaznam(id) on delete cascade;
+alter table archeologicky_zaznam_katastr add constraint archeologicky_zaznam_katastr_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam_id) references archeologicky_zaznam(id) on delete cascade;
 alter table dokument_autor add constraint dokument_autor_dokument_fkey foreign key (dokument) references dokument(id) on delete cascade;
 alter table dokument_jazyk add constraint dokument_jazyk_dokument_fkey foreign key (dokument) references dokument(id) on delete cascade;
 alter table dokument_posudek add constraint dokument_posudek_dokument_fkey foreign key (dokument) references dokument(id) on delete cascade;
@@ -59,4 +60,3 @@ alter table vyskovy_bod add constraint vyskovy_bod_adb_fkey foreign key (adb) re
 -- SET NULL ON DELETE
 alter table dokument_cast drop constraint dokument_cast_archeologicky_zaznam_fkey;
 alter table dokument_cast add constraint dokument_cast_archeologicky_zaznam_fkey foreign key (archeologicky_zaznam) references archeologicky_zaznam(id) on delete set null;
-
