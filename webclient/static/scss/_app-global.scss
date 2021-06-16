@@ -89,6 +89,12 @@
     transition: all 0.4s ease;
     transform: rotateZ(180deg);
   }
+
+  &.app-btn-in-form {
+    @extend .btn-light, .ml-2, .d-flex, .btn-sm;
+    height: 31px;
+    margin-bottom: .8rem;
+  }
 }
 
 table {

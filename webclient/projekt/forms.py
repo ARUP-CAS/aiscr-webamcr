@@ -221,7 +221,7 @@ class EditProjektForm(forms.ModelForm):
                         ),
                         Div(
                             Div("vedouci_projektu", css_class="flex-fill"),
-                            HTML(_("<button type=\button\" class=\"btn btn-primary ml-2\"><span class=\"material-icons\">add</span></button>")),
+                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\"><span class=\"material-icons\">add</span></a>")),
                             #"vedouci_projektu", 
                             css_class="col-sm-4 d-flex align-items-end"
                         ),
