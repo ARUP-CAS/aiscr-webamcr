@@ -357,7 +357,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
         model = Projekt
         fields = ("datum_zahajeni",)
         labels = {
-            "datum_zahajeni": _("Datum zahájení prací"),
+            "datum_zahajeni": _("Datum zahájení terénních prací"),
         }
         help_texts = {
             "datum_zahajeni": _("Lorem ipsum."),
@@ -370,25 +370,32 @@ class ZahajitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Zahájení výzkumu projektu")),
+                    Div(
+                        HTML(_("Zahájení výzkumu ")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     Div(
-                        "datum_zahajeni",
+                        Div(
+                            Div("datum_zahajeni", css_class="col-sm-3"),
+                            css_class="row",
+                        ),
                         css_class="card-body",
                     )
                 ),
-                Div(
-                    FormActions(
-                        Submit("save", "Zahájit v terénu"),
-                        HTML(
-                            '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
-                        ),
-                    )
+                css_class="card app-card-form",
+            ),
+            Div(
+                FormActions(
+                    Submit("save", "Zahájit v terénu"),
+                    HTML(
+                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
+                    ),
                 ),
-                css_class="card",
-            )
+                css_class="mt-3",
+            ),
         )
 
 
@@ -426,5 +433,14 @@ class UkoncitVTerenuForm(forms.ModelForm):
                     ),
                 ),
                 css_class="card app-card-form",
-            )
+            ),
+            Div(
+                FormActions(
+                    Submit("save", "Ukončit v terénu"),
+                    HTML(
+                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
+                    ),
+                ),
+                css_class="mt-3",
+            ),
         )
