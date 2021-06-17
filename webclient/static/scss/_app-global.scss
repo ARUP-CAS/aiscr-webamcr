@@ -163,6 +163,28 @@ table {
   }
 }
 
+// date range picker
+.app-daterangepicker {
+  .form-group {
+    & > div {
+      @extend .d-flex;
+      font-size: 0;
+
+      .textinput {
+        @extend .flex-fill, .form-control;
+       
+        &:first-child {
+          margin-right: 15px;
+        }
+
+        &:last-child {
+          margin-left: 15px;
+        }
+      }
+    }
+  }
+}
+
 // multiple upload form
 form {
   &.dropzone {

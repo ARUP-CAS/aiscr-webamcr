@@ -382,10 +382,10 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("kraj", css_class="col-sm-2"),
             Div("oblast", css_class="col-sm-2"),
             Div("popisne_udaje", css_class="col-sm-4"),
-            Div("planovane_zahajeni", css_class="col-sm-4"),
+            Div("planovane_zahajeni", css_class="col-sm-4 app-daterangepicker"),
             Div("datum_zahajeni", css_class="col-sm-4"),
             Div("datum_ukonceni", css_class="col-sm-4"),
-            Div("termin_odevzdani_nz", css_class="col-sm-4"),
+            Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
 
             Div(
                 HTML(_("<span class=\"app-divider-label\">Výběr podle historie</span>")),
