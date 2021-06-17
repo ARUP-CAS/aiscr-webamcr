@@ -269,7 +269,16 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                     css_class="card-body",
                 ),
                 css_class="card app-card-form",
-            )
+            ),
+             Div(
+                FormActions(
+                    Submit("save", "Navrhnout zrušení"),
+                    HTML(
+                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
+                    ),
+                ),
+                css_class="mt-3",
+            ),
         )
 
 
