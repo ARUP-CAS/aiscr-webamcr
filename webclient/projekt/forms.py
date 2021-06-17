@@ -336,8 +336,6 @@ class PrihlaseniProjektForm(forms.ModelForm):
                                 HTML(_("<a href=\"{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }}\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
                                 css_class="col-sm-4 d-flex align-items-center"
                             ),
-
-                            #Div("vedouci_projektu", css_class="col-sm-4"),
                             Div("organizace", css_class="col-sm-4"),
                             Div("uzivatelske_oznaceni", css_class="col-sm-4"),
                             Div("kulturni_pamatka", css_class="col-sm-2"),
