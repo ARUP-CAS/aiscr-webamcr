@@ -397,7 +397,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
         model = Projekt
         fields = ("datum_ukonceni",)
         labels = {
-            "datum_ukonceni": _("Datum ukončení prací"),
+            "datum_ukonceni": _("Datum ukončení terénních prací"),
         }
         help_texts = {
             "datum_ukonceni": _("Lorem ipsum."),
@@ -410,23 +410,21 @@ class UkoncitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Ukončení výzkumu projektu")),
+                    Div(
+                        HTML(_("Ukončení výzkumu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     Div(
-                        "datum_ukonceni",
+                        Div(
+                            Div("datum_ukonceni", css_class="col-sm-3"),
+                            css_class="row",
+                        ),
                         css_class="card-body",
                     ),
-                    Div(
-                        FormActions(
-                            Submit("save", "Ukončit v terénu"),
-                            HTML(
-                                '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
-                            ),
-                        )
-                    ),
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )

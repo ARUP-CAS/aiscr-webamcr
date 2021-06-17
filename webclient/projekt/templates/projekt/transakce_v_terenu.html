@@ -8,8 +8,19 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{{ header }} {{ object.ident_cely }}</h1>
-  {% crispy form %}
+  <div class="app-entity-projekt">
+    {% include "toolbar_projekt.html" %}
+    <form method="post">
+      {% crispy form %}
+      <div class="mt-3">
+        <button type="submit" name="save" class="btn btn-primary mr-1" id="submit-id-save">{% translate 'Ukončit v terénu' %}</button>
+        <button type="button" class="btn btn-secondary" onclick="window.history.back();">Zpět</button>
+      </div>
+    </form>
+  </div>
+  <!-- <h1>{{ header }} {{ object.ident_cely }}</h1> -->
+<!--   {% crispy form %} -->
+  
 
 {% endblock %}
 
