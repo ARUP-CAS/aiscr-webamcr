@@ -1,5 +1,6 @@
 from django.db import models
 from uzivatel.models import User
+from django.contrib.auth.models import Group
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
@@ -51,3 +52,50 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
+
+
+class Opravneni(models.Model):
+    class Opravneni(models.TextChoices):
+        NIC = "NIC"
+        VLASTNI = "VLASTNI"
+        ORGANIZACE = "ORGANIZACE"
+        VSE = "VSE"
+
+    class OpravneniDleStavu(models.TextChoices):
+        DO_STAVU = "DO_STAVU"
+        STAV = "STAV"
+        OD_STAVU = "OD_STAVU"
+
+    opravneni = models.CharField(
+        max_length=10, choices=Opravneni.choices, default=Opravneni.VLASTNI
+    )
+    opravneni_dle_stavu = models.CharField(
+        max_length=10, choices=OpravneniDleStavu.choices, null=True, blank=True
+    )
+    aplikace = models.CharField(max_length=50)
+    adresa_v_aplikaci = models.CharField(max_length=50)
+    skupina = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def over_opravneni_k_zaznamu(self, zaznam, uzivatel):
+        model_zaznamu = zaznam.__class__.__name__
+        if self.opravneni_dle_stavu is None:
+            pass
+        if self.opravneni == self.Opravneni.VSE:
+            return True
+        if self.opravneni == self.Opravneni.NIC:
+            return False
+        if self.opravneni == self.Opravneni.VLASTNI:
+            pass
+        if self.opravneni == self.Opravneni.ORGANIZACE:
+            pass
+
+    class Meta:
+        db_table = "opravneni"
+
+
+# class AdbSekvence(models.Model):
+#     kladysm5 = models.OneToOneField(Kladysm5, models.DO_NOTHING)
+#     sekvence = models.IntegerField()
+#
+#     class Meta:
+#         db_table = 'adb_sekvence'
