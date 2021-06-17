@@ -85,15 +85,21 @@ class OsobaForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Přidání jména")),
+                    Div(
+                        HTML(_("Přidání osoby")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
-                    "jmeno",
-                    "prijmeni",
-                    "rok_narozeni",
-                    "rok_umrti",
-                    "rodne_prijmeni",
+                    Div(
+                        Div("jmeno", css_class="col-sm-6"),
+                        Div("prijmeni", css_class="col-sm-6"),
+                        Div("rok_narozeni", css_class="col-sm-6"),
+                        Div("rok_umrti", css_class="col-sm-6"),
+                        Div("rodne_prijmeni", css_class="col-sm-12"),
+                        css_class="row",
+                    ),
                     css_class="card-body",
                 ),
                 css_class="card",

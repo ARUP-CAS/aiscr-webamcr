@@ -8,12 +8,12 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Přidání osoby" %}</h1>
+  <!-- <h1>{% trans "Přidání osoby" %}</h1> -->
 
   <form method="POST">
     {% crispy form %}
     <input type="hidden" name="next" value="{{ request.GET.next }}">
-    <input type="submit" name="save" value="{% translate 'Přidat osobu' %}" class="btn btn-primary" id="submit-id-save">
+    <button type="submit" name="save" id="submit-id-save" class="btn btn-primary mt-3">{% translate 'Přidat osobu' %}</button>
   </form>
 
 {% endblock %}
