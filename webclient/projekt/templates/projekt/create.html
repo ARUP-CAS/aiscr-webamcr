@@ -31,7 +31,7 @@
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" %}
     <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
-      <div class="card app-card-form">
+      <div class="card app-card-form app-card-in-clean-shadow">
         <div class="card-header">
           <div class="app-fx app-left">
             {{ header }}
@@ -42,8 +42,6 @@
           <div id="id_oznamvatel_form">
             {% crispy form_oznamovatel %}
           </div>
-
-
           <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="fallback">
