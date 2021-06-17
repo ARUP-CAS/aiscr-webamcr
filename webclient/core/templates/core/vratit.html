@@ -8,14 +8,20 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Vrácení objektu" %} {{ objekt.ident_cely }}</h1>
-
   <form method="POST" onsubmit="returnSubmitBtn.disabled = true; return true;">
-    {% csrf_token %}
-    {{ form|crispy }}
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Vrácení objektu" %} {{ objekt.ident_cely }}
+        </div>
+      </div>
+      <div class="card-body">
+        {% csrf_token %}
+        {{ form|crispy }}
+      </div>
+    </div>
     <button type="submit" id="returnSubmitBtn" class="btn btn-primary mt-3">{% trans "Vrátit" %}</button>
   </form>
-
 {% endblock %}
 
 {% block script %}

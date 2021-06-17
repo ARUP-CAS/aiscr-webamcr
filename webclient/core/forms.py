@@ -20,4 +20,4 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 
 
 class VratitForm(forms.Form):
-    reason = forms.CharField(label=_("Důvod vrácení"), required=True)
+    reason = forms.CharField(label=_("Zdůvodnění vrácení"), required=True)
