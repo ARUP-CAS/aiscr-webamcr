@@ -278,6 +278,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         model = Projekt
         fields = (
             "vedouci_projektu",
+            "organizace",
             "kulturni_pamatka",
             "kulturni_pamatka_cislo",
             "kulturni_pamatka_popis",
@@ -286,6 +287,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         widgets = {
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -295,14 +297,16 @@ class PrihlaseniProjektForm(forms.ModelForm):
         }
         labels = {
             "vedouci_projektu": _("Vedoucí projektu"),
-            "kulturni_pamatka": _("Kulturní památka"),
-            "kulturni_pamatka_cislo": _("Popis"),
-            "kulturni_pamatka_popis": _("Číslo"),
+            "organizace": _("Organizace"),
+            "kulturni_pamatka": _("Památková ochrana"),
+            "kulturni_pamatka_cislo": _("Rejstříkové číslo ÚSKP"),
+            "kulturni_pamatka_popis": _("Název památky"),
             "uzivatelske_oznaceni": _("Uživatelské označení"),
         }
         help_texts = {
             "vedouci_projektu": _("Lorem ipsum."),
             "kulturni_pamatka": _("Lorem ipsum."),
+            "organizace": _("Lorem ipsum."),
             "kulturni_pamatka_cislo": _("Lorem ipsum."),
             "kulturni_pamatka_popis": _("Lorem ipsum."),
             "uzivatelske_oznaceni": _("Lorem ipsum."),
@@ -311,24 +315,40 @@ class PrihlaseniProjektForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
+        self.fields["kulturni_pamatka"].required = True
+        self.fields["kulturni_pamatka_cislo"].required = True
+        self.fields["kulturni_pamatka_popis"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Přihlášení projektu")),
+                    Div(
+                        HTML(_("Přihlášení projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     Div(
-                        "vedouci_projektu",
-                        "uzivatelske_oznaceni",
-                        "kulturni_pamatka",
-                        "kulturni_pamatka_cislo",
-                        "kulturni_pamatka_popis",
+                        Div(
+                            Div(
+                                Div("vedouci_projektu", css_class="flex-fill"),
+                                HTML(_("<a href=\"{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }}\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
+                                css_class="col-sm-4 d-flex align-items-center"
+                            ),
+
+                            #Div("vedouci_projektu", css_class="col-sm-4"),
+                            Div("organizace", css_class="col-sm-4"),
+                            Div("uzivatelske_oznaceni", css_class="col-sm-4"),
+                            Div("kulturni_pamatka", css_class="col-sm-2"),
+                            Div("kulturni_pamatka_cislo", css_class="col-sm-2"),
+                            Div("kulturni_pamatka_popis", css_class="col-sm-8"),
+                            css_class="row",
+                        ),
                         css_class="card-body",
                     )
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
         self.helper.form_tag = False

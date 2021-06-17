@@ -8,15 +8,16 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Přihlášení projektu " %}{{ projekt.ident_cely }}</h1>
-
-  <form method="POST">
-    {% crispy form %}
-    <input type="submit" name="save" value="{% translate 'Přihlásit projekt' %}" class="btn btn-primary" id="submit-id-save">
-    <a class="btn btn-light" href="{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }} ">{% trans "Nové jméno" %}</a>
-    <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "Zpět" %}</button>
-  </form>
-
+  <div class="app-entity-projekt">
+    {% include "toolbar_projekt.html" %}
+    <form method="POST">
+      {% crispy form %}
+      <div class="mt-3">
+        <button type="submit" name="save" class="btn btn-primary mr-1" id="submit-id-save">{% translate 'Přihlásit projekt' %}</button>
+        <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "Zpět" %}</button>
+      </div>
+    </form>
+  </div>
 {% endblock %}
 
 {% block script %}
