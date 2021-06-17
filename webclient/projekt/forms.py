@@ -268,7 +268,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                     "reason",
                     css_class="card-body",
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
 
