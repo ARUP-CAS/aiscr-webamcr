@@ -102,7 +102,7 @@ class OsobaForm(forms.ModelForm):
                     ),
                     css_class="card-body",
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
         self.helper.form_tag = False
