@@ -12,8 +12,6 @@ ALTER TABLE projekt rename column oznamovatel to oznamovatel_text;
 ALTER TABLE projekt add column oznamovatel integer;
 ALTER TABLE projekt add constraint oznamovatel_ukey UNIQUE(id, oznamovatel);
 
-ALTER TABLE projekt add constraint projekt_oznamovatel_fkey foreign key (oznamovatel) references oznamovatel(id) ON DELETE SET NULL;
-
 -- migrace
 -- ERROR 148 nulovych email, adresa, telefon (jen nezachranne projekty?)
 -- ERROR 152 nulovych odpovedna_osoba, oznamovatel_text (jen nezachranne projekty?)
@@ -22,6 +20,8 @@ ALTER TABLE projekt add constraint projekt_oznamovatel_fkey foreign key (oznamov
 update projekt set oznamovatel = nextval('oznamovatel_id_seq') where typ_projektu = 1135;
 
 insert into oznamovatel (id, email, adresa, odpovedna_osoba, oznamovatel, telefon) select oznamovatel, email, adresa, odpovedna_osoba, oznamovatel_text, telefon from projekt where oznamovatel is not null order by oznamovatel asc;
+
+ALTER TABLE projekt add constraint projekt_oznamovatel_fkey foreign key (oznamovatel) references oznamovatel(id) ON DELETE SET NULL;
 
 -- Check ze kazdy zachranny projekt ma oznamovatele
 ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_check CHECK (not (oznamovatel IS NULL and typ_projektu = 1135));
