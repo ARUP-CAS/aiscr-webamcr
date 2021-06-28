@@ -34,3 +34,17 @@ update auth_user set is_staff = true where email = 'novak@arup.cas.cz';
 alter table samostatny_nalez ALTER id SET DEFAULT nextval('samostatny_nalez_seq');
 ALTER SEQUENCE samostatny_nalez_seq OWNED BY samostatny_nalez.id;
 SELECT setval('samostatny_nalez_seq', (SELECT MAX(id) from samostatny_nalez), TRUE);
+
+create table opravneni (
+    id serial,
+    opravneni VARCHAR(10) not null,
+    opravneni_dle_stavu VARCHAR(10) not null,
+    aplikace VARCHAR(10) not null,
+    adresa_v_aplikaci VARCHAR(10) not null,
+    role integer NOT NULL,
+
+    CONSTRAINT opravneni_hlavni_role FOREIGN KEY (role)
+        REFERENCES public.auth_group (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)

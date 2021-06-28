@@ -36,6 +36,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
+from core.models import Opravneni
 from core.utils import get_all_pians_in_cadastre, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -357,6 +358,8 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
+
+    opravneni = Opravneni.objects.filter(hlavni_role=request.user.hlavni_role)
 
     # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
     if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
