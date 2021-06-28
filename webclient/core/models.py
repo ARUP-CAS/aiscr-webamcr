@@ -74,7 +74,7 @@ class Opravneni(models.Model):
     )
     aplikace = models.CharField(max_length=50)
     adresa_v_aplikaci = models.CharField(max_length=50)
-    skupina = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
+    role = models.ForeignKey(Group, models.DO_NOTHING, db_column="role", related_name="role_opravneni")
 
     def over_opravneni_k_zaznamu(self, zaznam, uzivatel):
         model_zaznamu = zaznam.__class__.__name__
