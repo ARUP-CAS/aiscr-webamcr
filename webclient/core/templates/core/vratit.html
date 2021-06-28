@@ -20,7 +20,12 @@
         {{ form|crispy }}
       </div>
     </div>
-    <button type="submit" id="returnSubmitBtn" class="btn btn-primary mt-3">{% trans "Vrátit" %}</button>
+    <div class="mt-3">
+      <div class="form-group">
+        <button type="submit" id="returnSubmitBtn" class="btn btn-primary">{% trans "Vrátit" %}</button>
+        <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+      </div>
+    </div>
   </form>
 {% endblock %}
 

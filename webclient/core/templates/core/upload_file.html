@@ -17,8 +17,14 @@
         <input name="file" type="file" multiple/>
       </div>
     </form>
-    <a class="btn btn-primary app-entity-soubor-btn"
-       href="{{ back_url }}">{% trans "Dokončit" %}</a>
+    <div class="mt-3">
+      <div class="form-group">
+        <a class="btn btn-primary app-entity-soubor-btn"
+           href="{{ back_url }}">{% trans "Dokončit" %}</a>
+        <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+      </div>
+    </div>
+
   </div>
 {% endblock %}
 
