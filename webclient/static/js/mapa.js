@@ -91,14 +91,25 @@ var getOtherPoi= ()=>{
     xhr.send(JSON.stringify({ 'NorthWest': map.getBounds().getNorthWest(),'SouthEast': map.getBounds().getSouthEast() }))
 }
 
-var addPointToPoiLayer = (lat, long, text) => {
-    if( global_map_can_edit){
+const addPointToPoiLayer = (lat, long, text) => {
+    if (global_map_can_edit) {
         poi_correct.clearLayers();
         L.marker([lat, long], {icon: redIcon}).bindPopup(text).addTo(poi_correct);
-
+        const getUrl = window.location;
+        const select = $("#id_hlavni_katastr");
+        if (select) {
+            fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
+                .then(response => response.json())
+                .then(response => {
+                    let opt = `<option value="${response['id']}" selected="selected">${response['value']}</option>`;
+                    select.html(opt);
+                    select.val(response['id']).trigger("change");
+                })
+        }
         //console.log(lat+'  '+ long)
     }
 }
+
 var addPointOnLoad = (lat, long, text) => {
     if(text){
         L.marker([lat, long], {icon: greenIcon}).bindPopup(text).addTo(poi_sugest);
