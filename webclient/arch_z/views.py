@@ -592,14 +592,13 @@ def post_akce2kat(request):
     pian_ident_cely = body["pian"]
 
     [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
-    # logger.debug(katastr)
     if len(str(poi)) > 0:
         return JsonResponse(
             {
                 "lat": str(poi.lat),
                 "lng": str(poi.lng),
                 "zoom": str(poi.zoom),
-                "geom": str(geom).split(";")[1].replace(", ", ","),
+                "geom": str(geom).split(";")[1].replace(", ", ",") if geom else None,
             },
             status=200,
         )

@@ -9,14 +9,14 @@ var poi_other = L.layerGroup();
 var button_map_lock=L.easyButton({
     states: [{
         stateName: 'add-lock',
-        icon: 'glyphicon glyphicon-stop',
+        icon: 'bi bi-stop-fill',
         title: 'add-lock',
         onClick: function(control) {
             global_map_can_edit=!global_map_can_edit;
             control.state('remove-lock');
         }
       }, {
-        icon: 'glyphicon glyphicon-play',
+        icon: 'bi bi-play-fill',
         stateName: 'remove-lock',
         onClick: function(control) {
             global_map_can_edit=!global_map_can_edit;
@@ -27,7 +27,7 @@ var button_map_lock=L.easyButton({
 });
 button_map_lock.addTo(map)
 
-L.easyButton( 'glyphicon glyphicon-fast-backward', function(){
+L.easyButton( 'bi bi-skip-backward-fill', function(){
     poi_correct.clearLayers();
     let ll=poi_sugest.getLayers()[0]._latlng;
     map.setView(ll, 18);

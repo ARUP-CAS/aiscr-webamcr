@@ -8,6 +8,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
   {% compress css %}
   <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
   {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}

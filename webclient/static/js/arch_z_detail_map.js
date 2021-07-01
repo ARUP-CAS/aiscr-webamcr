@@ -31,7 +31,7 @@ var poi_other = L.layerGroup(); //L.markerClusterGroup();
 //var map = L.map('djMap').setView([49.84, 15.17], 7);
 //var poi = L.layerGroup();
 
-var map = L.map('djMap',{zoomControl:false,  layers: [osmColor], fullscreenControl: true}).setView([49.84, 15.17], 7);
+var map = L.map('djMap',{zoomControl:false,  layers: [cuzkZM], fullscreenControl: true}).setView([49.84, 15.17], 7);
 
 
 
@@ -64,7 +64,7 @@ L.control.zoom(
         /*L.easyButton({
                 states: [{
                     stateName: 'add-lock',
-                    icon: 'glyphicon glyphicon-lock',
+                    icon: 'glyphicon-lock',
                     title: 'Zamkni pro změny',
                     onClick: function(control) {
                         global_map_can_edit=!global_map_can_edit;
@@ -75,7 +75,7 @@ L.control.zoom(
                         control.state('remove-lock');
                     }
                     }, {
-                    icon: 'glyphicon glyphicon-pencil',
+                    icon: 'glyphicon-pencil',
                     stateName: 'remove-lock',
                     onClick: function(control) {
                         global_map_can_edit=!global_map_can_edit;
@@ -88,7 +88,7 @@ L.control.zoom(
                     }]
             }),*/
 
-        L.easyButton( '<<', function(){
+        L.easyButton( 'bi bi-skip-backward-fill', function(){
                 //gm_correct.clearLayers();
                 //editableLayers.clearLayers();
                 map.setView(poi_sugest.getLayers()[0]._latlng, 18);
