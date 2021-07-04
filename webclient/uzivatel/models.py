@@ -1,11 +1,18 @@
-from core.constants import CESKY, JAZYKY, ROLE_NEAKTIVNI_UZIVATEL_ID
+from core.constants import (
+    CESKY,
+    JAZYKY,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
+    ROLE_NEAKTIVNI_UZIVATEL_ID,
+)
+from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
-
-from core.validators import validate_phone_number
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 
@@ -31,7 +38,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
-    telefon = models.TextField(blank=True, null=True, validators=[validate_phone_number])
+    telefon = models.TextField(
+        blank=True, null=True, validators=[validate_phone_number]
+    )
     hlavni_role = models.ForeignKey(
         Group,
         models.DO_NOTHING,
@@ -56,6 +65,24 @@ class User(AbstractBaseUser, PermissionsMixin):
             + str(self.organizace)
             + ")"
         )
+
+    def moje_spolupracujici_organizace(self):
+        badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
+        archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+        archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
+        admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
+        if self.hlavni_role == badatel_group or self.hlavni_role == archeolog_group:
+            moje_spoluprace = self.spoluprace_badatelu.filter(spolupracovnik=self)
+            moje_spolupracujici_organizace = []
+            for spoluprace in moje_spoluprace:
+                moje_spolupracujici_organizace.append(spoluprace.vedouci.organizace)
+            # Archeologum jeste k spolupracim s jinymi archeology pridat jejich organizaci
+            if self.hlavni_role == archeolog_group:
+                moje_spolupracujici_organizace.append(self.organizace)
+            return moje_spolupracujici_organizace
+        elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
+            # Admin a archivar spolupracuje defaultne se vsemi organizacemi
+            return Organizace.objects.all()
 
     def email_user(self, *args, **kwargs):
         send_mail(

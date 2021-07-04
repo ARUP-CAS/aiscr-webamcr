@@ -80,7 +80,7 @@
               <li><a href="{% url 'pas:create' %}" title="">{% trans "Zapsat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" title="">{% trans "Moje nálezy" %}</a></li>
               <li><a href="{% url 'pas:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="#" title="">{% trans "Spolupráce" %}</a></li>
+              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "Spolupráce" %}</a></li>
               <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "Potvrdit" %}</a></li>
               <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "Archivovat" %}</a></li>
             </ul>

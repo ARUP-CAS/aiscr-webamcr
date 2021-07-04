@@ -451,7 +451,7 @@ def uzavrit(request, ident_cely):
             context["warnings"] = []
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
             for key, value in warnings.items():
-                context["warnings"].append((key, value))
+                context["warnings"].append(warnings)
         else:
             pass
         context["title"] = _("Uzavření projektu")

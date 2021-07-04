@@ -3,6 +3,10 @@ from core.constants import (
     SN_ODESLANY,
     SN_POTVRZENY,
     SN_ZAPSANY,
+    SPOLUPRACE_AKTIVACE,
+    SPOLUPRACE_AKTIVNI,
+    SPOLUPRACE_DEAKTIVACE,
+    SPOLUPRACE_NEAKTIVNI,
     ZAPSANI_SN,
 )
 from core.models import SouborVazby
@@ -21,7 +25,7 @@ from heslar.hesla import (
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 
 class SamostatnyNalez(models.Model):
@@ -143,3 +147,70 @@ class SamostatnyNalez(models.Model):
             return self.ident_cely
         else:
             return "Samostatny nalez [ident_cely not yet assigned]"
+
+
+class UzivatelSpoluprace(models.Model):
+
+    SPOLUPRACE_STATES = [
+        (SPOLUPRACE_NEAKTIVNI, _("neaktivní")),
+        (SPOLUPRACE_AKTIVNI, _("aktivní")),
+    ]
+
+    spolupracovnik = models.ForeignKey(
+        User,
+        models.DO_NOTHING,
+        db_column="spolupracovnik",
+        related_name="spoluprace_badatelu",
+    )
+    vedouci = models.ForeignKey(
+        User,
+        models.DO_NOTHING,
+        db_column="vedouci",
+        related_name="spoluprace_archeologu",
+    )
+    stav = models.SmallIntegerField(choices=SPOLUPRACE_STATES)
+    historie = models.ForeignKey(
+        HistorieVazby,
+        models.DO_NOTHING,
+        db_column="historie",
+        blank=True,
+        null=True,
+        related_name="spoluprace_historie",
+    )
+
+    def set_aktivni(self, user):
+        self.stav = SPOLUPRACE_AKTIVNI
+        Historie(
+            typ_zmeny=SPOLUPRACE_AKTIVACE,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_neaktivni(self, user):
+        self.stav = SPOLUPRACE_NEAKTIVNI
+        Historie(
+            typ_zmeny=SPOLUPRACE_DEAKTIVACE,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def check_pred_aktivaci(self):
+        result = []
+        if self.stav == SPOLUPRACE_AKTIVNI:
+            result.append(_("Spolupráce již je aktivní."))
+        return result
+
+    def check_pred_deaktivaci(self):
+        result = []
+        if self.stav == SPOLUPRACE_NEAKTIVNI:
+            result.append(_("Spolupráce již je neaktivní."))
+        return result
+
+    class Meta:
+        db_table = "uzivatel_spoluprace"
+        unique_together = (("vedouci", "spolupracovnik"),)
+
+    def __str__(self):
+        return self.spolupracovnik.last_name + " + " + self.vedouci.last_name

@@ -55,3 +55,10 @@ OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
 PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
 PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
 PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."
+
+# Spoluprace
+ZADOST_O_SPOLUPRACI_VYTVORENA: Final = "Žádost o spolupráci byla vytvořena."
+SPOLUPRACE_BYLA_AKTIVOVANA: Final = "Spolupráce byla aktivována."
+SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = "Spolupráce byla deaktivována."
+SPOLUPRACI_NELZE_AKTIVOVAT: Final = "Spolupráci nejde aktivovat."
+SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = "Spolupráci nejde deaktivovat."

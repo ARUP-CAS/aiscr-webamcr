@@ -3,7 +3,7 @@ import logging
 import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 
-from .models import SamostatnyNalez
+from .models import SamostatnyNalez, UzivatelSpoluprace
 
 logger = logging.getLogger(__name__)
 
@@ -42,3 +42,20 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
+
+
+class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
+
+    vedouci = tables.Column(accessor="vedouci__email", verbose_name="Vedoucí")
+    spolupracovnik = tables.Column(
+        accessor="spolupracovnik__email", verbose_name="Spolupracovník"
+    )
+    aktivace = tables.TemplateColumn(template_name="pas/aktivace_deaktivace_cell.html")
+
+    class Meta:
+        model = UzivatelSpoluprace
+        # template_name = "projekt/bootstrap4.html"
+        fields = ("stav",)
+
+    def __init__(self, *args, **kwargs):
+        super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
