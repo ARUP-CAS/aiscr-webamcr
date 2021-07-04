@@ -29,6 +29,50 @@ def validate_archeolog_email(email):
         )
 
 
+class PotvrditNalezForm(forms.ModelForm):
+    class Meta:
+        model = SamostatnyNalez
+        fields = ("predano_organizace", "evidencni_cislo", "predano", "pristupnost")
+        widgets = {
+            "evidencni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "predano_organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
+        labels = {
+            "evidencni_cislo": _("Evidenční číslo"),
+            "predano_organizace": _("Předáno organizaci"),
+            "predano": _("Nález předán"),
+            "pristupnost": _("Přístupnost"),
+        }
+        help_texts = {
+            "evidencni_cislo": _("Lorem ipsum."),
+            "predano_organizace": _("Lorem ipsum."),
+            "predano": _("Lorem ipsum."),
+            "pristupnost": _("Lorem ipsum."),
+        }
+
+    def __init__(self, *args, readonly=False, **kwargs):
+        super(PotvrditNalezForm, self).__init__(*args, **kwargs)
+        self.fields["evidencni_cislo"].required = True
+        self.fields["predano_organizace"].required = True
+        self.fields["predano"].required = True
+        self.fields["pristupnost"].required = True
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("predano_organizace", css_class="col-sm-6"),
+                Div("evidencni_cislo", css_class="col-sm-6"),
+                Div("predano", css_class="col-sm-6"),
+                Div("pristupnost", css_class="col-sm-6"),
+                css_class="row",
+            ),
+        )
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+        self.helper.form_tag = False
+
+
 class CreateSamostatnyNalezForm(forms.ModelForm):
     class Meta:
         model = SamostatnyNalez

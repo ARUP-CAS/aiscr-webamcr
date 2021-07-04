@@ -6,7 +6,9 @@ from core.constants import (
     DOKUMENT_RELATION_TYPE,
     OTHER_DOCUMENT_FILES,
     OTHER_PROJECT_FILES,
+    PHOTO_DOCUMENTATION,
     PROJEKT_RELATION_TYPE,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.models import Soubor
@@ -19,6 +21,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import is_safe_url
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
+from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
 
@@ -103,11 +106,23 @@ def upload_file_dokument(request, ident_cely):
     )
 
 
+@login_required
+@require_http_methods(["GET"])
+def upload_file_samostatny_nalez(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    return render(
+        request,
+        "core/upload_file.html",
+        {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
+    )
+
+
 @require_http_methods(["POST"])
 def post_upload(request):
     logger.debug("Uploading file to object: " + request.POST["objectID"])
     projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
     documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
+    finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
     typ_souboru = ""
     if projects.exists():
         objekt = projects[0]
@@ -115,7 +130,9 @@ def post_upload(request):
     elif documents.exists():
         objekt = documents[0]
         typ_souboru = OTHER_DOCUMENT_FILES
-    # TODO dokoncit upload samostatnych nalezu (FOTODOKUMENTACE)
+    elif finds.exists():
+        objekt = finds[0]
+        typ_souboru = PHOTO_DOCUMENTATION
     else:
         return JsonResponse(
             {
@@ -156,9 +173,8 @@ def post_upload(request):
                 parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
             if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                 parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
-            # TODO dokoncit az se budou delat samostatne nalezy
-            # if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-            #    parent_ident = duplikat[0].vazba
+            if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
+                parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
             return JsonResponse(
                 {
                     "error": "Soubor se stejným jménem na servru již existuje a je připojen k záznamu "

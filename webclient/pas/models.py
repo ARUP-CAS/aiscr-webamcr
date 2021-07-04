@@ -1,4 +1,7 @@
 from core.constants import (
+    ARCHIVACE_SN,
+    ODESLANI_SN,
+    POTVRZENI_SN,
     SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
@@ -7,6 +10,7 @@ from core.constants import (
     SPOLUPRACE_AKTIVNI,
     SPOLUPRACE_DEAKTIVACE,
     SPOLUPRACE_NEAKTIVNI,
+    VRACENI_SN,
     ZAPSANI_SN,
 )
 from core.models import SouborVazby
@@ -116,7 +120,12 @@ class SamostatnyNalez(models.Model):
     ident_cely = models.TextField(unique=True, blank=True, null=True)
     pocet = models.TextField(blank=True, null=True)
     soubory = models.ForeignKey(
-        SouborVazby, models.DO_NOTHING, db_column="soubory", blank=True, null=True
+        SouborVazby,
+        models.DO_NOTHING,
+        db_column="soubory",
+        blank=True,
+        null=True,
+        related_name="samostatny_nalez_souboru",
     )
     historie = models.ForeignKey(
         HistorieVazby,
@@ -131,6 +140,43 @@ class SamostatnyNalez(models.Model):
         self.stav = SN_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_SN,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_vracen(self, user, new_state, poznamka):
+        self.stav = new_state
+        Historie(
+            typ_zmeny=VRACENI_SN,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_odeslany(self, user):
+        self.stav = SN_ODESLANY
+        Historie(
+            typ_zmeny=ODESLANI_SN,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_potvrzeny(self, user):
+        self.stav = SN_POTVRZENY
+        Historie(
+            typ_zmeny=POTVRZENI_SN,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_archivovany(self, user):
+        self.stav = SN_ARCHIVOVANY
+        Historie(
+            typ_zmeny=ARCHIVACE_SN,
             uzivatel=user,
             vazba=self.historie,
         ).save()

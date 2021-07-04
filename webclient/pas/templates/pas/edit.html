@@ -1,0 +1,33 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}{% trans "Editace samostatného nálezu" %}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-samostatny_nalez">
+    {% include "toolbar_pas.html" %}
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Editace samostatného nálezu" %}
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% crispy form %}
+          <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary mt-3" id="submit-id-save">
+        </form>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

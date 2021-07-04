@@ -56,6 +56,12 @@ PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
 PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
 PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."
 
+# SN
+SAMOSTATNY_NALEZ_VRACEN: Final = "Samostatný nález vrácen do předchozího stavu."
+SAMOSTATNY_NALEZ_ODESLAN: Final = "Samostatný nález úspěšně odeslán."
+SAMOSTATNY_NALEZ_POTVRZEN: Final = "Samostatný nález úspěšně potvrzen."
+SAMOSTATNY_NALEZ_ARCHIVOVAN: Final = "Samostatný nález úspěšně archivován."
+
 # Spoluprace
 ZADOST_O_SPOLUPRACI_VYTVORENA: Final = "Žádost o spolupráci byla vytvořena."
 SPOLUPRACE_BYLA_AKTIVOVANA: Final = "Spolupráce byla aktivována."

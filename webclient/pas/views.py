@@ -4,6 +4,7 @@ from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
     POTVRZENI_SN,
+    SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
     SN_ZAPSANY,
@@ -12,8 +13,13 @@ from core.constants import (
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
 )
+from core.forms import VratitForm
 from core.ident_cely import get_sn_ident
 from core.message_constants import (
+    SAMOSTATNY_NALEZ_ARCHIVOVAN,
+    SAMOSTATNY_NALEZ_ODESLAN,
+    SAMOSTATNY_NALEZ_POTVRZEN,
+    SAMOSTATNY_NALEZ_VRACEN,
     SPOLUPRACE_BYLA_AKTIVOVANA,
     SPOLUPRACE_BYLA_DEAKTIVOVANA,
     SPOLUPRACI_NELZE_AKTIVOVAT,
@@ -21,6 +27,7 @@ from core.message_constants import (
     VYBERTE_PROSIM_POLOHU,
     ZADOST_O_SPOLUPRACI_VYTVORENA,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
@@ -28,6 +35,7 @@ from core.utils import get_cadastre_from_point
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -38,7 +46,7 @@ from heslar.hesla import PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
-from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm
+from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from uzivatel.models import User
@@ -106,7 +114,10 @@ def detail(request, ident_cely):
         ident_cely=ident_cely,
     )
     context["sn"] = sn
-    context["form"] = CreateSamostatnyNalezForm(instance=sn, readonly=True)
+    context["form"] = CreateSamostatnyNalezForm(
+        instance=sn, readonly=True, user=request.user
+    )
+    context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
     context["history_dates"] = get_history_dates(sn.historie)
     context["show"] = get_detail_template_shows(sn)
     logger.debug(context)
@@ -115,6 +126,137 @@ def detail(request, ident_cely):
     else:
         context["soubory"] = None
     return render(request, "pas/detail.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if request.method == "POST":
+        form = CreateSamostatnyNalezForm(request.POST, instance=sn, user=request.user)
+        if form.is_valid():
+            logger.debug("Form is valid")
+            form.save()
+            if form.changed_data:
+                logger.debug(form.changed_data)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("pas:detail", ident_cely=ident_cely)
+        else:
+            logger.debug("The form is not valid!")
+            logger.debug(form.errors)
+
+    else:
+        form = CreateSamostatnyNalezForm(instance=sn, user=request.user)
+    return render(
+        request,
+        "pas/edit.html",
+        {"form": form},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def edit_ulozeni(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if request.method == "POST":
+        form = PotvrditNalezForm(request.POST, instance=sn)
+        if form.is_valid():
+            logger.debug("Form is valid")
+            form.save()
+            if form.changed_data:
+                logger.debug(form.changed_data)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+            return redirect("pas:detail", ident_cely=ident_cely)
+        else:
+            logger.debug("The form is not valid!")
+            logger.debug(form.errors)
+    else:
+        form = PotvrditNalezForm(instance=sn)
+    return render(
+        request,
+        "pas/edit.html",
+        {"form": form},
+    )
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def vratit(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        form = VratitForm(request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            sn.set_vracen(request.user, sn.stav - 1, duvod)
+            sn.save()
+            messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
+            return redirect("pas:detail", ident_cely=ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+    else:
+        form = VratitForm()
+    return render(request, "core/vratit.html", {"form": form, "objekt": sn})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def odeslat(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav != SN_ZAPSANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        sn.set_odeslany(request.user)
+        messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
+        return redirect("pas:detail", ident_cely=ident_cely)
+    context = {
+        "object": sn,
+        "title": _("Odeslání nálezu"),
+        "header": _("Odeslání nálezu"),
+        "button": _("Odeslat nález"),
+    }
+    return render(request, "core/transakce.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def potvrdit(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav != SN_ODESLANY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        form = PotvrditNalezForm(request.POST, instance=sn)
+        if form.is_valid():
+            sn = form.save(commit=False)
+            sn.set_potvrzeny(request.user)
+            messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
+            return redirect("pas:detail", ident_cely=ident_cely)
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+    else:
+        form = PotvrditNalezForm(instance=sn)
+    return render(request, "pas/potvrdit.html", {"form": form, "sn": sn})
+
+
+def archivovat(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav != SN_POTVRZENY:
+        raise PermissionDenied()
+    if request.method == "POST":
+        sn.set_archivovany(request.user)
+        messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ARCHIVOVAN)
+        return redirect("pas:detail", ident_cely=ident_cely)
+    else:
+        # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
+        context = {
+            "title": _("Archivace nálezu"),
+            "header": _("Archivace nálezu ") + sn.ident_cely,
+            "button": _("Archivovat nález"),
+        }
+    return render(request, "core/transakce.html", context)
 
 
 class SamostatnyNalezListView(
