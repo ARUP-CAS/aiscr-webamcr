@@ -42,12 +42,12 @@
           <div id="id_oznamvatel_form">
             {% crispy form_oznamovatel %}
           </div>
-          <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="fallback">
-              <input name="file" type="file" multiple/>
-            </div>
-          </form>
+{#          <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">#}
+{#            {% csrf_token %}#}
+{#            <div class="fallback">#}
+{#              <input name="file" type="file" multiple/>#}
+{#            </div>#}
+{#          </form>#}
         </div>
       </div>
       <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
