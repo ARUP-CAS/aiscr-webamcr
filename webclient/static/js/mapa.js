@@ -101,9 +101,7 @@ const addPointToPoiLayer = (lat, long, text) => {
             fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
                 .then(response => response.json())
                 .then(response => {
-                    let opt = `<option value="${response['id']}" selected="selected">${response['value']}</option>`;
-                    select.html(opt);
-                    select.val(response['id']).trigger("change");
+                    select.val(response['id']);
                 })
         }
         //console.log(lat+'  '+ long)

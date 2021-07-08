@@ -30,7 +30,7 @@
 {% block content %}
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" %}
-    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
+    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;" action="{% url 'projekt:create' %}">
       <div class="card app-card-form app-card-in-clean-shadow">
         <div class="card-header">
           <div class="app-fx app-left">
