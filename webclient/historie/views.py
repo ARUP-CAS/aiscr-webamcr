@@ -16,7 +16,7 @@ class ProjektHistorieListView(HistorieListView):
         projekt_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
             vazba__projekt_historie__ident_cely=projekt_ident
-        ).order_by("-id")
+        ).order_by("-datum_zmeny")
 
 
 class AkceHistorieListView(HistorieListView):
@@ -24,7 +24,7 @@ class AkceHistorieListView(HistorieListView):
         akce_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
             vazba__archeologickyzaznam__ident_cely=akce_ident
-        ).order_by("-id")
+        ).order_by("-datum_zmeny")
 
 
 class DokumentHistorieListView(HistorieListView):
@@ -32,7 +32,7 @@ class DokumentHistorieListView(HistorieListView):
         dokument_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
             vazba__dokument_historie__ident_cely=dokument_ident
-        ).order_by("-id")
+        ).order_by("-datum_zmeny")
 
 
 class SamostatnyNalezHistorieListView(HistorieListView):
@@ -40,4 +40,4 @@ class SamostatnyNalezHistorieListView(HistorieListView):
         sn_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
             vazba__sn_historie__ident_cely=sn_ident
-        ).order_by("-id")
+        ).order_by("-datum_zmeny")
