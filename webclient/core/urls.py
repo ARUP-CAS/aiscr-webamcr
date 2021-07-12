@@ -17,6 +17,11 @@ urlpatterns = [
         views.upload_file_dokument,
         name="upload_file_dokument",
     ),
+    path(
+        "upload_file/pas/<str:ident_cely>",
+        views.upload_file_samostatny_nalez,
+        name="upload_file_pas",
+    ),
     path("download_file/<int:pk>", views.download_file, name="download_file"),
     path("delete_file/<int:pk>", views.delete_file, name="delete_file"),
 ]

@@ -1,17 +1,76 @@
+from core.constants import ROLE_ARCHEOLOG_ID
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
-from django.contrib.gis.forms import OSMWidget
+from django.contrib.auth.models import Group
+from django.contrib.gis.forms import OSMWidget, ValidationError
 from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
+    TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.views import heslar_12
 from pas.models import SamostatnyNalez
+from projekt.models import Projekt
+from uzivatel.models import User
+
+
+def validate_archeolog_email(email):
+    user = User.objects.filter(email=email)
+    if not user.exists() or user[0].hlavni_role != Group.objects.get(
+        id=ROLE_ARCHEOLOG_ID
+    ):
+        raise ValidationError(
+            _("Archeolg s emailem ") + email + _(" neexistuje."),
+        )
+
+
+class PotvrditNalezForm(forms.ModelForm):
+    class Meta:
+        model = SamostatnyNalez
+        fields = ("predano_organizace", "evidencni_cislo", "predano", "pristupnost")
+        widgets = {
+            "evidencni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "predano_organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        }
+        labels = {
+            "evidencni_cislo": _("Evidenční číslo"),
+            "predano_organizace": _("Předáno organizaci"),
+            "predano": _("Nález předán"),
+            "pristupnost": _("Přístupnost"),
+        }
+        help_texts = {
+            "evidencni_cislo": _("Lorem ipsum."),
+            "predano_organizace": _("Lorem ipsum."),
+            "predano": _("Lorem ipsum."),
+            "pristupnost": _("Lorem ipsum."),
+        }
+
+    def __init__(self, *args, readonly=False, **kwargs):
+        super(PotvrditNalezForm, self).__init__(*args, **kwargs)
+        self.fields["evidencni_cislo"].required = True
+        self.fields["predano_organizace"].required = True
+        self.fields["predano"].required = True
+        self.fields["pristupnost"].required = True
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("predano_organizace", css_class="col-sm-6"),
+                Div("evidencni_cislo", css_class="col-sm-6"),
+                Div("predano", css_class="col-sm-6"),
+                Div("pristupnost", css_class="col-sm-6"),
+                css_class="row",
+            ),
+        )
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+        self.helper.form_tag = False
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
@@ -33,9 +92,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka",
         )
         widgets = {
-            "projekt": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
-            ),
             "nalezce": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -50,7 +106,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             ),
         }
         labels = {
-            "projekt": _("Projekt"),
             "nalezce": _("Nálezce"),
             "datum_nalezu": _("Datum nálezu"),
             "lokalizace": _("Lokalizace"),
@@ -65,7 +120,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka": _("Poznámka / bližší popis"),
         }
 
-    def __init__(self, *args, readonly=False, **kwargs):
+    def __init__(self, *args, readonly=False, user=None, **kwargs):
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 1
         self.fields["pocet"].widget.attrs["rows"] = 1
@@ -77,6 +132,14 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.fields["specifikace"].required = True
         self.fields["geom"].required = True
         self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
+        self.fields["projekt"] = forms.ModelChoiceField(
+            queryset=Projekt.objects.filter(
+                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID
+            ).filter(organizace__in=user.moje_spolupracujici_organizace()),
+            widget=forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+        )
         self.fields["druh_nalezu"] = TwoLevelSelectField(
             label=_("Druh nálezu"),
             widget=forms.Select(
@@ -113,3 +176,19 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+
+
+class CreateZadostForm(forms.Form):
+    email_archeologa = forms.EmailField(
+        label=_("Archeolog"),
+        widget=forms.EmailInput(
+            attrs={"placeholder": _("Zadejte email archeologa pro spolupráci")}
+        ),
+        required=True,
+        validators=[validate_archeolog_email],
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(CreateZadostForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False

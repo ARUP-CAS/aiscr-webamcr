@@ -3,8 +3,14 @@ import logging
 import crispy_forms
 import django_filters
 import django_filters as filters
-from core.constants import OBLAST_CECHY, OBLAST_CHOICES, OBLAST_MORAVA
+from core.constants import (
+    OBLAST_CECHY,
+    OBLAST_CHOICES,
+    OBLAST_MORAVA,
+    ROLE_ARCHEOLOG_ID,
+)
 from crispy_forms.layout import Div, Layout
+from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
@@ -16,7 +22,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -144,6 +150,36 @@ class SamostatnyNalezFilter(filters.FilterSet):
         return queryset
 
 
+class UzivatelSpolupraceFilter(filters.FilterSet):
+    vedouci = ModelMultipleChoiceFilter(
+        queryset=User.objects.select_related("organizace").filter(
+            hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+        ),
+        field_name="vedouci",
+        label="Vedoucí",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    spolupracovnik = ModelMultipleChoiceFilter(
+        queryset=User.objects.select_related("organizace"),
+        field_name="spolupracovnik",
+        label="Spolupracovník",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    class Meta:
+        model = UzivatelSpoluprace
+        fields = ["stav"]
+
+    def __init__(self, *args, **kwargs):
+        super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
+        self.helper = UzivatelSpolupraceFilterFormHelper()
+
+
 class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
     layout = Layout(
@@ -167,6 +203,19 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("hloubka__lt", css_class="col-sm-2"),
             Div("pristupnost", css_class="col-sm-2"),
             Div("stav", css_class="col-sm-2"),
+            css_class="row",
+        ),
+    )
+    form_tag = False
+
+
+class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
+    form_method = "GET"
+    layout = Layout(
+        Div(
+            Div("vedouci", css_class="col-sm-4"),
+            Div("spolupracovnik", css_class="col-sm-4"),
+            Div("stav", css_class="col-sm-4"),
             css_class="row",
         ),
     )

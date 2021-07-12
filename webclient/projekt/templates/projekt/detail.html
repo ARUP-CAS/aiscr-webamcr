@@ -204,7 +204,7 @@
                 }
             </script>
           </div>
-        </div>      
+        </div>
         <div class="row">
           <div class="col-sm-12">
             <span class="app-divider-label">{% trans "Přihlášení projektu" %}</span>
@@ -268,7 +268,7 @@
               <input class="form-control" type="text" placeholder="{{ projekt.termin_odevzdani_nz|date:'Y-m-d' }}" readonly><!--missings-->
             </div>
           </div>
-        </div>          
+        </div>
       </div>
     </div>
     {% if show.oznamovatel %}
@@ -443,7 +443,7 @@
             {% for nalez in samostatne_nalezy %}
               <tr>
                 <td class="app-ident-cely">
-                  <a href="">
+                  <a href="{% url 'pas:detail' nalez.ident_cely %}">
                     <span class="material-icons">brush</span>
                     {{ nalez.ident_cely }}
                   </a>

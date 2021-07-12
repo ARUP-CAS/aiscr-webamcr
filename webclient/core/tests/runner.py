@@ -10,6 +10,8 @@ from core.constants import (
     KLADYZM50,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ROLE_NEAKTIVNI_UZIVATEL_ID,
 )
@@ -300,6 +302,10 @@ class AMCRTestRunner(BaseRunner):
         # Vlozit role do auth_user
         admin_group = Group(id=ROLE_ADMIN_ID, name="Admin")
         admin_group.save()
+        archeolog_group = Group(id=ROLE_ARCHEOLOG_ID, name="Archeolog")
+        archeolog_group.save()
+        archivar_group = Group(id=ROLE_ARCHIVAR_ID, name="Archivar")
+        archivar_group.save()
         badatel_group = Group(id=ROLE_BADATEL_ID, name="Badatel")
         badatel_group.save()
         neaktivni = Group(id=ROLE_NEAKTIVNI_UZIVATEL_ID, name="Neaktivni uzivatel")

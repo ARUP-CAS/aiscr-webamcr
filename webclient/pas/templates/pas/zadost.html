@@ -1,0 +1,34 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-samostatny_nalez">
+    <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {{ header }}
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy form %}
+        </div>
+      </div>
+      <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "Zažádat" %}</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script>
+      $(document).ready(function () {
+          document.getElementById("id-app-entity-item").innerHTML = "Žádost o spolupráci"
+      })
+  </script>
+{% endblock %}
