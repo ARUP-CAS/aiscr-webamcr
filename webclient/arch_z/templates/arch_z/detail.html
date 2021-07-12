@@ -579,6 +579,7 @@
   <script>
 
       let shown_form_id = "";
+      let ask_only_once=true;
 
       function setCookie(name, value, path) {
           var cookieString = name + '=' + value + ';path=' + path
@@ -619,10 +620,17 @@
                   rs = JSON.parse(this.responseText)
                   map.setView([rs.lat, rs.lng], rs.zoom)
                   if (rs.zoom == 19) {
-                      addPointToPoiLayerWithForce(rs.lat, rs.lng, pian_id, gm_correct)
-                     // console.log(rs.geom)
-                      addPointToPoiLayerWithForceG(rs.geom,gm_correct)
-                     // console.log("pian id: "+pian_id);
+                      drawnItems.clearLayers();
+                      addPointToPoiLayerWithForce(rs.lat, rs.lng, pian_id, drawnItems)
+                  }
+                  if(ask_only_once){
+                    ask_only_once=false;
+                  xhr2.send(JSON.stringify(
+                      {
+                          'dj_ident_cely': form_id.replace("detail_dj_form_", ""),
+                          'lat':rs.lat,
+                          'lng':rs.lng,
+                      }))
                   }
               };
               xhr.send(JSON.stringify(
@@ -640,21 +648,18 @@
               xhr2.onload = function () {
                 poi_other.clearLayers();
                 let res=JSON.parse(this.responseText).points
-
+                let dj_head=form_id.replace("detail_dj_form_", "")
                 res.forEach((i)=>{
-                  addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
-
-                  //gm_correct.bringToFront()
+                  if(i.dj != null){
+                    //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
+                    addPointToPoiLayerWithForceG(i.geom,poi_dj,i.ident_cely,true)
+                  }
+                  else {
+                    addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
+                  }
                 })
-
-
-
-
               };
-              xhr2.send(JSON.stringify(
-                  {
-                      'cadastre': document.getElementById("main_cadastre_id").placeholder,
-                  }))
+
           }
       }
 

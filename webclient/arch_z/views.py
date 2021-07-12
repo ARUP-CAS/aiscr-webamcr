@@ -36,7 +36,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.utils import get_all_pians_in_cadastre, get_centre_from_akce
+from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -565,9 +565,7 @@ def get_detail_template_shows(archeologicky_zaznam):
 @require_http_methods(["POST"])
 def post_ajax_get_pians(request):
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("get-pians")
-    pians = get_all_pians_in_cadastre(body["cadastre"])
-    logger.debug("get-pians-pocet pianu: " + str(len(pians)))
+    pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
     for pian in pians:
         # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
@@ -576,6 +574,7 @@ def post_ajax_get_pians(request):
                 "id": pian.id,
                 "ident_cely": pian.ident_cely,
                 "geom": pian.geometry.replace(", ", ","),
+                "dj": pian.dj,
             }
         )
     if len(pians) > 0:

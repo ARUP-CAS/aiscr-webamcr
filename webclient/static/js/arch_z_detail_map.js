@@ -9,8 +9,17 @@ var greenIcon = new L.Icon({
     shadowSize: [41, 41]
     })
 
-    var redIcon = new L.Icon({
+var redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+    })
+
+var orangeIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -26,7 +35,8 @@ cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/til
 
 var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
-var poi_other = L.layerGroup(); //L.markerClusterGroup();
+var poi_dj = L.layerGroup();
+var poi_other = L.markerClusterGroup();
 
 //var map = L.map('djMap').setView([49.84, 15.17], 7);
 //var poi = L.layerGroup();
@@ -99,8 +109,6 @@ L.control.zoom(
 var edit_buttons=L.easyBar(buttons)
 map.addControl(edit_buttons)
 
-var editableLayers = new L.FeatureGroup();
-map.addLayer(editableLayers);
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
@@ -295,32 +303,34 @@ map.on('draw:deleted', function(e) {
 })
 
 map.on('draw:created', function(e) {
+    if(global_map_can_edit){
+        var type = e.layerType;
+        var la = e.layer;
+        console.log(e)
 
-if(global_map_can_edit){
-    var type = e.layerType;
-    var la = e.layer;
-    console.log(e)
+        if (type === 'marker'){
+            drawnItems.clearLayers();
 
+            let corX = e.layer._latlng.lat;
+            let corY = e.layer._latlng.lng;
+                if( global_map_can_edit){
+                    L.marker([corX, corY], {icon: redIcon}).bindPopup(text).addTo(drawnItems);
 
-    if (type === 'marker'){
-        drawnItems.clearLayers();
+                }
+        } else{
+            drawnItems.clearLayers();
+            //gm_correct.clearLayers();
+            drawnItems.addLayer(la);
+        }
+        addLogText("created")
+        geomToText();
 
-        let corX = e.layer._latlng.lat;
-        let corY = e.layer._latlng.lng;
-        addPointToPoiLayer(corX, corY, 'Navržený PIAN',la);
-    } else{
-        drawnItems.clearLayers();
-        //gm_correct.clearLayers();
-        drawnItems.addLayer(la);
     }
-    addLogText("created")
-    geomToText();
-
-}
 });
 
 map.addLayer(poi_sugest);
 map.addLayer(poi_other);
+map.addLayer(poi_dj);
 
 function geomToText(){
     // LINESTRING(-71.160281 42.258729,-71.160837
@@ -369,23 +379,26 @@ function geomToText(){
 
 }
 
-var addPointToPoiLayer = (lat, long, text,lai) => {
-    if( global_map_can_edit){
-        L.marker([lat, long], {icon: redIcon}).bindPopup(text).addTo(drawnItems);
 
-    }
-}
 
 var addPointToPoiLayerWithForce = (lat, long, text,lai) => {
-        L.marker([lat, long], {icon: redIcon,zIndexOffset:1000}).bindPopup(text).addTo(drawnItems);
+        L.marker([lat, long], {icon: redIcon,zIndexOffset:2000}).bindPopup(text).addTo(drawnItems);
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
+    let myIco={icon: greenIcon};
+    if (layer===poi_dj){
+        console.log(text+" orange "+st_text)
+        myIco={icon: orangeIcon,zIndexOffset:1000};
+    } else if(layer==gm_correct){
+        myIco={icon: redIcon};
+    }
+
     if(st_text.includes("POLYGON")){
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
-        L.polygon(coor).addTo(drawnItems);
+        L.polygon(coor).addTo(layer);
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[1],i.split(" ")[0]])
@@ -393,38 +406,21 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         L.polyline(coor).addTo(layer);
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
-        L.marker([i.split(" ")[1], i.split(" ")[0]], {icon: greenIcon}).bindPopup(text).addTo(layer);
+        coor.push([i.split(" ")[1],i.split(" ")[0]])
+        //L.marker([i.split(" ")[1], i.split(" ")[0]], myIco).bindPopup(text).addTo(layer);
 
     }
-    if(overview && coor.length>1){
+    if(overview && coor.length>0){
         x0=0.0;
         x1=0.0
         c0=0
-        console.log(coor)
+        //console.log(coor)
         for(const i of coor){
             x0=x0+parseFloat(i[0])
             x1=x1+parseFloat(i[1])
             c0=c0+1
         }
-        L.marker([x0/c0,x1/c0], {icon: greenIcon}).bindPopup(text).addTo(layer);
-    }
-}
-
-var addPianFromKadastre =(st_text,text) => {
-    let coor=[]
-    if(st_text.includes("POLYGON")){
-        st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
-                coor.push([i.split(" ")[0],i.split(" ")[1]])
-        })
-        L.polygon(coor).addTo(poi_other);
-    }else if(st_text.includes("LINESTRING")){
-        st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
-            coor.push([i.split(" ")[0],i.split(" ")[1]])
-        })
-        L.polyline(coor).addTo(poi_other);
-    } else if(st_text.includes("POINT")){
-        let i=st_text.split("(")[1].split(")")[0];
-        L.marker([i.split(" ")[0], i.split(" ")[1]], {icon: greenIcon}).bindPopup(text).addTo(poi_other);
+        L.marker([x0/c0,x1/c0], myIco).bindPopup(text).addTo(layer);
 
     }
 }
@@ -436,13 +432,9 @@ function addLogText(text) {
 }
 
 function addGeometry(text) {
-    console.log(text)
     let geom=document.getElementById("id_geom");
     geom.value=text;
     if(poi_sugest.getLayers().size){
         edit_buttons.enable();
     }
-    //addLogText(text);
-    //geomToText();
-    //console.log(text);
 }

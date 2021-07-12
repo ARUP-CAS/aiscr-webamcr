@@ -9,14 +9,14 @@ var poi_other = L.layerGroup();
 var button_map_lock=L.easyButton({
     states: [{
         stateName: 'add-lock',
-        icon: 'bi bi-stop-fill',
+        icon: 'bi bi-lock',
         title: 'add-lock',
         onClick: function(control) {
             global_map_can_edit=!global_map_can_edit;
             control.state('remove-lock');
         }
       }, {
-        icon: 'bi bi-play-fill',
+        icon: 'bi bi-unlock',
         stateName: 'remove-lock',
         onClick: function(control) {
             global_map_can_edit=!global_map_can_edit;
