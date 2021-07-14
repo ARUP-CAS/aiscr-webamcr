@@ -522,6 +522,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
             )
             for key, value in warnings.items():
                 context["warnings"].append((key, value))
+            context["form"] = NavrhnoutZruseniProjektForm(enable_form_submit=False)
         else:
             pass
 
