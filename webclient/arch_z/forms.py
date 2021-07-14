@@ -12,7 +12,7 @@ from core.constants import (
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
 )
-
+from . import validators
 
 class CreateArchZForm(forms.ModelForm):
     class Meta:
@@ -43,7 +43,9 @@ class CreateArchZForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
-        self.fields["hlavni_katastr"].required = True
+        self.fields["hlavni_katastr"].required = False
+        self.fields["katastry"].disabled = True
+        self.fields["hlavni_katastr"].disabled = True
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
@@ -60,6 +62,14 @@ class CreateArchZForm(forms.ModelForm):
 
 
 class CreateAkceForm(forms.ModelForm):
+    datum_zahajeni = forms.DateField(validators=[validators.datum_max_1_mesic_v_budoucnosti])
+    datum_ukonceni = forms.DateField(validators=[validators.datum_max_1_mesic_v_budoucnosti])
+
+    def clean(self):
+        if self.cleaned_data['datum_zahajeni'] > self.cleaned_data['datum_ukonceni']:
+            raise forms.ValidationError('Datum zahájení nemůže být po datu ukončení')
+        return super().clean()
+
     class Meta:
         model = Akce
         fields = (
