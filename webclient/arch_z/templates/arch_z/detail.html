@@ -665,7 +665,6 @@
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {
-          //console.log("show_create_child_form"+" "+form_id+" "+form_to_show_next);
 
           show_form(form_id, form_to_show_next);
           let forma = document.getElementById(form_id + "_id");
@@ -682,6 +681,24 @@
           if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
               document.getElementById(detail_to_show).scrollIntoView()
+          } else {
+              let xhr3 = new XMLHttpRequest();
+              xhr3.open('POST', '/arch_z/akce-get-katastr');
+              xhr3.setRequestHeader('Content-type', 'application/json');
+              if (typeof global_csrftoken !== 'undefined') {
+                  xhr3.setRequestHeader('X-CSRFToken', global_csrftoken);
+              } else {
+                  console.log("neni X-CSRFToken token")
+              }
+              xhr3.onload = function () {
+                  rs = JSON.parse(this.responseText)
+                  map.setView([rs.lat, rs.lng], rs.zoom)
+              };
+              xhr3.send(JSON.stringify(
+                  {
+                      'cadastre': document.getElementById("main_cadastre_id").placeholder,
+                      'pian': '',
+                  }))
           }
       })
 
