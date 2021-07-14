@@ -8,6 +8,10 @@ from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.views import heslar_12
+from core.constants import (
+    D_STAV_ARCHIVOVANY,
+    D_STAV_ODESLANY,
+)
 
 
 class CreateArchZForm(forms.ModelForm):
@@ -136,8 +140,9 @@ class PripojitDokumentForm(forms.Form):
         super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("Vyberte dokument k připojení"),
-            choices=list(Dokument.objects.all().values_list("id", "ident_cely")),
-            widget=autocomplete.Select2Multiple(url="dokument:dokument-autocomplete"),
+            choices=list(Dokument.objects.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
+                         .values_list("id", "ident_cely")),
+            widget=autocomplete.Select2Multiple(url="dokument:dokument-autocomplete-bez-zapsanych"),
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
