@@ -1,7 +1,7 @@
 var global_map_can_edit=false;
 
-var greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+var blueIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -10,7 +10,7 @@ var greenIcon = new L.Icon({
     })
 
 var redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -18,8 +18,8 @@ var redIcon = new L.Icon({
     shadowSize: [41, 41]
     })
 
-var orangeIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+var greenIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -55,7 +55,8 @@ var baseLayers = {
 
 var overlays ={
     "Katastrální mapa":  L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom: 20.99, minZoom: 17, opacity: 0.5 }),
-    "Katastrální území": L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom: 20.99, minZoom: 12, opacity: 0.5 })
+    "Katastrální území": L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom: 20.99, minZoom: 12, opacity: 0.5 }),
+    "Piany": poi_other
 }
 
 L.control.layers(baseLayers,overlays).addTo(map);
@@ -112,6 +113,9 @@ map.addControl(edit_buttons)
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
+L.EditToolbar.Delete.include({
+    removeAllLayers: false
+});
 L.drawLocal = {
     // format: {
     // 	numeric: {
@@ -314,7 +318,7 @@ map.on('draw:created', function(e) {
             let corX = e.layer._latlng.lat;
             let corY = e.layer._latlng.lng;
                 if( global_map_can_edit){
-                    L.marker([corX, corY], {icon: redIcon}).bindPopup(text).addTo(drawnItems);
+                    L.marker([corX, corY], {icon: redIcon}).bindPopup('Navržený pian').addTo(drawnItems);
 
                 }
         } else{
@@ -386,10 +390,10 @@ var addPointToPoiLayerWithForce = (lat, long, text,lai) => {
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
-    let myIco={icon: greenIcon};
+    let myIco={icon: blueIcon};
     if (layer===poi_dj){
         console.log(text+" orange "+st_text)
-        myIco={icon: orangeIcon,zIndexOffset:1000};
+        myIco={icon: greenIcon,zIndexOffset:1000};
     } else if(layer==gm_correct){
         myIco={icon: redIcon};
     }
