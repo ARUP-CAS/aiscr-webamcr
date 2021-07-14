@@ -593,6 +593,13 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
+class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
+    def get_queryset(self):
+        qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
+        qs = qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
+        return qs
+
+
 def get_hierarchie_dokument_typ():
     hierarchie_qs = HeslarHierarchie.objects.filter(
         heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP

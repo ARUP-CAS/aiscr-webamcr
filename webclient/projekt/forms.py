@@ -131,7 +131,7 @@ class EditProjektForm(forms.ModelForm):
             "datum_ukonceni",
             "uzivatelske_oznaceni",
             "katastry",
-            #"termin_odevzdani",
+            # "termin_odevzdani",
         )
         widgets = {
             "typ_projektu": forms.Select(
@@ -152,7 +152,7 @@ class EditProjektForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
-             "vedouci_projektu": forms.Select(
+            "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
@@ -175,7 +175,7 @@ class EditProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("Uživatelské označení"),
             "datum_zahajeni": _("Datum zahájení výzkumu"),
             "datum_ukonceni": _("Datum ukončení výzkumu"),
-            #"termin_odevzdani": _("Termín odevzdání"),
+            # "termin_odevzdani": _("Termín odevzdání"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -202,7 +202,7 @@ class EditProjektForm(forms.ModelForm):
                                 Div("lokalizace", css_class="col-sm-12"),
                                 Div("parcelni_cislo", css_class="col-sm-12"),
                                 Div("oznaceni_stavby", css_class="col-sm-6"),
-                                Div("planovane_zahajeni", css_class="col-sm-3"),         
+                                Div("planovane_zahajeni", css_class="col-sm-3"),
                                 css_class="row",
                             ),
                             css_class="col-sm-9",
@@ -221,7 +221,8 @@ class EditProjektForm(forms.ModelForm):
                         ),
                         Div(
                             Div("vedouci_projektu", css_class="flex-fill"),
-                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
+                            HTML(_(
+                                "<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
                             css_class="col-sm-4 d-flex align-items-end"
                         ),
                         Div("organizace", css_class="col-sm-4"),
@@ -238,7 +239,7 @@ class EditProjektForm(forms.ModelForm):
                         ),
                         Div("datum_zahajeni", css_class="col-sm-4"),
                         Div("datum_ukonceni", css_class="col-sm-4"),
-                        #Div("termin_odevzdani", css_class="col-sm-4"),          
+                        # Div("termin_odevzdani", css_class="col-sm-4"),
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -251,8 +252,13 @@ class EditProjektForm(forms.ModelForm):
 
 class NavrhnoutZruseniProjektForm(forms.Form):
     reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True)
+    enable_submit = True
 
     def __init__(self, *args, **kwargs):
+        if "enable_form_submit" in kwargs:
+            enable_form_submit = kwargs.pop("enable_form_submit")
+        else:
+            enable_form_submit = True
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
@@ -270,9 +276,9 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                 ),
                 css_class="card app-card-form",
             ),
-             Div(
+            Div(
                 FormActions(
-                    Submit("save", "Navrhnout zrušení"),
+                    Submit("save", "Navrhnout zrušení", disabled=not enable_form_submit),
                     HTML(
                         '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
                     ),
@@ -342,7 +348,8 @@ class PrihlaseniProjektForm(forms.ModelForm):
                         Div(
                             Div(
                                 Div("vedouci_projektu", css_class="flex-fill"),
-                                HTML(_("<a href=\"{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }}\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
+                                HTML(_(
+                                    "<a href=\"{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }}\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
                                 css_class="col-sm-4 d-flex align-items-center"
                             ),
                             Div("organizace", css_class="col-sm-4"),
