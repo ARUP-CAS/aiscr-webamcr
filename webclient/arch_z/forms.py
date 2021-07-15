@@ -105,9 +105,14 @@ class CreateAkceForm(forms.ModelForm):
             "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "ulozeni_dokumentace": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
 
     def __init__(self, *args, **kwargs):
+        if "uzamknout_specifikace" in kwargs:
+            uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
+        else:
+            uzamknout_specifikace = False
         super(CreateAkceForm, self).__init__(*args, **kwargs)
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
@@ -129,6 +134,8 @@ class CreateAkceForm(forms.ModelForm):
         self.fields["lokalizace_okolnosti"].required = True
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
+        if uzamknout_specifikace:
+            self.fields["specifikace_data"].disabled = True
 
         self.helper.layout = Layout(
             Div(

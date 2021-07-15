@@ -393,7 +393,7 @@ def zapsat(request, projekt_ident_cely):
 
     else:
         form_az = CreateArchZForm()
-        form_akce = CreateAkceForm()
+        form_akce = CreateAkceForm(uzamknout_specifikace=True)
 
     return render(
         request,
