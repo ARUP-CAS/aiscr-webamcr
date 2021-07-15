@@ -1,7 +1,7 @@
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
+from crispy_forms.layout import Div, Layout, HTML
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
@@ -128,7 +128,10 @@ class CreateAkceForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Div(
-                Div("hlavni_vedouci", css_class="col-sm-4"),
+                Div(Div(Div("hlavni_vedouci", css_class="col-sm-10"),
+                        Div(HTML('<input type="button" value="+" class="btn btn-secondary" />'),
+                            css_class="col-sm-2", style="display: flex; align-items: center;"), css_class="row"),
+                    css_class="col-sm-3"),
                 Div("datum_zahajeni", css_class="col-sm-4"),
                 Div("datum_ukonceni", css_class="col-sm-4"),
                 Div("lokalizace_okolnosti", css_class="col-sm-4"),
