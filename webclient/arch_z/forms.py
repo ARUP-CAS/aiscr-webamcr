@@ -82,6 +82,8 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz",
             "hlavni_typ",
             "vedlejsi_typ",
+            "specifikace_data",
+            "ulozeni_dokumentace"
         )
 
         labels = {
@@ -92,6 +94,8 @@ class CreateAkceForm(forms.ModelForm):
             "ulozeni_nalezu": _("Uložení nálezu"),
             "souhrn_upresneni": _("Poznámka"),
             "je_nz": _("Odeslat ZAA jako NZ"),
+            "specifikace_data": _("Specifikace data"),
+            "ulozeni_dokumentace": _("Uložení dokumentace"),
         }
 
         widgets = {
@@ -129,7 +133,7 @@ class CreateAkceForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(Div(Div("hlavni_vedouci", css_class="col-sm-10"),
-                        Div(HTML('<input type="button" value="+" class="btn btn-secondary" />'),
+                        Div(HTML('<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'),
                             css_class="col-sm-2", style="display: flex; align-items: center;"), css_class="row"),
                     css_class="col-sm-3"),
                 Div("datum_zahajeni", css_class="col-sm-4"),
@@ -140,6 +144,8 @@ class CreateAkceForm(forms.ModelForm):
                 Div("hlavni_typ", css_class="col-sm-4"),
                 Div("vedlejsi_typ", css_class="col-sm-4"),
                 Div("je_nz", css_class="col-sm-4 d-flex align-items-end"),
+                Div("specifikace_data", css_class="col-sm-4"),
+                Div("ulozeni_dokumentace", css_class="col-sm-4"),
                 css_class="row",
             ),
         )
