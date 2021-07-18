@@ -74,6 +74,7 @@ class CreateAkceForm(forms.ModelForm):
         model = Akce
         fields = (
             "hlavni_vedouci",
+            "organizace",
             "datum_zahajeni",
             "datum_ukonceni",
             "lokalizace_okolnosti",
@@ -102,6 +103,9 @@ class CreateAkceForm(forms.ModelForm):
             "hlavni_vedouci": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
             "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
@@ -113,6 +117,10 @@ class CreateAkceForm(forms.ModelForm):
             uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
         else:
             uzamknout_specifikace = False
+        if "init_organizace" in kwargs:
+            init_organizace = kwargs.pop("init_organizace")
+        else:
+            init_organizace = None
         super(CreateAkceForm, self).__init__(*args, **kwargs)
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
@@ -132,6 +140,8 @@ class CreateAkceForm(forms.ModelForm):
             required=False,
         )
         self.fields["lokalizace_okolnosti"].required = True
+        if init_organizace:
+            self.fields["organizace"].initial = init_organizace
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
@@ -142,7 +152,8 @@ class CreateAkceForm(forms.ModelForm):
                 Div(Div(Div("hlavni_vedouci", css_class="col-sm-10"),
                         Div(HTML('<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'),
                             css_class="col-sm-2", style="display: flex; align-items: center;"), css_class="row"),
-                    css_class="col-sm-3"),
+                    css_class="col-sm-4"),
+                Div("organizace", css_class="col-sm-4"),
                 Div("datum_zahajeni", css_class="col-sm-4"),
                 Div("datum_ukonceni", css_class="col-sm-4"),
                 Div("lokalizace_okolnosti", css_class="col-sm-4"),
