@@ -38,9 +38,7 @@ class CreateProjektForm(forms.ModelForm):
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "hlavni_katastr": autocomplete.ModelSelect2(
-                url="heslar:katastr-autocomplete"
-            ),
+            "hlavni_katastr": forms.Textarea(attrs={"rows": 1, "cols": 20, 'readonly': 'readonly'}),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
@@ -54,10 +52,12 @@ class CreateProjektForm(forms.ModelForm):
             "parcelni_cislo": _("Parcelní číslo"),
             "oznaceni_stavby": _("Označení stavby"),
         }
+        error_messages = {"hlavni_katastr": {"required": "Je třeba vybrat bod na mapě."}}
 
     def __init__(self, *args, **kwargs):
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
+        self.fields["katastry"].readonly = True
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True
         self.fields["parcelni_cislo"].required = True
