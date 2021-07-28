@@ -1,18 +1,21 @@
-from arch_z.models import Akce, ArcheologickyZaznam
-from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, HTML
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-from dokument.models import Dokument
-from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
-from heslar.views import heslar_12
+
+from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     D_STAV_ARCHIVOVANY,
     D_STAV_ODESLANY,
 )
+from core.forms import TwoLevelSelectField
+from dokument.models import Dokument
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.views import heslar_12
+from projekt.models import Projekt
 from . import validators
+
 
 class CreateArchZForm(forms.ModelForm):
     class Meta:
@@ -41,11 +44,17 @@ class CreateArchZForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        projekt = kwargs.pop("projekt", None)
+        projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["hlavni_katastr"].required = False
         self.fields["katastry"].disabled = True
         self.fields["hlavni_katastr"].disabled = True
+        if projekt:
+            self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
+            self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
+
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
@@ -119,10 +128,8 @@ class CreateAkceForm(forms.ModelForm):
             uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
         else:
             uzamknout_specifikace = False
-        if "init_organizace" in kwargs:
-            init_organizace = kwargs.pop("init_organizace")
-        else:
-            init_organizace = None
+        projekt = kwargs.pop("projekt", None)
+        projekt: Projekt
         super(CreateAkceForm, self).__init__(*args, **kwargs)
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
@@ -142,8 +149,12 @@ class CreateAkceForm(forms.ModelForm):
             required=False,
         )
         self.fields["lokalizace_okolnosti"].required = True
-        if init_organizace:
-            self.fields["organizace"].initial = init_organizace
+        if projekt:
+            self.fields["hlavni_vedouci"].initial = projekt.vedouci_projektu
+            self.fields["organizace"].initial = projekt.organizace
+            self.fields["datum_zahajeni"].initial = projekt.datum_zahajeni
+            self.fields["datum_ukonceni"].initial = projekt.datum_ukonceni
+            self.fields["lokalizace_okolnosti"].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
@@ -152,7 +163,8 @@ class CreateAkceForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(Div(Div("hlavni_vedouci", css_class="col-sm-10"),
-                        Div(HTML('<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'),
+                        Div(HTML(
+                            '<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'),
                             css_class="col-sm-2", style="display: flex; align-items: center;"), css_class="row"),
                     css_class="col-sm-4"),
                 Div("organizace", css_class="col-sm-4"),
