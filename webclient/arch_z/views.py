@@ -392,8 +392,8 @@ def zapsat(request, projekt_ident_cely):
             logger.debug(form_akce.errors)
 
     else:
-        form_az = CreateArchZForm()
-        form_akce = CreateAkceForm()
+        form_az = CreateArchZForm(projekt=projekt)
+        form_akce = CreateAkceForm(uzamknout_specifikace=True, projekt=projekt)
 
     return render(
         request,
