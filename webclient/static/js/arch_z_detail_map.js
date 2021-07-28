@@ -1,5 +1,7 @@
 var global_map_can_edit=false;
 
+var global_map_can_grab_geom_from_map=false;
+
 var blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -20,6 +22,15 @@ var redIcon = new L.Icon({
 
 var greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+    })
+
+var goldIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -344,7 +355,7 @@ function geomToText(){
     drawnItems.eachLayer(function(layer) {
          if (layer instanceof L.Marker) {
             //addLogText('im an instance of L marker');
-            console.log(layer)
+            //console.log(layer)
             let latlngs=layer.getLatLng()
             text="POINT("+latlngs.lng+" "+latlngs.lat+")"
         }
@@ -391,8 +402,62 @@ var addPointToPoiLayerWithForce = (lat, long, text,lai) => {
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
     let myIco={icon: blueIcon};
+
+    function mouseOverGeometry(geom){
+        function getContent(e){
+            let content="";
+            try{
+                content = e.target.getPopup().getContent();
+            }catch(ee){
+                content = e.target.getTooltip().getContent();
+            }
+            return content;
+        }
+
+        geom.on('click', function (e) {
+            if(global_map_can_grab_geom_from_map!==false){
+                $.ajax({
+                    type: "GET",
+                    url:"/pian/list-pians/?q="+getContent(e),
+                    dataType: 'json',
+                    success: function(data){
+                      if(data.results.length>0){
+                      $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
+                      }
+                      global_map_can_grab_geom_from_map=false;
+
+                    },
+                    error: ()=>{
+                        global_map_can_grab_geom_from_map=false;
+                    }
+                  })
+            }
+        })
+
+        geom.on('mouseover', function() {
+
+            if (geom instanceof L.Marker){
+                this.options.iconOld=this.options.icon;
+                this.setIcon(goldIcon);
+            } else {
+                this.options.iconOld=this.options.color;
+                this.setStyle({color: 'red'});
+            }
+        });
+
+        geom.on('mouseout', function() {
+            //
+            if (geom instanceof L.Marker){
+            this.setIcon(this.options.iconOld);
+            } else {
+                this.setStyle({color:this.options.iconOld});
+            }
+            delete this.options.iconOld;
+        })
+    }
+
     if (layer===poi_dj){
-        console.log(text+" orange "+st_text)
+        //console.log(text+" orange "+st_text)
         myIco={icon: greenIcon,zIndexOffset:1000};
     } else if(layer==gm_correct){
         myIco={icon: redIcon};
@@ -402,19 +467,21 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
-        L.polygon(coor).addTo(layer);
+        mouseOverGeometry(L.polygon(coor).bindTooltip(text).addTo(layer));
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
-        L.polyline(coor).addTo(layer);
+        mouseOverGeometry(L.polyline(coor).bindTooltip(text).addTo(layer));
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
         coor.push([i.split(" ")[1],i.split(" ")[0]])
-        //L.marker([i.split(" ")[1], i.split(" ")[0]], myIco).bindPopup(text).addTo(layer);
+        if(layer===poi_other){
+            mouseOverGeometry(L.marker([i.split(" ")[1], i.split(" ")[0]], myIco).bindTooltip(text).addTo(layer));
+        }
 
     }
-    if(overview && coor.length>0){
+    if(overview && coor.length>0 && layer!==poi_other){
         x0=0.0;
         x1=0.0
         c0=0

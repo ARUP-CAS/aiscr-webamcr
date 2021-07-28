@@ -327,6 +327,12 @@
                       {% trans 'Přidat nový pian' %}
                     </a>
                   {% endif %}
+                  {% if j.show_add_pian %}
+                    <a class="dropdown-item" href="#"
+                       onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
+                      {% trans 'Připojit pian z mapy' %}
+                    </a>
+                  {% endif %}
                   {% if j.show_approve_pian %}
                     <a class="dropdown-item" href="{% url 'pian:potvrdit' j.ident_cely %}">
                       {% trans 'Potvrdit pian' %}
@@ -672,6 +678,10 @@
           if (form_id === "create_pian_form") {
               map_show_edit(true, false)
           }
+      }
+
+      function show_grap_geom_from_map(dj){
+        global_map_can_grab_geom_from_map=dj;
       }
 
       document.addEventListener('DOMContentLoaded', function (event) {
