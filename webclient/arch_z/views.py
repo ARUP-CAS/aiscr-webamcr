@@ -121,7 +121,7 @@ def detail(request, ident_cely):
         )
     )
 
-    dj_form_create = CreateDJForm()
+    dj_form_create = CreateDJForm(jednotky=jednotky)
     pian_form_create = PianCreateForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     adb_form_create = CreateADBForm()
@@ -155,7 +155,7 @@ def detail(request, ident_cely):
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
+            "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely, jednotky=jednotky),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
             "show_add_pian": show_add_pian,

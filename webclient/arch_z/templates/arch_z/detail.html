@@ -149,6 +149,18 @@
           </div>
           <div class="col-sm-4">
             <div class="form-group">
+              <label>{% trans "Organizace" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Specifikace data" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
               <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
                      readonly>
@@ -172,6 +184,13 @@
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu }}"
+                        readonly></textarea>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label>{% trans "Uložení dokumentace" %}</label>
+              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_dokumentace }}"
                         readonly></textarea>
             </div>
           </div>
@@ -548,6 +567,7 @@
             <th>{% trans "Identifikátor" %}</th>
             <th>{% trans "Stav" %}</th>
             <th>{% trans "Typ dokumentu" %}</th>
+            <th>{% trans "Popis" %}</th>
             <th>{% trans "Počet souborů" %}</th>
             <th>{% trans "Odpojit dokument" %}</th>
           </tr>
@@ -565,6 +585,7 @@
                 <div class="badge">{{ d.get_stav_display }}</div>
               </td>
               <td>{{ d.typ_dokumentu }}</td>
+              <td>{{ d.popis }}</td>
               <td>{{ d.soubory.soubory.all|length }}</td>
               <td>
                 <a href="{% url 'arch_z:odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
