@@ -357,7 +357,7 @@ def prihlasit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PrihlaseniProjektForm(instance=projekt)
+        form = PrihlaseniProjektForm(instance=projekt, initial={"organizace": request.user.organizace})
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
 

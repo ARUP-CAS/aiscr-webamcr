@@ -331,8 +331,6 @@ class PrihlaseniProjektForm(forms.ModelForm):
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
         self.fields["kulturni_pamatka"].required = True
-        self.fields["kulturni_pamatka_cislo"].required = True
-        self.fields["kulturni_pamatka_popis"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
