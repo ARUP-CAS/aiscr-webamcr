@@ -66,9 +66,11 @@ class CreateAkceForm(forms.ModelForm):
     datum_ukonceni = forms.DateField(validators=[validators.datum_max_1_mesic_v_budoucnosti])
 
     def clean(self):
-        if self.cleaned_data['datum_zahajeni'] > self.cleaned_data['datum_ukonceni']:
-            raise forms.ValidationError('Datum zahájení nemůže být po datu ukončení')
-        return super().clean()
+        cleaned_data = super().clean()
+        if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
+            if cleaned_data.get('datum_zahajeni') > cleaned_data.get('datum_ukonceni'):
+                raise forms.ValidationError('Datum zahájení nemůže být po datu ukončení')
+        return self.cleaned_data
 
     class Meta:
         model = Akce
