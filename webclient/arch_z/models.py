@@ -177,6 +177,9 @@ class Akce(models.Model):
         related_name="akce",
     )
     odlozena_nz = models.BooleanField(default=False)
+    organizace = models.ForeignKey(
+        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+    )
 
     class Meta:
         db_table = "akce"
