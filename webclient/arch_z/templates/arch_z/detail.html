@@ -405,8 +405,10 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <form method="POST" action="{% url 'adb:detail' j.ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
+                  <form method="POST" action="{% url 'adb:detail' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
                     {% crispy j.adb_form %}
+                    <h5>{% trans "Výškové body" %}</h5>
+                    {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
                     <button type="submit" id="editAdbSubmitButton"
                             class="btn btn-primary">{% trans "Upravit ADB" %}</button>
                   </form>
@@ -444,6 +446,8 @@
           <form method="POST" action="#" id="create_adb_form_id" onsubmit="createAdbSubmitButton.disabled = true; return true;">
             <!-- Action is filled using javascript -->
             {% crispy adb_form_create %}
+            <h5>{% trans "Výškové body" %}</h5>
+            {% crispy vyskovy_bod_formset vyskovy_bod_formset_helper %}
             <button type="submit" id="createAdbSubmitButton"
                     class="btn btn-primary">{% trans "Vytvořit ADB" %}</button>
           </form>

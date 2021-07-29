@@ -1,9 +1,10 @@
-from adb.models import Adb
+from adb.models import Adb, VyskovyBod
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
+from django.contrib.gis.forms import PointField
 
 
 class CreateADBForm(forms.ModelForm):
@@ -81,3 +82,38 @@ class CreateADBForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+
+
+class VyskovyBodFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.template = "bootstrap4/table_inline_formset.html"
+        self.form_tag = False
+
+
+
+def create_vyskovy_bod_form():
+    class CreateVyskovyBodForm(forms.ModelForm):
+        x_jstk = forms.FloatField()
+        y_jstk = forms.FloatField()
+
+        class Meta:
+            model = VyskovyBod
+
+            fields = ("ident_cely", "typ", "niveleta", "x_jstk", "y_jstk")
+
+            # labels = {
+            #     "pocet": _("Počet"),
+            #     "poznamka": _("Poznámka"),
+            # }
+            #
+            widgets = {
+                "ident_cely": forms.Textarea(attrs={"rows": 1, "10": 40}),
+            }
+
+        def __init__(self, *args, **kwargs):
+            super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
+
+
+    return CreateVyskovyBodForm
+
