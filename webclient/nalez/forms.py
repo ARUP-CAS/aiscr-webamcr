@@ -46,6 +46,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices):
                     attrs={"class": "selectpicker", "data-live-search": "true"},
                 ),
             )
+            self.fields["specifikace"].required = False
 
     return CreateNalezObjektForm
 
@@ -84,5 +85,6 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices)
                 "class": "selectpicker",
                 "data-live-search": "true",
             }
+            self.fields["specifikace"].required = True
 
     return CreateNalezPredmetForm
