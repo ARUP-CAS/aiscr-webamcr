@@ -511,7 +511,7 @@
                 <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
                   {% crispy k.form_nalezy_predmety k.helper %}
                   <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+                          class="btn btn-primary">{% trans "Upravit předměty" %}</button>
                 </form>
               </div>
             </div>
