@@ -131,7 +131,7 @@ class EditProjektForm(forms.ModelForm):
             "datum_ukonceni",
             "uzivatelske_oznaceni",
             "katastry",
-            # "termin_odevzdani",
+            "termin_odevzdani_nz",
         )
         widgets = {
             "typ_projektu": forms.Select(
@@ -158,6 +158,7 @@ class EditProjektForm(forms.ModelForm):
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "termin_odevzdani_nz": forms.DateInput(attrs={"data-provide": "datepicker"}),
         }
         labels = {
             "typ_projektu": _("Typ projektu"),
@@ -175,7 +176,7 @@ class EditProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("Uživatelské označení"),
             "datum_zahajeni": _("Datum zahájení výzkumu"),
             "datum_ukonceni": _("Datum ukončení výzkumu"),
-            # "termin_odevzdani": _("Termín odevzdání"),
+            "termin_odevzdani_nz": _("Termín odevzdání"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -239,7 +240,7 @@ class EditProjektForm(forms.ModelForm):
                         ),
                         Div("datum_zahajeni", css_class="col-sm-4"),
                         Div("datum_ukonceni", css_class="col-sm-4"),
-                        # Div("termin_odevzdani", css_class="col-sm-4"),
+                        Div("termin_odevzdani_nz", css_class="col-sm-4"),
                         css_class="row",
                     ),
                     css_class="card-body",
