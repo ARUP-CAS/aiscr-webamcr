@@ -5,7 +5,20 @@
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
-{% endblock %}
+
+<!-- Map imports -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+  integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+  crossorigin="">
+</script>
+<!--Leaflet FullScreen-->
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
+ rel='stylesheet'/>
+ {% endblock %}
 
 {% block content %}
   <div class="app-entity-samostatny_nalez">
@@ -20,6 +33,10 @@
         <div class="card-body">
           {% crispy form %}
         </div>
+        <div class="col-sm-12">
+          <small id="hint_id_map"class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
+          {% include "map.html" %}
+        </div>
       </div>
       <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
     </form>
@@ -32,4 +49,5 @@
           document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový samostatný nález"
       })
   </script>
+  <script src="{% static 'map.js' %}"></script>
 {% endblock %}

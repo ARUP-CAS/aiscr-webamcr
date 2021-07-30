@@ -4,7 +4,8 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
 from django.contrib.auth.models import Group
-from django.contrib.gis.forms import OSMWidget, ValidationError
+from django.contrib.gis.forms import ValidationError
+from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_OBDOBI,
@@ -74,6 +75,9 @@ class PotvrditNalezForm(forms.ModelForm):
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
+    latitude = forms.FloatField(required=False, widget=HiddenInput())
+    longitude = forms.FloatField(required=False, widget=HiddenInput())
+
     class Meta:
         model = SamostatnyNalez
         fields = (
@@ -83,7 +87,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "lokalizace",
             "okolnosti",
             "hloubka",
-            "geom",
             "obdobi",
             "druh_nalezu",
             "pocet",
@@ -101,9 +104,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "specifikace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "geom": OSMWidget(
-                attrs={"default_lat": 50.05, "default_lon": 14.05, "default_zoom": 6}
-            ),
         }
         labels = {
             "nalezce": _("Nálezce"),
@@ -111,7 +111,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "lokalizace": _("Lokalizace"),
             "okolnosti": _("Nálezové okolnosti"),
             "hloubka": _("Hloubka (cm)"),
-            "geom": _("Poloha"),
             "obdobi": _("Období"),
             "druh_nalezu": _("Nález"),
             "pocet": _("Počet"),
@@ -130,8 +129,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.fields["datum_nalezu"].required = True
         self.fields["okolnosti"].required = True
         self.fields["specifikace"].required = True
-        self.fields["geom"].required = True
-        self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
         self.fields["projekt"] = forms.ModelChoiceField(
             queryset=Projekt.objects.filter(
                 typ_projektu=TYP_PROJEKTU_PRUZKUM_ID
@@ -163,7 +160,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 Div("lokalizace", css_class="col-sm-12"),
                 Div("okolnosti", css_class="col-sm-6"),
                 Div("hloubka", css_class="col-sm-6"),
-                Div("geom", css_class="col-sm-12"),
+                Div("latitude", css_class="hidden"),
+                Div("longitude", css_class="hidden"),
                 Div("obdobi", css_class="col-sm-4"),
                 Div("druh_nalezu", css_class="col-sm-4"),
                 Div("pocet", css_class="col-sm-4"),

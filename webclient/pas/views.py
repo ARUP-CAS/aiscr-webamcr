@@ -16,6 +16,7 @@ from core.constants import (
 from core.forms import VratitForm
 from core.ident_cely import get_sn_ident
 from core.message_constants import (
+    FORM_NOT_VALID,
     SAMOSTATNY_NALEZ_ARCHIVOVAN,
     SAMOSTATNY_NALEZ_ODESLAN,
     SAMOSTATNY_NALEZ_POTVRZEN,
@@ -35,6 +36,7 @@ from core.utils import get_cadastre_from_point
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
@@ -64,25 +66,28 @@ def index(request):
 @require_http_methods(["GET", "POST"])
 def create(request):
     if request.method == "POST":
-        form = CreateSamostatnyNalezForm(request.POST)
+        form = CreateSamostatnyNalezForm(request.POST, user=request.user)
         if form.is_valid():
-            logger.debug("Forms are valid")
-            sn = form.save(commit=False)
-            sn.ident_cely = get_sn_ident(sn.projekt)
-            sn.stav = SN_ZAPSANY
-            sn.katastr = get_cadastre_from_point(sn.geom)
-            sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-            sn.save()
-            sn.set_zapsany(request.user)
-            form.save_m2m()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-            return redirect("pas:detail", ident_cely=sn.ident_cely)
+            latitude = form.cleaned_data["latitude"]
+            longitude = form.cleaned_data["longitude"]
+            if latitude and longitude:
+                sn = form.save(commit=False)
+                sn.ident_cely = get_sn_ident(sn.projekt)
+                sn.stav = SN_ZAPSANY
+                sn.geom = Point(longitude, latitude)
+                sn.katastr = get_cadastre_from_point(sn.geom)
+                sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+                sn.save()
+                sn.set_zapsany(request.user)
+                form.save_m2m()
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect("pas:detail", ident_cely=sn.ident_cely)
+            else:
+                messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
 
         else:
-            logger.warning("Form is not valid")
             logger.debug(form.errors)
-            if "geom" in form.errors:
-                messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
+            messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
         form = CreateSamostatnyNalezForm(user=request.user)
     return render(
