@@ -176,7 +176,8 @@ def detail(request, ident_cely):
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
             dj_form_detail["show_remove_adb"] = True
-            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset
+            dj_form_detail["vyskovy_bod_formset"] = \
+                vyskovy_bod_formset(instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb")
             dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
         dj_forms_detail.append(dj_form_detail)
         if jednotka.pian:
@@ -213,8 +214,6 @@ def detail(request, ident_cely):
     context["pian_form_create"] = pian_form_create
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
-    context["vyskovy_bod_formset"] = vyskovy_bod_formset
-    context["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
     context["komponenta_form_create"] = komponenta_form_create
     context["komponenta_forms_detail"] = komponenta_forms_detail
     context["pian_forms_detail"] = pian_forms_detail

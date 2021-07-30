@@ -94,13 +94,10 @@ class VyskovyBodFormSetHelper(FormHelper):
 
 def create_vyskovy_bod_form():
     class CreateVyskovyBodForm(forms.ModelForm):
-        x_jstk = forms.FloatField()
-        y_jstk = forms.FloatField()
-
         class Meta:
             model = VyskovyBod
 
-            fields = ("ident_cely", "typ", "niveleta", "x_jstk", "y_jstk")
+            fields = ("ident_cely", "typ", "niveleta", "northing", "easting", "poradi")
 
             # labels = {
             #     "pocet": _("Počet"),

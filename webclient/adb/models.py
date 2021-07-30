@@ -82,6 +82,9 @@ class VyskovyBod(models.Model):
     )
     niveleta = models.FloatField()
     geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
+    northing  = models.FloatField()
+    easting = models.FloatField()
+    poradi = models.IntegerField()
 
     class Meta:
         db_table = "vyskovy_bod"
