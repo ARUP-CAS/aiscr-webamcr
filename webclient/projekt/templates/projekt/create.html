@@ -18,6 +18,10 @@
 		crossorigin="">
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+   <!--Mark Cluster-->
+   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
+   <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
+   <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
 
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
 	<!-- Date picker imports -->
@@ -62,12 +66,12 @@
   <script src="{% static 'dz.js' %}"></script>
   <script>
       global_map_can_edit = true;
-      if (document.getElementById("id_latitude").value > 1) {
+     /* if (document.getElementById("id_latitude").value > 1) {
           console.log("Adding point to map.")
           addPointOnLoad(document.getElementById("id_latitude").value, document.getElementById("id_longitude").value, "Uživatelem zadaná poloha záměru");
       } else {
           console.log("Not adding point to map!")
-      }
+      }*/
   </script>
   <script>
       $(document).ready(function () {

@@ -16,7 +16,7 @@ var baseLayers = {
         "Stínovaný reliéf 5G": cuzkEL,
     };
 
-var poi_other = L.layerGroup();
+var poi_other = L.markerClusterGroup() //layerGroup();
 
 var overlays ={
     "Katastrální mapa":  L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom: 20.99, minZoom: 17, opacity: 0.5 }),
@@ -66,13 +66,15 @@ button_map_lock.addTo(map)
 
 L.easyButton( 'bi bi-skip-backward-fill', function(){
     poi_correct.clearLayers();
-    let ll=poi_sugest.getLayers()[0]._latlng;
-    map.setView(ll, 18);
-    try{
-        document.getElementById('id_latitude').value = ll.lat;
-        document.getElementById('id_longitude').value = ll.lng;
-    }catch(e){
-        console.log("Error: Element id_latitude/latitude doesn exists")
+    if (poi_sugest.getLayers().length){
+        let ll=poi_sugest.getLayers()[0]._latlng;
+        map.setView(ll, 18);
+        try{
+            document.getElementById('id_latitude').value = ll.lat;
+            document.getElementById('id_longitude').value = ll.lng;
+        }catch(e){
+            console.log("Error: Element id_latitude/latitude doesn exists")
+        }
     }
 }).addTo(map)
 
@@ -116,12 +118,12 @@ var getOtherPoi= ()=>{
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken );
     }
-    xhr.onload = function () {
+    xhr.onload = function () { 
         // do something to response
         poi_other.clearLayers();
-        console.log(poi_sugest.getLayers()[0]._latlng)
+        //console.log(poi_sugest.getLayers()[0]._latlng)
         JSON.parse(this.responseText).points.forEach((point) => {
-            if(poi_sugest.getLayers()[0]._latlng.lat!=point.lat && poi_sugest.getLayers()[0]._latlng.lng !=point.lng)
+            if(poi_sugest.getLayers().length>0 && poi_sugest.getLayers()[0]._latlng.lat!=point.lat && poi_sugest.getLayers()[0]._latlng.lng !=point.lng)
             L.marker([point.lat,point.lng]).bindPopup(point.ident_cely).addTo(poi_other)
         })
     };
