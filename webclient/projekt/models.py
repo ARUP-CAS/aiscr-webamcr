@@ -51,7 +51,7 @@ class Projekt(models.Model):
         (PROJEKT_STAV_UKONCENY_V_TERENU, "Ukončen v terénu"),
         (PROJEKT_STAV_UZAVRENY, "Uzavřen"),
         (PROJEKT_STAV_ARCHIVOVANY, "Archivován"),
-        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "Nevržen ke zrušení"),
+        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "Navržen ke zrušení"),
         (PROJEKT_STAV_ZRUSENY, "Zrušen"),
     )
 
