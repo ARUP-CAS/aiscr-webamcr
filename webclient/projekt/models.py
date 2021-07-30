@@ -171,7 +171,6 @@ class Projekt(models.Model):
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
-        self.organizace = user.organizace
         Historie(
             typ_zmeny=PRIHLASENI_PROJ,
             uzivatel=user,
