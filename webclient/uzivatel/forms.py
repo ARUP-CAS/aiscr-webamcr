@@ -27,14 +27,14 @@ class AuthUserCreationForm(RegistrationForm):
             "email": _("Email"),
             "organizace": _("Organizace"),
             "password1": _("Heslo"),
-            "telefon": _("Telefon")
+            "telefon": _("Telefon"),
         }
 
         widgets = {
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "telefon": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "telefon": forms.TextInput,
         }
 
     def __init__(self, *args, **kwargs):
