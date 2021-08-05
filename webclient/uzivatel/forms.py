@@ -55,28 +55,28 @@ class OsobaForm(forms.ModelForm):
         fields = (
             "jmeno",
             "prijmeni",
-            "rok_narozeni",
-            "rok_umrti",
-            "rodne_prijmeni",
+            # "rok_narozeni",
+            # "rok_umrti",
+            # "rodne_prijmeni",
         )
         widgets = {
             "jmeno": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
             "jmeno": _("Jméno"),
             "prijmeni": _("Příjmení"),
-            "rok_narozeni": _("Rok narození"),
-            "rok_umrti": _("Rok úmrtí"),
-            "rodne_prijmeni": _("Rodné příjmení"),
+            # "rok_narozeni": _("Rok narození"),
+            # "rok_umrti": _("Rok úmrtí"),
+            # "rodne_prijmeni": _("Rodné příjmení"),
         }
         help_texts = {
             "jmeno": _("Lorem ipsum."),
             "prijmeni": _("Lorem ipsum."),
-            "rok_narozeni": _("Lorem ipsum."),
-            "rok_umrti": _("Lorem ipsum."),
-            "rodne_prijmeni": _("Lorem ipsum."),
+            # "rok_narozeni": _("Lorem ipsum."),
+            # "rok_umrti": _("Lorem ipsum."),
+            # "rodne_prijmeni": _("Lorem ipsum."),
         }
 
     def __init__(self, *args, **kwargs):
@@ -95,9 +95,9 @@ class OsobaForm(forms.ModelForm):
                     Div(
                         Div("jmeno", css_class="col-sm-6"),
                         Div("prijmeni", css_class="col-sm-6"),
-                        Div("rok_narozeni", css_class="col-sm-6"),
-                        Div("rok_umrti", css_class="col-sm-6"),
-                        Div("rodne_prijmeni", css_class="col-sm-12"),
+                        # Div("rok_narozeni", css_class="col-sm-6"),
+                        # Div("rok_umrti", css_class="col-sm-6"),
+                        # Div("rodne_prijmeni", css_class="col-sm-12"),
                         css_class="row",
                     ),
                     css_class="card-body",

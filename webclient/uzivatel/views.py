@@ -35,6 +35,8 @@ def create_osoba(request):
     if request.method == "POST":
         form = OsobaForm(request.POST)
         next_url = request.POST.get("next", "/")
+        if not next_url:
+            next_url = "/"
         if form.is_valid():
             try:
                 osoba = form.save(commit=False)

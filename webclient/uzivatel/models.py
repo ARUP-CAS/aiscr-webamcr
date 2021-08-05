@@ -143,6 +143,9 @@ class Osoba(models.Model):
     class Meta:
         db_table = "osoba"
         ordering = ["vypis_cely"]
+        constraints = [
+            models.UniqueConstraint(fields=['jmeno', 'prijmeni'], name='unique jmeno a prijmeni')
+        ]
 
     def __str__(self):
         return self.vypis_cely
