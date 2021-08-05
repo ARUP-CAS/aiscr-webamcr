@@ -50,7 +50,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -522,7 +522,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
             )
             for key, value in warnings.items():
                 context["warnings"].append((key, value))
-            context["form"] = NavrhnoutZruseniProjektForm(enable_form_submit=False)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         else:
             pass
 
@@ -637,7 +637,6 @@ def get_detail_template_shows(projekt):
         PROJEKT_STAV_OZNAMENY,
     ]
     show_zrusit = projekt.stav in [
-        PROJEKT_STAV_OZNAMENY,
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     ]
     show_znovu_zapsat = projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
