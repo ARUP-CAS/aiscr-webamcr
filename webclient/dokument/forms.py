@@ -254,6 +254,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "popis",
             "poznamka",
             "autori",
+            "rok_vzniku",
         )
         widgets = {
             "typ_dokumentu": forms.Select(
@@ -273,6 +274,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "popis": _("Popis"),
             "poznamka": _("Poznámka"),
             "autori": _("Autoři"),
+            "rok_vzniku": _("Rok vzniku"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):
@@ -286,11 +288,13 @@ class CreateModelDokumentForm(forms.ModelForm):
             .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
             .values_list("id", "heslo")
         ) + [("", "")]
+        self.fields["rok_vzniku"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("typ_dokumentu", css_class="col-sm-6"),
-                Div("organizace", css_class="col-sm-6"),
+                Div("typ_dokumentu", css_class="col-sm-4"),
+                Div("organizace", css_class="col-sm-4"),
+                Div("rok_vzniku", css_class="col-sm-4"),
                 Div("oznaceni_originalu", css_class="col-sm-6"),
                 Div("autori", css_class="col-sm-6"),
                 Div("popis", css_class="col-sm-12"),
@@ -306,7 +310,16 @@ class CreateModelDokumentForm(forms.ModelForm):
 class CreateModelExtraDataForm(forms.ModelForm):
     class Meta:
         model = DokumentExtraData
-        fields = ("format", "datum_vzniku", "duveryhodnost", "geom", "odkaz")
+        fields = (
+            "format",
+            "duveryhodnost",
+            "geom",
+            "odkaz",
+            "zeme",
+            "region",
+            "vyska",
+            "sirka",
+        )
         widgets = {
             "format": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
@@ -314,22 +327,27 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "geom": OSMWidget(
                 attrs={"default_lat": 50.05, "default_lon": 14.05, "default_zoom": 6}
             ),
+            "region": forms.TextInput(),
         }
         labels = {
-            "datum_vzniku": _("Datum vzniku"),
             "format": _("Formát"),
             "duveryhodnost": _("Důvěryhodnost"),
             "geom": _("Lokalizace (Vyberte prosím polohu)"),
             "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
+            "zeme": _("Země"),
+            "region": _("Region"),
+            "vyska": _("Délka"),
+            "sirka": _("Šířka"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
-        self.fields["datum_vzniku"].required = True
         self.fields["geom"].required = True
         self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
         self.fields["format"].required = True
+        self.fields["vyska"].widget.attrs["disabled"] = "disabled"
+        self.fields["sirka"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
             .filter(heslo__startswith="3D")
@@ -338,11 +356,14 @@ class CreateModelExtraDataForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("datum_vzniku", css_class="col-sm-4"),
-                Div("format", css_class="col-sm-4"),
-                Div("duveryhodnost", css_class="col-sm-4"),
+                Div("format", css_class="col-sm-6"),
+                Div("duveryhodnost", css_class="col-sm-6"),
                 Div("odkaz", css_class="col-sm-12"),
                 Div("geom", css_class="col-sm-12"),
+                Div("zeme", css_class="col-sm-3"),
+                Div("region", css_class="col-sm-3"),
+                Div("vyska", css_class="col-sm-3"),
+                Div("sirka", css_class="col-sm-3"),
                 css_class="row",
             ),
         )
