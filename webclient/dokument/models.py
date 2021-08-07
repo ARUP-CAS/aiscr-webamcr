@@ -188,6 +188,13 @@ class Dokument(models.Model):
         ).save()
         self.save()
 
+    def check_pred_odeslanim(self):
+        # At least one soubor must be attached to the dokument
+        result = []
+        if self.soubory.soubory.all().count() == 0:
+            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+        return result
+
     def check_pred_archivaci(self):
         # At least one soubor must be attached to the dokument
         result = []
