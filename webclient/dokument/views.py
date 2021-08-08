@@ -20,6 +20,7 @@ from core.ident_cely import (
 )
 from core.message_constants import (
     DOKUMENT_NELZE_ARCHIVOVAT,
+    DOKUMENT_NELZE_ODESLAT,
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_VRACEN,
@@ -452,14 +453,14 @@ def odeslat(request, ident_cely):
         else:
             return redirect("dokument:detail", ident_cely=ident_cely)
     else:
-        # warnings = d.check_pred_odeslanim()
-        # logger.debug(warnings)
+        warnings = d.check_pred_odeslanim()
+        logger.debug(warnings)
         context = {"object": d}
-        # if warnings:
-        #    context["warnings"] = warnings
-        #    messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
-        # else:
-        #    pass
+        if warnings:
+            context["warnings"] = warnings
+            messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
+        else:
+            pass
     context["title"] = _("Odeslání dokumentu")
     context["header"] = _("Odeslání dokumentu")
     context["button"] = _("Odeslat dokument")
