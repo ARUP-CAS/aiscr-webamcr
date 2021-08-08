@@ -143,13 +143,13 @@ def detail(request, ident_cely):
         ),
         extra=1,
     )
-    vyskovy_bod_formset = inlineformset_factory(
-        Adb,
-        VyskovyBod,
-        form=create_vyskovy_bod_form(),
-        extra=3,
-    )
     for jednotka in jednotky:
+        vyskovy_bod_formset = inlineformset_factory(
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(pian=jednotka.pian),
+            extra=3,
+        )
         has_adb = jednotka.has_adb()
         show_adb_add = (
             jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb

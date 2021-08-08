@@ -92,12 +92,12 @@ class VyskovyBodFormSetHelper(FormHelper):
 
 
 
-def create_vyskovy_bod_form():
+def create_vyskovy_bod_form(pian):
     class CreateVyskovyBodForm(forms.ModelForm):
         class Meta:
             model = VyskovyBod
 
-            fields = ("ident_cely", "typ", "niveleta", "northing", "easting", "poradi")
+            fields = ("ident_cely", "typ", "niveleta", "northing", "easting")
 
             # labels = {
             #     "pocet": _("Počet"),
@@ -110,6 +110,8 @@ def create_vyskovy_bod_form():
 
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
+            self.fields["northing"].initial = pian.geom.centroid.x
+            self.fields["easting"].initial = pian.geom.centroid.y
 
 
     return CreateVyskovyBodForm
