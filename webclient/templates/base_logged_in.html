@@ -37,7 +37,7 @@
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Uzavřít projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}">{% trans "Vybrat projekty" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "Naše projekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&organizace={{ user.organizace.id }}">{% trans "Archivovat projekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "Archivovat projekty" %}</a></li>
             </ul>
           </div>
         </div>
