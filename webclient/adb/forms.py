@@ -91,8 +91,7 @@ class VyskovyBodFormSetHelper(FormHelper):
         self.form_tag = False
 
 
-
-def create_vyskovy_bod_form(pian):
+def create_vyskovy_bod_form(pian=None):
     class CreateVyskovyBodForm(forms.ModelForm):
         class Meta:
             model = VyskovyBod
@@ -110,8 +109,13 @@ def create_vyskovy_bod_form(pian):
 
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
-            self.fields["northing"].initial = pian.geom.centroid.x
-            self.fields["easting"].initial = pian.geom.centroid.y
+            self.fields["ident_cely"].disabled = True
+            self.fields["ident_cely"].required = False
+            self.fields["northing"].label = "X"
+            self.fields["easting"].label = "Y"
+            if pian:
+                self.fields["northing"].initial = pian.geom.centroid.x
+                self.fields["easting"].initial = pian.geom.centroid.y
 
 
     return CreateVyskovyBodForm

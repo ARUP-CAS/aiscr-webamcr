@@ -144,6 +144,7 @@ def detail(request, ident_cely):
         extra=1,
     )
     for jednotka in jednotky:
+        jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
             VyskovyBod,

@@ -114,7 +114,7 @@ def create(request, dj_ident_cely):
     form = PianCreateForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
-        pian = form.save(commit=False)
+        pian: Pian = form.save(commit=False)
         # Assign base map references
         if type(pian.geom) == Point:
             pian.typ = Heslar.objects.get(id=GEOMETRY_BOD)
@@ -153,6 +153,7 @@ def create(request, dj_ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
+        redirect("dj:detail", ident_cely=dj_ident_cely)
     else:
         logger.warning("Form is not valid")
         logger.warning(form.errors)

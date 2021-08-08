@@ -261,7 +261,7 @@
                             data-placement="top" title="{% trans 'DJ nemá pian' %}">location_disabled</span>
                     {% endif %}
                     <a href="#" class="flex-fill app-entity-color"
-                       onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
+                       onclick="show_form('detail_dj_form_{{ j.ident_cely }}');get_create_pain_form_action('{{ j.ident_cely }}');">
                       <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                       {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
                     </a>
@@ -273,7 +273,6 @@
                           <div class="d-flex align-items-baseline">
                             <a href="#" class="flex-fill mr-2 app-entity-color"
                                onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
-                              {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
                             <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
@@ -610,6 +609,11 @@
 {% block script %}
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
+      function get_create_pain_form_action(selected_dj_ident) {
+          const url = "/pian/create/1";
+          url.replace("1", selected_dj_ident);
+          document.getElementById("create_pian_form_id").action = url;
+      }
 
       let shown_form_id = "";
       let ask_only_once=true;
