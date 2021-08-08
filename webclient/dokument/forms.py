@@ -126,6 +126,9 @@ class EditDokumentForm(forms.ModelForm):
             "jazyky",
             "posudky",
             "osoby",
+            "rada",
+            "autori",
+            "let",
         )
         widgets = {
             "typ_dokumentu": forms.Select(
@@ -152,6 +155,9 @@ class EditDokumentForm(forms.ModelForm):
             "osoby": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "autori": forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
         labels = {
             "organizace": _("Organizace"),
@@ -165,6 +171,9 @@ class EditDokumentForm(forms.ModelForm):
             "pristupnost": _("Přístupnost"),
             "datum_zverejneni": _("Datum zveřejnění"),
             "licence": _("Licence"),
+            "rada": _("Řada"),
+            "autori": _("Autoři"),
+            "let": _("Let"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -189,6 +198,7 @@ class EditDokumentForm(forms.ModelForm):
             .values_list("id", "heslo")
         ) + [("", "")]
         self.fields["osoby"].required = False
+        self.fields["rada"].widget.attrs["disabled"] = "disabled"
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -206,6 +216,9 @@ class EditDokumentForm(forms.ModelForm):
                 Div("jazyky", css_class="col-sm-4"),
                 Div("posudky", css_class="col-sm-4"),
                 Div("osoby", css_class="col-sm-4"),
+                Div("autori", css_class="col-sm-4"),
+                Div("rada", css_class="col-sm-4"),
+                Div("let", css_class="col-sm-4"),
                 css_class="row",
             ),
         )

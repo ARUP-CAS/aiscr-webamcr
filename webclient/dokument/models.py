@@ -32,6 +32,9 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_UDALOST_TYP,
     HESLAR_ZEME,
+    HESLAR_DOHLEDNOST,
+    HESLAR_LETISTE,
+    HESLAR_POCASI,
 )
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
@@ -49,7 +52,9 @@ class Dokument(models.Model):
         (D_STAV_ARCHIVOVANY, "Archivován"),
     )
 
-    # let = models.ForeignKey('Let', models.DO_NOTHING, db_column='let', blank=True, null=True)
+    let = models.ForeignKey(
+        "Let", models.DO_NOTHING, db_column="let", blank=True, null=True
+    )
     rada = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -425,3 +430,54 @@ class DokumentSekvence(models.Model):
 
     class Meta:
         db_table = "dokument_sekvence"
+
+
+class Let(models.Model):
+    uzivatelske_oznaceni = models.TextField(blank=True, null=True)
+    datum = models.DateTimeField(blank=True, null=True)
+    pilot = models.TextField(blank=True, null=True)
+    pozorovatel = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="pozorovatel")
+    ucel_letu = models.TextField(blank=True, null=True)
+    typ_letounu = models.TextField(blank=True, null=True)
+    letiste_start = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="letiste_start",
+        related_name="let_start",
+        limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
+    )
+    letiste_cil = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="letiste_cil",
+        related_name="let_cil",
+        limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
+    )
+    hodina_zacatek = models.TextField(blank=True, null=True)
+    hodina_konec = models.TextField(blank=True, null=True)
+    pocasi = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="pocasi",
+        related_name="let_pocasi",
+        limit_choices_to={"nazev_heslare": HESLAR_POCASI},
+    )
+    dohlednost = models.ForeignKey(
+        Heslar,
+        models.DO_NOTHING,
+        db_column="dohlednost",
+        related_name="let_dohlednost",
+        limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST},
+    )
+    fotoaparat = models.TextField(blank=True, null=True)
+    organizace = models.ForeignKey(
+        Organizace, models.DO_NOTHING, db_column="organizace"
+    )
+    ident_cely = models.TextField(unique=True)
+
+    class Meta:
+        db_table = "let"
+        ordering = ["ident_cely"]
+
+    def __str__(self):
+        return self.ident_cely
