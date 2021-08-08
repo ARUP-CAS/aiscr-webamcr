@@ -177,7 +177,7 @@ def post_upload(request):
                 parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
             return JsonResponse(
                 {
-                    "error": "Soubor se stejným jménem na servru již existuje a je připojen k záznamu "
+                    "error": "Soubor se stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
                     + parent_ident
                 },
                 status=500,
