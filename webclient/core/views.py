@@ -40,6 +40,7 @@ def index(request):
 def delete_file(request, pk):
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
+        s.path.delete()
         items_deleted = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
@@ -164,9 +165,10 @@ def post_upload(request):
         if not duplikat.exists():
             logger.debug("Saving file object: " + str(s))
             s.save()
-            return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
+            return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
         else:
-            logger.warning("File already exists on the server.")
+            logger.warning("File already exists on the server. Saving copy" + str(s))
+            s.save()
             # Find parent record and send it to the user
             parent_ident = ""
             if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
@@ -177,10 +179,11 @@ def post_upload(request):
                 parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
             return JsonResponse(
                 {
-                    "error": "Soubor se stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                    "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
                     + parent_ident
+                    + ". Skontrolujte prosím duplicitu."
                 },
-                status=500,
+                status=200,
             )
     else:
         logger.warning("No file attached to the announcement form.")
