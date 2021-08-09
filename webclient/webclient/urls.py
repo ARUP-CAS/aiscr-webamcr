@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
-from uzivatel.views import UserRegistrationView
+from uzivatel.views import UserRegistrationView, UserLoginView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -40,6 +40,11 @@ urlpatterns = [
         name="django_registration_register",
     ),
     path("accounts/", include("django_registration.backends.activation.urls")),
+    path(
+        "accounts/login/",
+        UserLoginView.as_view(),
+        name="django_authentication_login",
+    ),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
 

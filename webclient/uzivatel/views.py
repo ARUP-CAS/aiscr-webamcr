@@ -14,7 +14,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django_registration.backends.activation.views import RegistrationView
-from uzivatel.forms import AuthUserCreationForm, OsobaForm
+from django.contrib.auth.views import LoginView
+from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm
 from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
@@ -68,3 +69,7 @@ def create_osoba(request):
 class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
+
+
+class UserLoginView(LoginView):
+    authentication_form = AuthUserLoginForm
