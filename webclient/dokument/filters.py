@@ -221,7 +221,7 @@ class DokumentFilter(filters.FilterSet):
 
     class Meta:
         model = Dokument
-        filter_fields = []
+        exclude = []
 
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)
