@@ -149,7 +149,7 @@ def detail(request, ident_cely):
             Adb,
             VyskovyBod,
             form=create_vyskovy_bod_form(pian=jednotka.pian),
-            extra=3,
+            extra=1,
         )
         has_adb = jednotka.has_adb()
         show_adb_add = (
