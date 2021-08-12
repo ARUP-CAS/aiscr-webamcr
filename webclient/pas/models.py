@@ -109,7 +109,7 @@ class SamostatnyNalez(models.Model):
     )
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
-    predano = models.BooleanField(blank=True, null=True)
+    predano = models.BooleanField(blank=True, null=True,default=False)
     predano_organizace = models.ForeignKey(
         Organizace,
         models.DO_NOTHING,
