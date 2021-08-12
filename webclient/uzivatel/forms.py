@@ -1,9 +1,10 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout
 from django import forms
-from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.forms import AuthenticationForm, UserChangeForm
 from django.utils.translation import gettext_lazy as _
 from django_registration.forms import RegistrationForm
+from django.core.exceptions import ValidationError
 
 from .models import Osoba, User
 
@@ -47,6 +48,14 @@ class AuthUserChangeForm(UserChangeForm):
     class Meta:
         model = User
         fields = ("email", "organizace", "jazyk", "ident_cely", "telefon")
+
+
+class AuthUserLoginForm(AuthenticationForm):
+    def get_invalid_login_error(self):
+        return ValidationError(
+            _("Nesprávne zadaný email nebo heslo."),
+            code="invalid_login",
+        )
 
 
 class OsobaForm(forms.ModelForm):
