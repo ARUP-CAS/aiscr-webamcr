@@ -41,3 +41,11 @@ class SamostatnyNalezHistorieListView(HistorieListView):
         return self.model.objects.filter(
             vazba__sn_historie__ident_cely=sn_ident
         ).order_by("-datum_zmeny")
+
+
+class SpolupraceHistorieListView(HistorieListView):
+    def get_queryset(self):
+        spoluprace_ident = self.kwargs["pk"]
+        return self.model.objects.filter(
+            vazba__spoluprace_historie__pk=spoluprace_ident
+        ).order_by("-datum_zmeny")
