@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block content %}
-  <div class="app-entity-dokument">
+  <div class="app-entity-knihovna_3d">
     {% include "toolbar_dokument.html" with d=dokument  showcontrols=True %}
 
     {% include "state_component_document.html" with dokument=dokument %}
@@ -69,7 +69,7 @@
         </div>
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+            <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'Nahrát soubory' %}">
               <span class="material-icons">publish</span>
