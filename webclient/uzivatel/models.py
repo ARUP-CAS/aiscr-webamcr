@@ -93,6 +93,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             fail_silently=False,
         )
 
+    def name_and_id(self):
+        return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
+
     class Meta:
         db_table = "auth_user"
 
@@ -144,7 +147,9 @@ class Osoba(models.Model):
         db_table = "osoba"
         ordering = ["vypis_cely"]
         constraints = [
-            models.UniqueConstraint(fields=['jmeno', 'prijmeni'], name='unique jmeno a prijmeni')
+            models.UniqueConstraint(
+                fields=["jmeno", "prijmeni"], name="unique jmeno a prijmeni"
+            )
         ]
 
     def __str__(self):

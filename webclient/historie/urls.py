@@ -5,6 +5,7 @@ from .views import (
     DokumentHistorieListView,
     ProjektHistorieListView,
     SamostatnyNalezHistorieListView,
+    SpolupraceHistorieListView,
 )
 
 app_name = "historie"
@@ -16,4 +17,9 @@ urlpatterns = [
         "dokument/<str:ident_cely>", DokumentHistorieListView.as_view(), name="dokument"
     ),
     path("pas/<str:ident_cely>", SamostatnyNalezHistorieListView.as_view(), name="pas"),
+    path(
+        "spoluprace/<str:pk>",
+        SpolupraceHistorieListView.as_view(),
+        name="spoluprace",
+    ),
 ]
