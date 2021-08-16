@@ -193,6 +193,7 @@ form {
     border: 1px solid $gray-400;
     background-color: $gray-100;
     min-height: 180px;
+    display:block !important;
 
     .dz-message {
       @extend .m-0;
