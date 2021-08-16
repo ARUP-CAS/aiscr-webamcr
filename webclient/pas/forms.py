@@ -57,6 +57,7 @@ class PotvrditNalezForm(forms.ModelForm):
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
         self.fields["predano_organizace"].required = True
+        self.fields["predano_organizace"].widget.attrs["disabled"] = "disabled"
         self.fields["predano"].required = True
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)

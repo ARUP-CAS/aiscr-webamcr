@@ -77,6 +77,7 @@ def create(request):
                 sn.geom = Point(longitude, latitude)
                 sn.katastr = get_cadastre_from_point(sn.geom)
                 sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+                sn.predano_organizace = sn.projekt.organizace
                 sn.save()
                 sn.set_zapsany(request.user)
                 form.save_m2m()
