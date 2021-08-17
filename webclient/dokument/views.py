@@ -1,4 +1,5 @@
 import logging
+from dokument.models import DokumentOsoba
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -44,13 +45,18 @@ from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin
 from dokument.filters import DokumentFilter
 from dokument.forms import (
-    CreateDokumentForm,
     CreateModelDokumentForm,
     CreateModelExtraDataForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
 )
-from dokument.models import Dokument, DokumentCast, DokumentExtraData
+from dokument.models import (
+    Dokument,
+    DokumentCast,
+    DokumentExtraData,
+    DokumentAutor,
+    Let,
+)
 from dokument.tables import DokumentTable
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
@@ -104,8 +110,22 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
-
+    if not dokument.has_extra_data():
+        extra_data = DokumentExtraData(dokument=dokument)
+        extra_data.save()
+    else:
+        extra_data = dokument.extra_data
+    form_dokument = EditDokumentForm(instance=dokument, readonly=True)
+    form_dokument_extra = EditDokumentExtraDataForm(
+        rada=dokument.rada,
+        let=(dokument.let.id if dokument.let else ""),
+        dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
+        instance=extra_data,
+        readonly=True,
+    )
     context["dokument"] = dokument
+    context["form_dokument"] = form_dokument
+    context["form_dokument_extra"] = form_dokument_extra
     context["history_dates"] = get_history_dates(dokument.historie)
     context["show"] = get_detail_template_shows(dokument)
 
@@ -223,11 +243,19 @@ def edit(request, ident_cely):
         extra_data = dokument.extra_data
     if request.method == "POST":
         form_d = EditDokumentForm(request.POST, instance=dokument)
-        form_extra = EditDokumentExtraDataForm(request.POST, instance=extra_data)
+        form_extra = EditDokumentExtraDataForm(
+            request.POST,
+            instance=extra_data,
+        )
         if form_d.is_valid() and form_extra.is_valid():
-            form_d.save()
+            instance_d = form_d.save(commit=False)
+            instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
+            if form_extra.cleaned_data["let"]:
+                instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
+            instance_d.save()
+            form_d.save_m2m()
             form_extra.save()
-            if form_d.changed_data or form_extra.changed_data:
+            if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
@@ -236,19 +264,21 @@ def edit(request, ident_cely):
             logger.debug(form_extra.errors)
     else:
         form_d = EditDokumentForm(instance=dokument)
-        form_extra = EditDokumentExtraDataForm(instance=extra_data)
+        form_extra = EditDokumentExtraDataForm(
+            rada=dokument.rada,
+            let=(dokument.let.id if dokument.let else ""),
+            dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
+            instance=extra_data,
+        )
 
     return render(
         request,
-        "dokument/create.html",
+        "dokument/edit.html",
         {
             "formDokument": form_d,
             "formExtraData": form_extra,
             "dokument": dokument,
             "hierarchie": get_hierarchie_dokument_typ(),
-            "title": _("Editace dokumentu"),
-            "header": _("Editace dokumentu"),
-            "button": _("Edituj dokument"),
         },
     )
 
@@ -312,22 +342,19 @@ def edit_model_3D(request, ident_cely):
 def zapsat(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if request.method == "POST":
-        form_d = CreateDokumentForm(request.POST)
-        form_extra = EditDokumentExtraDataForm(request.POST)
-
-        if form_d.is_valid() and form_extra.is_valid():
+        form_d = EditDokumentForm(request.POST)
+        if form_d.is_valid():
             logger.debug("Form is valid")
             dokument = form_d.save(commit=False)
-            identifikator = form_d.cleaned_data["identifikator"]
-            rada = get_dokument_rada(
+            dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
             dokument.ident_cely = get_temp_dokument_ident(
-                rada=rada.zkratka, region=identifikator
+                rada=dokument.rada.zkratka, region=arch_z_ident_cely[0]
             )
-            dokument.rada = rada
             dokument.stav = D_STAV_ZAPSANY
             dokument.save()
+
             dokument.set_zapsany(request.user)
 
             # Vytvorit defaultni cast dokumentu
@@ -338,9 +365,6 @@ def zapsat(request, arch_z_ident_cely):
             ).save()
 
             form_d.save_m2m()
-            extra_data = form_extra.save(commit=False)
-            extra_data.dokument = dokument
-            extra_data.save()
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -348,22 +372,16 @@ def zapsat(request, arch_z_ident_cely):
         else:
             logger.warning("Form is not valid")
             logger.debug(form_d.errors)
-            logger.debug(form_extra.errors)
 
     else:
-        form_d = CreateDokumentForm()
-        form_extra = EditDokumentExtraDataForm()
+        form_d = EditDokumentForm(create=True)
 
     return render(
         request,
         "dokument/create.html",
         {
             "formDokument": form_d,
-            "formExtraData": form_extra,
             "hierarchie": get_hierarchie_dokument_typ(),
-            "title": _("Nový dokument"),
-            "header": _("Nový dokument"),
-            "button": _("Vytvořit dokument"),
         },
     )
 
