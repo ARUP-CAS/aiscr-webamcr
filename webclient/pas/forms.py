@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
-=======
-from logging import warning
-from core.constants import ROLE_ARCHEOLOG_ID
->>>>>>> Pridane tlacidlo zpet na edit stranku, upravene required fields, pri vytvoreni a edit pred odeslanim len projekt a poloha. po odeslani vse jak doted povinne. Pridany check na povinne polia pred odeslanim.
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
