@@ -1,4 +1,4 @@
-from core.constants import ROLE_ARCHEOLOG_ID
+from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -20,13 +20,17 @@ from projekt.models import Projekt
 from uzivatel.models import User
 
 
-def validate_archeolog_email(email):
+def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
-    if not user.exists() or user[0].hlavni_role != Group.objects.get(
-        id=ROLE_ARCHEOLOG_ID
+    if not user.exists():
+        raise ValidationError(
+            _("Uživatel s emailem ") + email + _(" neexistuje."),
+        )
+    if user[0].hlavni_role not in Group.objects.filter(
+        id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
         raise ValidationError(
-            _("Archeolg s emailem ") + email + _(" neexistuje."),
+            _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
         )
 
 
@@ -178,13 +182,13 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
 
 
 class CreateZadostForm(forms.Form):
-    email_archeologa = forms.EmailField(
-        label=_("Archeolog"),
+    email_uzivatele = forms.EmailField(
+        label=_("Uživatel"),
         widget=forms.EmailInput(
-            attrs={"placeholder": _("Zadejte email archeologa pro spolupráci")}
+            attrs={"placeholder": _("Zadejte email uživatele pro spolupráci")}
         ),
         required=True,
-        validators=[validate_archeolog_email],
+        validators=[validate_uzivatel_email],
     )
 
     def __init__(self, *args, **kwargs):

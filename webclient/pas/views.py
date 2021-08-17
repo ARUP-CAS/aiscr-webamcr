@@ -317,13 +317,13 @@ def zadost(request):
     if request.method == "POST":
         form = CreateZadostForm(request.POST)
         if form.is_valid():
-            archeolog_email = form.cleaned_data["email_archeologa"]
-            archeolog = get_object_or_404(User, email=archeolog_email)
+            uzivatel_email = form.cleaned_data["email_uzivatele"]
+            uzivatel = get_object_or_404(User, email=uzivatel_email)
             exists = UzivatelSpoluprace.objects.filter(
-                vedouci=archeolog, spolupracovnik=request.user
+                vedouci=uzivatel, spolupracovnik=request.user
             ).exists()
 
-            if archeolog == request.user:
+            if uzivatel == request.user:
                 logger.debug("Nelze vytvorit spolupraci sam se sebou")
                 messages.add_message(
                     request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
@@ -334,8 +334,8 @@ def zadost(request):
                     request,
                     messages.ERROR,
                     _(
-                        "Spolupráce s archeologem s emailem "
-                        + archeolog_email
+                        "Spolupráce s uživatelem s emailem "
+                        + uzivatel_email
                         + " již existuje."
                     ),
                 )
@@ -343,7 +343,7 @@ def zadost(request):
                 hv = HistorieVazby(typ_vazby=UZIVATEL_SPOLUPRACE_RELATION_TYPE)
                 hv.save()
                 s = UzivatelSpoluprace(
-                    vedouci=archeolog,
+                    vedouci=uzivatel,
                     spolupracovnik=request.user,
                     stav=SPOLUPRACE_NEAKTIVNI,
                     historie=hv,
