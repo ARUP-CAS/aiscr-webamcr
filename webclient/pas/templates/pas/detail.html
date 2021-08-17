@@ -29,6 +29,15 @@
         </div>
       </div>
       <div class="card-body">
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
         <form>
           {% crispy form %}
         </form>

@@ -6,6 +6,15 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ROLE_NEAKTIVNI_UZIVATEL_ID,
+    PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+    PROJEKT_STAV_OZNAMENY,
+    PROJEKT_STAV_PRIHLASENY,
+    PROJEKT_STAV_UKONCENY_V_TERENU,
+    PROJEKT_STAV_UZAVRENY,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+    PROJEKT_STAV_ZAPSANY,
+    PROJEKT_STAV_ZRUSENY,
 )
 from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -83,6 +92,27 @@ class User(AbstractBaseUser, PermissionsMixin):
         elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
             # Admin a archivar spolupracuje defaultne se vsemi organizacemi
             return Organizace.objects.all()
+
+    def moje_stavy_pruzkumnych_projektu(self):
+        badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
+        archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+        archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
+        admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
+        if self.hlavni_role == badatel_group or self.hlavni_role == archeolog_group:
+            return (PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_ZAHAJENY_V_TERENU)
+        elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
+            # Admin a archivar vidi na vsechny stavy projektu
+            return (
+                PROJEKT_STAV_ARCHIVOVANY,
+                PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+                PROJEKT_STAV_OZNAMENY,
+                PROJEKT_STAV_PRIHLASENY,
+                PROJEKT_STAV_UKONCENY_V_TERENU,
+                PROJEKT_STAV_UZAVRENY,
+                PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                PROJEKT_STAV_ZAPSANY,
+                PROJEKT_STAV_ZRUSENY,
+            )
 
     def email_user(self, *args, **kwargs):
         send_mail(

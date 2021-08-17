@@ -185,6 +185,24 @@ class SamostatnyNalez(models.Model):
     def get_absolute_url(self):
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
+    def check_pred_odeslanim(self):
+        resp = []
+        if not self.obdobi:
+            resp.append(_("Nález před odesláním musí mít vyplneno období."))
+        if not self.datum_nalezu:
+            resp.append(_("Nález před odesláním musí mít vyplnen datum nálezu"))
+        if not self.lokalizace:
+            resp.append(_("Nález před odesláním musí mít vyplnenu lokalizaci"))
+        if not self.okolnosti:
+            resp.append(_("Nález před odesláním musí mít vyplnen okolnosti"))
+        if not self.specifikace:
+            resp.append(_("Nález před odesláním musí mít vyplnen materiál"))
+        if not self.druh_nalezu:
+            resp.append(_("Nález před odesláním musí mít vyplnen druh nálezu"))
+        if not self.geom:
+            resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
+        return resp
+
     class Meta:
         db_table = "samostatny_nalez"
 

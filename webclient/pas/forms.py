@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.forms import ModelChoiceField
 from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
@@ -32,6 +33,11 @@ def validate_uzivatel_email(email):
         raise ValidationError(
             _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
         )
+
+
+class ProjectModelChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
 class PotvrditNalezForm(forms.ModelForm):
@@ -125,23 +131,23 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, user=None, **kwargs):
+        projekt_disabed = kwargs.pop("projekt_disabled", False)
+        fields_required = kwargs.pop("fields_required", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 1
         self.fields["pocet"].widget.attrs["rows"] = 1
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["lokalizace"].required = True
-        self.fields["datum_nalezu"].required = True
-        self.fields["okolnosti"].required = True
-        self.fields["specifikace"].required = True
-        self.fields["projekt"] = forms.ModelChoiceField(
-            queryset=Projekt.objects.filter(
-                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID
-            ).filter(organizace__in=user.moje_spolupracujici_organizace()),
+        self.fields["projekt"] = ProjectModelChoiceField(
+            queryset=Projekt.objects.filter(typ_projektu=TYP_PROJEKTU_PRUZKUM_ID)
+            .filter(organizace__in=user.moje_spolupracujici_organizace())
+            .filter(stav__in=user.moje_stavy_pruzkumnych_projektu()),
             widget=forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         )
+        if projekt_disabed:
+            self.fields["projekt"].widget.attrs["disabled"] = projekt_disabed
         self.fields["druh_nalezu"] = TwoLevelSelectField(
             label=_("Druh nálezu"),
             widget=forms.Select(
@@ -156,6 +162,15 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
         )
+        self.fields["druh_nalezu"].required = False
+        self.fields["obdobi"].required = False
+        if fields_required:
+            self.fields["druh_nalezu"].required = True
+            self.fields["lokalizace"].required = True
+            self.fields["datum_nalezu"].required = True
+            self.fields["okolnosti"].required = True
+            self.fields["specifikace"].required = True
+            self.fields["obdobi"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
