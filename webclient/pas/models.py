@@ -109,7 +109,7 @@ class SamostatnyNalez(models.Model):
     )
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
-    predano = models.BooleanField(blank=True, null=True,default=False)
+    predano = models.BooleanField(blank=True, null=True, default=False)
     predano_organizace = models.ForeignKey(
         Organizace,
         models.DO_NOTHING,
@@ -201,6 +201,8 @@ class SamostatnyNalez(models.Model):
             resp.append(_("Nález před odesláním musí mít vyplnen druh nálezu"))
         if not self.geom:
             resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
+        if not self.soubory.soubory.exists():
+            resp.append(_("Nález před odesláním musí mít alespoň jednou fotografii"))
         return resp
 
     class Meta:
