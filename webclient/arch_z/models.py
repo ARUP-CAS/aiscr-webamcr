@@ -270,6 +270,19 @@ class Akce(models.Model):
                     + _(" nemá zadaný pian.")
                 )
                 logger.debug("DJ " + dj.ident_cely + " nema pian.")
+        for dokument_cast in self.archeologicky_zaznam.casti_dokumentu.all():
+            dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
+            if dokument_warning:
+                result.append(
+                    _("Dokument ")
+                    + str(dokument_cast.dokument.ident_cely)
+                    + _(" musí mít alespoň 1 přiložený soubor.")
+                )
+                logger.debug(
+                    "Dokument "
+                    + dokument_cast.dokument.ident_cely
+                    + " nema prilozeny soubor."
+                )
         return result
 
 

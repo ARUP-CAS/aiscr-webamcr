@@ -23,6 +23,7 @@ from core.constants import (
     UZAVRENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
+    D_STAV_ZAPSANY,
 )
 from core.decorators import allowed_user_groups
 from core.forms import VratitForm
@@ -357,7 +358,9 @@ def prihlasit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PrihlaseniProjektForm(instance=projekt, initial={"organizace": request.user.organizace})
+        form = PrihlaseniProjektForm(
+            instance=projekt, initial={"organizace": request.user.organizace}
+        )
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
 
@@ -439,6 +442,10 @@ def uzavrit(request, ident_cely):
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
                 logger.debug("Setting event to state A2")
                 a.archeologicky_zaznam.set_odeslany(request.user)
+                for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
+                    if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
+                        logger.debug("Setting dokument to state D2")
+                        dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return redirect("/projekt/detail/" + ident_cely)
@@ -450,8 +457,8 @@ def uzavrit(request, ident_cely):
         if warnings:
             context["warnings"] = []
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
-            for key, value in warnings.items():
-                context["warnings"].append(warnings)
+            for item in warnings.items():
+                context["warnings"].append(item)
         else:
             pass
         context["title"] = _("Uzavření projektu")
@@ -522,7 +529,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
             )
             for key, value in warnings.items():
                 context["warnings"].append((key, value))
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         else:
             pass
 
