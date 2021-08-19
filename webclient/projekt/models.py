@@ -279,7 +279,7 @@ class Projekt(models.Model):
         for a in self.akce_set.all():
             akce_warnings = a.check_pred_odeslanim()
             if akce_warnings:
-                result[_("Akce") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+                result[_("Akce ") + a.archeologicky_zaznam.ident_cely] = akce_warnings
         return result
 
     def parse_ident_cely(self):
