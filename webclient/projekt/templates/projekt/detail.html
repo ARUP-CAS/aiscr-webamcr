@@ -39,7 +39,7 @@
     <div class="bs-stepper">
       <div class="bs-stepper-header">
         <div class="step {% if projekt.stav == 0 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">0</span>
             <span class="bs-stepper-label">
               {% trans "Oznámený" %}
@@ -49,9 +49,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">1</span>
             <span class="bs-stepper-label">
               {% trans "Zapsaný" %}
@@ -61,9 +61,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">2</span>
             <span class="bs-stepper-label">
               {% trans "Přihlášený" %}
@@ -73,9 +73,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">3</span>
             <span class="bs-stepper-label">
               {% trans "Zahájen v terénu" %}
@@ -85,9 +85,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 4 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">4</span>
             <span class="bs-stepper-label">
               {% trans "Ukončen v terénu" %}
@@ -97,9 +97,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 5 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">5</span>
             <span class="bs-stepper-label">
               {% trans "Uzavřený" %}
@@ -109,14 +109,38 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 6 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">6</span>
             <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_archivace.uzivatel }}">
                 {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
+            </span>
+          </button>
+        </div>
+        <div class="line projekt"></div>
+        <div class="step {% if projekt.stav == 7 %}active{% endif %}">
+          <button type="button" class="btn step-trigger projekt">
+            <span class="bs-stepper-circle">7</span>
+            <span class="bs-stepper-label">
+              {% trans "Navržen ke zrušení" %}
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_navrhu_ke_zruseni.uzivatel }}">
+                {{ history_dates.datum_navrhu_ke_zruseni.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
+            </span>
+          </button>
+        </div>
+        <div class="line projekt"></div>
+        <div class="step {% if projekt.stav == 8 %}active{% endif %}">
+          <button type="button" class="btn step-trigger projekt">
+            <span class="bs-stepper-circle">8</span>
+            <span class="bs-stepper-label">
+              {% trans "Zrušen" %}
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zruseni.uzivatel }}">
+                {{ history_dates.datum_zruseni.datum|date:'Y/m/d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -129,6 +153,7 @@
         <div class="app-fx app-left">
           {% trans "Detail" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
@@ -136,6 +161,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         <div class="row">

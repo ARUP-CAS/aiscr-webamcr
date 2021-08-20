@@ -7,6 +7,7 @@ from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
+from arch_z import validators
 
 
 class CreateProjektForm(forms.ModelForm):
@@ -38,7 +39,9 @@ class CreateProjektForm(forms.ModelForm):
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "hlavni_katastr": forms.Textarea(attrs={"rows": 1, "cols": 20, 'readonly': 'readonly'}),
+            "hlavni_katastr": forms.Textarea(
+                attrs={"rows": 1, "cols": 20, "readonly": "readonly"}
+            ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
@@ -52,7 +55,9 @@ class CreateProjektForm(forms.ModelForm):
             "parcelni_cislo": _("Parcelní číslo"),
             "oznaceni_stavby": _("Označení stavby"),
         }
-        error_messages = {"hlavni_katastr": {"required": "Je třeba vybrat bod na mapě."}}
+        error_messages = {
+            "hlavni_katastr": {"required": "Je třeba vybrat bod na mapě."}
+        }
 
     def __init__(self, *args, **kwargs):
         super(CreateProjektForm, self).__init__(*args, **kwargs)
@@ -111,6 +116,12 @@ class EditProjektForm(forms.ModelForm):
         label=_("Plánované zahájení prací"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
     )
+    datum_zahajeni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
+    datum_ukonceni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
 
     class Meta:
         model = Projekt
@@ -158,7 +169,9 @@ class EditProjektForm(forms.ModelForm):
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "termin_odevzdani_nz": forms.DateInput(attrs={"data-provide": "datepicker"}),
+            "termin_odevzdani_nz": forms.DateInput(
+                attrs={"data-provide": "datepicker"}
+            ),
         }
         labels = {
             "typ_projektu": _("Typ projektu"),
@@ -216,15 +229,22 @@ class EditProjektForm(forms.ModelForm):
                     ),
                     Div(
                         Div(
-                            HTML(_("<span class=\"app-divider-label\">Přihlášení projektu</span>")),
-                            HTML(_("<hr class=\"mt-0\" />")),
-                            css_class="col-sm-12"
+                            HTML(
+                                _(
+                                    '<span class="app-divider-label">Přihlášení projektu</span>'
+                                )
+                            ),
+                            HTML(_('<hr class="mt-0" />')),
+                            css_class="col-sm-12",
                         ),
                         Div(
                             Div("vedouci_projektu", css_class="flex-fill"),
-                            HTML(_(
-                                "<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
-                            css_class="col-sm-4 d-flex align-items-end"
+                            HTML(
+                                _(
+                                    '<a href="/uzivatel/osoba/create" class="btn app-btn-in-form" rel="tooltip" data-placement="top" title="Přidání osoby"><span class="material-icons">add</span></a>'
+                                )
+                            ),
+                            css_class="col-sm-4 d-flex align-items-end",
                         ),
                         Div("organizace", css_class="col-sm-4"),
                         Div("uzivatelske_oznaceni", css_class="col-sm-4"),
@@ -234,9 +254,11 @@ class EditProjektForm(forms.ModelForm):
                         Div("latitude", css_class="hidden"),
                         Div("longitude", css_class="hidden"),
                         Div(
-                            HTML(_("<span class=\"app-divider-label\">Terenní část</span>")),
-                            HTML(_("<hr class=\"mt-0\" />")),
-                            css_class="col-sm-12"
+                            HTML(
+                                _('<span class="app-divider-label">Terenní část</span>')
+                            ),
+                            HTML(_('<hr class="mt-0" />')),
+                            css_class="col-sm-12",
                         ),
                         Div("datum_zahajeni", css_class="col-sm-4"),
                         Div("datum_ukonceni", css_class="col-sm-4"),
@@ -249,6 +271,15 @@ class EditProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
+            if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
+                raise forms.ValidationError(
+                    "Datum zahájení nemůže být po datu ukončení"
+                )
+        return self.cleaned_data
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
@@ -279,7 +310,9 @@ class NavrhnoutZruseniProjektForm(forms.Form):
             ),
             Div(
                 FormActions(
-                    Submit("save", "Navrhnout zrušení", disabled=not enable_form_submit),
+                    Submit(
+                        "save", "Navrhnout zrušení", disabled=not enable_form_submit
+                    ),
                     HTML(
                         '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
                     ),
@@ -347,9 +380,12 @@ class PrihlaseniProjektForm(forms.ModelForm):
                         Div(
                             Div(
                                 Div("vedouci_projektu", css_class="flex-fill"),
-                                HTML(_(
-                                    "<a href=\"{% url 'uzivatel:create_osoba' %}?next={{ request.path|urlencode }}\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
-                                css_class="col-sm-4 d-flex align-items-center"
+                                HTML(
+                                    _(
+                                        '<a href="{% url \'uzivatel:create_osoba\' %}?next={{ request.path|urlencode }}" class="btn app-btn-in-form" rel="tooltip" data-placement="top" title="Přidání osoby"><span class="material-icons">add</span></a>'
+                                    )
+                                ),
+                                css_class="col-sm-4 d-flex align-items-center",
                             ),
                             Div("organizace", css_class="col-sm-4"),
                             Div("uzivatelske_oznaceni", css_class="col-sm-4"),
@@ -368,6 +404,10 @@ class PrihlaseniProjektForm(forms.ModelForm):
 
 
 class ZahajitVTerenuForm(forms.ModelForm):
+    datum_zahajeni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
+
     class Meta:
         model = Projekt
         fields = ("datum_zahajeni",)
@@ -415,6 +455,10 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
 
 class UkoncitVTerenuForm(forms.ModelForm):
+    datum_ukonceni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
+
     class Meta:
         model = Projekt
         fields = ("datum_ukonceni",)
@@ -459,3 +503,13 @@ class UkoncitVTerenuForm(forms.ModelForm):
                 css_class="mt-3",
             ),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if {"datum_ukonceni"} <= cleaned_data.keys():
+            if self.instance.datum_zahajeni > cleaned_data.get("datum_ukonceni"):
+                raise forms.ValidationError(
+                    "Datum ukončení nemůže být pred datem zahájení (%s)"
+                    % self.instance.datum_zahajeni.strftime("%d. %m. %Y")
+                )
+        return self.cleaned_data
