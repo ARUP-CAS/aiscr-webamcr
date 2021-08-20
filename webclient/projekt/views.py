@@ -108,9 +108,7 @@ def detail(request, ident_cely):
     context["akce"] = akce
     soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
-    context["dalsi_katastry"] = ",".join(
-        projekt.katastry.all().values_list("nazev", flat=True)
-    )
+    context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie)
     context["show"] = get_detail_template_shows(projekt)
 

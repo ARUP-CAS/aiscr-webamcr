@@ -21,8 +21,10 @@ def url_to_classes(value):
 
 @register.filter
 def katastry_to_list(value):
-    list_katastry = ", ".join(value.values_list("nazev", flat=True))
-    return list_katastry
+    display = str()
+    for katastr in value:
+        display += (katastr.__str__()) + ", "
+    return display
 
 
 @register.filter
