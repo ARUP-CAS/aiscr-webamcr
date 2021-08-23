@@ -1,4 +1,5 @@
 import logging
+from core.exceptions import MaximalIdentNumberError
 
 from core.constants import (
     ARCHIVACE_SN,
@@ -32,6 +33,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
     SAMOSTATNY_NALEZ_NELZE_ODESLAT,
+    MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_cadastre_from_point
 from django.contrib import messages
@@ -89,20 +91,26 @@ def create(request):
             latitude = form.cleaned_data["latitude"]
             longitude = form.cleaned_data["longitude"]
             sn = form.save(commit=False)
-            sn.ident_cely = get_sn_ident(sn.projekt)
-            sn.stav = SN_ZAPSANY
-            sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-            sn.predano_organizace = sn.projekt.organizace
-            if latitude and longitude:
-                sn.geom = Point(longitude, latitude)
-                sn.katastr = get_cadastre_from_point(sn.geom)
-                sn.save()
-                sn.set_zapsany(request.user)
-                form.save_m2m()
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("pas:detail", ident_cely=sn.ident_cely)
+            try:
+                sn.ident_cely = get_sn_ident(sn.projekt)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
-                messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
+                sn.stav = SN_ZAPSANY
+                sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+                sn.predano_organizace = sn.projekt.organizace
+                if latitude and longitude:
+                    sn.geom = Point(longitude, latitude)
+                    sn.katastr = get_cadastre_from_point(sn.geom)
+                    sn.save()
+                    sn.set_zapsany(request.user)
+                    form.save_m2m()
+                    messages.add_message(
+                        request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
+                    )
+                    return redirect("pas:detail", ident_cely=sn.ident_cely)
+                else:
+                    messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
 
         else:
             logger.debug(form.errors)

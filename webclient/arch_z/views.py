@@ -22,6 +22,7 @@ from core.constants import (
     ZAPSANI_AZ,
 )
 from core.forms import VratitForm
+from core.exceptions import MaximalEventCount
 from core.ident_cely import get_cast_dokumentu_ident, get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
@@ -35,6 +36,7 @@ from core.message_constants import (
     DOKUMENT_USPESNE_PRIPOJEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    MAXIMUM_AKCII_DOSAZENO,
 )
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
@@ -373,18 +375,22 @@ def zapsat(request, projekt_ident_cely):
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-            az.ident_cely = get_project_event_ident(projekt)
-            az.save()
-            form_az.save_m2m()  # This must be called to save many to many (katastry) since we are doing commit = False
-            az.set_zapsany(request.user)
-            akce = form_akce.save(commit=False)
-            akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
-            akce.archeologicky_zaznam = az
-            akce.projekt = projekt
-            akce.save()
+            try:
+                az.ident_cely = get_project_event_ident(projekt)
+            except MaximalEventCount:
+                messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
+            else:
+                az.save()
+                form_az.save_m2m()  # This must be called to save many to many (katastry) since we are doing commit = False
+                az.set_zapsany(request.user)
+                akce = form_akce.save(commit=False)
+                akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+                akce.archeologicky_zaznam = az
+                akce.projekt = projekt
+                akce.save()
 
-            messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
-            return redirect("/arch_z/detail/" + az.ident_cely)
+                messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
+                return redirect("/arch_z/detail/" + az.ident_cely)
 
         else:
             logger.warning("Form is not valid")

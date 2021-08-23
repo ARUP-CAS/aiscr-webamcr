@@ -8,6 +8,14 @@ ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
 ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = "Záznam se nepovedlo editovat."
 ZAZNAM_USPESNE_SMAZAN: Final = "Záznam byl úspěšně smazán."
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = "Záznam nebyl smazán."
+MAXIMUM_IDENT_DOSAZEN: Final = "Byl překročen limit při přidělování identifikátoru. Pro vyřešení problému kontaktujte administrátora AMČR."
+MAXIMUM_AKCII_DOSAZENO: Final = "Byl překročen limit akcií pro jeden projekt."
+MAXIMUM_DJ_DOSAZENO: Final = (
+    "Byl překročen limit dokumentačních jednotek pro jednu akci."
+)
+MAXIMUM_KOMPONENT_DOSAZENO: Final = (
+    "Byl překročen limit komponent pro dokumentační jednotky."
+)
 
 # Projekt
 PROJEKT_USPESNE_PRIHLASEN: Final = "Projekt byl úspěšně přihlášen."

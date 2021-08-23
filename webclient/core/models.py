@@ -51,11 +51,3 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
-
-
-# class AdbSekvence(models.Model):
-#     kladysm5 = models.OneToOneField(Kladysm5, models.DO_NOTHING)
-#     sekvence = models.IntegerField()
-#
-#     class Meta:
-#         db_table = 'adb_sekvence'

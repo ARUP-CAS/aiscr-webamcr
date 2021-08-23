@@ -27,6 +27,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
 )
 from core.models import ProjektSekvence, SouborVazby
+from core.exceptions import MaximalIdentNumberError
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
@@ -314,6 +315,7 @@ class Projekt(models.Model):
         return has_oznamovatel
 
     def set_permanent_ident_cely(self):
+        MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
         logger.debug(
@@ -322,10 +324,15 @@ class Projekt(models.Model):
         sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
             0
         ]
-
-        perm_ident_cely = (
-            region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
+        if sequence.sekvence < MAXIMUM:
+            perm_ident_cely = (
+                region
+                + "-"
+                + str(current_year)
+                + "{0}".format(sequence.sekvence).zfill(5)
+            )
+        else:
+            raise MaximalIdentNumberError(MAXIMUM)
         # Loop through all of the idents that have been imported
         while True:
             if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():

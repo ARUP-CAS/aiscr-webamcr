@@ -1,4 +1,5 @@
 import logging
+from core.exceptions import MaximalIdentNumberError
 
 import simplejson as json
 from arch_z.models import Akce
@@ -48,6 +49,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_points_from_envelope
 from django.contrib import messages
@@ -163,26 +165,32 @@ def create(request):
             p = form_projekt.save(commit=False)
             if long and lat:
                 p.geom = Point(long, lat)
-            p.set_permanent_ident_cely()
-            p.save()
-            p.set_zapsany(request.user)
-            form_projekt.save_m2m()
-            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-                # Vytvoreni oznamovatele
-                if form_oznamovatel.is_valid():
-                    oznamovatel = form_oznamovatel.save(commit=False)
-                    oznamovatel.projekt = p
-                    oznamovatel.save()
+            try:
+                p.set_permanent_ident_cely()
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+            else:
+                p.save()
+                p.set_zapsany(request.user)
+                form_projekt.save_m2m()
+                if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                    # Vytvoreni oznamovatele
+                    if form_oznamovatel.is_valid():
+                        oznamovatel = form_oznamovatel.save(commit=False)
+                        oznamovatel.projekt = p
+                        oznamovatel.save()
+                        messages.add_message(
+                            request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
+                        )
+                        return redirect("projekt:detail", ident_cely=p.ident_cely)
+                    else:
+                        logger.debug("The form oznamovatel is not valid!")
+                        logger.debug(form_oznamovatel.errors)
+                else:
                     messages.add_message(
                         request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
                     )
                     return redirect("projekt:detail", ident_cely=p.ident_cely)
-                else:
-                    logger.debug("The form oznamovatel is not valid!")
-                    logger.debug(form_oznamovatel.errors)
-            else:
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
             logger.debug("The form projekt is not valid!")
             logger.debug(form_projekt.errors)
@@ -325,13 +333,25 @@ def schvalit(request, ident_cely):
         raise PermissionDenied()
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
-        projekt.set_permanent_ident_cely()
-        logger.debug(
-            "Projektu "
-            + ident_cely
-            + " byl prirazen permanentni ident "
-            + projekt.ident_cely
-        )
+        if projekt.ident_cely[0] == "X":
+            try:
+                projekt.set_permanent_ident_cely()
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                context = {
+                    "object": projekt,
+                    "title": _("Schválení projektu"),
+                    "header": _("Schválení projektu"),
+                    "button": _("Schválit projekt"),
+                }
+                return render(request, "core/transakce.html", context)
+            else:
+                logger.debug(
+                    "Projektu "
+                    + ident_cely
+                    + " byl prirazen permanentni ident "
+                    + projekt.ident_cely
+                )
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         return redirect("/projekt/detail/" + projekt.ident_cely)
@@ -634,9 +654,7 @@ def get_history_dates(historie_vazby):
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
             NAVRZENI_KE_ZRUSENI_PROJ
         ),
-        "datum_zruseni": historie_vazby.get_last_transaction_date(
-            RUSENI_PROJ
-        ),
+        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ),
     }
     return historie
 
