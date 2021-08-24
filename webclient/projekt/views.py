@@ -24,6 +24,10 @@ from core.constants import (
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
     D_STAV_ZAPSANY,
+    VRACENI_NAVRHU_ZRUSENI,
+    VRACENI_ZRUSENI,
+    NAVRZENI_KE_ZRUSENI_PROJ,
+    RUSENI_PROJ,
 )
 from core.decorators import allowed_user_groups
 from core.forms import VratitForm
@@ -71,6 +75,7 @@ from projekt.forms import (
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
+from django.contrib.auth.models import Group
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +115,7 @@ def detail(request, ident_cely):
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie)
-    context["show"] = get_detail_template_shows(projekt)
+    context["show"] = get_detail_template_shows(projekt, request.user)
 
     return render(request, "projekt/detail.html", context)
 
@@ -583,7 +588,10 @@ def vratit(request, ident_cely):
 def vratit_navrh_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
 
-    if PROJEKT_STAV_NAVRZEN_KE_ZRUSENI != projekt.stav:
+    if projekt.stav not in [
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_ZRUSENY,
+    ]:
         raise PermissionDenied()
 
     if request.method == "POST":
@@ -604,12 +612,16 @@ def vratit_navrh_zruseni(request, ident_cely):
 
 def get_history_dates(historie_vazby):
     # Transakce do stavu "Zapsan" jsou 2
-    schvaleni = (historie_vazby.get_last_transaction_date(SCHVALENI_OZNAMENI_PROJ),)
-    zapsani = historie_vazby.get_last_transaction_date(ZAPSANI_PROJ)
-
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
-        "datum_zapsani": zapsani if zapsani else schvaleni,
+        "datum_zapsani": historie_vazby.get_last_transaction_date(
+            [
+                VRACENI_NAVRHU_ZRUSENI,
+                SCHVALENI_OZNAMENI_PROJ,
+                ZAPSANI_PROJ,
+                VRACENI_ZRUSENI,
+            ]
+        ),
         "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
         "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
             ZAHAJENI_V_TERENU_PROJ
@@ -619,11 +631,17 @@ def get_history_dates(historie_vazby):
         ),
         "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ),
+        "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
+            NAVRZENI_KE_ZRUSENI_PROJ
+        ),
+        "datum_zruseni": historie_vazby.get_last_transaction_date(
+            RUSENI_PROJ
+        ),
     }
     return historie
 
 
-def get_detail_template_shows(projekt):
+def get_detail_template_shows(projekt, user):
     show_oznamovatel = (
         projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
         and projekt.has_oznamovatel()
@@ -644,9 +662,24 @@ def get_detail_template_shows(projekt):
     show_zrusit = projekt.stav in [
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     ]
-    show_znovu_zapsat = projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    show_znovu_zapsat = projekt.stav in [
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_ZRUSENY,
+    ]
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
-    show_pridat_akci = PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
+    archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
+    admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
+    if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
+        show_pridat_akci = (
+            PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
+        )
+    else:
+        show_pridat_akci = (
+            PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
+        )
+    show_edit = projekt.stav not in [
+        PROJEKT_STAV_ARCHIVOVANY,
+    ]
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -661,5 +694,6 @@ def get_detail_template_shows(projekt):
         "znovu_zapsat_link": show_znovu_zapsat,
         "samostatne_nalezy": show_samostatne_nalezy,
         "pridat_akci": show_pridat_akci,
+        "editovat": show_edit,
     }
     return show

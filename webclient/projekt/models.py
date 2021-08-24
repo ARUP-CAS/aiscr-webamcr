@@ -24,6 +24,7 @@ from core.constants import (
     VRACENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
+    VRACENI_ZRUSENI,
 )
 from core.models import ProjektSekvence, SouborVazby
 from django.contrib.gis.db import models as pgmodels
@@ -236,9 +237,15 @@ class Projekt(models.Model):
         self.save()
 
     def set_znovu_zapsan(self, user, poznamka):
+        zmena = (
+            VRACENI_NAVRHU_ZRUSENI
+            if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+            else VRACENI_ZRUSENI
+        )
         self.stav = PROJEKT_STAV_ZAPSANY
+
         Historie(
-            typ_zmeny=VRACENI_NAVRHU_ZRUSENI,
+            typ_zmeny=zmena,
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
