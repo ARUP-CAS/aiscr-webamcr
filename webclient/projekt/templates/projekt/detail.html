@@ -157,9 +157,9 @@
                 <div class="form-group">
                   <label>{% trans "Další katastry" %}</label>
                   <div class="input-group">
-                    <input class="form-control app-ellipsis" stype="text" placeholder="{{ dalsi_katastry }}" readonly>
+                    <input class="form-control app-ellipsis" stype="text" placeholder="{{ dalsi_katastry|katastry_to_list }}" readonly>
                     <div class="input-group-append" data-toggle="popover" data-placement="top"
-                    data-content="<strong>{% trans 'Seznam katastrů' %}:</strong> {{ dalsi_katastry }}">
+                    data-content="<strong>{% trans 'Seznam katastrů' %}:</strong> {{ dalsi_katastry|katastry_to_list }}">
                       <span class="input-group-text">
                         <span class="material-icons">info</span>
                       </span>
