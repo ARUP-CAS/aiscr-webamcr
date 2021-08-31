@@ -1,4 +1,5 @@
 import logging
+from core.exceptions import MaximalIdentNumberError
 
 from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
@@ -8,6 +9,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    MAXIMUM_KOMPONENT_DOSAZENO,
 )
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -63,12 +65,16 @@ def zapsat(request, dj_ident_cely):
     if form.is_valid():
         logger.debug("Form is valid")
         komponenta = form.save(commit=False)
-        komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
-        komponenta.komponenta_vazby = dj.komponenty
-        komponenta.save()
-        form.save_m2m()  # this must be called to store komponenta_aktivity
+        try:
+            komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
+        except MaximalIdentNumberError:
+            messages.add_message(request, messages.ERROR, MAXIMUM_KOMPONENT_DOSAZENO)
+        else:
+            komponenta.komponenta_vazby = dj.komponenty
+            komponenta.save()
+            form.save_m2m()  # this must be called to store komponenta_aktivity
 
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)

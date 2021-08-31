@@ -1,3 +1,4 @@
+import logging
 from core.constants import KLADYZM_KATEGORIE, PIAN_NEPOTVRZEN, PIAN_POTVRZEN
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
@@ -5,6 +6,9 @@ from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.models import Heslar
 from historie.models import HistorieVazby
+from core.exceptions import MaximalIdentNumberError
+
+logger = logging.getLogger(__name__)
 
 
 class Pian(models.Model):
@@ -55,6 +59,44 @@ class Pian(models.Model):
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
+    def set_permanent_ident_cely(self):
+        MAXIMUM: int = 999999
+        katastr = True if self.presnost.zkratka == "4" else False
+        sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(
+            katastr=katastr
+        )[0]
+        if sequence.sekvence < MAXIMUM:
+            perm_ident_cely = (
+                "P-"
+                + str(self.zm50.cislo).replace("-", "").zfill(4)
+                + "-"
+                + "{0}".format(sequence.sekvence).zfill(6)
+            )
+        else:
+            raise MaximalIdentNumberError(MAXIMUM)
+        # Loop through all of the idents that have been imported
+        while True:
+            if Pian.objects.filter(ident_cely=perm_ident_cely).exists():
+                sequence.sekvence += 1
+                logger.warning(
+                    "Ident "
+                    + perm_ident_cely
+                    + " already exists, trying next number "
+                    + str(sequence.sekvence)
+                )
+                perm_ident_cely = (
+                    "P-"
+                    + str(self.zm50.cislo).replace("-", "").zfill(4)
+                    + "-"
+                    + "{0}".format(sequence.sekvence).zfill(6)
+                )
+            else:
+                break
+        self.ident_cely = perm_ident_cely
+        sequence.sekvence += 1
+        sequence.save()
+        self.save()
+
 
 class Kladyzm(models.Model):
     gid = models.AutoField(primary_key=True)
@@ -69,3 +111,17 @@ class Kladyzm(models.Model):
 
     class Meta:
         db_table = "kladyzm"
+
+
+class PianSekvence(models.Model):
+    kladyzm50 = models.OneToOneField(
+        "Kladyzm",
+        models.DO_NOTHING,
+        db_column="kladyzm_id",
+        null=False,
+    )
+    sekvence = models.IntegerField()
+    katastr = models.BooleanField()
+
+    class Meta:
+        db_table = "pian_sekvence"

@@ -2,7 +2,7 @@ import datetime
 import logging
 from datetime import date
 
-from adb.models import Adb, Kladysm5
+from adb.models import Adb, Kladysm5, AdbSekvence
 from arch_z.models import ArcheologickyZaznam
 from core.constants import IDENTIFIKATOR_DOCASNY_PREFIX
 from core.exceptions import (
@@ -11,6 +11,7 @@ from core.exceptions import (
     NeocekavanaRadaError,
     NeznamaGeometrieError,
     PianNotInKladysm5Error,
+    MaximalEventCount,
 )
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
@@ -25,9 +26,8 @@ logger = logging.getLogger(__name__)
 
 def get_temporary_project_ident(project: Projekt, region: str) -> str:
     if project.id is not None:
-        year = datetime.datetime.now().year
-        id_number = "{0}".format(str(project.id)).zfill(5)[-5:]
-        return "X-" + region + "-" + str(year) + id_number
+        id_number = "{0}".format(str(project.id)).zfill(9)
+        return "X-" + region + "-" + id_number
     else:
         logger.error("Could not assign temporary identifier to project with Null ID")
         return None
@@ -47,7 +47,7 @@ def get_project_event_ident(project: Projekt) -> str:
                 return project.ident_cely + "A"
         else:
             logger.error("Maximal number of project events is 26.")
-            return None
+            raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
     else:
         logger.error("Project is missing ident_cely")
         return None
@@ -69,6 +69,7 @@ def get_dokument_rada(typ, material):
 
 
 def get_temp_dokument_ident(rada, region):
+    MAXIMAL: int = 99999
     if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
         d = Dokument.objects.filter(
@@ -92,15 +93,24 @@ def get_temp_dokument_ident(rada, region):
                 + "00001"
             )
         else:
-            return (
-                IDENTIFIKATOR_DOCASNY_PREFIX
-                + region
-                + "-"
-                + rada
-                + "-"
-                + str(date.today().year)
-                + str(int(d[0].ident_cely[-5:]) + 1).zfill(5)
-            )
+            max_count = int(d[0].ident_cely[-5:])
+            if max_count < MAXIMAL:
+                return (
+                    IDENTIFIKATOR_DOCASNY_PREFIX
+                    + region
+                    + "-"
+                    + rada
+                    + "-"
+                    + str(date.today().year)
+                    + str(int(d[0].ident_cely[-5:]) + 1).zfill(5)
+                )
+            else:
+                logger.error(
+                    "Maximal number of temporary document ident is "
+                    + str(MAXIMAL)
+                    + "for given region and rada"
+                )
+                raise MaximalIdentNumberError(max_count)
     else:
         # TODO dodelat dalsi rady
         raise NeocekavanaRadaError("Neocekavana rada dokumentu: " + rada)
@@ -110,34 +120,32 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
     MAXIMUM: int = 999
     last_digit_count = 3
     max_count = 0
-    for d in dokument.casti.all():
-        last_digits = int(d.ident_cely[-last_digit_count:])
-        if max_count < last_digits:
-            max_count = last_digits
-    new_ident = dokument.ident_cely
+    d = dokument.casti.all().order_by("-ident_cely")
+    if d.exists():
+        max_count = int(d[0].ident_cely[-last_digit_count:])
+    doc_ident = dokument.ident_cely
     if max_count < MAXIMUM:
-        ident = new_ident + "-D" + str(max_count + 1).zfill(last_digit_count)
+        ident = doc_ident + "-D" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
         logger.error("Maximal number of dokument parts is" + str(MAXIMUM))
-        return None
+        raise MaximalIdentNumberError(max_count)
 
 
 def get_dj_ident(event: ArcheologickyZaznam) -> str:
     MAXIMAL_EVENT_DJS: int = 99
     dj_last_digit_count = 2
     max_count = 0
-    for dj in event.dokumentacni_jednotky_akce.all():
-        last_digits = int(dj.ident_cely[-dj_last_digit_count:])
-        if max_count < last_digits:
-            max_count = last_digits
+    dj = event.dokumentacni_jednotky_akce.all().order_by("-ident_cely")
+    if dj.exists():
+        max_count = int(dj[0].ident_cely[-dj_last_digit_count:])
     event_ident = event.ident_cely
     if max_count < MAXIMAL_EVENT_DJS:
         ident = event_ident + "-D" + str(max_count + 1).zfill(dj_last_digit_count)
         return ident
     else:
         logger.error("Maximal number of DJs is " + str(MAXIMAL_EVENT_DJS))
-        return None
+        raise MaximalIdentNumberError(max_count)
 
 
 def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
@@ -155,9 +163,10 @@ def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
         return ident
     else:
         logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
-        return None
+        raise MaximalIdentNumberError(max_count)
 
 
+# nikde nepouzite
 def get_dokument_komponenta_ident(dokument: Dokument) -> str:
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
@@ -173,7 +182,7 @@ def get_dokument_komponenta_ident(dokument: Dokument) -> str:
         return ident
     else:
         logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
-        return None
+        raise MaximalIdentNumberError(max_count)
 
 
 def get_sm_from_point(point):
@@ -187,43 +196,44 @@ def get_sm_from_point(point):
         raise PianNotInKladysm5Error(point)
 
 
-def get_pian_ident(zm50, approved) -> str:
-    MAXIMAL_PIANS: int = 99999
-    last_digit_count = 5
+def get_temporary_pian_ident(zm50) -> str:
+    MAXIMAL_PIANS: int = 999999
+    last_digit_count = 6
     max_count = 0
-    prefix = "P" if approved else "N"
-    start = prefix + "-" + str(zm50.objectid).zfill(4) + "-"
-    for pian in Pian.objects.filter(ident_cely__startswith=start).all():
-        last_digits = int(pian.ident_cely[-last_digit_count:])
-        if max_count < last_digits:
-            max_count = last_digits
+    start = "N-" + str(zm50.cislo).replace("-", "").zfill(4) + "-"
+    pian = (
+        Pian.objects.filter(ident_cely__startswith=start).all().order_by("-ident_cely")
+    )
+    max_count = int(pian[0].ident_cely[-last_digit_count:])
     if max_count < MAXIMAL_PIANS:
         ident = start + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
         logger.error("Maximal number of pians is " + str(MAXIMAL_PIANS))
-        return None
+        raise MaximalIdentNumberError(max_count)
 
 
 def get_sn_ident(projekt: Projekt) -> str:
     MAXIMAL_FINDS: int = 99999
     last_digit_count = 5
     max_count = 0
-    for nalez in SamostatnyNalez.objects.filter(projekt=projekt).all():
-        last_digits = int(nalez.ident_cely[-last_digit_count:])
-        if max_count < last_digits:
-            max_count = last_digits
+    nalez = (
+        SamostatnyNalez.objects.filter(projekt=projekt).all().order_by("-ident_cely")
+    )
+    if nalez.exists():
+        max_count = int(nalez[0].ident_cely[-last_digit_count:])
     if max_count < MAXIMAL_FINDS:
         ident = projekt.ident_cely + "-N" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
         logger.error("Maximal number of SN is " + str(MAXIMAL_FINDS))
-        return None
+        raise MaximalIdentNumberError(max_count)
 
 
 def get_adb_ident(pian: Pian) -> str:
     # Get map list
     # Format: [ADB]-[sm5.mapno]-[NUMBER]
+    MAXIMAL_ADBS: int = 999999
     point = None
     if type(pian.geom) == LineString:
         point = pian.geom.interpolate(0.5)
@@ -236,17 +246,31 @@ def get_adb_ident(pian: Pian) -> str:
         raise NeznamaGeometrieError()
     sm5 = get_sm_from_point(point)[0]
     record_list = "ADB-" + sm5.mapno
-    MAXIMAL_ADBS: int = 999999
-    last_digit_count = 6
-    max_count = 0
-    # TODO rewrite so that max_count is from adb_sekvence.sekvence
-    for adb in Adb.objects.filter(ident_cely__icontains=record_list):
-        last_digits = int(adb.ident_cely[-last_digit_count:])
-        if max_count < last_digits:
-            max_count = last_digits
-    if max_count < MAXIMAL_ADBS:
-        ident = record_list + "-" + str(max_count + 1).zfill(last_digit_count)
+    try:
+        sequence = AdbSekvence.objects.get(kladysm5=sm5)
+    except AdbSekvence.DoesNotExist:
+        sequence = AdbSekvence.objects.create(kladysm5=sm5, sekvence=1)
+    perm_ident_cely = record_list + "-" + "{0}".format(sequence.sekvence).zfill(6)
+    # Loop through all of the idents that have been imported
+    while True:
+        if Adb.objects.filter(ident_cely=perm_ident_cely).exists():
+            sequence.sekvence += 1
+            logger.warning(
+                "Ident "
+                + perm_ident_cely
+                + " already exists, trying next number "
+                + str(sequence.sekvence)
+            )
+            perm_ident_cely = (
+                record_list + "-" + "{0}".format(sequence.sekvence).zfill(6)
+            )
+        else:
+            break
+    if sequence.sekvence < MAXIMAL_ADBS:
+        ident = perm_ident_cely
+        sequence.sekvence += 1
+        sequence.save()
         return ident, sm5
     else:
         logger.error("Maximal number of ADBs is " + str(MAXIMAL_ADBS))
-        raise MaximalIdentNumberError(max_count)
+        raise MaximalIdentNumberError(sequence.sekvence)
