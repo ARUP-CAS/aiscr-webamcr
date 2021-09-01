@@ -506,7 +506,7 @@ def archivovat(request, ident_cely):
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
             try:
-                d.set_permanent_ident_cely(ident_cely[2:3] + "-" + rada.zkratka)
+                d.set_permanent_ident_cely(d.ident_cely[2:4] + rada.zkratka)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 context = {"object": d}
@@ -519,32 +519,9 @@ def archivovat(request, ident_cely):
                 logger.debug(
                     "Dokumentu "
                     + ident_cely
-                    + " byl prirazen permanentni identifikator "
+                    + " a jeho castem byl prirazen permanentni identifikator "
                     + d.ident_cely
                 )
-                # Prejmenuj i dokumentacni jednotky
-                counter = 1
-                for cast in d.casti.all().order_by("ident_cely"):
-                    if cast.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-                        old_ident = cast.ident_cely
-                        cast.ident_cely = d.ident_cely + "-D" + str(counter).zfill(2)
-                        cast.save()
-                        logger.debug(
-                            "Casti dokumentu "
-                            + old_ident
-                            + " byl zmenen identifikator na "
-                            + cast.ident_cely
-                        )
-                        counter += 1
-
-            if "3D" in d.ident_cely:
-                komponenta = d.get_komponenta()
-                logger.debug(
-                    "Aktualizace identifikatoru komponenty modelu 3D: "
-                    + str(komponenta.ident_cely)
-                )
-                komponenta.ident_cely = d.ident_cely + "-K001"
-                komponenta.save()
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         if "3D" in ident_cely:

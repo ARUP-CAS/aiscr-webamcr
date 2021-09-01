@@ -2,7 +2,6 @@ import datetime
 import calendar
 import math
 import logging
-from webclient.core.exceptions import MaximalIdentNumberError
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -14,7 +13,7 @@ from core.constants import (
     VRACENI_DOK,
     ZAPSANI_DOK,
 )
-from core.exceptions import UnexpectedDataRelations
+from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
 from core.models import SouborVazby
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
@@ -264,6 +263,17 @@ class Dokument(models.Model):
             else:
                 break
         self.ident_cely = perm_ident_cely
+        for dc in self.casti.all():
+            if "3D" in perm_ident_cely:
+                for komponenta in dc.komponenty.komponenty.all():
+                    komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
+                    komponenta.save()
+                    logger.debug(
+                        "Prejmenovany ident komponenty " + komponenta.ident_cely
+                    )
+            dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
+            dc.save()
+            logger.debug("Prejmenovany ident dokumentacni casti " + dc.ident_cely)
         sequence.sekvence += 1
         sequence.save()
         self.save()
