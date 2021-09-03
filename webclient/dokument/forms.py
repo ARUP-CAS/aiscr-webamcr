@@ -145,6 +145,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
         self.fields["rada"].disabled = edit_prohibited
 
 
@@ -267,6 +270,9 @@ class EditDokumentForm(forms.ModelForm):
 
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
         self.fields["datum_zverejneni"].disabled = True
 
 
@@ -331,6 +337,9 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
@@ -396,3 +405,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"

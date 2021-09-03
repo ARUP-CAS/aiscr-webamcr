@@ -47,6 +47,13 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices):
                 ),
             )
 
+            for key in self.fields.keys():
+                if self.fields[key].disabled == True:
+                    if isinstance(self.fields[key].widget, forms.widgets.Select):
+                        self.fields[
+                            key
+                        ].widget.template_name = "core/select_to_text.html"
+
     return CreateNalezObjektForm
 
 
@@ -84,5 +91,12 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices)
                 "class": "selectpicker",
                 "data-live-search": "true",
             }
+
+            for key in self.fields.keys():
+                if self.fields[key].disabled == True:
+                    if isinstance(self.fields[key].widget, forms.widgets.Select):
+                        self.fields[
+                            key
+                        ].widget.template_name = "core/select_to_text.html"
 
     return CreateNalezPredmetForm
