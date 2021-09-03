@@ -105,7 +105,7 @@
     </div>
   </form>
 
-  <form method="post">
+  <form method="post" onSubmit="return confirm('{% trans "Nahrali jste všechny dokumenty?" %}') ">
     {% csrf_token %}
     <input name="ident_cely" type="hidden" value="{{ confirm.ident_cely }}">
     <button type="submit" class="btn btn-success ">{% trans "Dokončit oznámení" %}</button>
