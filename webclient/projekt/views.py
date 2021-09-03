@@ -214,6 +214,8 @@ def create(request):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     if request.method == "POST":
         form = EditProjektForm(request.POST, instance=projekt)
         if form.is_valid():

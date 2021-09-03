@@ -67,7 +67,6 @@ class PotvrditNalezForm(forms.ModelForm):
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
         self.fields["predano_organizace"].required = True
-        self.fields["predano_organizace"].widget.attrs["disabled"] = "disabled"
         self.fields["predano"].required = True
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)
@@ -83,6 +82,7 @@ class PotvrditNalezForm(forms.ModelForm):
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
         self.helper.form_tag = False
+        self.fields["predano_organizace"].disabled = True
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
@@ -146,8 +146,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         )
-        if projekt_disabed:
-            self.fields["projekt"].widget.attrs["disabled"] = projekt_disabed
         self.fields["druh_nalezu"] = TwoLevelSelectField(
             label=_("Druh nálezu"),
             widget=forms.Select(
@@ -194,6 +192,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+        if projekt_disabed:
+            self.fields["projekt"].disabled = projekt_disabed
 
 
 class CreateZadostForm(forms.Form):

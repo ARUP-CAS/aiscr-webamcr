@@ -153,6 +153,8 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav == SN_ARCHIVOVANY:
+        raise PermissionDenied()
     kwargs = {"projekt_disabled": "disabled"}
     if sn.stav > SN_ZAPSANY:
         kwargs["fields_required"] = True
@@ -508,10 +510,14 @@ def get_detail_template_shows(sn):
     show_odeslat = sn.stav == SN_ZAPSANY
     show_potvrdit = sn.stav == SN_ODESLANY
     show_archivovat = sn.stav == SN_POTVRZENY
+    show_edit = sn.stav not in [
+        SN_ARCHIVOVANY,
+    ]
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "potvrdit_link": show_potvrdit,
         "archivovat_link": show_archivovat,
+        "editovat": show_edit,
     }
     return show

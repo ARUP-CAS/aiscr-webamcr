@@ -223,6 +223,8 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if zaznam.stav == AZ_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST, instance=zaznam)
         form_akce = CreateAkceForm(request.POST, instance=zaznam.akce)
@@ -559,10 +561,14 @@ def get_detail_template_shows(archeologicky_zaznam):
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
     show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
+    show_edit = archeologicky_zaznam.stav not in [
+        AZ_STAV_ARCHIVOVANY,
+    ]
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
+        "editovat": show_edit,
     }
     return show
 
