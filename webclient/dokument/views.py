@@ -237,6 +237,8 @@ class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, Filter
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if dokument.stav == D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     if not dokument.has_extra_data():
         extra_data = DokumentExtraData(dokument=dokument)
         extra_data.save()
@@ -288,6 +290,8 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if dokument.stav == D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     if request.method == "POST":
@@ -663,9 +667,13 @@ def get_detail_template_shows(dokument):
     show_vratit = dokument.stav > D_STAV_ZAPSANY
     show_odeslat = dokument.stav == D_STAV_ZAPSANY
     show_archivovat = dokument.stav == D_STAV_ODESLANY
+    show_edit = dokument.stav not in [
+        D_STAV_ARCHIVOVANY,
+    ]
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
+        "editovat": show_edit,
     }
     return show

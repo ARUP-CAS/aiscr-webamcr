@@ -104,6 +104,7 @@
         <div class="app-fx app-left">
           {% trans "Detail" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip"
@@ -112,6 +113,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         <div class="row">
