@@ -81,9 +81,6 @@ def edit_predmet(request, komp_ident_cely):
         formset.save()
         if formset.has_changed():
             logger.debug("Form data was changed")
-            logger.debug(formset.changed_objects)
-            for form in formset:
-                logger.debug(form.changed_data)
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.warning("Form is not valid")
