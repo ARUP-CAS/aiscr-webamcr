@@ -13,7 +13,7 @@ class NalezFormSetHelper(FormHelper):
 
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
-def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices):
+def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=True):
     class CreateNalezObjektForm(forms.ModelForm):
         class Meta:
             model = NalezObjekt
@@ -48,6 +48,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices):
             )
 
             for key in self.fields.keys():
+                self.fields[key].disabled = not not_readonly
                 if self.fields[key].disabled == True:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
                         self.fields[
@@ -57,7 +58,9 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices):
     return CreateNalezObjektForm
 
 
-def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices):
+def create_nalez_predmet_form(
+    druh_projekt_choices, specifikce_predmetu_choices, not_readonly=True
+):
     class CreateNalezPredmetForm(forms.ModelForm):
         class Meta:
             model = NalezPredmet
@@ -93,6 +96,7 @@ def create_nalez_predmet_form(druh_projekt_choices, specifikce_predmetu_choices)
             }
 
             for key in self.fields.keys():
+                self.fields[key].disabled = not not_readonly
                 if self.fields[key].disabled == True:
                     if isinstance(self.fields[key].widget, forms.widgets.Select):
                         self.fields[

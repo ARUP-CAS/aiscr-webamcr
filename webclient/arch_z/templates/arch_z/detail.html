@@ -120,46 +120,46 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Hlavní katastr" %}</label>
-              <input id="main_cadastre_id" class="form-control" type="text" placeholder="{{ zaznam.hlavni_katastr }}"
+              <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr }}"
                      readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Přístupnost" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.pristupnost }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.pristupnost }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Další katastry" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.katastry.all|katastry_to_list }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Uživatelské označení" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni }}"
+              <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.uzivatelske_oznaceni }}"
                         readonly></textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Hlavní vedoucí" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.hlavni_vedouci }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
                      readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum ukončení" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}"
                      readonly>
             </div>
           </div>
@@ -167,39 +167,39 @@
             <div class="form-group">
               <label>{% trans "Lokalizace okolností" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2"
-                        placeholder="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
+                        value="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu }}"
+              <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.akce.ulozeni_nalezu }}"
                         readonly></textarea>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Hlavní typ" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.hlavni_typ }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Vedlejší typ" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.vedlejsi_typ }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.poznamka }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.poznamka }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Odeslat ZAA jako NZ" %}</label>
               <input class="form-control" type="text"
-                     placeholder="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}"
+                     value="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}"
                      readonly>
             </div>
           </div>
