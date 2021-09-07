@@ -21,9 +21,10 @@ def url_to_classes(value):
 
 @register.filter
 def katastry_to_list(value):
-    display = str()
-    for katastr in value:
-        display += (katastr.__str__()) + ", "
+    value = [str(i) for i in value]
+    display = ", ".join(value)
+    # for katastr in value:
+    #     display += (katastr.__str__()) + ", "
     return display
 
 
