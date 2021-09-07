@@ -50,8 +50,10 @@ class CreateArchZForm(forms.ModelForm):
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["hlavni_katastr"].required = False
-        self.fields["katastry"].disabled = True
-        self.fields["hlavni_katastr"].disabled = True
+        self.fields["katastry"].widget.attrs['readonly'] = True
+        self.fields["katastry"].widget.attrs['style'] = "pointer-events: none;"
+        self.fields["hlavni_katastr"].widget.attrs['readonly'] = True
+        self.fields["hlavni_katastr"].widget.attrs['style'] = "pointer-events: none;"
         if projekt:
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
@@ -61,9 +63,9 @@ class CreateArchZForm(forms.ModelForm):
 
         self.helper.layout = Layout(
             Div(
-                Div("hlavni_katastr", css_class="col-sm-4"),
+                Div("hlavni_katastr", css_class="col-sm-4", style="pointer-events: none;"),
                 Div("pristupnost", css_class="col-sm-4"),
-                Div("katastry", css_class="col-sm-4"),
+                Div("katastry", css_class="col-sm-4", style="pointer-events: none;"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-12"),
                 css_class="row",
             ),
