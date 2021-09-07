@@ -60,15 +60,17 @@ map.on('click', function (e) {
         xhr.onload = function () {
             // do something to response
             console.log(JSON.parse(this.responseText).cadastre);
-            let uzemi = document.getElementById('id_katastralni_uzemi');
-            uzemi.value=JSON.parse(this.responseText).cadastre;
             if(JSON.parse(this.responseText).cadastre=="None"){
                 //console.log("run")
                 alert("Neplatny bod, klikli jste mimo území ČR")
+                console.log("Neplatny bod, klikli jste mimo území ČR")
                 //var mess='<li><div class="alert alert-info msg fade show" role="alert">Klikli jste mimo území ČR</div></li>'
                 //document.getElementById('messages-list').append(mess)
                 //$("#messages").append(message);
                 //mess.fadeIn(500);
+            } else {
+                const uzemi = document.getElementById('id_katastralni_uzemi');
+                uzemi.value=JSON.parse(this.responseText).cadastre;
             }
         };
         xhr.send(JSON.stringify({ 'corY': corY,'corX': corX }))
