@@ -12,6 +12,7 @@ from core.constants import (
 from core.forms import TwoLevelSelectField
 from dokument.models import Dokument
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
 from . import validators
@@ -49,19 +50,22 @@ class CreateArchZForm(forms.ModelForm):
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["hlavni_katastr"].required = False
-        self.fields["katastry"].disabled = True
-        self.fields["hlavni_katastr"].disabled = True
+        self.fields["katastry"].widget.attrs['readonly'] = True
+        self.fields["katastry"].widget.attrs['style'] = "pointer-events: none;"
+        self.fields["hlavni_katastr"].widget.attrs['readonly'] = True
+        self.fields["hlavni_katastr"].widget.attrs['style'] = "pointer-events: none;"
         if projekt:
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
+            self.fields["katastry"].initial = projekt.katastry.all()
 
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
             Div(
-                Div("hlavni_katastr", css_class="col-sm-4"),
+                Div("hlavni_katastr", css_class="col-sm-4", style="pointer-events: none;"),
                 Div("pristupnost", css_class="col-sm-4"),
-                Div("katastry", css_class="col-sm-4"),
+                Div("katastry", css_class="col-sm-4", style="pointer-events: none;"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-12"),
                 css_class="row",
             ),
@@ -170,7 +174,9 @@ class CreateAkceForm(forms.ModelForm):
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
-            self.fields["specifikace_data"].disabled = True
+            self.fields["specifikace_data"].widget.attrs['readonly'] = True
+            self.fields["specifikace_data"].widget.attrs['style'] = "pointer-events: none;"
+            self.fields["specifikace_data"].initial = Heslar.objects.filter(heslo="přesně").first()
 
         self.helper.layout = Layout(
             Div(
