@@ -92,6 +92,7 @@ def detail(request, ident_cely):
         .select_related("pristupnost"),
         ident_cely=ident_cely,
     )
+    show = get_detail_template_shows(zaznam)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -133,36 +134,57 @@ def detail(request, ident_cely):
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
-        form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
-        extra=1,
+        form=create_nalez_objekt_form(
+            druh_objekt_choices,
+            specifikace_objekt_choices,
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
         NalezPredmet,
         form=create_nalez_predmet_form(
-            druh_predmet_choices, specifikce_predmetu_choices
+            druh_predmet_choices,
+            specifikce_predmetu_choices,
+            not_readonly=show["editovat"],
         ),
-        extra=1,
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     for jednotka in jednotky:
         has_adb = jednotka.has_adb()
         show_adb_add = (
-            jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb
+            jednotka.pian
+            and jednotka.typ.id == TYP_DJ_SONDA_ID
+            and not has_adb
+            and show["editovat"]
         )
-        show_add_komponenta = not jednotka.negativni_jednotka
+        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
         show_add_pian = False if jednotka.pian else True
         show_approve_pian = (
-            True if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN else False
+            True
+            if jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"]
+            else False
         )
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
+            "form": CreateDJForm(
+                instance=jednotka,
+                prefix=jednotka.ident_cely,
+                not_readonly=show["editovat"],
+            ),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
-            "show_add_pian": show_add_pian,
-            "show_remove_pian": not show_add_pian,
-            "show_uprav_pian": jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN,
+            "show_add_pian": (show_add_pian and show["editovat"]),
+            "show_remove_pian": (not show_add_pian and show["editovat"]),
+            "show_uprav_pian": jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"],
             "show_approve_pian": show_approve_pian,
         }
         if has_adb:
@@ -170,7 +192,7 @@ def detail(request, ident_cely):
                 instance=jednotka.adb, prefix=jednotka.adb.ident_cely
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["show_remove_adb"] = True
+            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
         dj_forms_detail.append(dj_form_detail)
         if jednotka.pian:
             pian_forms_detail.append(
@@ -191,6 +213,7 @@ def detail(request, ident_cely):
                         areal_choices,
                         instance=komponenta,
                         prefix=komponenta.ident_cely,
+                        readonly=not show["editovat"],
                     ),
                     "form_nalezy_objekty": NalezObjektFormset(
                         instance=komponenta, prefix=komponenta.ident_cely + "_o"
@@ -214,7 +237,7 @@ def detail(request, ident_cely):
     context["zaznam"] = zaznam
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
-    context["show"] = get_detail_template_shows(zaznam)
+    context["show"] = show
 
     return render(request, "arch_z/detail.html", context)
 

@@ -312,6 +312,7 @@
           <div class="app-fx app-left">
             {% trans "Oznamovatel" %}
           </div>
+          {% if show.editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a class="btn app-entity-projekt" href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
@@ -319,6 +320,7 @@
               </a>
             </div>
           </div>
+          {% endif %}
         </div>
         <div class="card-body">
           <div class="row">
@@ -362,6 +364,7 @@
         <div class="app-fx app-left">
           {% trans "Projektová dokumentace" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'core:upload_file_projekt' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Nahrát dokumentaci' %}">
@@ -369,6 +372,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}
