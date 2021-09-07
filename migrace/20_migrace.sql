@@ -1,0 +1,1 @@
+alter table soubor drop constraint if exists soubor_filepath_key;

@@ -172,7 +172,7 @@ def post_upload(request):
             size_bytes=soubor.size,
             typ_souboru=typ_souboru,
         )
-        duplikat = Soubor.objects.filter(nazev=s.nazev)
+        duplikat = Soubor.objects.filter(nazev=s.nazev).order_by("pk")
         if not duplikat.exists():
             logger.debug("Saving file object: " + str(s))
             s.save()
