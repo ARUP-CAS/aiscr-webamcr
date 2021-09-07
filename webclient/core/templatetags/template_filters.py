@@ -59,3 +59,16 @@ def last_x_letters(value, x):
         return value[-x:]
     else:
         return value
+
+
+@register.filter(name="ifinlist")
+def ifinlist(widget_optgroups, list):
+    string = ""
+    for group_name, group_choices, group_index in widget_optgroups:
+        for option in group_choices:
+            if str(option["value"]) in list:
+                if string == "":
+                    string = str(option["label"])
+                else:
+                    string += " ," + str(option["label"])
+    return string

@@ -170,20 +170,20 @@
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Typ projektu" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.typ_projektu }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.typ_projektu }}" readonly>
                 </div>
               </div>
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Hlavní katastr" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.hlavni_katastr }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.hlavni_katastr }}" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
                 <div class="form-group">
                   <label>{% trans "Další katastry" %}</label>
                   <div class="input-group">
-                    <input class="form-control app-ellipsis" stype="text" placeholder="{{ dalsi_katastry|katastry_to_list }}" readonly>
+                    <input class="form-control app-ellipsis" stype="text" value="{{ dalsi_katastry|katastry_to_list }}" readonly>
                     <div class="input-group-append" data-toggle="popover" data-placement="top"
                     data-content="<strong>{% trans 'Seznam katastrů' %}:</strong> {{ dalsi_katastry|katastry_to_list }}">
                       <span class="input-group-text">
@@ -196,31 +196,31 @@
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Podnět" %}</label>
-                  <textarea class="form-control" placeholder="{{ projekt.podnet }}" rows="2" readonly></textarea>
+                  <textarea class="form-control" value="{{ projekt.podnet }}" rows="2" readonly></textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
-                  <textarea class="form-control" placeholder="{{ projekt.lokalizace }}" rows="1" readonly></textarea>
+                  <textarea class="form-control" value="{{ projekt.lokalizace }}" rows="1" readonly></textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Parcelní číslo" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.parcelni_cislo }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.parcelni_cislo }}" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Označení stavby" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.oznaceni_stavby }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.oznaceni_stavby }}" readonly>
                 </div>
               </div>
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Plánované zahájení prací" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.planovane_zahajeni|render_daterange }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.planovane_zahajeni|render_daterange }}" readonly>
                 </div>
               </div>
             </div>
@@ -248,37 +248,37 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Vedoucí projektu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.vedouci_projektu}}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.vedouci_projektu}}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.organizace}}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.organizace}}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Uživatelské označení" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.uzivatelske_oznaceni }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.uzivatelske_oznaceni }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Rejstříkové číslo USKP" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_cislo }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_cislo }}" readonly>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Název památky" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_popis }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_popis }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
@@ -288,19 +288,19 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Termín odevzdání" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.termin_odevzdani_nz|date:'Y-m-d' }}" readonly><!--missings-->
+              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'Y-m-d' }}" readonly><!--missings-->
             </div>
           </div>
         </div>
@@ -312,6 +312,7 @@
           <div class="app-fx app-left">
             {% trans "Oznamovatel" %}
           </div>
+          {% if show.editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a class="btn app-entity-projekt" href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
@@ -319,37 +320,38 @@
               </a>
             </div>
           </div>
+          {% endif %}
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Oznamovatel" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.oznamovatel }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.oznamovatel }}" readonly>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Pověřená osoba oznamovatele" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.odpovedna_osoba }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.odpovedna_osoba }}" readonly>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Adresa oznamovatele" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.adresa }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.adresa }}" readonly>
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Telefon" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.telefon }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.telefon }}" readonly>
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Email" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.email }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.email }}" readonly>
               </div>
             </div>
           </div>
@@ -362,6 +364,7 @@
         <div class="app-fx app-left">
           {% trans "Projektová dokumentace" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'core:upload_file_projekt' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Nahrát dokumentaci' %}">
@@ -369,6 +372,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}

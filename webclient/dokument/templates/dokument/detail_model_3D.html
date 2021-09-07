@@ -50,16 +50,34 @@
         <h5>{% trans "Objekty" %}</h5>
         <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' komponenta.ident_cely %}"
               onsubmit="editNalezOSubmitButton.disabled = true; return true;">
+          {% if formset.objekt.forms %}
           {% crispy formset.objekt formset.helper %}
+          {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument neobsahuje žádné objekty." %}
+          </div>
+          {% endif %}          
+          {% if show.editovat %}
           <button type="submit" id="editNalezOSubmitButton"
                   class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+          {% endif %}
         </form>
         <h5>{% trans "Předměty" %}</h5>
         <form method="POST" action="{% url 'nalez:edit_predmet' komponenta.ident_cely %}"
               onsubmit="editNalezPSubmitButton.disabled = true; return true;">
+          {% if formset.predmet.forms %}
           {% crispy formset.predmet formset.helper %}
+          {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument neobsahuje žádné předměty." %}
+          </div>
+          {% endif %}
+          {% if show.editovat %}
           <button type="submit" id="editNalezPSubmitButton"
                   class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+          {% endif %}
         </form>
       </div>
     </div>
@@ -69,6 +87,7 @@
         <div class="app-fx app-left">
           {% trans "Náhledy 3D modelu / Obrázky s texturou" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
@@ -78,10 +97,11 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory next_url='/dokument/detail/' ident=dokument.ident_cely %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>

@@ -158,6 +158,7 @@ def detail_model_3D(request, ident_cely):
     if komponenty.count() != 1:
         logger.error("Model ma mit jednu komponentu: " + str(komponenty.count()))
         raise UnexpectedDataRelations()
+    show = get_detail_template_shows(dokument)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -173,16 +174,24 @@ def detail_model_3D(request, ident_cely):
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
-        form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
-        extra=1,
+        form=create_nalez_objekt_form(
+            druh_objekt_choices,
+            specifikace_objekt_choices,
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
         NalezPredmet,
         form=create_nalez_predmet_form(
-            druh_predmet_choices, specifikce_predmetu_choices
+            druh_predmet_choices,
+            specifikce_predmetu_choices,
+            not_readonly=show["editovat"],
         ),
-        extra=1,
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
@@ -203,7 +212,7 @@ def detail_model_3D(request, ident_cely):
         "helper": NalezFormSetHelper(),
     }
     context["history_dates"] = get_history_dates(dokument.historie)
-    context["show"] = get_detail_template_shows(dokument)
+    context["show"] = show
     logger.debug(context)
     if dokument.soubory:
         context["soubory"] = dokument.soubory.soubory.all()

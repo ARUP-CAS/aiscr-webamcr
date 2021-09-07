@@ -74,6 +74,7 @@
         <div class="app-fx app-left">
           {% trans "Fotografie" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" href="{% url 'core:upload_file_pas' sn.ident_cely %}"
@@ -83,6 +84,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}

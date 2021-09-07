@@ -9,6 +9,9 @@ from core.constants import (
     PHOTO_DOCUMENTATION,
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
+    D_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_ARCHIVOVANY,
+    SN_ARCHIVOVANY,
 )
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.models import Soubor
@@ -24,6 +27,8 @@ from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
+from django.core.exceptions import PermissionDenied
+
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +94,8 @@ def download_file(request, pk):
 @require_http_methods(["GET"])
 def upload_file_projekt(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     return render(
         request,
         "core/upload_file.html",
@@ -100,6 +107,8 @@ def upload_file_projekt(request, ident_cely):
 @require_http_methods(["GET"])
 def upload_file_dokument(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if d.stav == D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     return render(
         request,
         "core/upload_file.html",
@@ -111,6 +120,8 @@ def upload_file_dokument(request, ident_cely):
 @require_http_methods(["GET"])
 def upload_file_samostatny_nalez(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav == SN_ARCHIVOVANY:
+        raise PermissionDenied()
     return render(
         request,
         "core/upload_file.html",

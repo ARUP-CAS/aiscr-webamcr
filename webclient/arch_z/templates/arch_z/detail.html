@@ -120,46 +120,46 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Hlavní katastr" %}</label>
-              <input id="main_cadastre_id" class="form-control" type="text" placeholder="{{ zaznam.hlavni_katastr }}"
+              <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr }}"
                      readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Přístupnost" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.pristupnost }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.pristupnost }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Další katastry" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.katastry.all|katastry_to_list }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Uživatelské označení" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni }}"
+              <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.uzivatelske_oznaceni }}"
                         readonly></textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Hlavní vedoucí" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.hlavni_vedouci }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
                      readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum ukončení" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d' }}"
                      readonly>
             </div>
           </div>
@@ -167,39 +167,39 @@
             <div class="form-group">
               <label>{% trans "Lokalizace okolností" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2"
-                        placeholder="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
+                        value="{{ zaznam.akce.lokalizace_okolnosti }}" readonly></textarea>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu }}"
+              <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.akce.ulozeni_nalezu }}"
                         readonly></textarea>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Hlavní typ" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.hlavni_typ }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Vedlejší typ" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.vedlejsi_typ }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.poznamka }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.poznamka }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Odeslat ZAA jako NZ" %}</label>
               <input class="form-control" type="text"
-                     placeholder="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}"
+                     value="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}"
                      readonly>
             </div>
           </div>
@@ -215,6 +215,7 @@
             <div class="app-fx app-left">
               {% trans "Dokumentační jednotky" %}
             </div>
+            {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <button class="btn" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top"
@@ -223,6 +224,7 @@
                 </button>
               </div>
             </div>
+            {% endif %}
           </div>
           <div class="card-body p-0">
             <ul class="list-group list-group-flush">
@@ -315,6 +317,7 @@
               {% trans "Dokumentační jednotka" %} {{ j.ident_cely }}
             </div>
             <div class="app-fx app-right">
+              {% if show.editovat %}
               <div class="btn-group" role="group">
                 <div class="dropdown-menu" aria-labelledby="others">
                   {% if j.show_add_komponenta %}
@@ -371,13 +374,16 @@
                   <span class="material-icons">more_vert</span>
                 </button>
               </div>
+              {% endif %}
             </div>
           </div>
           <div class="card-body">
             <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
               {% crispy j.form %}
+              {% if show.editovat %}
               <button type="submit" id="editDjSubmitButton"
                       class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
+              {% endif %}
             </form>
 
             {% if j.adb_form %}
@@ -456,6 +462,7 @@
             <div class="app-fx app-left">
               {% trans "Komponenta" %} {{ k.ident_cely }}
             </div>
+            {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <div class="dropdown-menu" aria-labelledby="others">
@@ -469,12 +476,15 @@
                 </button>
               </div>
             </div>
+            {% endif %}
           </div>
           <div class="card-body">
             <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
               {% crispy k.form %}
+              {% if show.editovat %}
               <button type="submit" id="editKompSubmitButton"
                       class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
+              {% endif %}
             </form>
 
             <div class="card app-card-form app-card-inner">
@@ -486,15 +496,33 @@
               <div class="card-body">
                 <h5>{% trans "Objekty" %}</h5>
                 <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+                  {% if k.form_nalezy_objekty.forms %}
                   {% crispy k.form_nalezy_objekty k.helper %}
+                  {% else %}
+                  <div class="app-note">
+                    <span class="material-icons">info</span>
+                    {% trans "Komponenta neobsahuje žádné objekty." %}
+                  </div>
+                  {% endif %}
+                  {% if show.editovat %}
                   <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
                           class="btn btn-primary">{% trans "Upravit objekty" %}</button>
+                  {% endif %}
                 </form>
                 <h5>{% trans "Předměty" %}</h5>
                 <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
+                  {% if k.form_nalezy_predmety.forms %}
                   {% crispy k.form_nalezy_predmety k.helper %}
+                  {% else %}
+                  <div class="app-note">
+                    <span class="material-icons">info</span>
+                    {% trans "Komponenta neobsahuje žádné předměty." %}
+                  </div>
+                  {% endif %}
+                  {% if show.editovat %}
                   <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
                           class="btn btn-primary">{% trans "Upravit predmety" %}</button>
+                  {% endif %}
                 </form>
               </div>
             </div>
@@ -513,8 +541,10 @@
         <div class="card-body">
           <form class="mb-3" method="POST" action="{% url 'pian:detail' p.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">
             {% crispy p.form %}
+            {% if show.editovat %}
             <button type="submit" id="editPianButton"
                     class="btn btn-primary">{% trans "Upravit pian" %}</button>
+            {% endif %}
           </form>
         </div>
       </div>
@@ -526,6 +556,7 @@
         <div class="app-fx app-left">
           {% trans "Dokumenty" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
@@ -542,6 +573,7 @@
             </div>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         <table class="table table-striped table-hover table-sm mb-0">
@@ -551,7 +583,9 @@
             <th>{% trans "Stav" %}</th>
             <th>{% trans "Typ dokumentu" %}</th>
             <th>{% trans "Počet souborů" %}</th>
+            {% if show.editovat %}
             <th>{% trans "Odpojit dokument" %}</th>
+            {% endif %}
           </tr>
           </thead>
           <tbody>
@@ -568,11 +602,13 @@
               </td>
               <td>{{ d.typ_dokumentu }}</td>
               <td>{{ d.soubory.soubory.all|length }}</td>
+              {% if show.editovat %}
               <td>
                 <a href="{% url 'arch_z:odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
                   <span class="material-icons app-color-danger">delete_forever</span>
                 </a>
               </td>
+              {% endif %}
             </tr>
           {% endfor %}
           </tbody>

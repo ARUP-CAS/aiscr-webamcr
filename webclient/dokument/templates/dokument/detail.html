@@ -20,7 +20,7 @@
         <div class="app-fx app-left">
           {% trans "Detail" %}
         </div>
-         {% if show.editovat %}
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
@@ -96,6 +96,7 @@
         <div class="app-fx app-left">
           {% trans "Soubory" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
@@ -105,10 +106,11 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory next_url='/dokument/detail/' ident=dokument.ident_cely %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
