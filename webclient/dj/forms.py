@@ -30,8 +30,8 @@ class CreateDJForm(forms.ModelForm):
 
     def __init__(
         self,
-        not_readonly=True,
         *args,
+        not_readonly=True,
         **kwargs,
     ):
         super(CreateDJForm, self).__init__(*args, **kwargs)
