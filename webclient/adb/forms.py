@@ -47,7 +47,6 @@ class CreateADBForm(forms.ModelForm):
             "stratigraficke_jednotky": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "poznamka": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
-         
 
         # widgets = {
         #     "autor_popisu": autocomplete.ModelSelect2(
@@ -82,6 +81,9 @@ class CreateADBForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
 
 
 class VyskovyBodFormSetHelper(FormHelper):
@@ -117,6 +119,8 @@ def create_vyskovy_bod_form(pian=None):
                 self.fields["northing"].initial = pian.geom.centroid.x
                 self.fields["easting"].initial = pian.geom.centroid.y
 
+            for key in self.fields.keys():
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].empty_label = ""
 
     return CreateVyskovyBodForm
-

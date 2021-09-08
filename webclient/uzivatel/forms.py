@@ -42,6 +42,9 @@ class AuthUserCreationForm(RegistrationForm):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
 
 
 class AuthUserChangeForm(UserChangeForm):

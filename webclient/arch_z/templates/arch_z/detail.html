@@ -120,7 +120,7 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Hlavní katastr" %}</label>
-              <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr }}"
+              <input id="main_cadastre_id" class="form-control" type="text" value="{%if zaznam.hlavni_katastr %}{{ zaznam.hlavni_katastr }}{%endif%}"
                      readonly>
             </div>
           </div>
@@ -205,7 +205,7 @@
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Vedlejší typ" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ }}" readonly>
+              <input class="form-control" type="text" value="{% if zaznam.akce.vedlejsi_typ %}{{ zaznam.akce.vedlejsi_typ }}{%endif%}" readonly>
             </div>
           </div>
           <div class="col-sm-3">

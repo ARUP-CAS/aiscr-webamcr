@@ -219,8 +219,9 @@ class CreateAkceForm(forms.ModelForm):
 
         self.helper.form_tag = False
         for key in self.fields.keys():
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 

@@ -24,8 +24,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         label="Let",
         required=False,
         choices=tuple(
-            [("", "---------")]
-            + list(Let.objects.all().values_list("id", "ident_cely"))
+            [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
         ),
         widget=forms.Select(
             attrs={"class": "selectpicker", "data-live-search": "true"}
@@ -145,8 +144,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
         self.fields["rada"].disabled = edit_prohibited
 
@@ -270,8 +270,9 @@ class EditDokumentForm(forms.ModelForm):
 
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
         self.fields["datum_zverejneni"].disabled = True
 
@@ -337,8 +338,9 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
@@ -405,6 +407,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
