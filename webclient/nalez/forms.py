@@ -46,6 +46,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                     attrs={"class": "selectpicker", "data-live-search": "true"},
                 ),
             )
+            self.fields["specifikace"].required = False
 
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
@@ -94,6 +95,7 @@ def create_nalez_predmet_form(
                 "class": "selectpicker",
                 "data-live-search": "true",
             }
+            self.fields["specifikace"].required = True
 
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly

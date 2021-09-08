@@ -1,10 +1,17 @@
+import logging
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
+from django.db.models import Q
+
 from dj.models import DokumentacniJednotka
 from django import forms
 from django.utils.translation import gettext as _
+from heslar.models import Heslar
+from heslar.hesla import HESLAR_DJ_TYP
 
+logger = logging.getLogger(__name__)
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
     def media(self):
@@ -12,6 +19,22 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 
 class CreateDJForm(forms.ModelForm):
+    def get_typ_queryset(self, jednotky):
+        queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
+        logger.debug(jednotky)
+        if jednotky is not None:
+            if jednotky.filter(typ__heslo__iexact="sonda").count() > 0:
+                queryset = queryset.filter(heslo__iexact="sonda")
+            elif jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
+                if jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
+                    queryset = queryset.filter(heslo__iexact="část akce")
+                else:
+                    queryset = queryset.filter(Q(heslo__iexact="část akce") | Q(heslo__iexact="celek akce"))
+            elif jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
+                queryset = queryset.filter(heslo__iexact="část akce")
+        logger.debug(queryset)
+        return queryset
+
     class Meta:
         model = DokumentacniJednotka
         fields = ("typ", "negativni_jednotka", "nazev", "pian")
@@ -34,7 +57,9 @@ class CreateDJForm(forms.ModelForm):
         not_readonly=True,
         **kwargs,
     ):
+        jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
+        self.fields["typ"] = forms.ModelChoiceField(queryset=self.get_typ_queryset(jednotky))
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(

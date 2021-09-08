@@ -1,9 +1,10 @@
-from adb.models import Adb
+from adb.models import Adb, VyskovyBod
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
+from django.contrib.gis.forms import PointField
 
 
 class CreateADBForm(forms.ModelForm):
@@ -81,3 +82,41 @@ class CreateADBForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
+
+
+class VyskovyBodFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.template = "bootstrap4/table_inline_formset.html"
+        self.form_tag = False
+
+
+def create_vyskovy_bod_form(pian=None):
+    class CreateVyskovyBodForm(forms.ModelForm):
+        class Meta:
+            model = VyskovyBod
+
+            fields = ("ident_cely", "typ", "niveleta", "northing", "easting")
+
+            # labels = {
+            #     "pocet": _("Počet"),
+            #     "poznamka": _("Poznámka"),
+            # }
+            #
+            widgets = {
+                "ident_cely": forms.Textarea(attrs={"rows": 1, "10": 40}),
+            }
+
+        def __init__(self, *args, **kwargs):
+            super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
+            self.fields["ident_cely"].disabled = True
+            self.fields["ident_cely"].required = False
+            self.fields["northing"].label = "X"
+            self.fields["easting"].label = "Y"
+            if pian:
+                self.fields["northing"].initial = pian.geom.centroid.x
+                self.fields["easting"].initial = pian.geom.centroid.y
+
+
+    return CreateVyskovyBodForm
+

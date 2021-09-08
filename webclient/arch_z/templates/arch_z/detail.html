@@ -151,6 +151,18 @@
           </div>
           <div class="col-sm-4">
             <div class="form-group">
+              <label>{% trans "Organizace" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Specifikace data" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d' }}"
                      readonly>
@@ -174,6 +186,13 @@
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.akce.ulozeni_nalezu }}"
+                        readonly></textarea>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="form-group">
+              <label>{% trans "Uložení dokumentace" %}</label>
+              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_dokumentace }}"
                         readonly></textarea>
             </div>
           </div>
@@ -246,7 +265,7 @@
                             data-placement="top" title="{% trans 'DJ nemá pian' %}">location_disabled</span>
                     {% endif %}
                     <a href="#" class="flex-fill app-entity-color"
-                       onclick="show_form('detail_dj_form_{{ j.ident_cely }}')">
+                       onclick="show_form('detail_dj_form_{{ j.ident_cely }}');get_create_pain_form_action('{{ j.ident_cely }}');">
                       <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                       {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
                     </a>
@@ -258,7 +277,6 @@
                           <div class="d-flex align-items-baseline">
                             <a href="#" class="flex-fill mr-2 app-entity-color"
                                onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
-                              {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
                             <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
@@ -306,7 +324,7 @@
                 onsubmit="newDjSubmitButton.disabled = true; return true;">
             {% crispy dj_form_create %}
             <button type="submit" id="newDjSubmitButton"
-                    class="btn btn-primary">{% trans "Vytovřit jednotku" %}</button>
+                    class="btn btn-primary">{% trans "Vytvořit jednotku" %}</button>
           </form>
         </div>
       </div>
@@ -394,10 +412,16 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <form method="POST" action="{% url 'adb:detail' j.ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
+                  <form method="POST" action="{% url 'adb:detail' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
                     {% crispy j.adb_form %}
                     <button type="submit" id="editAdbSubmitButton"
                             class="btn btn-primary">{% trans "Upravit ADB" %}</button>
+                  </form>
+                  <form method="POST" action="{% url 'adb:zapsat_vyskove_body' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
+                    <h5>{% trans "Výškové body" %}</h5>
+                    {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
+                    <button type="submit" id="editAdbVyskoveBodySubmitButton"
+                            class="btn btn-primary">{% trans "Upravit Výškové body" %}</button>
                   </form>
                 </div>
               </div>
@@ -418,7 +442,7 @@
             <!-- Action is filled using javascript -->
             {% crispy komponenta_form_create %}
             <button type="submit" id="createCompotSubmitButton"
-                    class="btn btn-primary">{% trans "Vytovřit komponentu" %}</button>
+                    class="btn btn-primary">{% trans "Vytvořit komponentu" %}</button>
           </form>
         </div>
       </div>
@@ -434,7 +458,7 @@
             <!-- Action is filled using javascript -->
             {% crispy adb_form_create %}
             <button type="submit" id="createAdbSubmitButton"
-                    class="btn btn-primary">{% trans "Vytovřit ADB" %}</button>
+                    class="btn btn-primary">{% trans "Vytvořit ADB" %}</button>
           </form>
         </div>
       </div>
@@ -450,7 +474,7 @@
             <!-- Action is filled using javascript -->
             {% crispy pian_form_create %}
             <button type="submit" id="createPianSubmitButton"
-                    class="btn btn-primary">{% trans "Vytovřit pian" %}</button>
+                    class="btn btn-primary">{% trans "Vytvořit pian" %}</button>
           </form>
         </div>
       </div>
@@ -582,6 +606,7 @@
             <th>{% trans "Identifikátor" %}</th>
             <th>{% trans "Stav" %}</th>
             <th>{% trans "Typ dokumentu" %}</th>
+            <th>{% trans "Popis" %}</th>
             <th>{% trans "Počet souborů" %}</th>
             {% if show.editovat %}
             <th>{% trans "Odpojit dokument" %}</th>
@@ -601,6 +626,7 @@
                 <div class="badge">{{ d.get_stav_display }}</div>
               </td>
               <td>{{ d.typ_dokumentu }}</td>
+              <td>{{ d.popis }}</td>
               <td>{{ d.soubory.soubory.all|length }}</td>
               {% if show.editovat %}
               <td>
@@ -621,6 +647,11 @@
 {% block script %}
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
+      function get_create_pain_form_action(selected_dj_ident) {
+          const url = "/pian/create/1";
+          url.replace("1", selected_dj_ident);
+          document.getElementById("create_pian_form_id").action = url;
+      }
 
       let shown_form_id = "";
       let ask_only_once=true;
@@ -725,8 +756,13 @@
       document.addEventListener('DOMContentLoaded', function (event) {
           // Focus on detail set by the cookie and display it
           let detail_to_show = getCookie("detail-id-shown")
+          const show_form_cookie = getCookie("show-form");
           let element_of_the_detail = document.getElementById(detail_to_show)
-          if (detail_to_show != null && element_of_the_detail != null) {
+          if (show_form_cookie) {
+              show_form(show_form_cookie);
+              get_create_pain_form_action(show_form);
+              setCookie("show-form", "", "");
+          } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
               document.getElementById(detail_to_show).scrollIntoView()
           } else {

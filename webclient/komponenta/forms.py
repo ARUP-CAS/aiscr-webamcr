@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 class CreateKomponentaForm(forms.ModelForm):
     class Meta:
         model = Komponenta
-        fields = ("presna_datace", "jistota", "aktivity", "obdobi", "areal")
+        fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
 
         labels = {
             "presna_datace": _("Přesná datace"),
             "jistota": _("Jistota"),
             "aktivity": _("Aktivity"),
+            "poznamka": _("Poznámka"),
         }
 
         widgets = {
@@ -58,6 +59,7 @@ class CreateKomponentaForm(forms.ModelForm):
                 Div("presna_datace", css_class="col-sm-6"),
                 Div("areal", css_class="col-sm-6"),
                 Div("aktivity", css_class="col-sm-6"),
+                Div("poznamka", css_class="col-sm-12"),
                 css_class="row",
             ),
         )

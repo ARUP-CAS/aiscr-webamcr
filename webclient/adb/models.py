@@ -1,9 +1,13 @@
+import logging
+
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
+
+logger = logging.getLogger(__name__)
 
 
 class Kladysm5(models.Model):
@@ -68,6 +72,24 @@ class Adb(models.Model):
         db_table = "adb"
 
 
+def get_vyskovy_bod(adb: Adb, offset=1) -> str:
+    MAXIMAL_VYSKOVY_BOD: int = 9999
+    last_digit_count = 4
+    max_count = 0
+    vyskove_body = VyskovyBod.objects.filter(adb=adb).order_by("-ident_cely")
+    if vyskove_body.count() == 0:
+        return f"{adb.ident_cely}-V000{offset}"
+    elif vyskove_body.count() <= MAXIMAL_VYSKOVY_BOD + offset:
+        posledni_vyskovy_bod = vyskove_body.first()
+        posledni_vyskovy_bod: VyskovyBod
+        nejvyssi_postfix = int(posledni_vyskovy_bod.ident_cely[-4:]) + offset
+        nejvyssi_postfix = str(nejvyssi_postfix).zfill(last_digit_count)
+        return f"{adb.ident_cely}-V{nejvyssi_postfix}"
+    else:
+        logger.error("Maximal number of Výškový bod is " + str(MAXIMAL_VYSKOVY_BOD))
+        raise MaximalIdentNumberError(max_count)
+
+
 class VyskovyBod(models.Model):
     adb = models.ForeignKey(
         Adb, on_delete=models.CASCADE, db_column="adb", related_name="vyskove_body"
@@ -82,6 +104,14 @@ class VyskovyBod(models.Model):
     )
     niveleta = models.FloatField()
     geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
+    northing = models.FloatField()
+    easting = models.FloatField()
+    poradi = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.adb:
+            self.ident_cely = get_vyskovy_bod(self.adb)
+        super(VyskovyBod, self).save(*args, **kwargs)
 
     class Meta:
         db_table = "vyskovy_bod"

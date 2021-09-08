@@ -1,7 +1,8 @@
 import logging
 
 import simplejson as json
-from adb.forms import CreateADBForm
+from adb.forms import CreateADBForm, create_vyskovy_bod_form, VyskovyBodFormSetHelper
+from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
     CreateAkceForm,
     CreateArchZForm,
@@ -124,7 +125,7 @@ def detail(request, ident_cely):
         )
     )
 
-    dj_form_create = CreateDJForm()
+    dj_form_create = CreateDJForm(jednotky=jednotky)
     pian_form_create = PianCreateForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     adb_form_create = CreateADBForm()
@@ -154,6 +155,13 @@ def detail(request, ident_cely):
         can_delete=show["editovat"],
     )
     for jednotka in jednotky:
+        jednotka: DokumentacniJednotka
+        vyskovy_bod_formset = inlineformset_factory(
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(pian=jednotka.pian),
+            extra=1,
+        )
         has_adb = jednotka.has_adb()
         show_adb_add = (
             jednotka.pian
@@ -192,6 +200,9 @@ def detail(request, ident_cely):
                 instance=jednotka.adb, prefix=jednotka.adb.ident_cely
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+            dj_form_detail["vyskovy_bod_formset"] = \
+                vyskovy_bod_formset(instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb")
+            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
             dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
         dj_forms_detail.append(dj_form_detail)
         if jednotka.pian:
