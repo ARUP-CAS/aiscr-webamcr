@@ -718,8 +718,13 @@
       document.addEventListener('DOMContentLoaded', function (event) {
           // Focus on detail set by the cookie and display it
           let detail_to_show = getCookie("detail-id-shown")
+          const show_form_cookie = getCookie("show-form");
           let element_of_the_detail = document.getElementById(detail_to_show)
-          if (detail_to_show != null && element_of_the_detail != null) {
+          if (show_form_cookie) {
+              show_form(show_form_cookie);
+              get_create_pain_form_action(show_form);
+              setCookie("show-form", "", "");
+          } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
               document.getElementById(detail_to_show).scrollIntoView()
           } else {
