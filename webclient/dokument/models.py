@@ -1,4 +1,6 @@
 import datetime
+import calendar
+import math
 import logging
 
 from arch_z.models import ArcheologickyZaznam
@@ -11,7 +13,7 @@ from core.constants import (
     VRACENI_DOK,
     ZAPSANI_DOK,
 )
-from core.exceptions import UnexpectedDataRelations
+from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
 from core.models import SouborVazby
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
@@ -176,6 +178,8 @@ class Dokument(models.Model):
 
     def set_archivovany(self, user):
         self.stav = D_STAV_ARCHIVOVANY
+        if not self.datum_zverejneni:
+            self.set_datum_zverejneni()
         Historie(
             typ_zmeny=ARCHIVACE_DOK,
             uzivatel=user,
@@ -226,13 +230,20 @@ class Dokument(models.Model):
             return None
 
     def set_permanent_ident_cely(self, rada):
+        MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
             0
         ]
-        perm_ident_cely = (
-            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
+        if sequence.sekvence < MAXIMUM:
+            perm_ident_cely = (
+                rada
+                + "-"
+                + str(current_year)
+                + "{0}".format(sequence.sekvence).zfill(5)
+            )
+        else:
+            raise MaximalIdentNumberError(MAXIMUM)
         # Loop through all of the idents that have been imported
         while True:
             if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
@@ -252,9 +263,29 @@ class Dokument(models.Model):
             else:
                 break
         self.ident_cely = perm_ident_cely
+        for dc in self.casti.all():
+            if "3D" in perm_ident_cely:
+                for komponenta in dc.komponenty.komponenty.all():
+                    komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
+                    komponenta.save()
+                    logger.debug(
+                        "Prejmenovany ident komponenty " + komponenta.ident_cely
+                    )
+            dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
+            dc.save()
+            logger.debug("Prejmenovany ident dokumentacni casti " + dc.ident_cely)
         sequence.sekvence += 1
         sequence.save()
         self.save()
+
+    def set_datum_zverejneni(self):
+        new_date = datetime.date.today()
+        new_month = new_date.month + self.organizace.mesicu_do_zverejneni
+        year = new_date.year + (math.floor(new_month / 12))
+        month = new_month % 12
+        last_day_of_month = calendar.monthrange(new_date.year, month)[1]
+        day = min(new_date.day, last_day_of_month)
+        self.datum_zverejneni = datetime.date(year, month, day)
 
 
 class DokumentCast(models.Model):

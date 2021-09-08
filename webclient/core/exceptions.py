@@ -43,3 +43,10 @@ class NeznamaGeometrieError(Exception):
 class UnexpectedDataRelations(Exception):
     def __init__(self, message="Duplicitni nebo chybejici relace."):
         self.message = message
+
+
+class MaximalEventCount(Exception):
+    def __init__(self, number, message="Maximalni pocet akci prekrocen"):
+        self.number = number
+        self.message = message
+        super().__init__(self.number)

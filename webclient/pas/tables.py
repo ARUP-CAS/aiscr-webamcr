@@ -2,6 +2,7 @@ import logging
 
 import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
+from django_tables2.utils import A
 
 from .models import SamostatnyNalez, UzivatelSpoluprace
 
@@ -46,11 +47,36 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
 class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
 
-    vedouci = tables.Column(accessor="vedouci__email", verbose_name="Vedoucí")
-    spolupracovnik = tables.Column(
-        accessor="spolupracovnik__email", verbose_name="Spolupracovník"
+    stav = tables.Column(
+        verbose_name="Stav",
+        attrs={"td": {"class": "spoluprace"}},
     )
-    aktivace = tables.TemplateColumn(template_name="pas/aktivace_deaktivace_cell.html")
+    vedouci = tables.Column(
+        accessor=("vedouci__name_and_id"),
+        verbose_name="Vedoucí",
+        attrs={"td": {"class": "spoluprace"}},
+    )
+    organizace_vedouci = tables.Column(
+        accessor=("vedouci__organizace"),
+        verbose_name="Organizace (Vedoucí)",
+        attrs={"td": {"class": "spoluprace"}},
+    )
+    spolupracovnik = tables.Column(
+        accessor="spolupracovnik__name_and_id",
+        verbose_name="Spolupracovník",
+        attrs={"td": {"class": "spoluprace"}},
+    )
+    organizace_spolupracovnik = tables.Column(
+        accessor=("spolupracovnik__organizace"),
+        verbose_name="Organizace (Spolupracovník)",
+        attrs={"td": {"class": "spoluprace"}},
+    )
+
+    historie = tables.LinkColumn("historie:spoluprace", text="Historie", args=[A("pk")])
+    aktivace = tables.TemplateColumn(
+        attrs={"td": {"class": "spoluprace"}},
+        template_name="pas/aktivace_deaktivace_cell.html",
+    )
 
     class Meta:
         model = UzivatelSpoluprace

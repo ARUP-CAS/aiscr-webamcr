@@ -109,7 +109,7 @@ class SamostatnyNalez(models.Model):
     )
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
-    predano = models.BooleanField(blank=True, null=True)
+    predano = models.BooleanField(blank=True, null=True, default=False)
     predano_organizace = models.ForeignKey(
         Organizace,
         models.DO_NOTHING,
@@ -184,6 +184,26 @@ class SamostatnyNalez(models.Model):
 
     def get_absolute_url(self):
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
+
+    def check_pred_odeslanim(self):
+        resp = []
+        if not self.obdobi:
+            resp.append(_("Nález před odesláním musí mít vyplneno období."))
+        if not self.datum_nalezu:
+            resp.append(_("Nález před odesláním musí mít vyplnen datum nálezu"))
+        if not self.lokalizace:
+            resp.append(_("Nález před odesláním musí mít vyplnenu lokalizaci"))
+        if not self.okolnosti:
+            resp.append(_("Nález před odesláním musí mít vyplnen okolnosti"))
+        if not self.specifikace:
+            resp.append(_("Nález před odesláním musí mít vyplnen materiál"))
+        if not self.druh_nalezu:
+            resp.append(_("Nález před odesláním musí mít vyplnen druh nálezu"))
+        if not self.geom:
+            resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
+        if not self.soubory.soubory.exists():
+            resp.append(_("Nález před odesláním musí mít alespoň jednou fotografii"))
+        return resp
 
     class Meta:
         db_table = "samostatny_nalez"

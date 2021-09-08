@@ -1,4 +1,4 @@
-from core.constants import ROLE_ARCHEOLOG_ID
+from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.forms import ModelChoiceField
 from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
@@ -20,14 +21,23 @@ from projekt.models import Projekt
 from uzivatel.models import User
 
 
-def validate_archeolog_email(email):
+def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
-    if not user.exists() or user[0].hlavni_role != Group.objects.get(
-        id=ROLE_ARCHEOLOG_ID
+    if not user.exists():
+        raise ValidationError(
+            _("Uživatel s emailem ") + email + _(" neexistuje."),
+        )
+    if user[0].hlavni_role not in Group.objects.filter(
+        id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
         raise ValidationError(
-            _("Archeolg s emailem ") + email + _(" neexistuje."),
+            _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
         )
+
+
+class ProjectModelChoiceField(ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
 class PotvrditNalezForm(forms.ModelForm):
@@ -72,6 +82,11 @@ class PotvrditNalezForm(forms.ModelForm):
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
         self.helper.form_tag = False
+        self.fields["predano_organizace"].disabled = True
+        for key in self.fields.keys():
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
@@ -120,19 +135,17 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         }
 
     def __init__(self, *args, readonly=False, user=None, **kwargs):
+        projekt_disabed = kwargs.pop("projekt_disabled", False)
+        fields_required = kwargs.pop("fields_required", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 1
         self.fields["pocet"].widget.attrs["rows"] = 1
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["lokalizace"].required = True
-        self.fields["datum_nalezu"].required = True
-        self.fields["okolnosti"].required = True
-        self.fields["specifikace"].required = True
-        self.fields["projekt"] = forms.ModelChoiceField(
-            queryset=Projekt.objects.filter(
-                typ_projektu=TYP_PROJEKTU_PRUZKUM_ID
-            ).filter(organizace__in=user.moje_spolupracujici_organizace()),
+        self.fields["projekt"] = ProjectModelChoiceField(
+            queryset=Projekt.objects.filter(typ_projektu=TYP_PROJEKTU_PRUZKUM_ID)
+            .filter(organizace__in=user.moje_spolupracujici_organizace())
+            .filter(stav__in=user.moje_stavy_pruzkumnych_projektu()),
             widget=forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -151,6 +164,15 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
         )
+        self.fields["druh_nalezu"].required = False
+        self.fields["obdobi"].required = False
+        if fields_required:
+            self.fields["druh_nalezu"].required = True
+            self.fields["lokalizace"].required = True
+            self.fields["datum_nalezu"].required = True
+            self.fields["okolnosti"].required = True
+            self.fields["specifikace"].required = True
+            self.fields["obdobi"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -174,16 +196,22 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+        if projekt_disabed:
+            self.fields["projekt"].disabled = projekt_disabed
+        for key in self.fields.keys():
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateZadostForm(forms.Form):
-    email_archeologa = forms.EmailField(
-        label=_("Archeolog"),
+    email_uzivatele = forms.EmailField(
+        label=_("Uživatel"),
         widget=forms.EmailInput(
-            attrs={"placeholder": _("Zadejte email archeologa pro spolupráci")}
+            attrs={"placeholder": _("Zadejte email uživatele pro spolupráci")}
         ),
         required=True,
-        validators=[validate_archeolog_email],
+        validators=[validate_uzivatel_email],
     )
 
     def __init__(self, *args, **kwargs):

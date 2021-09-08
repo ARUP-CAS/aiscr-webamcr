@@ -34,3 +34,15 @@
     }
   }
 }
+
+.step-trigger { 
+  &.projekt {
+  padding: 10px;
+  }
+}
+
+.line {
+  &.projekt{
+  flex: 1 0 12px;
+  }
+}

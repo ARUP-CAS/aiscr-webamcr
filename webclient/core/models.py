@@ -27,7 +27,7 @@ class Soubor(models.Model):
     nazev_puvodni = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     vlastnik = models.ForeignKey(User, models.DO_NOTHING, db_column="vlastnik")
-    nazev = models.TextField(unique=True)
+    nazev = models.TextField(unique=False)
     mimetype = models.TextField()
     size_bytes = models.IntegerField()
     vytvoreno = models.DateField(auto_now_add=True)
@@ -51,11 +51,3 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
-
-
-# class AdbSekvence(models.Model):
-#     kladysm5 = models.OneToOneField(Kladysm5, models.DO_NOTHING)
-#     sekvence = models.IntegerField()
-#
-#     class Meta:
-#         db_table = 'adb_sekvence'

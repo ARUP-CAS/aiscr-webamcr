@@ -2,7 +2,7 @@ import logging
 
 from adb.forms import CreateADBForm, create_vyskovy_bod_form, VyskovyBodFormSetHelper
 from adb.models import Adb
-from core.exceptions import DJNemaPianError
+from core.exceptions import DJNemaPianError, MaximalIdentNumberError
 from core.ident_cely import get_adb_ident
 from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
@@ -55,12 +55,15 @@ def zapsat(request, dj_ident_cely):
         adb = form.save(commit=False)
         if not dj.pian:
             raise DJNemaPianError(dj)
-        adb.ident_cely, sm5 = get_adb_ident(dj.pian)
-        adb.dokumentacni_jednotka = dj
-        adb.sm5 = sm5
-        adb.save()
-
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+        try:
+            adb.ident_cely, sm5 = get_adb_ident(dj.pian)
+        except MaximalIdentNumberError as e:
+            messages.add_message(request, messages.ERROR, e.message)
+        else:
+            adb.dokumentacni_jednotka = dj
+            adb.sm5 = sm5
+            adb.save()
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)

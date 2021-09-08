@@ -9,7 +9,7 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-dokument app-table-list-container">
+  <div class="app-entity-knihovna_3d app-table-list-container">
     {% include "toolbar_dokument.html" %}
 
     {% if filter %}
@@ -106,11 +106,7 @@
         </div>
       </form>
     {% endif %}
-    <div class="app-table-list-wrapper">
-      <div class="app-table-list-inner">
-        {% render_table table 'projekt/bootstrap4.html' %}
-      </div>
-    </div>
+    {% render_table table 'projekt/bootstrap4.html' %}
   </div>
 {% endblock %}
 

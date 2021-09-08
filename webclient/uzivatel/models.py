@@ -6,6 +6,15 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ROLE_NEAKTIVNI_UZIVATEL_ID,
+    PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+    PROJEKT_STAV_OZNAMENY,
+    PROJEKT_STAV_PRIHLASENY,
+    PROJEKT_STAV_UKONCENY_V_TERENU,
+    PROJEKT_STAV_UZAVRENY,
+    PROJEKT_STAV_ZAHAJENY_V_TERENU,
+    PROJEKT_STAV_ZAPSANY,
+    PROJEKT_STAV_ZRUSENY,
 )
 from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -84,6 +93,27 @@ class User(AbstractBaseUser, PermissionsMixin):
             # Admin a archivar spolupracuje defaultne se vsemi organizacemi
             return Organizace.objects.all()
 
+    def moje_stavy_pruzkumnych_projektu(self):
+        badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
+        archeolog_group = Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+        archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
+        admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
+        if self.hlavni_role == badatel_group or self.hlavni_role == archeolog_group:
+            return (PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_ZAHAJENY_V_TERENU)
+        elif self.hlavni_role == archivar_group or self.hlavni_role == admin_group:
+            # Admin a archivar vidi na vsechny stavy projektu
+            return (
+                PROJEKT_STAV_ARCHIVOVANY,
+                PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+                PROJEKT_STAV_OZNAMENY,
+                PROJEKT_STAV_PRIHLASENY,
+                PROJEKT_STAV_UKONCENY_V_TERENU,
+                PROJEKT_STAV_UZAVRENY,
+                PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                PROJEKT_STAV_ZAPSANY,
+                PROJEKT_STAV_ZRUSENY,
+            )
+
     def email_user(self, *args, **kwargs):
         send_mail(
             "{}".format(args[0]),
@@ -92,6 +122,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             [self.email],
             fail_silently=False,
         )
+
+    def name_and_id(self):
+        return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
 
     class Meta:
         db_table = "auth_user"
@@ -144,7 +177,9 @@ class Osoba(models.Model):
         db_table = "osoba"
         ordering = ["vypis_cely"]
         constraints = [
-            models.UniqueConstraint(fields=['jmeno', 'prijmeni'], name='unique jmeno a prijmeni')
+            models.UniqueConstraint(
+                fields=["jmeno", "prijmeni"], name="unique jmeno a prijmeni"
+            )
         ]
 
     def __str__(self):

@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Nový dokument" %}{% endblock %}
+{% block title %}{% trans "Editace dokumentu" %}{% endblock %}
 {% block head %}
 {% endblock %}
 
@@ -15,11 +15,20 @@
         <div class="card app-card-form">
           <div class="card-header">
             <div class="app-fx app-left">
-              {% trans "Nový dokument" %}
+              {% trans "Editace dokumentu" %}
             </div>
           </div>
           <div class="card-body">
-            {% crispy formDokument %}
+            <div>
+              {% crispy formDokument %}
+            </div>
+            <div css_class="col-sm-12">
+              <span class="app-divider-label">Rozšiřující popis</span>
+              <hr class="mt-0" />
+            </div>
+            <div>
+              {% crispy formExtraData %}
+            </div>
           </div>
         </div>
         <div class="mt-3">

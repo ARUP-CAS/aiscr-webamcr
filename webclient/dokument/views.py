@@ -1,4 +1,5 @@
 import logging
+from dokument.models import DokumentOsoba
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -11,7 +12,7 @@ from core.constants import (
     ODESLANI_DOK,
     ZAPSANI_DOK,
 )
-from core.exceptions import UnexpectedDataRelations
+from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
 from core.forms import VratitForm
 from core.ident_cely import (
     get_cast_dokumentu_ident,
@@ -29,6 +30,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    MAXIMUM_IDENT_DOSAZEN,
 )
 from dal import autocomplete
 from django.contrib import messages
@@ -44,13 +46,18 @@ from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin
 from dokument.filters import DokumentFilter
 from dokument.forms import (
-    CreateDokumentForm,
     CreateModelDokumentForm,
     CreateModelExtraDataForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
 )
-from dokument.models import Dokument, DokumentCast, DokumentExtraData
+from dokument.models import (
+    Dokument,
+    DokumentCast,
+    DokumentExtraData,
+    DokumentAutor,
+    Let,
+)
 from dokument.tables import DokumentTable
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
@@ -104,8 +111,22 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
-
+    if not dokument.has_extra_data():
+        extra_data = DokumentExtraData(dokument=dokument)
+        extra_data.save()
+    else:
+        extra_data = dokument.extra_data
+    form_dokument = EditDokumentForm(instance=dokument, readonly=True)
+    form_dokument_extra = EditDokumentExtraDataForm(
+        rada=dokument.rada,
+        let=(dokument.let.id if dokument.let else ""),
+        dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
+        instance=extra_data,
+        readonly=True,
+    )
     context["dokument"] = dokument
+    context["form_dokument"] = form_dokument
+    context["form_dokument_extra"] = form_dokument_extra
     context["history_dates"] = get_history_dates(dokument.historie)
     context["show"] = get_detail_template_shows(dokument)
 
@@ -137,6 +158,7 @@ def detail_model_3D(request, ident_cely):
     if komponenty.count() != 1:
         logger.error("Model ma mit jednu komponentu: " + str(komponenty.count()))
         raise UnexpectedDataRelations()
+    show = get_detail_template_shows(dokument)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -152,16 +174,24 @@ def detail_model_3D(request, ident_cely):
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
-        form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
-        extra=1,
+        form=create_nalez_objekt_form(
+            druh_objekt_choices,
+            specifikace_objekt_choices,
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
         NalezPredmet,
         form=create_nalez_predmet_form(
-            druh_predmet_choices, specifikce_predmetu_choices
+            druh_predmet_choices,
+            specifikce_predmetu_choices,
+            not_readonly=show["editovat"],
         ),
-        extra=1,
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
@@ -182,7 +212,7 @@ def detail_model_3D(request, ident_cely):
         "helper": NalezFormSetHelper(),
     }
     context["history_dates"] = get_history_dates(dokument.historie)
-    context["show"] = get_detail_template_shows(dokument)
+    context["show"] = show
     logger.debug(context)
     if dokument.soubory:
         context["soubory"] = dokument.soubory.soubory.all()
@@ -216,6 +246,8 @@ class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, Filter
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if dokument.stav == D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     if not dokument.has_extra_data():
         extra_data = DokumentExtraData(dokument=dokument)
         extra_data.save()
@@ -223,11 +255,19 @@ def edit(request, ident_cely):
         extra_data = dokument.extra_data
     if request.method == "POST":
         form_d = EditDokumentForm(request.POST, instance=dokument)
-        form_extra = EditDokumentExtraDataForm(request.POST, instance=extra_data)
+        form_extra = EditDokumentExtraDataForm(
+            request.POST,
+            instance=extra_data,
+        )
         if form_d.is_valid() and form_extra.is_valid():
-            form_d.save()
+            instance_d = form_d.save(commit=False)
+            instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
+            if form_extra.cleaned_data["let"]:
+                instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
+            instance_d.save()
+            form_d.save_m2m()
             form_extra.save()
-            if form_d.changed_data or form_extra.changed_data:
+            if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
@@ -236,19 +276,21 @@ def edit(request, ident_cely):
             logger.debug(form_extra.errors)
     else:
         form_d = EditDokumentForm(instance=dokument)
-        form_extra = EditDokumentExtraDataForm(instance=extra_data)
+        form_extra = EditDokumentExtraDataForm(
+            rada=dokument.rada,
+            let=(dokument.let.id if dokument.let else ""),
+            dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
+            instance=extra_data,
+        )
 
     return render(
         request,
-        "dokument/create.html",
+        "dokument/edit.html",
         {
             "formDokument": form_d,
             "formExtraData": form_extra,
             "dokument": dokument,
             "hierarchie": get_hierarchie_dokument_typ(),
-            "title": _("Editace dokumentu"),
-            "header": _("Editace dokumentu"),
-            "button": _("Edituj dokument"),
         },
     )
 
@@ -257,6 +299,8 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if dokument.stav == D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     if request.method == "POST":
@@ -312,58 +356,49 @@ def edit_model_3D(request, ident_cely):
 def zapsat(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if request.method == "POST":
-        form_d = CreateDokumentForm(request.POST)
-        form_extra = EditDokumentExtraDataForm(request.POST)
-
-        if form_d.is_valid() and form_extra.is_valid():
+        form_d = EditDokumentForm(request.POST)
+        if form_d.is_valid():
             logger.debug("Form is valid")
             dokument = form_d.save(commit=False)
-            identifikator = form_d.cleaned_data["identifikator"]
-            rada = get_dokument_rada(
+            dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
             )
-            dokument.ident_cely = get_temp_dokument_ident(
-                rada=rada.zkratka, region=identifikator
-            )
-            dokument.rada = rada
-            dokument.stav = D_STAV_ZAPSANY
-            dokument.save()
-            dokument.set_zapsany(request.user)
+            try:
+                dokument.ident_cely = get_temp_dokument_ident(
+                    rada=dokument.rada.zkratka, region=arch_z_ident_cely[0]
+                )
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+            else:
+                dokument.stav = D_STAV_ZAPSANY
+                dokument.save()
+                dokument.set_zapsany(request.user)
 
-            # Vytvorit defaultni cast dokumentu
-            DokumentCast(
-                dokument=dokument,
-                ident_cely=get_cast_dokumentu_ident(dokument),
-                archeologicky_zaznam=zaznam,
-            ).save()
+                # Vytvorit defaultni cast dokumentu
+                DokumentCast(
+                    dokument=dokument,
+                    ident_cely=get_cast_dokumentu_ident(dokument),
+                    archeologicky_zaznam=zaznam,
+                ).save()
 
-            form_d.save_m2m()
-            extra_data = form_extra.save(commit=False)
-            extra_data.dokument = dokument
-            extra_data.save()
+                form_d.save_m2m()
 
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-            return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect("dokument:detail", ident_cely=dokument.ident_cely)
 
         else:
             logger.warning("Form is not valid")
             logger.debug(form_d.errors)
-            logger.debug(form_extra.errors)
 
     else:
-        form_d = CreateDokumentForm()
-        form_extra = EditDokumentExtraDataForm()
+        form_d = EditDokumentForm(create=True)
 
     return render(
         request,
         "dokument/create.html",
         {
             "formDokument": form_d,
-            "formExtraData": form_extra,
             "hierarchie": get_hierarchie_dokument_typ(),
-            "title": _("Nový dokument"),
-            "header": _("Nový dokument"),
-            "button": _("Vytvořit dokument"),
         },
     )
 
@@ -387,32 +422,38 @@ def create_model_3D(request):
             dokument.material_originalu = Heslar.objects.get(
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
             )
-            dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C")
-            dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_BADATEL_ID)
-            dokument.stav = D_STAV_ZAPSANY
-            dokument.save()
-            dokument.set_zapsany(request.user)
-            # Vytvorit defaultni cast dokumentu
-            kv = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
-            kv.save()
-            dc = DokumentCast(
-                dokument=dokument,
-                ident_cely=get_cast_dokumentu_ident(dokument),
-                komponenty=kv,
-            )
-            dc.save()
-            form_d.save_m2m()
-            extra_data = form_extra.save(commit=False)
-            extra_data.dokument = dokument
-            extra_data.save()
+            try:
+                dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C")
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+            else:
+                dokument.pristupnost = Heslar.objects.get(id=PRISTUPNOST_BADATEL_ID)
+                dokument.stav = D_STAV_ZAPSANY
+                dokument.save()
+                dokument.set_zapsany(request.user)
+                # Vytvorit defaultni cast dokumentu
+                kv = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+                kv.save()
+                dc = DokumentCast(
+                    dokument=dokument,
+                    ident_cely=get_cast_dokumentu_ident(dokument),
+                    komponenty=kv,
+                )
+                dc.save()
+                form_d.save_m2m()
+                extra_data = form_extra.save(commit=False)
+                extra_data.dokument = dokument
+                extra_data.save()
 
-            komponenta = form_komponenta.save(commit=False)
-            komponenta.komponenta_vazby = dc.komponenty
-            komponenta.ident_cely = dokument.ident_cely + "-K001"
-            komponenta.save()
+                komponenta = form_komponenta.save(commit=False)
+                komponenta.komponenta_vazby = dc.komponenty
+                komponenta.ident_cely = dokument.ident_cely + "-K001"
+                komponenta.save()
 
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-            return redirect("dokument:detail-model-3D", ident_cely=dokument.ident_cely)
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect(
+                    "dokument:detail-model-3D", ident_cely=dokument.ident_cely
+                )
 
         else:
             logger.warning("Form is not valid")
@@ -474,42 +515,27 @@ def archivovat(request, ident_cely):
     if d.stav != D_STAV_ODESLANY:
         raise PermissionDenied()
     if request.method == "POST":
-        d.set_archivovany(request.user)
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
-            d.set_permanent_ident_cely(ident_cely[2:3] + "-" + rada.zkratka)
-            d.save()
-            logger.debug(
-                "Dokumentu "
-                + ident_cely
-                + " byl prirazen permanentni identifikator "
-                + d.ident_cely
-            )
-            # Prejmenuj i dokumentacni jednotky
-            counter = 1
-            for cast in d.casti.all().order_by("ident_cely"):
-                if cast.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-                    old_ident = cast.ident_cely
-                    cast.ident_cely = d.ident_cely + "-D" + str(counter).zfill(2)
-                    cast.save()
-                    logger.debug(
-                        "Casti dokumentu "
-                        + old_ident
-                        + " byl zmenen identifikator na "
-                        + cast.ident_cely
-                    )
-                    counter += 1
-
-            if "3D" in d.ident_cely:
-                komponenta = d.get_komponenta()
+            try:
+                d.set_permanent_ident_cely(d.ident_cely[2:4] + rada.zkratka)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                context = {"object": d}
+                context["title"] = _("Archivace dokumentu")
+                context["header"] = _("Archivace dokumentu")
+                context["button"] = _("Archivovat dokument")
+                return render(request, "core/transakce.html", context)
+            else:
+                d.save()
                 logger.debug(
-                    "Aktualizace identifikatoru komponenty modelu 3D: "
-                    + str(komponenta.ident_cely)
+                    "Dokumentu "
+                    + ident_cely
+                    + " a jeho castem byl prirazen permanentni identifikator "
+                    + d.ident_cely
                 )
-                komponenta.ident_cely = d.ident_cely + "-K001"
-                komponenta.save()
-
+        d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         if "3D" in ident_cely:
             return redirect("dokument:detail-model-3D", ident_cely=d.ident_cely)
@@ -627,9 +653,13 @@ def get_detail_template_shows(dokument):
     show_vratit = dokument.stav > D_STAV_ZAPSANY
     show_odeslat = dokument.stav == D_STAV_ZAPSANY
     show_archivovat = dokument.stav == D_STAV_ODESLANY
+    show_edit = dokument.stav not in [
+        D_STAV_ARCHIVOVANY,
+    ]
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
+        "editovat": show_edit,
     }
     return show

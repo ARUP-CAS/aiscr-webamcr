@@ -21,8 +21,11 @@ def url_to_classes(value):
 
 @register.filter
 def katastry_to_list(value):
-    list_katastry = ", ".join(value.values_list("nazev", flat=True))
-    return list_katastry
+    value = [str(i) for i in value]
+    display = ", ".join(value)
+    # for katastr in value:
+    #     display += (katastr.__str__()) + ", "
+    return display
 
 
 @register.filter
@@ -57,3 +60,16 @@ def last_x_letters(value, x):
         return value[-x:]
     else:
         return value
+
+
+@register.filter(name="ifinlist")
+def ifinlist(widget_optgroups, list):
+    string = ""
+    for group_name, group_choices, group_index in widget_optgroups:
+        for option in group_choices:
+            if str(option["value"]) in list:
+                if string == "":
+                    string = str(option["label"])
+                else:
+                    string += " ," + str(option["label"])
+    return string

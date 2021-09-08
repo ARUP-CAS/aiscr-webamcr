@@ -7,7 +7,9 @@
     <th scope="col">{% trans "Typ" %}</th>
     <th scope="col">{% trans "Velikost" %}</th>
     <th scope="col">{% trans "Datum vytvoření" %}</th>
+    {% if show %}
     <th scope="col">{% trans "Smazat" %}</th>
+    {% endif %}
     <th scope="col">{% trans "Stáhnout" %}</th>
   </tr>
   </thead>
@@ -18,11 +20,13 @@
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_bytes }}</td>
       <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
+      {% if show %}
       <td>
         <a href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
           <span class="material-icons app-color-danger">delete_forever</span>
         </a>
       </td>
+      {% endif %}
       <td>
         <a href="{% url 'core:download_file' soubor.id %}" target="_blank">
           <span class="material-icons">get_app</span>

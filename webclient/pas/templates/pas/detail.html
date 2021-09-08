@@ -19,6 +19,7 @@
         <div class="app-fx app-left">
           {% trans "Detail" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'pas:edit' sn.ident_cely %}" rel="tooltip"
@@ -27,8 +28,18 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
         <form>
           {% crispy form %}
         </form>
@@ -40,6 +51,7 @@
         <div class="app-fx app-left">
           {% trans "Uložení" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'pas:edit_ulozeni' sn.ident_cely %}" rel="tooltip"
@@ -48,6 +60,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         <form>
@@ -61,6 +74,7 @@
         <div class="app-fx app-left">
           {% trans "Fotografie" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" href="{% url 'core:upload_file_pas' sn.ident_cely %}"
@@ -70,6 +84,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}

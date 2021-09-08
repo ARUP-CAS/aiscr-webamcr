@@ -1,4 +1,5 @@
 import logging
+from core.exceptions import MaximalIdentNumberError
 
 from core.constants import (
     ARCHIVACE_SN,
@@ -31,6 +32,8 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    SAMOSTATNY_NALEZ_NELZE_ODESLAT,
+    MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_cadastre_from_point
 from django.contrib import messages
@@ -56,6 +59,23 @@ from uzivatel.models import User
 logger = logging.getLogger(__name__)
 
 
+def get_detail_context(sn, request):
+    context = {}
+    context["sn"] = sn
+    context["form"] = CreateSamostatnyNalezForm(
+        instance=sn, readonly=True, user=request.user
+    )
+    context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
+    context["history_dates"] = get_history_dates(sn.historie)
+    context["show"] = get_detail_template_shows(sn)
+    logger.debug(context)
+    if sn.soubory:
+        context["soubory"] = sn.soubory.soubory.all()
+    else:
+        context["soubory"] = None
+    return context
+
+
 @login_required
 @require_http_methods(["GET"])
 def index(request):
@@ -70,20 +90,27 @@ def create(request):
         if form.is_valid():
             latitude = form.cleaned_data["latitude"]
             longitude = form.cleaned_data["longitude"]
-            if latitude and longitude:
-                sn = form.save(commit=False)
+            sn = form.save(commit=False)
+            try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
-                sn.stav = SN_ZAPSANY
-                sn.geom = Point(longitude, latitude)
-                sn.katastr = get_cadastre_from_point(sn.geom)
-                sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
-                sn.save()
-                sn.set_zapsany(request.user)
-                form.save_m2m()
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("pas:detail", ident_cely=sn.ident_cely)
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
-                messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
+                sn.stav = SN_ZAPSANY
+                sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
+                sn.predano_organizace = sn.projekt.organizace
+                if latitude and longitude:
+                    sn.geom = Point(longitude, latitude)
+                    sn.katastr = get_cadastre_from_point(sn.geom)
+                    sn.save()
+                    sn.set_zapsany(request.user)
+                    form.save_m2m()
+                    messages.add_message(
+                        request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
+                    )
+                    return redirect("pas:detail", ident_cely=sn.ident_cely)
+                else:
+                    messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
 
         else:
             logger.debug(form.errors)
@@ -118,18 +145,7 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
-    context["sn"] = sn
-    context["form"] = CreateSamostatnyNalezForm(
-        instance=sn, readonly=True, user=request.user
-    )
-    context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
-    context["history_dates"] = get_history_dates(sn.historie)
-    context["show"] = get_detail_template_shows(sn)
-    logger.debug(context)
-    if sn.soubory:
-        context["soubory"] = sn.soubory.soubory.all()
-    else:
-        context["soubory"] = None
+    context = get_detail_context(sn=sn, request=request)
     return render(request, "pas/detail.html", context)
 
 
@@ -137,8 +153,17 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav == SN_ARCHIVOVANY:
+        raise PermissionDenied()
+    kwargs = {"projekt_disabled": "disabled"}
+    if sn.stav > SN_ZAPSANY:
+        kwargs["fields_required"] = True
     if request.method == "POST":
-        form = CreateSamostatnyNalezForm(request.POST, instance=sn, user=request.user)
+        request_post = request.POST.copy()
+        request_post["projekt"] = sn.projekt
+        form = CreateSamostatnyNalezForm(
+            request_post, instance=sn, user=request.user, **kwargs
+        )
         if form.is_valid():
             logger.debug("Form is valid")
             form.save()
@@ -151,7 +176,7 @@ def edit(request, ident_cely):
             logger.debug(form.errors)
 
     else:
-        form = CreateSamostatnyNalezForm(instance=sn, user=request.user)
+        form = CreateSamostatnyNalezForm(instance=sn, user=request.user, **kwargs)
     return render(
         request,
         "pas/edit.html",
@@ -209,19 +234,40 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
-    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    sn = get_object_or_404(
+        SamostatnyNalez.objects.select_related(
+            "soubory",
+            "okolnosti",
+            "obdobi",
+            "druh_nalezu",
+            "specifikace",
+            "predano_organizace",
+            "historie",
+        ),
+        ident_cely=ident_cely,
+    )
     if sn.stav != SN_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
         sn.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
         return redirect("pas:detail", ident_cely=ident_cely)
+
+    warnings = sn.check_pred_odeslanim()
+    logger.debug(warnings)
+    context = {}
+    if warnings:
+        context = get_detail_context(sn=sn, request=request)
+        context["warnings"] = warnings
+        messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
+        return render(request, "pas/detail.html", context)
     context = {
         "object": sn,
         "title": _("Odeslání nálezu"),
         "header": _("Odeslání nálezu"),
         "button": _("Odeslat nález"),
     }
+
     return render(request, "core/transakce.html", context)
 
 
@@ -316,13 +362,13 @@ def zadost(request):
     if request.method == "POST":
         form = CreateZadostForm(request.POST)
         if form.is_valid():
-            archeolog_email = form.cleaned_data["email_archeologa"]
-            archeolog = get_object_or_404(User, email=archeolog_email)
+            uzivatel_email = form.cleaned_data["email_uzivatele"]
+            uzivatel = get_object_or_404(User, email=uzivatel_email)
             exists = UzivatelSpoluprace.objects.filter(
-                vedouci=archeolog, spolupracovnik=request.user
+                vedouci=uzivatel, spolupracovnik=request.user
             ).exists()
 
-            if archeolog == request.user:
+            if uzivatel == request.user:
                 logger.debug("Nelze vytvorit spolupraci sam se sebou")
                 messages.add_message(
                     request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
@@ -333,8 +379,8 @@ def zadost(request):
                     request,
                     messages.ERROR,
                     _(
-                        "Spolupráce s archeologem s emailem "
-                        + archeolog_email
+                        "Spolupráce s uživatelem s emailem "
+                        + uzivatel_email
                         + " již existuje."
                     ),
                 )
@@ -342,7 +388,7 @@ def zadost(request):
                 hv = HistorieVazby(typ_vazby=UZIVATEL_SPOLUPRACE_RELATION_TYPE)
                 hv.save()
                 s = UzivatelSpoluprace(
-                    vedouci=archeolog,
+                    vedouci=uzivatel,
                     spolupracovnik=request.user,
                     stav=SPOLUPRACE_NEAKTIVNI,
                     historie=hv,
@@ -464,10 +510,14 @@ def get_detail_template_shows(sn):
     show_odeslat = sn.stav == SN_ZAPSANY
     show_potvrdit = sn.stav == SN_ODESLANY
     show_archivovat = sn.stav == SN_POTVRZENY
+    show_edit = sn.stav not in [
+        SN_ARCHIVOVANY,
+    ]
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "potvrdit_link": show_potvrdit,
         "archivovat_link": show_archivovat,
+        "editovat": show_edit,
     }
     return show

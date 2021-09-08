@@ -12,6 +12,7 @@ from core.constants import (
 from core.forms import TwoLevelSelectField
 from dokument.models import Dokument
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
 from . import validators
@@ -49,36 +50,53 @@ class CreateArchZForm(forms.ModelForm):
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["hlavni_katastr"].required = False
-        self.fields["katastry"].disabled = True
-        self.fields["hlavni_katastr"].disabled = True
+        self.fields["katastry"].widget.attrs["readonly"] = True
+        self.fields["katastry"].widget.attrs["style"] = "pointer-events: none;"
+        self.fields["hlavni_katastr"].widget.attrs["readonly"] = True
+        self.fields["hlavni_katastr"].widget.attrs["style"] = "pointer-events: none;"
         if projekt:
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
+            self.fields["katastry"].initial = projekt.katastry.all()
 
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
             Div(
-                Div("hlavni_katastr", css_class="col-sm-4"),
+                Div(
+                    "hlavni_katastr",
+                    css_class="col-sm-4",
+                    style="pointer-events: none;",
+                ),
                 Div("pristupnost", css_class="col-sm-4"),
-                Div("katastry", css_class="col-sm-4"),
+                Div("katastry", css_class="col-sm-4", style="pointer-events: none;"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-12"),
                 css_class="row",
             ),
         )
 
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateAkceForm(forms.ModelForm):
-    datum_zahajeni = forms.DateField(validators=[validators.datum_max_1_mesic_v_budoucnosti])
-    datum_ukonceni = forms.DateField(validators=[validators.datum_max_1_mesic_v_budoucnosti])
+    datum_zahajeni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
+    datum_ukonceni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
 
     def clean(self):
         cleaned_data = super().clean()
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
-            if cleaned_data.get('datum_zahajeni') > cleaned_data.get('datum_ukonceni'):
-                raise forms.ValidationError('Datum zahájení nemůže být po datu ukončení')
+            if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
+                raise forms.ValidationError(
+                    "Datum zahájení nemůže být po datu ukončení"
+                )
         return self.cleaned_data
 
     class Meta:
@@ -95,7 +113,7 @@ class CreateAkceForm(forms.ModelForm):
             "hlavni_typ",
             "vedlejsi_typ",
             "specifikace_data",
-            "ulozeni_dokumentace"
+            "ulozeni_dokumentace",
         )
 
         labels = {
@@ -154,19 +172,36 @@ class CreateAkceForm(forms.ModelForm):
             self.fields["organizace"].initial = projekt.organizace
             self.fields["datum_zahajeni"].initial = projekt.datum_zahajeni
             self.fields["datum_ukonceni"].initial = projekt.datum_ukonceni
-            self.fields["lokalizace_okolnosti"].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
+            self.fields[
+                "lokalizace_okolnosti"
+            ].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
-            self.fields["specifikace_data"].disabled = True
+            self.fields["specifikace_data"].widget.attrs["readonly"] = True
+            self.fields["specifikace_data"].widget.attrs[
+                "style"
+            ] = "pointer-events: none;"
+            self.fields["specifikace_data"].initial = Heslar.objects.filter(
+                heslo="přesně"
+            ).first()
 
         self.helper.layout = Layout(
             Div(
-                Div(Div(Div("hlavni_vedouci", css_class="col-sm-10"),
-                        Div(HTML(
-                            '<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'),
-                            css_class="col-sm-2", style="display: flex; align-items: center;"), css_class="row"),
-                    css_class="col-sm-4"),
+                Div(
+                    Div(
+                        Div("hlavni_vedouci", css_class="col-sm-10"),
+                        Div(
+                            HTML(
+                                '<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
+                            ),
+                            css_class="col-sm-2",
+                            style="display: flex; align-items: center;",
+                        ),
+                        css_class="row",
+                    ),
+                    css_class="col-sm-4",
+                ),
                 Div("organizace", css_class="col-sm-4"),
                 Div("datum_zahajeni", css_class="col-sm-4"),
                 Div("datum_ukonceni", css_class="col-sm-4"),
@@ -183,17 +218,25 @@ class CreateAkceForm(forms.ModelForm):
         )
 
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class PripojitDokumentForm(forms.Form):
-
     def __init__(self, projekt=None, *args, **kwargs):
         super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
             label=_("Vyberte dokument k připojení"),
-            choices=list(Dokument.objects.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
-                         .values_list("id", "ident_cely")),
-            widget=autocomplete.Select2Multiple(url="dokument:dokument-autocomplete-bez-zapsanych"),
+            choices=list(
+                Dokument.objects.filter(
+                    stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)
+                ).values_list("id", "ident_cely")
+            ),
+            widget=autocomplete.Select2Multiple(
+                url="dokument:dokument-autocomplete-bez-zapsanych"
+            ),
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False

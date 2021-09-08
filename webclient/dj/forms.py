@@ -51,7 +51,12 @@ class CreateDJForm(forms.ModelForm):
             "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        not_readonly=True,
+        **kwargs,
+    ):
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         self.fields["typ"] = forms.ModelChoiceField(queryset=self.get_typ_queryset(jednotky))
@@ -66,3 +71,8 @@ class CreateDJForm(forms.ModelForm):
                 css_class="row align-items-end",
             ),
         )
+        if not not_readonly:
+            for key in self.fields.keys():
+                self.fields[key].disabled = not not_readonly
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"

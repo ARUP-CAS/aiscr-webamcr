@@ -115,3 +115,16 @@ class VyskovyBod(models.Model):
 
     class Meta:
         db_table = "vyskovy_bod"
+
+
+class AdbSekvence(models.Model):
+    kladysm5 = models.OneToOneField(
+        "Kladysm5",
+        models.DO_NOTHING,
+        db_column="kladysm5_id",
+        null=False,
+    )
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "adb_sekvence"
