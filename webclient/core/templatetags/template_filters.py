@@ -73,3 +73,11 @@ def ifinlist(widget_optgroups, list):
                 else:
                     string += " ," + str(option["label"])
     return string
+
+
+@register.filter
+def check_if_none(value):
+    if value:
+        return value
+    else:
+        return ""

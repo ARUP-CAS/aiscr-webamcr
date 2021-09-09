@@ -216,8 +216,9 @@ def edit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
+    required_fields = get_required_fields(projekt)
     if request.method == "POST":
-        form = EditProjektForm(request.POST, instance=projekt)
+        form = EditProjektForm(request.POST, instance=projekt, required=required_fields)
         if form.is_valid():
             logger.debug("Form is valid")
             lat = form.cleaned_data["latitude"]
@@ -245,7 +246,7 @@ def edit(request, ident_cely):
             logger.debug(form.errors)
 
     else:
-        form = EditProjektForm(instance=projekt)
+        form = EditProjektForm(instance=projekt, required=required_fields)
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
@@ -717,3 +718,40 @@ def get_detail_template_shows(projekt, user):
         "editovat": show_edit,
     }
     return show
+
+
+def get_required_fields(projekt):
+    required_fields = []
+    if projekt.stav > PROJEKT_STAV_OZNAMENY:
+        required_fields = [
+            "typ_projektu",
+            "hlavni_katastr",
+            "podnet",
+            "lokalizace",
+            "parcelni_cislo",
+            "planovane_zahajeni",
+        ]
+    if (
+        projekt.stav > PROJEKT_STAV_ZAPSANY
+        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    ):
+        required_fields += [
+            "vedouci_projektu",
+            "organizace",
+            "kulturni_pamatka",
+        ]
+    if (
+        projekt.stav > PROJEKT_STAV_PRIHLASENY
+        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    ):
+        required_fields += [
+            "datum_zahajeni",
+        ]
+    if (
+        projekt.stav > PROJEKT_STAV_ZAHAJENY_V_TERENU
+        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    ):
+        required_fields += [
+            "datum_ukonceni",
+        ]
+    return required_fields
