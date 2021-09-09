@@ -76,3 +76,4 @@ backup_file_db_v4.tar
 docker-compose-db-yml
 Dockerfile-DB
 scripts/restore_database.sh
+docker-compose-debug-yml

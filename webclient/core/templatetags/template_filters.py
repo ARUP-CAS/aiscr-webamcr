@@ -67,7 +67,7 @@ def ifinlist(widget_optgroups, list):
     string = ""
     for group_name, group_choices, group_index in widget_optgroups:
         for option in group_choices:
-            if str(option["value"]) in list:
+            if str(option["value"]) in list and str(option["value"]) != "":
                 if string == "":
                     string = str(option["label"])
                 else:

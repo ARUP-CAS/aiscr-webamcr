@@ -84,8 +84,9 @@ class PotvrditNalezForm(forms.ModelForm):
         self.helper.form_tag = False
         self.fields["predano_organizace"].disabled = True
         for key in self.fields.keys():
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
@@ -199,8 +200,9 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         if projekt_disabed:
             self.fields["projekt"].disabled = projekt_disabed
         for key in self.fields.keys():
-            if self.fields[key].disabled == True:
-                if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 

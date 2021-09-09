@@ -40,8 +40,16 @@ def heslar_12(druha, prvni_kat):
 
 def zjisti_katastr_souradnic(request):
     nalezene_katastry = RuianKatastr.objects.filter(
-        hranice__contains=Point(float(request.GET.get('long', 0)), float(request.GET.get('lat', 0))))
+        hranice__contains=Point(
+            float(request.GET.get("long", 0)), float(request.GET.get("lat", 0))
+        )
+    )
     if nalezene_katastry.count() == 1:
-        return JsonResponse({"id": nalezene_katastry.first().pk, "value": str(nalezene_katastry.first())})
+        return JsonResponse(
+            {
+                "id": nalezene_katastry.first().pk,
+                "value": str(nalezene_katastry.first()),
+            }
+        )
     else:
         return JsonResponse({})

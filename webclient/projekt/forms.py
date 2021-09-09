@@ -106,6 +106,9 @@ class CreateProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
 
 
 class EditProjektForm(forms.ModelForm):
@@ -271,6 +274,9 @@ class EditProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
 
     def clean(self):
         cleaned_data = super().clean()
@@ -401,6 +407,10 @@ class PrihlaseniProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
 
 
 class ZahajitVTerenuForm(forms.ModelForm):
