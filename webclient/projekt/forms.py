@@ -195,7 +195,7 @@ class EditProjektForm(forms.ModelForm):
             "termin_odevzdani_nz": _("Termín odevzdání"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, required, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
@@ -275,16 +275,23 @@ class EditProjektForm(forms.ModelForm):
         )
         self.helper.form_tag = False
         for key in self.fields.keys():
+            if required:
+                self.fields[key].required = True if key in required else False
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
 
     def clean(self):
         cleaned_data = super().clean()
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
-            if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
-                raise forms.ValidationError(
-                    "Datum zahájení nemůže být po datu ukončení"
-                )
+            if cleaned_data.get("datum_zahajeni") and cleaned_data.get(
+                "datum_ukonceni"
+            ):
+                if cleaned_data.get("datum_zahajeni") > cleaned_data.get(
+                    "datum_ukonceni"
+                ):
+                    raise forms.ValidationError(
+                        "Datum zahájení nemůže být po datu ukončení"
+                    )
         return self.cleaned_data
 
 

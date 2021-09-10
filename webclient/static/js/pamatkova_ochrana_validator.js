@@ -30,6 +30,8 @@ function enableFields() {
     document.getElementById("id_kulturni_pamatka_popis").value = pamatka_popis;
     document.getElementById("id_kulturni_pamatka_cislo").disabled = false;
     document.getElementById("id_kulturni_pamatka_popis").disabled = false;
-    document.getElementById("id_kulturni_pamatka_cislo").required = true;
-    document.getElementById("id_kulturni_pamatka_popis").required = true;
+    if (pamatkova_ochrana.required == true) {
+        document.getElementById("id_kulturni_pamatka_cislo").required = true;
+        document.getElementById("id_kulturni_pamatka_popis").required = true;
+    };
 };

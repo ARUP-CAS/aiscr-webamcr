@@ -196,13 +196,13 @@
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Podnět" %}</label>
-                  <textarea class="form-control" value="{{ projekt.podnet }}" rows="2" readonly></textarea>
+                  <textarea class="form-control" value="{{ projekt.podnet }}" rows="2" readonly>{{ projekt.podnet }}</textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
-                  <textarea class="form-control" value="{{ projekt.lokalizace }}" rows="1" readonly></textarea>
+                  <textarea class="form-control" value="{{ projekt.lokalizace }}" rows="1" readonly>{{ projekt.parcelni_cislo }}</textarea>
                 </div>
               </div>
               <div class="col-sm-12">
@@ -248,37 +248,37 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Vedoucí projektu" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.vedouci_projektu}}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.vedouci_projektu|check_if_none}}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.organizace}}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.organizace|check_if_none}}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Uživatelské označení" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.uzivatelske_oznaceni }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.uzivatelske_oznaceni|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Rejstříkové číslo USKP" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_cislo }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_cislo|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Název památky" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_popis }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_popis|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
