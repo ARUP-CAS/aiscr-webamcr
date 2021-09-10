@@ -120,10 +120,16 @@ class EditProjektForm(forms.ModelForm):
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
     )
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        widget=forms.DateInput(
+            attrs={"data-provide": "datepicker", "autocomplete": "off"}
+        ),
     )
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        widget=forms.DateInput(
+            attrs={"data-provide": "datepicker", "autocomplete": "off"}
+        ),
     )
 
     class Meta:
@@ -158,8 +164,6 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "datum_zahajeni": forms.DateInput(attrs={"data-provide": "datepicker"}),
-            "datum_ukonceni": forms.DateInput(attrs={"data-provide": "datepicker"}),
             "hlavni_katastr": autocomplete.ModelSelect2(
                 url="heslar:katastr-autocomplete"
             ),
@@ -173,7 +177,7 @@ class EditProjektForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "termin_odevzdani_nz": forms.DateInput(
-                attrs={"data-provide": "datepicker"}
+                attrs={"data-provide": "datepicker", "autocomplete": "off"}
             ),
         }
         labels = {

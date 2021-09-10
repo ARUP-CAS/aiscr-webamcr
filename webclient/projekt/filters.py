@@ -165,7 +165,10 @@ class ProjektFilter(filters.FilterSet):
 
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=Historie.CHOICES,
+        choices=filter(
+            lambda x: x[0].startswith("P") and not x[0].startswith("PI"),
+            Historie.CHOICES,
+        ),
         label="Změna stavu",
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
@@ -259,7 +262,9 @@ class ProjektFilter(filters.FilterSet):
         widget=DateRangeWidget(attrs={"type": "date"}),
     )
     typ_akce = MultipleChoiceFilter(
-        choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list("id", "heslo"),
+        choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
+            "id", "heslo"
+        ),
         method="filter_akce_typ",
         label="Typ",
         widget=SelectMultiple(
@@ -403,14 +408,12 @@ class ProjektFilter(filters.FilterSet):
 
     def filtr_katastr_okres(self, queryset, name, value):
         return queryset.filter(
-            Q(hlavni_katastr__okres__in=value)
-            | Q(katastry__okres__in=value)
+            Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)
         )
 
     def filter_akce_typ(self, queryset, name, value):
         return queryset.filter(
-            Q(akce__hlavni_typ__in=value)
-            | Q(akce__vedlejsi_typ__in=value)
+            Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)
         )
 
     def filtr_akce_katastr(self, queryset, name, value):
@@ -433,14 +436,12 @@ class ProjektFilter(filters.FilterSet):
 
     def filtr_akce_vedouci(self, queryset, name, value):
         return queryset.filter(
-            Q(akce__hlavni_vedouci__in=value)
-            | Q(akce__akcevedouci__vedouci__in=value)
+            Q(akce__hlavni_vedouci__in=value) | Q(akce__akcevedouci__vedouci__in=value)
         )
 
     def filtr_akce_organizace(self, queryset, name, value):
         return queryset.filter(
-            Q(akce__organizace__in=value)
-            | Q(akce__akcevedouci__organizace__in=value)
+            Q(akce__organizace__in=value) | Q(akce__akcevedouci__organizace__in=value)
         )
 
     class Meta:
@@ -474,20 +475,18 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
             Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
             Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
-
             Div(
-                HTML(_("<span class=\"app-divider-label\">Výběr podle historie</span>")),
-                HTML(_("<hr class=\"mt-0\" />")),
-                css_class="col-sm-12"
+                HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
             ),
             Div("historie_typ_zmeny", css_class="col-sm-2"),
             Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
             Div("historie_uzivatel", css_class="col-sm-2"),
-
             Div(
-                HTML(_("<span class=\"app-divider-label\">Výběr podle akcí</span>")),
-                HTML(_("<hr class=\"mt-0\" />")),
-                css_class="col-sm-12"
+                HTML(_('<span class="app-divider-label">Výběr podle akcí</span>')),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
             ),
             Div("akce_ident_obsahuje", css_class="col-sm-2"),
             Div("typ_akce", css_class="col-sm-2"),
@@ -495,21 +494,22 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("akce_vedouci_organizace", css_class="col-sm-2"),
             Div("akce_vedouci", css_class="col-sm-2"),
             Div("pristupnost_akce", css_class="col-sm-2"),
-
             Div("akce_katastr", css_class="col-sm-2"),
             Div("akce_okres", css_class="col-sm-2"),
             Div("akce_kraj", css_class="col-sm-2"),
             Div("akce_popisne_udaje", css_class="col-sm-6"),
-
             Div("akce_datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
             Div("akce_datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
             Div("akce_zjisteni", css_class="col-sm-2"),
             Div("akce_je_nz", css_class="col-sm-2"),
-
             Div(
-                HTML(_("<span class=\"app-divider-label\">Výběr podle souvisejících záznamů</span>")),
-                HTML(_("<hr class=\"mt-0\" />")),
-                css_class="col-sm-12"
+                HTML(
+                    _(
+                        '<span class="app-divider-label">Výběr podle souvisejících záznamů</span>'
+                    )
+                ),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
             ),
             Div("dokument_ident_obsahuje", css_class="col-sm-2"),
             Div("pian_ident_obsahuje", css_class="col-sm-2"),
