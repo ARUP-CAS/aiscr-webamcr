@@ -226,6 +226,7 @@ class EditDokumentForm(forms.ModelForm):
                 "id", "heslo"
             )
         )
+        self.fields["posudky"].required = False
         self.fields["typ_dokumentu"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
             .filter(id__in=ALLOWED_DOKUMENT_TYPES)
