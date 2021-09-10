@@ -188,8 +188,11 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit_ulozeni(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    predano_required = True if sn.stav == SN_POTVRZENY else False
     if request.method == "POST":
-        form = PotvrditNalezForm(request.POST, instance=sn)
+        form = PotvrditNalezForm(
+            request.POST, instance=sn, predano_required=predano_required
+        )
         if form.is_valid():
             logger.debug("Form is valid")
             form.save()
@@ -201,7 +204,7 @@ def edit_ulozeni(request, ident_cely):
             logger.debug("The form is not valid!")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn)
+        form = PotvrditNalezForm(instance=sn, predano_required=predano_required)
     return render(
         request,
         "pas/edit.html",
@@ -278,7 +281,7 @@ def potvrdit(request, ident_cely):
     if sn.stav != SN_ODESLANY:
         raise PermissionDenied()
     if request.method == "POST":
-        form = PotvrditNalezForm(request.POST, instance=sn)
+        form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
             sn = form.save(commit=False)
             sn.set_potvrzeny(request.user)
