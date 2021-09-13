@@ -24,4 +24,7 @@ urlpatterns = [
     path(
         "spoluprace/deaktivace/<int:pk>", views.deaktivace, name="spoluprace_deaktivace"
     ),
+    path(
+        "spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"
+    ),
 ]

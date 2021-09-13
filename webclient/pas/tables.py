@@ -72,10 +72,22 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         attrs={"td": {"class": "spoluprace"}},
     )
 
-    historie = tables.LinkColumn("historie:spoluprace", text="Historie", args=[A("pk")])
+    historie = tables.LinkColumn(
+        "historie:spoluprace",
+        text="Historie",
+        args=[A("pk")],
+        attrs={"a": {"class": "btn btn-sm"}},
+    )
     aktivace = tables.TemplateColumn(
         attrs={"td": {"class": "spoluprace"}},
         template_name="pas/aktivace_deaktivace_cell.html",
+    )
+    smazani = tables.LinkColumn(
+        "pas:spoluprace_smazani",
+        text="Smazat",
+        args=[A("pk")],
+        attrs={"a": {"class": "btn btn-sm"}},
+        exclude_from_export=True,
     )
 
     class Meta:
