@@ -102,15 +102,11 @@ def create(request):
                 if latitude and longitude:
                     sn.geom = Point(longitude, latitude)
                     sn.katastr = get_cadastre_from_point(sn.geom)
-                    sn.save()
-                    sn.set_zapsany(request.user)
-                    form.save_m2m()
-                    messages.add_message(
-                        request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
-                    )
-                    return redirect("pas:detail", ident_cely=sn.ident_cely)
-                else:
-                    messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
+                sn.save()
+                sn.set_zapsany(request.user)
+                form.save_m2m()
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect("pas:detail", ident_cely=sn.ident_cely)
 
         else:
             logger.debug(form.errors)
