@@ -43,7 +43,14 @@ def create_osoba(request):
                 osoba = form.save(commit=False)
                 vypis = osoba.prijmeni + ","
                 for j in osoba.jmeno.split():
-                    vypis += " " + j.strip()[0].upper() + "."
+                    if "-" in j:
+                        vypis += " "
+                        pom = []
+                        for p in j.split("-"):
+                            pom.append(p[0].upper() + ".")
+                        vypis += "-".join(pom)
+                    else:
+                        vypis += " " + j.strip()[0].upper() + "."
                 osoba.vypis_cely = osoba.prijmeni + ", " + osoba.jmeno
                 osoba.vypis = vypis
                 osoba.jmeno = " ".join(osoba.jmeno.split())
