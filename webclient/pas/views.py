@@ -13,6 +13,8 @@ from core.constants import (
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
 )
 from core.forms import VratitForm
 from core.ident_cely import get_sn_ident
@@ -439,6 +441,11 @@ class UzivatelSpolupraceListView(
         qs = qs.select_related("vedouci", "spolupracovnik")
         return qs.order_by("id")
 
+    def get_table_kwargs(self):
+        if self.request.user.hlavni_role.id not in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            return {"exclude": ("smazani",)}
+        return {}
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -496,6 +503,29 @@ def deaktivace(request, pk):
     )
     context["button"] = _("Deaktivovat spolupráci")
     return render(request, "core/transakce.html", context)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def smazat_spolupraci(request, pk):
+    spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    if request.method == "POST":
+        historie = spoluprace.historie
+        resp1 = spoluprace.delete()
+        resp2 = historie.delete()
+
+        if resp1:
+            logger.debug("Spoluprace byla smazana: " + str(resp1 + resp2))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        else:
+            logger.warning("Spoluprace nebyla smazana: " + str(pk))
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+
+        return redirect("pas:spoluprace_list")
+    else:
+        return render(
+            request, "core/smazat.html", {"objekt": spoluprace, "spoluprace": True}
+        )
 
 
 def get_history_dates(historie_vazby):
