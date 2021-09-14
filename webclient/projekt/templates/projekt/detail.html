@@ -5,14 +5,22 @@
 
 {% block title %}{% trans "Detail projektu" %}{% endblock %}
 {% block head %}
-  <!-- Map imports -->
+  <!-- Leaflet imports -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-    crossorigin=""/>
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-      crossorigin="">
+          integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+          crossorigin="">
   </script>
+  <!--Mark Cluster-->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
+  <!--Leaflet FullScreen-->
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
+        rel='stylesheet'/>
 
   <script>
   var global_csrftoken = '{{ csrf_token }}';
@@ -31,7 +39,7 @@
     <div class="bs-stepper">
       <div class="bs-stepper-header">
         <div class="step {% if projekt.stav == 0 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">0</span>
             <span class="bs-stepper-label">
               {% trans "Oznámený" %}
@@ -41,9 +49,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">1</span>
             <span class="bs-stepper-label">
               {% trans "Zapsaný" %}
@@ -53,9 +61,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">2</span>
             <span class="bs-stepper-label">
               {% trans "Přihlášený" %}
@@ -65,9 +73,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">3</span>
             <span class="bs-stepper-label">
               {% trans "Zahájen v terénu" %}
@@ -77,9 +85,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 4 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">4</span>
             <span class="bs-stepper-label">
               {% trans "Ukončen v terénu" %}
@@ -89,9 +97,9 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 5 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">5</span>
             <span class="bs-stepper-label">
               {% trans "Uzavřený" %}
@@ -101,14 +109,38 @@
             </span>
           </button>
         </div>
-        <div class="line"></div>
+        <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 6 %}active{% endif %}">
-          <button type="button" class="btn step-trigger">
+          <button type="button" class="btn step-trigger projekt">
             <span class="bs-stepper-circle">6</span>
             <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_archivace.uzivatel }}">
                 {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
+            </span>
+          </button>
+        </div>
+        <div class="line projekt"></div>
+        <div class="step {% if projekt.stav == 7 %}active{% endif %}">
+          <button type="button" class="btn step-trigger projekt">
+            <span class="bs-stepper-circle">7</span>
+            <span class="bs-stepper-label">
+              {% trans "Navržen ke zrušení" %}
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_navrhu_ke_zruseni.uzivatel }}">
+                {{ history_dates.datum_navrhu_ke_zruseni.datum|date:'Y/m/d'|default_if_none:"" }}
+              </span>
+            </span>
+          </button>
+        </div>
+        <div class="line projekt"></div>
+        <div class="step {% if projekt.stav == 8 %}active{% endif %}">
+          <button type="button" class="btn step-trigger projekt">
+            <span class="bs-stepper-circle">8</span>
+            <span class="bs-stepper-label">
+              {% trans "Zrušen" %}
+              <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zruseni.uzivatel }}">
+                {{ history_dates.datum_zruseni.datum|date:'Y/m/d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -121,6 +153,7 @@
         <div class="app-fx app-left">
           {% trans "Detail" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'projekt:edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
@@ -128,6 +161,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         <div class="row">
@@ -136,22 +170,22 @@
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Typ projektu" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.typ_projektu }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.typ_projektu }}" readonly>
                 </div>
               </div>
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Hlavní katastr" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.hlavni_katastr }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.hlavni_katastr }}" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
                 <div class="form-group">
                   <label>{% trans "Další katastry" %}</label>
                   <div class="input-group">
-                    <input class="form-control app-ellipsis" stype="text" placeholder="{{ dalsi_katastry }}" readonly>
+                    <input class="form-control app-ellipsis" stype="text" value="{{ dalsi_katastry|katastry_to_list }}" readonly>
                     <div class="input-group-append" data-toggle="popover" data-placement="top"
-                    data-content="<strong>{% trans 'Seznam katastrů' %}:</strong> {{ dalsi_katastry }}">
+                    data-content="<strong>{% trans 'Seznam katastrů' %}:</strong> {{ dalsi_katastry|katastry_to_list }}">
                       <span class="input-group-text">
                         <span class="material-icons">info</span>
                       </span>
@@ -162,37 +196,38 @@
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Podnět" %}</label>
-                  <textarea class="form-control" placeholder="{{ projekt.podnet }}" rows="2" readonly></textarea>
+                  <textarea class="form-control" value="{{ projekt.podnet }}" rows="2" readonly>{{ projekt.podnet }}</textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
-                  <textarea class="form-control" placeholder="{{ projekt.lokalizace }}" rows="1" readonly></textarea>
+                  <textarea class="form-control" value="{{ projekt.lokalizace }}" rows="1" readonly>{{ projekt.parcelni_cislo }}</textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Parcelní číslo" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.parcelni_cislo }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.parcelni_cislo }}" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Označení stavby" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.oznaceni_stavby }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.oznaceni_stavby }}" readonly>
                 </div>
               </div>
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Plánované zahájení prací" %}</label>
-                  <input class="form-control" type="text" placeholder="{{ projekt.planovane_zahajeni|render_daterange }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.planovane_zahajeni|render_daterange }}" readonly>
                 </div>
               </div>
             </div>
           </div>
           <div class="col-sm-3">
             <div id="projectMap"></div>
+
             <script src="{% static 'mapa.js' %}"></script>
             <script>
                 global_map_can_edit=false;
@@ -204,7 +239,7 @@
                 }
             </script>
           </div>
-        </div>      
+        </div>
         <div class="row">
           <div class="col-sm-12">
             <span class="app-divider-label">{% trans "Přihlášení projektu" %}</span>
@@ -213,37 +248,37 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Vedoucí projektu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.vedouci_projektu}}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.vedouci_projektu|check_if_none}}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.organizace}}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.organizace|check_if_none}}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Uživatelské označení" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.uzivatelske_oznaceni }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.uzivatelske_oznaceni|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Památková ochrana" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Rejstříkové číslo USKP" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_cislo }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_cislo|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Název památky" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.kulturni_pamatka_popis }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.kulturni_pamatka_popis|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
@@ -253,22 +288,22 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Termín odevzdání" %}</label>
-              <input class="form-control" type="text" placeholder="{{ projekt.termin_odevzdani_nz|date:'Y-m-d' }}" readonly><!--missings-->
+              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'Y-m-d' }}" readonly><!--missings-->
             </div>
           </div>
-        </div>          
+        </div>
       </div>
     </div>
     {% if show.oznamovatel %}
@@ -277,6 +312,7 @@
           <div class="app-fx app-left">
             {% trans "Oznamovatel" %}
           </div>
+          {% if show.editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a class="btn app-entity-projekt" href="{% url 'oznameni:oznameni_edit' projekt.oznamovatel.id %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
@@ -284,37 +320,38 @@
               </a>
             </div>
           </div>
+          {% endif %}
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Oznamovatel" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.oznamovatel }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.oznamovatel }}" readonly>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Pověřená osoba oznamovatele" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.odpovedna_osoba }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.odpovedna_osoba }}" readonly>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Adresa oznamovatele" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.adresa }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.adresa }}" readonly>
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Telefon" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.telefon }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.telefon }}" readonly>
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Email" %}</label>
-                <input class="form-control" type="text" placeholder="{{ oznamovatel.email }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.email }}" readonly>
               </div>
             </div>
           </div>
@@ -327,6 +364,7 @@
         <div class="app-fx app-left">
           {% trans "Projektová dokumentace" %}
         </div>
+        {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-projekt" href="{% url 'core:upload_file_projekt' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Nahrát dokumentaci' %}">
@@ -334,6 +372,7 @@
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if soubory %}
@@ -443,7 +482,7 @@
             {% for nalez in samostatne_nalezy %}
               <tr>
                 <td class="app-ident-cely">
-                  <a href="">
+                  <a href="{% url 'pas:detail' nalez.ident_cely %}">
                     <span class="material-icons">brush</span>
                     {{ nalez.ident_cely }}
                   </a>

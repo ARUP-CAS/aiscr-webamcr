@@ -8,6 +8,14 @@ ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
 ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = "Záznam se nepovedlo editovat."
 ZAZNAM_USPESNE_SMAZAN: Final = "Záznam byl úspěšně smazán."
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = "Záznam nebyl smazán."
+MAXIMUM_IDENT_DOSAZEN: Final = "Byl překročen limit při přidělování identifikátoru. Pro vyřešení problému kontaktujte administrátora AMČR."
+MAXIMUM_AKCII_DOSAZENO: Final = "Byl překročen limit akcií pro jeden projekt."
+MAXIMUM_DJ_DOSAZENO: Final = (
+    "Byl překročen limit dokumentačních jednotek pro jednu akci."
+)
+MAXIMUM_KOMPONENT_DOSAZENO: Final = (
+    "Byl překročen limit komponent pro dokumentační jednotky."
+)
 
 # Projekt
 PROJEKT_USPESNE_PRIHLASEN: Final = "Projekt byl úspěšně přihlášen."
@@ -55,3 +63,17 @@ OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
 PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
 PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
 PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."
+
+# SN
+SAMOSTATNY_NALEZ_VRACEN: Final = "Samostatný nález vrácen do předchozího stavu."
+SAMOSTATNY_NALEZ_NELZE_ODESLAT: Final = "Samostatný nález nelze odeslat."
+SAMOSTATNY_NALEZ_ODESLAN: Final = "Samostatný nález úspěšně odeslán."
+SAMOSTATNY_NALEZ_POTVRZEN: Final = "Samostatný nález úspěšně potvrzen."
+SAMOSTATNY_NALEZ_ARCHIVOVAN: Final = "Samostatný nález úspěšně archivován."
+
+# Spoluprace
+ZADOST_O_SPOLUPRACI_VYTVORENA: Final = "Žádost o spolupráci byla vytvořena."
+SPOLUPRACE_BYLA_AKTIVOVANA: Final = "Spolupráce byla aktivována."
+SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = "Spolupráce byla deaktivována."
+SPOLUPRACI_NELZE_AKTIVOVAT: Final = "Spolupráci nejde aktivovat."
+SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = "Spolupráci nejde deaktivovat."

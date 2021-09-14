@@ -2,13 +2,13 @@
 {% load i18n %}
 {% load static %}
 
-{% block title %}{% trans "Smazání objektu" %} {{ objekt.ident_cely }}{% endblock %}
+{% block title %}{%if spoluprace%}{% trans "Smazání Spoluprace" %} {{ objekt.id }}{% else %}{% trans "Smazání objektu" %} {{ objekt.ident_cely }}{% endif%}{% endblock %}
 {% block head %}
 {% endblock %}
 
 {% block content %}
   <div class="d-flex h-100 flex-column align-items-center justify-content-center">
-    <h4 class="mb-3">{% trans "Smazání objektu" %} <strong>{{ objekt.ident_cely }}</strong></h4>
+    <h4 class="mb-3">{%if spoluprace%}{% trans "Smazání Spoluprace " %} <strong>{{ objekt.id }}{% else %}{% trans "Smazání objektu" %} <strong>{{ objekt.ident_cely }}{% endif%}</strong></h4>
     <form method="post" onsubmit="eraseSubmitBtn.disabled = true; return true;">
       {% csrf_token %}
       {% if warnings %}
@@ -21,7 +21,7 @@
         </div>
       {% endif %}
       <div class="text-center">
-        <button type="submit" id="eraseSubmitBtn" class="btn btn-primary mr-1" {% if warnings %}disabled{% endif %}>{% trans "Smazat objekt" %}</button>
+        <button type="submit" id="eraseSubmitBtn" class="btn btn-primary mr-1" {% if warnings %}disabled{% endif %}>{%if spoluprace%}{% trans "Smazání Spoluprace " %}{% else %}{% trans "Smazat objekt" %}{%endif%}</button>
         <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
       </div>
     </form>
@@ -29,9 +29,5 @@
 {% endblock %}
 
 {% block script %}
-  <script>
-      function goBack() {
-          window.history.back();
-      }
-  </script>
+
 {% endblock %}

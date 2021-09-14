@@ -41,12 +41,7 @@
           <div class="card app-desc">
             <div class="card-body">
               <h3>{% trans "Popis projektu" %}</h3>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus luctus massa neque. Nunc suscipit magna dui, quis molestie elit laoreet non. Aenean in tellus ut metus cursus dapibus sit amet sit amet dolor. Nulla lectus orci, fringilla vitae fringilla et, bibendum et nibh. Donec finibus sapien urna, eget laoreet sem tincidunt placerat. Aenean porta leo quis eros aliquam, eu iaculis odio scelerisque. Curabitur sollicitudin feugiat quam.
-              </p>
-              <p>
-                Phasellus luctus massa neque. Nunc suscipit magna dui, quis molestie elit laoreet non. Aenean in tellus ut metus cursus dapibus sit amet sit amet dolor. Nulla lectus orci, fringilla vitae fringilla et, bibendum et nibh. Donec finibus sapien urna, eget laoreet sem tincidunt placerat. Aenean porta leo quis eros aliquam, eu iaculis odio scelerisque. Curabitur sollicitudin feugiat quam.
-              </p>
+              {% include "index_page/popis_projektu.html" %}
             </div>
           </div>
           <hr />
@@ -54,7 +49,7 @@
             <div class="card-body">
               <h3>{% trans "Novinky" %}</h3>
               <div class="app-sroll-inner">
-                {% include "uzivatel/novinky.html" %}
+                {% include "index_page/novinky.html" %}
               </div>
             </div>
           </div>
@@ -62,4 +57,11 @@
       </div>
     </div>
   </div>
+{% endblock %}
+{% block script %}
+  <script>
+    document.getElementById("id_username").addEventListener("change", function () {
+      this.value = this.value.toLowerCase(); 
+    });
+  </script>
 {% endblock %}

@@ -8,9 +8,12 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{{ header }} {{ object.ident_cely }}</h1>
-  {% crispy form %}
-
+  <div class="app-entity-projekt">
+    {% include "toolbar_projekt.html" with projekt=object %}
+    <form method="post">
+      {% crispy form %}
+    </form>
+  </div>  
 {% endblock %}
 
 {% block script %}

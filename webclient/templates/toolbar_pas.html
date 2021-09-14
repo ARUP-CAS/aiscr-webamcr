@@ -13,25 +13,25 @@
     <div class="app-right app-controls">
       <div class="btn-group app-entity-samostatny_nalez" role="group">
         {% if show.vratit_link %}
-          <a href="#" class="btn">
+          <a href="{% url 'pas:vratit' sn.ident_cely %}" class="btn">
             <span class="material-icons">arrow_back</span>
             {% trans "Vrátit" %}
           </a>
         {% endif %}
         {% if show.odeslat_link %}
-          <a href="#" class="btn">
+          <a href="{% url 'pas:odeslat' sn.ident_cely %}" class="btn">
             <span class="material-icons">flag</span>
             {% trans "Odeslat" %}
           </a>
         {% endif %}
         {% if show.potvrdit_link %}
-          <a href="#" class="btn">
+          <a href="{% url 'pas:potvrdit' sn.ident_cely %}" class="btn">
             <span class="material-icons">flag</span>
             {% trans "Potvrdit" %}
           </a>
         {% endif %}
         {% if show.archivovat_link %}
-          <a href="#" class="btn">
+          <a href="{% url 'pas:archivovat' sn.ident_cely %}" class="btn">
             <span class="material-icons">archive</span>
             {% trans "Archivovat" %}
           </a>

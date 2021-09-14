@@ -66,6 +66,7 @@ UPDATE extra_data SET zeme = null WHERE zeme = -1;
 ALTER TABLE extra_data ADD CONSTRAINT extra_data_zeme_fkey FOREIGN KEY (zeme) REFERENCES heslar_zeme(id);
 UPDATE extra_data SET udalost_typ = null WHERE udalost_typ = -1;
 ALTER TABLE extra_data ADD CONSTRAINT extra_data_udalost_typ_fkey FOREIGN KEY (udalost_typ) REFERENCES heslar_typ_udalosti(id);
+update heslar_predmet_druh set implicitni_material = null where implicitni_material = -1;
 ALTER TABLE heslar_predmet_druh ADD CONSTRAINT predmet_druh_implicitni_material_fkey FOREIGN KEY (implicitni_material) REFERENCES heslar_specifikace_predmetu(id);
 ALTER TABLE heslar_specifikace_objektu_druha ADD CONSTRAINT specifikace_objektu_druha_prvni_fkey FOREIGN KEY (prvni) REFERENCES heslar_specifikace_objektu_prvni(id);
 ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_nalezce_fkey FOREIGN KEY (nalezce) REFERENCES heslar_jmena(id);

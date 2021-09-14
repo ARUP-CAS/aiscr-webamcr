@@ -1,37 +1,85 @@
 Dropzone.autoDiscover = false;
 window.onload = function () {
-    var dropzoneOptions = {
-        dictDefaultMessage: 'Přiložte dokumentaci.',
-        dictInvalidFileType: "Nepodporovaný typ souboru.",
-        acceptedFiles: "image/*," +
-            "application/pdf," +
+    const xhttp = new XMLHttpRequest();
+    var csrfcookie = function () {
+        var cookieValue = null,
+            name = 'csrftoken';
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    };
+    var currentLocation = window.location.pathname;
+    if (currentLocation.includes("upload_file/pas/")) {
+        acceptFile = "image/*"
+    }
+    else if (currentLocation.includes("upload_file/dokument/")) {
+        acceptFile = "application/pdf"
+    }
+    else {
+        acceptFile = "image/*," +
             ".zip," +
-            ".csv," +
-            ".txt," +
+            ".ZIP," +
+            ".rar," +
+            ".RAR," +
+            ".7z," +
+            ".7Z," +
             "application/vnd.ms-excel," +
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document," +
             "application/docx," +
             "application/pdf," +
             "text/plain," +
             "application/msword," +
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet," +
+            "application/vnd.oasis.opendocument.text," +
+            "application/vnd.oasis.opendocument.spreadsheet"
+    }
+
+    var dropzoneOptions = {
+        dictDefaultMessage: 'Přiložte dokumentaci.',
+        dictInvalidFileType: "Nepodporovaný typ souboru.",
+        acceptedFiles: acceptFile,
+        addRemoveLinks: true,
+        dictCancelUpload: "Zrušit nahrávání",
+        dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
+        dictRemoveFile: "Odstranit soubor",
         maxFilesize: 100, // MB
         init: function () {
             this.on("success", function (file, response) {
-                console.log("success > " + file.name);
+                file.id = response.id
+                file.previewElement.lastChild.style.display = null
+                if (response.duplicate) {
+                    alert(response.duplicate)
+                    console.log("success > " + file.name);
+
+                }
+            });
+            this.on("removedfile", function (file) {
+                if (file.id) {
+                    xhttp.open("POST", "/delete_file/" + file.id);
+                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
+                    xhttp.send();
+                }
+            });
+            this.on("sending", function (file) {
+                file.previewElement.lastChild.style.display = "none"
             });
         },
-        error: function(file, response) {
+        error: function (file, response) {
             console.log(response);
-            if (response.error){
-                alert(response.error)
-            } else {
-                alert(response)
-            }
+            alert(response)
             this.removeFile(file);
 
         },
-        params: {'objectID': object_id}
+        params: { 'objectID': object_id }
     };
     var uploader = document.querySelector('#my-awesome-dropzone');
     var newDropzone = new Dropzone(uploader, dropzoneOptions);

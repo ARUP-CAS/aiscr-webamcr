@@ -7,6 +7,7 @@ from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
+from arch_z import validators
 
 
 class CreateProjektForm(forms.ModelForm):
@@ -38,8 +39,8 @@ class CreateProjektForm(forms.ModelForm):
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "hlavni_katastr": autocomplete.ModelSelect2(
-                url="heslar:katastr-autocomplete"
+            "hlavni_katastr": forms.Textarea(
+                attrs={"rows": 1, "cols": 20, "readonly": "readonly"}
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -54,10 +55,14 @@ class CreateProjektForm(forms.ModelForm):
             "parcelni_cislo": _("Parcelní číslo"),
             "oznaceni_stavby": _("Označení stavby"),
         }
+        error_messages = {
+            "hlavni_katastr": {"required": "Je třeba vybrat bod na mapě."}
+        }
 
     def __init__(self, *args, **kwargs):
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
+        self.fields["katastry"].readonly = True
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True
         self.fields["parcelni_cislo"].required = True
@@ -101,6 +106,9 @@ class CreateProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
 
 
 class EditProjektForm(forms.ModelForm):
@@ -110,6 +118,18 @@ class EditProjektForm(forms.ModelForm):
         required=True,
         label=_("Plánované zahájení prací"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
+    )
+    datum_zahajeni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        widget=forms.DateInput(
+            attrs={"data-provide": "datepicker", "autocomplete": "off"}
+        ),
+    )
+    datum_ukonceni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        widget=forms.DateInput(
+            attrs={"data-provide": "datepicker", "autocomplete": "off"}
+        ),
     )
 
     class Meta:
@@ -131,7 +151,7 @@ class EditProjektForm(forms.ModelForm):
             "datum_ukonceni",
             "uzivatelske_oznaceni",
             "katastry",
-            #"termin_odevzdani",
+            "termin_odevzdani_nz",
         )
         widgets = {
             "typ_projektu": forms.Select(
@@ -144,19 +164,20 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "datum_zahajeni": forms.DateInput(attrs={"data-provide": "datepicker"}),
-            "datum_ukonceni": forms.DateInput(attrs={"data-provide": "datepicker"}),
             "hlavni_katastr": autocomplete.ModelSelect2(
                 url="heslar:katastr-autocomplete"
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
-             "vedouci_projektu": forms.Select(
+            "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "termin_odevzdani_nz": forms.DateInput(
+                attrs={"data-provide": "datepicker", "autocomplete": "off"}
             ),
         }
         labels = {
@@ -175,10 +196,10 @@ class EditProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("Uživatelské označení"),
             "datum_zahajeni": _("Datum zahájení výzkumu"),
             "datum_ukonceni": _("Datum ukončení výzkumu"),
-            #"termin_odevzdani": _("Termín odevzdání"),
+            "termin_odevzdani_nz": _("Termín odevzdání"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, required, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
@@ -202,7 +223,7 @@ class EditProjektForm(forms.ModelForm):
                                 Div("lokalizace", css_class="col-sm-12"),
                                 Div("parcelni_cislo", css_class="col-sm-12"),
                                 Div("oznaceni_stavby", css_class="col-sm-6"),
-                                Div("planovane_zahajeni", css_class="col-sm-3"),         
+                                Div("planovane_zahajeni", css_class="col-sm-3"),
                                 css_class="row",
                             ),
                             css_class="col-sm-9",
@@ -215,14 +236,22 @@ class EditProjektForm(forms.ModelForm):
                     ),
                     Div(
                         Div(
-                            HTML(_("<span class=\"app-divider-label\">Přihlášení projektu</span>")),
-                            HTML(_("<hr class=\"mt-0\" />")),
-                            css_class="col-sm-12"
+                            HTML(
+                                _(
+                                    '<span class="app-divider-label">Přihlášení projektu</span>'
+                                )
+                            ),
+                            HTML(_('<hr class="mt-0" />')),
+                            css_class="col-sm-12",
                         ),
                         Div(
                             Div("vedouci_projektu", css_class="flex-fill"),
-                            HTML(_("<a href=\"/uzivatel/osoba/create\" class=\"btn app-btn-in-form\" rel=\"tooltip\" data-placement=\"top\" title=\"Přidání osoby\"><span class=\"material-icons\">add</span></a>")),
-                            css_class="col-sm-4 d-flex align-items-end"
+                            HTML(
+                                _(
+                                    '<a href="/uzivatel/osoba/create" class="btn app-btn-in-form" rel="tooltip" data-placement="top" title="Přidání osoby"><span class="material-icons">add</span></a>'
+                                )
+                            ),
+                            css_class="col-sm-4 d-flex align-items-end",
                         ),
                         Div("organizace", css_class="col-sm-4"),
                         Div("uzivatelske_oznaceni", css_class="col-sm-4"),
@@ -232,13 +261,15 @@ class EditProjektForm(forms.ModelForm):
                         Div("latitude", css_class="hidden"),
                         Div("longitude", css_class="hidden"),
                         Div(
-                            HTML(_("<span class=\"app-divider-label\">Terenní část</span>")),
-                            HTML(_("<hr class=\"mt-0\" />")),
-                            css_class="col-sm-12"
+                            HTML(
+                                _('<span class="app-divider-label">Terenní část</span>')
+                            ),
+                            HTML(_('<hr class="mt-0" />')),
+                            css_class="col-sm-12",
                         ),
                         Div("datum_zahajeni", css_class="col-sm-4"),
                         Div("datum_ukonceni", css_class="col-sm-4"),
-                        #Div("termin_odevzdani", css_class="col-sm-4"),          
+                        Div("termin_odevzdani_nz", css_class="col-sm-4"),
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -247,12 +278,36 @@ class EditProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            if required:
+                self.fields[key].required = True if key in required else False
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
+            if cleaned_data.get("datum_zahajeni") and cleaned_data.get(
+                "datum_ukonceni"
+            ):
+                if cleaned_data.get("datum_zahajeni") > cleaned_data.get(
+                    "datum_ukonceni"
+                ):
+                    raise forms.ValidationError(
+                        "Datum zahájení nemůže být po datu ukončení"
+                    )
+        return self.cleaned_data
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
     reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True)
+    enable_submit = True
 
     def __init__(self, *args, **kwargs):
+        if "enable_form_submit" in kwargs:
+            enable_form_submit = kwargs.pop("enable_form_submit")
+        else:
+            enable_form_submit = True
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
@@ -268,8 +323,19 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                     "reason",
                     css_class="card-body",
                 ),
-                css_class="card",
-            )
+                css_class="card app-card-form",
+            ),
+            Div(
+                FormActions(
+                    Submit(
+                        "save", "Navrhnout zrušení", disabled=not enable_form_submit
+                    ),
+                    HTML(
+                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
+                    ),
+                ),
+                css_class="mt-3",
+            ),
         )
 
 
@@ -278,6 +344,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         model = Projekt
         fields = (
             "vedouci_projektu",
+            "organizace",
             "kulturni_pamatka",
             "kulturni_pamatka_cislo",
             "kulturni_pamatka_popis",
@@ -286,6 +353,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         widgets = {
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -295,14 +363,16 @@ class PrihlaseniProjektForm(forms.ModelForm):
         }
         labels = {
             "vedouci_projektu": _("Vedoucí projektu"),
-            "kulturni_pamatka": _("Kulturní památka"),
-            "kulturni_pamatka_cislo": _("Popis"),
-            "kulturni_pamatka_popis": _("Číslo"),
+            "organizace": _("Organizace"),
+            "kulturni_pamatka": _("Památková ochrana"),
+            "kulturni_pamatka_cislo": _("Rejstříkové číslo ÚSKP"),
+            "kulturni_pamatka_popis": _("Název památky"),
             "uzivatelske_oznaceni": _("Uživatelské označení"),
         }
         help_texts = {
             "vedouci_projektu": _("Lorem ipsum."),
             "kulturni_pamatka": _("Lorem ipsum."),
+            "organizace": _("Lorem ipsum."),
             "kulturni_pamatka_cislo": _("Lorem ipsum."),
             "kulturni_pamatka_popis": _("Lorem ipsum."),
             "uzivatelske_oznaceni": _("Lorem ipsum."),
@@ -311,35 +381,59 @@ class PrihlaseniProjektForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
+        self.fields["kulturni_pamatka"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Přihlášení projektu")),
+                    Div(
+                        HTML(_("Přihlášení projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     Div(
-                        "vedouci_projektu",
-                        "uzivatelske_oznaceni",
-                        "kulturni_pamatka",
-                        "kulturni_pamatka_cislo",
-                        "kulturni_pamatka_popis",
+                        Div(
+                            Div(
+                                Div("vedouci_projektu", css_class="flex-fill"),
+                                HTML(
+                                    _(
+                                        '<a href="{% url \'uzivatel:create_osoba\' %}?next={{ request.path|urlencode }}" class="btn app-btn-in-form" rel="tooltip" data-placement="top" title="Přidání osoby"><span class="material-icons">add</span></a>'
+                                    )
+                                ),
+                                css_class="col-sm-4 d-flex align-items-center",
+                            ),
+                            Div("organizace", css_class="col-sm-4"),
+                            Div("uzivatelske_oznaceni", css_class="col-sm-4"),
+                            Div("kulturni_pamatka", css_class="col-sm-2"),
+                            Div("kulturni_pamatka_cislo", css_class="col-sm-2"),
+                            Div("kulturni_pamatka_popis", css_class="col-sm-8"),
+                            css_class="row",
+                        ),
                         css_class="card-body",
                     )
                 ),
-                css_class="card",
+                css_class="card app-card-form",
             )
         )
         self.helper.form_tag = False
 
+        for key in self.fields.keys():
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+
 
 class ZahajitVTerenuForm(forms.ModelForm):
+    datum_zahajeni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
+
     class Meta:
         model = Projekt
         fields = ("datum_zahajeni",)
         labels = {
-            "datum_zahajeni": _("Datum zahájení prací"),
+            "datum_zahajeni": _("Datum zahájení terénních prací"),
         }
         help_texts = {
             "datum_zahajeni": _("Lorem ipsum."),
@@ -352,34 +446,45 @@ class ZahajitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Zahájení výzkumu projektu")),
+                    Div(
+                        HTML(_("Zahájení výzkumu ")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     Div(
-                        "datum_zahajeni",
+                        Div(
+                            Div("datum_zahajeni", css_class="col-sm-3"),
+                            css_class="row",
+                        ),
                         css_class="card-body",
                     )
                 ),
-                Div(
-                    FormActions(
-                        Submit("save", "Zahájit v terénu"),
-                        HTML(
-                            '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
-                        ),
-                    )
+                css_class="card app-card-form",
+            ),
+            Div(
+                FormActions(
+                    Submit("save", "Zahájit v terénu"),
+                    HTML(
+                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
+                    ),
                 ),
-                css_class="card",
-            )
+                css_class="mt-3",
+            ),
         )
 
 
 class UkoncitVTerenuForm(forms.ModelForm):
+    datum_ukonceni = forms.DateField(
+        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+    )
+
     class Meta:
         model = Projekt
         fields = ("datum_ukonceni",)
         labels = {
-            "datum_ukonceni": _("Datum ukončení prací"),
+            "datum_ukonceni": _("Datum ukončení terénních prací"),
         }
         help_texts = {
             "datum_ukonceni": _("Lorem ipsum."),
@@ -392,23 +497,40 @@ class UkoncitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    HTML(_("Ukončení výzkumu projektu")),
+                    Div(
+                        HTML(_("Ukončení výzkumu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
                     Div(
-                        "datum_ukonceni",
+                        Div(
+                            Div("datum_ukonceni", css_class="col-sm-3"),
+                            css_class="row",
+                        ),
                         css_class="card-body",
                     ),
-                    Div(
-                        FormActions(
-                            Submit("save", "Ukončit v terénu"),
-                            HTML(
-                                '<button type="button" class="btn" onclick="window.history.back();">Zpět</button>'
-                            ),
-                        )
+                ),
+                css_class="card app-card-form",
+            ),
+            Div(
+                FormActions(
+                    Submit("save", "Ukončit v terénu"),
+                    HTML(
+                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
                     ),
                 ),
-                css_class="card",
-            )
+                css_class="mt-3",
+            ),
         )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if {"datum_ukonceni"} <= cleaned_data.keys():
+            if self.instance.datum_zahajeni > cleaned_data.get("datum_ukonceni"):
+                raise forms.ValidationError(
+                    "Datum ukončení nemůže být pred datem zahájení (%s)"
+                    % self.instance.datum_zahajeni.strftime("%d. %m. %Y")
+                )
+        return self.cleaned_data

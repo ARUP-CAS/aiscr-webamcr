@@ -8,6 +8,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
   {% compress css %}
   <link type="text/x-scss" href="{% static 'theme.scss' %}" rel="stylesheet" media="screen">
   {% if user.is_authenticated and request.path != '/oznameni/' and request.path != '/accounts/login/' %}
@@ -40,6 +41,7 @@
           crossorigin="anonymous"></script>
   <script src="{% static '/js/datepicker-cs.js' %}"></script>
   <script src="{% static '/js/selectpicker-cs.js' %}"></script>
+  <script src="{% static 'pridani_title_pro_disabled.js' %}"></script>
 
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
@@ -56,12 +58,12 @@
     </div>
 
     <!-- for alert development
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
       Záznam byl úspěšně vytvořen.
       <button aria-label="Close" class="close" data-dismiss="alert" type="button">
         <span aria-hidden="true">×</span>
        </button>
-    </div> -->
+    </div>-->
 
     {% if messages %}
       {% for message in messages %}

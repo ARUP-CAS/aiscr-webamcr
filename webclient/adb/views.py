@@ -1,8 +1,8 @@
 import logging
 
-from adb.forms import CreateADBForm
+from adb.forms import CreateADBForm, create_vyskovy_bod_form, VyskovyBodFormSetHelper
 from adb.models import Adb
-from core.exceptions import DJNemaPianError
+from core.exceptions import DJNemaPianError, MaximalIdentNumberError
 from core.ident_cely import get_adb_ident
 from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
@@ -15,8 +15,10 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from adb.models import Adb, VyskovyBod
 
 logger = logging.getLogger(__name__)
 
@@ -53,16 +55,50 @@ def zapsat(request, dj_ident_cely):
         adb = form.save(commit=False)
         if not dj.pian:
             raise DJNemaPianError(dj)
-        adb.ident_cely, sm5 = get_adb_ident(dj.pian)
-        adb.dokumentacni_jednotka = dj
-        adb.sm5 = sm5
-        adb.save()
-
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+        try:
+            adb.ident_cely, sm5 = get_adb_ident(dj.pian)
+        except MaximalIdentNumberError as e:
+            messages.add_message(request, messages.ERROR, e.message)
+        else:
+            adb.dokumentacni_jednotka = dj
+            adb.sm5 = sm5
+            adb.save()
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+
+    return redirect(request.META.get("HTTP_REFERER"))
+
+
+@login_required
+@require_http_methods(["POST"])
+def zapsat_vyskove_body(request, adb_ident_cely):
+    adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
+    vyskovy_bod_formset = inlineformset_factory(
+        Adb,
+        VyskovyBod,
+        form=create_vyskovy_bod_form(),
+        extra=3,
+    )
+    formset = vyskovy_bod_formset(
+        request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
+    )
+    if formset.is_valid():
+        logger.debug("Formset is valid")
+        formset.save()
+    if formset.is_valid():
+        logger.debug("Form is valid")
+        formset.save()
+        if (
+            formset.has_changed()
+        ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+    else:
+        logger.warning("Form is not valid")
+        logger.debug(formset.errors)
+        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     return redirect(request.META.get("HTTP_REFERER"))
 

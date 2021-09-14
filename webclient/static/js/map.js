@@ -1,14 +1,39 @@
-var map = L.map('projectMap').setView([49.84, 15.17], 7);
-var poi = L.layerGroup();
+//var map = L.map('projectMap').setView([49.84, 15.17], 7);
+//var poi = L.layerGroup();
 
-L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-    maxZoom: 18,
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-        'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    id: 'mapbox/streets-v11',
-    tileSize: 512,
-    zoomOffset: -1
-}).addTo(map);
+var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom: 19.99, minZoom: 6 }),
+cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom: 19.99, minZoom: 6 }),
+cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 20, minZoom: 6 }),
+cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 19.99, minZoom: 6 });
+
+var map = L.map('projectMap',{zoomControl:false,  layers: [cuzkZM], fullscreenControl: true}).setView([49.84, 15.17], 7);
+
+var baseLayers = {
+        "Mapa ČR": osmColor,
+        "Základní mapa": cuzkZM,
+        "Ortofotomapa": cuzkOrt,
+        "Stínovaný reliéf 5G": cuzkEL,
+    };
+
+var poi_other = L.layerGroup();
+
+var overlays ={
+    "Katastrální mapa":  L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom: 20.99, minZoom: 17, opacity: 0.5 }),
+    "Katastrální území": L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom: 20.99, minZoom: 12, opacity: 0.5 })
+
+}
+
+L.control.layers(baseLayers,overlays).addTo(map);
+L.control.scale(metric = "true").addTo(map);
+L.control.zoom(
+    {
+        zoomInText:'+',
+        zoomInTitle:'Zvětšit',
+        zoomOutText:'-',
+        zoomOutTitle:'Zmenšit'
+    }).addTo(map)
+
+var poi = L.layerGroup();
 map.addLayer(poi);
 
 var addPointToPoiLayer = (lat, long, text) => {
@@ -35,8 +60,18 @@ map.on('click', function (e) {
         xhr.onload = function () {
             // do something to response
             console.log(JSON.parse(this.responseText).cadastre);
-            let uzemi = document.getElementById('id_katastralni_uzemi');
-            uzemi.value=JSON.parse(this.responseText).cadastre;
+            if(JSON.parse(this.responseText).cadastre=="None"){
+                //console.log("run")
+                alert("Neplatny bod, klikli jste mimo území ČR")
+                console.log("Neplatny bod, klikli jste mimo území ČR")
+                //var mess='<li><div class="alert alert-info msg fade show" role="alert">Klikli jste mimo území ČR</div></li>'
+                //document.getElementById('messages-list').append(mess)
+                //$("#messages").append(message);
+                //mess.fadeIn(500);
+            } else {
+                const uzemi = document.getElementById('id_katastralni_uzemi');
+                uzemi.value=JSON.parse(this.responseText).cadastre;
+            }
         };
         xhr.send(JSON.stringify({ 'corY': corY,'corX': corX }))
 

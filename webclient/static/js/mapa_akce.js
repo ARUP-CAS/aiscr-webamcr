@@ -23,7 +23,7 @@ var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { at
     cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom: 19.99, minZoom: 6 }),
     cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 20, minZoom: 6 }),
     cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 19.99, minZoom: 6 });
-    
+
 
 var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
@@ -59,10 +59,10 @@ L.control.zoom(
     }).addTo(map)
 
     var buttons = [
-L.easyButton({ 
+L.easyButton({
         states: [{
             stateName: 'add-lock',
-            icon: 'glyphicon glyphicon-lock',
+            icon: 'bi-lock',
             title: 'Zamkni pro změny',
             onClick: function(control) {
                 global_map_can_edit=!global_map_can_edit;
@@ -73,7 +73,7 @@ L.easyButton({
                 control.state('remove-lock');
             }
             }, {
-            icon: 'glyphicon glyphicon-pencil',
+            icon: 'bi bi-pencil',
             stateName: 'remove-lock',
             onClick: function(control) {
                 global_map_can_edit=!global_map_can_edit;
@@ -83,10 +83,10 @@ L.easyButton({
                 control.state('add-lock');
             },
             title: 'Odemkni pro změny'
-            }]    
+            }]
     }),
-    
-L.easyButton( 'glyphicon glyphicon-fast-backward', function(){
+
+L.easyButton( 'i bi-skip-backward-fill', function(){
         //gm_correct.clearLayers();
         //editableLayers.clearLayers();
         map.setView(poi_sugest.getLayers()[0]._latlng, 18);
@@ -254,7 +254,7 @@ var drawControl = new L.Control.Draw( {
         circle: false, // Turns off this drawing tool
         rectangle: false,
         marker: {
-            icon: redIcon 
+            icon: redIcon
         },
         circlemarker: false,
         },
@@ -266,7 +266,7 @@ var drawControl = new L.Control.Draw( {
 
 
 map.addControl(drawControl);
-    
+
 
 map.on('draw:edited', function (e) {
     var layers = e.layers;
@@ -282,11 +282,11 @@ if(global_map_can_edit){
     var type = e.layerType;
     var la = e.layer;
     console.log(e)
-    
+
 
     if (type === 'marker'){
         drawnItems.clearLayers();
-        
+
         let corX = e.layer._latlng.lat;
         let corY = e.layer._latlng.lng;
         addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru',la);
@@ -331,11 +331,11 @@ var getOtherPoi= ()=>{
     poi_other.clearLayers();
 //                console.log('delka vsech:'+points.length)
 
-    points.forEach((point) => {       
+    points.forEach((point) => {
         if(map.getBounds().getEast()> point[1] &&  point[1]> map.getBounds().getWest()
         &&
         map.getBounds().getSouth()< point[0] &&  point[0]< map.getBounds().getNorth()
-        ){ 
+        ){
 //            pp.push(point[0])
             if(point.length>2){
                 L.marker([point[0],point[1]]).bindPopup(point[2]).addTo(poi_other)
@@ -360,7 +360,7 @@ var addPointOnLoad = (lat, long, text) => {
     } else{
         L.marker([lat, long], {icon: greenIcon}).addTo(poi_sugest);
     }
-    
+
     map.setView([lat, long], 18)
     getOtherPoi();
 
@@ -373,7 +373,7 @@ var addPointOnLoad = (lat, long, text) => {
     polyLayers.push(polygon2)
 
     for(layer of polyLayers) {
-        poi_sugest.addLayer(layer);	
+        poi_sugest.addLayer(layer);
     }
 }
 
@@ -392,5 +392,5 @@ map.on('click', function (e) {
         //console.log("Your type: "+type)
         //console.log(e)
         //console.log(map.getBounds())
-    
+
 });

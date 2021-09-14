@@ -6,10 +6,14 @@ db.sqlite3
 local_settings.py
 webclient_env_var.sh
 secrets.json
+secrets_backup.json
 
 # Pycharm project files
 .idea/
 *.ini
+
+# VsCode project files
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -62,3 +66,14 @@ CACHE/
 
 # Sphinx documentation
 docs/_build/
+
+#Media documents - emails and soubory
+vol/web/media/emails
+vol/web/media/soubory
+
+#jnihnat - local changes
+backup_file_db_v4.tar
+docker-compose-db-yml
+Dockerfile-DB
+scripts/restore_database.sh
+docker-compose-debug-yml

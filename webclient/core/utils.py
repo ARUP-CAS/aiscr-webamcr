@@ -52,7 +52,7 @@ def get_centre_point(bod, geom):
         [x0, x1, xlength] = [0.0, 0.0, 1]
         bod.zoom = 19
         if isinstance(geom[0], float):
-            [x0, x1, xlength] = [geom[0], geom[0], 1]
+            [x0, x1, xlength] = [geom[0], geom[1], 1]
         elif isinstance(geom[0][0], float):
             for i in range(0, len(geom)):
                 [x0, x1, xlength] = [
@@ -67,8 +67,8 @@ def get_centre_point(bod, geom):
                     x1 + geom[0][i][1],
                     len(geom[0]),
                 ]
-            bod.lat = x1 / xlength
-            bod.lng = x0 / xlength
+        bod.lat = x1 / xlength
+        bod.lng = x0 / xlength
         return [bod, geom]
     except Exception as e:
         logger.error("Pian error: " + e)
@@ -108,16 +108,19 @@ def get_points_from_envelope(left, bottom, right, top):
         return None
 
 
-def get_all_pians_in_cadastre(katastr):
+def get_all_pians_with_dj(ident_cely, lat, lng):
     query = (
-        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry from public.pian pian "
-        " join public.ruian_katastr ruian "
-        " on ST_Contains(ruian.hranice,pian.geom ) "
-        " where pian.geom is not null and ruian.aktualni='t' and ruian.nazev_stary!=%s limit 100"
+        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj from public.pian pian "
+        " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely like %s "
+        "where pian.geom is not null "
+        " and abs(ST_Y(ST_Centroid(pian.geom))-%s)<0.1 and abs(ST_X(ST_Centroid(pian.geom))-%s)<0.1"
+        " limit 20000"
     )
     try:
-        pians = Pian.objects.raw(query, [katastr])
+        pians = Pian.objects.raw(
+            query, [ident_cely[0 : ident_cely.rindex("-")] + "%", lat, lng]
+        )
         return pians
     except Exception:
-        logger.debug("No pians in cadastre: %s", katastr)
+        logger.debug("No pians")
         return None

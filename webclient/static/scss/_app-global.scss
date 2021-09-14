@@ -163,6 +163,28 @@ table {
   }
 }
 
+// date range picker
+.app-daterangepicker {
+  .form-group {
+    & > div {
+      @extend .d-flex;
+      font-size: 0;
+
+      .textinput {
+        @extend .flex-fill, .form-control;
+       
+        &:first-child {
+          margin-right: 15px;
+        }
+
+        &:last-child {
+          margin-left: 15px;
+        }
+      }
+    }
+  }
+}
+
 // multiple upload form
 form {
   &.dropzone {
@@ -171,6 +193,7 @@ form {
     border: 1px solid $gray-400;
     background-color: $gray-100;
     min-height: 180px;
+    display:block !important;
 
     .dz-message {
       @extend .m-0;
@@ -286,6 +309,12 @@ form {
         box-shadow: $app-card-shadow-hover;
       }
     }
+
+    &.app-card-in-clean-shadow {
+      .app-card-form {
+        @extend .shadow-none;
+      }
+    }
   }
 
   // dokumentacni jednotka
@@ -325,11 +354,12 @@ form {
   &.app-alert-floating {
     box-shadow: 0px 0px 40px 0px rgba(0,0,0,0.2);
     border-color: initial;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+    position: fixed;
+    //top: 50%;
+    top: 15px;
+    //transform: translateY(-50%);
     left: 50%;
-    transform: translateX(-50%);
+    //transform: translateX(-50%);
   }
 
   ul {
@@ -416,6 +446,9 @@ form {
     
               &.podnet {
                 max-width: 130px;
+              }
+              &.spoluprace{
+                max-width: 20%;
               }
             }
           }

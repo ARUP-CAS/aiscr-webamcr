@@ -6,7 +6,12 @@ from core.constants import (
     DOKUMENT_RELATION_TYPE,
     OTHER_DOCUMENT_FILES,
     OTHER_PROJECT_FILES,
+    PHOTO_DOCUMENTATION,
     PROJEKT_RELATION_TYPE,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
+    D_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_ARCHIVOVANY,
+    SN_ARCHIVOVANY,
 )
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
 from core.models import Soubor
@@ -19,8 +24,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import is_safe_url
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
+from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
+from django.core.exceptions import PermissionDenied
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +45,7 @@ def index(request):
 def delete_file(request, pk):
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
+        s.path.delete()
         items_deleted = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
@@ -85,6 +94,8 @@ def download_file(request, pk):
 @require_http_methods(["GET"])
 def upload_file_projekt(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     return render(
         request,
         "core/upload_file.html",
@@ -96,10 +107,25 @@ def upload_file_projekt(request, ident_cely):
 @require_http_methods(["GET"])
 def upload_file_dokument(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if d.stav == D_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     return render(
         request,
         "core/upload_file.html",
         {"ident_cely": ident_cely, "back_url": d.get_absolute_url()},
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
+def upload_file_samostatny_nalez(request, ident_cely):
+    sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if sn.stav == SN_ARCHIVOVANY:
+        raise PermissionDenied()
+    return render(
+        request,
+        "core/upload_file.html",
+        {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
     )
 
 
@@ -108,6 +134,7 @@ def post_upload(request):
     logger.debug("Uploading file to object: " + request.POST["objectID"])
     projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
     documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
+    finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
     typ_souboru = ""
     if projects.exists():
         objekt = projects[0]
@@ -115,7 +142,9 @@ def post_upload(request):
     elif documents.exists():
         objekt = documents[0]
         typ_souboru = OTHER_DOCUMENT_FILES
-    # TODO dokoncit upload samostatnych nalezu (FOTODOKUMENTACE)
+    elif finds.exists():
+        objekt = finds[0]
+        typ_souboru = PHOTO_DOCUMENTATION
     else:
         return JsonResponse(
             {
@@ -143,28 +172,29 @@ def post_upload(request):
             size_bytes=soubor.size,
             typ_souboru=typ_souboru,
         )
-        duplikat = Soubor.objects.filter(nazev=s.nazev)
+        duplikat = Soubor.objects.filter(nazev=s.nazev).order_by("pk")
         if not duplikat.exists():
             logger.debug("Saving file object: " + str(s))
             s.save()
-            return JsonResponse({"filename": s.nazev_zkraceny}, status=200)
+            return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
         else:
-            logger.warning("File already exists on the server.")
+            logger.warning("File already exists on the server. Saving copy" + str(s))
+            s.save()
             # Find parent record and send it to the user
             parent_ident = ""
             if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
                 parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
             if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                 parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
-            # TODO dokoncit az se budou delat samostatne nalezy
-            # if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-            #    parent_ident = duplikat[0].vazba
+            if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
+                parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
             return JsonResponse(
                 {
-                    "error": "Soubor se stejným jménem na servru již existuje a je připojen k záznamu "
+                    "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
                     + parent_ident
+                    + ". Skontrolujte prosím duplicitu."
                 },
-                status=500,
+                status=200,
             )
     else:
         logger.warning("No file attached to the announcement form.")

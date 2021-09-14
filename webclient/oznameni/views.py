@@ -4,15 +4,21 @@ import simplejson as json
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
 from core.utils import get_cadastre_from_point
+from core.constants import (
+    PROJEKT_STAV_ARCHIVOVANY,
+)
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
+from projekt.models import Projekt
+from django.core.exceptions import PermissionDenied
+
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
@@ -105,6 +111,9 @@ def index(request):
 @require_http_methods(["GET", "POST"])
 def edit(request, pk):
     oznameni = Oznamovatel.objects.get(id=pk)
+    projekt = get_object_or_404(Projekt, ident_cely=oznameni.projekt.ident_cely)
+    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     if request.method == "POST":
         form = OznamovatelForm(request.POST, instance=oznameni)
         if form.is_valid():

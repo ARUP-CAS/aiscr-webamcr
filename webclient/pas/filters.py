@@ -3,12 +3,25 @@ import logging
 import crispy_forms
 import django_filters
 import django_filters as filters
-from core.constants import OBLAST_CECHY, OBLAST_CHOICES, OBLAST_MORAVA
-from crispy_forms.layout import Div, Layout
+from core.constants import (
+    OBLAST_CECHY,
+    OBLAST_CHOICES,
+    OBLAST_MORAVA,
+    ROLE_ARCHEOLOG_ID,
+)
+from crispy_forms.layout import Div, Layout, HTML
+from django.contrib.auth.models import Group
 from django.db.models import Q
 from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
-from django_filters import CharFilter, ModelMultipleChoiceFilter, MultipleChoiceFilter
+from django_filters import (
+    CharFilter,
+    ModelMultipleChoiceFilter,
+    MultipleChoiceFilter,
+    DateFromToRangeFilter,
+)
+from django_filters.widgets import DateRangeWidget
+
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -16,8 +29,10 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
-from pas.models import SamostatnyNalez
+from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
+from historie.models import Historie
+
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +129,30 @@ class SamostatnyNalezFilter(filters.FilterSet):
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
+    # Filters by historie
+    historie_typ_zmeny = MultipleChoiceFilter(
+        choices=filter(lambda x: x[0].startswith("SN"), Historie.CHOICES),
+        label="Změna stavu",
+        field_name="historie__historie__typ_zmeny",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    historie_datum_zmeny_od = DateFromToRangeFilter(
+        label="Datum změny (od-do)",
+        field_name="historie__historie__datum_zmeny",
+        widget=DateRangeWidget(attrs={"type": "date"}),
+    )
+
+    historie_uzivatel = MultipleChoiceFilter(
+        choices=[(user.id, str(user)) for user in User.objects.all()],
+        field_name="historie__historie__uzivatel",
+        label="Uživatel",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
 
     class Meta:
         model = SamostatnyNalez
@@ -144,6 +183,36 @@ class SamostatnyNalezFilter(filters.FilterSet):
         return queryset
 
 
+class UzivatelSpolupraceFilter(filters.FilterSet):
+    vedouci = ModelMultipleChoiceFilter(
+        queryset=User.objects.select_related("organizace").filter(
+            hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+        ),
+        field_name="vedouci",
+        label="Vedoucí",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    spolupracovnik = ModelMultipleChoiceFilter(
+        queryset=User.objects.select_related("organizace"),
+        field_name="spolupracovnik",
+        label="Spolupracovník",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    class Meta:
+        model = UzivatelSpoluprace
+        fields = ["stav"]
+
+    def __init__(self, *args, **kwargs):
+        super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
+        self.helper = UzivatelSpolupraceFilterFormHelper()
+
+
 class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
     layout = Layout(
@@ -167,6 +236,27 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("hloubka__lt", css_class="col-sm-2"),
             Div("pristupnost", css_class="col-sm-2"),
             Div("stav", css_class="col-sm-2"),
+            Div(
+                HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
+            ),
+            Div("historie_typ_zmeny", css_class="col-sm-2"),
+            Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
+            Div("historie_uzivatel", css_class="col-sm-2"),
+            css_class="row",
+        ),
+    )
+    form_tag = False
+
+
+class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
+    form_method = "GET"
+    layout = Layout(
+        Div(
+            Div("vedouci", css_class="col-sm-4"),
+            Div("spolupracovnik", css_class="col-sm-4"),
+            Div("stav", css_class="col-sm-4"),
             css_class="row",
         ),
     )

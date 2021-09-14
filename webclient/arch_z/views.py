@@ -1,7 +1,8 @@
 import logging
 
 import simplejson as json
-from adb.forms import CreateADBForm
+from adb.forms import CreateADBForm, create_vyskovy_bod_form, VyskovyBodFormSetHelper
+from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
     CreateAkceForm,
     CreateArchZForm,
@@ -22,6 +23,7 @@ from core.constants import (
     ZAPSANI_AZ,
 )
 from core.forms import VratitForm
+from core.exceptions import MaximalEventCount
 from core.ident_cely import get_cast_dokumentu_ident, get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
@@ -35,9 +37,10 @@ from core.message_constants import (
     DOKUMENT_USPESNE_PRIPOJEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    MAXIMUM_AKCII_DOSAZENO,
 )
 from core.models import Opravneni
-from core.utils import get_all_pians_in_cadastre, get_centre_from_akce
+from core.utils import get_all_pians_in_cadastre, get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -91,6 +94,7 @@ def detail(request, ident_cely):
         .select_related("pristupnost"),
         ident_cely=ident_cely,
     )
+    show = get_detail_template_shows(zaznam)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
@@ -122,7 +126,7 @@ def detail(request, ident_cely):
         )
     )
 
-    dj_form_create = CreateDJForm()
+    dj_form_create = CreateDJForm(jednotky=jednotky)
     pian_form_create = PianCreateForm()
     komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
     adb_form_create = CreateADBForm()
@@ -132,36 +136,64 @@ def detail(request, ident_cely):
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
-        form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
-        extra=1,
+        form=create_nalez_objekt_form(
+            druh_objekt_choices,
+            specifikace_objekt_choices,
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
         NalezPredmet,
         form=create_nalez_predmet_form(
-            druh_predmet_choices, specifikce_predmetu_choices
+            druh_predmet_choices,
+            specifikce_predmetu_choices,
+            not_readonly=show["editovat"],
         ),
-        extra=1,
+        extra=1 if show["editovat"] else 0,
+        can_delete=show["editovat"],
     )
     for jednotka in jednotky:
+        jednotka: DokumentacniJednotka
+        vyskovy_bod_formset = inlineformset_factory(
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(pian=jednotka.pian),
+            extra=1,
+        )
         has_adb = jednotka.has_adb()
         show_adb_add = (
-            jednotka.pian and jednotka.typ.id == TYP_DJ_SONDA_ID and not has_adb
+            jednotka.pian
+            and jednotka.typ.id == TYP_DJ_SONDA_ID
+            and not has_adb
+            and show["editovat"]
         )
-        show_add_komponenta = not jednotka.negativni_jednotka
+        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
         show_add_pian = False if jednotka.pian else True
         show_approve_pian = (
-            True if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN else False
+            True
+            if jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"]
+            else False
         )
         dj_form_detail = {
             "ident_cely": jednotka.ident_cely,
             "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(instance=jednotka, prefix=jednotka.ident_cely),
+            "form": CreateDJForm(
+                instance=jednotka,
+                prefix=jednotka.ident_cely,
+                not_readonly=show["editovat"],
+            ),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
-            "show_add_pian": show_add_pian,
-            "show_remove_pian": not show_add_pian,
-            "show_uprav_pian": jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN,
+            "show_add_pian": (show_add_pian and show["editovat"]),
+            "show_remove_pian": (not show_add_pian and show["editovat"]),
+            "show_uprav_pian": jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"],
             "show_approve_pian": show_approve_pian,
         }
         if has_adb:
@@ -169,7 +201,10 @@ def detail(request, ident_cely):
                 instance=jednotka.adb, prefix=jednotka.adb.ident_cely
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["show_remove_adb"] = True
+            dj_form_detail["vyskovy_bod_formset"] = \
+                vyskovy_bod_formset(instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb")
+            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
+            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
         dj_forms_detail.append(dj_form_detail)
         if jednotka.pian:
             pian_forms_detail.append(
@@ -190,6 +225,7 @@ def detail(request, ident_cely):
                         areal_choices,
                         instance=komponenta,
                         prefix=komponenta.ident_cely,
+                        readonly=not show["editovat"],
                     ),
                     "form_nalezy_objekty": NalezObjektFormset(
                         instance=komponenta, prefix=komponenta.ident_cely + "_o"
@@ -213,7 +249,7 @@ def detail(request, ident_cely):
     context["zaznam"] = zaznam
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
-    context["show"] = get_detail_template_shows(zaznam)
+    context["show"] = show
 
     return render(request, "arch_z/detail.html", context)
 
@@ -222,6 +258,8 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if zaznam.stav == AZ_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST, instance=zaznam)
         form_akce = CreateAkceForm(request.POST, instance=zaznam.akce)
@@ -376,18 +414,22 @@ def zapsat(request, projekt_ident_cely):
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
-            az.ident_cely = get_project_event_ident(projekt)
-            az.save()
-            form_az.save_m2m()  # This must be called to save many to many (katastry) since we are doing commit = False
-            az.set_zapsany(request.user)
-            akce = form_akce.save(commit=False)
-            akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
-            akce.archeologicky_zaznam = az
-            akce.projekt = projekt
-            akce.save()
+            try:
+                az.ident_cely = get_project_event_ident(projekt)
+            except MaximalEventCount:
+                messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
+            else:
+                az.save()
+                form_az.save_m2m()  # This must be called to save many to many (katastry) since we are doing commit = False
+                az.set_zapsany(request.user)
+                akce = form_akce.save(commit=False)
+                akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+                akce.archeologicky_zaznam = az
+                akce.projekt = projekt
+                akce.save()
 
-            messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
-            return redirect("/arch_z/detail/" + az.ident_cely)
+                messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
+                return redirect("/arch_z/detail/" + az.ident_cely)
 
         else:
             logger.warning("Form is not valid")
@@ -395,8 +437,8 @@ def zapsat(request, projekt_ident_cely):
             logger.debug(form_akce.errors)
 
     else:
-        form_az = CreateArchZForm()
-        form_akce = CreateAkceForm()
+        form_az = CreateArchZForm(projekt=projekt)
+        form_akce = CreateAkceForm(uzamknout_specifikace=True, projekt=projekt)
 
     return render(
         request,
@@ -556,10 +598,14 @@ def get_detail_template_shows(archeologicky_zaznam):
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
     show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
+    show_edit = archeologicky_zaznam.stav not in [
+        AZ_STAV_ARCHIVOVANY,
+    ]
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
+        "editovat": show_edit,
     }
     return show
 
@@ -568,9 +614,7 @@ def get_detail_template_shows(archeologicky_zaznam):
 @require_http_methods(["POST"])
 def post_ajax_get_pians(request):
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug("get-pians")
-    pians = get_all_pians_in_cadastre(body["cadastre"])
-    logger.debug("get-pians-pocet pianu: " + str(len(pians)))
+    pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
     for pian in pians:
         # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
@@ -579,6 +623,7 @@ def post_ajax_get_pians(request):
                 "id": pian.id,
                 "ident_cely": pian.ident_cely,
                 "geom": pian.geometry.replace(", ", ","),
+                "dj": pian.dj,
             }
         )
     if len(pians) > 0:
@@ -595,14 +640,13 @@ def post_akce2kat(request):
     pian_ident_cely = body["pian"]
 
     [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
-    # logger.debug(katastr)
     if len(str(poi)) > 0:
         return JsonResponse(
             {
                 "lat": str(poi.lat),
                 "lng": str(poi.lng),
                 "zoom": str(poi.zoom),
-                "geom": str(geom).split(";")[1].replace(", ", ","),
+                "geom": str(geom).split(";")[1].replace(", ", ",") if geom else None,
             },
             status=200,
         )

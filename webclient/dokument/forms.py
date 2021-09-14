@@ -1,10 +1,11 @@
+from uzivatel.models import Osoba
 from core.constants import OBLAST_CHOICES
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
 from django.contrib.gis.forms import OSMWidget
 from django.utils.translation import gettext as _
-from dokument.models import Dokument, DokumentExtraData
+from dokument.models import Dokument, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
     HESLAR_DOKUMENT_FORMAT,
@@ -12,11 +13,32 @@ from heslar.hesla import (
     HESLAR_JAZYK,
     HESLAR_POSUDEK_TYP,
     MODEL_3D_DOKUMENT_TYPES,
+    HESLAR_DOKUMENT_ULOZENI,
 )
 from heslar.models import Heslar
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
+    rada = forms.CharField(label="Řada", required=False)
+    let = forms.ChoiceField(
+        label="Let",
+        required=False,
+        choices=tuple(
+            [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
+        ),
+        widget=forms.Select(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+    dokument_osoba = forms.MultipleChoiceField(
+        label="Dokumentované osoby",
+        required=False,
+        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+        widget=forms.SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
     class Meta:
         model = DokumentExtraData
         fields = (
@@ -54,6 +76,10 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "udalost_typ": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "meritko": forms.TextInput(),
+            "cislo_objektu": forms.TextInput(),
+            "region": forms.TextInput(),
+            "udalost": forms.TextInput(),
         }
         labels = {
             "datum_vzniku": _("Datum vzniku"),
@@ -75,7 +101,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("Důvěryhodnost"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, readonly=False, **kwargs):
+        rada = kwargs.pop("rada", None)
+        let = kwargs.pop("let", "")
+        dok_osoby = kwargs.pop("dok_osoby", None)
+        edit_prohibited = kwargs.pop("edit", True)
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
@@ -83,29 +113,42 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         self.fields["region"].widget.attrs["rows"] = 1
         self.fields["udalost"].widget.attrs["rows"] = 1
         self.helper = FormHelper(self)
+        self.fields["rada"].initial = rada
+        self.fields["let"].initial = let
+        self.fields["dokument_osoba"].initial = dok_osoby
         self.helper.layout = Layout(
             Div(
-                Div("datum_vzniku", css_class="col-sm-4"),
-                Div("zachovalost", css_class="col-sm-4"),
-                Div("nahrada", css_class="col-sm-4"),
-                Div("pocet_variant_originalu", css_class="col-sm-4"),
-                Div("odkaz", css_class="col-sm-12"),
-                Div("format", css_class="col-sm-4"),
-                Div("meritko", css_class="col-sm-4"),
-                Div("vyska", css_class="col-sm-4"),
-                Div("sirka", css_class="col-sm-4"),
+                Div("rada", css_class="col-sm-2"),
+                Div("let", css_class="col-sm-2"),
+                Div("datum_vzniku", css_class="col-sm-2"),
+                Div("zachovalost", css_class="col-sm-2"),
+                Div("nahrada", css_class="col-sm-2"),
+                Div("pocet_variant_originalu", css_class="col-sm-2"),
+                Div("format", css_class="col-sm-2"),
+                Div("meritko", css_class="col-sm-2"),
+                Div("vyska", css_class="col-sm-2"),
+                Div("sirka", css_class="col-sm-2"),
                 Div("cislo_objektu", css_class="col-sm-4"),
-                Div("zeme", css_class="col-sm-4"),
-                Div("region", css_class="col-sm-4"),
-                Div("udalost", css_class="col-sm-4"),
-                Div("udalost_typ", css_class="col-sm-4"),
-                Div("rok_od", css_class="col-sm-4"),
-                Div("rok_do", css_class="col-sm-4"),
-                Div("duveryhodnost", css_class="col-sm-4"),
+                Div("zeme", css_class="col-sm-2"),
+                Div("region", css_class="col-sm-2"),
+                Div("udalost", css_class="col-sm-2"),
+                Div("udalost_typ", css_class="col-sm-2"),
+                Div("rok_od", css_class="col-sm-2"),
+                Div("rok_do", css_class="col-sm-2"),
+                Div("duveryhodnost", css_class="col-sm-2"),
+                Div("dokument_osoba", css_class="col-sm-2"),
+                Div("odkaz", css_class="col-sm-8"),
                 css_class="row",
             ),
         )
         self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
+        self.fields["rada"].disabled = edit_prohibited
 
 
 class EditDokumentForm(forms.ModelForm):
@@ -125,7 +168,7 @@ class EditDokumentForm(forms.ModelForm):
             "licence",
             "jazyky",
             "posudky",
-            "osoby",
+            "autori",
         )
         widgets = {
             "typ_dokumentu": forms.Select(
@@ -149,9 +192,11 @@ class EditDokumentForm(forms.ModelForm):
             "posudky": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "osoby": forms.SelectMultiple(
+            "autori": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "oznaceni_originalu": forms.TextInput(),
+            "licence": forms.TextInput(),
         }
         labels = {
             "organizace": _("Organizace"),
@@ -165,83 +210,72 @@ class EditDokumentForm(forms.ModelForm):
             "pristupnost": _("Přístupnost"),
             "datum_zverejneni": _("Datum zveřejnění"),
             "licence": _("Licence"),
+            "autori": _("Autoři"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, readonly=False, **kwargs):
+        create = kwargs.pop("create", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["oznaceni_originalu"].widget.attrs["rows"] = 1
-        self.fields["licence"].widget.attrs["rows"] = 1
-        self.fields["jazyky"].required = False
         self.fields["jazyky"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK).values_list("id", "heslo")
         )
-        self.fields["posudky"].required = False
         self.fields["posudky"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_POSUDEK_TYP).values_list(
                 "id", "heslo"
             )
         )
+        self.fields["posudky"].required = False
         self.fields["typ_dokumentu"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
             .filter(id__in=ALLOWED_DOKUMENT_TYPES)
             .values_list("id", "heslo")
         ) + [("", "")]
-        self.fields["osoby"].required = False
+        self.fields["ulozeni_originalu"].required = True
+        self.fields["rok_vzniku"].required = True
+        self.fields["licence"].required = True
+        self.fields["popis"].required = True
+        self.fields["poznamka"].required = False
+        if create:
+            self.fields["jazyky"].initial = [
+                Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, heslo="CS").pk
+            ]
+            self.fields["ulozeni_originalu"].initial = [
+                Heslar.objects.get(
+                    nazev_heslare=HESLAR_DOKUMENT_ULOZENI,
+                    heslo="primárně digitální dokument",
+                ).pk
+            ]
+            self.fields["licence"].initial = "CC-BY-NC 4.0"
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("typ_dokumentu", css_class="col-sm-4"),
-                Div("material_originalu", css_class="col-sm-4"),
-                Div("organizace", css_class="col-sm-4"),
-                Div("rok_vzniku", css_class="col-sm-4"),
-                Div("pristupnost", css_class="col-sm-4"),
-                Div("datum_zverejneni", css_class="col-sm-4"),
+                Div("autori", css_class="col-sm-2"),
+                Div("rok_vzniku", css_class="col-sm-2"),
+                Div("organizace", css_class="col-sm-2"),
+                Div("typ_dokumentu", css_class="col-sm-2"),
+                Div("material_originalu", css_class="col-sm-2"),
+                Div("jazyky", css_class="col-sm-2"),
                 Div("popis", css_class="col-sm-12"),
                 Div("poznamka", css_class="col-sm-12"),
-                Div("oznaceni_originalu", css_class="col-sm-12"),
-                Div("ulozeni_originalu", css_class="col-sm-4"),
-                Div("licence", css_class="col-sm-4"),
-                Div("jazyky", css_class="col-sm-4"),
-                Div("posudky", css_class="col-sm-4"),
-                Div("osoby", css_class="col-sm-4"),
+                Div("ulozeni_originalu", css_class="col-sm-2"),
+                Div("oznaceni_originalu", css_class="col-sm-2"),
+                Div("posudky", css_class="col-sm-2"),
+                Div("pristupnost", css_class="col-sm-2"),
+                Div("licence", css_class="col-sm-2"),
+                Div("datum_zverejneni", css_class="col-sm-2"),
                 css_class="row",
             ),
         )
-        self.helper.form_tag = False
 
-
-class CreateDokumentForm(EditDokumentForm):
-
-    identifikator = forms.ChoiceField(choices=OBLAST_CHOICES, required=True)
-
-    def __init__(self, *args, **kwargs):
-        super(CreateDokumentForm, self).__init__(*args, **kwargs)
-        self.fields["identifikator"].widget.attrs = {
-            "class": "selectpicker",
-            "data-live-search": "true",
-        }
-        self.helper.layout = Layout(
-            Div(
-                Div("identifikator", css_class="col-sm-4"),
-                Div("typ_dokumentu", css_class="col-sm-4"),
-                Div("material_originalu", css_class="col-sm-4"),
-                Div("organizace", css_class="col-sm-4"),
-                Div("rok_vzniku", css_class="col-sm-4"),
-                Div("pristupnost", css_class="col-sm-4"),
-                Div("popis", css_class="col-sm-12"),
-                Div("poznamka", css_class="col-sm-12"),
-                Div("oznaceni_originalu", css_class="col-sm-12"),
-                Div("ulozeni_originalu", css_class="col-sm-4"),
-                Div("licence", css_class="col-sm-4"),
-                Div("jazyky", css_class="col-sm-4"),
-                Div("posudky", css_class="col-sm-4"),
-                Div("osoby", css_class="col-sm-4"),
-                Div("datum_zverejneni", css_class="col-sm-4"),
-                css_class="row",
-            ),
-        )
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
+        self.fields["datum_zverejneni"].disabled = True
 
 
 class CreateModelDokumentForm(forms.ModelForm):
@@ -254,6 +288,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "popis",
             "poznamka",
             "autori",
+            "rok_vzniku",
         )
         widgets = {
             "typ_dokumentu": forms.Select(
@@ -273,6 +308,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "popis": _("Popis"),
             "poznamka": _("Poznámka"),
             "autori": _("Autoři"),
+            "rok_vzniku": _("Rok vzniku"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):
@@ -286,11 +322,13 @@ class CreateModelDokumentForm(forms.ModelForm):
             .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
             .values_list("id", "heslo")
         ) + [("", "")]
+        self.fields["rok_vzniku"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("typ_dokumentu", css_class="col-sm-6"),
-                Div("organizace", css_class="col-sm-6"),
+                Div("typ_dokumentu", css_class="col-sm-4"),
+                Div("organizace", css_class="col-sm-4"),
+                Div("rok_vzniku", css_class="col-sm-4"),
                 Div("oznaceni_originalu", css_class="col-sm-6"),
                 Div("autori", css_class="col-sm-6"),
                 Div("popis", css_class="col-sm-12"),
@@ -301,12 +339,25 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
     class Meta:
         model = DokumentExtraData
-        fields = ("format", "datum_vzniku", "duveryhodnost", "geom", "odkaz")
+        fields = (
+            "format",
+            "duveryhodnost",
+            "geom",
+            "odkaz",
+            "zeme",
+            "region",
+            "vyska",
+            "sirka",
+        )
         widgets = {
             "format": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
@@ -314,22 +365,27 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "geom": OSMWidget(
                 attrs={"default_lat": 50.05, "default_lon": 14.05, "default_zoom": 6}
             ),
+            "region": forms.TextInput(),
         }
         labels = {
-            "datum_vzniku": _("Datum vzniku"),
             "format": _("Formát"),
             "duveryhodnost": _("Důvěryhodnost"),
             "geom": _("Lokalizace (Vyberte prosím polohu)"),
             "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
+            "zeme": _("Země"),
+            "region": _("Region"),
+            "vyska": _("Délka"),
+            "sirka": _("Šířka"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
-        self.fields["datum_vzniku"].required = True
         self.fields["geom"].required = True
         self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
         self.fields["format"].required = True
+        self.fields["vyska"].widget.attrs["disabled"] = "disabled"
+        self.fields["sirka"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
             .filter(heslo__startswith="3D")
@@ -338,14 +394,21 @@ class CreateModelExtraDataForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("datum_vzniku", css_class="col-sm-4"),
-                Div("format", css_class="col-sm-4"),
-                Div("duveryhodnost", css_class="col-sm-4"),
+                Div("format", css_class="col-sm-6"),
+                Div("duveryhodnost", css_class="col-sm-6"),
                 Div("odkaz", css_class="col-sm-12"),
                 Div("geom", css_class="col-sm-12"),
+                Div("zeme", css_class="col-sm-3"),
+                Div("region", css_class="col-sm-3"),
+                Div("vyska", css_class="col-sm-3"),
+                Div("sirka", css_class="col-sm-3"),
                 css_class="row",
             ),
         )
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
+                    self.fields[key].widget.template_name = "core/select_to_text.html"

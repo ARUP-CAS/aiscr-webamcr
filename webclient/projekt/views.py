@@ -1,4 +1,5 @@
 import logging
+from core.exceptions import MaximalIdentNumberError
 
 import simplejson as json
 from arch_z.models import Akce
@@ -23,6 +24,11 @@ from core.constants import (
     UZAVRENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
+    D_STAV_ZAPSANY,
+    VRACENI_NAVRHU_ZRUSENI,
+    VRACENI_ZRUSENI,
+    NAVRZENI_KE_ZRUSENI_PROJ,
+    RUSENI_PROJ,
 )
 from core.decorators import allowed_user_groups
 from core.forms import VratitForm
@@ -43,6 +49,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_points_from_envelope
 from django.contrib import messages
@@ -50,7 +57,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -70,6 +77,7 @@ from projekt.forms import (
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
+from django.contrib.auth.models import Group
 
 logger = logging.getLogger(__name__)
 
@@ -107,11 +115,9 @@ def detail(request, ident_cely):
     context["akce"] = akce
     soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
-    context["dalsi_katastry"] = ",".join(
-        projekt.katastry.all().values_list("nazev", flat=True)
-    )
+    context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie)
-    context["show"] = get_detail_template_shows(projekt)
+    context["show"] = get_detail_template_shows(projekt, request.user)
 
     return render(request, "projekt/detail.html", context)
 
@@ -159,26 +165,32 @@ def create(request):
             p = form_projekt.save(commit=False)
             if long and lat:
                 p.geom = Point(long, lat)
-            p.set_permanent_ident_cely()
-            p.save()
-            p.set_zapsany(request.user)
-            form_projekt.save_m2m()
-            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-                # Vytvoreni oznamovatele
-                if form_oznamovatel.is_valid():
-                    oznamovatel = form_oznamovatel.save(commit=False)
-                    oznamovatel.projekt = p
-                    oznamovatel.save()
+            try:
+                p.set_permanent_ident_cely()
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+            else:
+                p.save()
+                p.set_zapsany(request.user)
+                form_projekt.save_m2m()
+                if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                    # Vytvoreni oznamovatele
+                    if form_oznamovatel.is_valid():
+                        oznamovatel = form_oznamovatel.save(commit=False)
+                        oznamovatel.projekt = p
+                        oznamovatel.save()
+                        messages.add_message(
+                            request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
+                        )
+                        return redirect("projekt:detail", ident_cely=p.ident_cely)
+                    else:
+                        logger.debug("The form oznamovatel is not valid!")
+                        logger.debug(form_oznamovatel.errors)
+                else:
                     messages.add_message(
                         request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
                     )
                     return redirect("projekt:detail", ident_cely=p.ident_cely)
-                else:
-                    logger.debug("The form oznamovatel is not valid!")
-                    logger.debug(form_oznamovatel.errors)
-            else:
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
             logger.debug("The form projekt is not valid!")
             logger.debug(form_projekt.errors)
@@ -202,8 +214,11 @@ def create(request):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
+        raise PermissionDenied()
+    required_fields = get_required_fields(projekt)
     if request.method == "POST":
-        form = EditProjektForm(request.POST, instance=projekt)
+        form = EditProjektForm(request.POST, instance=projekt, required=required_fields)
         if form.is_valid():
             logger.debug("Form is valid")
             lat = form.cleaned_data["latitude"]
@@ -231,7 +246,7 @@ def edit(request, ident_cely):
             logger.debug(form.errors)
 
     else:
-        form = EditProjektForm(instance=projekt)
+        form = EditProjektForm(instance=projekt, required=required_fields)
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
@@ -321,13 +336,25 @@ def schvalit(request, ident_cely):
         raise PermissionDenied()
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
-        projekt.set_permanent_ident_cely()
-        logger.debug(
-            "Projektu "
-            + ident_cely
-            + " byl prirazen permanentni ident "
-            + projekt.ident_cely
-        )
+        if projekt.ident_cely[0] == "X":
+            try:
+                projekt.set_permanent_ident_cely()
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
+                context = {
+                    "object": projekt,
+                    "title": _("Schválení projektu"),
+                    "header": _("Schválení projektu"),
+                    "button": _("Schválit projekt"),
+                }
+                return render(request, "core/transakce.html", context)
+            else:
+                logger.debug(
+                    "Projektu "
+                    + ident_cely
+                    + " byl prirazen permanentni ident "
+                    + projekt.ident_cely
+                )
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         return redirect("/projekt/detail/" + projekt.ident_cely)
@@ -357,7 +384,9 @@ def prihlasit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PrihlaseniProjektForm(instance=projekt)
+        form = PrihlaseniProjektForm(
+            instance=projekt, initial={"organizace": request.user.organizace}
+        )
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
 
@@ -439,6 +468,10 @@ def uzavrit(request, ident_cely):
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
                 logger.debug("Setting event to state A2")
                 a.archeologicky_zaznam.set_odeslany(request.user)
+                for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
+                    if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
+                        logger.debug("Setting dokument to state D2")
+                        dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return redirect("/projekt/detail/" + ident_cely)
@@ -450,8 +483,8 @@ def uzavrit(request, ident_cely):
         if warnings:
             context["warnings"] = []
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
-            for key, value in warnings.items():
-                context["warnings"].append((key, value))
+            for item in warnings.items():
+                context["warnings"].append(item)
         else:
             pass
         context["title"] = _("Uzavření projektu")
@@ -522,6 +555,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
             )
             for key, value in warnings.items():
                 context["warnings"].append((key, value))
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         else:
             pass
 
@@ -577,7 +611,10 @@ def vratit(request, ident_cely):
 def vratit_navrh_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
 
-    if PROJEKT_STAV_NAVRZEN_KE_ZRUSENI != projekt.stav:
+    if projekt.stav not in [
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_ZRUSENY,
+    ]:
         raise PermissionDenied()
 
     if request.method == "POST":
@@ -598,12 +635,16 @@ def vratit_navrh_zruseni(request, ident_cely):
 
 def get_history_dates(historie_vazby):
     # Transakce do stavu "Zapsan" jsou 2
-    schvaleni = (historie_vazby.get_last_transaction_date(SCHVALENI_OZNAMENI_PROJ),)
-    zapsani = historie_vazby.get_last_transaction_date(ZAPSANI_PROJ)
-
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
-        "datum_zapsani": zapsani if zapsani else schvaleni,
+        "datum_zapsani": historie_vazby.get_last_transaction_date(
+            [
+                VRACENI_NAVRHU_ZRUSENI,
+                SCHVALENI_OZNAMENI_PROJ,
+                ZAPSANI_PROJ,
+                VRACENI_ZRUSENI,
+            ]
+        ),
         "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
         "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
             ZAHAJENI_V_TERENU_PROJ
@@ -613,11 +654,15 @@ def get_history_dates(historie_vazby):
         ),
         "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ),
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ),
+        "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
+            NAVRZENI_KE_ZRUSENI_PROJ
+        ),
+        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ),
     }
     return historie
 
 
-def get_detail_template_shows(projekt):
+def get_detail_template_shows(projekt, user):
     show_oznamovatel = (
         projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
         and projekt.has_oznamovatel()
@@ -636,12 +681,26 @@ def get_detail_template_shows(projekt):
         PROJEKT_STAV_OZNAMENY,
     ]
     show_zrusit = projekt.stav in [
-        PROJEKT_STAV_OZNAMENY,
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     ]
-    show_znovu_zapsat = projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    show_znovu_zapsat = projekt.stav in [
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_ZRUSENY,
+    ]
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
-    show_pridat_akci = PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
+    archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
+    admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
+    if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
+        show_pridat_akci = (
+            PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
+        )
+    else:
+        show_pridat_akci = (
+            PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
+        )
+    show_edit = projekt.stav not in [
+        PROJEKT_STAV_ARCHIVOVANY,
+    ]
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -656,5 +715,43 @@ def get_detail_template_shows(projekt):
         "znovu_zapsat_link": show_znovu_zapsat,
         "samostatne_nalezy": show_samostatne_nalezy,
         "pridat_akci": show_pridat_akci,
+        "editovat": show_edit,
     }
     return show
+
+
+def get_required_fields(projekt):
+    required_fields = []
+    if projekt.stav > PROJEKT_STAV_OZNAMENY:
+        required_fields = [
+            "typ_projektu",
+            "hlavni_katastr",
+            "podnet",
+            "lokalizace",
+            "parcelni_cislo",
+            "planovane_zahajeni",
+        ]
+    if (
+        projekt.stav > PROJEKT_STAV_ZAPSANY
+        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    ):
+        required_fields += [
+            "vedouci_projektu",
+            "organizace",
+            "kulturni_pamatka",
+        ]
+    if (
+        projekt.stav > PROJEKT_STAV_PRIHLASENY
+        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    ):
+        required_fields += [
+            "datum_zahajeni",
+        ]
+    if (
+        projekt.stav > PROJEKT_STAV_ZAHAJENY_V_TERENU
+        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+    ):
+        required_fields += [
+            "datum_ukonceni",
+        ]
+    return required_fields

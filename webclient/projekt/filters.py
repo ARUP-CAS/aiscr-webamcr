@@ -13,13 +13,11 @@ from core.constants import (
 )
 from crispy_forms.layout import HTML, Div, Layout
 from django.db.models import Q
-from django.forms import DateInput, Select, SelectMultiple
+from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
-    BooleanFilter,
     CharFilter,
     ChoiceFilter,
-    DateFilter,
     DateFromToRangeFilter,
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
@@ -34,7 +32,8 @@ from heslar.hesla import (
 from heslar.models import Heslar, RuianKraj, RuianOkres
 from projekt.models import Projekt
 from psycopg2._range import DateRange
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
+from historie.models import Historie
 
 logger = logging.getLogger(__name__)
 
@@ -45,20 +44,21 @@ class ProjektFilter(filters.FilterSet):
 
     oblast = ChoiceFilter(
         choices=OBLAST_CHOICES,
-        label=_("Oblast"),
+        label=_("Územní příslušnost"),
         method="filter_by_oblast",
         widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
     )
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
+        label=_("Typ"),
         widget=SelectMultiple(attrs={"class": "selectpicker"}),
     )
 
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
-        label=_("Kraje"),
-        field_name="hlavni_katastr__okres__kraj",
+        label=_("Kraj"),
+        method="filtr_katastr_kraj",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -66,16 +66,16 @@ class ProjektFilter(filters.FilterSet):
 
     okres = MultipleChoiceFilter(
         choices=RuianOkres.objects.all().values_list("id", "nazev"),
-        label=_("Okresy"),
-        field_name="hlavni_katastr__okres",
+        label=_("Okres"),
+        method="filtr_katastr_okres",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
-    hlavni_katastr = CharFilter(
-        lookup_expr="nazev__icontains",
-        label=_("Hlavní katastr obsahuje"),
+    katastr = CharFilter(
+        method="filtr_katastr",
+        label=_("Katastr"),
     )
 
     popisne_udaje = CharFilter(
@@ -85,20 +85,27 @@ class ProjektFilter(filters.FilterSet):
 
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
+        label=_("Stav"),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
-    datum_zahajeni = DateFilter(
-        lookup_expr="gte", widget=DateInput(attrs={"data-provide": "datepicker"})
+    datum_zahajeni = DateFromToRangeFilter(
+        field_name="datum_zahajeni",
+        label=_("Datum zahájení (od-do)"),
+        widget=DateRangeWidget(attrs={"type": "date"}),
     )
-    datum_ukonceni = DateFilter(
-        lookup_expr="lte", widget=DateInput(attrs={"data-provide": "datepicker"})
+
+    datum_ukonceni = DateFromToRangeFilter(
+        field_name="datum_ukonceni",
+        label=_("Datum ukončení (od-do)"),
+        widget=DateRangeWidget(attrs={"type": "date"}),
     )
 
     vedouci_projektu = ModelMultipleChoiceFilter(
         queryset=Osoba.objects.all(),
+        label=_("Vedoucí"),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -117,6 +124,7 @@ class ProjektFilter(filters.FilterSet):
     )
 
     planovane_zahajeni = DateFromToRangeFilter(
+        # field_name="planovane_zahajeni",
         method="filter_planovane_zahajeni",
         widget=DateRangeWidget(
             attrs={
@@ -126,11 +134,13 @@ class ProjektFilter(filters.FilterSet):
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
-        method="filter_termin_odevzdani_nz",
+        field_name="termin_odevzdani_nz",
+        label=_("Termín odevzdání NZ (od-do)"),
         widget=DateRangeWidget(attrs={"type": "date"}),
     )
 
-    # Dle transakci
+    # Dle transakci nevyuzito"
+    """
     datum_oznameni_od = DateFilter(
         method="filter_announced_after",
         label="Datum oznámení od",
@@ -151,33 +161,64 @@ class ProjektFilter(filters.FilterSet):
         label="Datum schválení do",
         widget=DateInput(attrs={"data-provide": "datepicker"}),
     )
+    """
 
+    # Filters by historie
+    historie_typ_zmeny = MultipleChoiceFilter(
+        choices=filter(
+            lambda x: x[0].startswith("P") and not x[0].startswith("PI"),
+            Historie.CHOICES,
+        ),
+        label="Změna stavu",
+        field_name="historie__historie__typ_zmeny",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    historie_datum_zmeny_od = DateFromToRangeFilter(
+        label="Datum změny (od-do)",
+        field_name="historie__historie__datum_zmeny",
+        widget=DateRangeWidget(attrs={"type": "date"}),
+    )
+
+    historie_uzivatel = MultipleChoiceFilter(
+        choices=[(user.id, str(user)) for user in User.objects.all()],
+        field_name="historie__historie__uzivatel",
+        label="Uživatel",
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
+    )
+
+    # Filters by event
     akce_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__ident_cely",
         lookup_expr="icontains",
-        label="Ident akce obsahuje",
+        label="ID",
     )
 
-    akce_zjisteni = BooleanFilter(
+    akce_zjisteni = ChoiceFilter(
         method="filter_has_positive_find",
         label="Zjištění",
+        choices=[("True", "pozitivní"), ("False", "negativní")],
+        widget=Select,
     )
 
     akce_popisne_udaje = CharFilter(
         method="filter_popisne_udaje_akce",
-        label="Popisné údaje akce",
+        label="Popisné údaje",
     )
 
-    akce_hlavni_katastr = CharFilter(
-        field_name="akce__archeologicky_zaznam__hlavni_katastr",
-        lookup_expr="nazev__icontains",
-        label=_("Hlavní katastr"),
+    akce_katastr = CharFilter(
+        method="filtr_akce_katastr",
+        label=_("Katastr"),
     )
 
     akce_kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
-        label=_("Kraje akce"),
-        field_name="akce__archeologicky_zaznam__hlavni_katastr__okres__kraj",
+        label=_("Kraj"),
+        method="filtr_akce_katastr_kraj",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -185,48 +226,47 @@ class ProjektFilter(filters.FilterSet):
 
     akce_okres = MultipleChoiceFilter(
         choices=RuianOkres.objects.all().values_list("id", "nazev"),
-        label=_("Okresy akce"),
-        field_name="akce__archeologicky_zaznam__hlavni_katastr__okres",
+        label=_("Okres"),
+        method="filtr_akce_katastr_okres",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
-    # Filters by event
-    akce_hlavni_vedouci = MultipleChoiceFilter(
+    akce_vedouci = MultipleChoiceFilter(
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        label="Hlavní vedoucí akce",
-        field_name="akce__hlavni_vedouci",
+        label="Vedoucí",
+        method="filtr_akce_vedouci",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
-    akce_hlavni_vedouci_organizace = ModelMultipleChoiceFilter(
-        queryset=Organizace.objects.all(),
+    akce_vedouci_organizace = MultipleChoiceFilter(
+        choices=Organizace.objects.all().values_list("id", "nazev_zkraceny"),
+        label="Organizace",
+        method="filtr_akce_organizace",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
-        label="Organizace vedoucího akce",
-        field_name="akce__hlavni_vedouci__organizace",
     )
 
-    akce_datum_zahajeni = DateFilter(
+    akce_datum_zahajeni = DateFromToRangeFilter(
         field_name="akce__datum_zahajeni",
-        lookup_expr="gte",
-        label="Datum zahájení akce po",
-        widget=DateInput(attrs={"data-provide": "datepicker"}),
+        label="Datum zahájení (od-do)",
+        widget=DateRangeWidget(attrs={"type": "date"}),
     )
-    akce_datum_ukonceni = DateFilter(
+    akce_datum_ukonceni = DateFromToRangeFilter(
         field_name="akce__datum_ukonceni",
-        lookup_expr="lte",
-        label="Datum ukončení akce před",
-        widget=DateInput(attrs={"data-provide": "datepicker"}),
+        label="Datum ukončení (od-do)",
+        widget=DateRangeWidget(attrs={"type": "date"}),
     )
-    hlavni_typ_akce = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP),
-        field_name="akce__hlavni_typ",
-        label="Hlavní typy akce",
+    typ_akce = MultipleChoiceFilter(
+        choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
+            "id", "heslo"
+        ),
+        method="filter_akce_typ",
+        label="Typ",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -234,7 +274,7 @@ class ProjektFilter(filters.FilterSet):
     pristupnost_akce = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         field_name="akce__archeologicky_zaznam__pristupnost",
-        label="Přístupnosti akce",
+        label="Přístupnost",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -242,28 +282,35 @@ class ProjektFilter(filters.FilterSet):
     stav_akce = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,
         field_name="akce__archeologicky_zaznam__stav",
-        label="Stavy záznamů akcí",
+        label="Stav",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+    )
+    akce_je_nz = ChoiceFilter(
+        choices=[("True", "Ano"), ("False", "Ne")],
+        field_name="akce__je_nz",
+        lookup_expr="iexact",
+        label="ZAA jako NZ",
+        widget=Select,
     )
 
     pian_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__dokumentacni_jednotky_akce__pian__ident_cely",
         lookup_expr="icontains",
-        label="Ident pianu obsahuje",
+        label="ID PIAN",
     )
 
     dokument_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
         lookup_expr="icontains",
-        label="Ident dokumentu obsahuje",
+        label="ID dokumentu",
     )
 
     zdroj_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__externi_odkazy__externi_zdroj__ident_cely",
         lookup_expr="icontains",
-        label="Ident externího zdroje",
+        label="ID externího zdroje",
     )
 
     def filter_planovane_zahajeni(self, queryset, name, value):
@@ -275,28 +322,15 @@ class ProjektFilter(filters.FilterSet):
         elif value.start and not value.stop:
             rng = DateRange(
                 lower=value.start.strftime("%m/%d/%Y"),
-                upper=datetime.date.today().strftime("%m/%d/%Y"),
+                upper=datetime.date.max().strftime("%m/%d/%Y"),
             )
         elif value.stop and not value.start:
             rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
         else:
             rng = DateRange(
-                lower="01/01/1900", upper=datetime.date.today().strftime("%m/%d/%Y")
+                lower="01/01/1900", upper=datetime.date.max().strftime("%m/%d/%Y")
             )
         return queryset.filter(planovane_zahajeni__overlap=rng)
-
-    def filter_termin_odevzdani_nz(self, queryset, name, value):
-        if value.start:
-            start = value.start
-        else:
-            start = datetime.strptime("01/01/1900", "%m/%d/%Y").date()
-        if value.stop:
-            stop = value.stop
-        else:
-            stop = datetime.date.today()
-        return queryset.filter(
-            termin_odevzdani_nz__gte=start, termin_odevzdani_nz__lte=stop
-        )
 
     def filter_popisne_udaje_akce(self, queryset, name, value):
         return queryset.filter(
@@ -324,9 +358,14 @@ class ProjektFilter(filters.FilterSet):
         )
 
     def filter_has_positive_find(self, queryset, name, value):
-        return queryset.filter(
-            akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
-        )
+        if value == "True":
+            return queryset.filter(
+                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+            )
+        elif value == "False":
+            return queryset.exclude(
+                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+            ).distinct()
 
     def filter_by_oblast(self, queryset, name, value):
         if value == OBLAST_CECHY:
@@ -355,6 +394,56 @@ class ProjektFilter(filters.FilterSet):
             historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ
         ).filter(historie__historie__datum_zmeny__lte=value)
 
+    def filtr_katastr(self, queryset, name, value):
+        return queryset.filter(
+            Q(hlavni_katastr__nazev__icontains=value)
+            | Q(katastry__nazev__icontains=value)
+        )
+
+    def filtr_katastr_kraj(self, queryset, name, value):
+        return queryset.filter(
+            Q(hlavni_katastr__okres__kraj__in=value)
+            | Q(katastry__okres__kraj__in=value)
+        )
+
+    def filtr_katastr_okres(self, queryset, name, value):
+        return queryset.filter(
+            Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)
+        )
+
+    def filter_akce_typ(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)
+        )
+
+    def filtr_akce_katastr(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__archeologicky_zaznam__hlavni_katastr__nazev__icontains=value)
+            | Q(akce__archeologicky_zaznam__katastry__nazev__icontains=value)
+        )
+
+    def filtr_akce_katastr_kraj(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
+            | Q(akce__archeologicky_zaznam__katastry__okres__kraj__in=value)
+        )
+
+    def filtr_akce_katastr_okres(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__archeologicky_zaznam__hlavni_katastr__okres__in=value)
+            | Q(akce__archeologicky_zaznam__katastry__okres__in=value)
+        )
+
+    def filtr_akce_vedouci(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__hlavni_vedouci__in=value) | Q(akce__akcevedouci__vedouci__in=value)
+        )
+
+    def filtr_akce_organizace(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__organizace__in=value) | Q(akce__akcevedouci__organizace__in=value)
+        )
+
     class Meta:
         model = Projekt
         fields = [
@@ -377,54 +466,50 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("organizace", css_class="col-sm-2"),
             Div("vedouci_projektu", css_class="col-sm-2"),
             Div("kulturni_pamatka", css_class="col-sm-2"),
-            Div("hlavni_katastr", css_class="col-sm-2"),
+            Div("katastr", css_class="col-sm-2"),
             Div("okres", css_class="col-sm-2"),
             Div("kraj", css_class="col-sm-2"),
             Div("oblast", css_class="col-sm-2"),
             Div("popisne_udaje", css_class="col-sm-4"),
-            Div("planovane_zahajeni", css_class="col-sm-4"),
-            Div("datum_zahajeni", css_class="col-sm-4"),
-            Div("datum_ukonceni", css_class="col-sm-4"),
-            Div("termin_odevzdani_nz", css_class="col-sm-4"),
-
+            Div("planovane_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+            Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+            Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+            Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
             Div(
-                HTML(_("<span class=\"app-divider-label\">Výběr podle historie</span>")),
-                HTML(_("<hr class=\"mt-0\" />")),
-                css_class="col-sm-12"
+                HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
             ),
-            # zde chybi field zmena stavu
-            Div("datum_oznameni_od", css_class="col-sm-2"),
-            Div("datum_oznameni_do", css_class="col-sm-2"),
-            Div("datum_schvaleni_od", css_class="col-sm-2"),
-            Div("datum_schvaleni_do", css_class="col-sm-2"),
-            # zde chybi field uzivatel
-
-             Div(
-                HTML(_("<span class=\"app-divider-label\">Výběr podle akcí</span>")),
-                HTML(_("<hr class=\"mt-0\" />")),
-                css_class="col-sm-12"
+            Div("historie_typ_zmeny", css_class="col-sm-2"),
+            Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
+            Div("historie_uzivatel", css_class="col-sm-2"),
+            Div(
+                HTML(_('<span class="app-divider-label">Výběr podle akcí</span>')),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
             ),
             Div("akce_ident_obsahuje", css_class="col-sm-2"),
-            Div("hlavni_typ_akce", css_class="col-sm-2"),
+            Div("typ_akce", css_class="col-sm-2"),
             Div("stav_akce", css_class="col-sm-2"),
-            Div("akce_hlavni_vedouci_organizace", css_class="col-sm-2"),
-            Div("akce_hlavni_vedouci", css_class="col-sm-2"),
+            Div("akce_vedouci_organizace", css_class="col-sm-2"),
+            Div("akce_vedouci", css_class="col-sm-2"),
             Div("pristupnost_akce", css_class="col-sm-2"),
-
-            Div("akce_hlavni_katastr", css_class="col-sm-2"),
+            Div("akce_katastr", css_class="col-sm-2"),
             Div("akce_okres", css_class="col-sm-2"),
             Div("akce_kraj", css_class="col-sm-2"),
             Div("akce_popisne_udaje", css_class="col-sm-6"),
-            
-            Div("akce_datum_zahajeni", css_class="col-sm-4"),
-            Div("akce_datum_ukonceni", css_class="col-sm-4"),
+            Div("akce_datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+            Div("akce_datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
             Div("akce_zjisteni", css_class="col-sm-2"),
-            # chybi pole ZAA jako NZ
-
+            Div("akce_je_nz", css_class="col-sm-2"),
             Div(
-                HTML(_("<span class=\"app-divider-label\">Výběr podle souvisejících záznamů</span>")),
-                HTML(_("<hr class=\"mt-0\" />")),
-                css_class="col-sm-12"
+                HTML(
+                    _(
+                        '<span class="app-divider-label">Výběr podle souvisejících záznamů</span>'
+                    )
+                ),
+                HTML(_('<hr class="mt-0" />')),
+                css_class="col-sm-12",
             ),
             Div("dokument_ident_obsahuje", css_class="col-sm-2"),
             Div("pian_ident_obsahuje", css_class="col-sm-2"),

@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 class CreateKomponentaForm(forms.ModelForm):
     class Meta:
         model = Komponenta
-        fields = ("presna_datace", "jistota", "aktivity", "obdobi", "areal")
+        fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
 
         labels = {
             "presna_datace": _("Přesná datace"),
             "jistota": _("Jistota"),
             "aktivity": _("Aktivity"),
+            "poznamka": _("Poznámka"),
         }
 
         widgets = {
@@ -58,9 +59,13 @@ class CreateKomponentaForm(forms.ModelForm):
                 Div("presna_datace", css_class="col-sm-6"),
                 Div("areal", css_class="col-sm-6"),
                 Div("aktivity", css_class="col-sm-6"),
+                Div("poznamka", css_class="col-sm-12"),
                 css_class="row",
             ),
         )
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
+            if self.fields[key].disabled == True:
+                if isinstance(self.fields[key].widget, forms.widgets.Select):
+                    self.fields[key].widget.template_name = "core/select_to_text.html"

@@ -48,3 +48,15 @@ create table opravneni (
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
+
+alter table uzivatel_spoluprace add column stav smallint;
+
+-- migrace spolupaci do spravneho stavu
+update uzivatel_spoluprace set stav = 1 where aktivni = false;
+update uzivatel_spoluprace set stav = 2 where aktivni = true;
+
+alter table uzivatel_spoluprace alter column stav set not null;
+
+-- TODO remove aktivni and potvrzeno states
+alter table uzivatel_spoluprace drop column aktivni;
+alter table uzivatel_spoluprace drop column potvrzeno;

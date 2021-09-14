@@ -1,4 +1,7 @@
 from dal import autocomplete
+from django.contrib.gis.geos import Point
+from django.http import JsonResponse
+
 from heslar.models import Heslar, RuianKatastr
 
 
@@ -33,3 +36,20 @@ def heslar_12(druha, prvni_kat):
         .values("id", "heslo")
     )
     return merge_heslare(prvni, druha)
+
+
+def zjisti_katastr_souradnic(request):
+    nalezene_katastry = RuianKatastr.objects.filter(
+        hranice__contains=Point(
+            float(request.GET.get("long", 0)), float(request.GET.get("lat", 0))
+        )
+    )
+    if nalezene_katastry.count() == 1:
+        return JsonResponse(
+            {
+                "id": nalezene_katastry.first().pk,
+                "value": str(nalezene_katastry.first()),
+            }
+        )
+    else:
+        return JsonResponse({})

@@ -37,6 +37,8 @@ from core.constants import (
     ZAPSANI_PIAN,
     ZAPSANI_PROJ,
     ZAPSANI_SN,
+    VRACENI_NAVRHU_ZRUSENI,
+    VRACENI_ZRUSENI,
 )
 from django.db import models
 from django.utils.translation import gettext as _
@@ -58,6 +60,8 @@ class Historie(models.Model):
         (NAVRZENI_KE_ZRUSENI_PROJ, "Navržení ke zrušení projektu"),
         (RUSENI_PROJ, "Rušení projektu"),
         (VRACENI_PROJ, "Vrácení projektu"),
+        (VRACENI_NAVRHU_ZRUSENI, "Vrácení návrhu ke zrušení projektu"),
+        (VRACENI_ZRUSENI, "Vrácení zrušení projektu"),
         # Akce + Lokalita (archeologicke zaznamy)
         (ZAPSANI_AZ, "Zápis archeologického záznamu"),
         (ODESLANI_AZ, "Odeslání archeologického záznamu"),
@@ -125,11 +129,18 @@ class HistorieVazby(models.Model):
 
     def get_last_transaction_date(self, transaction_type):
         resp = {}
-        tranzakce_list = (
-            self.historie_set.filter(typ_zmeny=transaction_type)
-            .only("datum_zmeny")
-            .order_by("-datum_zmeny")
-        )
+        if isinstance(transaction_type, list):
+            tranzakce_list = (
+                self.historie_set.filter(typ_zmeny__in=transaction_type)
+                .only("datum_zmeny")
+                .order_by("-datum_zmeny")
+            )
+        else:
+            tranzakce_list = (
+                self.historie_set.filter(typ_zmeny=transaction_type)
+                .only("datum_zmeny")
+                .order_by("-datum_zmeny")
+            )
         if len(tranzakce_list) > 0:
             resp["datum"] = tranzakce_list[0].datum_zmeny
             resp["uzivatel"] = tranzakce_list[0].uzivatel

@@ -18,6 +18,10 @@
 		crossorigin="">
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+   <!--Mark Cluster-->
+   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
+   <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
+   <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
 
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
 	<!-- Date picker imports -->
@@ -30,8 +34,8 @@
 {% block content %}
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" %}
-    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;">
-      <div class="card app-card-form">
+    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;" action="{% url 'projekt:create' %}">
+      <div class="card app-card-form app-card-in-clean-shadow">
         <div class="card-header">
           <div class="app-fx app-left">
             {{ header }}
@@ -42,14 +46,12 @@
           <div id="id_oznamvatel_form">
             {% crispy form_oznamovatel %}
           </div>
-
-
-          <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="fallback">
-              <input name="file" type="file" multiple/>
-            </div>
-          </form>
+{#          <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone" enctype="multipart/form-data">#}
+{#            {% csrf_token %}#}
+{#            <div class="fallback">#}
+{#              <input name="file" type="file" multiple/>#}
+{#            </div>#}
+{#          </form>#}
         </div>
       </div>
       <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
@@ -64,12 +66,12 @@
   <script src="{% static 'dz.js' %}"></script>
   <script>
       global_map_can_edit = true;
-      if (document.getElementById("id_latitude").value > 1) {
+     /* if (document.getElementById("id_latitude").value > 1) {
           console.log("Adding point to map.")
           addPointOnLoad(document.getElementById("id_latitude").value, document.getElementById("id_longitude").value, "Uživatelem zadaná poloha záměru");
       } else {
           console.log("Not adding point to map!")
-      }
+      }*/
   </script>
   <script>
       $(document).ready(function () {

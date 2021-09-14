@@ -24,8 +24,10 @@ from core.constants import (
     VRACENI_PROJ,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ,
+    VRACENI_ZRUSENI,
 )
 from core.models import ProjektSekvence, SouborVazby
+from core.exceptions import MaximalIdentNumberError
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
@@ -51,7 +53,7 @@ class Projekt(models.Model):
         (PROJEKT_STAV_UKONCENY_V_TERENU, "Ukončen v terénu"),
         (PROJEKT_STAV_UZAVRENY, "Uzavřen"),
         (PROJEKT_STAV_ARCHIVOVANY, "Archivován"),
-        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "Nevržen ke zrušení"),
+        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "Navržen ke zrušení"),
         (PROJEKT_STAV_ZRUSENY, "Zrušen"),
     )
 
@@ -171,7 +173,6 @@ class Projekt(models.Model):
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
-        self.organizace = user.organizace
         Historie(
             typ_zmeny=PRIHLASENI_PROJ,
             uzivatel=user,
@@ -237,9 +238,15 @@ class Projekt(models.Model):
         self.save()
 
     def set_znovu_zapsan(self, user, poznamka):
+        zmena = (
+            VRACENI_NAVRHU_ZRUSENI
+            if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+            else VRACENI_ZRUSENI
+        )
         self.stav = PROJEKT_STAV_ZAPSANY
+
         Historie(
-            typ_zmeny=VRACENI_NAVRHU_ZRUSENI,
+            typ_zmeny=zmena,
             uzivatel=user,
             poznamka=poznamka,
             vazba=self.historie,
@@ -280,7 +287,7 @@ class Projekt(models.Model):
         for a in self.akce_set.all():
             akce_warnings = a.check_pred_odeslanim()
             if akce_warnings:
-                result[_("Akce") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+                result[_("Akce ") + a.archeologicky_zaznam.ident_cely] = akce_warnings
         return result
 
     def parse_ident_cely(self):
@@ -308,6 +315,7 @@ class Projekt(models.Model):
         return has_oznamovatel
 
     def set_permanent_ident_cely(self):
+        MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
         logger.debug(
@@ -316,10 +324,15 @@ class Projekt(models.Model):
         sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
             0
         ]
-
-        perm_ident_cely = (
-            region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
+        if sequence.sekvence < MAXIMUM:
+            perm_ident_cely = (
+                region
+                + "-"
+                + str(current_year)
+                + "{0}".format(sequence.sekvence).zfill(5)
+            )
+        else:
+            raise MaximalIdentNumberError(MAXIMUM)
         # Loop through all of the idents that have been imported
         while True:
             if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():

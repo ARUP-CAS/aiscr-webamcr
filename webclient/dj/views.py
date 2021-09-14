@@ -1,4 +1,5 @@
 import logging
+from core.exceptions import MaximalIdentNumberError
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
@@ -10,6 +11,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    MAXIMUM_DJ_DOSAZENO,
 )
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -51,19 +53,25 @@ def zapsat(request, arch_z_ident_cely):
         vazba.save()  # TODO rewrite to signals
 
         dj = form.save(commit=False)
-        dj.ident_cely = get_dj_ident(az)
-        dj.komponenty = vazba
-        dj.archeologicky_zaznam = az
-        resp = dj.save()
-        logger.debug(resp)
+        try:
+            dj.ident_cely = get_dj_ident(az)
+        except MaximalIdentNumberError:
+            messages.add_message(request, messages.ERROR, MAXIMUM_DJ_DOSAZENO)
+        else:
+            dj.komponenty = vazba
+            dj.archeologicky_zaznam = az
+            resp = dj.save()
+            logger.debug(resp)
 
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    return redirect("/arch_z/detail/" + az.ident_cely)
+    response = redirect("/arch_z/detail/" + az.ident_cely)
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    return response
 
 
 @login_required

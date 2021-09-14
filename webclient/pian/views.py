@@ -1,8 +1,8 @@
 import logging
 
 from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN, PIAN_NEPOTVRZEN
-from core.exceptions import NeznamaGeometrieError
-from core.ident_cely import get_pian_ident
+from core.exceptions import NeznamaGeometrieError, MaximalIdentNumberError
+from core.ident_cely import get_temporary_pian_ident
 from core.message_constants import (
     PIAN_USPESNE_ODPOJEN,
     PIAN_USPESNE_POTVRZEN,
@@ -11,6 +11,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    MAXIMUM_IDENT_DOSAZEN,
 )
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
@@ -57,7 +58,9 @@ def detail(request, ident_cely):
 def odpojit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
-    delete_pian = True if pian_djs.count() < 2 and dj.pian.stav == PIAN_NEPOTVRZEN else False
+    delete_pian = (
+        True if pian_djs.count() < 2 and dj.pian.stav == PIAN_NEPOTVRZEN else False
+    )
     pian = dj.pian
     if request.method == "POST":
         dj.pian = None
@@ -90,21 +93,27 @@ def potvrdit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if request.method == "POST":
-        pian.stav = PIAN_POTVRZEN
-        pian.ident_cely = get_pian_ident(pian.zm50, True)
-        pian.save()
-        logger.debug("Pian potvrzen: " + pian.ident_cely)
-        messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
-        return redirect("arch_z:detail", ident_cely=dj.archeologicky_zaznam.ident_cely)
-    else:
-        context = {
-            "objekt": pian,
-            "header": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
-            "title": _("Potvrzení pianu"),
-            "button": _("Potvrdit pian"),
-        }
+        try:
+            pian.set_permanent_ident_cely()
+        except MaximalIdentNumberError:
+            messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+        else:
+            pian.stav = PIAN_POTVRZEN
+            pian.save()
+            logger.debug("Pian potvrzen: " + pian.ident_cely)
+            messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
+            return redirect(
+                "arch_z:detail", ident_cely=dj.archeologicky_zaznam.ident_cely
+            )
 
-        return render(request, "core/transakce.html", context)
+    context = {
+        "objekt": pian,
+        "header": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
+        "title": _("Potvrzení pianu"),
+        "button": _("Potvrdit pian"),
+    }
+
+    return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -114,7 +123,7 @@ def create(request, dj_ident_cely):
     form = PianCreateForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
-        pian = form.save(commit=False)
+        pian: Pian = form.save(commit=False)
         # Assign base map references
         if type(pian.geom) == Point:
             pian.typ = Heslar.objects.get(id=GEOMETRY_BOD)
@@ -141,11 +150,15 @@ def create(request, dj_ident_cely):
         if zm10s.count() == 1 and zm50s.count() == 1:
             pian.zm10 = zm10s[0]
             pian.zm50 = zm50s[0]
-            pian.ident_cely = get_pian_ident(zm50s[0], False)
-            pian.save()
-            dj.pian = pian
-            dj.save()
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            try:
+                pian.ident_cely = get_temporary_pian_ident(zm50s[0])
+            except MaximalIdentNumberError as e:
+                messages.add_message(request, messages.ERROR, e.message)
+            else:
+                pian.save()
+                dj.pian = pian
+                dj.save()
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         else:
             logger.error("Nelze priradit ZM10 nebo ZM50 k pianu.")
             logger.error("ZM10s" + str(zm10s))
@@ -153,6 +166,7 @@ def create(request, dj_ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
+        redirect("dj:detail", ident_cely=dj_ident_cely)
     else:
         logger.warning("Form is not valid")
         logger.warning(form.errors)

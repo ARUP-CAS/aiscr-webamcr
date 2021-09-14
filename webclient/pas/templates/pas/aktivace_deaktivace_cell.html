@@ -1,0 +1,5 @@
+{% if record.stav == 1 %}
+  <a class="btn btn-sm" href="{% url 'pas:spoluprace_aktivace' record.id %}">Aktivovat</a>
+{% else %}
+  <a class="btn btn-sm" href="{% url 'pas:spoluprace_deaktivace' record.id %}">Deaktivovat</a>
+{% endif %}

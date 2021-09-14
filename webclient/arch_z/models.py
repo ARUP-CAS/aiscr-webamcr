@@ -36,9 +36,9 @@ class ArcheologickyZaznam(models.Model):
 
     CHOICES = ((TYP_ZAZNAMU_LOKALITA, "Lokalita"), (TYP_ZAZNAMU_AKCE, "Akce"))
     STATES = (
-        (AZ_STAV_ZAPSANY, "Zapsán"),
-        (AZ_STAV_ODESLANY, "Odeslán"),
-        (AZ_STAV_ARCHIVOVANY, "Archivován"),
+        (AZ_STAV_ZAPSANY, "Zapsána"),
+        (AZ_STAV_ODESLANY, "Odeslána"),
+        (AZ_STAV_ARCHIVOVANY, "Archivována"),
     )
 
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
@@ -177,6 +177,9 @@ class Akce(models.Model):
         related_name="akce",
     )
     odlozena_nz = models.BooleanField(default=False)
+    organizace = models.ForeignKey(
+        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+    )
 
     class Meta:
         db_table = "akce"
@@ -267,6 +270,19 @@ class Akce(models.Model):
                     + _(" nemá zadaný pian.")
                 )
                 logger.debug("DJ " + dj.ident_cely + " nema pian.")
+        for dokument_cast in self.archeologicky_zaznam.casti_dokumentu.all():
+            dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
+            if dokument_warning:
+                result.append(
+                    _("Dokument ")
+                    + str(dokument_cast.dokument.ident_cely)
+                    + _(" musí mít alespoň 1 přiložený soubor.")
+                )
+                logger.debug(
+                    "Dokument "
+                    + dokument_cast.dokument.ident_cely
+                    + " nema prilozeny soubor."
+                )
         return result
 
 

@@ -14,7 +14,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django_registration.backends.activation.views import RegistrationView
-from uzivatel.forms import AuthUserCreationForm, OsobaForm
+from django.contrib.auth.views import LoginView
+from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm
 from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
@@ -35,12 +36,21 @@ def create_osoba(request):
     if request.method == "POST":
         form = OsobaForm(request.POST)
         next_url = request.POST.get("next", "/")
+        if not next_url:
+            next_url = "/"
         if form.is_valid():
             try:
                 osoba = form.save(commit=False)
                 vypis = osoba.prijmeni + ","
                 for j in osoba.jmeno.split():
-                    vypis += " " + j.strip()[0].upper() + "."
+                    if "-" in j:
+                        vypis += " "
+                        pom = []
+                        for p in j.split("-"):
+                            pom.append(p[0].upper() + ".")
+                        vypis += "-".join(pom)
+                    else:
+                        vypis += " " + j.strip()[0].upper() + "."
                 osoba.vypis_cely = osoba.prijmeni + ", " + osoba.jmeno
                 osoba.vypis = vypis
                 osoba.jmeno = " ".join(osoba.jmeno.split())
@@ -66,3 +76,7 @@ def create_osoba(request):
 class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
+
+
+class UserLoginView(LoginView):
+    authentication_form = AuthUserLoginForm
