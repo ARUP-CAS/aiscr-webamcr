@@ -235,15 +235,9 @@ class Dokument(models.Model):
         sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
             0
         ]
-        if sequence.sekvence < MAXIMUM:
-            perm_ident_cely = (
-                rada
-                + "-"
-                + str(current_year)
-                + "{0}".format(sequence.sekvence).zfill(5)
-            )
-        else:
-            raise MaximalIdentNumberError(MAXIMUM)
+        perm_ident_cely = (
+            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+        )
         # Loop through all of the idents that have been imported
         while True:
             if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
@@ -262,6 +256,8 @@ class Dokument(models.Model):
                 )
             else:
                 break
+        if sequence.sekvence >= MAXIMUM:
+            raise MaximalIdentNumberError(MAXIMUM)
         self.ident_cely = perm_ident_cely
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
