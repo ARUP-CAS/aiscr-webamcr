@@ -324,15 +324,9 @@ class Projekt(models.Model):
         sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
             0
         ]
-        if sequence.sekvence < MAXIMUM:
-            perm_ident_cely = (
-                region
-                + "-"
-                + str(current_year)
-                + "{0}".format(sequence.sekvence).zfill(5)
-            )
-        else:
-            raise MaximalIdentNumberError(MAXIMUM)
+        perm_ident_cely = (
+            region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+        )
         # Loop through all of the idents that have been imported
         while True:
             if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
@@ -351,6 +345,8 @@ class Projekt(models.Model):
                 )
             else:
                 break
+        if sequence.sekvence >= MAXIMUM:
+            raise MaximalIdentNumberError(MAXIMUM)
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
         sequence.save()

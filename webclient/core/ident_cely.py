@@ -204,7 +204,10 @@ def get_temporary_pian_ident(zm50) -> str:
     pian = (
         Pian.objects.filter(ident_cely__startswith=start).all().order_by("-ident_cely")
     )
-    max_count = int(pian[0].ident_cely[-last_digit_count:])
+    if pian.exists():
+        max_count = int(pian[0].ident_cely[-last_digit_count:])
+    else:
+        max_count = 0
     if max_count < MAXIMAL_PIANS:
         ident = start + str(max_count + 1).zfill(last_digit_count)
         return ident
