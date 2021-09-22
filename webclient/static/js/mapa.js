@@ -140,7 +140,7 @@ const addPointToPoiLayer = (lat, long, text) => {
             fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
                 .then(response => response.json())
                 .then(response => {
-                    select.val(response['id']);
+                    select.val(response['value']);
                 })
         }
         //console.log(lat+'  '+ long)

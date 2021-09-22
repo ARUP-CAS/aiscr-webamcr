@@ -74,7 +74,14 @@ class OznamovatelForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
+        if uzamknout_formular:
+            self.fields["oznamovatel"].widget.attrs["readonly"] = True
+            self.fields["odpovedna_osoba"].widget.attrs["readonly"] = True
+            self.fields["adresa"].widget.attrs["readonly"] = True
+            self.fields["telefon"].widget.attrs["readonly"] = True
+            self.fields["email"].widget.attrs["readonly"] = True
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(

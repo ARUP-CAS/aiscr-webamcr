@@ -57,6 +57,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
@@ -65,6 +66,7 @@ from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.models import RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
 from projekt.forms import (
@@ -156,8 +158,16 @@ def post_ajax_get_point(request):
 @require_http_methods(["GET", "POST"])
 def create(request):
     if request.method == "POST":
+        hlavni_katastr: str = request.POST.get("hlavni_katastr")
+        hlavni_katastr_name = hlavni_katastr[:hlavni_katastr.find("(")].strip()
+        okres_name = (hlavni_katastr[hlavni_katastr.find("(") + 1:]).replace(")", "").strip()
+        katastr = RuianKatastr.objects.filter(Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)).first()
+        post = request.POST.copy()
+        post['hlavni_katastr'] = str(katastr.id)
+        request.POST = post
         form_projekt = CreateProjektForm(request.POST)
         form_oznamovatel = OznamovatelForm(request.POST)
+        print(post)
         if form_projekt.is_valid():
             logger.debug("Form is valid")
             lat = form_projekt.cleaned_data["latitude"]
@@ -196,7 +206,7 @@ def create(request):
             logger.debug(form_projekt.errors)
     else:
         form_projekt = CreateProjektForm()
-        form_oznamovatel = OznamovatelForm()
+        form_oznamovatel = OznamovatelForm(uzamknout_formular=True)
     return render(
         request,
         "projekt/create.html",
