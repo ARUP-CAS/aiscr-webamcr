@@ -130,6 +130,7 @@ class KonkretniOpravneni(models.Model):
         ORGANIZACE = "Organizace"
         STAV = "Stav"
         VSE = "Vse"
+        XID = "X-ID"
 
     class OpravneniDleStavu(models.TextChoices):
         DO_STAVU = "operator.lt", "Do stavu"
@@ -198,6 +199,11 @@ class KonkretniOpravneni(models.Model):
                     pass
                 else:
                     return False
+        if self.druh_opravneni == self.DruhyOpravneni.XID:
+            if zaznam.ident_cely.startswith("X"):
+                pass
+            else:
+                return False
         return True
 
 
