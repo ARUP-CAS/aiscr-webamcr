@@ -74,11 +74,12 @@ class OpravneniInline(admin.TabularInline):
 
     def get_field_queryset(self, db, db_field, request):
         if db_field.name == "vazba_na_konkretni_opravneni":
-            return KonkretniOpravneni.objects.filter(
-                parent_opravneni_id=request.resolver_match.kwargs["object_id"],
-                vazba_na_konkretni_opravneni__isnull=True,
-            )
-        super(OpravneniAdmin, self).get_field_queryset(db, db_field, request)
+            if request.resolver_match.kwargs.get("object_id"):
+                return KonkretniOpravneni.objects.filter(
+                    parent_opravneni_id=request.resolver_match.kwargs["object_id"],
+                    vazba_na_konkretni_opravneni__isnull=True,
+                )
+        super(admin.TabularInline, self).get_field_queryset(db, db_field, request)
 
 
 class OpravneniAdmin(admin.ModelAdmin):
