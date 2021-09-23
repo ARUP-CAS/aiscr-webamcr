@@ -196,31 +196,31 @@
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Podnět" %}</label>
-                  <textarea class="form-control" value="{{ projekt.podnet }}" rows="2" readonly>{{ projekt.podnet }}</textarea>
+                  <textarea class="form-control" value="{{ projekt.podnet|check_if_none }}" rows="2" readonly>{{ projekt.podnet|check_if_none }}</textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
-                  <textarea class="form-control" value="{{ projekt.lokalizace }}" rows="1" readonly>{{ projekt.parcelni_cislo }}</textarea>
+                  <textarea class="form-control" value="{{ projekt.lokalizace|check_if_none }}" rows="1" readonly>{{ projekt.lokalizace|check_if_none }}</textarea>
                 </div>
               </div>
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Parcelní číslo" %}</label>
-                  <input class="form-control" type="text" value="{{ projekt.parcelni_cislo }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.parcelni_cislo|check_if_none }}" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Označení stavby" %}</label>
-                  <input class="form-control" type="text" value="{{ projekt.oznaceni_stavby }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.oznaceni_stavby|check_if_none }}" readonly>
                 </div>
               </div>
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Plánované zahájení prací" %}</label>
-                  <input class="form-control" type="text" value="{{ projekt.planovane_zahajeni|render_daterange }}" readonly>
+                  <input class="form-control" type="text" value="{{ projekt.planovane_zahajeni|render_daterange|check_if_none }}" readonly>
                 </div>
               </div>
             </div>
