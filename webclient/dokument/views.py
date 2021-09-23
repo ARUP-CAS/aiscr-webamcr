@@ -198,8 +198,8 @@ def detail_model_3D(request, ident_cely):
             .replace(", ", ",")
             .replace(")", "")
         )
-        context["coordinate_x"] = geom.split(" ")[0]
-        context["coordinate_y"] = geom.split(" ")[1]
+        context["coordinate_x"] = geom.split(" ")[1]
+        context["coordinate_y"] = geom.split(" ")[0]
 
     context["formExtraData"] = CreateModelExtraDataForm(
         instance=dokument.extra_data, readonly=True
@@ -328,7 +328,7 @@ def edit_model_3D(request, ident_cely):
             dx = float(form_coor.data.get("coordinate_x"))
             dy = float(form_coor.data.get("coordinate_y"))
             if dx > 0 and dy > 0:
-                geom = Point(dx, dy)
+                geom = Point(dy, dx)
         except Exception:
             logger.error("Chybny format souradnic")
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
@@ -366,8 +366,8 @@ def edit_model_3D(request, ident_cely):
                 request,
                 "dokument/create_model_3D.html",
                 {
-                    "coordinate_x": geom.split(" ")[0],
-                    "coordinate_y": geom.split(" ")[1],
+                    "coordinate_x": geom.split(" ")[1],
+                    "coordinate_y": geom.split(" ")[0],
                     "global_map_can_edit": True,
                     "formDokument": form_d,
                     "formExtraData": form_extra,
@@ -461,7 +461,7 @@ def create_model_3D(request):
             dx = float(form_extra.data.get("coordinate_x"))
             dy = float(form_extra.data.get("coordinate_y"))
             if dx > 0 and dy > 0:
-                geom = Point(dx, dy)
+                geom = Point(dy, dx)
         except Exception:
             logger.error("Chybny format souradnic")
 

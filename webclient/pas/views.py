@@ -96,7 +96,7 @@ def create(request):
                 dx = float(form_coor.data.get("detector_coordinates_x"))
                 dy = float(form_coor.data.get("detector_coordinates_y"))
                 if dx > 0 and dy > 0:
-                    geom = Point(dx, dy)
+                    geom = Point(dy, dx)
             except Exception:
                 logger.error("Chybny format souradnic")
             # latitude = form.cleaned_data["latitude"]
@@ -163,8 +163,8 @@ def detail(request, ident_cely):
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
                 "detector_system_coordinates": "WGS-84",
-                "detector_coordinates_x": geom.split(" ")[0],
-                "detector_coordinates_y": geom.split(" ")[1],
+                "detector_coordinates_x": geom.split(" ")[1],
+                "detector_coordinates_y": geom.split(" ")[0],
             }
         )  # Zmen musis poslat data do formulare
         context["global_map_can_edit"] = False
@@ -194,7 +194,7 @@ def edit(request, ident_cely):
             dx = float(form_coor.data.get("detector_coordinates_x"))
             dy = float(form_coor.data.get("detector_coordinates_y"))
             if dx > 0 and dy > 0:
-                geom = Point(dx, dy)
+                geom = Point(dy, dx)
         except Exception:
             logger.error("Chybny format souradnic")
         if form.is_valid():
@@ -217,8 +217,8 @@ def edit(request, ident_cely):
             form_coor = CoordinatesDokumentForm(
                 initial={
                     "detector_system_coordinates": "WGS-84",
-                    "detector_coordinates_x": geom.split(" ")[0],
-                    "detector_coordinates_y": geom.split(" ")[1],
+                    "detector_coordinates_x": geom.split(" ")[1],
+                    "detector_coordinates_y": geom.split(" ")[0],
                 }
             )  # Zmen musis poslat data do formulare
         else:
