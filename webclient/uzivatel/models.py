@@ -24,6 +24,7 @@ from django.db import models
 from django.utils import timezone
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
+from simple_history.models import HistoricalRecords
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -57,6 +58,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name="uzivatele",
         default=ROLE_NEAKTIVNI_UZIVATEL_ID,
     )
+    history = HistoricalRecords()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

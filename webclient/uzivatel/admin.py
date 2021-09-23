@@ -4,6 +4,8 @@ from django.contrib.auth.admin import UserAdmin
 from .forms import AuthUserCreationForm
 from .models import User
 
+from simple_history import register
+
 
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
@@ -11,6 +13,7 @@ class CustomUserAdmin(UserAdmin):
     model = User
     list_display = ("email", "is_staff", "is_active", "organizace", "ident_cely")
     list_filter = ("is_staff", "is_active", "organizace")
+    readonly_fields = ("ident_cely", )
     fieldsets = (
         (
             None,
