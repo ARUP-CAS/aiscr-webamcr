@@ -138,3 +138,5 @@ KLADYZM_KATEGORIE = (
     (KLADYZM100, "1:100 000"),
     (KLADYZM200, "1:200 000"),
 )
+# Podporovane souradnicove systemy
+COORDINATE_SYSTEM = [(1, "WGS-84"), (2, "S-JTSK")]

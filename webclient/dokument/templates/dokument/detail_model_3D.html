@@ -1,12 +1,13 @@
 {% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
+{% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
 {% block title %}{% trans "Detail dokumentu" %}{% endblock %}
 {% block head %}
-  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -31,13 +32,17 @@
         </div>
         {% endif %}
       </div>
+      <form>
       <div class="card-body">
-        <form>
+
           {% crispy formDokument %}
+        </div>
+        {% include "dokument/coor_model_3D.html" %}
+        <div class="card-body">
           {% crispy formExtraData %}
           {% crispy formKomponenta %}
-        </form>
       </div>
+      </form>
     </div>
 
     <div class="card app-card-form">
@@ -57,7 +62,7 @@
             <span class="material-icons">info</span>
             {% trans "Dokument neobsahuje žádné objekty." %}
           </div>
-          {% endif %}          
+          {% endif %}
           {% if show.editovat %}
           <button type="submit" id="editNalezOSubmitButton"
                   class="btn btn-primary">{% trans "Upravit objekty" %}</button>
@@ -115,4 +120,12 @@
 {% endblock %}
 
 {% block script %}
+  <script>
+      $(document).ready(function () {
+          document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový model 3D"
+
+      })
+  </script>
+
+
 {% endblock %}

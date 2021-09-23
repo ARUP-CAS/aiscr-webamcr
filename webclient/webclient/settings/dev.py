@@ -8,6 +8,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS += [
     "debug_toolbar",
+    "widget_tweaks",
     "django_extensions",
     "template_profiler_panel",
 ]

@@ -1,13 +1,12 @@
-from core.constants import ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
-from django.forms import HiddenInput
-from django.utils.translation import gettext as _
 from django.forms import ModelChoiceField
+from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
@@ -100,13 +99,13 @@ class PotvrditNalezForm(forms.ModelForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
-    latitude = forms.FloatField(required=False, widget=HiddenInput())
-    longitude = forms.FloatField(required=False, widget=HiddenInput())
+    # latitude = forms.FloatField(required=False, widget=HiddenInput())
+    # longitude = forms.FloatField(required=False, widget=HiddenInput())
 
     class Meta:
         model = SamostatnyNalez
@@ -197,8 +196,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 Div("lokalizace", css_class="col-sm-12"),
                 Div("okolnosti", css_class="col-sm-6"),
                 Div("hloubka", css_class="col-sm-6"),
-                Div("latitude", css_class="hidden"),
-                Div("longitude", css_class="hidden"),
+                #                Div("latitude", css_class="hidden"),
+                #                Div("longitude", css_class="hidden"),
                 Div("obdobi", css_class="col-sm-4"),
                 Div("druh_nalezu", css_class="col-sm-4"),
                 Div("pocet", css_class="col-sm-4"),
@@ -216,7 +215,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 

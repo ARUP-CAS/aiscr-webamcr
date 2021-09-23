@@ -1,10 +1,11 @@
 import logging
-from core.exceptions import MaximalIdentNumberError
 
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
     POTVRZENI_SN,
+    ROLE_ADMIN_ID,
+    ROLE_ARCHIVAR_ID,
     SN_ARCHIVOVANY,
     SN_ODESLANY,
     SN_POTVRZENY,
@@ -13,14 +14,15 @@ from core.constants import (
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
-    ROLE_ADMIN_ID,
-    ROLE_ARCHIVAR_ID,
 )
+from core.exceptions import MaximalIdentNumberError
 from core.forms import VratitForm
 from core.ident_cely import get_sn_ident
 from core.message_constants import (
     FORM_NOT_VALID,
+    MAXIMUM_IDENT_DOSAZEN,
     SAMOSTATNY_NALEZ_ARCHIVOVAN,
+    SAMOSTATNY_NALEZ_NELZE_ODESLAT,
     SAMOSTATNY_NALEZ_ODESLAN,
     SAMOSTATNY_NALEZ_POTVRZEN,
     SAMOSTATNY_NALEZ_VRACEN,
@@ -28,14 +30,11 @@ from core.message_constants import (
     SPOLUPRACE_BYLA_DEAKTIVOVANA,
     SPOLUPRACI_NELZE_AKTIVOVAT,
     SPOLUPRACI_NELZE_DEAKTIVOVAT,
-    VYBERTE_PROSIM_POLOHU,
     ZADOST_O_SPOLUPRACI_VYTVORENA,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
-    SAMOSTATNY_NALEZ_NELZE_ODESLAT,
-    MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_cadastre_from_point
 from django.contrib import messages
@@ -49,6 +48,7 @@ from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin
+from dokument.forms import CoordinatesDokumentForm
 from heslar.hesla import PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
@@ -89,9 +89,18 @@ def index(request):
 def create(request):
     if request.method == "POST":
         form = CreateSamostatnyNalezForm(request.POST, user=request.user)
+        form_coor = CoordinatesDokumentForm(request.POST)
         if form.is_valid():
-            latitude = form.cleaned_data["latitude"]
-            longitude = form.cleaned_data["longitude"]
+            geom = None
+            try:
+                dx = float(form_coor.data.get("detector_coordinates_x"))
+                dy = float(form_coor.data.get("detector_coordinates_y"))
+                if dx > 0 and dy > 0:
+                    geom = Point(dx, dy)
+            except Exception:
+                logger.error("Chybny format souradnic")
+            # latitude = form.cleaned_data["latitude"]
+            # longitude = form.cleaned_data["longitude"]
             sn = form.save(commit=False)
             try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
@@ -101,8 +110,10 @@ def create(request):
                 sn.stav = SN_ZAPSANY
                 sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
                 sn.predano_organizace = sn.projekt.organizace
-                if latitude and longitude:
-                    sn.geom = Point(longitude, latitude)
+                if geom:
+                    # if latitude and longitude:
+                    #    sn.geom = Point(longitude, latitude)
+                    sn.geom = geom
                     sn.katastr = get_cadastre_from_point(sn.geom)
                 sn.save()
                 sn.set_zapsany(request.user)
@@ -115,10 +126,13 @@ def create(request):
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
         form = CreateSamostatnyNalezForm(user=request.user)
+        form_coor = CoordinatesDokumentForm()
     return render(
         request,
         "pas/create.html",
         {
+            "global_map_can_edit": True,
+            "formCoor": form_coor,
             "form": form,
             "title": _("Nový samostatný nález"),
             "header": _("Nový samostatný nález"),
@@ -144,6 +158,18 @@ def detail(request, ident_cely):
         ident_cely=ident_cely,
     )
     context = get_detail_context(sn=sn, request=request)
+    if sn.geom:
+        geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
+        context["formCoor"] = CoordinatesDokumentForm(
+            initial={
+                "detector_system_coordinates": "WGS-84",
+                "detector_coordinates_x": geom.split(" ")[0],
+                "detector_coordinates_y": geom.split(" ")[1],
+            }
+        )  # Zmen musis poslat data do formulare
+        context["global_map_can_edit"] = False
+    else:
+        context["formCoor"] = CoordinatesDokumentForm()
     return render(request, "pas/detail.html", context)
 
 
@@ -162,8 +188,19 @@ def edit(request, ident_cely):
         form = CreateSamostatnyNalezForm(
             request_post, instance=sn, user=request.user, **kwargs
         )
+        form_coor = CoordinatesDokumentForm(request.POST)
+        geom = None
+        try:
+            dx = float(form_coor.data.get("detector_coordinates_x"))
+            dy = float(form_coor.data.get("detector_coordinates_y"))
+            if dx > 0 and dy > 0:
+                geom = Point(dx, dy)
+        except Exception:
+            logger.error("Chybny format souradnic")
         if form.is_valid():
             logger.debug("Form is valid")
+            if geom is not None:
+                sn.geom = geom
             form.save()
             if form.changed_data:
                 logger.debug(form.changed_data)
@@ -175,10 +212,27 @@ def edit(request, ident_cely):
 
     else:
         form = CreateSamostatnyNalezForm(instance=sn, user=request.user, **kwargs)
+        if sn.geom:
+            geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
+            form_coor = CoordinatesDokumentForm(
+                initial={
+                    "detector_system_coordinates": "WGS-84",
+                    "detector_coordinates_x": geom.split(" ")[0],
+                    "detector_coordinates_y": geom.split(" ")[1],
+                }
+            )  # Zmen musis poslat data do formulare
+        else:
+            form_coor = CoordinatesDokumentForm()
     return render(
         request,
         "pas/edit.html",
-        {"form": form},
+        {
+            "global_map_can_edit": True,
+            "formCoor": form_coor,
+            "form": form,
+            "global_map_can_edit": True,
+            "formCoor": form_coor,
+        },
     )
 
 

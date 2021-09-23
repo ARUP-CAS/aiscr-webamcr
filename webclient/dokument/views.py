@@ -1,5 +1,4 @@
 import logging
-from dokument.models import DokumentOsoba
 
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
@@ -12,7 +11,7 @@ from core.constants import (
     ODESLANI_DOK,
     ZAPSANI_DOK,
 )
-from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
+from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import VratitForm
 from core.ident_cely import (
     get_cast_dokumentu_ident,
@@ -25,17 +24,18 @@ from core.message_constants import (
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_VRACEN,
+    MAXIMUM_IDENT_DOSAZEN,
     VYBERTE_PROSIM_POLOHU,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
-    MAXIMUM_IDENT_DOSAZEN,
 )
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
@@ -46,18 +46,13 @@ from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin
 from dokument.filters import DokumentFilter
 from dokument.forms import (
+    CoordinatesDokumentForm,
     CreateModelDokumentForm,
     CreateModelExtraDataForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
 )
-from dokument.models import (
-    Dokument,
-    DokumentCast,
-    DokumentExtraData,
-    DokumentAutor,
-    Let,
-)
+from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
 from dokument.tables import DokumentTable
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
@@ -196,6 +191,16 @@ def detail_model_3D(request, ident_cely):
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
     context["formDokument"] = CreateModelDokumentForm(instance=dokument, readonly=True)
+    if dokument.extra_data.geom:
+        geom = (
+            str(dokument.extra_data.geom)
+            .split("(")[1]
+            .replace(", ", ",")
+            .replace(")", "")
+        )
+        context["coordinate_x"] = geom.split(" ")[0]
+        context["coordinate_y"] = geom.split(" ")[1]
+
     context["formExtraData"] = CreateModelExtraDataForm(
         instance=dokument.extra_data, readonly=True
     )
@@ -213,6 +218,7 @@ def detail_model_3D(request, ident_cely):
     }
     context["history_dates"] = get_history_dates(dokument.historie)
     context["show"] = show
+    context["global_map_can_edit"] = False
     logger.debug(context)
     if dokument.soubory:
         context["soubory"] = dokument.soubory.soubory.all()
@@ -308,14 +314,27 @@ def edit_model_3D(request, ident_cely):
         form_extra = CreateModelExtraDataForm(
             request.POST, instance=dokument.extra_data
         )
+        form_coor = CoordinatesDokumentForm(
+            request.POST
+        )  # Zmen musis ulozit data z formulare
         form_komponenta = CreateKomponentaForm(
             obdobi_choices,
             areal_choices,
             request.POST,
             instance=dokument.get_komponenta(),
         )
+        geom = None
+        try:
+            dx = float(form_coor.data.get("coordinate_x"))
+            dy = float(form_coor.data.get("coordinate_y"))
+            if dx > 0 and dy > 0:
+                geom = Point(dx, dy)
+        except Exception:
+            logger.error("Chybny format souradnic")
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             form_d.save()
+            if geom is not None:
+                dokument.extra_data.geom = geom
             form_extra.save()
             form_komponenta.save()
             if (
@@ -336,11 +355,34 @@ def edit_model_3D(request, ident_cely):
         form_komponenta = CreateKomponentaForm(
             obdobi_choices, areal_choices, instance=dokument.get_komponenta()
         )
+        if dokument.extra_data.geom:
+            geom = (
+                str(dokument.extra_data.geom)
+                .split("(")[1]
+                .replace(", ", ",")
+                .replace(")", "")
+            )
+            return render(
+                request,
+                "dokument/create_model_3D.html",
+                {
+                    "coordinate_x": geom.split(" ")[0],
+                    "coordinate_y": geom.split(" ")[1],
+                    "global_map_can_edit": True,
+                    "formDokument": form_d,
+                    "formExtraData": form_extra,
+                    "formKomponenta": form_komponenta,
+                    "title": _("Editace modelu 3D"),
+                    "header": _("Editace modelu 3D"),
+                    "button": _("Upravit model"),
+                },
+            )
 
     return render(
         request,
         "dokument/create_model_3D.html",
         {
+            "global_map_can_edit": True,
             "formDokument": form_d,
             "formExtraData": form_extra,
             "formKomponenta": form_komponenta,
@@ -414,6 +456,14 @@ def create_model_3D(request):
         form_komponenta = CreateKomponentaForm(
             obdobi_choices, areal_choices, request.POST
         )
+        geom = None
+        try:
+            dx = float(form_extra.data.get("coordinate_x"))
+            dy = float(form_extra.data.get("coordinate_y"))
+            if dx > 0 and dy > 0:
+                geom = Point(dx, dy)
+        except Exception:
+            logger.error("Chybny format souradnic")
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             logger.debug("Forms are valid")
@@ -443,6 +493,8 @@ def create_model_3D(request):
                 form_d.save_m2m()
                 extra_data = form_extra.save(commit=False)
                 extra_data.dokument = dokument
+                if geom is not None:
+                    extra_data.geom = geom
                 extra_data.save()
 
                 komponenta = form_komponenta.save(commit=False)
@@ -470,6 +522,7 @@ def create_model_3D(request):
         request,
         "dokument/create_model_3D.html",
         {
+            "global_map_can_edit": True,
             "formDokument": form_d,
             "formExtraData": form_extra,
             "formKomponenta": form_komponenta,

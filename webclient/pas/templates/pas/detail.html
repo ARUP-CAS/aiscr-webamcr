@@ -6,7 +6,7 @@
 
 {% block title %}{% trans "Detail samostatného nálezu" %}{% endblock %}
 {% block head %}
-  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -42,8 +42,10 @@
       {% endif %}
         <form>
           {% crispy form %}
+
         </form>
       </div>
+      {% include "pas/coor.html" %}
     </div>
 
     <div class="card app-card-form">

@@ -1,21 +1,29 @@
-from uzivatel.models import Osoba
-from core.constants import OBLAST_CHOICES
+from core.constants import COORDINATE_SYSTEM
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
-from django.contrib.gis.forms import OSMWidget
+from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 from dokument.models import Dokument, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_TYP,
+    HESLAR_DOKUMENT_ULOZENI,
     HESLAR_JAZYK,
     HESLAR_POSUDEK_TYP,
     MODEL_3D_DOKUMENT_TYPES,
-    HESLAR_DOKUMENT_ULOZENI,
 )
 from heslar.models import Heslar
+from uzivatel.models import Osoba
+
+
+class CoordinatesDokumentForm(forms.Form):
+    detector_system_coordinates = forms.ChoiceField(
+        label=_("Souř. systém"), choices=COORDINATE_SYSTEM, required=False
+    )
+    detector_coordinates_x = forms.CharField(label=_("Šířka (N / Y)"), required=False)
+    detector_coordinates_y = forms.CharField(label=_("Délka (E / X)"), required=False)
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
@@ -146,7 +154,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
         self.fields["rada"].disabled = edit_prohibited
 
@@ -273,7 +281,7 @@ class EditDokumentForm(forms.ModelForm):
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
         self.fields["datum_zverejneni"].disabled = True
 
@@ -341,17 +349,19 @@ class CreateModelDokumentForm(forms.ModelForm):
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
+    coordinate_x = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_y = forms.FloatField(required=False, widget=HiddenInput())
+
     class Meta:
         model = DokumentExtraData
         fields = (
             "format",
             "duveryhodnost",
-            "geom",
             "odkaz",
             "zeme",
             "region",
@@ -362,15 +372,11 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "format": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "geom": OSMWidget(
-                attrs={"default_lat": 50.05, "default_lon": 14.05, "default_zoom": 6}
-            ),
             "region": forms.TextInput(),
         }
         labels = {
             "format": _("Formát"),
             "duveryhodnost": _("Důvěryhodnost"),
-            "geom": _("Lokalizace (Vyberte prosím polohu)"),
             "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
             "zeme": _("Země"),
             "region": _("Region"),
@@ -381,9 +387,8 @@ class CreateModelExtraDataForm(forms.ModelForm):
     def __init__(self, *args, readonly=False, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
-        self.fields["geom"].required = True
-        self.fields["geom"].widget.template_name = "dokument/openlayers-osm.html"
         self.fields["format"].required = True
+        # Disabled hodnoty se neposilaji na server
         self.fields["vyska"].widget.attrs["disabled"] = "disabled"
         self.fields["sirka"].widget.attrs["disabled"] = "disabled"
         self.fields["format"].choices = list(
@@ -397,11 +402,12 @@ class CreateModelExtraDataForm(forms.ModelForm):
                 Div("format", css_class="col-sm-6"),
                 Div("duveryhodnost", css_class="col-sm-6"),
                 Div("odkaz", css_class="col-sm-12"),
-                Div("geom", css_class="col-sm-12"),
                 Div("zeme", css_class="col-sm-3"),
                 Div("region", css_class="col-sm-3"),
                 Div("vyska", css_class="col-sm-3"),
                 Div("sirka", css_class="col-sm-3"),
+                Div("coordinate_x", css_class="hidden"),
+                Div("coordinate_y", css_class="hidden"),
                 css_class="row",
             ),
         )
@@ -410,5 +416,5 @@ class CreateModelExtraDataForm(forms.ModelForm):
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
