@@ -288,19 +288,19 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'Y-m-d' }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'Y-m-d'|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'Y-m-d' }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'Y-m-d'|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Termín odevzdání" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'Y-m-d' }}" readonly><!--missings-->
+              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'Y-m-d'|check_if_none }}" readonly><!--missings-->
             </div>
           </div>
         </div>
@@ -327,31 +327,31 @@
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Oznamovatel" %}</label>
-                <input class="form-control" type="text" value="{{ oznamovatel.oznamovatel }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.oznamovatel|check_if_none }}" readonly>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Pověřená osoba oznamovatele" %}</label>
-                <input class="form-control" type="text" value="{{ oznamovatel.odpovedna_osoba }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.odpovedna_osoba|check_if_none }}" readonly>
               </div>
             </div>
             <div class="col-sm-6">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Adresa oznamovatele" %}</label>
-                <input class="form-control" type="text" value="{{ oznamovatel.adresa }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.adresa|check_if_none }}" readonly>
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Telefon" %}</label>
-                <input class="form-control" type="text" value="{{ oznamovatel.telefon }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.telefon|check_if_none }}" readonly>
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group">
                 <label for="formGroupExampleInput">{% trans "Email" %}</label>
-                <input class="form-control" type="text" value="{{ oznamovatel.email }}" readonly>
+                <input class="form-control" type="text" value="{{ oznamovatel.email|check_if_none }}" readonly>
               </div>
             </div>
           </div>
