@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "komponenta",
     "dj",
     "simple_history",
+    "widget_tweaks",
 ]
 
 MIDDLEWARE = [
