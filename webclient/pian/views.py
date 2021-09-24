@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
-    pian = get_object_or_404(Pian, dent_cely=ident_cely)
+    pian = get_object_or_404(Pian, ident_cely=ident_cely)
     form = PianCreateForm(
         request.POST,
         instance=pian,
