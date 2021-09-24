@@ -150,8 +150,6 @@ class Projekt(models.Model):
 
     def set_vytvoreny(self):
         self.stav = PROJEKT_STAV_VYTVORENY
-        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(typ_zmeny=OZNAMENI_PROJ, uzivatel=owner, vazba=self.historie,).save()
         self.save()
 
     def set_oznameny(self):
