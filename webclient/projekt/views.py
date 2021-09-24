@@ -17,6 +17,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    PROJEKT_STAV_VYTVORENY,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     SCHVALENI_OZNAMENI_PROJ,
@@ -159,11 +160,15 @@ def post_ajax_get_point(request):
 def create(request):
     if request.method == "POST":
         hlavni_katastr: str = request.POST.get("hlavni_katastr")
-        hlavni_katastr_name = hlavni_katastr[:hlavni_katastr.find("(")].strip()
-        okres_name = (hlavni_katastr[hlavni_katastr.find("(") + 1:]).replace(")", "").strip()
-        katastr = RuianKatastr.objects.filter(Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)).first()
+        hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
+        okres_name = (
+            (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
+        )
+        katastr = RuianKatastr.objects.filter(
+            Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)
+        ).first()
         post = request.POST.copy()
-        post['hlavni_katastr'] = str(katastr.id)
+        post["hlavni_katastr"] = str(katastr.id)
         request.POST = post
         form_projekt = CreateProjektForm(request.POST)
         form_oznamovatel = OznamovatelForm(request.POST)
@@ -263,9 +268,7 @@ def edit(request, ident_cely):
         else:
             logger.warning("Projekt geom is empty.")
     return render(
-        request,
-        "projekt/edit.html",
-        {"form_projekt": form, "projekt": projekt},
+        request, "projekt/edit.html", {"form_projekt": form, "projekt": projekt},
     )
 
 
@@ -327,14 +330,18 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related(
-            "kulturni_pamatka",
-            "typ_projektu",
-            "hlavni_katastr",
-            "organizace",
-            "vedouci_projektu",
-            "hlavni_katastr__okres",
-        ).defer("geom")
+        qs = (
+            qs.filter(stav__gt=PROJEKT_STAV_VYTVORENY)
+            .select_related(
+                "kulturni_pamatka",
+                "typ_projektu",
+                "hlavni_katastr",
+                "organizace",
+                "vedouci_projektu",
+                "hlavni_katastr__okres",
+            )
+            .defer("geom")
+        )
         return qs
 
 

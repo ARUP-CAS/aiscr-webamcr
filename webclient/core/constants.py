@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _
 
 # Stavy
 # Projekty
+PROJEKT_STAV_VYTVORENY: Final = -1
 PROJEKT_STAV_OZNAMENY: Final = 0
 PROJEKT_STAV_ZAPSANY: Final = 1
 PROJEKT_STAV_PRIHLASENY: Final = 2

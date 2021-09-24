@@ -16,6 +16,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
+    PROJEKT_STAV_VYTVORENY,
     RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
@@ -147,22 +148,22 @@ class Projekt(models.Model):
         db_table = "projekt"
         verbose_name = "projekty"
 
+    def set_vytvoreny(self):
+        self.stav = PROJEKT_STAV_VYTVORENY
+        owner = get_object_or_404(User, email="amcr@arup.cas.cz")
+        Historie(typ_zmeny=OZNAMENI_PROJ, uzivatel=owner, vazba=self.historie,).save()
+        self.save()
+
     def set_oznameny(self):
         self.stav = PROJEKT_STAV_OZNAMENY
         owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(
-            typ_zmeny=OZNAMENI_PROJ,
-            uzivatel=owner,
-            vazba=self.historie,
-        ).save()
+        Historie(typ_zmeny=OZNAMENI_PROJ, uzivatel=owner, vazba=self.historie,).save()
         self.save()
 
     def set_schvaleny(self, user):
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
-            typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
-            uzivatel=user,
-            vazba=self.historie,
+            typ_zmeny=SCHVALENI_OZNAMENI_PROJ, uzivatel=user, vazba=self.historie,
         ).save()
         self.save()
 
@@ -173,38 +174,26 @@ class Projekt(models.Model):
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
-        Historie(
-            typ_zmeny=PRIHLASENI_PROJ,
-            uzivatel=user,
-            vazba=self.historie,
-        ).save()
+        Historie(typ_zmeny=PRIHLASENI_PROJ, uzivatel=user, vazba=self.historie,).save()
         self.save()
 
     def set_zahajeny_v_terenu(self, user):
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
         Historie(
-            typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
-            uzivatel=user,
-            vazba=self.historie,
+            typ_zmeny=ZAHAJENI_V_TERENU_PROJ, uzivatel=user, vazba=self.historie,
         ).save()
         self.save()
 
     def set_ukoncen_v_terenu(self, user):
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
         Historie(
-            typ_zmeny=UKONCENI_V_TERENU_PROJ,
-            uzivatel=user,
-            vazba=self.historie,
+            typ_zmeny=UKONCENI_V_TERENU_PROJ, uzivatel=user, vazba=self.historie,
         ).save()
         self.save()
 
     def set_uzavreny(self, user):
         self.stav = PROJEKT_STAV_UZAVRENY
-        Historie(
-            typ_zmeny=UZAVRENI_PROJ,
-            uzivatel=user,
-            vazba=self.historie,
-        ).save()
+        Historie(typ_zmeny=UZAVRENI_PROJ, uzivatel=user, vazba=self.historie,).save()
         self.save()
 
     def set_archivovany(self, user):
@@ -246,10 +235,7 @@ class Projekt(models.Model):
         self.stav = PROJEKT_STAV_ZAPSANY
 
         Historie(
-            typ_zmeny=zmena,
-            uzivatel=user,
-            poznamka=poznamka,
-            vazba=self.historie,
+            typ_zmeny=zmena, uzivatel=user, poznamka=poznamka, vazba=self.historie,
         ).save()
         self.save()
 
