@@ -99,6 +99,7 @@ def potvrdit(request, dj_ident_cely):
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
         else:
             pian.stav = PIAN_POTVRZEN
+            pian.potvrdil = request.user
             pian.save()
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
@@ -147,6 +148,7 @@ def create(request, dj_ident_cely):
             .exclude(objectid=1094)
             .filter(the_geom__contains=point)
         )
+        pian.vymezil = request.user
         if zm10s.count() == 1 and zm50s.count() == 1:
             pian.zm10 = zm10s[0]
             pian.zm50 = zm50s[0]
