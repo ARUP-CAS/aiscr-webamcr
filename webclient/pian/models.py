@@ -7,8 +7,6 @@ from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.models import Heslar
 from historie.models import HistorieVazby
 from core.exceptions import MaximalIdentNumberError
-from django.db.models import Q
-from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +23,7 @@ class Pian(models.Model):
         models.DO_NOTHING,
         db_column="presnost",
         related_name="piany_presnosti",
-        limit_choices_to=Q(nazev_heslare=HESLAR_PIAN_PRESNOST) & Q(zkratka__lt="4"),
+        limit_choices_to={"nazev_heslare": HESLAR_PIAN_PRESNOST},
     )
     typ = models.ForeignKey(
         Heslar,
