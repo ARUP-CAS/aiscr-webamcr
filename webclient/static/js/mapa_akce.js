@@ -27,7 +27,7 @@ var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { at
 
 var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
-var poi_other = L.markerClusterGroup();//L.layerGroup();
+var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});//L.layerGroup();
 
 var map = L.map('projectMap',{zoomControl:false,  layers: [osmColor], fullscreenControl: true}).setView([49.84, 15.17], 7);
 

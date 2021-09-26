@@ -4,6 +4,8 @@ from django.contrib.auth.admin import UserAdmin
 from .forms import AuthUserCreationForm
 from .models import User
 
+from historie.models import Historie
+
 from simple_history import register
 
 
@@ -49,5 +51,10 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("email",)
     ordering = ("email",)
 
+    def has_delete_permission(self, request, obj=None):
+        if obj:
+            if Historie.objects.filter(uzivatel=obj).count() > 1000:
+                return False
+        return True
 
 admin.site.register(User, CustomUserAdmin)

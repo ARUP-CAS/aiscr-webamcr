@@ -24,6 +24,7 @@ urlpatterns = [
     path(
         "spoluprace/deaktivace/<int:pk>", views.deaktivace, name="spoluprace_deaktivace"
     ),
+    path("pas-get-katastr", views.post_pas2kat, name="post_pas2kat"),
     path(
         "spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"
     ),

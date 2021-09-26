@@ -54,7 +54,7 @@
 
 
 {% block script %}
-  <script src="{% static 'mapa.js' %}"></script>
+  <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
       global_map_can_edit = true;
       if (document.getElementById("id_latitude").value > 1) {
@@ -66,6 +66,6 @@
   </script>
 
   <script src="{% static 'daterangepicker.js' %}"></script>
-	
+
   <script src="{% static 'js/pamatkova_ochrana_validator.js' %}"></script>
 {% endblock %}

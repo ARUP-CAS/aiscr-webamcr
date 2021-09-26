@@ -43,3 +43,13 @@ CREATE INDEX projekt_ident_cely
 ON public.projekt USING btree
 (ident_cely ASC NULLS LAST)
 ;
+
+CREATE INDEX historie_uzivatel
+ON public.historie USING btree
+(uzivatel ASC NULLS LAST)
+;
+
+CREATE INDEX ix_auth_user_id
+ON public.auth_user USING btree
+(id ASC NULLS LAST)
+;

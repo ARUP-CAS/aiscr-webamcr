@@ -64,9 +64,16 @@ crossorigin=""/>
         <!-- Current Location -->
         <div class="form-group map">
             <label for="detector_coordinates_y">{% trans "Poloha" %}</label>
-            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" readonly class="btn btn-amcr btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
+            {% if global_map_can_edit %}
+            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" class="btn btn-amcr btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
                 <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
             </button>
+            {% else %}
+            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" readonly class="btn btn-amcr btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
+            <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
+            </button>
+            {% endif %}
+
         </div>
     </div>
 </div>   
@@ -77,6 +84,9 @@ crossorigin=""/>
 {% endblock %}
 
 {% block script %}
+<script>
+    var global_csrftoken = '{{ csrf_token }}';
+</script>
 <script src="{% static 'mapa_pas.js' %}"></script>
     <script>
         $(document).ready(function () {
