@@ -38,37 +38,37 @@ var goldIcon = new L.Icon({
     shadowSize: [41, 41]
     })
 
-var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom: 19.99, minZoom: 6 }),
-cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom: 19.99, minZoom: 6 }),
-cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 20, minZoom: 6 }),
-cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 19.99, minZoom: 6 });
+    var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
+        cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
+        cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
+        cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
+        cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
+        cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
+    var poi_sugest = L.layerGroup();
+    var gm_correct = L.layerGroup();
+    var poi_dj = L.layerGroup();
+    var poi_other = L.markerClusterGroup();
 
-var poi_sugest = L.layerGroup();
-var gm_correct = L.layerGroup();
-var poi_dj = L.layerGroup();
-var poi_other = L.markerClusterGroup();
+    var map = L.map('djMap', {
+        center: [49.84, 15.17],
+        zoom: 7,
+        layers: [cuzkZM, poi_other],
+        fullscreenControl: true,
+    }).setView([49.84, 15.17], 7);;
 
-//var map = L.map('djMap').setView([49.84, 15.17], 7);
-//var poi = L.layerGroup();
-
-var map = L.map('djMap',{zoomControl:false,  layers: [cuzkZM], fullscreenControl: true}).setView([49.84, 15.17], 7);
-
-
-
-
-var baseLayers = {
-        "Mapa ČR": osmColor,
-        "Základní mapa": cuzkZM,
-        "Ortofotomapa": cuzkOrt,
-        "Stínovaný reliéf 5G": cuzkEL,
+    var baseLayers = {
+        "ČÚZK - Základní mapy ČR": cuzkZM,
+        "ČÚZK - Ortofotomapa": cuzkOrt,
+        "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
+        "OpenStreetMap": osmColor,
     };
 
-var overlays ={
-    "Katastrální mapa":  L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom: 20.99, minZoom: 17, opacity: 0.5 }),
-    "Katastrální území": L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom: 20.99, minZoom: 12, opacity: 0.5 }),
-    "Piany": poi_other
-}
+    var overlays = {
+        "ČÚZK - Katastrální mapa": cuzkWMS,
+        "ČÚZK - Katastrální území": cuzkWMS2,
+        "AMČR Piany": poi_other
+    };
 
 L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
