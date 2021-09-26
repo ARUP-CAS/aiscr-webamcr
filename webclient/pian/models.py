@@ -31,7 +31,7 @@ class Pian(models.Model):
         models.DO_NOTHING,
         db_column="typ",
         related_name="piany_typu",
-        limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP,},
+        limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
     zm10 = models.ForeignKey(
