@@ -183,6 +183,7 @@ def detail(request, ident_cely):
             "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
             "form": CreateDJForm(
                 instance=jednotka,
+                jednotky=jednotky,
                 prefix=jednotka.ident_cely,
                 not_readonly=show["editovat"],
             ),

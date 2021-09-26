@@ -95,6 +95,8 @@ class VyskovyBodFormSetHelper(FormHelper):
 
 def create_vyskovy_bod_form(pian=None):
     class CreateVyskovyBodForm(forms.ModelForm):
+        northing = forms.FloatField()
+        easting = forms.FloatField()
         class Meta:
             model = VyskovyBod
 

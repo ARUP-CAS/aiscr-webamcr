@@ -15,6 +15,7 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.gis.geos import Point
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -87,10 +88,13 @@ def zapsat_vyskove_body(request, adb_ident_cely):
     )
     if formset.is_valid():
         logger.debug("Formset is valid")
-        formset.save()
+        instances = formset.save()
+        for vyskovy_bod in instances:
+            vyskovy_bod: VyskovyBod
+            vyskovy_bod.geom = Point(x=vyskovy_bod.northing, y=vyskovy_bod.easting)
+            vyskovy_bod.save()
     if formset.is_valid():
         logger.debug("Form is valid")
-        formset.save()
         if (
             formset.has_changed()
         ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
