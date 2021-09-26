@@ -23,9 +23,7 @@ from uzivatel.models import User
 def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
     if not user.exists():
-        raise ValidationError(
-            _("Uživatel s emailem ") + email + _(" neexistuje."),
-        )
+        raise ValidationError(_("Uživatel s emailem ") + email + _(" neexistuje."),)
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
@@ -43,17 +41,11 @@ class PotvrditNalezForm(forms.ModelForm):
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
-            attrs={"class": "select"},
-            choices=(
-                (True, "Ano"),
-                (False, "Ne"),
-            ),
+            attrs={"class": "select"}, choices=((True, "Ano"), (False, "Ne"),),
         ),
         label=_("Nález předán"),
         help_text=_("Lorem ipsum."),
-        error_messages={
-            "required": _("Nález musí být předán. Vyplňte Ano"),
-        },
+        error_messages={"required": _("Nález musí být předán. Vyplňte Ano"),},
     )
 
     class Meta:
@@ -106,6 +98,11 @@ class PotvrditNalezForm(forms.ModelForm):
 class CreateSamostatnyNalezForm(forms.ModelForm):
     # latitude = forms.FloatField(required=False, widget=HiddenInput())
     # longitude = forms.FloatField(required=False, widget=HiddenInput())
+    katastr = forms.CharField(
+        label=_("Katastrální území"),
+        widget=forms.Textarea(attrs={"rows": 1, "cols": 20, "readonly": "readonly"}),
+        error_messages={"required": "Je třeba vybrat bod na mapě."},
+    )
 
     class Meta:
         model = SamostatnyNalez
@@ -193,7 +190,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 Div("projekt", css_class="col-sm-4"),
                 Div("nalezce", css_class="col-sm-4"),
                 Div("datum_nalezu", css_class="col-sm-4"),
-                Div("lokalizace", css_class="col-sm-12"),
+                Div("lokalizace", css_class="col-sm-8"),
+                Div("katastr", css_class="col-sm-4"),
                 Div("okolnosti", css_class="col-sm-6"),
                 Div("hloubka", css_class="col-sm-6"),
                 #                Div("latitude", css_class="hidden"),
@@ -212,6 +210,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             self.fields[key].disabled = readonly
         if projekt_disabed:
             self.fields["projekt"].disabled = projekt_disabed
+        if self.instance is not None:
+            self.fields["katastr"].initial = self.instance.katastr
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
