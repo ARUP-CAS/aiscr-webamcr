@@ -48,7 +48,7 @@ var goldIcon = new L.Icon({
     var poi_sugest = L.layerGroup();
     var gm_correct = L.layerGroup();
     var poi_dj = L.layerGroup();
-    var poi_other = L.markerClusterGroup();
+    var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
 
     var map = L.map('djMap', {
         center: [49.84, 15.17],

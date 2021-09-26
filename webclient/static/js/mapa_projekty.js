@@ -1,6 +1,6 @@
 var global_map_can_edit = true;
 
-var poi_other = L.markerClusterGroup()
+var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20})
 
 var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
         cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
@@ -50,14 +50,14 @@ var poi_correct = L.layerGroup();
 var button_map_lock = L.easyButton({
     states: [{
         stateName: 'add-lock',
-        icon: 'bi bi-geo-alt',
+        icon: 'bi bi-lock',
         title: 'add-lock',
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('remove-lock');
         }
     }, {
-        icon: 'bi bi-lock',
+        icon: 'bi bi-geo-alt',
         stateName: 'remove-lock',
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
