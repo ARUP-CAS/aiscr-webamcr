@@ -8,6 +8,7 @@ from heslar.models import Heslar
 from historie.models import HistorieVazby
 from core.exceptions import MaximalIdentNumberError
 from django.db.models import Q
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,15 @@ class Pian(models.Model):
         HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
     )
     stav = models.SmallIntegerField(null=False, choices=STATES, default=PIAN_NEPOTVRZEN)
+    vymezil = models.ForeignKey(
+        User, on_delete=models.PROTECT, db_column="vymezil", related_name="user_vymezil"
+    )
+    potvrdil = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        db_column="potvrdil",
+        related_name="user_potvrdil",
+    )
 
     class Meta:
         db_table = "pian"
