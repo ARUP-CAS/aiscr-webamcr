@@ -23,7 +23,9 @@ from uzivatel.models import User
 def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
     if not user.exists():
-        raise ValidationError(_("Uživatel s emailem ") + email + _(" neexistuje."),)
+        raise ValidationError(
+            _("Uživatel s emailem ") + email + _(" neexistuje."),
+        )
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
@@ -41,11 +43,17 @@ class PotvrditNalezForm(forms.ModelForm):
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
-            attrs={"class": "select"}, choices=((True, "Ano"), (False, "Ne"),),
+            attrs={"class": "select"},
+            choices=(
+                (True, "Ano"),
+                (False, "Ne"),
+            ),
         ),
         label=_("Nález předán"),
         help_text=_("Lorem ipsum."),
-        error_messages={"required": _("Nález musí být předán. Vyplňte Ano"),},
+        error_messages={
+            "required": _("Nález musí být předán. Vyplňte Ano"),
+        },
     )
 
     class Meta:
@@ -99,8 +107,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     # latitude = forms.FloatField(required=False, widget=HiddenInput())
     # longitude = forms.FloatField(required=False, widget=HiddenInput())
     katastr = forms.CharField(
+        max_length=50,
         label=_("Katastrální území"),
-        widget=forms.Textarea(attrs={"rows": 1, "cols": 20, "readonly": "readonly"}),
         error_messages={"required": "Je třeba vybrat bod na mapě."},
     )
 
@@ -161,6 +169,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         )
+        self.fields["katastr"].widget.attrs["readonly"] = True
         self.fields["druh_nalezu"] = TwoLevelSelectField(
             label=_("Druh nálezu"),
             widget=forms.Select(

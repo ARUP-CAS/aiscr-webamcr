@@ -1,5 +1,6 @@
 import logging
 
+import simplejson as json
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -42,6 +43,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -200,6 +202,7 @@ def edit(request, ident_cely):
         if form.is_valid():
             logger.debug("Form is valid")
             if geom is not None:
+                sn.katastr = get_cadastre_from_point(sn.geom)
                 sn.geom = geom
             form.save()
             if form.changed_data:
@@ -604,3 +607,19 @@ def get_detail_template_shows(sn):
         "editovat": show_edit,
     }
     return show
+
+
+@require_http_methods(["POST"])
+def post_pas2kat(request):
+    body = json.loads(request.body.decode("utf-8"))
+    logger.debug(body)
+    katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
+    if katastr_name is not None:
+        return JsonResponse(
+            {
+                "katastr_name": katastr_name.nazev,
+            },
+            status=200,
+        )
+    else:
+        return JsonResponse({"katastr_name": ""}, status=200)

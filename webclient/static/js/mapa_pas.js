@@ -198,6 +198,27 @@ var global_map_can_edit = true;
                     $("#detector_coordinates_x").change();
                     $("#detector_coordinates_y").change();
                     addUniquePointToPoiLayer(corX, corY, '', false)
+                    //
+                    let xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/pas/pas-get-katastr');
+                    xhr.setRequestHeader('Content-type', 'application/json');
+                    if (typeof global_csrftoken !== 'undefined') {
+                        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+                    } else {
+                        console.log("neni X-CSRFToken token")
+                    }
+                    xhr.onload = function () {
+                        rs = JSON.parse(this.responseText)
+                        if(rs.katastr_name){
+                            document.getElementById("id_katastr").value=rs.katastr_name
+                        }
+                    };
+                    xhr.send(JSON.stringify(
+                        {
+                            'cX': point_global_WGS84[1],
+                            'cY': point_global_WGS84[0],
+                        }))
+                    //
                 } else {
                         map.setView(e.latlng, map.getZoom() + 2)
                 }

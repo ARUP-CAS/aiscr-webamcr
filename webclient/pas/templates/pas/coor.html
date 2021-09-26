@@ -85,6 +85,9 @@ crossorigin=""/>
 {% endblock %}
 
 {% block script %}
+<script>
+    var global_csrftoken = '{{ csrf_token }}';
+</script>
 <script src="{% static 'mapa_pas.js' %}"></script>
     <script>
         $(document).ready(function () {
