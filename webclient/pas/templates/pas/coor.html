@@ -21,15 +21,14 @@ crossorigin=""/>
 {% endblock %}
 
 {% block content %}
+<div class="card-body">
   <small id="hint_id_map"class="form-text text-muted">{% trans "Kliknutím do mapy prosím lokalizujte záměr." %}</small>
   <div class="form-row">
     <div class="col-3 col-md-4 col-lg-3">
         <!-- Koordinaty -->
         <div class="form-group">
-            <label for="detector_system_coordinates"
-                class="d-none d-sm-none d-md-block">{{ formCoor.detector_system_coordinates.label }}</label>
-            <label for="detector_system_cordinates"
-                class="d-block d-md-none d-lg-none">{% trans "Souř. S." %}</label>
+            <label for="detector_system_coordinates">{{ formCoor.detector_system_coordinates.label }}</label>
+            <label for="detector_system_cordinates">{% trans "Souř. S." %}</label>
             {% if global_map_can_edit %}
             {% render_field formCoor.detector_system_coordinates class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
             {% else %}
@@ -69,12 +68,12 @@ crossorigin=""/>
                 <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
             </button>
         </div>
-      </div>
-      </div>
-  <div class="form-row col-12">
+    </div>
+</div>   
+</div>
+<div class="col-12">
     {% include "map.html" %}
-  </div>
-
+</div>
 {% endblock %}
 
 {% block script %}
