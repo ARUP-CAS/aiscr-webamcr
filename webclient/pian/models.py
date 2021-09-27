@@ -1,11 +1,17 @@
 import logging
-from core.constants import KLADYZM_KATEGORIE, PIAN_NEPOTVRZEN, PIAN_POTVRZEN
+from core.constants import (
+    KLADYZM_KATEGORIE,
+    PIAN_NEPOTVRZEN,
+    PIAN_POTVRZEN,
+    ZAPSANI_PIAN,
+    POTVRZENI_PIAN,
+)
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.models import Heslar
-from historie.models import HistorieVazby
+from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
 
 logger = logging.getLogger(__name__)
@@ -48,19 +54,13 @@ class Pian(models.Model):
         null=False,
     )
     ident_cely = models.TextField(unique=True, null=False)
-    historie = models.ForeignKey(
-        HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
+    historie = models.OneToOneField(
+        HistorieVazby,
+        on_delete=models.DO_NOTHING,
+        db_column="historie",
+        related_name="pian_historie",
     )
     stav = models.SmallIntegerField(null=False, choices=STATES, default=PIAN_NEPOTVRZEN)
-    vymezil = models.ForeignKey(
-        User, on_delete=models.PROTECT, db_column="vymezil", related_name="user_vymezil"
-    )
-    potvrdil = models.ForeignKey(
-        User,
-        on_delete=models.PROTECT,
-        db_column="potvrdil",
-        related_name="user_potvrdil",
-    )
 
     class Meta:
         db_table = "pian"
@@ -104,6 +104,16 @@ class Pian(models.Model):
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
         sequence.save()
+        self.save()
+
+    def set_vymezeny(self, user):
+        self.stav = PIAN_NEPOTVRZEN
+        Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
+        self.save()
+
+    def set_potvrzeny(self, user):
+        self.stav = PIAN_POTVRZEN
+        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
 
 
