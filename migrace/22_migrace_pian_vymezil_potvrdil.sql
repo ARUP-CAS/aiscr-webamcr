@@ -5,7 +5,7 @@ from (
         select au.id as ved,
             u.id as userid
         from auth_user au
-            join uzivatel u on u.ident_cely = au.username
+            join uzivatel u on u.ident_cely = au.ident_cely
     ) as sel
 where potvrdil = sel.userid;
 alter table pian
