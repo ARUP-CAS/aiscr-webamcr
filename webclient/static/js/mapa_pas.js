@@ -156,6 +156,7 @@ var global_map_can_edit = true;
         cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
     var map = L.map('projectMap', {
+        zoomControl:false,
         center: [49.84, 15.17],
         zoom: 7,
         layers: [cuzkZM, poi],
@@ -318,6 +319,25 @@ var global_map_can_edit = true;
 
     L.control.layers(baseLayers, overlays).addTo(map);
     L.control.scale(metric = "true").addTo(map);
+    L.control.zoom(
+        {
+            zoomInText:'+',
+            zoomInTitle:'Zvětšit',
+            zoomOutText:'-',
+            zoomOutTitle:'Zmenšit'
+        }).addTo(map)
+
+    L.control.measure().addTo(map)
+
+    L.control.coordinates({
+        position:"bottomright",
+        useDMS:true,
+        labelTemplateLat:"N {y}",
+        labelTemplateLng:"E {x}",
+        useLatLngOrder:true,
+        centerUserCoordinates: true,
+        markerType: null
+    }).addTo(map);
 
     //addPointToPoiLayer(49.96885475762718,16.090292930603033,'Ukázka POI1')
     //addPointToPoiLayer(49.880477638742555,15.347900390625002,'Ukázka POI2')

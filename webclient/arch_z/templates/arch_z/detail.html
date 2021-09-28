@@ -48,6 +48,11 @@
   <script>
       var global_csrftoken = '{{ csrf_token }}';
   </script>
+  <!-- static leaflet additional import-->
+  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
+  <script src="{% static 'leaflet.measure.js' %}"></script>
+  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 {% endblock %}
 
 {% block content %}

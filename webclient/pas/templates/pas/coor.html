@@ -18,6 +18,11 @@ crossorigin=""/>
 <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
 <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
     rel='stylesheet' />
+<!-- static leaflet additional import-->
+<link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
+<script src="{% static 'leaflet.measure.js' %}"></script>
+<script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+<link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -76,7 +81,7 @@ crossorigin=""/>
 
         </div>
     </div>
-</div>   
+</div>
 </div>
 <div class="col-12">
     {% include "map.html" %}

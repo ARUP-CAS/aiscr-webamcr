@@ -32,6 +32,17 @@ L.control.zoom(
         zoomOutText:'-',
         zoomOutTitle:'Zmenšit'
     }).addTo(map)
+L.control.measure().addTo(map)
+
+L.control.coordinates({
+    position:"bottomright",
+    useDMS:true,
+    labelTemplateLat:"N {y}",
+    labelTemplateLng:"E {x}",
+    useLatLngOrder:true,
+    centerUserCoordinates: true,
+    markerType: null
+}).addTo(map);
 
 var poi = L.layerGroup();
 map.addLayer(poi);

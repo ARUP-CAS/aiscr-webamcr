@@ -27,6 +27,11 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
 
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
+  <!-- static leaflet additional import-->
+  <link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
+  <script src="{% static 'leaflet.measure.js' %}"></script>
+  <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
 {% endblock %}
 
 {% block content %}

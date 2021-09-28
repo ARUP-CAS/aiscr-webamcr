@@ -51,6 +51,7 @@ var goldIcon = new L.Icon({
     var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
 
     var map = L.map('djMap', {
+        zoomControl:false,
         center: [49.84, 15.17],
         zoom: 7,
         layers: [cuzkZM, poi_other],
@@ -278,6 +279,18 @@ var drawControl = new L.Control.Draw( {
 
 
 map.addControl(drawControl);
+
+L.control.measure().addTo(map)
+
+L.control.coordinates({
+    position:"bottomright",
+    useDMS:true,
+    labelTemplateLat:"N {y}",
+    labelTemplateLng:"E {x}",
+    useLatLngOrder:true,
+    centerUserCoordinates: true,
+    markerType: null
+}).addTo(map);
 
 function map_show_edit(show, show_go_back){
     global_map_can_edit=show;

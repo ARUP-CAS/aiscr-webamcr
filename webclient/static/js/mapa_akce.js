@@ -267,6 +267,18 @@ var drawControl = new L.Control.Draw( {
 
 map.addControl(drawControl);
 
+L.control.measure().addTo(map)
+
+L.control.coordinates({
+    position:"bottomright",
+    useDMS:true,
+    labelTemplateLat:"N {y}",
+    labelTemplateLng:"E {x}",
+    useLatLngOrder:true,
+    centerUserCoordinates: true,
+    markerType: null
+}).addTo(map);
+
 
 map.on('draw:edited', function (e) {
     var layers = e.layers;

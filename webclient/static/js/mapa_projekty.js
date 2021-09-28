@@ -10,6 +10,7 @@ var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { at
         cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
     var map = L.map('projectMap', {
+        zoomControl:false,
         center: [49.84, 15.17],
         zoom: 7,
         layers: [cuzkZM, poi_other],
@@ -29,17 +30,29 @@ var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { at
         "Projekty": poi_other
     };
 
-L.control.layers(baseLayers, overlays).addTo(map);
-L.control.scale(metric = "true").addTo(map);
+    L.control.layers(baseLayers, overlays).addTo(map);
+    L.control.scale(metric = "true").addTo(map);
 
 
-L.control.zoom(
-    {
-        zoomInText: '+',
-        zoomInTitle: 'Zvětšit',
-        zoomOutText: '-',
-        zoomOutTitle: 'Zmenšit'
-    }).addTo(map);
+    L.control.zoom(
+        {
+            zoomInText: '+',
+            zoomInTitle: 'Zvětšit',
+            zoomOutText: '-',
+            zoomOutTitle: 'Zmenšit'
+        }).addTo(map);
+
+    L.control.measure().addTo(map)
+
+L.control.coordinates({
+    position:"bottomright",
+    useDMS:true,
+    labelTemplateLat:"N {y}",
+    labelTemplateLng:"E {x}",
+    useLatLngOrder:true,
+    centerUserCoordinates: true,
+    markerType: null
+}).addTo(map);
 
 //var map = L.map('projectMap').setView([49.84, 15.17], 7);
 var poi_sugest = L.layerGroup();
