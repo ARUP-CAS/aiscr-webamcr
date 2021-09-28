@@ -7,6 +7,7 @@ from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.models import Heslar
 from historie.models import HistorieVazby
 from core.exceptions import MaximalIdentNumberError
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
