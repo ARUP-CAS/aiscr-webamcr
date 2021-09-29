@@ -4,9 +4,7 @@ import simplejson as json
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
 from core.utils import get_cadastre_from_point
-from core.constants import (
-    PROJEKT_STAV_ARCHIVOVANY,
-)
+from core.constants import PROJEKT_STAV_ARCHIVOVANY
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
@@ -58,7 +56,7 @@ def index(request):
             p.save()
             o.projekt = p
             o.save()
-            p.set_oznameny()
+            p.set_vytvoreny()
             p.katastry.add(*[i for i in dalsi_katastry])
 
             confirmation = {
@@ -87,7 +85,8 @@ def index(request):
 
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:
-        logger.debug(request.POST)
+        p = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
+        p.set_oznameny()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
 

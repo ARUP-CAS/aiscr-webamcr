@@ -79,15 +79,17 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         attrs={"a": {"class": "btn btn-sm"}},
     )
     aktivace = tables.TemplateColumn(
-        attrs={"td": {"class": "spoluprace"}},
+        attrs={"td": {"class": "spoluprace"},"th": {"class": "orderable ","style":"color:#fff"}},
         template_name="pas/aktivace_deaktivace_cell.html",
+        orderable=False,
     )
     smazani = tables.LinkColumn(
         "pas:spoluprace_smazani",
         text="Smazat",
         args=[A("pk")],
-        attrs={"a": {"class": "btn btn-sm"}},
+        attrs={"a": {"class": "btn btn-sm"},"th": {"class": "orderable ","style":"color:#fff"}},
         exclude_from_export=True,
+        orderable=False,
     )
 
     class Meta:
