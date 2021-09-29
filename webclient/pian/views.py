@@ -35,11 +35,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
-    form = PianCreateForm(
-        request.POST,
-        instance=pian,
-        prefix=ident_cely,
-    )
+    form = PianCreateForm(request.POST, instance=pian, prefix=ident_cely,)
     if form.is_valid():
         logger.debug("Form is valid")
         form.save()
@@ -98,9 +94,7 @@ def potvrdit(request, dj_ident_cely):
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
         else:
-            pian.stav = PIAN_POTVRZEN
-            pian.potvrdil = request.user
-            pian.save()
+            pian.set_potvrzeny(request.user)
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
             return redirect(
@@ -124,7 +118,7 @@ def create(request, dj_ident_cely):
     form = PianCreateForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
-        pian: Pian = form.save(commit=False)
+        pian = form.save(commit=False)
         # Assign base map references
         if type(pian.geom) == Point:
             pian.typ = Heslar.objects.get(id=GEOMETRY_BOD)
@@ -148,7 +142,6 @@ def create(request, dj_ident_cely):
             .exclude(objectid=1094)
             .filter(the_geom__contains=point)
         )
-        pian.vymezil = request.user
         if zm10s.count() == 1 and zm50s.count() == 1:
             pian.zm10 = zm10s[0]
             pian.zm50 = zm50s[0]
@@ -158,6 +151,7 @@ def create(request, dj_ident_cely):
                 messages.add_message(request, messages.ERROR, e.message)
             else:
                 pian.save()
+                pian.set_vymezeny(request.user)
                 dj.pian = pian
                 dj.save()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
