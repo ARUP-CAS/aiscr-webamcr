@@ -14,7 +14,7 @@ from core.constants import (
     SN_ARCHIVOVANY,
 )
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
-from core.models import Soubor
+from core.models import Soubor, over_opravneni_with_exception
 from core.utils import calculate_crc_32, get_mime_type
 from django.conf import settings
 from django.contrib import messages
@@ -94,6 +94,7 @@ def download_file(request, pk):
 @require_http_methods(["GET"])
 def upload_file_projekt(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     return render(
@@ -107,6 +108,7 @@ def upload_file_projekt(request, ident_cely):
 @require_http_methods(["GET"])
 def upload_file_dokument(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(d, request)
     if d.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     return render(
@@ -120,6 +122,7 @@ def upload_file_dokument(request, ident_cely):
 @require_http_methods(["GET"])
 def upload_file_samostatny_nalez(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(sn, request)
     if sn.stav == SN_ARCHIVOVANY:
         raise PermissionDenied()
     return render(
@@ -153,6 +156,7 @@ def post_upload(request):
             },
             status=500,
         )
+    over_opravneni_with_exception(objekt, request)
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)

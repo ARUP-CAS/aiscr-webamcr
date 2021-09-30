@@ -18,6 +18,7 @@ from core.ident_cely import (
     get_dokument_rada,
     get_temp_dokument_ident,
 )
+from core.models import over_opravneni_with_exception
 from core.message_constants import (
     DOKUMENT_NELZE_ARCHIVOVAT,
     DOKUMENT_NELZE_ODESLAT,
@@ -106,6 +107,7 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
+    over_opravneni_with_exception(dokument, request)
     if not dokument.has_extra_data():
         extra_data = DokumentExtraData(dokument=dokument)
         extra_data.save()
@@ -138,13 +140,11 @@ def detail_model_3D(request, ident_cely):
     context = {}
     dokument = get_object_or_404(
         Dokument.objects.select_related(
-            "soubory",
-            "organizace",
-            "extra_data__format",
-            "typ_dokumentu",
+            "soubory", "organizace", "extra_data__format", "typ_dokumentu",
         ),
         ident_cely=ident_cely,
     )
+    over_opravneni_with_exception(dokument, request)
     casti = dokument.casti.all()
     if casti.count() != 1:
         logger.error("Model ma mit jednu cast dokumentu: " + str(casti.count()))
@@ -252,6 +252,7 @@ class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, Filter
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(dokument, request)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if not dokument.has_extra_data():
@@ -261,10 +262,7 @@ def edit(request, ident_cely):
         extra_data = dokument.extra_data
     if request.method == "POST":
         form_d = EditDokumentForm(request.POST, instance=dokument)
-        form_extra = EditDokumentExtraDataForm(
-            request.POST,
-            instance=extra_data,
-        )
+        form_extra = EditDokumentExtraDataForm(request.POST, instance=extra_data,)
         if form_d.is_valid() and form_extra.is_valid():
             instance_d = form_d.save(commit=False)
             instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
@@ -305,6 +303,7 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(dokument, request)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -397,6 +396,7 @@ def edit_model_3D(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zapsat(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    over_opravneni_with_exception(zaznam, request)
     if request.method == "POST":
         form_d = EditDokumentForm(request.POST)
         if form_d.is_valid():
@@ -438,10 +438,7 @@ def zapsat(request, arch_z_ident_cely):
     return render(
         request,
         "dokument/create.html",
-        {
-            "formDokument": form_d,
-            "hierarchie": get_hierarchie_dokument_typ(),
-        },
+        {"formDokument": form_d, "hierarchie": get_hierarchie_dokument_typ(),},
     )
 
 
@@ -537,6 +534,7 @@ def create_model_3D(request):
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(d, request)
     if d.stav != D_STAV_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -565,6 +563,7 @@ def odeslat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(d, request)
     if d.stav != D_STAV_ODESLANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -613,6 +612,7 @@ def archivovat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(d, request)
     if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -637,6 +637,7 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    over_opravneni_with_exception(d, request)
     if request.method == "POST":
 
         historie = d.historie
@@ -671,6 +672,10 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return qs
+
+    def get(self, request, *args, **kwargs):
+        # To be added permision rules
+        super().get(request, *args, **kwargs)
 
 
 class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):

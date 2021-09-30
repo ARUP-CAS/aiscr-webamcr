@@ -16,6 +16,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
     MAXIMUM_DJ_DOSAZENO,
 )
+from core.models import over_opravneni_with_exception
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    over_opravneni_with_exception(dj.archeologicky_zaznam, request)
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("Form is valid")
@@ -67,6 +69,7 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def zapsat(request, arch_z_ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    over_opravneni_with_exception(az, request)
     form = CreateDJForm(request.POST)
     if form.is_valid():
         logger.debug("Form is valid")
@@ -99,6 +102,7 @@ def zapsat(request, arch_z_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    over_opravneni_with_exception(dj.archeologicky_zaznam, request)
     arch_z_ident_cely = dj.archeologicky_zaznam.ident_cely
     if request.method == "POST":
         resp = dj.delete()

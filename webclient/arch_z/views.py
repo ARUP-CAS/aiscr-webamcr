@@ -39,7 +39,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Opravneni, over_opravneni_with_exception
+from core.models import over_opravneni_with_exception
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -282,6 +282,7 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    over_opravneni_with_exception(zaznam, request)
     if zaznam.stav == AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -320,6 +321,7 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    over_opravneni_with_exception(az, request)
     if az.stav != AZ_STAV_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -346,6 +348,7 @@ def odeslat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    over_opravneni_with_exception(az, request)
     if az.stav != AZ_STAV_ODESLANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -373,6 +376,7 @@ def archivovat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    over_opravneni_with_exception(az, request)
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -420,7 +424,6 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
-    logger.debug(request.path.rpartition("/")[0])
     over_opravneni_with_exception(projekt, request)
     # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
     if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
@@ -480,6 +483,7 @@ def zapsat(request, projekt_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
+    over_opravneni_with_exception(akce.archeologicky_zaznam, request)
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam
@@ -509,6 +513,7 @@ def smazat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    over_opravneni_with_exception(az, request)
     if request.method == "POST":
         dokument_ids = request.POST.getlist("dokument")
         casti_zaznamu = DokumentCast.objects.filter(
@@ -566,6 +571,8 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    over_opravneni_with_exception(az, request)
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely)
     remove_orphan = False
     if len(relace_dokumentu) == 0:

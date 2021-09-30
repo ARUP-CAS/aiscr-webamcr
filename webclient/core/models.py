@@ -10,6 +10,10 @@ from .constants import (
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     ZAPSANI_AZ,
+    ZAPSANI_SN,
+    ZAPSANI_DOK,
+    ZAPSANI_PROJ,
+    SCHVALENI_OZNAMENI_PROJ,
 )
 import logging
 
@@ -148,10 +152,7 @@ class KonkretniOpravneni(models.Model):
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI = 7, "P7"
         PROJEKT_STAV_ZRUSENY = 8, "P8"
 
-    druh_opravneni = models.CharField(
-        max_length=10,
-        choices=DruhyOpravneni.choices,
-    )
+    druh_opravneni = models.CharField(max_length=10, choices=DruhyOpravneni.choices,)
     porovnani_stavu = models.CharField(
         max_length=50, choices=OpravneniDleStavu.choices, null=True, blank=True
     )
@@ -187,13 +188,36 @@ class KonkretniOpravneni(models.Model):
         if self.druh_opravneni == self.DruhyOpravneni.VLASTNI:
             try:
                 Historie.objects.get(
-                    typ_zmeny=ZAPSANI_AZ, uzivatel=uzivatel, vazba=zaznam.historie,
+                    typ_zmeny__in=[
+                        ZAPSANI_AZ,
+                        ZAPSANI_SN,
+                        ZAPSANI_DOK,
+                        ZAPSANI_PROJ,
+                        SCHVALENI_OZNAMENI_PROJ,
+                    ],
+                    uzivatel=uzivatel,
+                    vazba=zaznam.historie,
                 )
             except Historie.DoesNotExist:
                 return False
         if self.druh_opravneni == self.DruhyOpravneni.ORGANIZACE:
             if model_zaznamu == "ArcheologickyZaznam":
                 if zaznam.akce.organizace == uzivatel.organizace:
+                    pass
+                else:
+                    return False
+            elif model_zaznamu == "SamostatnyNalez":
+                if zaznam.projekt.organizace == uzivatel.organizace:
+                    pass
+                else:
+                    return False
+            elif model_zaznamu == "UzivatelSpoluprace":
+                if zaznam.vedouci.organizace == uzivatel.organizace:  # potvrdit si
+                    pass
+                else:
+                    return False
+            else:
+                if zaznam.organizace == uzivatel.organizace:
                     pass
                 else:
                     return False
@@ -206,10 +230,12 @@ class KonkretniOpravneni(models.Model):
 
 
 def over_opravneni_with_exception(zaznam, request):
+    logger.debug(str(request.resolver_match.route))
+    logger.debug(str(zaznam))
     try:
         opravneni = Opravneni.objects.get(
             hlavni_role=request.user.hlavni_role,
-            adresa_v_aplikaci=str(request.path.rpartition("/")[0]),
+            adresa_v_aplikaci=str(request.resolver_match.route),
         )
     except Opravneni.DoesNotExist:
         logger.debug("Pro stranku a roli neexistuje opravneni. Povoluji operaci")
