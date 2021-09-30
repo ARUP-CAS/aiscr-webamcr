@@ -5,6 +5,7 @@ from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
 from core.utils import get_cadastre_from_point
 from core.constants import PROJEKT_STAV_ARCHIVOVANY
+from core.models import over_opravneni_with_exception
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET", "POST"])
 def index(request):
     # First step of the form
+    over_opravneni_with_exception(request=request)
     if request.method == "POST" and "oznamovatel" in request.POST:
         form_ozn = OznamovatelForm(request.POST)
         form_projekt = ProjektOznameniForm(request.POST)
@@ -111,6 +113,7 @@ def index(request):
 def edit(request, pk):
     oznameni = Oznamovatel.objects.get(id=pk)
     projekt = get_object_or_404(Projekt, ident_cely=oznameni.projekt.ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -133,6 +136,7 @@ def edit(request, pk):
 @csrf_exempt
 @require_http_methods(["POST"])
 def post_poi2kat(request):
+    over_opravneni_with_exception(request=request)
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
     geom = Point(float(body["corY"]), float(body["corX"]))

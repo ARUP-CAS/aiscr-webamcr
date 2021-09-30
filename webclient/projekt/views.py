@@ -53,6 +53,7 @@ from core.message_constants import (
     MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_points_from_envelope
+from core.models import over_opravneni_with_exception
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -88,6 +89,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def index(request):
+    over_opravneni_with_exception(request=request)
     return render(request, "projekt/index.html")
 
 
@@ -101,6 +103,7 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
+    over_opravneni_with_exception(projekt, request)
     context["projekt"] = projekt
     typ_projektu = projekt.typ_projektu
     if typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and projekt.has_oznamovatel():
@@ -129,6 +132,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_point(request):
+    over_opravneni_with_exception(request=request)
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
     projekty = get_points_from_envelope(
@@ -158,6 +162,7 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
         form_projekt = CreateProjektForm(request.POST)
@@ -223,6 +228,7 @@ def create(request):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     required_fields = get_required_fields(projekt)
@@ -272,6 +278,7 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if request.method == "POST":
         resp = projekt.delete()
         logger.debug("Projekt smazan: " + str(resp))
@@ -291,6 +298,7 @@ def smazat(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def odebrat_sloupec_z_vychozich(request):
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         if "projekt_vychozi_skryte_sloupce" not in request.session:
             request.session["projekt_vychozi_skryte_sloupce"] = []
@@ -339,11 +347,16 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
         )
         return qs
 
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def schvalit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -383,6 +396,7 @@ def schvalit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def prihlasit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -406,6 +420,7 @@ def prihlasit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -439,6 +454,7 @@ def zahajit_v_terenu(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def ukoncit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
         raise PermissionDenied()
     if request.method == "POST":
@@ -471,6 +487,7 @@ def ukoncit_v_terenu(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def uzavrit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
         raise PermissionDenied()
     if request.method == "POST":
@@ -510,6 +527,7 @@ def uzavrit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -541,6 +559,7 @@ def archivovat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def navrhnout_ke_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -579,6 +598,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
         raise PermissionDenied()
     if request.method == "POST":
@@ -600,6 +620,7 @@ def zrusit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    over_opravneni_with_exception(projekt, request)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -622,7 +643,7 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def vratit_navrh_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-
+    over_opravneni_with_exception(projekt, request)
     if projekt.stav not in [
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
         PROJEKT_STAV_ZRUSENY,

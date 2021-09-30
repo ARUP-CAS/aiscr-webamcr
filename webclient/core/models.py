@@ -175,7 +175,8 @@ class KonkretniOpravneni(models.Model):
         return str(self.id) + " - " + self.druh_opravneni
 
     def over_konkretni_opravneni(self, zaznam, uzivatel):
-        model_zaznamu = zaznam.__class__.__name__
+        if zaznam:
+            model_zaznamu = zaznam.__class__.__name__  # osetrit kdyz prijde prazdne
         if self.druh_opravneni == self.DruhyOpravneni.STAV:
             if eval(self.porovnani_stavu + "(zaznam.stav, self.stav)"):
                 pass
@@ -216,6 +217,14 @@ class KonkretniOpravneni(models.Model):
                     pass
                 else:
                     return False
+            elif model_zaznamu == "Pian":
+                if (
+                    zaznam.dokumentacni_jednotka.archeologicky_zaznam.akce.organizace
+                    == uzivatel.organizace
+                ):  # potvrdit si
+                    pass
+                else:
+                    return False
             else:
                 if zaznam.organizace == uzivatel.organizace:
                     pass
@@ -229,7 +238,7 @@ class KonkretniOpravneni(models.Model):
         return True
 
 
-def over_opravneni_with_exception(zaznam, request):
+def over_opravneni_with_exception(zaznam=None, request=None):
     logger.debug(str(request.resolver_match.route))
     logger.debug(str(zaznam))
     try:

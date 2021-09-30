@@ -5,6 +5,7 @@ from core.message_constants import (
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
 )
+from core.models import over_opravneni_with_exception
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -28,11 +29,15 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
             qs = qs.filter(vypis_cely__icontains=self.q)
         return qs
 
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)
+
 
 @login_required
 @require_http_methods(["POST", "GET"])
 def create_osoba(request):
-
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         form = OsobaForm(request.POST)
         next_url = request.POST.get("next", "/")
@@ -77,6 +82,14 @@ class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
 
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)
+
 
 class UserLoginView(LoginView):
     authentication_form = AuthUserLoginForm
+
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)

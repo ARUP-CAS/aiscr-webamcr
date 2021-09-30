@@ -1,6 +1,7 @@
 import logging
 
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
+from core.models import over_opravneni_with_exception
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms import inlineformset_factory
@@ -28,6 +29,9 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def edit_objekt(request, komp_ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
+    over_opravneni_with_exception(
+        komponenta.dokumentacni_jednotka.archeologicky_zaznam, request
+    )
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(
         HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
@@ -61,6 +65,9 @@ def edit_objekt(request, komp_ident_cely):
 @require_http_methods(["POST"])
 def edit_predmet(request, komp_ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
+    over_opravneni_with_exception(
+        komponenta.dokumentacni_jednotka.archeologicky_zaznam, request
+    )
     druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
     specifikce_predmetu_choices = list(
         Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(

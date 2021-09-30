@@ -38,6 +38,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import get_cadastre_from_point
+from core.models import over_opravneni_with_exception
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -83,12 +84,14 @@ def get_detail_context(sn, request):
 @login_required
 @require_http_methods(["GET"])
 def index(request):
+    over_opravneni_with_exception(request=request)
     return render(request, "pas/index.html")
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         form = CreateSamostatnyNalezForm(request.POST, user=request.user)
         form_coor = CoordinatesDokumentForm(request.POST)
@@ -159,6 +162,7 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
+    over_opravneni_with_exception(sn, request)
     context = get_detail_context(sn=sn, request=request)
     if sn.geom:
         geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
@@ -179,6 +183,7 @@ def detail(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(sn, request)
     if sn.stav == SN_ARCHIVOVANY:
         raise PermissionDenied()
     kwargs = {"projekt_disabled": "disabled"}
@@ -243,6 +248,7 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def edit_ulozeni(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(sn, request)
     predano_required = True if sn.stav == SN_POTVRZENY else False
     if request.method == "POST":
         form = PotvrditNalezForm(
@@ -260,17 +266,14 @@ def edit_ulozeni(request, ident_cely):
             logger.debug(form.errors)
     else:
         form = PotvrditNalezForm(instance=sn, predano_required=predano_required)
-    return render(
-        request,
-        "pas/edit.html",
-        {"form": form},
-    )
+    return render(request, "pas/edit.html", {"form": form},)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(sn, request)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -304,6 +307,7 @@ def odeslat(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
+    over_opravneni_with_exception(sn, request)
     if sn.stav != SN_ZAPSANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -333,6 +337,7 @@ def odeslat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def potvrdit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(sn, request)
     if sn.stav != SN_ODESLANY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -352,6 +357,7 @@ def potvrdit(request, ident_cely):
 
 def archivovat(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(sn, request)
     if sn.stav != SN_POTVRZENY:
         raise PermissionDenied()
     if request.method == "POST":
@@ -390,11 +396,16 @@ class SamostatnyNalezListView(
         )
         return qs
 
+    def get(self, request):
+        over_opravneni_with_exception(request=request)
+        super().get(request)
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     nalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    over_opravneni_with_exception(nalez, request)
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory
@@ -417,6 +428,7 @@ def smazat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zadost(request):
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         form = CreateZadostForm(request.POST)
         if form.is_valid():
@@ -453,9 +465,7 @@ def zadost(request):
                 )
                 s.save()
                 Historie(
-                    typ_zmeny=SPOLUPRACE_ZADOST,
-                    uzivatel=request.user,
-                    vazba=hv,
+                    typ_zmeny=SPOLUPRACE_ZADOST, uzivatel=request.user, vazba=hv,
                 ).save()
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
@@ -499,11 +509,16 @@ class UzivatelSpolupraceListView(
             return {"exclude": ("smazani",)}
         return {}
 
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def aktivace(request, pk):
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    over_opravneni_with_exception(spoluprace, request)
     if request.method == "POST":
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
@@ -533,6 +548,7 @@ def aktivace(request, pk):
 @require_http_methods(["GET", "POST"])
 def deaktivace(request, pk):
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    over_opravneni_with_exception(spoluprace, request)
     if request.method == "POST":
         spoluprace.set_neaktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
@@ -562,6 +578,7 @@ def deaktivace(request, pk):
 @require_http_methods(["GET", "POST"])
 def smazat_spolupraci(request, pk):
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
+    over_opravneni_with_exception(spoluprace, request)
     if request.method == "POST":
         historie = spoluprace.historie
         resp1 = spoluprace.delete()
