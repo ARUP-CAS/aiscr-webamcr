@@ -56,6 +56,10 @@ var goldIcon = new L.Icon({
         zoom: 7,
         layers: [cuzkZM, poi_other],
         fullscreenControl: true,
+        contextmenu: true,
+        contextmenuWidth: 140,
+	    contextmenuItems: []
+
     }).setView([49.84, 15.17], 7);;
 
     var baseLayers = {
@@ -314,6 +318,35 @@ function map_show_edit(show, show_go_back){
 
 map_show_edit(false)
 
+map.on('contextmenu',(e) => {
+
+    var features = [];
+    map.contextmenu.removeAllItems();
+    map.contextmenu.addItem({text:'Přenes do popředí:',disabled:true})
+    map.eachLayer(function (layer) {
+       if (layer instanceof L.Polyline || layer instanceof L.Polygon ){
+         if(layer.getBounds().contains(e.latlng)) {
+          features.push(layer.getTooltip().getContent());
+           //console.log(layer.getTooltip().getContent());
+           map.contextmenu.addItem({
+           text: layer.getTooltip().getContent(),
+           callback: function (){layer.bringToFront() }
+           })
+         }
+       }
+       // do something with the layer
+     });
+     if(features.length == 0){
+       map.contextmenu.hide();
+     } else {
+      map.contextmenu.showAt(e.latlng, features)
+     }
+
+   //  console.log(markersLayer.length())
+});
+
+
+
 map.on('draw:edited', function (e) {
 
     var layers = e.layers;
@@ -428,6 +461,7 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         }
 
         geom.on('click', function (e) {
+            console.log("cc")
             if(global_map_can_grab_geom_from_map!==false){
                 $.ajax({
                     type: "GET",
@@ -480,12 +514,12 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
-        mouseOverGeometry(L.polygon(coor).bindTooltip(text).addTo(layer));
+        mouseOverGeometry(L.polygon(coor).bindTooltip(text,{sticky: true }).addTo(layer));
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push([i.split(" ")[1],i.split(" ")[0]])
         })
-        mouseOverGeometry(L.polyline(coor).bindTooltip(text).addTo(layer));
+        mouseOverGeometry(L.polyline(coor).bindTooltip(text,{sticky: true }).addTo(layer));
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
         coor.push([i.split(" ")[1],i.split(" ")[0]])
