@@ -93,6 +93,14 @@ L.Control.Coordinates = L.Control.extend({
 		var className = 'leaflet-control-coordinates',
 			container = this._container = L.DomUtil.create('div', className),
 			options = this.options;
+		
+		if (!L.Browser.touch) { //ToDo: zmenit/pridat
+			L.DomEvent
+				.disableClickPropagation(container)
+				.disableScrollPropagation(container);
+		} else {
+			L.DomEvent.on(container, 'click', L.DomEvent.stopPropagation);
+		}
 
 		//label containers
 		this._labelcontainer = L.DomUtil.create("div", "uiElement label", container);
@@ -118,6 +126,11 @@ L.Control.Coordinates = L.Control.extend({
 
 		L.DomEvent.on(this._inputX, 'keyup', this._handleKeypress, this);
 		L.DomEvent.on(this._inputY, 'keyup', this._handleKeypress, this);
+		L.DomEvent.on(container, 'click', function(ev){ //ToDo: zmenit/pridat
+			if(ev.target!==this._inputY && ev.target!==this._inputX){
+			this.collapse();
+			}
+		}, this);
 
 		//connect to mouseevents
 		map.on("mousemove", this._update, this);
