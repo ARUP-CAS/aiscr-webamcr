@@ -112,14 +112,10 @@ crossorigin=""/>
             $('input.float').on('input', function () {
                 if(document.getElementById('detector_system_coordinates').value == 1){
                     this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-                    if (set_numeric_coordinates()) {
-                        addUniquePointToPoiLayer($("#detector_coordinates_x").val(), $("#detector_coordinates_y").val())
-                    }
+                    set_numeric_coordinates()
                 } else if(document.getElementById('detector_system_coordinates').value == 2){
                     this.value = this.value.replace(/-[^0-9.]/g, '').replace(/-(\..*)\./g, '$1');
-                    if ( set_numeric_coordinates()) {
-                        addUniquePointToPoiLayer(point_global_WGS84[0],point_global_WGS84[1])
-                    }
+                    set_numeric_coordinates()
                 }
             });
                 })

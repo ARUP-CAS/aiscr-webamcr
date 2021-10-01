@@ -260,14 +260,15 @@ var global_map_can_edit = true;
                 jtsk_coor = converToJTSK(corX, corY);
                 point_global_WGS84 = [Math.round(corX * 1000000) / 1000000, Math.round(corY * 1000000) / 1000000]
                 point_global_JTSK = [-Math.round(jtsk_coor[0] * 100) / 100, -Math.round(jtsk_coor[1] * 100) / 100]
+                addUniquePointToPoiLayer($("#detector_coordinates_x").val(), $("#detector_coordinates_y").val())
                 return true;
             } else if(document.getElementById('detector_system_coordinates').value ==2){
-                $.getJSON( "https://epsg.io/trans?x="+Math.round(corX * 100) / 100+"&y="+Math.round(corY * 100) / 100+"&s_srs=5514&t_srs=4326", function(data){
-                            point_global_WGS84 = [Math.round(data.y * 1000000) / 1000000, Math.round(data.x * 1000000) / 1000000]
-                            point_global_JTSK = [Math.round(corX * 100) / 100, Math.round(corY * 100) / 100]
+                $.getJSON( "https://epsg.io/trans?x="+Math.round(corX * 100.0) / 100+"&y="+Math.round(corY * 100.0) / 100+"&s_srs=5514&t_srs=4326", async function(data){
+                            point_global_WGS84 = [Math.round(data.y * 1000000.0) / 1000000.0, Math.round(data.x * 1000000.0) / 1000000.0]
+                            point_global_JTSK = [Math.round(corX * 100.0) / 100.0, Math.round(corY * 100.0) / 100.0]
+                            addUniquePointToPoiLayer(point_global_WGS84[0],point_global_WGS84[1])
                             return true;
-
-                        });
+                        })
 
 
             }
