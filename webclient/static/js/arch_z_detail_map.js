@@ -146,24 +146,24 @@ L.drawLocal = {
             // #TODO: this should be reorganized where actions are nested in actions
             // ex: actions.undo  or actions.cancel
             actions: {
-                title: 'Zruš kresbu',
-                text: 'Zruš'
+                title: 'Storno',
+                text: 'Storno'
             },
             finish: {
-                title: 'Ukonči kresbu',
-                text: 'Ukonči'
+                title: 'Dokončit kresbu',
+                text: 'Dokončit'
             },
             undo: {
-                title: 'Smaž poslední nakreslený bod',
-                text: 'Smaž poslední bod'
+                title: 'Krok zpět',
+                text: 'Krok zpět'
             },
             buttons: {
-                polyline: 'Nakresli linii',
-                polygon: 'Nakresli polygon',
-                rectangle: 'Nakresli obdélník',
-                circle: 'Nakresli kruh',
-                marker: 'Nakresli značku',
-                circlemarker: 'Nakresli kruhovou značku'
+                polyline: 'Přidat linii',
+                polygon: 'Přidat polygon',
+                rectangle: 'Přidat obdélník',
+                circle: 'Přidat kruh',
+                marker: 'Přidat bod',
+                circlemarker: 'Přidat kruhový bod'
             }
         },
         handlers: {
@@ -214,22 +214,22 @@ L.drawLocal = {
         toolbar: {
             actions: {
                 save: {
-                    title: 'Potvrď změny',
-                    text: 'Potvrď'
+                    title: 'Dokončit',
+                    text: 'Dokončit'
                 },
                 cancel: {
-                    title: 'Zruš editaci a zruš změny',
-                    text: 'Zruš'
+                    title: 'Storno',
+                    text: 'Storno'
                 },
                 clearAll: {
-                    title: 'Smaž vrstvu',
-                    text: 'Smaž'
+                    title: 'Smazat prvek',
+                    text: 'Smazat'
                 }
             },
             buttons: {
-                edit: 'Uprav vrstvy',
+                edit: 'Uprav vymezení',
                 editDisabled: 'Neexistuje vrstva k editaci',
-                remove: 'Smaž vrstvy',
+                remove: 'Smazat prvek',
                 removeDisabled: 'Neexistuje vrstva ke smazání'
             }
         },
@@ -461,7 +461,6 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         }
 
         geom.on('click', function (e) {
-            console.log("cc")
             if(global_map_can_grab_geom_from_map!==false){
                 $.ajax({
                     type: "GET",
