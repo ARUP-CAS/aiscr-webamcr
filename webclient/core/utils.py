@@ -50,7 +50,7 @@ def get_cadastre_from_point(point):
 def get_centre_point(bod, geom):
     try:
         [x0, x1, xlength] = [0.0, 0.0, 1]
-        bod.zoom = 19
+        bod.zoom = 17
         if isinstance(geom[0], float):
             [x0, x1, xlength] = [geom[0], geom[1], 1]
         elif isinstance(geom[0][0], float):
