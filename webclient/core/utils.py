@@ -28,7 +28,7 @@ def calculate_crc_32(file):
 
 def get_cadastre_from_point(point):
     query = (
-        "select id, nazev from public.ruian_katastr where "
+        "select id, nazev_stary from public.ruian_katastr where "
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
     try:

@@ -199,33 +199,38 @@ var global_map_can_edit = true;
                     $("#detector_coordinates_x").change();
                     $("#detector_coordinates_y").change();
                     addUniquePointToPoiLayer(corX, corY, '', false)
+                    fill_katastr();
                     //
-                    let xhr = new XMLHttpRequest();
-                    xhr.open('POST', '/pas/pas-get-katastr');
-                    xhr.setRequestHeader('Content-type', 'application/json');
-                    if (typeof global_csrftoken !== 'undefined') {
-                        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
-                    } else {
-                        console.log("neni X-CSRFToken token")
-                    }
-                    xhr.onload = function () {
-                        rs = JSON.parse(this.responseText)
-                        if(rs.katastr_name){
-                            document.getElementById("id_katastr").value=rs.katastr_name
-                        }
-                    };
-                    xhr.send(JSON.stringify(
-                        {
-                            'cX': point_global_WGS84[1],
-                            'cY': point_global_WGS84[0],
-                        }))
-                    //
+                    
                 } else {
                         map.setView(e.latlng, map.getZoom() + 2)
                 }
             }
             }
     });
+
+
+    var fill_katastr=()=>{
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/pas/pas-get-katastr');
+        xhr.setRequestHeader('Content-type', 'application/json');
+        if (typeof global_csrftoken !== 'undefined') {
+            xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+        } else {
+            console.log("neni X-CSRFToken token")
+        }
+        xhr.onload = function () {
+            rs = JSON.parse(this.responseText)
+            if(rs.katastr_name){
+                document.getElementById("id_katastr").value=rs.katastr_name
+            }
+        };
+        xhr.send(JSON.stringify(
+            {
+                'cX': point_global_WGS84[1],
+                'cY': point_global_WGS84[0],
+            }))
+    }
 
     var is_in_czech_republic = (corX,corY) => {
         console.log("Test coordinates for bounding box");
@@ -261,12 +266,14 @@ var global_map_can_edit = true;
                 point_global_WGS84 = [Math.round(corX * 1000000) / 1000000, Math.round(corY * 1000000) / 1000000]
                 point_global_JTSK = [-Math.round(jtsk_coor[0] * 100) / 100, -Math.round(jtsk_coor[1] * 100) / 100]
                 addUniquePointToPoiLayer($("#detector_coordinates_x").val(), $("#detector_coordinates_y").val())
+                fill_katastr();
                 return true;
             } else if(document.getElementById('detector_system_coordinates').value ==2){
                 $.getJSON( "https://epsg.io/trans?x="+Math.round(corX * 100.0) / 100+"&y="+Math.round(corY * 100.0) / 100+"&s_srs=5514&t_srs=4326", async function(data){
                             point_global_WGS84 = [Math.round(data.y * 1000000.0) / 1000000.0, Math.round(data.x * 1000000.0) / 1000000.0]
                             point_global_JTSK = [Math.round(corX * 100.0) / 100.0, Math.round(corY * 100.0) / 100.0]
                             addUniquePointToPoiLayer(point_global_WGS84[0],point_global_WGS84[1])
+                            fill_katastr();
                             return true;
                         })
 

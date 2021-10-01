@@ -617,7 +617,7 @@ def post_pas2kat(request):
     if katastr_name is not None:
         return JsonResponse(
             {
-                "katastr_name": katastr_name.nazev,
+                "katastr_name": katastr_name.nazev_stary,
             },
             status=200,
         )
