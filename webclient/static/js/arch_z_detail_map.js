@@ -437,11 +437,11 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
                       if(data.results.length>0){
                       $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
                       }
-                      global_map_can_grab_geom_from_map=false;
+                      //global_map_can_grab_geom_from_map=false;
 
                     },
                     error: ()=>{
-                        global_map_can_grab_geom_from_map=false;
+                       // global_map_can_grab_geom_from_map=false;
                     }
                   })
             }

@@ -672,6 +672,8 @@
       }
 
       function show_form(form_id, form_to_show_next) {
+        global_map_can_grab_geom_from_map=false;
+        map_show_edit(false, false)
           let form = document.getElementById(form_id);
           if (form.style.display === "none") {
               // hide the form what was shown
@@ -745,6 +747,8 @@
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {
+          global_map_can_grab_geom_from_map=false;
+          map_show_edit(false, false)
 
           show_form(form_id, form_to_show_next);
           let forma = document.getElementById(form_id + "_id");

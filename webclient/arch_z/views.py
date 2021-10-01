@@ -1,7 +1,7 @@
 import logging
 
 import simplejson as json
-from adb.forms import CreateADBForm, create_vyskovy_bod_form, VyskovyBodFormSetHelper
+from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
     CreateAkceForm,
@@ -22,8 +22,8 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     ZAPSANI_AZ,
 )
-from core.forms import VratitForm
 from core.exceptions import MaximalEventCount
+from core.forms import VratitForm
 from core.ident_cely import get_cast_dokumentu_ident, get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
@@ -35,9 +35,9 @@ from core.message_constants import (
     DOKUMENT_JIZ_BYL_PRIPOJEN,
     DOKUMENT_USPESNE_ODPOJEN,
     DOKUMENT_USPESNE_PRIPOJEN,
+    MAXIMUM_AKCII_DOSAZENO,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    MAXIMUM_AKCII_DOSAZENO,
 )
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
@@ -200,8 +200,9 @@ def detail(request, ident_cely):
                 instance=jednotka.adb, prefix=jednotka.adb.ident_cely
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["vyskovy_bod_formset"] = \
-                vyskovy_bod_formset(instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb")
+            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
+                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
+            )
             dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
             dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
         dj_forms_detail.append(dj_form_detail)
@@ -636,16 +637,18 @@ def post_akce2kat(request):
     katastr_name = body["cadastre"]
     pian_ident_cely = body["pian"]
 
-    [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
-    if len(str(poi)) > 0:
-        return JsonResponse(
-            {
-                "lat": str(poi.lat),
-                "lng": str(poi.lng),
-                "zoom": str(poi.zoom),
-                "geom": str(geom).split(";")[1].replace(", ", ",") if geom else None,
-            },
-            status=200,
-        )
-    else:
-        return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)
+    if len(katastr_name) > 0:
+        [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
+        if len(str(poi)) > 0:
+            return JsonResponse(
+                {
+                    "lat": str(poi.lat),
+                    "lng": str(poi.lng),
+                    "zoom": str(poi.zoom),
+                    "geom": str(geom).split(";")[1].replace(", ", ",")
+                    if geom
+                    else None,
+                },
+                status=200,
+            )
+    return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)

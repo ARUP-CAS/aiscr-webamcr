@@ -58,6 +58,19 @@ L.control.coordinates({
 var poi_sugest = L.layerGroup();
 var poi_correct = L.layerGroup();
 
+L.easyButton('bi bi-skip-backward-fill', function () {
+    poi_correct.clearLayers();
+    if (poi_sugest.getLayers().length) {
+        let ll = poi_sugest.getLayers()[0]._latlng;
+        map.setView(ll, 18);
+        try {
+            document.getElementById('id_latitude').value = ll.lat;
+            document.getElementById('id_longitude').value = ll.lng;
+        } catch (e) {
+            console.log("Error: Element id_latitude/latitude doesn exists")
+        }
+    }
+}).addTo(map)
 
 
 var button_map_lock = L.easyButton({
@@ -81,19 +94,7 @@ var button_map_lock = L.easyButton({
 });
 button_map_lock.addTo(map)
 
-L.easyButton('bi bi-skip-backward-fill', function () {
-    poi_correct.clearLayers();
-    if (poi_sugest.getLayers().length) {
-        let ll = poi_sugest.getLayers()[0]._latlng;
-        map.setView(ll, 18);
-        try {
-            document.getElementById('id_latitude').value = ll.lat;
-            document.getElementById('id_longitude').value = ll.lng;
-        } catch (e) {
-            console.log("Error: Element id_latitude/latitude doesn exists")
-        }
-    }
-}).addTo(map)
+
 
 //https://github.com/pointhi/leaflet-color-markers
 var greenIcon = new L.Icon({
