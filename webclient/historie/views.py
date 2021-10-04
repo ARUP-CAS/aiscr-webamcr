@@ -76,7 +76,7 @@ class SpolupraceHistorieListView(HistorieListView):
             vazba__spoluprace_historie__pk=spoluprace_ident
         ).order_by("-datum_zmeny")
 
-    def get(self, request, ident_cely, *args, **kwargs):
-        zaznam = get_object_or_404(UzivatelSpoluprace, ident_cely=ident_cely)
+    def get(self, request, pk, *args, **kwargs):
+        zaznam = get_object_or_404(UzivatelSpoluprace, ident_cely=pk)
         over_opravneni_with_exception(zaznam, request)
         super().get(request, *args, **kwargs)

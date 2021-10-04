@@ -81,6 +81,9 @@ def zapsat(request, dj_ident_cely):
 @require_http_methods(["POST"])
 def zapsat_vyskove_body(request, adb_ident_cely):
     adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
+    over_opravneni_with_exception(
+        adb.dokumentacni_jednotka.archeologicky_zaznam, request
+    )
     vyskovy_bod_formset = inlineformset_factory(
         Adb, VyskovyBod, form=create_vyskovy_bod_form(), extra=3,
     )

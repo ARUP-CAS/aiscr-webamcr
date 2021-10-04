@@ -89,6 +89,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def index_model_3D(request):
+    over_opravneni_with_exception(request=request)
     return render(request, "dokument/index_model_3D.html")
 
 
@@ -246,6 +247,10 @@ class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, Filter
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
         )
         return qs
+
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)
 
 
 @login_required
@@ -447,6 +452,7 @@ def zapsat(request, arch_z_ident_cely):
 def create_model_3D(request):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         form_d = CreateModelDokumentForm(request.POST)
         form_extra = CreateModelExtraDataForm(request.POST)
@@ -674,7 +680,7 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
     def get(self, request, *args, **kwargs):
-        # To be added permision rules
+        over_opravneni_with_exception(request=request)
         super().get(request, *args, **kwargs)
 
 
@@ -683,6 +689,10 @@ class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
         qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
         qs = qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
         return qs
+
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        super().get(request, *args, **kwargs)
 
 
 def get_hierarchie_dokument_typ():

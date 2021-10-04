@@ -44,6 +44,7 @@ def index(request):
 @require_http_methods(["POST", "GET"])
 def delete_file(request, pk):
     s = get_object_or_404(Soubor, pk=pk)
+    over_opravneni_with_exception(request=request)
     if request.method == "POST":
         s.path.delete()
         items_deleted = s.delete()
@@ -72,6 +73,7 @@ def delete_file(request, pk):
 @require_http_methods(["GET"])
 def download_file(request, pk):
     soubor = get_object_or_404(Soubor, id=pk)
+    over_opravneni_with_exception(request=request)
     path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
     if os.path.exists(path):
         content_type = mimetypes.guess_type(soubor.path.name)[

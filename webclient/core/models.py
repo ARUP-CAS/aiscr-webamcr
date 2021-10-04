@@ -14,6 +14,7 @@ from .constants import (
     ZAPSANI_DOK,
     ZAPSANI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
+    ZAPSANI_PIAN,
 )
 import logging
 
@@ -195,6 +196,7 @@ class KonkretniOpravneni(models.Model):
                         ZAPSANI_DOK,
                         ZAPSANI_PROJ,
                         SCHVALENI_OZNAMENI_PROJ,
+                        ZAPSANI_PIAN,
                     ],
                     uzivatel=uzivatel,
                     vazba=zaznam.historie,
