@@ -7,7 +7,7 @@ from pian.models import Pian
 
 class PianCreateForm(forms.ModelForm):
 
-    geom = GeometryField(required=True, widget=HiddenInput())
+    geom = GeometryField(srid=4326, required=True, widget=HiddenInput())
 
     class Meta:
         model = Pian

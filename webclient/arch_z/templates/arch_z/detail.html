@@ -674,8 +674,7 @@
       }
 
       function show_form(form_id, form_to_show_next) {
-        global_map_can_grab_geom_from_map=false;
-        map_show_edit(false, false)
+        clearUnfinishedEditGeometry()
           let form = document.getElementById(form_id);
           if (form.style.display === "none") {
               // hide the form what was shown
@@ -705,7 +704,7 @@
                   map.setView([rs.lat, rs.lng], rs.zoom)
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce(rs.lat, rs.lng, pian_id, drawnItems)
+                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id)
                   }
                   if(ask_only_once){
                     ask_only_once=false;
@@ -744,13 +743,15 @@
                 })
               };
 
+          }else if (form_id.includes("detail_pian_form_")){
+            map_show_edit(true, false)
+            loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
       }
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {
-          global_map_can_grab_geom_from_map=false;
-          map_show_edit(false, false)
+          clearUnfinishedEditGeometry()
 
           show_form(form_id, form_to_show_next);
           let forma = document.getElementById(form_id + "_id");

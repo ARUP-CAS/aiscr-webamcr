@@ -1,6 +1,7 @@
 var global_map_can_edit=false;
 
 var global_map_can_grab_geom_from_map=false;
+var global_map_element="id_geom";
 
 var blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
@@ -127,6 +128,7 @@ var edit_buttons=L.easyBar(buttons)
 map.addControl(edit_buttons)
 
 var drawnItems = new L.FeatureGroup();
+var drawnItemsBuffer = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
 L.EditToolbar.Delete.include({
@@ -345,22 +347,29 @@ map.on('contextmenu',(e) => {
    //  console.log(markersLayer.length())
 });
 
-
+function disableSavePianButton(){
+    console.log("disableSavePianButton")
+    console.log(document.getElementById(global_map_element).value)
+    if(document.getElementById(global_map_element).value==='undefined'){
+        document.getElementById("editPianButton").disabled = true;
+        console.log("disableSavePianButton:disa")
+    } else {
+        document.getElementById("editPianButton").disabled = false;
+        console.log("disableSavePianButton:enable")
+    }
+}
 
 map.on('draw:edited', function (e) {
-
-    var layers = e.layers;
-    var countOfEditedLayers = 0;
-    layers.eachLayer(function(layer) {
-        countOfEditedLayers++;
-    });
-    console.log("Edited " + countOfEditedLayers + " layers");
-    addLogText("edit")
+    addLogText("edited")
     geomToText();
 });
 map.on('draw:deleted', function(e) {
     addLogText("deleted")
-    addGeometry("")
+    addGeometry()
+    disableSavePianButton();
+    //console.log(document.getElementById(global_map_element));
+    //console.log(document.getElementById("editPianButton"))//editPianButton
+
 })
 
 map.on('draw:created', function(e) {
@@ -385,6 +394,7 @@ map.on('draw:created', function(e) {
         }
         addLogText("created")
         geomToText();
+        disableSavePianButton();
 
     }
 });
@@ -433,7 +443,7 @@ function geomToText(){
             }
             text +=")"
         }
-        addGeometry(text);
+        addGeometry(text,global_map_can_edit);
     });
 
 
@@ -442,8 +452,8 @@ function geomToText(){
 
 
 
-var addPointToPoiLayerWithForce = (lat, long, text,lai) => {
-        L.marker([lat, long], {icon: redIcon,zIndexOffset:2000}).bindPopup(text).addTo(drawnItems);
+var addPointToPoiLayerWithForce = (geom, layer,text) => {
+        L.marker(geom, {icon: redIcon,zIndexOffset:2000}).bindPopup(text).addTo(layer);
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
@@ -549,9 +559,86 @@ function addLogText(text) {
 }
 
 function addGeometry(text) {
-    let geom=document.getElementById("id_geom");
+    console.log("add-geometry: "+global_map_element)
+    let geom=document.getElementById(global_map_element);
     geom.value=text;
     if(poi_sugest.getLayers().size){
         edit_buttons.enable();
     }
+}
+
+function clearUnfinishedEditGeometry(){
+    global_map_element="id_geom";
+    global_map_can_grab_geom_from_map=false;
+    map_show_edit(false, false)
+    drawnItems.clearLayers();
+    drawnItemsBuffer.eachLayer(function (layer){
+        layer.addTo(poi_dj)
+    })
+}
+
+function loadGeomToEdit(ident_cely){
+    drawnItems.clearLayers();
+    drawnItemsBuffer.clearLayers();
+    let drawnItemsCount=0;
+    map.eachLayer(function (layer) {
+        if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Marker ){
+            let content="";
+            try{
+                content = layer.getPopup().getContent();
+            }catch(ee){
+                try{
+                    content = layer.getTooltip().getContent();
+                } catch(eee){
+                   // console.log(layer)
+                }
+            }
+            if(content==ident_cely){
+                drawnItemsCount=drawnItemsCount+1;
+                if(layer instanceof L.Marker){
+                    let latlngs=layer.getLatLng()
+                    if(drawnItemsCount==1){
+                        layer.addTo(drawnItems);
+                        L.marker([latlngs.lat,latlngs.lng],{icon: blueIcon}).bindPopup(content).addTo(drawnItemsBuffer);
+                        //drawnItemsBuffer.push({type:"Marker", coor:layer.getLatLng(), content:content});
+                    } else{
+                       // L.marker([latlngs.lat,latlngs.lng]).bindPopup(content).addTo(drawnItemsBuffer);
+                        layer.remove();
+                    }
+                } else if (layer instanceof L.Polygon){
+                    if(drawnItemsCount>1){
+                        drawnItems.clearLayers();
+                    }
+                    layer.addTo(drawnItems);
+                    let latlngs=layer.getLatLngs()
+                    let coordinates=[];
+                    for (var i = 0; i < latlngs.length; i++) {
+                        for(var j=0; j< latlngs[i].length;j++){
+                            coordinates.push([latlngs[i][j].lat, latlngs[i][j].lng])
+                        }
+                    }
+                    L.polygon(coordinates).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
+                    //drawnItemsBuffer.push({type:"Polygon", coor:layer.getLatLngs(), content:content});
+                } else if (layer instanceof L.Polyline) {
+                    if(drawnItemsCount>1){
+                        drawnItems.clearLayers();
+                    }
+                    layer.addTo(drawnItems);
+                    let latlngs=layer.getLatLngs()
+                    let coordinates=[];
+                    for (let i in latlngs){
+                        coordinates.push([latlngs[i].lat,latlngs[i].lng]);
+                    }
+                    L.polyline(coordinates).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
+                    //drawnItemsBuffer.push({type:"Polyline", coor:layer.getLatLngs(), content:content});
+                }
+            }
+        }
+    })
+    if(drawnItemsCount){
+        global_map_element="id_"+ident_cely+"-geom"
+        geomToText();
+        drawControl._toolbars.edit._modes.edit.handler.enable();
+    }
+
 }
