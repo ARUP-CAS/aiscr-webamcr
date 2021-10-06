@@ -159,20 +159,9 @@ def post_ajax_get_point(request):
 @require_http_methods(["GET", "POST"])
 def create(request):
     if request.method == "POST":
-        hlavni_katastr: str = request.POST.get("hlavni_katastr")
-        hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
-        okres_name = (
-            (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
-        )
-        katastr = RuianKatastr.objects.filter(
-            Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)
-        ).first()
-        post = request.POST.copy()
-        post["hlavni_katastr"] = str(katastr.id)
-        request.POST = post
+        request.POST = katastr_text_to_id(request)
         form_projekt = CreateProjektForm(request.POST)
         form_oznamovatel = OznamovatelForm(request.POST)
-        print(post)
         if form_projekt.is_valid():
             logger.debug("Form is valid")
             lat = form_projekt.cleaned_data["latitude"]
@@ -233,6 +222,7 @@ def edit(request, ident_cely):
         raise PermissionDenied()
     required_fields = get_required_fields(projekt)
     if request.method == "POST":
+        request.POST = katastr_text_to_id(request)
         form = EditProjektForm(request.POST, instance=projekt, required=required_fields)
         if form.is_valid():
             logger.debug("Form is valid")
@@ -772,3 +762,17 @@ def get_required_fields(projekt):
             "datum_ukonceni",
         ]
     return required_fields
+
+
+def katastr_text_to_id(request):
+    hlavni_katastr: str = request.POST.get("hlavni_katastr")
+    hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
+    okres_name = (
+        (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
+    )
+    katastr = RuianKatastr.objects.filter(
+        Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)
+    ).first()
+    post = request.POST.copy()
+    post["hlavni_katastr"] = katastr.id
+    return post
