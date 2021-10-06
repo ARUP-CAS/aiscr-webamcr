@@ -70,10 +70,7 @@ class CreateProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Detail projektu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Detail projektu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -94,10 +91,7 @@ class CreateProjektForm(forms.ModelForm):
                             ),
                             css_class="col-sm-9",
                         ),
-                        Div(
-                            Div(id="projectMap"),
-                            css_class="col-sm-3",
-                        ),
+                        Div(Div(id="projectMap"), css_class="col-sm-3",),
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -164,8 +158,8 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "hlavni_katastr": autocomplete.ModelSelect2(
-                url="heslar:katastr-autocomplete"
+            "hlavni_katastr": forms.Textarea(
+                attrs={"rows": 1, "cols": 20, "readonly": "readonly",},
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -206,10 +200,7 @@ class EditProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Editace projektu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Editace projektu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -228,10 +219,7 @@ class EditProjektForm(forms.ModelForm):
                             ),
                             css_class="col-sm-9",
                         ),
-                        Div(
-                            Div(id="projectMap"),
-                            css_class="col-sm-3",
-                        ),
+                        Div(Div(id="projectMap"), css_class="col-sm-3",),
                         css_class="row",
                     ),
                     Div(
@@ -278,6 +266,9 @@ class EditProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+        self.fields[
+            "hlavni_katastr"
+        ].widget.template_name = "core/select_to_textarea.html"
         for key in self.fields.keys():
             if required:
                 self.fields[key].required = True if key in required else False
@@ -314,15 +305,11 @@ class NavrhnoutZruseniProjektForm(forms.Form):
             Div(
                 Div(
                     Div(
-                        HTML(_("Návrh zrušení projektu")),
-                        css_class="app-fx app-left",
+                        HTML(_("Návrh zrušení projektu")), css_class="app-fx app-left",
                     ),
                     css_class="card-header",
                 ),
-                Div(
-                    "reason",
-                    css_class="card-body",
-                ),
+                Div("reason", css_class="card-body",),
                 css_class="card app-card-form",
             ),
             Div(
@@ -386,10 +373,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Přihlášení projektu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Přihlášení projektu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -446,10 +430,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Zahájení výzkumu ")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Zahájení výzkumu ")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -497,10 +478,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Ukončení výzkumu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Ukončení výzkumu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(

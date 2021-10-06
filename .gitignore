@@ -77,3 +77,4 @@ docker-compose-db-yml
 Dockerfile-DB
 scripts/restore_database.sh
 docker-compose-debug-yml
+docker-compose-db-prod-yml
