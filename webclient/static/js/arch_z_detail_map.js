@@ -189,7 +189,7 @@ L.drawLocal = {
                 text: 'Storno'
             },
             finish: {
-                title: 'Dokončit kresbu',
+                title: 'Dokončit',
                 text: 'Dokončit'
             },
             undo: {
@@ -208,7 +208,7 @@ L.drawLocal = {
         handlers: {
             circle: {
                 tooltip: {
-                    start: 'pro akreslení kruhu klikni a táhni.'
+                    start: 'Pro nakreslení kruhu klikni a táhni.'
                 },
                 radius: 'Poloměr'
             },
@@ -261,14 +261,14 @@ L.drawLocal = {
                     text: 'Storno'
                 },
                 clearAll: {
-                    title: 'Smazat prvek',
+                    title: 'Smazat',
                     text: 'Smazat'
                 }
             },
             buttons: {
                 edit: 'Uprav vymezení',
                 editDisabled: 'Neexistuje vrstva k editaci',
-                remove: 'Smazat prvek',
+                remove: 'Smazat',
                 removeDisabled: 'Neexistuje vrstva ke smazání'
             }
         },
