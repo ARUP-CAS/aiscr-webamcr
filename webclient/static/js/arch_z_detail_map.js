@@ -93,7 +93,7 @@ L.control.zoom(
                 states: [{
                     stateName: 'add-lock',
                     icon: 'glyphicon-lock',
-                    title: 'Zamkni pro změny',
+                    title: 'Vypnout‌ ‌editaci‌‌',
                     onClick: function(control) {
                         global_map_can_edit=!global_map_can_edit;
                         //toggleMarkerButton(false);
@@ -105,14 +105,14 @@ L.control.zoom(
                     }, {
                     icon: 'glyphicon-pencil',
                     stateName: 'remove-lock',
+                    title: 'Zapnout‌ ‌editaci‌',
                     onClick: function(control) {
                         global_map_can_edit=!global_map_can_edit;
                         //toggleMarkerButton(true);
                         map.addControl(drawControl);
                         console.log("odemknout")
                         control.state('add-lock');
-                    },
-                    title: 'Odemkni pro změny'
+                    }
                     }]
             }),*/
 
@@ -167,7 +167,7 @@ L.DrawToolbar.include({
 				handler: new L.Draw.Circle(map, this.options.circle),
 				title: L.drawLocal.draw.toolbar.buttons.circle
 			}
-			
+
         ];
     }
 });

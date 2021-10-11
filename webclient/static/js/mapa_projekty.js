@@ -77,7 +77,7 @@ var button_map_lock = L.easyButton({
     states: [{
         stateName: 'add-lock',
         icon: 'bi bi-lock',
-        title: 'add-lock',
+        title: 'Vypnout‌ ‌editaci‌‌',
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('remove-lock');
@@ -85,11 +85,11 @@ var button_map_lock = L.easyButton({
     }, {
         icon: 'bi bi-geo-alt',
         stateName: 'remove-lock',
+        title: 'Zapnout‌ ‌editaci‌',
         onClick: function (control) {
             global_map_can_edit = !global_map_can_edit;
             control.state('add-lock');
-        },
-        title: 'remove markers'
+        }
     }]
 });
 button_map_lock.addTo(map)

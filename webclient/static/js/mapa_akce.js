@@ -63,7 +63,7 @@ L.easyButton({
         states: [{
             stateName: 'add-lock',
             icon: 'bi-lock',
-            title: 'Zamkni pro změny',
+            title: 'Vypnout‌ ‌editaci‌‌',
             onClick: function(control) {
                 global_map_can_edit=!global_map_can_edit;
                 //toggleMarkerButton(false);
@@ -75,14 +75,14 @@ L.easyButton({
             }, {
             icon: 'bi bi-pencil',
             stateName: 'remove-lock',
+            title: 'Zapnout‌ ‌editaci‌',
             onClick: function(control) {
                 global_map_can_edit=!global_map_can_edit;
                 //toggleMarkerButton(true);
                 map.addControl(drawControl);
                 console.log("odemknout")
                 control.state('add-lock');
-            },
-            title: 'Odemkni pro změny'
+            }
             }]
     }),
 
