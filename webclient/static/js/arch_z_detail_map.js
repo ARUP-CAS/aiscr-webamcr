@@ -134,6 +134,43 @@ map.addLayer(drawnItems);
 L.EditToolbar.Delete.include({
     removeAllLayers: false
 });
+L.DrawToolbar.include({
+    getModeHandlers: function (map) {
+        return [
+            {
+				enabled: this.options.marker,
+				handler: new L.Draw.Marker(map, this.options.marker),
+				title: L.drawLocal.draw.toolbar.buttons.marker
+			},
+			{
+				enabled: this.options.circlemarker,
+				handler: new L.Draw.CircleMarker(map, this.options.circlemarker),
+				title: L.drawLocal.draw.toolbar.buttons.circlemarker
+			},
+            {
+				enabled: this.options.polyline,
+				handler: new L.Draw.Polyline(map, this.options.polyline),
+				title: L.drawLocal.draw.toolbar.buttons.polyline
+			},
+			{
+				enabled: this.options.polygon,
+				handler: new L.Draw.Polygon(map, this.options.polygon),
+				title: L.drawLocal.draw.toolbar.buttons.polygon
+			},
+			{
+				enabled: this.options.rectangle,
+				handler: new L.Draw.Rectangle(map, this.options.rectangle),
+				title: L.drawLocal.draw.toolbar.buttons.rectangle
+			},
+			{
+				enabled: this.options.circle,
+				handler: new L.Draw.Circle(map, this.options.circle),
+				title: L.drawLocal.draw.toolbar.buttons.circle
+			}
+			
+        ];
+    }
+});
 L.drawLocal = {
     // format: {
     // 	numeric: {
@@ -561,7 +598,9 @@ function addLogText(text) {
 function addGeometry(text) {
     console.log("add-geometry: "+global_map_element)
     let geom=document.getElementById(global_map_element);
-    geom.value=text;
+    if(geom){
+        geom.value=text;
+    }
     if(poi_sugest.getLayers().size){
         edit_buttons.enable();
     }
