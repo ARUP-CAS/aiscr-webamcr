@@ -66,7 +66,7 @@ def edit_objekt(request, komp_ident_cely):
 def edit_predmet(request, komp_ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     over_opravneni_with_exception(
-        komponenta.dokumentacni_jednotka.archeologicky_zaznam, request
+        komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam, request
     )
     druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
     specifikce_predmetu_choices = list(
