@@ -24,10 +24,17 @@ class CreateDJForm(forms.ModelForm):
         logger.debug(jednotky)
         if instance is not None and jednotky is not None and hasattr(instance, "typ") \
                 and instance.typ is not None and instance.typ.heslo.lower() == "část akce":
-            queryset = queryset.filter(Q(heslo__iexact="část akce") | Q(heslo__iexact="celek akce"))
+            queryset = queryset.filter(Q(heslo__iexact="část akce"))
         elif jednotky is not None:
             if jednotky.filter(typ__heslo__iexact="sonda").count() > 0:
-                queryset = queryset.filter(heslo__iexact="sonda")
+                if instance.ident_cely is None:
+                    queryset = queryset.filter(heslo__iexact="sonda")
+                elif jednotky.filter(Q(typ__heslo__iexact="sonda") & Q(ident_cely__lt=instance.ident_cely)).count() > 0:
+                    queryset = queryset.filter(heslo__iexact="sonda")
+                else:
+                    queryset = queryset.filter(Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce"))
+            elif hasattr(instance, "typ") and instance.typ.heslo == "Celek akce":
+                queryset = queryset.filter(Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce"))
             elif jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
                 if jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
                     queryset = queryset.filter(heslo__iexact="část akce")
