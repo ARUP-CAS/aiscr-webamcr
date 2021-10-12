@@ -18,7 +18,8 @@ L.Control.Measure = L.Control.extend({
     //  format distance method
     formatDistance: null,
     //  define text color
-    textColor: 'black'
+    textColor: 'black',
+    title:'Measure'
   },
 
   initialize: function (options) {
@@ -29,7 +30,7 @@ L.Control.Measure = L.Control.extend({
   onAdd: function (map) {
     var className = 'leaflet-control-zoom leaflet-bar leaflet-control'
     var container = L.DomUtil.create('div', className)
-    this._createButton('&#8674;', 'Measure',
+    this._createButton('&#8674;', this.options.title,
     'leaflet-control-measure leaflet-bar-part leaflet-bar-part-top-and-bottom',
     container, this._toggleMeasure, this)
 

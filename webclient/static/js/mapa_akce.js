@@ -29,7 +29,7 @@ var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});//L.layerGroup();
 
-var map = L.map('projectMap',{zoomControl:false,  layers: [osmColor], fullscreenControl: true}).setView([49.84, 15.17], 7);
+var map = L.map('projectMap',{zoomControl:false,  layers: [osmColor]}).setView([49.84, 15.17], 7);
 
 
 
@@ -50,13 +50,19 @@ L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 
 
-L.control.zoom(
+map.addControl(new L.Control.Fullscreen({
+    title: {
+        'false': 'Celá obrazovka',
+        'true': 'Opustit celou obrazovku'
+    }
+}));
+map.addControl(new L.control.zoom(
     {
         zoomInText:'+',
-        zoomInTitle:'Zvětšit',
+        zoomInTitle:'Přiblížit',
         zoomOutText:'-',
-        zoomOutTitle:'Zmenšit'
-    }).addTo(map)
+        zoomOutTitle:'Oddálit'
+    }))
 
     var buttons = [
 L.easyButton({
@@ -90,7 +96,7 @@ L.easyButton( 'i bi-skip-backward-fill', function(){
         //gm_correct.clearLayers();
         //editableLayers.clearLayers();
         map.setView(poi_sugest.getLayers()[0]._latlng, 18);
-    },'Vrať změny')]
+    },'Výchozí stav ')]
 
 
 L.easyBar(buttons).addTo(map);

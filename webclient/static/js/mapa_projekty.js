@@ -1,62 +1,21 @@
 var global_map_can_edit = true;
 
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20})
-
-var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
-        cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
-        cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
-        cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
-
-    var map = L.map('projectMap', {
-        zoomControl:false,
-        center: [49.84, 15.17],
-        zoom: 7,
-        layers: [cuzkZM, poi_other],
-        fullscreenControl: true,
-    }).setView([49.84, 15.17], 7);;
-
-    var baseLayers = {
-        "ČÚZK - Základní mapy ČR": cuzkZM,
-        "ČÚZK - Ortofotomapa": cuzkOrt,
-        "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-        "OpenStreetMap": osmColor,
-    };
-
-    var overlays = {
-        "ČÚZK - Katastrální mapa": cuzkWMS,
-        "ČÚZK - Katastrální území": cuzkWMS2,
-        "Projekty": poi_other
-    };
-
-    L.control.layers(baseLayers, overlays).addTo(map);
-    L.control.scale(metric = "true").addTo(map);
-
-
-    L.control.zoom(
-        {
-            zoomInText: '+',
-            zoomInTitle: 'Zvětšit',
-            zoomOutText: '-',
-            zoomOutTitle: 'Zmenšit'
-        }).addTo(map);
-
-    L.control.measure().addTo(map)
-
-L.control.coordinates({
-    position:"bottomright",
-    useDMS:true,
-    labelTemplateLat:"N {y}",
-    labelTemplateLng:"E {x}",
-    useLatLngOrder:true,
-    centerUserCoordinates: true,
-    markerType: null
-}).addTo(map);
-
-//var map = L.map('projectMap').setView([49.84, 15.17], 7);
 var poi_sugest = L.layerGroup();
 var poi_correct = L.layerGroup();
+
+map.addLayer(poi_sugest);
+map.addLayer(poi_correct);
+map.addLayer(poi_other);
+
+var overlays = {
+    "ČÚZK - Katastrální mapa": cuzkWMS,
+    "ČÚZK - Katastrální území": cuzkWMS2,
+    "Projekty": poi_other
+};
+
+global_map_layers.remove(map);//remove previous overlay
+L.control.layers(baseLayers, overlays).addTo(map);
 
 L.easyButton('bi bi-skip-backward-fill', function () {
     poi_correct.clearLayers();
@@ -70,7 +29,7 @@ L.easyButton('bi bi-skip-backward-fill', function () {
             console.log("Error: Element id_latitude/latitude doesn exists")
         }
     }
-}).addTo(map)
+},'Výchozí stav ').addTo(map)
 
 
 var button_map_lock = L.easyButton({
@@ -91,10 +50,7 @@ var button_map_lock = L.easyButton({
             control.state('add-lock');
         }
     }]
-});
-button_map_lock.addTo(map)
-
-
+}).addTo(map);
 
 //https://github.com/pointhi/leaflet-color-markers
 var greenIcon = new L.Icon({
@@ -115,18 +71,6 @@ var redIcon = new L.Icon({
     shadowSize: [41, 41]
 })
 
-/*L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-    maxZoom: 18,
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
-        'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    id: 'mapbox/streets-v11',
-    tileSize: 512,
-    zoomOffset: -1
-}).addTo(map);*/
-map.addLayer(poi_sugest);
-map.addLayer(poi_correct);
-map.addLayer(poi_other);
-
 //adding other points to layer
 var getOtherPoi = () => {
 
@@ -137,11 +81,8 @@ var getOtherPoi = () => {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
     }
     xhr.onload = function () {
-        // do something to response
         poi_other.clearLayers();
-        //console.log(poi_sugest.getLayers()[0]._latlng)
         JSON.parse(this.responseText).points.forEach((point) => {
-            //if(poi_sugest.getLayers().length>0 && poi_sugest.getLayers()[0]._latlng.lat!=point.lat && poi_sugest.getLayers()[0]._latlng.lng !=point.lng)
             L.marker([point.lat, point.lng]).bindPopup(point.ident_cely).addTo(poi_other)
         })
     };
@@ -161,7 +102,6 @@ const addPointToPoiLayer = (lat, long, text) => {
                     select.val(response['value']);
                 })
         }
-        //console.log(lat+'  '+ long)
     }
 }
 
@@ -173,7 +113,6 @@ var addPointOnLoad = (lat, long, text) => {
     }
 
     map.setView([lat, long], 18)
-    //getOtherPoi();
 }
 
 map.on('zoomend', function () {
@@ -183,10 +122,10 @@ map.on('zoomend', function () {
 });
 
 map.on('click', function (e) {
-    console.log("Your zoom is: " + map.getZoom())
-
+    //console.log("Your zoom is: " + map.getZoom())
     let corX = e.latlng.lat;
     let corY = e.latlng.lng;
+    if(!global_measuring_toolbox._measuring)
     if (corY >= 12.2401111182 && corY <= 18.8531441586 && corX >= 48.5553052842 && corX <= 51.1172677679)
         if (map.getZoom() > 15) {
             try {
@@ -195,22 +134,7 @@ map.on('click', function (e) {
             } catch (e) {
                 console.log("Error: Element id_latitude/latitude doesn exists")
             }
-            //$("#detector_coordinates_x").change();
-            //$("#detector_coordinates_y").change();
             addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
-            //getOtherPoi();
-            /*let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/oznameni/get-katastr-from-point');
-            xhr.setRequestHeader('Content-type', 'application/json');
-            if (typeof global_csrftoken !== 'undefined') {
-                xhr.setRequestHeader('X-CSRFToken', global_csrftoken );
-            }
-            xhr.onload = function () {
-                // do something to response
-                console.log(JSON.parse(this.responseText).cadastre);
-                document.getElementById('katastr_name').innerHTML=JSON.parse(this.responseText).cadastre;
-            };
-            xhr.send(JSON.stringify({ 'corY': corY,'corX': corX }))*/
 
         } else {
             var zoom = 2;
@@ -218,6 +142,5 @@ map.on('click', function (e) {
             else if (map.getZoom() < 13) zoom += 1;
 
             map.setView(e.latlng, map.getZoom() + zoom);
-            //console.log("Your zoom is: "+map.getZoom())
         }
 });

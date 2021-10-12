@@ -39,90 +39,66 @@ var goldIcon = new L.Icon({
     shadowSize: [29, 29]
     })
 
-    var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
-        cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
-        cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
-        cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
+var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
+    cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
+    cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
+    cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
+    cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
+    cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
-    var poi_sugest = L.layerGroup();
-    var gm_correct = L.layerGroup();
-    var poi_dj = L.layerGroup();
-    var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
+var poi_sugest = L.layerGroup();
+var gm_correct = L.layerGroup();
+var poi_dj = L.layerGroup();
+var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
 
-    var map = L.map('djMap', {
-        zoomControl:false,
-        center: [49.84, 15.17],
-        zoom: 7,
-        layers: [cuzkZM, poi_other],
-        fullscreenControl: true,
-        contextmenu: true,
-        contextmenuWidth: 140,
-	    contextmenuItems: []
+var map = L.map('djMap', {
+    layers: [cuzkZM, poi_other],
+    zoomControl: false,
+    contextmenu: true,
+    contextmenuWidth: 140,
+    contextmenuItems: []
 
-    }).setView([49.84, 15.17], 7);;
+}).setView([49.84, 15.17], 7);
 
-    var baseLayers = {
-        "ČÚZK - Základní mapy ČR": cuzkZM,
-        "ČÚZK - Ortofotomapa": cuzkOrt,
-        "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-        "OpenStreetMap": osmColor,
-    };
+map.addLayer(poi_sugest);
+map.addLayer(poi_other);
+map.addLayer(poi_dj);
 
-    var overlays = {
-        "ČÚZK - Katastrální mapa": cuzkWMS,
-        "ČÚZK - Katastrální území": cuzkWMS2,
-        "AMČR Piany": poi_other
-    };
+var baseLayers = {
+    "ČÚZK - Základní mapy ČR": cuzkZM,
+    "ČÚZK - Ortofotomapa": cuzkOrt,
+    "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
+    "OpenStreetMap": osmColor,
+};
+
+var overlays = {
+    "ČÚZK - Katastrální mapa": cuzkWMS,
+    "ČÚZK - Katastrální území": cuzkWMS2,
+    "AMČR Piany": poi_other
+};
 
 L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 
-
-L.control.zoom(
+map.addControl(new L.Control.Fullscreen({
+    title: {
+        'false': 'Celá obrazovka',
+        'true': 'Opustit celou obrazovku'
+    }
+}));
+map.addControl(new L.control.zoom(
     {
         zoomInText:'+',
-        zoomInTitle:'Zvětšit',
+        zoomInTitle:'Přiblížit',
         zoomOutText:'-',
-        zoomOutTitle:'Zmenšit'
-    }).addTo(map)
+        zoomOutTitle:'Oddálit'
+    }))
 
-    var buttons = [
-        /*L.easyButton({
-                states: [{
-                    stateName: 'add-lock',
-                    icon: 'glyphicon-lock',
-                    title: 'Vypnout‌ ‌editaci‌‌',
-                    onClick: function(control) {
-                        global_map_can_edit=!global_map_can_edit;
-                        //toggleMarkerButton(false);
-                        console.log("zamknout");
-                        map.removeControl(drawControl)
-                        //drawControl.removeToolbar();
-                        control.state('remove-lock');
-                    }
-                    }, {
-                    icon: 'glyphicon-pencil',
-                    stateName: 'remove-lock',
-                    title: 'Zapnout‌ ‌editaci‌',
-                    onClick: function(control) {
-                        global_map_can_edit=!global_map_can_edit;
-                        //toggleMarkerButton(true);
-                        map.addControl(drawControl);
-                        console.log("odemknout")
-                        control.state('add-lock');
-                    }
-                    }]
-            }),*/
-
-        L.easyButton( 'bi bi-skip-backward-fill', function(){
-                //gm_correct.clearLayers();
-                //editableLayers.clearLayers();
-                map.setView(poi_sugest.getLayers()[0]._latlng, 18);
-                edit_buttons.disable();
-            },'Vrať změny')]
-
+var buttons = [
+    L.easyButton( 'bi bi-skip-backward-fill', function(){
+            map.setView(poi_sugest.getLayers()[0]._latlng, 18);
+            edit_buttons.disable();
+        },'Výchozí stav')]
 
 var edit_buttons=L.easyBar(buttons)
 map.addControl(edit_buttons)
@@ -172,18 +148,8 @@ L.DrawToolbar.include({
     }
 });
 L.drawLocal = {
-    // format: {
-    // 	numeric: {
-    // 		delimiters: {
-    // 			thousands: ',',
-    // 			decimal: '.'
-    // 		}
-    // 	}
-    // },
     draw: {
         toolbar: {
-            // #TODO: this should be reorganized where actions are nested in actions
-            // ex: actions.undo  or actions.cancel
             actions: {
                 title: 'Storno',
                 text: 'Storno'
@@ -323,9 +289,10 @@ var drawControl = new L.Control.Draw( {
 
 map.addControl(drawControl);
 
-L.control.measure().addTo(map)
+var measureControl=new L.control.measure({title:"Měřit vzdálenost"});
+map.addControl(measureControl);
 
-L.control.coordinates({
+map.addControl(new L.control.coordinates({
     position:"bottomright",
     useDMS:true,
     labelTemplateLat:"N {y}",
@@ -333,7 +300,7 @@ L.control.coordinates({
     useLatLngOrder:true,
     centerUserCoordinates: true,
     markerType: null
-}).addTo(map);
+}));
 
 function map_show_edit(show, show_go_back){
     global_map_can_edit=show;
@@ -409,6 +376,12 @@ map.on('draw:deleted', function(e) {
 
 })
 
+map.on('draw:drawstart',function(e){
+    if(measureControl._measuring){
+        measureControl._stopMeasuring()
+    }
+   })
+
 map.on('draw:created', function(e) {
     if(global_map_can_edit){
         var type = e.layerType;
@@ -436,9 +409,7 @@ map.on('draw:created', function(e) {
     }
 });
 
-map.addLayer(poi_sugest);
-map.addLayer(poi_other);
-map.addLayer(poi_dj);
+
 
 function geomToText(){
     // LINESTRING(-71.160281 42.258729,-71.160837
@@ -508,6 +479,9 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         }
 
         geom.on('click', function (e) {
+            if(measureControl._measuring){
+                measureControl._stopMeasuring()
+            }
             if(global_map_can_grab_geom_from_map!==false){
                 $.ajax({
                     type: "GET",
