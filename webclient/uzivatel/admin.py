@@ -26,6 +26,9 @@ class CustomUserAdmin(UserAdmin):
                     "organizace",
                     "ident_cely",
                     "hlavni_role",
+                    "first_name",
+                    "last_name",
+                    "telefon"
                 )
             },
         ),
@@ -44,6 +47,7 @@ class CustomUserAdmin(UserAdmin):
                     "is_active",
                     "organizace",
                     "hlavni_role",
+
                 ),
             },
         ),

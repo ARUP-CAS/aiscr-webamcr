@@ -1,4 +1,7 @@
 import logging
+
+from django.db.models import Q
+
 from core.exceptions import MaximalIdentNumberError
 
 from arch_z.models import ArcheologickyZaznam
@@ -20,6 +23,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from komponenta.models import KomponentaVazby
+from heslar.hesla import HESLAR_DJ_TYP
+from heslar.models import Heslar
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +39,22 @@ def detail(request, ident_cely):
         dj = form.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        if dj.typ.heslo == "Celek akce":
+            dokumentacni_jednotka_query = \
+                DokumentacniJednotka.objects.filter(Q(archeologicky_zaznam=dj.archeologicky_zaznam) &
+                                                    ~Q(ident_cely=dj.ident_cely))
+            for dokumentacni_jednotka in dokumentacni_jednotka_query:
+                dokumentacni_jednotka.typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP)
+                                                                  & Q(heslo__iexact="část akce")).first()
+                dokumentacni_jednotka.save()
+        elif dj.typ.heslo == "Sonda":
+            dokumentacni_jednotka_query = \
+                DokumentacniJednotka.objects.filter(Q(archeologicky_zaznam=dj.archeologicky_zaznam) &
+                                                    ~Q(ident_cely=dj.ident_cely))
+            for dokumentacni_jednotka in dokumentacni_jednotka_query:
+                dokumentacni_jednotka.typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP)
+                                                                  & Q(heslo__iexact="sonda")).first()
+                dokumentacni_jednotka.save()
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
