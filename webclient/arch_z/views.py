@@ -86,6 +86,9 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
     context = {}
+    old_objekt_post = request.session.pop("_old_objekt_post", None)
+    old_predmet_post = request.session.pop("_old_predmet_post", None)
+    komp_ident_cely = request.session.pop("komp_ident_cely", None)
     zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
         .select_related("akce__vedlejsi_typ")
@@ -157,10 +160,7 @@ def detail(request, ident_cely):
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
-            Adb,
-            VyskovyBod,
-            form=create_vyskovy_bod_form(pian=jednotka.pian),
-            extra=1,
+            Adb, VyskovyBod, form=create_vyskovy_bod_form(pian=jednotka.pian), extra=1,
         )
         has_adb = jednotka.has_adb()
         show_adb_add = (
@@ -228,9 +228,21 @@ def detail(request, ident_cely):
                         readonly=not show["editovat"],
                     ),
                     "form_nalezy_objekty": NalezObjektFormset(
+                        old_objekt_post,
+                        instance=komponenta,
+                        prefix=komponenta.ident_cely + "_o",
+                    )
+                    if komponenta.ident_cely == komp_ident_cely
+                    else NalezObjektFormset(
                         instance=komponenta, prefix=komponenta.ident_cely + "_o"
                     ),
                     "form_nalezy_predmety": NalezPredmetFormset(
+                        old_predmet_post,
+                        instance=komponenta,
+                        prefix=komponenta.ident_cely + "_p",
+                    )
+                    if komponenta.ident_cely == komp_ident_cely
+                    else NalezPredmetFormset(
                         instance=komponenta, prefix=komponenta.ident_cely + "_p"
                     ),
                     "helper": NalezFormSetHelper(),

@@ -51,6 +51,8 @@ def edit_objekt(request, komp_ident_cely):
         logger.warning("Form is not valid")
         logger.debug(formset.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        request.session["_old_objekt_post"] = request.POST
+        request.session["komp_ident_cely"] = komp_ident_cely
 
     return redirect(request.META.get("HTTP_REFERER"))
 
@@ -86,5 +88,7 @@ def edit_predmet(request, komp_ident_cely):
         logger.warning("Form is not valid")
         logger.debug(formset.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        request.session["_old_predmet_post"] = request.POST
+        request.session["komp_ident_cely"] = komp_ident_cely
 
     return redirect(request.META.get("HTTP_REFERER"))
