@@ -37,3 +37,10 @@ CREATE OR REPLACE FUNCTION delete_connected_documents() RETURNS trigger AS $dele
     CREATE TRIGGER delete_connected_documents AFTER DELETE ON archeologicky_zaznam
         FOR EACH ROW EXECUTE PROCEDURE delete_connected_documents();
 
+ALTER TABLE public.archeologicky_zaznam
+	DROP CONSTRAINT archeologicky_zaznam_historie_fkey,
+    ADD CONSTRAINT archeologicky_zaznam_historie_fkey FOREIGN KEY (historie)
+    REFERENCES public.historie_vazby (id) MATCH SIMPLE
+    ON UPDATE CASCADE
+    ON DELETE CASCADE;
+

@@ -53,7 +53,7 @@ class ArcheologickyZaznam(models.Model):
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
     historie = models.ForeignKey(
-        HistorieVazby, on_delete=models.DO_NOTHING, db_column="historie"
+        HistorieVazby, on_delete=models.CASCADE, db_column="historie"
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)

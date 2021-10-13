@@ -97,7 +97,7 @@ class Historie(models.Model):
     )
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("Poznámka"))
     vazba = models.ForeignKey(
-        "HistorieVazby", on_delete=models.PROTECT, db_column="vazba"
+        "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
     )
 
     class Meta:
