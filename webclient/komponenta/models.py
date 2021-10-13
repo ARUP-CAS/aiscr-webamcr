@@ -1,3 +1,4 @@
+import logging
 from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
@@ -6,6 +7,7 @@ from django.db import models
 from heslar.hesla import HESLAR_AKTIVITA, HESLAR_AREAL, HESLAR_OBDOBI
 from heslar.models import Heslar
 
+logger = logging.getLogger(__name__)
 
 class KomponentaVazby(models.Model):
 
@@ -41,7 +43,7 @@ class Komponenta(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_AREAL},
     )
     poznamka = models.TextField(blank=True, null=True)
-    jistota = models.CharField(max_length=1, blank=True, null=True)
+    jistota = models.CharField(max_length=5, blank=True, null=True)
     ident_cely = models.TextField(unique=True)
     komponenta_vazby = models.ForeignKey(
         KomponentaVazby,
@@ -60,6 +62,13 @@ class Komponenta(models.Model):
     class Meta:
         db_table = "komponenta"
         ordering = ["ident_cely"]
+
+    def save(self, *args, **kwargs):
+        if str(self.jistota) == "True":
+            self.jistota = "?"
+        else:
+            self.jistota = None
+        super().save(*args, **kwargs)
 
 
 class KomponentaAktivita(models.Model):

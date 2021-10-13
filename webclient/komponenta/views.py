@@ -76,7 +76,7 @@ def zapsat(request, dj_ident_cely):
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
-        logger.warning("Form is not valid")
+        logger.warning("Form CreateKomponentaForm is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
