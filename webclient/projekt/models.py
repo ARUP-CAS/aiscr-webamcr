@@ -257,10 +257,13 @@ class Projekt(models.Model):
         resp = []
         has_event = len(self.akce_set.all()) > 0
         has_individual_finds = len(self.samostatne_nalezy.all()) > 0
+        has_soubory = (self.soubory.soubory.all())
         if has_event:
             resp.append(_("Projekt před smazáním nesmí mít projektové akce."))
         if has_individual_finds:
             resp.append(_("Projekt před smazáním nesmí mít samostatné nálezy."))
+        if has_soubory:
+            resp.append(_("Projekt má projektovou dokumentaci."))
         return resp
 
     def check_pred_uzavrenim(self):
