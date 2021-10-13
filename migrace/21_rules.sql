@@ -24,7 +24,7 @@ CREATE OR REPLACE FUNCTION delete_unconfirmed_pian() RETURNS trigger AS $delete_
 CREATE OR REPLACE FUNCTION delete_connected_documents() RETURNS trigger AS $delete_connected_documents$
         BEGIN
             DELETE FROM dokument AS d USING dokument_cast AS dc WHERE dc.dokument = d.id AND dc.archeologicky_zaznam = old.id
-			AND NOT EXISTS (SELECT FROM dokument AS di INNER JOIN dokument_cast AS dci ON dci.dokument = di.id WHERE dc.archeologicky_zaznam != old.id AND d.id = di.id)
+			AND NOT EXISTS (SELECT FROM dokument AS di INNER JOIN dokument_cast AS dci ON dci.dokument = di.id WHERE dci.archeologicky_zaznam != old.id AND d.id = di.id)
 			AND d.stav = 1;
 			DELETE FROM dokument_cast AS dc
 			WHERE dc.archeologicky_zaznam = old.id AND NOT EXISTS (SELECT FROM neident_akce AS na WHERE dc.id = na.dokument_cast)
