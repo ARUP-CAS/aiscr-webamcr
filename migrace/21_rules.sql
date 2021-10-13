@@ -13,7 +13,7 @@ CREATE OR REPLACE FUNCTION prevent_project_deletion() RETURNS trigger AS $preven
 
 CREATE OR REPLACE FUNCTION delete_unconfirmed_pian() RETURNS trigger AS $delete_unconfirmed_pian$
         BEGIN
-            DELETE FROM pian WHERE pian.id = old.pian;
+            DELETE FROM pian WHERE pian.id = old.pian and pian.stav = 1;
 			RETURN NEW;
         END;
     $delete_unconfirmed_pian$ LANGUAGE plpgsql;
