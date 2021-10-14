@@ -47,7 +47,9 @@ class CustomUserAdmin(UserAdmin):
                     "is_active",
                     "organizace",
                     "hlavni_role",
-
+                    "first_name",
+                    "last_name",
+                    "telefon"
                 ),
             },
         ),
