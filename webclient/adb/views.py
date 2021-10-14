@@ -28,11 +28,7 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
-    form = CreateADBForm(
-        request.POST,
-        instance=adb,
-        prefix=ident_cely,
-    )
+    form = CreateADBForm(request.POST, instance=adb, prefix=ident_cely,)
     if form.is_valid():
         logger.debug("Form is valid")
         form.save()
@@ -78,10 +74,7 @@ def zapsat(request, dj_ident_cely):
 def zapsat_vyskove_body(request, adb_ident_cely):
     adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
     vyskovy_bod_formset = inlineformset_factory(
-        Adb,
-        VyskovyBod,
-        form=create_vyskovy_bod_form(),
-        extra=3,
+        Adb, VyskovyBod, form=create_vyskovy_bod_form(), extra=3,
     )
     formset = vyskovy_bod_formset(
         request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
@@ -93,6 +86,7 @@ def zapsat_vyskove_body(request, adb_ident_cely):
             vyskovy_bod: VyskovyBod
             vyskovy_bod.geom = Point(x=vyskovy_bod.northing, y=vyskovy_bod.easting)
             vyskovy_bod.save()
+            # vyskovy_bod.set_ident()
     if formset.is_valid():
         logger.debug("Form is valid")
         if (
