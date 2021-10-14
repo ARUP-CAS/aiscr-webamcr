@@ -6,6 +6,8 @@ from django.db import models
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
+from core.exceptions import MaximalIdentNumberError
+
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +111,7 @@ class VyskovyBod(models.Model):
     poradi = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
-        if self.adb:
+        if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
         super(VyskovyBod, self).save(*args, **kwargs)
 
@@ -119,10 +121,7 @@ class VyskovyBod(models.Model):
 
 class AdbSekvence(models.Model):
     kladysm5 = models.OneToOneField(
-        "Kladysm5",
-        models.DO_NOTHING,
-        db_column="kladysm5_id",
-        null=False,
+        "Kladysm5", models.DO_NOTHING, db_column="kladysm5_id", null=False,
     )
     sekvence = models.IntegerField()
 
