@@ -14,6 +14,7 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ROLE_NEAKTIVNI_UZIVATEL_ID,
+    PIAN_RELATION_TYPE
 )
 from core.models import ProjektSekvence, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -382,6 +383,8 @@ class AMCRTestRunner(BaseRunner):
         osoba.save()
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
         d = Dokument(

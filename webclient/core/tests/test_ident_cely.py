@@ -15,6 +15,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
+from historie.models import HistorieVazby
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
 
@@ -37,6 +38,7 @@ class IdentTests(TestCase):
             ),
         )
         kl.save()
+        vazba_pian = HistorieVazby.get(pk=47)
         pian = Pian(
             id=1,
             presnost=Heslar.objects.get(pk=PRESNOST_DESITKY_METRU_ID),
@@ -46,6 +48,7 @@ class IdentTests(TestCase):
             zm50=kl,
             ident_cely="P-3412-900002",
             stav=2,
+            historie=vazba_pian,
         )
         pian.save()
 
