@@ -41,6 +41,8 @@ jobs:
     - name: Install gdal
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+    - name: Run Migrations # run migrations to create table in side car db container
+      run: python manage.py migrate
     - name: Django Testing
       working-directory: ./webclient
       run: |
