@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     "compressor",
     "captcha",
     "core",
-    "uzivatel.apps.ProjektConfig",
+    "uzivatel.apps.UzivatelConfig",
     "ez",
     "historie",
     "oznameni",
