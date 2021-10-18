@@ -244,7 +244,8 @@
             {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
-                <button class="btn" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top"
+                <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form')"
+                        rel="tooltip" data-placement="top"
                         title="{% trans 'Přidat dokumentační jednotku' %}">
                   <span class="material-icons">add</span>
                 </button>
