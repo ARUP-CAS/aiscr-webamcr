@@ -19,3 +19,7 @@ alter TABLE opravneni
 alter column adresa_v_aplikaci TYPE VARCHAR(50);
 alter TABLE opravneni drop column opravneni;
 alter TABLE opravneni drop column opravneni_dle_stavu;
+ALTER TABLE opravneni
+ALTER COLUMN aplikace DROP not null;
+ALTER TABLE opravneni
+ALTER COLUMN adresa_v_aplikaci type varchar(100);
