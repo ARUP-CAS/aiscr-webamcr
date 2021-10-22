@@ -3,7 +3,11 @@
 <div class="app-toolbar">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="#"><span class="material-icons">brush</span> Knihovna 3D</a>
+      {% if is_3d %}
+      <a href="{% url 'dokument:index-model-3D' %}"><span class="material-icons">brush</span> Knihovna 3D</a>
+      {% else %}
+      <a href="#"><span class="material-icons">brush</span> Dokument</a>
+      {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {{ d.ident_cely }}

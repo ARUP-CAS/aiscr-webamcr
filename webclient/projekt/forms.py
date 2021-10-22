@@ -99,6 +99,9 @@ class CreateProjektForm(forms.ModelForm):
                 css_class="card app-card-form",
             )
         )
+        self.fields[
+            "hlavni_katastr"
+        ].widget.template_name = "core/select_to_textarea.html"
         self.helper.form_tag = False
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):

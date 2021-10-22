@@ -39,6 +39,7 @@
 <script src="{% static 'leaflet.measure.js' %}"></script>
 <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
 <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.min.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -74,4 +75,14 @@
   <script src="{% static 'daterangepicker.js' %}"></script>
 
   <script src="{% static 'js/pamatkova_ochrana_validator.js' %}"></script>
+  <script>
+    $(document).ready(function () {
+        var sel = document.getElementById('id_katastry');
+        for(var i = 0; i < sel.options.length; i++){
+          if(sel.options[i].value === ""){
+          sel.remove(i--);//decrease i to preserve future index references after removal
+          }
+        }
+    })
+  </script>
 {% endblock %}
