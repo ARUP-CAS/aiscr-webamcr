@@ -38,6 +38,9 @@ def detail(request, ident_cely):
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        request.session["_old_adb_post"] = request.POST
+        request.session["adb_ident_cely"] = ident_cely
+        logger.debug(ident_cely)
 
     return redirect(request.META.get("HTTP_REFERER"))
 

@@ -73,15 +73,9 @@ class ProjektFilter(filters.FilterSet):
         ),
     )
 
-    katastr = CharFilter(
-        method="filtr_katastr",
-        label=_("Katastr"),
-    )
+    katastr = CharFilter(method="filtr_katastr", label=_("Katastr"),)
 
-    popisne_udaje = CharFilter(
-        method="filter_popisne_udaje",
-        label="Popisné údaje",
-    )
+    popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",)
 
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
@@ -126,11 +120,7 @@ class ProjektFilter(filters.FilterSet):
     planovane_zahajeni = DateFromToRangeFilter(
         # field_name="planovane_zahajeni",
         method="filter_planovane_zahajeni",
-        widget=DateRangeWidget(
-            attrs={
-                "type": "date",
-            }
-        ),
+        widget=DateRangeWidget(attrs={"type": "date",}),
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
@@ -174,12 +164,14 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     historie_datum_zmeny_od = DateFromToRangeFilter(
         label="Datum změny (od-do)",
         field_name="historie__historie__datum_zmeny",
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
 
     historie_uzivatel = MultipleChoiceFilter(
@@ -189,6 +181,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     # Filters by event
@@ -196,6 +189,7 @@ class ProjektFilter(filters.FilterSet):
         field_name="akce__archeologicky_zaznam__ident_cely",
         lookup_expr="icontains",
         label="ID",
+        distinct=True,
     )
 
     akce_zjisteni = ChoiceFilter(
@@ -203,16 +197,15 @@ class ProjektFilter(filters.FilterSet):
         label="Zjištění",
         choices=[("True", "pozitivní"), ("False", "negativní")],
         widget=Select,
+        distinct=True,
     )
 
     akce_popisne_udaje = CharFilter(
-        method="filter_popisne_udaje_akce",
-        label="Popisné údaje",
+        method="filter_popisne_udaje_akce", label="Popisné údaje", distinct=True,
     )
 
     akce_katastr = CharFilter(
-        method="filtr_akce_katastr",
-        label=_("Katastr"),
+        method="filtr_akce_katastr", label=_("Katastr"), distinct=True,
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -222,6 +215,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     akce_okres = MultipleChoiceFilter(
@@ -231,6 +225,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     akce_vedouci = MultipleChoiceFilter(
@@ -240,6 +235,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     akce_vedouci_organizace = MultipleChoiceFilter(
@@ -249,17 +245,20 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     akce_datum_zahajeni = DateFromToRangeFilter(
         field_name="akce__datum_zahajeni",
         label="Datum zahájení (od-do)",
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
     akce_datum_ukonceni = DateFromToRangeFilter(
         field_name="akce__datum_ukonceni",
         label="Datum ukončení (od-do)",
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
     typ_akce = MultipleChoiceFilter(
         choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
@@ -270,6 +269,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
     pristupnost_akce = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
@@ -278,6 +278,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
     stav_akce = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,
@@ -286,6 +287,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
     akce_je_nz = ChoiceFilter(
         choices=[("True", "Ano"), ("False", "Ne")],
@@ -293,24 +295,28 @@ class ProjektFilter(filters.FilterSet):
         lookup_expr="iexact",
         label="ZAA jako NZ",
         widget=Select,
+        distinct=True,
     )
 
     pian_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__dokumentacni_jednotky_akce__pian__ident_cely",
         lookup_expr="icontains",
         label="ID PIAN",
+        distinct=True,
     )
 
     dokument_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
         lookup_expr="icontains",
         label="ID dokumentu",
+        distinct=True,
     )
 
     zdroj_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__externi_odkazy__externi_zdroj__ident_cely",
         lookup_expr="icontains",
         label="ID externího zdroje",
+        distinct=True,
     )
 
     def filter_planovane_zahajeni(self, queryset, name, value):

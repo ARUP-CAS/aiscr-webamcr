@@ -3,6 +3,7 @@ import logging
 import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from django_tables2.utils import A
+from django.utils.translation import gettext as _
 
 from .models import SamostatnyNalez, UzivatelSpoluprace
 
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
+    katastr = tables.Column(verbose_name=_("Katastrální území"))
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
@@ -31,6 +33,7 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
             "ident_cely",
             "stav",
             "lokalizace",
+            "katastr",
             "obdobi",
             "druh_nalezu",
             "specifikace",
@@ -47,10 +50,7 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
 class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
 
-    stav = tables.Column(
-        verbose_name="Stav",
-        attrs={"td": {"class": "spoluprace"}},
-    )
+    stav = tables.Column(verbose_name="Stav", attrs={"td": {"class": "spoluprace"}},)
     vedouci = tables.Column(
         accessor=("vedouci__name_and_id"),
         verbose_name="Vedoucí",
@@ -79,7 +79,10 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         attrs={"a": {"class": "btn btn-sm"}},
     )
     aktivace = tables.TemplateColumn(
-        attrs={"td": {"class": "spoluprace"},"th": {"class": "orderable ","style":"color:#fff"}},
+        attrs={
+            "td": {"class": "spoluprace"},
+            "th": {"class": "orderable ", "style": "color:#fff"},
+        },
         template_name="pas/aktivace_deaktivace_cell.html",
         orderable=False,
     )
@@ -87,7 +90,10 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         "pas:spoluprace_smazani",
         text="Smazat",
         args=[A("pk")],
-        attrs={"a": {"class": "btn btn-sm"},"th": {"class": "orderable ","style":"color:#fff"}},
+        attrs={
+            "a": {"class": "btn btn-sm"},
+            "th": {"class": "orderable ", "style": "color:#fff"},
+        },
         exclude_from_export=True,
         orderable=False,
     )

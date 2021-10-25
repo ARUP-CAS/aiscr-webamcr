@@ -163,10 +163,26 @@ def create(request):
         form_projekt = CreateProjektForm(request.POST)
         form_oznamovatel = OznamovatelForm(request.POST)
         if form_projekt.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("Projekt form is valid")
             lat = form_projekt.cleaned_data["latitude"]
             long = form_projekt.cleaned_data["longitude"]
             p = form_projekt.save(commit=False)
+            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                # Kontrola oznamovatele
+                if not form_oznamovatel.is_valid():
+                    logger.debug("The form oznamovatel is not valid!")
+                    logger.debug(form_oznamovatel.errors)
+                    return render(
+                        request,
+                        "projekt/create.html",
+                        {
+                            "form_projekt": form_projekt,
+                            "form_oznamovatel": form_oznamovatel,
+                            "title": _("Zápis projektu"),
+                            "header": _("Zápis projektu"),
+                            "button": _("Zapsat projekt"),
+                        },
+                    )
             if long and lat:
                 p.geom = Point(long, lat)
             try:
@@ -178,23 +194,12 @@ def create(request):
                 p.set_zapsany(request.user)
                 form_projekt.save_m2m()
                 if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
-                    # Vytvoreni oznamovatele
-                    if form_oznamovatel.is_valid():
-                        oznamovatel = form_oznamovatel.save(commit=False)
-                        oznamovatel.projekt = p
-                        oznamovatel.save()
-                        messages.add_message(
-                            request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
-                        )
-                        return redirect("projekt:detail", ident_cely=p.ident_cely)
-                    else:
-                        logger.debug("The form oznamovatel is not valid!")
-                        logger.debug(form_oznamovatel.errors)
-                else:
-                    messages.add_message(
-                        request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN
-                    )
-                    return redirect("projekt:detail", ident_cely=p.ident_cely)
+                    # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
+                    oznamovatel = form_oznamovatel.save(commit=False)
+                    oznamovatel.projekt = p
+                    oznamovatel.save()
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
             logger.debug("The form projekt is not valid!")
             logger.debug(form_projekt.errors)

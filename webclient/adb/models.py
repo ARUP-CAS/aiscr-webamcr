@@ -7,6 +7,7 @@ from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_T
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 from core.exceptions import MaximalIdentNumberError
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 logger = logging.getLogger(__name__)
@@ -63,11 +64,17 @@ class Adb(models.Model):
         db_column="autor_popisu",
         related_name="adb_autori_popisu",
     )
-    rok_popisu = models.IntegerField()
+    rok_popisu = models.IntegerField(
+        validators=[MinValueValidator(1900), MaxValueValidator(2050)],
+    )
     autor_revize = models.ForeignKey(
         Osoba, models.DO_NOTHING, db_column="autor_revize", blank=True, null=True
     )
-    rok_revize = models.IntegerField(blank=True, null=True)
+    rok_revize = models.IntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(1900), MaxValueValidator(2050)],
+    )
     sm5 = models.ForeignKey(Kladysm5, models.DO_NOTHING, db_column="sm5")
 
     class Meta:

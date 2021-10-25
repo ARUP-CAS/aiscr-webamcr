@@ -180,7 +180,11 @@ class EditDokumentForm(forms.ModelForm):
         )
         widgets = {
             "typ_dokumentu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-live-search": "true",
+                    "required": "",
+                }
             ),
             "material_originalu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
@@ -235,11 +239,11 @@ class EditDokumentForm(forms.ModelForm):
             )
         )
         self.fields["posudky"].required = False
-        self.fields["typ_dokumentu"].choices = list(
+        self.fields["typ_dokumentu"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
             .filter(id__in=ALLOWED_DOKUMENT_TYPES)
             .values_list("id", "heslo")
-        ) + [("", "")]
+        )
         self.fields["ulozeni_originalu"].required = True
         self.fields["rok_vzniku"].required = True
         self.fields["licence"].required = True
@@ -325,11 +329,11 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.fields["popis"].required = True
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["oznaceni_originalu"].widget.attrs["rows"] = 1
-        self.fields["typ_dokumentu"].choices = list(
+        self.fields["typ_dokumentu"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
             .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
             .values_list("id", "heslo")
-        ) + [("", "")]
+        )
         self.fields["rok_vzniku"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
@@ -373,6 +377,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "region": forms.TextInput(),
+            "duveryhodnost": forms.NumberInput(attrs={"max": "100", "min": "0"}),
         }
         labels = {
             "format": _("Formát"),
@@ -391,11 +396,11 @@ class CreateModelExtraDataForm(forms.ModelForm):
         # Disabled hodnoty se neposilaji na server
         self.fields["vyska"].widget.attrs["disabled"] = "disabled"
         self.fields["sirka"].widget.attrs["disabled"] = "disabled"
-        self.fields["format"].choices = list(
+        self.fields["format"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT)
             .filter(heslo__startswith="3D")
             .values_list("id", "heslo")
-        ) + [("", "")]
+        )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(

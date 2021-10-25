@@ -437,8 +437,8 @@
                 </td>
                 <td>{{ a.hlavni_vedouci }}</td>
                 <td>{{ a.datum_zahajeni|date:'Y/m/d' }} - {{ a.datum_ukonceni|date:'Y/m/d' }}</td>
-                <td>{{ a.hlavni_typ }}, {{ a.vedlejsi_typ }}</td>
-                <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni }}</td>
+                <td>{{ a.hlavni_typ|check_if_none }}, {{ a.vedlejsi_typ|check_if_none }}</td>
+                <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni|check_if_none }}</td>
                 <td><div class="badge">{{ a.archeologicky_zaznam.get_stav_display }}</div></td>
               </tr>
             {% endfor %}
