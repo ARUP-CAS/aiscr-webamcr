@@ -398,7 +398,7 @@ class SamostatnyNalezListView(
 
     def get(self, request):
         over_opravneni_with_exception(request=request)
-        super().get(request)
+        return super().get(request)
 
 
 @login_required
@@ -511,7 +511,7 @@ class UzivatelSpolupraceListView(
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 @login_required
@@ -632,11 +632,6 @@ def post_pas2kat(request):
     logger.debug(body)
     katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
     if katastr_name is not None:
-        return JsonResponse(
-            {
-                "katastr_name": katastr_name.nazev_stary,
-            },
-            status=200,
-        )
+        return JsonResponse({"katastr_name": katastr_name.nazev_stary,}, status=200,)
     else:
         return JsonResponse({"katastr_name": ""}, status=200)

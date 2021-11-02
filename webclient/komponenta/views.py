@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 def detail(request, ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     over_opravneni_with_exception(
-        komponenta.dokumentacni_jednotka.archeologicky_zaznam, request
+        komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam, request
     )
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
@@ -92,7 +92,9 @@ def zapsat(request, dj_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     k = get_object_or_404(Komponenta, ident_cely=ident_cely)
-    over_opravneni_with_exception(k.dokumentacni_jednotka.archeologicky_zaznam, request)
+    over_opravneni_with_exception(
+        k.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam, request
+    )
     if request.method == "POST":
         arch_z_ident_cely = (
             k.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely

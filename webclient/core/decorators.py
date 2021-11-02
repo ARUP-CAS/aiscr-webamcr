@@ -3,7 +3,7 @@ from functools import wraps
 
 logger = logging.getLogger(__name__)
 
-
+# not used, created more complex logic in core.models
 def allowed_user_groups(allowed_groups):
     @wraps(allowed_groups)
     def _method_wrapper(func):

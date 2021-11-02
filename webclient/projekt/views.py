@@ -31,7 +31,6 @@ from core.constants import (
     NAVRZENI_KE_ZRUSENI_PROJ,
     RUSENI_PROJ,
 )
-from core.decorators import allowed_user_groups
 from core.forms import VratitForm
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
@@ -274,7 +273,6 @@ def edit(request, ident_cely):
 
 
 @login_required
-@allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
@@ -349,7 +347,7 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 @login_required

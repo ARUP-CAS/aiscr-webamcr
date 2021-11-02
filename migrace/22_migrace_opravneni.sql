@@ -23,3 +23,6 @@ ALTER TABLE opravneni
 ALTER COLUMN aplikace DROP not null;
 ALTER TABLE opravneni
 ALTER COLUMN adresa_v_aplikaci type varchar(100);
+alter TABLE opravneni drop column aplikace;
+ALTER TABLE opravneni
+add CONSTRAINT adresa_role UNIQUE (adresa_v_aplikaci, role);

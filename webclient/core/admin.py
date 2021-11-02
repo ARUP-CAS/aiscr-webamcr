@@ -83,7 +83,7 @@ class OpravneniInline(admin.TabularInline):
 
 
 class OpravneniAdmin(admin.ModelAdmin):
-    list_display = ("id", "aplikace", "adresa_v_aplikaci", "hlavni_role")
+    list_display = ("id", "adresa_v_aplikaci", "hlavni_role")
     inlines = [OpravneniInline]
 
 

@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 def edit_objekt(request, komp_ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     over_opravneni_with_exception(
-        komponenta.dokumentacni_jednotka.archeologicky_zaznam, request
+        komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam, request
     )
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(

@@ -3,6 +3,7 @@ from django.contrib.gis.geos import Point
 from django.http import JsonResponse
 
 from heslar.models import Heslar, RuianKatastr
+from core.models import over_opravneni_with_exception
 
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
@@ -11,6 +12,10 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
         if self.q:
             qs = qs.filter(nazev__icontains=self.q)
         return qs
+
+    def get(self, request, *args, **kwargs):
+        over_opravneni_with_exception(request=request)
+        return super().get(request, *args, **kwargs)
 
 
 def merge_heslare(first, second):

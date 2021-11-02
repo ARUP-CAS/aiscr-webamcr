@@ -250,7 +250,7 @@ class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, Filter
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 @login_required
@@ -681,7 +681,7 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
@@ -692,7 +692,7 @@ class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 def get_hierarchie_dokument_typ():

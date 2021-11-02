@@ -12,7 +12,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -22,7 +22,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -39,7 +39,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -55,10 +55,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -75,7 +75,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -91,10 +91,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -110,7 +110,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -129,7 +129,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -139,7 +139,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -156,7 +156,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -172,10 +172,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -192,7 +192,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -208,10 +208,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -231,7 +231,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -247,10 +247,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -270,7 +270,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -286,10 +286,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -308,7 +308,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -322,7 +322,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -338,10 +338,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -357,7 +357,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -370,7 +370,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -389,7 +389,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -399,7 +399,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -416,7 +416,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -432,10 +432,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -452,7 +452,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -468,10 +468,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -487,7 +487,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -506,7 +506,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -516,7 +516,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -538,7 +538,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -548,7 +548,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -565,7 +565,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -584,7 +584,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -601,7 +601,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -620,7 +620,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -637,7 +637,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -656,7 +656,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -672,7 +672,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -686,7 +686,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -702,10 +702,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -721,7 +721,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -740,7 +740,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -750,7 +750,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -772,7 +772,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -782,7 +782,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -798,7 +798,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -817,7 +817,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'VLASTNI',
+        'Vlastni',
         null,
         null,
         null,
@@ -827,7 +827,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -844,7 +844,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -860,10 +860,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -880,7 +880,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -896,10 +896,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -916,7 +916,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -932,10 +932,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -952,7 +952,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -968,10 +968,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -987,7 +987,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -1000,7 +1000,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -1013,7 +1013,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1026,7 +1026,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1039,7 +1039,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1052,7 +1052,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1065,7 +1065,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1078,7 +1078,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1094,7 +1094,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1107,7 +1107,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1120,7 +1120,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1133,7 +1133,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1146,7 +1146,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1159,7 +1159,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1175,7 +1175,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1188,7 +1188,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1201,7 +1201,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1214,7 +1214,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1227,7 +1227,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -1241,7 +1241,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'VLASTNI',
+            'Vlastni',
             (
                 select id
                 from opr
@@ -1260,7 +1260,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1276,7 +1276,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1289,7 +1289,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -1302,7 +1302,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -1322,7 +1322,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -1332,7 +1332,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -1349,7 +1349,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1365,10 +1365,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1385,7 +1385,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1401,10 +1401,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1420,7 +1420,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1439,7 +1439,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -1449,7 +1449,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -1466,7 +1466,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1482,10 +1482,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1502,7 +1502,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1518,10 +1518,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1541,7 +1541,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1557,10 +1557,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1580,7 +1580,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1596,10 +1596,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1619,7 +1619,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1635,10 +1635,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1655,7 +1655,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1671,10 +1671,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1690,7 +1690,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1703,7 +1703,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         (
             select id
             from opr
@@ -1722,7 +1722,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -1732,7 +1732,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -1749,7 +1749,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1765,10 +1765,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1785,7 +1785,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1801,10 +1801,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1820,7 +1820,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -1839,7 +1839,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -1849,7 +1849,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -1871,7 +1871,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -1881,7 +1881,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -1898,7 +1898,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1917,7 +1917,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1934,7 +1934,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1953,7 +1953,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -1970,7 +1970,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -1989,7 +1989,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2005,7 +2005,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2019,7 +2019,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2035,10 +2035,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2054,7 +2054,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2073,7 +2073,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -2083,7 +2083,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -2105,7 +2105,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -2115,7 +2115,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -2131,7 +2131,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2150,7 +2150,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'ORGANIZACE',
+        'Organizace',
         null,
         null,
         null,
@@ -2160,7 +2160,7 @@ VALUES (
         )
     ),
     (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -2177,7 +2177,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2193,10 +2193,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2213,7 +2213,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2229,10 +2229,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2249,7 +2249,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2265,10 +2265,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2285,7 +2285,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2301,10 +2301,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2320,7 +2320,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2333,7 +2333,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2346,7 +2346,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2359,7 +2359,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2372,7 +2372,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2385,7 +2385,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2398,7 +2398,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2411,7 +2411,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2430,7 +2430,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
         null,
@@ -2446,7 +2446,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2459,7 +2459,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2473,7 +2473,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2489,10 +2489,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2509,7 +2509,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2525,10 +2525,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         4,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2547,7 +2547,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2560,7 +2560,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2574,7 +2574,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2590,10 +2590,10 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2609,7 +2609,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'NIC',
+        'Nic',
         (
             select id
             from opr
@@ -2622,7 +2622,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2636,7 +2636,7 @@ With opr as (
 kon_opr as (
     INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
     VALUES (
-            'ORGANIZACE',
+            'Organizace',
             (
                 select id
                 from opr
@@ -2655,7 +2655,7 @@ VALUES (
         'X-ID',
         null,
         null,
-(
+        (
             select id
             from kon_opr
         ),
@@ -2671,7 +2671,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2684,7 +2684,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2698,7 +2698,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2717,7 +2717,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2739,7 +2739,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2761,7 +2761,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -2777,7 +2777,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2796,7 +2796,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2818,7 +2818,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
         null,
@@ -2843,7 +2843,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2868,7 +2868,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2893,7 +2893,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2909,7 +2909,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2928,7 +2928,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.gt',
         1,
         null,
@@ -2944,7 +2944,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2957,7 +2957,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -2976,7 +2976,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -2998,7 +2998,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3020,7 +3020,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -3036,7 +3036,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3049,7 +3049,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3068,7 +3068,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3090,7 +3090,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -3106,7 +3106,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3125,7 +3125,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.gt',
         1,
         null,
@@ -3147,7 +3147,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3163,7 +3163,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3176,7 +3176,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3189,7 +3189,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3202,7 +3202,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3215,7 +3215,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3234,7 +3234,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3256,7 +3256,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3278,7 +3278,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3300,7 +3300,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3316,7 +3316,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3329,7 +3329,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3342,7 +3342,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3361,7 +3361,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         5,
         null,
@@ -3377,7 +3377,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3390,7 +3390,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3403,7 +3403,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3416,7 +3416,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3432,7 +3432,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3451,7 +3451,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
         null,
@@ -3473,7 +3473,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         0,
         null,
@@ -3489,7 +3489,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3508,7 +3508,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -3530,7 +3530,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         4,
         null,
@@ -3555,7 +3555,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         7,
         null,
@@ -3577,7 +3577,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -3599,7 +3599,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         7,
         null,
@@ -3615,7 +3615,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3634,7 +3634,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3650,7 +3650,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3663,7 +3663,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3676,7 +3676,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3690,7 +3690,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3709,7 +3709,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3731,7 +3731,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3753,7 +3753,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -3769,7 +3769,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3788,7 +3788,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3810,7 +3810,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
         null,
@@ -3835,7 +3835,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3860,7 +3860,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3885,7 +3885,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3901,7 +3901,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3920,7 +3920,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.gt',
         1,
         null,
@@ -3936,7 +3936,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3949,7 +3949,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -3968,7 +3968,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -3990,7 +3990,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4012,7 +4012,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -4028,7 +4028,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4041,7 +4041,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4060,7 +4060,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4082,7 +4082,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -4098,7 +4098,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4117,7 +4117,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.gt',
         1,
         null,
@@ -4139,7 +4139,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4155,7 +4155,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4168,7 +4168,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4181,7 +4181,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4194,7 +4194,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4207,7 +4207,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4226,7 +4226,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4248,7 +4248,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4270,7 +4270,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4292,7 +4292,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4308,7 +4308,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4321,7 +4321,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4334,7 +4334,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4353,7 +4353,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         5,
         null,
@@ -4369,7 +4369,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4382,7 +4382,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4395,7 +4395,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4408,7 +4408,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4424,7 +4424,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4443,7 +4443,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         1,
         null,
@@ -4465,7 +4465,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         0,
         null,
@@ -4481,7 +4481,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4500,7 +4500,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         3,
         null,
@@ -4522,7 +4522,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         4,
         null,
@@ -4547,7 +4547,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         7,
         null,
@@ -4569,7 +4569,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         2,
         null,
@@ -4591,7 +4591,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.eq',
         7,
         null,
@@ -4607,7 +4607,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4626,7 +4626,7 @@ INSERT INTO opravneni_konkretni(
         parent_opravneni
     )
 VALUES (
-        'STAV',
+        'Stav',
         'operator.lt',
         3,
         null,
@@ -4642,7 +4642,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4655,7 +4655,7 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
         (
             select id
             from opr
@@ -4668,7 +4668,284 @@ With opr as (
 )
 INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
 VALUES (
-        'VSE',
+        'Vse',
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/projekt/vratit/<str:ident_cely>', 3)
+    returning id
+),
+kon_opr as (
+    INSERT INTO opravneni_konkretni(
+            druh_opravneni,
+            porovnani_stavu,
+            stav,
+            parent_opravneni
+        )
+    VALUES (
+            'Stav',
+            'operator.gt',
+            1,
+            (
+                select id
+                from opr
+            )
+        )
+    returning id
+)
+INSERT INTO opravneni_konkretni(
+        druh_opravneni,
+        porovnani_stavu,
+        stav,
+        vazba_na_konkretni_opravneni,
+        parent_opravneni
+    )
+VALUES (
+        'Stav',
+        'operator.lt',
+        7,
+        (
+            select id
+            from kon_opr
+        ),
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/projekt/vratit/<str:ident_cely>', 4)
+    returning id
+),
+kon_opr as (
+    INSERT INTO opravneni_konkretni(
+            druh_opravneni,
+            porovnani_stavu,
+            stav,
+            parent_opravneni
+        )
+    VALUES (
+            'Stav',
+            'operator.gt',
+            1,
+            (
+                select id
+                from opr
+            )
+        )
+    returning id
+)
+INSERT INTO opravneni_konkretni(
+        druh_opravneni,
+        porovnani_stavu,
+        stav,
+        vazba_na_konkretni_opravneni,
+        parent_opravneni
+    )
+VALUES (
+        'Stav',
+        'operator.lt',
+        7,
+        (
+            select id
+            from kon_opr
+        ),
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES (
+            '/projekt/navrhnout-ke-zruseni/<str:ident_cely>',
+            2
+        )
+    returning id
+),
+kon_opr as (
+    INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
+    VALUES (
+            'Organizace',
+            (
+                select id
+                from opr
+            )
+        )
+    returning id
+)
+INSERT INTO opravneni_konkretni(
+        druh_opravneni,
+        porovnani_stavu,
+        stav,
+        vazba_na_konkretni_opravneni,
+        parent_opravneni
+    )
+VALUES (
+        'Stav',
+        'operator.lt',
+        3,
+        (
+            select id
+            from kon_opr
+        ),
+        (
+            select id
+            from opr
+        )
+    ),
+    (
+        'Stav',
+        'operator.eq',
+        1,
+        null,
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/upload_file/projekt/<str:ident_cely>', 2)
+    returning id
+),
+kon_opr as (
+    INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
+    VALUES (
+            'Organizace',
+            (
+                select id
+                from opr
+            )
+        )
+    returning id
+)
+INSERT INTO opravneni_konkretni(
+        druh_opravneni,
+        porovnani_stavu,
+        stav,
+        vazba_na_konkretni_opravneni,
+        parent_opravneni
+    )
+VALUES (
+        'Stav',
+        'operator.lt',
+        5,
+        (
+            select id
+            from kon_opr
+        ),
+        (
+            select id
+            from opr
+        )
+    ),
+    (
+        'Stav',
+        'operator.gt',
+        1,
+        (
+            select id
+            from kon_opr
+        ),
+        (
+            select id
+            from opr
+        )
+    ),
+    (
+        'Stav',
+        'operator.eq',
+        1,
+        null,
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/pian/list-pians/', 3)
+    returning id
+)
+INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
+VALUES (
+        'Vse',
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/pian/list-pians/', 4)
+    returning id
+)
+INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
+VALUES (
+        'Vse',
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/projekt/edit/<str:ident_cely>', 1)
+    returning id
+)
+INSERT INTO opravneni_konkretni(druh_opravneni, parent_opravneni)
+VALUES (
+        'Nic',
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/projekt/edit/<str:ident_cely>', 3)
+    returning id
+)
+INSERT INTO opravneni_konkretni(
+        druh_opravneni,
+        porovnani_stavu,
+        stav,
+        vazba_na_konkretni_opravneni,
+        parent_opravneni
+    )
+VALUES (
+        'Stav',
+        'operator.lt',
+        6,
+        null,
+        (
+            select id
+            from opr
+        )
+    );
+With opr as (
+    INSERT INTO OPRAVNENI (adresa_v_aplikaci, role)
+    VALUES ('/projekt/edit/<str:ident_cely>', 4)
+    returning id
+)
+INSERT INTO opravneni_konkretni(
+        druh_opravneni,
+        porovnani_stavu,
+        stav,
+        vazba_na_konkretni_opravneni,
+        parent_opravneni
+    )
+VALUES (
+        'Stav',
+        'operator.lt',
+        6,
+        null,
         (
             select id
             from opr

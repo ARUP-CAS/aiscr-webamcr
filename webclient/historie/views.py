@@ -27,7 +27,7 @@ class ProjektHistorieListView(HistorieListView):
     def get(self, request, ident_cely, *args, **kwargs):
         zaznam = get_object_or_404(Projekt, ident_cely=ident_cely)
         over_opravneni_with_exception(zaznam, request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class AkceHistorieListView(HistorieListView):
@@ -40,7 +40,7 @@ class AkceHistorieListView(HistorieListView):
     def get(self, request, ident_cely, *args, **kwargs):
         zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
         over_opravneni_with_exception(zaznam, request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class DokumentHistorieListView(HistorieListView):
@@ -53,7 +53,7 @@ class DokumentHistorieListView(HistorieListView):
     def get(self, request, ident_cely, *args, **kwargs):
         zaznam = get_object_or_404(Dokument, ident_cely=ident_cely)
         over_opravneni_with_exception(zaznam, request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class SamostatnyNalezHistorieListView(HistorieListView):
@@ -66,7 +66,7 @@ class SamostatnyNalezHistorieListView(HistorieListView):
     def get(self, request, ident_cely, *args, **kwargs):
         zaznam = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
         over_opravneni_with_exception(zaznam, request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class SpolupraceHistorieListView(HistorieListView):
@@ -79,4 +79,4 @@ class SpolupraceHistorieListView(HistorieListView):
     def get(self, request, pk, *args, **kwargs):
         zaznam = get_object_or_404(UzivatelSpoluprace, ident_cely=pk)
         over_opravneni_with_exception(zaznam, request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)

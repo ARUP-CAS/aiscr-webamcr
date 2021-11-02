@@ -643,6 +643,7 @@ def get_detail_template_shows(archeologicky_zaznam):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_pians(request):
+    over_opravneni_with_exception(request=request)
     body = json.loads(request.body.decode("utf-8"))
     pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
@@ -664,6 +665,7 @@ def post_ajax_get_pians(request):
 
 @require_http_methods(["POST"])
 def post_akce2kat(request):
+    over_opravneni_with_exception(request=request)
     body = json.loads(request.body.decode("utf-8"))
     logger.debug(body)
     katastr_name = body["cadastre"]

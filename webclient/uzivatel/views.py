@@ -31,7 +31,7 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 @login_required
@@ -82,14 +82,6 @@ class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
 
-    def get(self, request, *args, **kwargs):
-        over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
-
 
 class UserLoginView(LoginView):
     authentication_form = AuthUserLoginForm
-
-    def get(self, request, *args, **kwargs):
-        over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)

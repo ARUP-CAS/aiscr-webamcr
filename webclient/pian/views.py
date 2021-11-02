@@ -185,4 +185,4 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
     def get(self, request, *args, **kwargs):
         over_opravneni_with_exception(request=request)
-        super().get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
