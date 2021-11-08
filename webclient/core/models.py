@@ -174,16 +174,14 @@ class KonkretniOpravneni(models.Model):
     def over_konkretni_opravneni(self, zaznam, uzivatel):
         if zaznam:
             model_zaznamu = zaznam.__class__.__name__
-        if self.druh_opravneni == self.DruhyOpravneni.STAV:
-            if eval(self.porovnani_stavu + "(zaznam.stav, self.stav)"):
-                pass
-            else:
+        if self.druh_opravneni == self.DruhyOpravneni.STAV and zaznam is not None:
+            if not eval(self.porovnani_stavu + "(zaznam.stav, self.stav)"):
                 return False
         if self.druh_opravneni == self.DruhyOpravneni.VSE:
             pass
         if self.druh_opravneni == self.DruhyOpravneni.NIC:
             return False
-        if self.druh_opravneni == self.DruhyOpravneni.VLASTNI & zaznam:
+        if self.druh_opravneni == self.DruhyOpravneni.VLASTNI and zaznam is not None:
             try:
                 Historie.objects.get(
                     typ_zmeny__in=[
@@ -199,39 +197,27 @@ class KonkretniOpravneni(models.Model):
                 )
             except Historie.DoesNotExist:
                 return False
-        if self.druh_opravneni == self.DruhyOpravneni.ORGANIZACE & zaznam:
+        if self.druh_opravneni == self.DruhyOpravneni.ORGANIZACE and zaznam is not None:
             if model_zaznamu == "ArcheologickyZaznam":
-                if zaznam.akce.organizace == uzivatel.organizace:
-                    pass
-                else:
+                if zaznam.akce.organizace != uzivatel.organizace:
                     return False
             elif model_zaznamu == "SamostatnyNalez":
-                if zaznam.projekt.organizace == uzivatel.organizace:
-                    pass
-                else:
+                if zaznam.projekt.organizace != uzivatel.organizace:
                     return False
             elif model_zaznamu == "UzivatelSpoluprace":
-                if zaznam.vedouci.organizace == uzivatel.organizace:
-                    pass
-                else:
+                if zaznam.vedouci.organizace != uzivatel.organizace:
                     return False
             elif model_zaznamu == "Pian":
                 if (
                     zaznam.dokumentacni_jednotka.archeologicky_zaznam.akce.organizace
-                    == uzivatel.organizace
+                    != uzivatel.organizace
                 ):
-                    pass
-                else:
                     return False
             else:
-                if zaznam.organizace == uzivatel.organizace:
-                    pass
-                else:
+                if zaznam.organizace != uzivatel.organizace:
                     return False
-        if self.druh_opravneni == self.DruhyOpravneni.XID & zaznam:
-            if zaznam.ident_cely.startswith("X"):
-                pass
-            else:
+        if self.druh_opravneni == self.DruhyOpravneni.XID and zaznam is not None:
+            if not zaznam.ident_cely.startswith("X"):
                 return False
         return True
 
