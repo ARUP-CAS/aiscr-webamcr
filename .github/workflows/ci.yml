@@ -44,6 +44,10 @@ jobs:
     - name: Run Migrations
       working-directory: ./webclient
       run: |
+        python manage.py migrate uzivatel --settings=webclient.settings.dev
+    - name: Run Migrations
+      working-directory: ./webclient
+      run: |
         python manage.py migrate --settings=webclient.settings.dev
     - name: Run Flush
       working-directory: ./webclient
