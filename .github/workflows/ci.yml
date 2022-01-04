@@ -41,14 +41,14 @@ jobs:
     - name: Install gdal
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
-    - name: Run Flush # run migrations to create table in side car db container
-      working-directory: ./webclient
-      run: |
-        python manage.py flush --settings=webclient.settings.dev
-    - name: Run Migrations # run migrations to create table in side car db container
+    - name: Run Migrations
       working-directory: ./webclient
       run: |
         python manage.py migrate --settings=webclient.settings.dev
+    - name: Run Flush
+      working-directory: ./webclient
+      run: |
+        python manage.py flush --settings=webclient.settings.dev
     - name: Django Testing
       working-directory: ./webclient
       run: |
