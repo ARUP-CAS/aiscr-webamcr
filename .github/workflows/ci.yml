@@ -14,7 +14,7 @@ jobs:
         env: # the environment variable must match with app/settings.py if block of DATBASES variable otherwise test will fail due to connectivity issue.
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_secretpass
-          POSTGRES_DB: test_db_2
+          POSTGRES_DB: test_db_3
         ports:
           - 5432:5432 # exposing 5432 port for application to use
         # needed because the postgres container does not provide a healthcheck
@@ -41,10 +41,6 @@ jobs:
     - name: Install gdal
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
-    - name: Run Migrations
-      working-directory: ./webclient
-      run: |
-        python manage.py migrate uzivatel --settings=webclient.settings.dev
     - name: Run Migrations
       working-directory: ./webclient
       run: |
