@@ -128,8 +128,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     def name_and_id(self):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
 
-    # class Meta:
-    #     db_table = "auth_user"
+    class Meta:
+        db_table = "auth_user"
 
 
 class Organizace(models.Model):

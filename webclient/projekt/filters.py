@@ -175,7 +175,7 @@ class ProjektFilter(filters.FilterSet):
     )
 
     historie_uzivatel = MultipleChoiceFilter(
-        choices=[(user.id, str(user)) for user in User.objects.all()],
+        # choices=[(user.id, str(user)) for user in User.objects.all()],
         field_name="historie__historie__uzivatel",
         label="Uživatel",
         widget=SelectMultiple(
