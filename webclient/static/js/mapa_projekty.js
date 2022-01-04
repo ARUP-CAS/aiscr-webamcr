@@ -121,6 +121,12 @@ map.on('zoomend', function () {
     }
 });
 
+map.on('moveend', function () {
+    if (map.getZoom() > 10) {
+        getOtherPoi();
+    }
+});
+
 map.on('click', function (e) {
     //console.log("Your zoom is: " + map.getZoom())
     let corX = e.latlng.lat;

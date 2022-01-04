@@ -10,7 +10,7 @@
 
 {% block content %}
   <div class="app-entity-knihovna_3d app-table-list-container">
-    {% include "toolbar_dokument.html" %}
+    {% include "toolbar_dokument.html" with is_3d=True %}
 
     {% if filter %}
       <form method="get">

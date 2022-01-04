@@ -91,11 +91,9 @@ class DokumentFilter(filters.FilterSet):
         label=_("Důvěryhodnost (min. %)"),
         lookup_expr="gte",
         widget=NumberInput(attrs={"min": "1", "max": "100"}),
+        distinct=True,
     )
-    popisne_udaje = CharFilter(
-        label=_("Popisné údaje"),
-        method="filter_popisne_udaje",
-    )
+    popisne_udaje = CharFilter(label=_("Popisné údaje"), method="filter_popisne_udaje",)
 
     zeme = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_ZEME),
@@ -104,6 +102,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     obdobi = ModelMultipleChoiceFilter(
@@ -126,6 +125,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     aktivity = ModelMultipleChoiceFilter(
@@ -137,6 +137,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     predmet_druh = ModelMultipleChoiceFilter(
@@ -148,6 +149,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     predmet_specifikace = ModelMultipleChoiceFilter(
@@ -159,6 +161,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
     objekt_druh = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(
@@ -169,6 +172,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     objekt_specifikace = ModelMultipleChoiceFilter(
@@ -180,6 +184,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     # Filters by historie
@@ -192,12 +197,14 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     historie_datum_zmeny_od = DateFromToRangeFilter(
         label="Datum změny (od-do)",
         field_name="historie__historie__datum_zmeny",
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
 
     historie_uzivatel = MultipleChoiceFilter(
@@ -207,6 +214,7 @@ class DokumentFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     def filter_popisne_udaje(self, queryset, name, value):

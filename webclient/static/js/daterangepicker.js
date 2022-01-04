@@ -1,6 +1,7 @@
 // setting locale to the daterangepicker
 moment.locale('cs');
 $('input[name="planovane_zahajeni"]').daterangepicker({
+    parentEl: '#div_id_planovane_zahajeni',
     autoUpdateInput: false,
     locale: {
         cancelLabel: "Zrušit",
@@ -8,10 +9,10 @@ $('input[name="planovane_zahajeni"]').daterangepicker({
     },
 });
 
-$('input[name="planovane_zahajeni"]').on('apply.daterangepicker', function(ev, picker) {
+$('input[name="planovane_zahajeni"]').on('apply.daterangepicker', function (ev, picker) {
     $(this).val(picker.startDate.format('DD.MM.YYYY') + ' - ' + picker.endDate.format('DD.MM.YYYY'));
 });
 
-$('input[name="planovane_zahajeni"]').on('cancel.daterangepicker', function(ev, picker) {
+$('input[name="planovane_zahajeni"]').on('cancel.daterangepicker', function (ev, picker) {
     $(this).val('');
 });

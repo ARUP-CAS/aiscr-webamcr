@@ -146,8 +146,8 @@
           <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Uživatelské označení" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.uzivatelske_oznaceni|check_if_none }}"
-                        readonly></textarea>
+              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni|check_if_none }}"
+                        readonly>{{ zaznam.uzivatelske_oznaceni|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
@@ -186,21 +186,21 @@
             <div class="form-group">
               <label>{% trans "Lokalizace okolností" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2"
-                        value="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly></textarea>
+                        placeholder="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" value="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
-                        readonly></textarea>
+              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
+                        readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-6">
             <div class="form-group">
               <label>{% trans "Uložení dokumentace" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
-                        readonly></textarea>
+                        readonly>{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-3">
@@ -218,7 +218,7 @@
           <div class="col-sm-3">
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.poznamka|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.souhrn_upresneni|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-3">
@@ -244,7 +244,8 @@
             {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
-                <button class="btn" onclick="show_form('create_dj_form')" rel="tooltip" data-placement="top"
+                <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form')"
+                        rel="tooltip" data-placement="top"
                         title="{% trans 'Přidat dokumentační jednotku' %}">
                   <span class="material-icons">add</span>
                 </button>

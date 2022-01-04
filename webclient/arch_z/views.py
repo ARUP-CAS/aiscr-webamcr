@@ -89,6 +89,8 @@ def detail(request, ident_cely):
     old_objekt_post = request.session.pop("_old_objekt_post", None)
     old_predmet_post = request.session.pop("_old_predmet_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
+    old_adb_post = request.session.pop("_old_adb_post", None)
+    adb_ident_cely = request.session.pop("adb_ident_cely", None)
     zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
         .select_related("akce__vedlejsi_typ")
@@ -197,8 +199,15 @@ def detail(request, ident_cely):
             "show_approve_pian": show_approve_pian,
         }
         if has_adb:
-            dj_form_detail["adb_form"] = CreateADBForm(
-                instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+            logger.debug(jednotka.ident_cely)
+            dj_form_detail["adb_form"] = (
+                CreateADBForm(
+                    old_adb_post, instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+                )
+                if jednotka.adb.ident_cely == adb_ident_cely
+                else CreateADBForm(
+                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+                )
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
             dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(

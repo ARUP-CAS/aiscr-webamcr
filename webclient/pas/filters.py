@@ -70,10 +70,7 @@ class SamostatnyNalezFilter(filters.FilterSet):
         ),
     )
 
-    katastr = CharFilter(
-        lookup_expr="nazev__icontains",
-        label=_("Katastr"),
-    )
+    katastr = CharFilter(lookup_expr="nazev__icontains", label=_("Katastr"),)
 
     vlastnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace").all(),
@@ -83,10 +80,7 @@ class SamostatnyNalezFilter(filters.FilterSet):
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
-    popisne_udaje = CharFilter(
-        method="filter_popisne_udaje",
-        label="Popisné údaje",
-    )
+    popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",)
 
     nalezce = ModelMultipleChoiceFilter(
         queryset=Osoba.objects.all(),
@@ -137,12 +131,14 @@ class SamostatnyNalezFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     historie_datum_zmeny_od = DateFromToRangeFilter(
         label="Datum změny (od-do)",
         field_name="historie__historie__datum_zmeny",
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
 
     historie_uzivatel = MultipleChoiceFilter(
@@ -152,6 +148,7 @@ class SamostatnyNalezFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     class Meta:
