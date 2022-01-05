@@ -1,4 +1,4 @@
-import psycopg2 # Python library for database connection
+import psycopg2
 
 t_host = "localhost"
 t_port = "5432"
@@ -16,4 +16,6 @@ def get_table_list():
     for t_name_table in list_tables:
         print(t_name_table)
 
+
+db_cursor.execute("CREATE DATABASE test_db_3")
 get_table_list()
