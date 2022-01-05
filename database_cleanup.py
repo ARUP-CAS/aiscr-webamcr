@@ -14,6 +14,6 @@ def get_table_list():
     db_cursor.execute(s)
     list_tables = db_cursor.fetchall()
     for t_name_table in list_tables:
-        print(t_name_table + "\n")
+        print(t_name_table)
 
 get_table_list()
