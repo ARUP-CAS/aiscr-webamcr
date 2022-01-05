@@ -19,6 +19,8 @@ jobs:
           - 5432:5432 # exposing 5432 port for application to use
         # needed because the postgres container does not provide a healthcheck
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        volumes:
+          - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
