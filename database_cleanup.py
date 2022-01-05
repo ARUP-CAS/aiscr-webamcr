@@ -13,6 +13,7 @@ def get_table_list():
     s = "SELECT table_schema, table_name FROM information_schema.tables"
     db_cursor.execute(s)
     list_tables = db_cursor.fetchall()
+
     for t_name_table in list_tables:
         print(t_name_table)
 
