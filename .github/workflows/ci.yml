@@ -44,7 +44,7 @@ jobs:
     - name: Run Migrations
       working-directory: ./webclient
       run: |
-        python manage.py migrate auth --settings=webclient.settings.dev
+        python manage.py makemigrations --settings=webclient.settings.dev
     - name: Run Flush
       working-directory: ./webclient
       run: |
