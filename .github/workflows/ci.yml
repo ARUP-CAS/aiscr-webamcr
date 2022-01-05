@@ -47,7 +47,7 @@ jobs:
     - name: Run Migrations
       working-directory: ./webclient
       run: |
-        python manage.py flush --settings=webclient.settings.dev
+        python manage.py flush --no-input --settings=webclient.settings.dev
     - name: Run Migrations
       working-directory: ./webclient
       run: |
