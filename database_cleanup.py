@@ -17,5 +17,4 @@ def get_table_list():
         print(t_name_table)
 
 
-db_cursor.execute("CREATE DATABASE test_db_3")
 get_table_list()

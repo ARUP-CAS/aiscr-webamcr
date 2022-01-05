@@ -47,6 +47,10 @@ jobs:
     - name: Run Migrations
       working-directory: ./webclient
       run: |
+        python manage.py flush --settings=webclient.settings.dev
+    - name: Run Migrations
+      working-directory: ./webclient
+      run: |
         python manage.py migrate --settings=webclient.settings.dev
     - name: Django Testing
       working-directory: ./webclient
