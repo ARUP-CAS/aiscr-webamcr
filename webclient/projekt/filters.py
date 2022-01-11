@@ -3,6 +3,8 @@ from datetime import datetime
 
 import crispy_forms
 import django_filters as filters
+from django.db import utils
+
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     OBLAST_CECHY,
@@ -175,7 +177,6 @@ class ProjektFilter(filters.FilterSet):
     )
 
     historie_uzivatel = MultipleChoiceFilter(
-        choices=[(user.id, str(user)) for user in User.objects.all()],
         field_name="historie__historie__uzivatel",
         label="Uživatel",
         widget=SelectMultiple(
@@ -459,6 +460,10 @@ class ProjektFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
+        try:
+            self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
+        except utils.ProgrammingError as err:
+            self.historie_uzivatel.choices = []
         self.helper = ProjektFilterFormHelper()
 
 
