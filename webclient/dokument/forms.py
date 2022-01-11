@@ -117,7 +117,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             self.fields["let"].choices = tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely")))
             self.fields["dokument_osoba"].choices = Osoba.objects.all().values_list("id", "vypis_cely"),
         except utils.ProgrammingError:
-            self.fields["let"].choices = []
+            self.fields["let"].choices = tuple([("", "")])
             self.fields["dokument_osoba"].choices = []
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
