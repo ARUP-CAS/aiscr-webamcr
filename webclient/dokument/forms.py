@@ -114,11 +114,11 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         edit_prohibited = kwargs.pop("edit", True)
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
         try:
-            self.let.choices = tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely")))
-            self.dokument_osoba.choices = Osoba.objects.all().values_list("id", "vypis_cely"),
-        except utils.ProgrammingError as err:
-            self.historie_uzivatel.choices = []
-            self.dokument_osoba.choices = []
+            self.fields["let"].choices = tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely")))
+            self.fields["dokument_osoba"].choices = Osoba.objects.all().values_list("id", "vypis_cely"),
+        except utils.ProgrammingError:
+            self.fields["let"].choices = []
+            self.fields["dokument_osoba"].choices = []
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
