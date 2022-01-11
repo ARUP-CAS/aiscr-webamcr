@@ -144,7 +144,6 @@ class SamostatnyNalezFilter(filters.FilterSet):
     )
 
     historie_uzivatel = MultipleChoiceFilter(
-        choices=[(user.id, str(user)) for user in User.objects.all()],
         field_name="historie__historie__uzivatel",
         label="Uživatel",
         widget=SelectMultiple(
@@ -167,8 +166,10 @@ class SamostatnyNalezFilter(filters.FilterSet):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         try:
             self.nalezce.choices = Osoba.objects.all()
+            self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
         except utils.ProgrammingError as err:
             self.nalezce.choices = []
+            self.historie_uzivatel.choices = []
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_popisne_udaje(self, queryset, name, value):
