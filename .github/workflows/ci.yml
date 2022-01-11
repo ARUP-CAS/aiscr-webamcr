@@ -41,13 +41,6 @@ jobs:
     - name: Install gdal
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
-    - name: Database cleanup
-      run: |
-        python database_cleanup.py
-    - name: Run Migrations
-      working-directory: ./webclient
-      run: |
-        python manage.py flush --no-input --settings=webclient.settings.dev
     - name: Run Migrations
       working-directory: ./webclient
       run: |
