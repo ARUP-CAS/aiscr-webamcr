@@ -1,3 +1,5 @@
+from django.db import utils
+
 from core.constants import COORDINATE_SYSTEM
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -31,9 +33,6 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     let = forms.ChoiceField(
         label="Let",
         required=False,
-        choices=tuple(
-            [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
-        ),
         widget=forms.Select(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -115,6 +114,10 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         dok_osoby = kwargs.pop("dok_osoby", None)
         edit_prohibited = kwargs.pop("edit", True)
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
+        try:
+            self.let.choices = tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely")))
+        except utils.ProgrammingError as err:
+            self.historie_uzivatel.choices = []
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
