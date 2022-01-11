@@ -42,7 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     # osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
     auth_level = models.IntegerField(blank=True, null=True)
     organizace = models.ForeignKey(
-        "Organizace", models.DO_NOTHING, db_column="organizace"
+        "Organizace", models.DO_NOTHING, db_column="organizace", null=True
     )
     # historie = models.ForeignKey('HistorieVazby', models.DO_NOTHING, db_column='historie', blank=True, null=True)
     email_potvrzen = models.TextField(blank=True, null=True)
@@ -140,6 +140,7 @@ class Organizace(models.Model):
         models.DO_NOTHING,
         db_column="typ_organizace",
         related_name="typy_organizaci",
+        null=True
     )
     oao = models.BooleanField(default=False)
     mesicu_do_zverejneni = models.IntegerField(default=36)
@@ -148,6 +149,7 @@ class Organizace(models.Model):
         models.DO_NOTHING,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
+        null=True
     )
     nazev_zkraceny_en = models.TextField(blank=True, null=True)
     email = models.TextField(blank=True, null=True)
