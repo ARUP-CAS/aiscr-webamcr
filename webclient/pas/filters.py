@@ -3,16 +3,9 @@ import logging
 import crispy_forms
 import django_filters
 import django_filters as filters
-from django.db import utils
-
-from core.constants import (
-    OBLAST_CECHY,
-    OBLAST_CHOICES,
-    OBLAST_MORAVA,
-    ROLE_ARCHEOLOG_ID,
-)
 from crispy_forms.layout import Div, Layout, HTML
 from django.contrib.auth.models import Group
+from django.db import utils
 from django.db.models import Q
 from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
@@ -24,6 +17,12 @@ from django_filters import (
 )
 from django_filters.widgets import DateRangeWidget
 
+from core.constants import (
+    OBLAST_CECHY,
+    OBLAST_CHOICES,
+    OBLAST_MORAVA,
+    ROLE_ARCHEOLOG_ID,
+)
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
@@ -31,10 +30,9 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
+from historie.models import Historie
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
-from historie.models import Historie
-
 
 logger = logging.getLogger(__name__)
 
@@ -189,9 +187,6 @@ class SamostatnyNalezFilter(filters.FilterSet):
 
 class UzivatelSpolupraceFilter(filters.FilterSet):
     vedouci = ModelMultipleChoiceFilter(
-        queryset=User.objects.select_related("organizace").filter(
-            hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
-        ),
         field_name="vedouci",
         label="Vedoucí",
         widget=SelectMultiple(
@@ -214,6 +209,13 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
+        try:
+            self.vedouci.queryset = User.objects.select_related("organizace").filter(
+                hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+            )
+        except utils.ProgrammingError as err:
+            self.vedouci.queryset = None
+
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
 
