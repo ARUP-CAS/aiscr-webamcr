@@ -38,7 +38,7 @@ class IdentTests(TestCase):
             ),
         )
         kl.save()
-        vazba_pian = HistorieVazby.get(pk=47)
+        vazba_pian = HistorieVazby.objects.get(pk=47)
         pian = Pian(
             id=1,
             presnost=Heslar.objects.get(pk=PRESNOST_DESITKY_METRU_ID),
