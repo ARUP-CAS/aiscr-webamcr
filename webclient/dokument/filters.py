@@ -2,6 +2,7 @@ import logging
 
 import crispy_forms
 import django_filters as filters
+from django.db import utils
 from django_filters.widgets import DateRangeWidget
 from crispy_forms.layout import Div, Layout, HTML
 from django.forms import SelectMultiple, NumberInput
@@ -72,7 +73,6 @@ class DokumentFilter(filters.FilterSet):
     )
 
     autor = MultipleChoiceFilter(
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         label=_("Autor"),
         field_name="autori",
         widget=SelectMultiple(
@@ -208,7 +208,6 @@ class DokumentFilter(filters.FilterSet):
     )
 
     historie_uzivatel = MultipleChoiceFilter(
-        choices=[(user.id, str(user)) for user in User.objects.all()],
         field_name="historie__historie__uzivatel",
         label="Uživatel",
         widget=SelectMultiple(
@@ -233,6 +232,13 @@ class DokumentFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)
+        try:
+            self.autor.choices = Osoba.objects.all().values_list("id", "vypis_cely")
+            self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
+        except utils.ProgrammingError as err:
+            self.autor.choices = []
+            self.historie_uzivatel.choices = []
+
         self.helper = DokumentFilterFormHelper()
 
 

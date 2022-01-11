@@ -40,7 +40,6 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     dokument_osoba = forms.MultipleChoiceField(
         label="Dokumentované osoby",
         required=False,
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=forms.SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -116,8 +115,10 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
         try:
             self.let.choices = tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely")))
+            self.dokument_osoba.choices = Osoba.objects.all().values_list("id", "vypis_cely"),
         except utils.ProgrammingError as err:
             self.historie_uzivatel.choices = []
+            self.dokument_osoba.choices = []
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1

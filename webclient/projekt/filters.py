@@ -100,7 +100,6 @@ class ProjektFilter(filters.FilterSet):
     )
 
     vedouci_projektu = ModelMultipleChoiceFilter(
-        queryset=Osoba.objects.all(),
         label=_("Vedoucí"),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
@@ -230,7 +229,6 @@ class ProjektFilter(filters.FilterSet):
     )
 
     akce_vedouci = MultipleChoiceFilter(
-        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         label="Vedoucí",
         method="filtr_akce_vedouci",
         widget=SelectMultiple(
@@ -462,8 +460,12 @@ class ProjektFilter(filters.FilterSet):
         super(ProjektFilter, self).__init__(*args, **kwargs)
         try:
             self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
+            self.akce_vedouci.choices = Osoba.objects.all().values_list("id", "vypis_cely")
+            self.vedouci_projektu.choices = queryset=Osoba.objects.all()
         except utils.ProgrammingError as err:
             self.historie_uzivatel.choices = []
+            self.akce_vedouci.choices = []
+            self.vedouci_projektu.choices = []
         self.helper = ProjektFilterFormHelper()
 
 

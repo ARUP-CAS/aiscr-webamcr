@@ -3,6 +3,8 @@ import logging
 import crispy_forms
 import django_filters
 import django_filters as filters
+from django.db import utils
+
 from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
@@ -163,6 +165,10 @@ class SamostatnyNalezFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
+        try:
+            self.nalezce.choices = Osoba.objects.all()
+        except utils.ProgrammingError as err:
+            self.nalezce.choices = []
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_popisne_udaje(self, queryset, name, value):
