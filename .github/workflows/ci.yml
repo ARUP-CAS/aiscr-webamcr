@@ -41,6 +41,10 @@ jobs:
     - name: Install gdal
       run: |
         pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+    - name: Run Migrations for auth
+      working-directory: ./webclient
+      run: |
+        python manage.py migrate auth --settings=webclient.settings.dev
     - name: Run Migrations
       working-directory: ./webclient
       run: |
