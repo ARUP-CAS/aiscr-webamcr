@@ -62,7 +62,7 @@ class UrlTests(TestCase):
     def test_get_change_states(self):
         requestA = self.factory.get("/dokument/archivovat/")
         requestA = add_middleware_to_request(requestA, SessionMiddleware)
-        request = add_middleware_to_request(requestA, MessageMiddleware)
+        requestA = add_middleware_to_request(requestA, MessageMiddleware)
         requestA.user = self.existing_user
         requestA.session.save()
         # Dokument je ve spatnem stavu
@@ -70,6 +70,7 @@ class UrlTests(TestCase):
             archivovat(requestA, ident_cely=self.existing_dokument)
         request = self.factory.get("/dokument/odeslat/")
         request = add_middleware_to_request(request, SessionMiddleware)
+        request = add_middleware_to_request(request, MessageMiddleware)
         request.user = self.existing_user
         request.session.save()
         # Dokument lze odeslat
