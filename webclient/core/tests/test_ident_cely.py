@@ -62,7 +62,7 @@ class IdentTests(TestCase):
 
         p.set_permanent_ident_cely()
         p.save()
-        self.assertEqual(p.ident_cely, "C-202100001")
+        self.assertEqual(p.ident_cely, f"C-{datetime.datetime.now().year}00001")
 
     def test_get_temporary_project_ident(self):
         year = datetime.datetime.now().year
@@ -71,10 +71,10 @@ class IdentTests(TestCase):
         )
         region = "M"
         ident = get_temporary_project_ident(p, region)
-        self.assertEqual(ident, "X-M-" + str(year) + "00001")
+        self.assertEqual(ident, f"X-M-{'0' * 8}1")
         p.id = 100000
         ident = get_temporary_project_ident(p, region)
-        self.assertEqual(ident, "X-M-" + str(year) + "00000")
+        self.assertEqual(ident, f"X-M-{str(p.id).zfill(9)}")
 
     def test_get_permanent_ident(self):
         # Insert some projects to the database

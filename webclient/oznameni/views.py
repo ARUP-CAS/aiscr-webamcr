@@ -25,14 +25,16 @@ logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET", "POST"])
-def index(request):
+def index(request, test_run=False):
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
         form_ozn = OznamovatelForm(request.POST)
         form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
+        logger.debug(f"oznameni.views.index form_ozn.is_valid {form_ozn.is_valid()}")
+        logger.debug(f"oznameni.views.index form_projekt.is_valid {form_projekt.is_valid()}")
 
-        if form_ozn.is_valid() and form_projekt.is_valid() and form_captcha.is_valid():
+        if form_ozn.is_valid() and form_projekt.is_valid() and (test_run or form_captcha.is_valid()):
             logger.debug("Form is valid")
             o = form_ozn.save(commit=False)
             p = form_projekt.save(commit=False)
@@ -81,7 +83,8 @@ def index(request):
             logger.debug("One of the forms is not valid")
             logger.debug(form_ozn.errors)
             logger.debug(form_projekt.errors)
-            logger.debug(form_captcha.errors)
+            if not test_run:
+                logger.debug(form_captcha.errors)
 
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:

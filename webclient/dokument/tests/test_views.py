@@ -9,7 +9,7 @@ from core.tests.runner import (
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
     ZACHOVALOST_30_80_ID,
-    add_middleware_to_request,
+    add_middleware_to_request, EL_CHEFE_ID, ARCHIV_ARUB,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -110,6 +110,11 @@ class UrlTests(TestCase):
             "posudky": str(ARCHEOLOGICKY_POSUDEK_ID),
             "duveryhodnost": "10",
             "zachovalost": str(ZACHOVALOST_30_80_ID),
+            "popis": "test",
+            "licence": "test",
+            "ulozeni_originalu": str(ARCHIV_ARUB),
+            "autori": str(EL_CHEFE_ID),
+
         }
         request = self.factory.post("/dokument/edit/", data)
         request.user = self.existing_user

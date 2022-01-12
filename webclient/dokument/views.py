@@ -266,6 +266,7 @@ def edit(request, ident_cely):
             instance=extra_data,
         )
         if form_d.is_valid() and form_extra.is_valid():
+            logger.debug("webclient.dokument.views: Both forms are valid")
             instance_d = form_d.save(commit=False)
             instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
             if form_extra.cleaned_data["let"]:
@@ -277,9 +278,9 @@ def edit(request, ident_cely):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form_d.errors)
-            logger.debug(form_extra.errors)
+            logger.debug("webclient.dokument.views: The form is not valid")
+            logger.debug(f"webclient.dokument.views form_d.errors: {form_d.errors}")
+            logger.debug(f"webclient.dokument.views form_extra.errors: {form_extra.errors}")
     else:
         form_d = EditDokumentForm(instance=dokument)
         form_extra = EditDokumentExtraDataForm(

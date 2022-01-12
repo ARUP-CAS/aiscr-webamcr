@@ -45,6 +45,7 @@ from heslar.hesla import (
     PRISTUPNOST_ANONYM_ID,
     SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_ZACHRANNY_ID,
+    HESLAR_DOKUMENT_ULOZENI,
 )
 from heslar.models import (
     Heslar,
@@ -76,6 +77,7 @@ OBDOBI_STREDNI_PALEOLIT_ID = 336
 AREAL_HRADISTE_ID = 337
 RADA_DOKUMENTU_TEXT_ID = 547
 ZACHOVALOST_30_80_ID = 658
+ARCHIV_ARUB = 1165
 
 TYP_ORGANIZACE_USTAV_PAMATKOVE_PECE_ID = 852
 TYP_ORGANIZACE_MUZEUM_ID = 342
@@ -197,6 +199,7 @@ class AMCRTestRunner(BaseRunner):
         hok = HeslarNazev(id=HESLAR_OBDOBI, nazev="heslar_obdobi")
         hak = HeslarNazev(id=HESLAR_AREAL, nazev="heslar_areal")
         hza = HeslarNazev(id=HESLAR_DOKUMENT_ZACHOVALOST, nazev="heslar_zachovalost")
+        hdu = HeslarNazev(id=HESLAR_DOKUMENT_ULOZENI, nazev="heslar_dokument_ulozeni")
         nazvy_heslaru = [
             hn,
             hp,
@@ -214,6 +217,7 @@ class AMCRTestRunner(BaseRunner):
             hak,
             hdr,
             hza,
+            hdu,
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -221,13 +225,14 @@ class AMCRTestRunner(BaseRunner):
         Heslar(
             id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="zachranny"
         ).save()
-        Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp).save()
+        Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp, zkratka=1).save()
         Heslar(id=GEOMETRY_PLOCHA, nazev_heslare=ha).save()
         Heslar(id=GEOMETRY_BOD, nazev_heslare=ha).save()
         Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
         Heslar(id=SPECIFIKACE_DATA_PRESNE, heslo="presne", nazev_heslare=hsd).save()
         Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
         Heslar(id=ZACHOVALOST_30_80_ID, heslo="30 % az 80 %", nazev_heslare=hza).save()
+        Heslar(id=ARCHIV_ARUB, heslo="archiv ARÚB", nazev_heslare=hdu).save()
         typ_dokumentu_plan = Heslar(
             id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd
         )

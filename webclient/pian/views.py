@@ -117,7 +117,7 @@ def create(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("pian.views.create: Form is valid")
         pian = form.save(commit=False)
         # Assign base map references
         if type(pian.geom) == Point:
@@ -131,7 +131,7 @@ def create(request, dj_ident_cely):
             point = Centroid(pian.geom)
         else:
             raise NeznamaGeometrieError()
-        logger.debug("GEOM: " + str(form.data["geom"]))
+        logger.debug("pian.views.create: GEOM: " + str(form.data["geom"]))
         zm10s = (
             Kladyzm.objects.filter(kategorie=KLADYZM10)
             .exclude(objectid=1094)
@@ -148,24 +148,26 @@ def create(request, dj_ident_cely):
             try:
                 pian.ident_cely = get_temporary_pian_ident(zm50s[0])
             except MaximalIdentNumberError as e:
+                logger.error(f"pian.views.create: {messages.ERROR}, {e.message}.")
                 messages.add_message(request, messages.ERROR, e.message)
             else:
                 pian.save()
                 pian.set_vymezeny(request.user)
                 dj.pian = pian
                 dj.save()
+                logger.debug(f"pian.views.create: {messages.SUCCESS}, {ZAZNAM_USPESNE_VYTVOREN} {dj.pk}.")
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         else:
-            logger.error("Nelze priradit ZM10 nebo ZM50 k pianu.")
-            logger.error("ZM10s" + str(zm10s))
-            logger.error("ZM50s" + str(zm50s))
+            logger.error("pian.views.create: Nelze priradit ZM10 nebo ZM50 k pianu.")
+            logger.error("pian.views.create: ZM10s" + str(zm10s))
+            logger.error("pian.views.create: ZM50s" + str(zm50s))
             messages.add_message(
                 request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
         redirect("dj:detail", ident_cely=dj_ident_cely)
     else:
-        logger.warning("Form is not valid")
-        logger.warning(form.errors)
+        logger.warning("pian.views.create: Form is not valid")
+        logger.warning(f"pian.views.create: Form errors: {form.errors}")
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     return redirect(request.META.get("HTTP_REFERER"))

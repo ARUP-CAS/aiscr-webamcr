@@ -775,9 +775,16 @@ def katastr_text_to_id(request):
     okres_name = (
         (hlavni_katastr[hlavni_katastr.find("(") + 1 :]).replace(")", "").strip()
     )
-    katastr = RuianKatastr.objects.filter(
+    katastr_query = RuianKatastr.objects.filter(
         Q(nazev=hlavni_katastr_name) & Q(okres__nazev=okres_name)
-    ).first()
-    post = request.POST.copy()
-    post["hlavni_katastr"] = katastr.id
-    return post
+    )
+    if katastr_query.count() > 0:
+        post = request.POST.copy()
+        post["hlavni_katastr"] = katastr_query.first().id
+        return post
+    else:
+        if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
+            logger.debug(f"Katastr {hlavni_katastr_name} and {okres_name} are already numbers")
+        else:
+            logger.error(f"Cannot find katastr {hlavni_katastr_name} in {okres_name}!")
+        return request.POST.copy()

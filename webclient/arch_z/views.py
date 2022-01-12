@@ -421,6 +421,8 @@ def zapsat(request, projekt_ident_cely):
 
     # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
     if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
+        logger.debug("arch_z.views.zapsat: "
+                     f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added.")
         raise PermissionDenied(
             "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
         )
@@ -449,10 +451,13 @@ def zapsat(request, projekt_ident_cely):
                 akce.save()
 
                 messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
+                logger.debug(f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
+                             f"projekt: {projekt_ident_cely}")
                 return redirect("/arch_z/detail/" + az.ident_cely)
 
         else:
-            logger.warning("Form is not valid")
+            logger.warning("arch_z.views.zapsat: "
+                           "Form is not valid")
             logger.debug(form_az.errors)
             logger.debug(form_akce.errors)
 

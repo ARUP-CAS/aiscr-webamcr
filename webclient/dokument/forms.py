@@ -1,11 +1,11 @@
-from django.db import utils
-
-from core.constants import COORDINATE_SYSTEM
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
+from django.db import utils
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+
+from core.constants import COORDINATE_SYSTEM
 from dokument.models import Dokument, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
@@ -30,20 +30,13 @@ class CoordinatesDokumentForm(forms.Form):
 
 class EditDokumentExtraDataForm(forms.ModelForm):
     rada = forms.CharField(label="Řada", required=False)
-    let = forms.ChoiceField(
-        label="Let",
-        required=False,
-        widget=forms.Select(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
-    )
-    dokument_osoba = forms.MultipleChoiceField(
-        label="Dokumentované osoby",
-        required=False,
-        widget=forms.SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
-    )
+    # dokument_osoba = forms.MultipleChoiceField(
+    #     label="Dokumentované osoby",
+    #     required=False,
+    #     widget=forms.SelectMultiple(
+    #         attrs={"class": "selectpicker", "data-live-search": "true"}
+    #     ),
+    # )
 
     class Meta:
         model = DokumentExtraData
@@ -114,11 +107,41 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         edit_prohibited = kwargs.pop("edit", True)
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
         try:
-            self.fields["let"].choices = tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely")))
-            self.fields["dokument_osoba"].choices = Osoba.objects.all().values_list("id", "vypis_cely"),
+            self.fields["dokument_osoba"] = \
+                forms.MultipleChoiceField(
+                    choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+                    label="Dokumentované osoby",
+                    required=False,
+                    widget=forms.SelectMultiple(
+                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                    ),
+                )
+            self.fields["let"] = forms.ChoiceField(
+                choices=tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))),
+                label="Let",
+                required=False,
+                widget=forms.Select(
+                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                ),
+            )
         except utils.ProgrammingError:
-            self.fields["let"].choices = tuple(("", ""))
-            self.fields["dokument_osoba"].choices = None
+            self.fields["dokument_osoba"] = \
+                forms.MultipleChoiceField(
+                    choices=tuple(("", "")),
+                    label="Dokumentované osoby",
+                    required=False,
+                    widget=forms.SelectMultiple(
+                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                    ),
+                )
+            self.fields["let"] = forms.ChoiceField(
+                choices=tuple(("", "")),
+                label="Let",
+                required=False,
+                widget=forms.Select(
+                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                ),
+            )
         self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1

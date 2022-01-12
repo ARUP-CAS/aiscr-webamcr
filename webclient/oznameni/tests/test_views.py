@@ -33,7 +33,7 @@ class UrlTests(TestCase):
             "longitude": "14.417222",
         }
         request = self.factory.post("/oznameni/", data)
-        response = index(request)
+        response = index(request, test_run=True)
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
 
