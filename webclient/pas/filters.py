@@ -163,11 +163,11 @@ class SamostatnyNalezFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         try:
-            self.nalezce.choices = Osoba.objects.all()
-            self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
+            self.filters["nalezce"].choices = Osoba.objects.all()
+            self.filters["historie_uzivatel"].choices = [(user.id, str(user)) for user in User.objects.all()]
         except utils.ProgrammingError as err:
-            self.nalezce.choices = []
-            self.historie_uzivatel.choices = []
+            self.filters["nalezce"].choices = []
+            self.filters["historie_uzivatel"].choices = []
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_popisne_udaje(self, queryset, name, value):
@@ -210,11 +210,10 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         try:
-            self.vedouci.queryset = User.objects.select_related("organizace").filter(
-                hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
-            )
+            self.filters["vedouci"].extra.update({"queryset": User.objects.select_related("organizace").filter(
+                hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID))})
         except utils.ProgrammingError as err:
-            self.vedouci.queryset = None
+            self.filters["vedouci"].extra.update({"queryset": None})
 
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
