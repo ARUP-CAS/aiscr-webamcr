@@ -459,13 +459,13 @@ class ProjektFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
         try:
-            self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
-            self.akce_vedouci.choices = Osoba.objects.all().values_list("id", "vypis_cely")
-            self.vedouci_projektu.choices = queryset=Osoba.objects.all()
+            self.filters["historie_uzivatel"].choices = User.objects.all().values_list("id", "last_name")
+            self.filters["akce_vedouci"].choices = Osoba.objects.all().values_list("id", "vypis_cely")
+            self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
         except utils.ProgrammingError as err:
-            self.historie_uzivatel.choices = []
-            self.akce_vedouci.choices = []
-            self.vedouci_projektu.choices = []
+            self.filters["historie_uzivatel"].choices = []
+            self.filters["akce_vedouci"].choices = []
+            self.filters["vedouci_projektu"].extra.update({"queryset": None})
         self.helper = ProjektFilterFormHelper()
 
 
