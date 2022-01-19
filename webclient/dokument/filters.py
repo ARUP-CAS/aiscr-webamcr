@@ -233,11 +233,11 @@ class DokumentFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)
         try:
-            self.autor.choices = Osoba.objects.all().values_list("id", "vypis_cely")
-            self.historie_uzivatel.choices = [(user.id, str(user)) for user in User.objects.all()]
+            self.filters["autor"].choices = Osoba.objects.all().values_list("id", "vypis_cely")
+            self.filters["historie_uzivatel"].choices = User.objects.all().values_list("id", "first_name")
         except utils.ProgrammingError as err:
-            self.autor.choices = []
-            self.historie_uzivatel.choices = []
+            self.filters["autor"].choices = []
+            self.filters["historie_uzivatel"].choices = []
 
         self.helper = DokumentFilterFormHelper()
 
