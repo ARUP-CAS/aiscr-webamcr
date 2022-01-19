@@ -17,4 +17,33 @@
 {% endblock %}
 
 {% block script %}
+<script>
+  window.onload = function() {
+    $('#div_id_reason_text').hide();
+    $('#div_id_projekt_id').hide();
+    
+    if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option1') {
+      $('#div_id_projekt_id').show();
+      };
+    if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option6') {
+      $('#div_id_reason_text').show();
+      };
+};
+  $('input:radio[name="reason"]').change(
+    function(){
+        if ($(this).is(':checked') && $(this).val() == 'option1') {
+          $('#div_id_reason_text').hide();
+          $('#div_id_projekt_id').show();
+                };
+        if ($(this).is(':checked') && $(this).val() == 'option6') {
+          $('#div_id_reason_text').show();
+          $('#div_id_projekt_id').hide();
+            };
+        if ($(this).is(':checked') && $(this).val() != 'option6' && $(this).val() != 'option1'){
+          $('#div_id_reason_text').hide();
+          $('#div_id_projekt_id').hide();
+          }
+    });
+  
+  </script>
 {% endblock %}

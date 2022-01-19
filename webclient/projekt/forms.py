@@ -80,7 +80,10 @@ class CreateProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(HTML(_("Detail projektu")), css_class="app-fx app-left",),
+                    Div(
+                        HTML(_("Detail projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -101,7 +104,10 @@ class CreateProjektForm(forms.ModelForm):
                             ),
                             css_class="col-sm-9",
                         ),
-                        Div(Div(id="projectMap"), css_class="col-sm-3",),
+                        Div(
+                            Div(id="projectMap"),
+                            css_class="col-sm-3",
+                        ),
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -177,7 +183,11 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "hlavni_katastr": forms.Textarea(
-                attrs={"rows": 1, "cols": 20, "readonly": "readonly",},
+                attrs={
+                    "rows": 1,
+                    "cols": 20,
+                    "readonly": "readonly",
+                },
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -221,12 +231,20 @@ class EditProjektForm(forms.ModelForm):
             "vedouci_projektu": _("projekt.form.editProjekt.vedouci_projektu.tooltip"),
             "organizace": _("projekt.form.editProjekt.organizace.tooltip"),
             "kulturni_pamatka": _("projekt.form.editProjekt.kulturni_pamatka.tooltip"),
-            "kulturni_pamatka_cislo": _("projekt.form.editProjekt.kulturni_pamatka_cislo.tooltip"),
-            "kulturni_pamatka_popis": _("projekt.form.editProjekt.kulturni_pamatka_popis.tooltip"),
-            "uzivatelske_oznaceni": _("projekt.form.editProjekt.uzivatelske_oznaceni.tooltip"),
+            "kulturni_pamatka_cislo": _(
+                "projekt.form.editProjekt.kulturni_pamatka_cislo.tooltip"
+            ),
+            "kulturni_pamatka_popis": _(
+                "projekt.form.editProjekt.kulturni_pamatka_popis.tooltip"
+            ),
+            "uzivatelske_oznaceni": _(
+                "projekt.form.editProjekt.uzivatelske_oznaceni.tooltip"
+            ),
             "datum_zahajeni": _("projekt.form.editProjekt.datum_zahajeni.tooltip"),
             "datum_ukonceni": _("projekt.form.editProjekt.datum_ukonceni.tooltip"),
-            "termin_odevzdani_nz": _("projekt.form.editProjekt.termin_odevzdani_nz.tooltip"),
+            "termin_odevzdani_nz": _(
+                "projekt.form.editProjekt.termin_odevzdani_nz.tooltip"
+            ),
         }
 
     def __init__(self, *args, required, **kwargs):
@@ -236,7 +254,10 @@ class EditProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(HTML(_("Editace projektu")), css_class="app-fx app-left",),
+                    Div(
+                        HTML(_("Editace projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -255,7 +276,10 @@ class EditProjektForm(forms.ModelForm):
                             ),
                             css_class="col-sm-9",
                         ),
-                        Div(Div(id="projectMap"), css_class="col-sm-3",),
+                        Div(
+                            Div(id="projectMap"),
+                            css_class="col-sm-3",
+                        ),
                         css_class="row",
                     ),
                     Div(
@@ -329,8 +353,34 @@ class EditProjektForm(forms.ModelForm):
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
-    reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True,help_text=_("projekt.form.navrhZruseniProj.reason.tooltip"))
+    reason = forms.CharField(
+        label=_("Důvod návrhu zrušení"),
+        required=True,
+        help_text=_("projekt.form.navrhZruseniProj.reason.tooltip"),
+    )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
+    CHOICES = [
+        ("option1", _("projekt.form.navrhzruseni.duvod1.text")),
+        ("option2", _("projekt.form.navrhzruseni.duvod2.text")),
+        ("option3", _("projekt.form.navrhzruseni.duvod3.text")),
+        ("option4", _("projekt.form.navrhzruseni.duvod4.text")),
+        ("option5", _("projekt.form.navrhzruseni.duvod5.text")),
+        ("option6", _("projekt.form.navrhzruseni.duvod6.text")),
+    ]
+
+    reason = forms.ChoiceField(
+        label=_("projekt.form.navrhzruseni.duvod.label"),
+        choices=CHOICES,
+        widget=forms.RadioSelect,
+    )
+    projekt_id = forms.CharField(
+        label=_("projekt.form.navrhzruseni.projektId.label"), required=False
+    )
+    reason_text = forms.CharField(
+        label=_("projekt.form.navrhzruseni.vlastniduvod.label"),
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+    )
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
@@ -344,12 +394,23 @@ class NavrhnoutZruseniProjektForm(forms.Form):
             Div(
                 Div(
                     Div(
-                        HTML(_("Návrh zrušení projektu")), css_class="app-fx app-left",
+                        HTML(_("Návrh zrušení projektu")),
+                        css_class="app-fx app-left",
                     ),
                     css_class="card-header",
                 ),
-                Div("reason", css_class="card-body",),
-                Div("old_stav"),
+                Div(
+                    Div(
+                        "reason",
+                        css_class="form-check",
+                    ),
+                    Div(
+                        "reason_text",
+                        css_class="col-sm-12",
+                    ),
+                    Div("projekt_id", css_class="col-sm-12"),
+                    Div("old_stav"),
+                ),
                 css_class="card app-card-form",
             ),
             Div(
@@ -365,9 +426,24 @@ class NavrhnoutZruseniProjektForm(forms.Form):
             ),
         )
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("reason") == "option1":
+            if not cleaned_data.get("projekt_id"):
+                raise forms.ValidationError(
+                    _("projekt.form.navrhzruseni.validation.projektId.text")
+                )
+        elif cleaned_data.get("reason") == "option6":
+            if not cleaned_data.get("reason_text"):
+                raise forms.ValidationError(
+                    _("projekt.form.navrhzruseni.validation.vlastniDuvod.text")
+                )
+        return self.cleaned_data
+
 
 class PrihlaseniProjektForm(forms.ModelForm):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
+
     class Meta:
         model = Projekt
         fields = (
@@ -398,12 +474,22 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("Uživatelské označení"),
         }
         help_texts = {
-            "vedouci_projektu": _("projekt.form.prihlaseniProj.vedouci_projektu.tooltip"),
-            "kulturni_pamatka": _("projekt.form.prihlaseniProj.kulturni_pamatka.tooltip"),
+            "vedouci_projektu": _(
+                "projekt.form.prihlaseniProj.vedouci_projektu.tooltip"
+            ),
+            "kulturni_pamatka": _(
+                "projekt.form.prihlaseniProj.kulturni_pamatka.tooltip"
+            ),
             "organizace": _("projekt.form.prihlaseniProj.organizace.tooltip"),
-            "kulturni_pamatka_cislo": _("projekt.form.prihlaseniProj.kulturni_pamatka_cislo.tooltip"),
-            "kulturni_pamatka_popis": _("projekt.form.prihlaseniProj.kulturni_pamatka_popis.tooltip"),
-            "uzivatelske_oznaceni": _("projekt.form.prihlaseniProj.uzivatelske_oznaceni.tooltip"),
+            "kulturni_pamatka_cislo": _(
+                "projekt.form.prihlaseniProj.kulturni_pamatka_cislo.tooltip"
+            ),
+            "kulturni_pamatka_popis": _(
+                "projekt.form.prihlaseniProj.kulturni_pamatka_popis.tooltip"
+            ),
+            "uzivatelske_oznaceni": _(
+                "projekt.form.prihlaseniProj.uzivatelske_oznaceni.tooltip"
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -414,7 +500,10 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(HTML(_("Přihlášení projektu")), css_class="app-fx app-left",),
+                    Div(
+                        HTML(_("Přihlášení projektu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -456,7 +545,6 @@ class ZahajitVTerenuForm(forms.ModelForm):
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip"),
-        
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -477,7 +565,10 @@ class ZahajitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(HTML(_("Zahájení výzkumu ")), css_class="app-fx app-left",),
+                    Div(
+                        HTML(_("Zahájení výzkumu ")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -518,7 +609,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
             "datum_ukonceni": _("Datum ukončení terénních prací"),
         }
         help_texts = {
-            "datum_ukonceni":  _("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
+            "datum_ukonceni": _("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -528,7 +619,10 @@ class UkoncitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(HTML(_("Ukončení výzkumu")), css_class="app-fx app-left",),
+                    Div(
+                        HTML(_("Ukončení výzkumu")),
+                        css_class="app-fx app-left",
+                    ),
                     css_class="card-header",
                 ),
                 Div(
@@ -563,3 +657,29 @@ class UkoncitVTerenuForm(forms.ModelForm):
                     % self.instance.datum_zahajeni.strftime("%d. %m. %Y")
                 )
         return self.cleaned_data
+
+
+class ZruseniProjektForm(forms.Form):
+
+    reason_text = forms.CharField(
+        label=_("projekt.form.zruseni.duvod.label"),
+        required=True,
+        widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Div(
+                        "reason_text",
+                        css_class="col-sm-12",
+                        title="projekt.form.zruseni.duvodTooltip.text",
+                    ),
+                    css_class="row",
+                ),
+            ),
+        )
