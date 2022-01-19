@@ -70,10 +70,7 @@ class CreateProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Detail projektu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Detail projektu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -94,10 +91,7 @@ class CreateProjektForm(forms.ModelForm):
                             ),
                             css_class="col-sm-9",
                         ),
-                        Div(
-                            Div(id="projectMap"),
-                            css_class="col-sm-3",
-                        ),
+                        Div(Div(id="projectMap"), css_class="col-sm-3",),
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -168,11 +162,7 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "hlavni_katastr": forms.Textarea(
-                attrs={
-                    "rows": 1,
-                    "cols": 20,
-                    "readonly": "readonly",
-                },
+                attrs={"rows": 1, "cols": 20, "readonly": "readonly",},
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -213,10 +203,7 @@ class EditProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Editace projektu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Editace projektu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -235,10 +222,7 @@ class EditProjektForm(forms.ModelForm):
                             ),
                             css_class="col-sm-9",
                         ),
-                        Div(
-                            Div(id="projectMap"),
-                            css_class="col-sm-3",
-                        ),
+                        Div(Div(id="projectMap"), css_class="col-sm-3",),
                         css_class="row",
                     ),
                     Div(
@@ -310,26 +294,7 @@ class EditProjektForm(forms.ModelForm):
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
-    CHOICES = [
-        ("option1", _("projekt.form.navrhzruseni.duvod1.text")),
-        ("option2", _("projekt.form.navrhzruseni.duvod2.text")),
-        ("option3", _("projekt.form.navrhzruseni.duvod3.text")),
-        ("option4", _("projekt.form.navrhzruseni.duvod4.text")),
-        ("option5", _("projekt.form.navrhzruseni.duvod5.text")),
-        ("option6", _("projekt.form.navrhzruseni.duvod6.text")),
-    ]
-
-    reason = forms.ChoiceField(
-        label=_("projekt.form.navrhzruseni.duvod.label"),
-        choices=CHOICES,
-        widget=forms.RadioSelect,
-    )
-    projekt_id = forms.CharField(
-        label=_("projekt.form.navrhzruseni.projektId.label"), required=False
-    )
-    reason_text = forms.CharField(
-        label=_("projekt.form.navrhzruseni.vlastniduvod.label"), required=False
-    )
+    reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True)
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
@@ -343,22 +308,11 @@ class NavrhnoutZruseniProjektForm(forms.Form):
             Div(
                 Div(
                     Div(
-                        HTML(_("Návrh zrušení projektu")),
-                        css_class="app-fx app-left",
+                        HTML(_("Návrh zrušení projektu")), css_class="app-fx app-left",
                     ),
                     css_class="card-header",
                 ),
-                Div(
-                    Div(
-                        "reason",
-                        css_class="form-check",
-                    ),
-                    Div(
-                        "reason_text",
-                        css_class="col-sm-12",
-                    ),
-                    Div("projekt_id", css_class="col-sm-12"),
-                ),
+                Div("reason", css_class="card-body",),
                 css_class="card app-card-form",
             ),
             Div(
@@ -373,16 +327,6 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                 css_class="mt-3",
             ),
         )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        if cleaned_data.get("reason") == "option1":
-            if not cleaned_data.get("projekt_id"):
-                raise forms.ValidationError("Projekt ID musi byt vyplneno")
-        elif cleaned_data.get("reason") == "option6":
-            if not cleaned_data.get("reason_text"):
-                raise forms.ValidationError("Vlastny duvod musi byt vyplnen")
-        return self.cleaned_data
 
 
 class PrihlaseniProjektForm(forms.ModelForm):
@@ -432,10 +376,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Přihlášení projektu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Přihlášení projektu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -492,10 +433,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Zahájení výzkumu ")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Zahájení výzkumu ")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -543,10 +481,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Ukončení výzkumu")),
-                        css_class="app-fx app-left",
-                    ),
+                    Div(HTML(_("Ukončení výzkumu")), css_class="app-fx app-left",),
                     css_class="card-header",
                 ),
                 Div(
@@ -580,31 +515,3 @@ class UkoncitVTerenuForm(forms.ModelForm):
                     % self.instance.datum_zahajeni.strftime("%d. %m. %Y")
                 )
         return self.cleaned_data
-
-
-class ZruseniProjektForm(forms.Form):
-
-    reason_text = forms.CharField(
-        label=_("projekt.form.zruseni.duvod.label"), required=False
-    )
-    enable_submit = True
-
-    def __init__(self, *args, **kwargs):
-        if "enable_form_submit" in kwargs:
-            enable_form_submit = kwargs.pop("enable_form_submit")
-        else:
-            enable_form_submit = True
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div(
-                Div(
-                    "reason",
-                    css_class="form-check",
-                ),
-                Div(
-                    "reason_text",
-                    css_class="col-sm-12",
-                ),
-            ),
-        )
