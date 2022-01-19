@@ -11,6 +11,9 @@
     <h4 class="mb-3">{{ header }} <strong>{{ object.ident_cely }}</strong></h4>
     <form method="post">
       {% csrf_token %}
+      {% if form %}
+      {% crispy form %}
+      {% endif %}
       {% if warnings %}
         <div class="alert alert-info" role="alert">
           <ul>
