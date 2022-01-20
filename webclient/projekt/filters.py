@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 import crispy_forms
+from dal import autocomplete
 import django_filters as filters
 from django.db import utils
 
@@ -14,7 +15,7 @@ from core.constants import (
     SCHVALENI_OZNAMENI_PROJ,
 )
 from crispy_forms.layout import HTML, Div, Layout
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
@@ -38,6 +39,15 @@ from uzivatel.models import Organizace, Osoba, User
 from historie.models import Historie
 
 logger = logging.getLogger(__name__)
+
+class MyAutocompleteWidget(autocomplete.ModelSelect2):
+    def media(self):
+        return ()
+
+
+class Users(QuerySet):
+    def active_processes(self):
+        return self.select_related("first_name", "last_name")
 
 
 class ProjektFilter(filters.FilterSet):
@@ -175,9 +185,10 @@ class ProjektFilter(filters.FilterSet):
         distinct=True,
     )
 
-    historie_uzivatel = MultipleChoiceFilter(
-        field_name="historie__historie__uzivatel",
+    historie_uzivatel = ModelMultipleChoiceFilter(
+        queryset=None,
         label="Uživatel",
+        # widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -228,13 +239,13 @@ class ProjektFilter(filters.FilterSet):
         distinct=True,
     )
 
-    akce_vedouci = MultipleChoiceFilter(
+    akce_vedouci = ModelMultipleChoiceFilter(
         label="Vedoucí",
-        method="filtr_akce_vedouci",
+        # method="filtr_akce_vedouci",
+        queryset=None,
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
-        distinct=True,
+        )
     )
 
     akce_vedouci_organizace = MultipleChoiceFilter(
@@ -459,8 +470,8 @@ class ProjektFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
         try:
-            self.filters["historie_uzivatel"].choices = User.objects.all().values_list("id", "last_name")
-            self.filters["akce_vedouci"].choices = Osoba.objects.all().values_list("id", "vypis_cely")
+            self.filters["historie_uzivatel"].extra.update({"queryset": User.objects.all()})
+            self.filters["akce_vedouci"].extra.update({"queryset": Osoba.objects.all()})
             self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
         except utils.ProgrammingError as err:
             self.filters["historie_uzivatel"].choices = []

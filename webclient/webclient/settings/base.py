@@ -207,3 +207,10 @@ DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 ACCOUNT_ACTIVATION_DAYS = 10
 
 AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'memcached:11211',
+    }
+}
