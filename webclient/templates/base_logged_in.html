@@ -2,6 +2,8 @@
 {% load i18n %}
 {% load compress %}
 {% load static %}
+{% load l10n %}
+{% load template_tags%}
 
 {% block sidebar %}
   <!-- {% compress css %}
@@ -127,6 +129,14 @@
             </small>
           </span>
         </li>
+        <li class="nav-item app-pipe"></li>
+        <li class="nav-item d-lg-none d-xl-block">
+          <span class="nav-link">
+            <small>
+              <strong>{% trans "nav.autologout.text" %}:</strong> <span id="time">01:00</span>
+            </small>
+          </span>
+        </li>
         <li class="nav-item d-none d-lg-block d-xl-none">
           <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-toggle="popover" data-placement="bottom"
             data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
@@ -213,6 +223,64 @@
           window.history.back();
       }
 
-  </script>
+</script>
 
+<script>
+  // for autologout functionality timer and messages
+    var time = {{ seconds_until_idle_end|unlocalize }}
+    
+    function createMessage (tag, message, button='False') {
+      if (button === 'True') {
+        return `<div class="alert alert-${tag} alert-dismissible fade show app-alert-floating" role="alert">
+          <button id="prolong_btn" type="button" class="btn btn-prolong">${message}</button>
+          <button aria-label="Close" class="close" data-dismiss="alert" type="button">
+          <span aria-hidden="true">&times;</span></button></div>`;      
+        }
+      return `<div class="alert alert-${tag} alert-dismissible fade show app-alert-floating" role="alert">
+              ${message}
+              <button aria-label="Close" class="close" data-dismiss="alert" type="button">
+              <span aria-hidden="true">&times;</span></button></div>`;
+    }
+    var timer = new Timer();
+    
+    timer.start({countdown: true, startValues: {seconds: time}});
+    $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
+    
+    timer.addEventListener('secondsUpdated', function (e) {
+      var actual_time = timer.getTimeValues().toString(['minutes', 'seconds'])
+      $('#time').html(actual_time);
+      if (actual_time === '10:00') { 
+        msg = createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True')
+        $('.message-container').append(msg);
+      };
+    });
+
+    timer.addEventListener('targetAchieved', function (e) {
+      {{redirect_to_login_immediately}}
+    });
+    $('.message-container').on('click', '#prolong_btn', function () {
+      $.ajax({
+        type: "GET",
+        url: '{% url "core:prolong_session" %}',
+        dataType: 'json',
+        success: function(data){
+          console.log("session prolonged"+data.session_time)
+          timer.stop();
+          timer.start({countdown: true, startValues: {seconds: data.session_time}});
+          $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
+          $(".app-alert-floating").alert('close');
+          msg = createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}))
+          $('.message-container').append(msg);
+          $(".alert").delay(5000).slideUp(200, function() {
+              $(this).alert('close');
+            });
+          },
+        error: ()=>{
+          $(".app-alert-floating").alert('close');
+          msg = createMessage("danger",({% get_message "AUTOLOGOUT_REFRESH_ERROR" %}))
+          $('.message-container').append(msg);
+        }
+      })
+    });
+</script>
 {% endblock %}

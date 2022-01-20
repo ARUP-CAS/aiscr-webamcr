@@ -82,3 +82,10 @@ SPOLUPRACE_BYLA_AKTIVOVANA: Final = "Spolupráce byla aktivována."
 SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = "Spolupráce byla deaktivována."
 SPOLUPRACI_NELZE_AKTIVOVAT: Final = "Spolupráci nejde aktivovat."
 SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = "Spolupráci nejde deaktivovat."
+
+
+# Auto-logout
+AUTOLOGOUT_AFTER_LOGOUT: Final = _("autologout.message.afterlogout.text")
+AUTOLOGOUT_EXPIRATION_WARNING: Final = _("autologout.message.expirationwarning.text")
+AUTOLOGOUT_REFRESH_ERROR: Final = _("autologout.message.refresherror.text")
+AUTOLOGOUT_REFRESH_SUCCESS: Final = _("autologout.message.refreshsuccess.text")

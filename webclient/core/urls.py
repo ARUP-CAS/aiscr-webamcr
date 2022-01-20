@@ -30,4 +30,5 @@ urlpatterns = [
     path("stahnout-soubor/<int:pk>", views.download_file, name="download_file"),
     path("smazat-soubor/<int:pk>", views.delete_file, name="delete_file"),
     path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
+    path("prodlouzit-session/", views.prolong_session, name="prolong_session"),
 ]
