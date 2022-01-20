@@ -35,6 +35,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import is_safe_url
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
@@ -331,3 +332,25 @@ def check_stav_changed(request, zaznam):
             return True
     
     return False
+
+@login_required
+@require_http_methods(["GET"])
+def redirect_ident_view(request, ident_cely):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
+        logger.debug("regex match for project with ident %s", ident_cely)
+        return redirect("projekt:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}A", ident_cely)):
+        logger.debug("regex match for archeologicka akce with ident %s", ident_cely)
+        return redirect("arch_z:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(TX|DD)-\d{9}", ident_cely)):
+        logger.debug("regex match for dokument with ident %s", ident_cely)
+        return redirect("dokument:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
+        logger.debug("regex match for dokument 3D with ident %s", ident_cely)
+        return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
+        logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
+        return redirect("pas:detail", ident_cely=ident_cely)
+
+    messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
+    return redirect("core:home")
