@@ -17,6 +17,11 @@ services:
       - "8080:8080"
     depends_on:
       - web
+  memcached:
+    container_name: memcached
+    image: memcached:latest
+    ports:
+        - "11211:11211"
 
 volumes:
   static_data:
