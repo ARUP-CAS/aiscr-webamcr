@@ -17,3 +17,4 @@ django-widget-tweaks==1.4.5
 tablib[all]
 django-simple-history==3.0.0
 python-memcached==1.59
+distlib==0.3.4
