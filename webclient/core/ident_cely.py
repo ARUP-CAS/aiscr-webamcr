@@ -72,45 +72,44 @@ def get_temp_dokument_ident(rada, region):
     MAXIMAL: int = 99999
     if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        d = Dokument.objects.filter(
-            ident_cely__regex="^"
-            + IDENTIFIKATOR_DOCASNY_PREFIX
+        prefix = str(
+            IDENTIFIKATOR_DOCASNY_PREFIX
             + region
             + "-"
             + rada
             + "-"
             + str(date.today().year)
-            + "\\d{5}$"
+        )
+        d = Dokument.objects.filter(
+            ident_cely__regex="^" + prefix + "\\d{5}$"
         ).order_by("-ident_cely")
-        if d.count() == 0:
-            return (
-                IDENTIFIKATOR_DOCASNY_PREFIX
-                + region
-                + "-"
-                + rada
-                + "-"
-                + str(date.today().year)
-                + "00001"
-            )
+        if d.filter(ident_cely=str(prefix + "00001")).count() == 0:
+            return prefix + "00001"
         else:
-            max_count = int(d[0].ident_cely[-5:])
-            if max_count < MAXIMAL:
-                return (
-                    IDENTIFIKATOR_DOCASNY_PREFIX
-                    + region
-                    + "-"
-                    + rada
-                    + "-"
-                    + str(date.today().year)
-                    + str(int(d[0].ident_cely[-5:]) + 1).zfill(5)
-                )
-            else:
+            # temp number from empty spaces
+            sequence = d[d.count() - 1].ident_cely[-5:]
+            logger.warning(sequence)
+            while True:
+                if d.filter(ident_cely=prefix + sequence).exists():
+                    old_sequence = sequence
+                    sequence = str(int(sequence) + 1).zfill(5)
+                    logger.warning(
+                        "Ident "
+                        + prefix
+                        + old_sequence
+                        + " already exists, trying next number "
+                        + str(sequence)
+                    )
+                else:
+                    break
+            if int(sequence) >= MAXIMAL:
                 logger.error(
                     "Maximal number of temporary document ident is "
                     + str(MAXIMAL)
                     + "for given region and rada"
                 )
-                raise MaximalIdentNumberError(max_count)
+                raise MaximalIdentNumberError(MAXIMAL)
+            return prefix + sequence
     else:
         # TODO dodelat dalsi rady
         raise NeocekavanaRadaError("Neocekavana rada dokumentu: " + rada)
@@ -204,16 +203,36 @@ def get_temporary_pian_ident(zm50) -> str:
     pian = (
         Pian.objects.filter(ident_cely__startswith=start).all().order_by("-ident_cely")
     )
-    if pian.exists():
-        max_count = int(pian[0].ident_cely[-last_digit_count:])
+    if (
+        pian.filter(ident_cely=str(start + str("1").zfill(last_digit_count))).count()
+        == 0
+    ):
+        return start + str("1").zfill(last_digit_count)
     else:
-        max_count = 0
-    if max_count < MAXIMAL_PIANS:
-        ident = start + str(max_count + 1).zfill(last_digit_count)
-        return ident
-    else:
-        logger.error("Maximal number of pians is " + str(MAXIMAL_PIANS))
-        raise MaximalIdentNumberError(max_count)
+        # temp number from empty spaces
+        sequence = pian[pian.count() - 1].ident_cely[-last_digit_count:]
+        logger.warning(sequence)
+        while True:
+            if pian.filter(ident_cely=start + sequence).exists():
+                old_sequence = sequence
+                sequence = str(int(sequence) + 1).zfill(last_digit_count)
+                logger.warning(
+                    "Ident "
+                    + start
+                    + old_sequence
+                    + " already exists, trying next number "
+                    + str(sequence)
+                )
+            else:
+                break
+        if int(sequence) >= MAXIMAL_PIANS:
+            logger.error(
+                "Maximal number of temporary document ident is "
+                + str(MAXIMAL_PIANS)
+                + "for given region and rada"
+            )
+            raise MaximalIdentNumberError(MAXIMAL_PIANS)
+        return start + sequence
 
 
 def get_sn_ident(projekt: Projekt) -> str:
