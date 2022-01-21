@@ -137,6 +137,14 @@ def detail(request, ident_cely):
         context["soubory"] = dokument.soubory.soubory.all()
     else:
         context["soubory"] = None
+    casti = dokument.casti.all()
+    logger.debug(casti)
+    if casti[0].archeologicky_zaznam:
+        context["backdetail"] = "arch_z"
+        context["backident"] = casti[0].archeologicky_zaznam.ident_cely
+        context["backtext"] = _("dokument.toolbar.backtoarch_z.text")
+    else:
+        context["backdetail"] = False
     return render(request, "dokument/detail.html", context)
 
 
@@ -288,7 +296,9 @@ def edit(request, ident_cely):
         else:
             logger.debug("webclient.dokument.views: The form is not valid")
             logger.debug(f"webclient.dokument.views form_d.errors: {form_d.errors}")
-            logger.debug(f"webclient.dokument.views form_extra.errors: {form_extra.errors}")
+            logger.debug(
+                f"webclient.dokument.views form_extra.errors: {form_extra.errors}"
+            )
     else:
         form_d = EditDokumentForm(instance=dokument)
         form_extra = EditDokumentExtraDataForm(
