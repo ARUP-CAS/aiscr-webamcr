@@ -1,0 +1,12 @@
+FROM postgis/postgis:latest
+VOLUME /tmp
+
+ENV FILE=backup_file_db_v4.tar
+
+COPY ${FILE} /tmp/${FILE}
+RUN echo ${FILE}
+COPY /scripts/restore_database.sh /docker-entrypoint-initdb.d/restore_database.sh
+RUN sed -i 's/\r$//g' /docker-entrypoint-initdb.d/restore_database.sh
+RUN chmod 777 /docker-entrypoint-initdb.d/restore_database.sh
+
+EXPOSE 5432
