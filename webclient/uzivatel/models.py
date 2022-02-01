@@ -69,16 +69,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def user_str(self):
-        return (
-            self.first_name
-            + " "
-            + self.last_name
-            + " "
-            + self.ident_cely
-            + " ("
-            + str(self.organizace)
-            + ")"
-        )
+        retezec = f"{self.first_name} {self.last_name} {self.ident_cely}"
+        if self.organizace:
+            retezec += f" {self.organizace}"
+        return retezec
 
     def __str__(self):
         return self.user_str
