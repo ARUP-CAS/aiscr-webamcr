@@ -80,7 +80,7 @@ def download_file(request, pk):
         response = HttpResponse(soubor.path, content_type=content_type)
         response["Content-Length"] = str(len(soubor.path))
         response["Content-Disposition"] = "inline; filename=" + os.path.basename(
-            soubor.nazev_puvodni
+            soubor.nazev_zkraceny
         )
         return response
     else:
