@@ -33,13 +33,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
-    is_superuser = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor")
     ident_cely = models.CharField(unique=True, max_length=150)
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
+    first_name = models.CharField(max_length=150, verbose_name="Jméno")
+    last_name = models.CharField(max_length=150, verbose_name="Příjmení")
     email = models.CharField(max_length=254, unique=True)
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False, verbose_name="Přístup do administračního rozhraní")
+    is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
     # osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
     auth_level = models.IntegerField(blank=True, null=True)
@@ -130,6 +130,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = "auth_user"
+        verbose_name = "Uživatel"
+        verbose_name_plural = "Uživatelé"
 
 
 class Organizace(models.Model):
