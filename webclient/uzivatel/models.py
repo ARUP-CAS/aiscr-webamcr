@@ -38,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150, verbose_name="Jméno")
     last_name = models.CharField(max_length=150, verbose_name="Příjmení")
     email = models.CharField(max_length=254, unique=True)
-    is_staff = models.BooleanField(default=False, verbose_name="Přístup do administračního rozhraní")
+    is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
     # osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
