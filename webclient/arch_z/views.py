@@ -6,8 +6,6 @@ from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
     CreateAkceForm,
     CreateArchZForm,
-    PripojitDokumentForm,
-    PripojitProjDocForm,
 )
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
@@ -32,8 +30,6 @@ from core.message_constants import (
     AKCE_USPESNE_ZAPSANA,
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
-    DOKUMENT_JIZ_BYL_PRIPOJEN,
-    DOKUMENT_USPESNE_PRIPOJEN,
     MAXIMUM_AKCII_DOSAZENO,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
