@@ -1,6 +1,7 @@
 import logging
 
 from arch_z.models import ArcheologickyZaznam
+from projekt.models import Projekt
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -19,10 +20,12 @@ from core.ident_cely import (
     get_temp_dokument_ident,
 )
 from core.message_constants import (
+    DOKUMENT_JIZ_BYL_PRIPOJEN,
     DOKUMENT_NELZE_ARCHIVOVAT,
     DOKUMENT_NELZE_ODESLAT,
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
+    DOKUMENT_USPESNE_PRIPOJEN,
     DOKUMENT_USPESNE_VRACEN,
     MAXIMUM_IDENT_DOSAZEN,
     VYBERTE_PROSIM_POLOHU,
@@ -30,6 +33,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
+    DOKUMENT_USPESNE_ODPOJEN,
 )
 from dal import autocomplete
 from django.contrib import messages
@@ -37,6 +41,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
@@ -51,6 +56,8 @@ from dokument.forms import (
     CreateModelExtraDataForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
+    PripojitDokumentForm,
+    PripojitProjDocForm,
 )
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
 from dokument.tables import DokumentTable
@@ -396,54 +403,13 @@ def edit_model_3D(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def zapsat(request, arch_z_ident_cely):
+def zapsat_do_akce(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    if request.method == "POST":
-        form_d = EditDokumentForm(request.POST)
-        if form_d.is_valid():
-            logger.debug("Form is valid")
-            dokument = form_d.save(commit=False)
-            dokument.rada = get_dokument_rada(
-                dokument.typ_dokumentu, dokument.material_originalu
-            )
-            try:
-                dokument.ident_cely = get_temp_dokument_ident(
-                    rada=dokument.rada.zkratka, region=arch_z_ident_cely[0]
-                )
-            except MaximalIdentNumberError:
-                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
-            else:
-                dokument.stav = D_STAV_ZAPSANY
-                dokument.save()
-                dokument.set_zapsany(request.user)
+    return zapsat(request, zaznam)
 
-                # Vytvorit defaultni cast dokumentu
-                DokumentCast(
-                    dokument=dokument,
-                    ident_cely=get_cast_dokumentu_ident(dokument),
-                    archeologicky_zaznam=zaznam,
-                ).save()
-
-                form_d.save_m2m()
-
-                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("dokument:detail", ident_cely=dokument.ident_cely)
-
-        else:
-            logger.warning("Form is not valid")
-            logger.debug(form_d.errors)
-
-    else:
-        form_d = EditDokumentForm(create=True)
-
-    return render(
-        request,
-        "dokument/create.html",
-        {
-            "formDokument": form_d,
-            "hierarchie": get_hierarchie_dokument_typ(),
-        },
-    )
+def zapsat_do_projektu(request, proj_ident_cely):
+    zaznam = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    return zapsat(request, zaznam)
 
 
 @login_required
@@ -717,3 +683,179 @@ def get_detail_template_shows(dokument):
         "editovat": show_edit,
     }
     return show
+
+def zapsat(request, zaznam):
+    if request.method == "POST":
+        form_d = EditDokumentForm(request.POST)
+        if form_d.is_valid():
+            logger.debug("Form is valid")
+            dokument = form_d.save(commit=False)
+            dokument.rada = get_dokument_rada(
+                dokument.typ_dokumentu, dokument.material_originalu
+            )
+            try:
+                dokument.ident_cely = get_temp_dokument_ident(
+                    rada=dokument.rada.zkratka, region=zaznam.ident_cely[0]
+                )
+            except MaximalIdentNumberError:
+                messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+            else:
+                dokument.stav = D_STAV_ZAPSANY
+                dokument.save()
+                dokument.set_zapsany(request.user)
+
+                # Vytvorit defaultni cast dokumentu
+                if zaznam._meta.verbose_name == "archeologicky zaznam":
+                    DokumentCast(
+                        dokument=dokument,
+                        ident_cely=get_cast_dokumentu_ident(dokument),
+                        archeologicky_zaznam=zaznam,
+                    ).save()
+                else:
+                    DokumentCast(
+                        dokument=dokument,
+                        ident_cely=get_cast_dokumentu_ident(dokument),
+                        projekt=zaznam,
+                    ).save()
+
+                form_d.save_m2m()
+
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+                return redirect("dokument:detail", ident_cely=dokument.ident_cely)
+
+        else:
+            logger.warning("Form is not valid")
+            logger.debug(form_d.errors)
+
+    else:
+        form_d = EditDokumentForm(create=True)
+
+    return render(
+        request,
+        "dokument/create.html",
+        {
+            "formDokument": form_d,
+            "hierarchie": get_hierarchie_dokument_typ(),
+        },
+    )
+
+def odpojit(request, ident_doku, ident_zaznamu, view):
+    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
+    remove_orphan = False
+    if len(relace_dokumentu) == 0:
+        raise Http404("Nelze najít zadne relace dokumentu " + str(ident_doku))
+    if len(relace_dokumentu) == 1:
+        orphan_dokument = relace_dokumentu[0].dokument
+        if "X-" in orphan_dokument.ident_cely:
+            remove_orphan = True
+    if request.method == "POST":
+        if view == "arch_z":
+            dokument_cast = relace_dokumentu.filter(
+                archeologicky_zaznam__ident_cely=ident_zaznamu
+            )
+        else:
+            dokument_cast = relace_dokumentu.filter(
+                projekt__ident_cely=ident_zaznamu
+            )
+        if len(dokument_cast) == 0:
+            raise Http404("Nelze najít relaci mezi zaznamem a dokumentem")
+        resp = dokument_cast[0].delete()
+        logger.debug("Byla smazana cast dokumentu " + str(resp))
+        if remove_orphan:
+            orphan_dokument.delete()
+            logger.debug("Docasny soubor bez relaci odstranen.")
+        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
+        return redirect(f"{view}:detail", ident_cely=ident_zaznamu)
+    else:
+        warnings = []
+        if remove_orphan:
+            warnings.append(
+                "Nearchivovaný dokument "
+                + str(orphan_dokument)
+                + " nemá žádnou jinou relaci a odpojením bude automaticky smazán."
+            )
+        return render(
+            request,
+            "dokument/transakce_dokument.html",
+            {
+                "object": relace_dokumentu[0],
+                "warnings": warnings,
+                "title": _("Odpojení dokumentu"),
+                "header": _("Odpojení dokumentu"),
+                "button": _("Odpojit dokument"),
+            },
+        )
+
+def pripojit(request, ident_zaznam, proj_ident_cely, typ):
+    zaznam = get_object_or_404(typ, ident_cely=ident_zaznam)
+    logger.debug(zaznam.__class__.__name__)
+    if isinstance(zaznam, ArcheologickyZaznam):
+        casti_zaznamu = DokumentCast.objects.filter(
+            archeologicky_zaznam__ident_cely=ident_zaznam
+        )
+        debug_name = "akci "
+        redirect_name = "arch_z"
+    else:
+        casti_zaznamu = DokumentCast.objects.filter(
+            projekt__ident_cely=ident_zaznam
+        )
+        debug_name = "projektu "
+        redirect_name = "projekt"
+    if request.method == "POST":
+        dokument_ids = request.POST.getlist("dokument")
+        
+        for dokument_id in dokument_ids:
+            dokument = get_object_or_404(Dokument, id=dokument_id)
+            relace = casti_zaznamu.filter(dokument__id=dokument_id)
+            if not relace.exists():
+                dc_ident = get_cast_dokumentu_ident(dokument)
+                if isinstance(zaznam, ArcheologickyZaznam):
+                    DokumentCast(
+                        archeologicky_zaznam=zaznam, dokument=dokument, ident_cely=dc_ident
+                    ).save()
+                else:
+                    DokumentCast(
+                        projekt=zaznam, dokument=dokument, ident_cely=dc_ident
+                    ).save()
+                logger.debug(
+                    "K "
+                    + str(debug_name)
+                    + str(ident_zaznam)
+                    + " byl pripojen dokument "
+                    + str(dokument.ident_cely)
+                )
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    DOKUMENT_USPESNE_PRIPOJEN,
+                )
+            else:
+                messages.add_message(
+                    request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
+                )
+        return redirect(f"{redirect_name}:detail", ident_cely=ident_zaznam)
+    else:
+        if proj_ident_cely :
+            # Pridavam projektove dokumenty
+            projektove_dokumenty = set()
+            dokumenty_akce = set(
+                Dokument.objects.filter(
+                    casti__archeologicky_zaznam__ident_cely=ident_zaznam
+                )
+            )
+            projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+            for akce in projekt.akce_set.all().exclude(
+                archeologicky_zaznam__ident_cely=ident_zaznam
+            ):
+                for cast in akce.archeologicky_zaznam.casti_dokumentu.all():
+                    if cast.dokument not in dokumenty_akce:
+                        projektove_dokumenty.add(
+                            (cast.dokument.id, cast.dokument.ident_cely)
+                        )
+            form = PripojitProjDocForm(projekt_docs=list(projektove_dokumenty))
+        else:
+            # Pridavam vsechny dokumenty
+            form = PripojitDokumentForm()
+    return render(
+        request, "dokument/pripojit_dokument.html", {"form": form, "object": zaznam, "typ": redirect_name}
+    )

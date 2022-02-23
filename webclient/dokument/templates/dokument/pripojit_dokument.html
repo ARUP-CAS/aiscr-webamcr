@@ -3,12 +3,24 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Připojit dokumenty k akci " %}{{ object.ident_cely }}{% endblock %}
+{% block title %}
+{% if typ == "arch_z" %}
+{% trans "Připojit dokumenty k akci " %}{{ object.ident_cely }}
+{% else %}
+{% trans "Připojit dokumenty k projektu " %}{{ object.ident_cely }}
+{% endif %}
+{% endblock %}
 {% block head %}
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "Připojit dokumenty k akci " %}{{ object.ident_cely }}</h1>
+  <h1>
+    {% if typ == "arch_z" %}
+    {% trans "Připojit dokumenty k akci " %}{{ object.ident_cely }}
+    {% else %}
+    {% trans "Připojit dokumenty k projektu " %}{{ object.ident_cely }}
+    {% endif %}
+  </h1>
 
   <form method="post">
     {% crispy form %}

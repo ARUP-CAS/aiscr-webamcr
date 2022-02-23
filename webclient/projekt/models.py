@@ -36,7 +36,11 @@ from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
+from heslar.hesla import (
+    HESLAR_PAMATKOVA_OCHRANA,
+    HESLAR_PROJEKT_TYP,
+    TYP_PROJEKTU_PRUZKUM_ID,
+)
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba, User
@@ -155,13 +159,19 @@ class Projekt(models.Model):
     def set_oznameny(self):
         self.stav = PROJEKT_STAV_OZNAMENY
         owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(typ_zmeny=OZNAMENI_PROJ, uzivatel=owner, vazba=self.historie,).save()
+        Historie(
+            typ_zmeny=OZNAMENI_PROJ,
+            uzivatel=owner,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_schvaleny(self, user):
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
-            typ_zmeny=SCHVALENI_OZNAMENI_PROJ, uzivatel=user, vazba=self.historie,
+            typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
         ).save()
         self.save()
 
@@ -172,26 +182,38 @@ class Projekt(models.Model):
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
-        Historie(typ_zmeny=PRIHLASENI_PROJ, uzivatel=user, vazba=self.historie,).save()
+        Historie(
+            typ_zmeny=PRIHLASENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_zahajeny_v_terenu(self, user):
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
         Historie(
-            typ_zmeny=ZAHAJENI_V_TERENU_PROJ, uzivatel=user, vazba=self.historie,
+            typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
         ).save()
         self.save()
 
     def set_ukoncen_v_terenu(self, user):
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
         Historie(
-            typ_zmeny=UKONCENI_V_TERENU_PROJ, uzivatel=user, vazba=self.historie,
+            typ_zmeny=UKONCENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
         ).save()
         self.save()
 
     def set_uzavreny(self, user):
         self.stav = PROJEKT_STAV_UZAVRENY
-        Historie(typ_zmeny=UZAVRENI_PROJ, uzivatel=user, vazba=self.historie,).save()
+        Historie(
+            typ_zmeny=UZAVRENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_archivovany(self, user):
@@ -233,7 +255,10 @@ class Projekt(models.Model):
         self.stav = PROJEKT_STAV_ZAPSANY
 
         Historie(
-            typ_zmeny=zmena, uzivatel=user, poznamka=poznamka, vazba=self.historie,
+            typ_zmeny=zmena,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
         ).save()
         self.save()
 
@@ -257,7 +282,7 @@ class Projekt(models.Model):
         resp = []
         has_event = len(self.akce_set.all()) > 0
         has_individual_finds = len(self.samostatne_nalezy.all()) > 0
-        has_soubory = (self.soubory.soubory.all())
+        has_soubory = self.soubory.soubory.all()
         if has_event:
             resp.append(_("Projekt před smazáním nesmí mít projektové akce."))
         if has_individual_finds:
@@ -269,7 +294,7 @@ class Projekt(models.Model):
     def check_pred_uzavrenim(self):
         does_not_have_event = len(self.akce_set.all()) == 0
         result = {}
-        if does_not_have_event:
+        if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
             result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
         for a in self.akce_set.all():
             akce_warnings = a.check_pred_odeslanim()

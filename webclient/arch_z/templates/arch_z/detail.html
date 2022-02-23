@@ -583,72 +583,9 @@
     {% endfor %}
 
     <!-- dokumenty -->
-    <div class="card app-card-form app-card-dokument">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Dokumenty" %}
-        </div>
-        {% if show.editovat %}
-        <div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                    aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-              <span class="material-icons">add</span>
-            </button>
-            <div class="dropdown-menu" aria-labelledby="others">
-              <a class="dropdown-item"
-                 href="{% url 'dokument:zapsat' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
-              <a class="dropdown-item"
-                 href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">{% trans "Připojit existující dokument" %}</a>
-              <a class="dropdown-item"
-                 href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">{% trans "Připojit existující dokument z projektu" %}</a>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-      <div class="card-body">
-        <table class="table table-striped table-hover table-sm mb-0">
-          <thead>
-          <tr>
-            <th>{% trans "Identifikátor" %}</th>
-            <th>{% trans "Stav" %}</th>
-            <th>{% trans "Typ dokumentu" %}</th>
-            <th>{% trans "Popis" %}</th>
-            <th>{% trans "Počet souborů" %}</th>
-            {% if show.editovat %}
-            <th>{% trans "Odpojit dokument" %}</th>
-            {% endif %}
-          </tr>
-          </thead>
-          <tbody>
-          {% for d in dokumenty %}
-            <tr>
-              <td class="app-ident-cely">
-                <a href="{% url 'dokument:detail' d.ident_cely %}">
-                  <span class="material-icons">description</span>
-                  {{ d.ident_cely }}
-                </a>
-              </td>
-              <td>
-                <div class="badge">{{ d.get_stav_display }}</div>
-              </td>
-              <td>{{ d.typ_dokumentu }}</td>
-              <td>{{ d.popis }}</td>
-              <td>{{ d.soubory.soubory.all|length }}</td>
-              {% if show.editovat %}
-              <td>
-                <a href="{% url 'arch_z:odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
-                  <span class="material-icons app-color-danger">delete_forever</span>
-                </a>
-              </td>
-              {% endif %}
-            </tr>
-          {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    
+      {% include "dokument/dokument_table.html" with type="arch_z"%}
+    
   </div>
 {% endblock %}
 

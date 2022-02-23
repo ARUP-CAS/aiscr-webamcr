@@ -42,19 +42,21 @@ logger = logging.getLogger(__name__)
 
 class ProjektFilter(filters.FilterSet):
 
-    ident_cely = CharFilter(lookup_expr="icontains")
+    ident_cely = CharFilter(lookup_expr="icontains",distinct=True,)
 
     oblast = ChoiceFilter(
         choices=OBLAST_CHOICES,
         label=_("Územní příslušnost"),
         method="filter_by_oblast",
         widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+        distinct=True,
     )
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
         label=_("Typ"),
         widget=SelectMultiple(attrs={"class": "selectpicker"}),
+        distinct=True,
     )
 
     kraj = MultipleChoiceFilter(
@@ -64,6 +66,7 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     okres = MultipleChoiceFilter(
@@ -73,11 +76,12 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
-    katastr = CharFilter(method="filtr_katastr", label=_("Katastr"),)
+    katastr = CharFilter(method="filtr_katastr", label=_("Katastr"),distinct=True,)
 
-    popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",)
+    popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",distinct=True,)
 
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
@@ -85,18 +89,21 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     datum_zahajeni = DateFromToRangeFilter(
         field_name="datum_zahajeni",
         label=_("Datum zahájení (od-do)"),
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
 
     datum_ukonceni = DateFromToRangeFilter(
         field_name="datum_ukonceni",
         label=_("Datum ukončení (od-do)"),
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
 
     vedouci_projektu = ModelMultipleChoiceFilter(
@@ -104,30 +111,35 @@ class ProjektFilter(filters.FilterSet):
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
     kulturni_pamatka = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PAMATKOVA_OCHRANA),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
+        distinct=True,
     )
 
     planovane_zahajeni = DateFromToRangeFilter(
         # field_name="planovane_zahajeni",
         method="filter_planovane_zahajeni",
         widget=DateRangeWidget(attrs={"type": "date",}),
+        distinct=True,
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
         field_name="termin_odevzdani_nz",
         label=_("Termín odevzdání NZ (od-do)"),
         widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
     )
 
     # Dle transakci nevyuzito"
@@ -305,8 +317,9 @@ class ProjektFilter(filters.FilterSet):
     )
 
     dokument_ident_obsahuje = CharFilter(
-        field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
-        lookup_expr="icontains",
+        #field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
+        #lookup_expr="icontains",
+        method = "filtr_dokumenty_ident",
         label="ID dokumentu",
         distinct=True,
     )
@@ -448,6 +461,11 @@ class ProjektFilter(filters.FilterSet):
         return queryset.filter(
             Q(akce__organizace__in=value) | Q(akce__akcevedouci__organizace__in=value)
         )
+
+    def filtr_dokumenty_ident(self, queryset, name, value):
+        return queryset.filter(
+            Q(akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value) | Q(casti_dokumentu__dokument__ident_cely__icontains=value)
+        ).distinct()
 
     class Meta:
         model = Projekt

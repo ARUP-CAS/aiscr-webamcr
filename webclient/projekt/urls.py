@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import index, create, edit, smazat, prihlasit, schvalit, uzavrit, archivovat, detail, zahajit_v_terenu, \
     ukoncit_v_terenu, navrhnout_ke_zruseni, zrusit, vratit, vratit_navrh_zruseni, post_ajax_get_point, \
-    odebrat_sloupec_z_vychozich
+    odebrat_sloupec_z_vychozich, odpojit_dokument, pripojit_dokument
 from .views import ProjektListView
 
 app_name = "projekt"
@@ -49,5 +49,15 @@ urlpatterns = [
         "odebrat-sloupec-z-vychozich",
         odebrat_sloupec_z_vychozich,
         name="odebrat_sloupec_z_vychozich",
-    )
+    ),
+    path(
+        "odpojit/dokument/<str:ident_cely>/<str:proj_ident_cely>",
+        odpojit_dokument,
+        name="odpojit_dokument",
+    ),
+    path(
+        "pripojit/dokument/<str:proj_ident_cely>",
+        pripojit_dokument,
+        name="pripojit_dokument",
+    ),
 ]
