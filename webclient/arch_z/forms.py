@@ -5,12 +5,7 @@ from django import forms
 from django.utils.translation import gettext as _
 
 from arch_z.models import Akce, ArcheologickyZaznam
-from core.constants import (
-    D_STAV_ARCHIVOVANY,
-    D_STAV_ODESLANY,
-)
 from core.forms import TwoLevelSelectField
-from dokument.models import Dokument
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.models import Heslar
 from heslar.views import heslar_12
@@ -223,36 +218,3 @@ class CreateAkceForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
-
-
-class PripojitDokumentForm(forms.Form):
-    def __init__(self, projekt=None, *args, **kwargs):
-        super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
-        self.fields["dokument"] = forms.MultipleChoiceField(
-            label=_("Vyberte dokument k připojení"),
-            choices=list(
-                Dokument.objects.filter(
-                    stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)
-                ).values_list("id", "ident_cely")
-            ),
-            widget=autocomplete.Select2Multiple(
-                url="dokument:dokument-autocomplete-bez-zapsanych"
-            ),
-        )
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False
-
-
-class PripojitProjDocForm(forms.Form):
-    def __init__(self, *args, projekt_docs, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["dokument"] = forms.MultipleChoiceField(
-            label=_("Projektové dokumenty k připojení"),
-            required=True,
-            choices=projekt_docs + [("", "")],
-            widget=forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"},
-            ),
-        )
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False
