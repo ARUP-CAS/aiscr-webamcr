@@ -1,11 +1,12 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
+from dal import autocomplete
 from django import forms
 from django.db import utils
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 
-from core.constants import COORDINATE_SYSTEM
+from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from dokument.models import Dokument, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
@@ -515,3 +516,35 @@ class CreateModelExtraDataForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+
+class PripojitDokumentForm(forms.Form):
+    def __init__(self, projekt=None, *args, **kwargs):
+        super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
+        self.fields["dokument"] = forms.MultipleChoiceField(
+            label=_("Vyberte dokument k připojení"),
+            choices=list(
+                Dokument.objects.filter(
+                    stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)
+                ).values_list("id", "ident_cely")
+            ),
+            widget=autocomplete.Select2Multiple(
+                url="dokument:dokument-autocomplete-bez-zapsanych"
+            ),
+        )
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PripojitProjDocForm(forms.Form):
+    def __init__(self, *args, projekt_docs, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dokument"] = forms.MultipleChoiceField(
+            label=_("Projektové dokumenty k připojení"),
+            required=True,
+            choices=projekt_docs + [("", "")],
+            widget=forms.SelectMultiple(
+                attrs={"class": "selectpicker", "data-live-search": "true"},
+            ),
+        )
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False

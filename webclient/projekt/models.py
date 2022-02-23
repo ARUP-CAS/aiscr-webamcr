@@ -337,7 +337,7 @@ class Projekt(models.Model):
     def check_pred_uzavrenim(self):
         does_not_have_event = len(self.akce_set.all()) == 0
         result = {}
-        if does_not_have_event:
+        if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
             result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
         for a in self.akce_set.all():
             akce_warnings = a.check_pred_odeslanim()

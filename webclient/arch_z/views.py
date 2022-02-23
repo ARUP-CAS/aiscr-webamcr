@@ -33,7 +33,6 @@ from core.message_constants import (
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
     DOKUMENT_JIZ_BYL_PRIPOJEN,
-    DOKUMENT_USPESNE_ODPOJEN,
     DOKUMENT_USPESNE_PRIPOJEN,
     MAXIMUM_AKCII_DOSAZENO,
     ZAZNAM_USPESNE_EDITOVAN,
@@ -42,11 +41,12 @@ from core.message_constants import (
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
+from dokument.views import odpojit, pripojit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
@@ -65,6 +65,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
     SPECIFIKACE_DATA_PRESNE,
     TYP_DJ_SONDA_ID,
+    TYP_PROJEKTU_PRUZKUM_ID,
 )
 from heslar.models import Heslar
 from heslar.views import heslar_12
@@ -162,7 +163,10 @@ def detail(request, ident_cely):
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
-            Adb, VyskovyBod, form=create_vyskovy_bod_form(pian=jednotka.pian), extra=1,
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(pian=jednotka.pian),
+            extra=1,
         )
         has_adb = jednotka.has_adb()
         show_adb_add = (
@@ -427,10 +431,21 @@ def zapsat(request, projekt_ident_cely):
 
     # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
     if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
-        logger.debug("arch_z.views.zapsat: "
-                     f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added.")
+        logger.debug(
+            "arch_z.views.zapsat: "
+            f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added."
+        )
         raise PermissionDenied(
             "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
+        )
+    # Projektove akce nelze vytvorit pro projekt typu pruzkum
+    if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
+        logger.debug(
+            "arch_z.views.zapsat: "
+            f"Type of project {projekt_ident_cely} is {projekt.typ_projektu} and action cannot be added."
+        )
+        raise PermissionDenied(
+            f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
         )
 
     if request.method == "POST":
@@ -457,13 +472,14 @@ def zapsat(request, projekt_ident_cely):
                 akce.save()
 
                 messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
-                logger.debug(f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
-                             f"projekt: {projekt_ident_cely}")
+                logger.debug(
+                    f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
+                    f"projekt: {projekt_ident_cely}"
+                )
                 return redirect("/arch_z/detail/" + az.ident_cely)
 
         else:
-            logger.warning("arch_z.views.zapsat: "
-                           "Form is not valid")
+            logger.warning("arch_z.views.zapsat: " "Form is not valid")
             logger.debug(form_az.errors)
             logger.debug(form_akce.errors)
 
@@ -515,105 +531,16 @@ def smazat(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
-    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    if request.method == "POST":
-        dokument_ids = request.POST.getlist("dokument")
-        casti_zaznamu = DokumentCast.objects.filter(
-            archeologicky_zaznam__ident_cely=arch_z_ident_cely
-        )
-        for dokument_id in dokument_ids:
-            dokument = get_object_or_404(Dokument, id=dokument_id)
-            relace = casti_zaznamu.filter(dokument__id=dokument_id)
-            if not relace.exists():
-                dc_ident = get_cast_dokumentu_ident(dokument)
-                DokumentCast(
-                    archeologicky_zaznam=az, dokument=dokument, ident_cely=dc_ident
-                ).save()
-                logger.debug(
-                    "K akci "
-                    + str(arch_z_ident_cely)
-                    + " byl pripojen dokument "
-                    + str(dokument.ident_cely)
-                )
-                messages.add_message(
-                    request, messages.SUCCESS, DOKUMENT_USPESNE_PRIPOJEN
-                )
-            else:
-                messages.add_message(
-                    request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
-                )
-        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
-    else:
-        if proj_ident_cely:
-            # Pridavam projektove dokumenty
-            projektove_dokumenty = set()
-            dokumenty_akce = set(
-                Dokument.objects.filter(
-                    casti__archeologicky_zaznam__ident_cely=arch_z_ident_cely
-                )
-            )
-            projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
-            for akce in projekt.akce_set.all().exclude(
-                archeologicky_zaznam__ident_cely=arch_z_ident_cely
-            ):
-                for cast in akce.archeologicky_zaznam.casti_dokumentu.all():
-                    if cast.dokument not in dokumenty_akce:
-                        projektove_dokumenty.add(
-                            (cast.dokument.id, cast.dokument.ident_cely)
-                        )
-            form = PripojitProjDocForm(projekt_docs=list(projektove_dokumenty))
-        else:
-            # Pridavam vsechny dokumenty
-            form = PripojitDokumentForm()
-    return render(
-        request, "arch_z/pripojit_dokument.html", {"form": form, "object": az}
-    )
+def pripojit_dokument(
+    request, arch_z_ident_cely, proj_ident_cely=None
+):  
+    return pripojit(request, arch_z_ident_cely, proj_ident_cely, ArcheologickyZaznam)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
-    relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_cely)
-    remove_orphan = False
-    if len(relace_dokumentu) == 0:
-        raise Http404("Nelze najít zadne relace dokumentu " + str(ident_cely))
-    if len(relace_dokumentu) == 1:
-        orphan_dokument = relace_dokumentu[0].dokument
-        if "X-" in orphan_dokument.ident_cely:
-            remove_orphan = True
-    if request.method == "POST":
-        dokument_cast = relace_dokumentu.filter(
-            archeologicky_zaznam__ident_cely=arch_z_ident_cely
-        )
-        if len(dokument_cast) == 0:
-            raise Http404("Nelze najít relaci mezi zaznamem a dokumentem")
-        resp = dokument_cast[0].delete()
-        logger.debug("Byla smazana cast dokumentu " + str(resp))
-        if remove_orphan:
-            orphan_dokument.delete()
-            logger.debug("Docasny soubor bez relaci odstranen.")
-        messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
-        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
-    else:
-        warnings = []
-        if remove_orphan:
-            warnings.append(
-                "Nearchivovaný dokument "
-                + str(orphan_dokument)
-                + " nemá žádnou jinou relaci a odpojením bude automaticky smazán."
-            )
-        return render(
-            request,
-            "arch_z/transakce_dokument.html",
-            {
-                "object": relace_dokumentu[0],
-                "warnings": warnings,
-                "title": _("Odpojení dokumentu"),
-                "header": _("Odpojení dokumentu"),
-                "button": _("Odpojit dokument"),
-            },
-        )
+    return odpojit (request, ident_cely, arch_z_ident_cely, "arch_z")
 
 @login_required
 @require_http_methods(["POST"])

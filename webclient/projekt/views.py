@@ -3,6 +3,7 @@ from core.exceptions import MaximalIdentNumberError
 
 import simplejson as json
 from arch_z.models import Akce
+from dokument.models import Dokument
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
@@ -53,6 +54,7 @@ from core.message_constants import (
     MAXIMUM_IDENT_DOSAZEN,
 )
 from core.utils import get_points_from_envelope
+from dokument.views import odpojit, pripojit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -115,12 +117,18 @@ def detail(request, ident_cely):
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
     )
+    dokumenty = (
+        Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
+        .select_related("soubory")
+        .prefetch_related("soubory__soubory")
+    ).order_by("ident_cely")
     context["akce"] = akce
     soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
     context["history_dates"] = get_history_dates(projekt.historie)
     context["show"] = get_detail_template_shows(projekt, request.user)
+    context["dokumenty"] = dokumenty
 
     return render(request, "projekt/detail.html", context)
 
@@ -263,7 +271,9 @@ def edit(request, ident_cely):
         else:
             logger.warning("Projekt geom is empty.")
     return render(
-        request, "projekt/edit.html", {"form_projekt": form, "projekt": projekt},
+        request,
+        "projekt/edit.html",
+        {"form_projekt": form, "projekt": projekt},
     )
 
 
@@ -521,9 +531,6 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         projekt.set_archivovany(request.user)
         projekt.save()
-        # Removing personal information from the projekt announcement
-        projekt.oznamovatel.remove_data()
-
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
         return redirect("/projekt/detail/" + ident_cely)
     else:
@@ -652,6 +659,18 @@ def vratit_navrh_zruseni(request, ident_cely):
         form = VratitForm()
     return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
 
+@login_required
+@require_http_methods(["GET", "POST"])
+def odpojit_dokument(request, ident_cely, proj_ident_cely):
+    return odpojit (request, ident_cely, proj_ident_cely, "projekt")
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def pripojit_dokument(
+    request, proj_ident_cely
+):
+    return pripojit(request, proj_ident_cely, None, Projekt) 
+
 
 def get_history_dates(historie_vazby):
     # Transakce do stavu "Zapsan" jsou 2
@@ -710,17 +729,20 @@ def get_detail_template_shows(projekt, user):
     show_samostatne_nalezy = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
     admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
-    if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
-        show_pridat_akci = (
-            PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
-        )
-    else:
-        show_pridat_akci = (
-            PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
-        )
+    show_pridat_akci = False
+    if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
+        if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
+            show_pridat_akci = (
+                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
+            )
+        else:
+            show_pridat_akci = (
+                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
+            )
     show_edit = projekt.stav not in [
         PROJEKT_STAV_ARCHIVOVANY,
     ]
+    show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -736,6 +758,7 @@ def get_detail_template_shows(projekt, user):
         "samostatne_nalezy": show_samostatne_nalezy,
         "pridat_akci": show_pridat_akci,
         "editovat": show_edit,
+        "dokumenty": show_dokumenty,
     }
     return show
 
@@ -792,7 +815,9 @@ def katastr_text_to_id(request):
         return post
     else:
         if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
-            logger.debug(f"Katastr {hlavni_katastr_name} and {okres_name} are already numbers")
+            logger.debug(
+                f"Katastr {hlavni_katastr_name} and {okres_name} are already numbers"
+            )
         else:
             logger.error(f"Cannot find katastr {hlavni_katastr_name} in {okres_name}!")
         return request.POST.copy()
