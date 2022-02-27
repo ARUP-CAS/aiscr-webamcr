@@ -22,10 +22,10 @@ from uzivatel.models import Osoba
 
 class CoordinatesDokumentForm(forms.Form):
     detector_system_coordinates = forms.ChoiceField(
-        label=_("Souř. systém"), choices=COORDINATE_SYSTEM, required=False
+        label=_("Souř. systém"), choices=COORDINATE_SYSTEM, required=False, help_text= _("dokument.form.coordinates.detector.tooltip"),
     )
-    detector_coordinates_x = forms.CharField(label=_("Šířka (N / Y)"), required=False)
-    detector_coordinates_y = forms.CharField(label=_("Délka (E / X)"), required=False)
+    detector_coordinates_x = forms.CharField(label=_("Šířka (N / Y)"), required=False, help_text= _("dokument.form.coordinates.cor_x.tooltip"),)
+    detector_coordinates_y = forms.CharField(label=_("Délka (E / X)"), required=False, help_text= _("dokument.form.coordinates.cor_y.tooltip"),)
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
@@ -99,6 +99,25 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "rok_do": _("Rok do"),
             "duveryhodnost": _("Důvěryhodnost"),
         }
+        help_texts = {
+            "datum_vzniku": _("dokument.form.dokumentExtraData.datum_vzniku.tooltip"),
+            "zachovalost": _("dokument.form.dokumentExtraData.zachovalost.tooltip"),
+            "nahrada": _("dokument.form.dokumentExtraData.nahrada.tooltip"),
+            "pocet_variant_originalu": _("dokument.form.dokumentExtraData.pocet_variant_originalu.tooltip"),
+            "odkaz": _("dokument.form.dokumentExtraData.odkaz.tooltip"),
+            "format": _("dokument.form.dokumentExtraData.format.tooltip"),
+            "meritko": _("dokument.form.dokumentExtraData.meritko.tooltip"),
+            "vyska": _("dokument.form.dokumentExtraData.vyska.tooltip"),
+            "sirka": _("dokument.form.dokumentExtraData.sirka.tooltip"),
+            "cislo_objektu": _("dokument.form.dokumentExtraData.cislo_objektu.tooltip"),
+            "zeme": _("dokument.form.dokumentExtraData.zeme.tooltip"),
+            "region": _("dokument.form.dokumentExtraData.region.tooltip"),
+            "udalost": _("dokument.form.dokumentExtraData.udalost.tooltip"),
+            "udalost_typ": _("dokument.form.dokumentExtraData.udalost_typ.tooltip"),
+            "rok_od": _("dokument.form.dokumentExtraData.rok_od.tooltip"),
+            "rok_do": _("dokument.form.dokumentExtraData.rok_do.tooltip"),
+            "duveryhodnost": _("dokument.form.dokumentExtraData.duveryhodnost.tooltip"),
+        }
 
     def __init__(self, *args, readonly=False, **kwargs):
         rada = kwargs.pop("rada", None)
@@ -115,6 +134,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                     widget=forms.SelectMultiple(
                         attrs={"class": "selectpicker", "data-live-search": "true"}
                     ),
+                    help_text= _("dokument.form.dokumentExtraData.dokument_osoba.tooltip"),
                 )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))),
@@ -123,6 +143,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-live-search": "true"}
                 ),
+                help_text= _("dokument.form.dokumentExtraData.let.tooltip"),
             )
         except utils.ProgrammingError:
             self.fields["dokument_osoba"] = \
@@ -183,6 +204,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
         self.fields["rada"].disabled = edit_prohibited
 
 
@@ -251,6 +274,22 @@ class EditDokumentForm(forms.ModelForm):
             "licence": _("Licence"),
             "autori": _("Autoři"),
         }
+        help_texts = {
+            "organizace": _("dokument.form.createDokument.organizace.tooltip"),
+            "rok_vzniku": _("dokument.form.createDokument.rok_vzniku.tooltip"),
+            "material_originalu": _("dokument.form.createDokument.material_originalu.tooltip"),
+            "typ_dokumentu": _("dokument.form.createDokument.typ_dokumentu.tooltip"),
+            "popis": _("dokument.form.createDokument.popis.tooltip"),
+            "poznamka": _("dokument.form.createDokument.poznamka.tooltip"),
+            "ulozeni_originalu": _("dokument.form.createDokument.ulozeni_originalu.tooltip"),
+            "oznaceni_originalu": _("dokument.form.createDokument.oznaceni_originalu.tooltip"),
+            "pristupnost": _("dokument.form.createDokument.pristupnost.tooltip"),
+            "datum_zverejneni": _("dokument.form.createDokument.datum_zverejneni.tooltip"),
+            "licence": _("dokument.form.createDokument.licence.tooltip"),
+            "autori": _("dokument.form.createDokument.autori.tooltip"),
+            "jazyky": _("dokument.form.createDokument.jazyky.tooltip"),
+            "posudky": _("dokument.form.createDokument.posudky.tooltip"),
+        }
 
     def __init__(self, *args, readonly=False, **kwargs):
         create = kwargs.pop("create", None)
@@ -314,7 +353,11 @@ class EditDokumentForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
         self.fields["datum_zverejneni"].disabled = True
+
+        
 
 
 class CreateModelDokumentForm(forms.ModelForm):
@@ -349,6 +392,15 @@ class CreateModelDokumentForm(forms.ModelForm):
             "autori": _("Autoři"),
             "rok_vzniku": _("Rok vzniku"),
         }
+        help_texts = {
+            "typ_dokumentu": _("dokument.form.createModel.typ_dokumentu.tooltip"),
+            "organizace": _("dokument.form.createModel.organizace.tooltip"),
+            "oznaceni_originalu": _("dokument.form.createModel.oznaceni_originalu.tooltip"),
+            "popis": _("dokument.form.createModel.popis.tooltip"),
+            "poznamka": _("dokument.form.createModel.poznamka.tooltip"),
+            "autori": _("dokument.form.createModel.autori.tooltip"),
+            "rok_vzniku": _("dokument.form.createModel.rok_vzniku.tooltip"),
+        }
 
     def __init__(self, *args, readonly=False, **kwargs):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
@@ -382,6 +434,8 @@ class CreateModelDokumentForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
@@ -414,6 +468,15 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "region": _("Region"),
             "vyska": _("Délka"),
             "sirka": _("Šířka"),
+        }
+        help_texts = {
+            "format": _("dokument.form.modelExtraData.format.tooltip"),
+            "duveryhodnost": _("dokument.form.modelExtraData.duveryhodnost.tooltip"),
+            "odkaz": _("dokument.form.modelExtraData.odkaz.tooltip"),
+            "zeme": _("dokument.form.modelExtraData.zeme.tooltip"),
+            "region": _("dokument.form.modelExtraData.region.tooltip"),
+            "vyska": _("dokument.form.modelExtraData.vyska.tooltip"),
+            "sirka": _("dokument.form.modelExtraData.sirka.tooltip"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):
@@ -450,3 +513,5 @@ class CreateModelExtraDataForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""

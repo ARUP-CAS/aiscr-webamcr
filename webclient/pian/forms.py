@@ -13,6 +13,7 @@ class PianCreateForm(forms.ModelForm):
         model = Pian
         fields = ("presnost", "geom")
         labels = {"presnost": _("Přesnost")}
+        help_texts = {"presnost":_("pian.form.presnost.tooltip"),}
 
     def __init__(self, *args, **kwargs):
         super(PianCreateForm, self).__init__(*args, **kwargs)

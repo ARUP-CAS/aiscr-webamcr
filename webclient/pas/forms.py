@@ -50,7 +50,7 @@ class PotvrditNalezForm(forms.ModelForm):
             ),
         ),
         label=_("Nález předán"),
-        help_text=_("Lorem ipsum."),
+        help_text=_("pas.form.potvrditNalez.predano.tooltip"),
         error_messages={
             "required": _("Nález musí být předán. Vyplňte Ano"),
         },
@@ -71,9 +71,9 @@ class PotvrditNalezForm(forms.ModelForm):
             "pristupnost": _("Přístupnost"),
         }
         help_texts = {
-            "evidencni_cislo": _("Lorem ipsum."),
-            "predano_organizace": _("Lorem ipsum."),
-            "pristupnost": _("Lorem ipsum."),
+            "evidencni_cislo": _("pas.form.potvrditNalez.evidencni_cislo.tooltip"),
+            "predano_organizace": _("pas.form.potvrditNalez.predano_organizace.tooltip"),
+            "pristupnost": _("pas.form.potvrditNalez.pristupnost.tooltip"),
         }
 
     def __init__(self, *args, readonly=False, predano_required=False, **kwargs):
@@ -101,6 +101,8 @@ class PotvrditNalezForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
@@ -110,6 +112,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         max_length=50,
         label=_("Katastrální území"),
         error_messages={"required": "Je třeba vybrat bod na mapě."},
+        help_text=_("pas.form.createSamostatnyNalez.katastr.tooltip"),
     )
 
     class Meta:
@@ -152,6 +155,19 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "specifikace": _("Materiál"),
             "poznamka": _("Poznámka / bližší popis"),
         }
+        help_texts = {
+            "nalezce": _("pas.form.createSamostatnyNalez.nalezce.tooltip"),
+            "datum_nalezu": _("pas.form.createSamostatnyNalez.datum_nalezu.tooltip"),
+            "lokalizace": _("pas.form.createSamostatnyNalez.lokalizace.tooltip"),
+            "okolnosti": _("pas.form.createSamostatnyNalez.okolnosti.tooltip"),
+            "hloubka": _("pas.form.createSamostatnyNalez.hloubka.tooltip"),
+            "obdobi": _("pas.form.createSamostatnyNalez.obdobi.tooltip"),
+            "druh_nalezu": _("pas.form.createSamostatnyNalez.druh_nalezu.tooltip"),
+            "pocet": _("pas.form.createSamostatnyNalez.pocet.tooltip"),
+            "presna_datace": _("pas.form.createSamostatnyNalez.presna_datace.tooltip"),
+            "specifikace": _("pas.form.createSamostatnyNalez.specifikace.tooltip"),
+            "poznamka": _("pas.form.createSamostatnyNalez.poznamka.tooltip"),
+        }
 
     def __init__(self, *args, readonly=False, user=None, **kwargs):
         projekt_disabed = kwargs.pop("projekt_disabled", False)
@@ -168,6 +184,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             widget=forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            help_text=_("pas.form.createSamostatnyNalez.projekt.tooltip"),
         )
         self.fields["katastr"].widget.attrs["readonly"] = True
         self.fields["druh_nalezu"] = TwoLevelSelectField(
@@ -176,6 +193,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
+            help_text=_("pas.form.createSamostatnyNalez.drih_nalezu.tooltip"),
         )
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("Období"),
@@ -183,6 +201,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
+            help_text=_("pas.form.createSamostatnyNalez.obdobi.tooltip"),
         )
         self.fields["druh_nalezu"].required = False
         self.fields["obdobi"].required = False
@@ -226,6 +245,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
 
 class CreateZadostForm(forms.Form):
@@ -236,6 +257,7 @@ class CreateZadostForm(forms.Form):
         ),
         required=True,
         validators=[validate_uzivatel_email],
+        help_text=_("pas.form.createZadost.email_uzivatele.tooltip"),
     )
 
     def __init__(self, *args, **kwargs):

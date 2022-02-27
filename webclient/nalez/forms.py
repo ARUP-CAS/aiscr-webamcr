@@ -23,6 +23,10 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
                 "pocet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             }
+            help_texts = {
+                "pocet": _("nalez.form.nalezObjekt.pocet.tooltip"),
+                "poznamka": _("nalez.form.nalezObjekt.poznamka.tooltip"),
+            }
 
         def __init__(
             self,
@@ -38,6 +42,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                     choices=druh_objekt_choices,
                     attrs={"class": "selectpicker", "data-live-search": "true"},
                 ),
+                help_text=_("nalez.form.nalezObjekt.druh.tooltip"),
             )
             self.fields["specifikace"] = TwoLevelSelectField(
                 label=_("Specifikace"),
@@ -45,6 +50,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                     choices=specifikace_objekt_choices,
                     attrs={"class": "selectpicker", "data-live-search": "true"},
                 ),
+                help_text=_("nalez.form.nalezObjekt.specifikace.tooltip"),
             )
             self.fields["specifikace"].required = False
 
@@ -55,6 +61,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                         self.fields[
                             key
                         ].widget.template_name = "core/select_to_text.html"
+                    self.fields[key].help_text = ""
 
     return CreateNalezObjektForm
 
@@ -77,6 +84,10 @@ def create_nalez_predmet_form(
                 "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
                 "pocet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             }
+            help_texts = {
+                "pocet": _("nalez.form.nalezPredmet.pocet.tooltip"),
+                "poznamka": _("nalez.form.nalezPredmet.poznamka.tooltip"),
+            }
 
         def __init__(self, *args, **kwargs):
             super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
@@ -86,10 +97,12 @@ def create_nalez_predmet_form(
                     choices=druh_projekt_choices,
                     attrs={"class": "selectpicker", "data-live-search": "true"},
                 ),
+                help_text=_("nalez.form.nalezPredmet.druh.tooltip"),
             )
             self.fields["specifikace"] = HeslarChoiceFieldField(
                 label=_("Specifikace"),
                 choices=[("", "")] + specifikce_predmetu_choices,
+                help_text=_("nalez.form.nalezPredmet.specifikace.tooltip"),
             )
             self.fields["specifikace"].widget.attrs = {
                 "class": "selectpicker",
@@ -104,5 +117,6 @@ def create_nalez_predmet_form(
                         self.fields[
                             key
                         ].widget.template_name = "core/select_to_text.html"
+                    self.fields[key].help_text = ""
 
     return CreateNalezPredmetForm

@@ -37,6 +37,14 @@ class AuthUserCreationForm(RegistrationForm):
             ),
             "telefon": forms.TextInput,
         }
+        help_texts = {
+            "first_name": _("uzivatel.form.userCreation.first_name.tooltip"),
+            "last_name": _("uzivatel.form.userCreation.last_name.tooltip"),
+            "email": _("uzivatel.form.userCreation.email.tooltip"),
+            "organizace": _("uzivatel.form.userCreation.organizace.tooltip"),
+            "password1": _("uzivatel.form.userCreation.password1.tooltip"),
+            "telefon": _("uzivatel.form.userCreation.telefon.tooltip"),
+        }
 
     def __init__(self, *args, **kwargs):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
@@ -51,6 +59,13 @@ class AuthUserChangeForm(UserChangeForm):
     class Meta:
         model = User
         fields = ("email", "organizace", "jazyk", "ident_cely", "telefon")
+        help_texts = {
+            "email": _("uzivatel.form.userChange.email.tooltip"),
+            "jazyk": _("uzivatel.form.userChange.jazyk.tooltip"),
+            "organizace": _("uzivatel.form.userChange.organizace.tooltip"),
+            "ident_cely": _("uzivatel.form.userChange.ident_cely.tooltip"),
+            "telefon": _("uzivatel.form.userChange.telefon.tooltip"),
+        }
 
 
 class AuthUserLoginForm(AuthenticationForm):
@@ -84,8 +99,8 @@ class OsobaForm(forms.ModelForm):
             # "rodne_prijmeni": _("Rodné příjmení"),
         }
         help_texts = {
-            "jmeno": _("Lorem ipsum."),
-            "prijmeni": _("Lorem ipsum."),
+            "jmeno": _("uzivatel.form.osoba.jmeno.tooltip"),
+            "prijmeni": _("uzivatel.form.osoba.prijmeni.tooltip"),
             # "rok_narozeni": _("Lorem ipsum."),
             # "rok_umrti": _("Lorem ipsum."),
             # "rodne_prijmeni": _("Lorem ipsum."),

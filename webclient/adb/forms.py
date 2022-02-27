@@ -48,6 +48,21 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
 
+        help_texts = {
+            "typ_sondy": _("adb.form.typSondy.tooltip"),
+            "uzivatelske_oznaceni_sondy": _("adb.form.uzivatelske_oznaceni_sondy.tooltip"),
+            "trat": _("adb.form.trat.tooltip"),
+            "cislo_popisne": _("adb.form.cislo_popisne.tooltip"),
+            "parcelni_cislo": _("adb.form.parcelni_cislo.tooltip"),
+            "podnet": _("adb.form.podnet.tooltip"),
+            "stratigraficke_jednotky": _("adb.form.stratigraficke_jednotky.tooltip"),
+            "autor_popisu": _("adb.form.autor_popisu.tooltip"),
+            "rok_popisu": _("adb.form.rok_popisu.tooltip"),
+            "autor_revize": _("adb.form.autor_revize.tooltip"),
+            "rok_revize": _("adb.form.rok_revize.tooltip"),
+            "poznamka": _("adb.form.poznamka.tooltip"),
+        }
+
         # widgets = {
         #     "autor_popisu": autocomplete.ModelSelect2(
         #         url="uzivatel:osoba-autocomplete"
@@ -84,6 +99,8 @@ class CreateADBForm(forms.ModelForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
 
 class VyskovyBodFormSetHelper(FormHelper):
@@ -95,8 +112,8 @@ class VyskovyBodFormSetHelper(FormHelper):
 
 def create_vyskovy_bod_form(pian=None):
     class CreateVyskovyBodForm(forms.ModelForm):
-        northing = forms.FloatField()
-        easting = forms.FloatField()
+        northing = forms.FloatField(help_text=_("adb.form.vyskovyBod.northing.tooltip"),)
+        easting = forms.FloatField(help_text=_("adb.form.vyskovyBod.easting.tooltip"),)
         class Meta:
             model = VyskovyBod
 
@@ -110,6 +127,13 @@ def create_vyskovy_bod_form(pian=None):
             widgets = {
                 "ident_cely": forms.Textarea(attrs={"rows": 1, "10": 40}),
             }
+            help_texts = {
+            "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),
+            "typ": _("adb.form.vyskovyBod.typ.tooltip"),
+            "niveleta": _("adb.form.vyskovyBod.niveleta.tooltip"),
+            "northing": _("adb.form.vyskovyBod.northing.tooltip"),
+            "easting": _("adb.form.vyskovyBod.easting.tooltip"),
+        }
 
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
@@ -124,5 +148,7 @@ def create_vyskovy_bod_form(pian=None):
             for key in self.fields.keys():
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].empty_label = ""
+                if self.fields[key].disabled is True:
+                    self.fields[key].help_text = ""
 
     return CreateVyskovyBodForm
