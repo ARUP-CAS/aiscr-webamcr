@@ -13,6 +13,7 @@ services:
     volumes:
       - ./webclient:/code
       - ./vol/web:/vol/web
+      - locale_data:/vol/web/locale
     ports:
       - "8000:8000"
       - "5678:5678"
@@ -49,4 +50,7 @@ services:
     image: memcached:latest
     ports:
         - "11211:11211"
+
+volumes:
+  locale_data:
 
