@@ -262,4 +262,4 @@ def get_projekt_soubor_name(file_name):
     nfkd_form = unicodedata.normalize('NFKD', split_file[0])
     only_ascii = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return (re.sub('[^A-Za-z0-9_]', '_', only_ascii)+split_file[1])
-    # potrebne odstranit contraint soubor_filepath_key
+    # potrebne odstranit constraint soubor_filepath_key
