@@ -75,7 +75,7 @@ window.onload = function () {
         },
         error: function (file, response) {
             console.log(response);
-            alert(response)
+            alert(response.error)
             this.removeFile(file);
 
         },

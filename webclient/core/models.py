@@ -1,3 +1,5 @@
+import os
+import datetime
 from django.db import models
 from uzivatel.models import User
 
@@ -7,7 +9,9 @@ from .constants import (
     SAMOSTATNY_NALEZ_RELATION_TYPE,
 )
 
-
+def get_upload_to(instance, filename):
+    base_path = f"soubory/{datetime.datetime.now().strftime('%Y/%m/%d')}"
+    return os.path.join(base_path, instance.nazev)
 class SouborVazby(models.Model):
 
     CHOICES = (
@@ -35,7 +39,7 @@ class Soubor(models.Model):
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
-    path = models.FileField(upload_to="soubory/%Y/%m/%d", default="empty")
+    path = models.FileField(upload_to=get_upload_to, default="empty")
 
     class Meta:
         db_table = "soubor"
@@ -51,3 +55,6 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
+
+
+
