@@ -139,9 +139,11 @@ def post_upload(request):
     if projects.exists():
         objekt = projects[0]
         typ_souboru = OTHER_PROJECT_FILES
+        
     elif documents.exists():
         objekt = documents[0]
         typ_souboru = OTHER_DOCUMENT_FILES
+        get_dokument_soubor_name(objekt)
     elif finds.exists():
         objekt = finds[0]
         typ_souboru = PHOTO_DOCUMENTATION
@@ -200,3 +202,7 @@ def post_upload(request):
         logger.warning("No file attached to the announcement form.")
 
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
+
+def get_dokument_soubor_name(dokument):
+    soubory = dokument.soubory.soubory.all()
+    logger.debug(soubory)
