@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile-production
     volumes:
       - static_data:/vol/web
+      - locale_data:/vol/web/locale
 
   proxy:
     build:
@@ -25,3 +26,4 @@ services:
 
 volumes:
   static_data:
+  locale_data:

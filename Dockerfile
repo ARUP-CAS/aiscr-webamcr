@@ -51,7 +51,6 @@ RUN adduser user
 RUN passwd -d user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
-RUN chmod -R 777 /vol/web/locale
 USER user
 
 ENV PYTHONUNBUFFERED=1
