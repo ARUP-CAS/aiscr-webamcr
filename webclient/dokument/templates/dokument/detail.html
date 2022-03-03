@@ -32,9 +32,17 @@
         {% endif %}
       </div>
       <div class="card-body">
-        <div>
-          {% crispy form_dokument %}
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
         </div>
+      {% endif %}
+          {% crispy form_dokument %}
+
         <div css_class="col-sm-12">
                 <span class="app-divider-label">Rozšiřující popis</span>
                 <hr class="mt-0" />

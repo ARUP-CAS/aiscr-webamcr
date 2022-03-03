@@ -85,7 +85,7 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = {}
+    context = { "warnings": request.session.pop("temp_data", None) }
     old_objekt_post = request.session.pop("_old_objekt_post", None)
     old_predmet_post = request.session.pop("_old_predmet_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
@@ -328,15 +328,18 @@ def odeslat(request, ident_cely):
     else:
         warnings = az.akce.check_pred_odeslanim()
         logger.debug(warnings)
-        context = {"object": az}
         if warnings:
-            context["warnings"] = warnings
+            request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
-        else:
-            pass
-    context["title"] = _("Odeslání akce")
-    context["header"] = _("Odeslání akce")
-    context["button"] = _("Odeslat akci")
+            return redirect ("arch_z:detail", ident_cely)
+    context = {
+        "object": az,
+        "title" : _("Odeslání akce"),
+        "header" : _("Odeslání akce"),
+        "button" : _("Odeslat akci"),
+    }
+    
+    
     return render(request, "core/transakce.html", context)
 
 
@@ -355,15 +358,18 @@ def archivovat(request, ident_cely):
     else:
         warnings = az.akce.check_pred_archivaci()
         logger.debug(warnings)
-        context = {"object": az}
         if warnings:
-            context["warnings"] = warnings
+            request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
+            return redirect ("arch_z:detail", ident_cely)
         else:
             pass
-    context["title"] = _("Archivace akce")
-    context["header"] = _("Archivace akce")
-    context["button"] = _("Archivovat akci")
+    context = {
+        "object": az,
+        "title" : _("Archivace akce"),
+        "header" : _("Archivace akce"),
+        "button" : _("Archivovat akci"),
+    }
     return render(request, "core/transakce.html", context)
 
 
@@ -609,32 +615,6 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
             },
         )
 
-
-def get_history_dates(historie_vazby):
-    historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
-    }
-    return historie
-
-
-def get_detail_template_shows(archeologicky_zaznam):
-    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
-    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
-    show_edit = archeologicky_zaznam.stav not in [
-        AZ_STAV_ARCHIVOVANY,
-    ]
-    show = {
-        "vratit_link": show_vratit,
-        "odeslat_link": show_odeslat,
-        "archivovat_link": show_archivovat,
-        "editovat": show_edit,
-    }
-    return show
-
-
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_pians(request):
@@ -679,3 +659,27 @@ def post_akce2kat(request):
                 status=200,
             )
     return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)
+
+def get_history_dates(historie_vazby):
+    historie = {
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
+    }
+    return historie
+
+
+def get_detail_template_shows(archeologicky_zaznam):
+    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
+    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
+    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
+    show_edit = archeologicky_zaznam.stav not in [
+        AZ_STAV_ARCHIVOVANY,
+    ]
+    show = {
+        "vratit_link": show_vratit,
+        "odeslat_link": show_odeslat,
+        "archivovat_link": show_archivovat,
+        "editovat": show_edit,
+    }
+    return show

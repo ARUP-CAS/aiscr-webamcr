@@ -94,7 +94,7 @@ def index_model_3D(request):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = {}
+    context = { "warnings": request.session.pop("temp_data", None) }
     dokument = get_object_or_404(
         Dokument.objects.select_related(
             "soubory",
@@ -135,7 +135,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET"])
 def detail_model_3D(request, ident_cely):
-    context = {}
+    context = { "warnings": request.session.pop("temp_data", None) }
     dokument = get_object_or_404(
         Dokument.objects.select_related(
             "soubory",
@@ -550,15 +550,19 @@ def odeslat(request, ident_cely):
     else:
         warnings = d.check_pred_odeslanim()
         logger.debug(warnings)
-        context = {"object": d}
         if warnings:
-            context["warnings"] = warnings
+            request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
-        else:
-            pass
-    context["title"] = _("Odeslání dokumentu")
-    context["header"] = _("Odeslání dokumentu")
-    context["button"] = _("Odeslat dokument")
+            if "3D" in ident_cely:
+                return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+            else:
+                return redirect("dokument:detail", ident_cely=ident_cely)
+    context = {
+        "object": d,
+        "title": _("Odeslání dokumentu"),
+        "header": _("Odeslání dokumentu"),
+        "button": _("Odeslat dokument")
+    }
     return render(request, "core/transakce.html", context)
 
 
@@ -598,15 +602,19 @@ def archivovat(request, ident_cely):
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)
-        context = {"object": d}
         if warnings:
-            context["warnings"] = warnings
+            request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
-        else:
-            pass
-    context["title"] = _("Archivace dokumentu")
-    context["header"] = _("Archivace dokumentu")
-    context["button"] = _("Archivovat dokument")
+            if "3D" in ident_cely:
+                return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+            else:
+                return redirect("dokument:detail", ident_cely=ident_cely)
+    context = {
+        "object": d,
+        "title": _("Archivace dokumentu"),
+        "header": _("Archivace dokumentu"),
+        "button": _("Archivovat dokument")
+    }
     return render(request, "core/transakce.html", context)
 
 

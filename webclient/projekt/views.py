@@ -94,7 +94,7 @@ def index(request):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = {}
+    context = { "warnings": request.session.pop("temp_data", None) }
     projekt = get_object_or_404(
         Projekt.objects.select_related(
             "kulturni_pamatka", "typ_projektu", "vedouci_projektu", "organizace"
@@ -280,11 +280,11 @@ def smazat(request, ident_cely):
     else:
         warnings = projekt.check_pred_smazanim()
         logger.debug(warnings)
-        context = {"objekt": projekt}
         if warnings:
-            context["warnings"] = warnings
+            request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
-
+            return redirect ("projekt:detail", ident_cely)
+        context = {"objekt": projekt}
         return render(request, "core/smazat.html", context)
 
 
@@ -491,17 +491,23 @@ def uzavrit(request, ident_cely):
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
         logger.debug(warnings)
-        context = {"object": projekt}
+        
         if warnings:
-            context["warnings"] = []
+            request.session['temp_data'] = []
+            for key, item in warnings.items():
+                if key == "has_event":
+                    request.session['temp_data'].append(item)
+                else:
+                    request.session['temp_data'].append(f"{key}: {' '.join(item)}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
-            for item in warnings.items():
-                context["warnings"].append(item)
-        else:
-            pass
-        context["title"] = _("Uzavření projektu")
-        context["header"] = _("Uzavření projektu")
-        context["button"] = _("Uzavřít projekt")
+            return redirect ("projekt:detail", ident_cely)
+            
+        context = {
+            "object": projekt,
+            "title": _("Uzavření projektu"),
+            "header": _("Uzavření projektu"),
+            "button": _("Uzavřít projekt")
+        }
 
         return render(request, "core/transakce.html", context)
 
@@ -523,17 +529,18 @@ def archivovat(request, ident_cely):
     else:
         warnings = projekt.check_pred_archivaci()
         logger.debug(warnings)
-        context = {"object": projekt}
         if warnings:
-            context["warnings"] = []
+            request.session['temp_data'] = []
+            for key, item in warnings.items():
+                request.session['temp_data'].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ARCHIVOVAT)
-            for key, value in warnings.items():
-                context["warnings"].append((key, value))
-        else:
-            pass
-    context["title"] = _("Archivace projektu")
-    context["header"] = _("Archivace projektu")
-    context["button"] = _("Archivovat projekt")
+            return redirect ("projekt:detail", ident_cely)
+    context = {
+        "object": projekt,
+        "title": _("Archivace projektu"),
+        "header": _("Archivace projektu"),
+        "button": _("Archivovat projekt")
+    }
     return render(request, "core/transakce.html", context)
 
 
@@ -559,19 +566,20 @@ def navrhnout_ke_zruseni(request, ident_cely):
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
         logger.debug(warnings)
-        context = {"projekt": projekt}
+        
         if warnings:
-            context["warnings"] = []
+            request.session['temp_data'] = []
+            for key, item in warnings.items():
+                if key == "has_event":
+                    request.session['temp_data'].append(item)
             messages.add_message(
                 request, messages.ERROR, PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI
             )
-            for key, value in warnings.items():
-                context["warnings"].append((key, value))
-            return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
-        else:
-            pass
-
-        context["form"] = NavrhnoutZruseniProjektForm()
+            return redirect ("projekt:detail", ident_cely)
+        context = {
+            "projekt": projekt,
+            "form": NavrhnoutZruseniProjektForm() 
+            }
     return render(request, "projekt/navrhnout_zruseni.html", context)
 
 
