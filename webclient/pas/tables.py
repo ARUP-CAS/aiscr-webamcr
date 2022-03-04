@@ -14,6 +14,7 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
     katastr = tables.Column(verbose_name=_("Katastrální území"))
+    datum_nalezu = tables.columns.DateTimeColumn(format ='Y-m-d')
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())

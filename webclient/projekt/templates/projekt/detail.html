@@ -49,7 +49,7 @@
             <span class="bs-stepper-label">
               {% trans "Oznámený" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_oznameni.uzivatel }}">
-                {{ history_dates.datum_oznameni.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_oznameni.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -61,7 +61,7 @@
             <span class="bs-stepper-label">
               {% trans "Zapsaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zapsani.uzivatel }}">
-                {{ history_dates.datum_zapsani.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -73,7 +73,7 @@
             <span class="bs-stepper-label">
               {% trans "Přihlášený" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_prihlaseni.uzivatel }}">
-                {{ history_dates.datum_prihlaseni.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_prihlaseni.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -85,7 +85,7 @@
             <span class="bs-stepper-label">
               {% trans "Zahájen v terénu" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zahajeni_v_terenu.uzivatel }}">
-                {{ history_dates.datum_zahajeni_v_terenu.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_zahajeni_v_terenu.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -97,7 +97,7 @@
             <span class="bs-stepper-label">
               {% trans "Ukončen v terénu" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_ukonceni_v_terenu.uzivatel }}">
-                {{ history_dates.datum_ukonceni_v_terenu.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_ukonceni_v_terenu.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -109,7 +109,7 @@
             <span class="bs-stepper-label">
               {% trans "Uzavřený" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_uzavreni.uzivatel }}">
-                {{ history_dates.datum_uzavreni.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_uzavreni.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -121,7 +121,7 @@
             <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_archivace.uzivatel }}">
-                {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -133,7 +133,7 @@
             <span class="bs-stepper-label">
               {% trans "Navržen ke zrušení" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_navrhu_ke_zruseni.uzivatel }}">
-                {{ history_dates.datum_navrhu_ke_zruseni.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_navrhu_ke_zruseni.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -145,7 +145,7 @@
             <span class="bs-stepper-label">
               {% trans "Zrušen" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom" title="{{ history_dates.datum_zruseni.uzivatel }}">
-                {{ history_dates.datum_zruseni.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_zruseni.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
           </button>
@@ -293,19 +293,19 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'Y-m-d'|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'d.m.Y'|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'Y-m-d'|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'d.m.Y'|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Termín odevzdání" %}</label>
-              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'Y-m-d'|check_if_none }}" readonly><!--missings-->
+              <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'d.m.Y'|check_if_none }}" readonly><!--missings-->
             </div>
           </div>
         </div>
@@ -436,7 +436,7 @@
                   {% if a.archeologicky_zaznam.katastry.all %}, {{ a.archeologicky_zaznam.katastry.all|katastry_to_list }}{% endif %}
                 </td>
                 <td>{{ a.hlavni_vedouci }}</td>
-                <td>{{ a.datum_zahajeni|date:'Y/m/d' }} - {{ a.datum_ukonceni|date:'Y/m/d' }}</td>
+                <td>{{ a.datum_zahajeni|date:'Y-m-d' }} - {{ a.datum_ukonceni|date:'Y-m-d' }}</td>
                 <td>{{ a.hlavni_typ|check_if_none }}, {{ a.vedlejsi_typ|check_if_none }}</td>
                 <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni|check_if_none }}</td>
                 <td><div class="badge">{{ a.archeologicky_zaznam.get_stav_display }}</div></td>
