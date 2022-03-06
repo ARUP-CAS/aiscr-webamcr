@@ -742,7 +742,11 @@ def get_detail_template_shows(projekt, user):
     show_edit = projekt.stav not in [
         PROJEKT_STAV_ARCHIVOVANY,
     ]
+<<<<<<< HEAD
     show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
+=======
+    show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
+>>>>>>> 76e65eb... pridane digi linky pro archivovane zaznamy
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -758,7 +762,11 @@ def get_detail_template_shows(projekt, user):
         "samostatne_nalezy": show_samostatne_nalezy,
         "pridat_akci": show_pridat_akci,
         "editovat": show_edit,
+<<<<<<< HEAD
         "dokumenty": show_dokumenty,
+=======
+        "arch_links": show_arch_links,
+>>>>>>> 76e65eb... pridane digi linky pro archivovane zaznamy
     }
     return show
 

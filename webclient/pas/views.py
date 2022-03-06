@@ -590,12 +590,14 @@ def get_detail_template_shows(sn):
     show_edit = sn.stav not in [
         SN_ARCHIVOVANY,
     ]
+    show_arch_links = sn.stav == SN_ARCHIVOVANY
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "potvrdit_link": show_potvrdit,
         "archivovat_link": show_archivovat,
         "editovat": show_edit,
+        "arch_links": show_arch_links,
     }
     return show
 
