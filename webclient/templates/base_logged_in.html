@@ -249,9 +249,12 @@
     timer.addEventListener('secondsUpdated', function (e) {
       var actual_time = timer.getTimeValues().toString(['minutes', 'seconds'])
       $('#time').html(actual_time);
-      if (actual_time === '10:00') { 
-        msg = createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True')
-        $('.message-container').append(msg);
+      var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
+      if (idle_warning !== false) {
+        if (actual_time === idle_warning) { 
+          msg = createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True')
+          $('.message-container').append(msg);
+        };
       };
     });
 

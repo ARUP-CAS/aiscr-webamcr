@@ -61,6 +61,9 @@ def auto_logout_client(request):
         ctx["seconds_until_idle_end"] = seconds_until_idle_time_end(
             request, options["IDLE_TIME"], current_time
         )
+    
+    if "IDLE_WARNING_TIME" in options:
+        ctx["IDLE_WARNING_TIME"] = mark_safe(options["IDLE_WARNING_TIME"])
 
     if options.get("REDIRECT_TO_LOGIN_IMMEDIATELY"):
         ctx["redirect_to_login_immediately"] = mark_safe(
