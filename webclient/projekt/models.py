@@ -1,5 +1,6 @@
 import datetime
 import logging
+import zlib
 
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -27,7 +28,7 @@ from core.constants import (
     ZAPSANI_PROJ,
     VRACENI_ZRUSENI,
 )
-from core.models import ProjektSekvence, SouborVazby
+from core.models import ProjektSekvence, Soubor, SouborVazby
 from core.exceptions import MaximalIdentNumberError
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.postgres.fields import DateRangeField
@@ -36,7 +37,12 @@ from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_PAMATKOVA_OCHRANA, HESLAR_PROJEKT_TYP
+from django.core.files.base import ContentFile
+from heslar.hesla import (
+    HESLAR_PAMATKOVA_OCHRANA,
+    HESLAR_PROJEKT_TYP,
+    TYP_PROJEKTU_ZACHRANNY_ID,
+)
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba, User
@@ -155,13 +161,19 @@ class Projekt(models.Model):
     def set_oznameny(self):
         self.stav = PROJEKT_STAV_OZNAMENY
         owner = get_object_or_404(User, email="amcr@arup.cas.cz")
-        Historie(typ_zmeny=OZNAMENI_PROJ, uzivatel=owner, vazba=self.historie,).save()
+        Historie(
+            typ_zmeny=OZNAMENI_PROJ,
+            uzivatel=owner,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_schvaleny(self, user):
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
-            typ_zmeny=SCHVALENI_OZNAMENI_PROJ, uzivatel=user, vazba=self.historie,
+            typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
         ).save()
         self.save()
 
@@ -172,29 +184,82 @@ class Projekt(models.Model):
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
-        Historie(typ_zmeny=PRIHLASENI_PROJ, uzivatel=user, vazba=self.historie,).save()
+        Historie(
+            typ_zmeny=PRIHLASENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_zahajeny_v_terenu(self, user):
         self.stav = PROJEKT_STAV_ZAHAJENY_V_TERENU
         Historie(
-            typ_zmeny=ZAHAJENI_V_TERENU_PROJ, uzivatel=user, vazba=self.historie,
+            typ_zmeny=ZAHAJENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
         ).save()
         self.save()
 
     def set_ukoncen_v_terenu(self, user):
         self.stav = PROJEKT_STAV_UKONCENY_V_TERENU
         Historie(
-            typ_zmeny=UKONCENI_V_TERENU_PROJ, uzivatel=user, vazba=self.historie,
+            typ_zmeny=UKONCENI_V_TERENU_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
         ).save()
         self.save()
 
     def set_uzavreny(self, user):
         self.stav = PROJEKT_STAV_UZAVRENY
-        Historie(typ_zmeny=UZAVRENI_PROJ, uzivatel=user, vazba=self.historie,).save()
+        Historie(
+            typ_zmeny=UZAVRENI_PROJ,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
         self.save()
 
     def set_archivovany(self, user):
+        if self.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and self.has_oznamovatel():
+            # Removing personal information from the projekt announcement
+            self.oznamovatel.remove_data()
+            # making txt file with deleted files
+            today = datetime.datetime.now()
+            soubory = self.soubory.soubory.exclude(
+                nazev_zkraceny__regex="^log_dokumentace_"
+            )
+            if soubory.count() > 0:
+                filename = (
+                    "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
+                )
+                ("soubory/APD/" + filename, "w+")
+                file_content = (
+                    "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
+                    % today.strftime("%d. %m. %Y")
+                )
+                for nazev in soubory.values_list("nazev_zkraceny"):
+                    file_content += nazev[0] + ", "
+                prev = 0
+                prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
+                new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
+                myfile = ContentFile(content=file_content, name=new_filename)
+                aktual_soubor = Soubor(
+                    vazba=self.soubory,
+                    nazev=new_filename,
+                    nazev_zkraceny=filename,
+                    nazev_puvodni=filename,
+                    vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
+                    mimetype="text/plain",
+                    size_bytes=myfile.size,
+                )
+                aktual_soubor.save()
+                aktual_soubor.path.save(name=new_filename, content=myfile)
+                for file in soubory:
+                    file.path.delete()
+                items_deleted = soubory.delete()
+                logger.debug(
+                    "Pocet smazanych souboru soubory: " + str(items_deleted[0])
+                )
+
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
@@ -233,7 +298,10 @@ class Projekt(models.Model):
         self.stav = PROJEKT_STAV_ZAPSANY
 
         Historie(
-            typ_zmeny=zmena, uzivatel=user, poznamka=poznamka, vazba=self.historie,
+            typ_zmeny=zmena,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
         ).save()
         self.save()
 
@@ -257,7 +325,7 @@ class Projekt(models.Model):
         resp = []
         has_event = len(self.akce_set.all()) > 0
         has_individual_finds = len(self.samostatne_nalezy.all()) > 0
-        has_soubory = (self.soubory.soubory.all())
+        has_soubory = self.soubory.soubory.all()
         if has_event:
             resp.append(_("Projekt před smazáním nesmí mít projektové akce."))
         if has_individual_finds:
