@@ -36,6 +36,7 @@ crossorigin=""/>
             <label for="detector_system_cordinates">{% trans "Souř. S." %}</label>
             {% if global_map_can_edit %}
             {% render_field formCoor.detector_system_coordinates class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
+            <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.detector_system_coordinates.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_system_coordinates|append_attr:"readonly:readonly" class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
             {% endif %}
@@ -47,6 +48,7 @@ crossorigin=""/>
             <label for="detector_coordinates_x">{{ formCoor.detector_coordinates_x.label }}</label>
             {% if global_map_can_edit %}
             {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float" id="detector_coordinates_x" %}
+            <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_x.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_coordinates_x|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_x"%}
             {% endif %}
@@ -60,6 +62,7 @@ crossorigin=""/>
             <label for="detector_coordinates_y">{{ formCoor.detector_coordinates_y.label }}</label>
             {% if global_map_can_edit %}
             {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float"  id="detector_coordinates_y" %}
+            <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_y.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_coordinates_y|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_y"%}
             {% endif %}
@@ -68,14 +71,15 @@ crossorigin=""/>
     <div class="col-3 col-md-2 col-lg-3">
         <!-- Current Location -->
         <div class="form-group map">
-            <label for="detector_coordinates_y">{% trans "Poloha" %}</label>
+            <label for="detector_coordinates_y">{% trans "Přidat současnou polohu" %}</label>
             {% if global_map_can_edit %}
-            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" class="btn btn-amcr btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
-                <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
+            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" class="btn btn-amcr btn-outline-gray btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
+                <i class="bi bi-geo-alt btn-outline-dark" style="font-size: 1rem;"></i>
             </button>
+            <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.currentLocation.tooltip" %}</small>
             {% else %}
-            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" readonly class="btn btn-amcr btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
-            <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
+            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" readonly class="btn btn-amcr btn-outline-gray btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
+            <i class="bi bi-geo-alt btn-outline-dark" style="font-size: 1rem;"></i>
             </button>
             {% endif %}
 

@@ -43,6 +43,12 @@ class CreateArchZForm(forms.ModelForm):
             ),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
+        help_texts = {
+            "hlavni_katastr": _("arch_z.form.hlavni_katastr.tooltip"),
+            "pristupnost": _("arch_z.form.pristupnost.tooltip"),
+            "uzivatelske_oznaceni": _("arch_z.form.uzivatelske_oznaceni.tooltip"),
+            "katastry": _("arch_z.form.katastry.tooltip"),
+        }
 
     def __init__(self, *args, **kwargs):
         projekt = kwargs.pop("projekt", None)
@@ -80,14 +86,17 @@ class CreateArchZForm(forms.ModelForm):
             if self.fields[key].disabled == True:
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+                self.fields[key].help_text = ""
 
 
 class CreateAkceForm(forms.ModelForm):
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        help_text=_("arch_z.form.datum_zahajeni.tooltip"),
     )
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        help_text=_("arch_z.form.datum_ukonceni.tooltip"),
     )
 
     def clean(self):
@@ -141,6 +150,17 @@ class CreateAkceForm(forms.ModelForm):
             "ulozeni_dokumentace": forms.Textarea(attrs={"rows": 2, "cols": 40}),
         }
 
+        help_texts = {
+            "hlavni_vedouci": _("arch_z.form.hlavni_vedouci.tooltip"),
+            "organizace": _("arch_z.form.organizace.tooltip"),
+            "lokalizace_okolnosti": _("arch_z.form.lokalizace_okolnosti.tooltip"),
+            "ulozeni_nalezu": _("arch_z.form.ulozeni_nalezu.tooltip"),
+            "souhrn_upresneni": _("arch_z.form.souhrn_upresneni.tooltip"),
+            "je_nz": _("arch_z.form.je_nz.tooltip"),
+            "specifikace_data": _("arch_z.form.specifikace_data.tooltip"),
+            "ulozeni_dokumentace": _("arch_z.form.ulozeni_dokumentace.tooltip"),
+        }
+
     def __init__(self, *args, **kwargs):
         if "uzamknout_specifikace" in kwargs:
             uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
@@ -157,6 +177,7 @@ class CreateAkceForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
             required=True,
+            help_text=_("arch_z.form.hlavni_typ.tooltip"),
         )
         self.fields["vedlejsi_typ"] = TwoLevelSelectField(
             label=_("Vedlejší typ"),
@@ -165,6 +186,7 @@ class CreateAkceForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
             required=False,
+            help_text=_("arch_z.form.vedlejsi_typ.tooltip"),
         )
         self.fields["lokalizace_okolnosti"].required = True
         if projekt:
@@ -223,6 +245,8 @@ class CreateAkceForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
 
 class PripojitDokumentForm(forms.Form):
@@ -238,6 +262,7 @@ class PripojitDokumentForm(forms.Form):
             widget=autocomplete.Select2Multiple(
                 url="dokument:dokument-autocomplete-bez-zapsanych"
             ),
+            help_text=_("arch_z.form.pripojitDokument.dokument.tooltip"),
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -253,6 +278,7 @@ class PripojitProjDocForm(forms.Form):
             widget=forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
+            help_text=_("arch_z.form.pripojitProjDokument.dokument.tooltip"),
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False

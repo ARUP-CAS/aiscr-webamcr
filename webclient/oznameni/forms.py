@@ -48,8 +48,8 @@ class DateRangeWidget(forms.TextInput):
 
 
 class OznamovatelForm(forms.ModelForm):
-    telefon = forms.CharField(validators=[validate_phone_number])
-    email = forms.EmailField()
+    telefon = forms.CharField(validators=[validate_phone_number],help_text= _("oznameni.forms.telefon.tooltip"),)
+    email = forms.EmailField(help_text= _("oznameni.forms.telefon.tooltip"),)
 
     class Meta:
         model = Oznamovatel
@@ -71,6 +71,9 @@ class OznamovatelForm(forms.ModelForm):
             "odpovedna_osoba": _(
                 "Jméno fyzické osoby, která zastupuje oznamovatele při jednání a podání oznámení."
             ),
+            "telefon": _("oznameni.forms.telefon.tooltip"),
+            "email": _("oznameni.forms.email.tooltip"),
+            "adresa": _("oznameni.forms.adresa.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):

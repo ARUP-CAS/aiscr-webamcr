@@ -61,6 +61,12 @@ class CreateDJForm(forms.ModelForm):
             "nazev": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
         }
+        help_texts = {
+            "typ": _("dj.form.typ.tooltip"),
+            "negativni_jednotka": _("dj.form.negativni_jednotka.tooltip"),
+            "nazev": _("dj.form.nazev.tooltip"),
+            "pian": _("dj.form.pian.tooltip"),
+        }
 
     def __init__(
         self,
@@ -70,7 +76,7 @@ class CreateDJForm(forms.ModelForm):
     ):
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
-        self.fields["typ"] = forms.ModelChoiceField(queryset=self.get_typ_queryset(jednotky, self.instance))
+        self.fields["typ"] = forms.ModelChoiceField(queryset=self.get_typ_queryset(jednotky, self.instance),help_text=_("dj.form.typ.tooltip"),)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -88,3 +94,5 @@ class CreateDJForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""

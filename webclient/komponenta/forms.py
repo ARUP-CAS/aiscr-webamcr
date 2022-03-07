@@ -32,6 +32,12 @@ class CreateKomponentaForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         }
+        help_texts = {
+            "presna_datace": _("komponenta.form.presna_datace.tooltip"),
+            "jistota": _("komponenta.form.jistota.tooltip"),
+            "aktivity": _("komponenta.form.aktivity.tooltip"),
+            "poznamka": _("komponenta.form.poznamka.tooltip"),
+        }
 
     def __init__(self, obdobi_choices, areal_choices, *args, readonly=False, **kwargs):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
@@ -41,6 +47,7 @@ class CreateKomponentaForm(forms.ModelForm):
                 choices=obdobi_choices,
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
+            help_text=_("komponenta.form.obdobi.tooltip"),
         )
         self.fields["areal"] = TwoLevelSelectField(
             label=_("Areál"),
@@ -48,6 +55,7 @@ class CreateKomponentaForm(forms.ModelForm):
                 choices=areal_choices,
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
+            help_text=_("komponenta.form.areal.tooltip"),
         )
         self.fields["aktivity"].queryset = Heslar.objects.filter(
             nazev_heslare=HESLAR_AKTIVITA
@@ -71,3 +79,4 @@ class CreateKomponentaForm(forms.ModelForm):
             if self.fields[key].disabled == True:
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
+                self.fields[key].help_text = ""

@@ -17,6 +17,7 @@ class CreateProjektForm(forms.ModelForm):
         required=True,
         label=_("Plánované zahájení prací"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
+        help_text=_("projekt.form.createProjekt.planovane_zahajeni.tooltip"),
     )
 
     class Meta:
@@ -57,6 +58,15 @@ class CreateProjektForm(forms.ModelForm):
         }
         error_messages = {
             "hlavni_katastr": {"required": "Je třeba vybrat bod na mapě."}
+        }
+        help_texts = {
+            "typ_projektu": _("projekt.form.createProjekt.typ_projektu.tooltip"),
+            "hlavni_katastr": _("projekt.form.createProjekt.hlavni_katastr.tooltip"),
+            "katastry": _("projekt.form.createProjekt.katastry.tooltip"),
+            "podnet": _("projekt.form.createProjekt.podnet.tooltip"),
+            "lokalizace": _("projekt.form.createProjekt.lokalizace.tooltip"),
+            "parcelni_cislo": _("projekt.form.createProjekt.parcelni_cislo.tooltip"),
+            "oznaceni_stavby": _("projekt.form.createProjekt.oznaceni_stavby.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -106,6 +116,8 @@ class CreateProjektForm(forms.ModelForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+            if self.fields[key].disabled == True:
+                self.fields[key].help_text = ""
 
 
 class EditProjektForm(forms.ModelForm):
@@ -115,18 +127,21 @@ class EditProjektForm(forms.ModelForm):
         required=True,
         label=_("Plánované zahájení prací"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
+        help_text=_("projekt.form.editProjekt.planovane_zahajeni.tooltip"),
     )
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         widget=forms.DateInput(
             attrs={"data-provide": "datepicker", "autocomplete": "off"}
         ),
+        help_text=_("projekt.form.editProjekt.datum_zahajeni.tooltip"),
     )
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         widget=forms.DateInput(
             attrs={"data-provide": "datepicker", "autocomplete": "off"}
         ),
+        help_text=_("projekt.form.editProjekt.datum_ukonceni.tooltip"),
     )
 
     class Meta:
@@ -194,6 +209,24 @@ class EditProjektForm(forms.ModelForm):
             "datum_zahajeni": _("Datum zahájení výzkumu"),
             "datum_ukonceni": _("Datum ukončení výzkumu"),
             "termin_odevzdani_nz": _("Termín odevzdání"),
+        }
+        help_texts = {
+            "typ_projektu": _("projekt.form.editProjekt.typ_projektu.tooltip"),
+            "hlavni_katastr": _("projekt.form.editProjekt.hlavni_katastr.tooltip"),
+            "katastry": _("projekt.form.editProjekt.katastry.tooltip"),
+            "podnet": _("projekt.form.editProjekt.podnet.tooltip"),
+            "lokalizace": _("projekt.form.editProjekt.lokalizace.tooltip"),
+            "parcelni_cislo": _("projekt.form.editProjekt.parcelni_cislo.tooltip"),
+            "oznaceni_stavby": _("projekt.form.editProjekt.oznaceni_stavby.tooltip"),
+            "vedouci_projektu": _("projekt.form.editProjekt.vedouci_projektu.tooltip"),
+            "organizace": _("projekt.form.editProjekt.organizace.tooltip"),
+            "kulturni_pamatka": _("projekt.form.editProjekt.kulturni_pamatka.tooltip"),
+            "kulturni_pamatka_cislo": _("projekt.form.editProjekt.kulturni_pamatka_cislo.tooltip"),
+            "kulturni_pamatka_popis": _("projekt.form.editProjekt.kulturni_pamatka_popis.tooltip"),
+            "uzivatelske_oznaceni": _("projekt.form.editProjekt.uzivatelske_oznaceni.tooltip"),
+            "datum_zahajeni": _("projekt.form.editProjekt.datum_zahajeni.tooltip"),
+            "datum_ukonceni": _("projekt.form.editProjekt.datum_ukonceni.tooltip"),
+            "termin_odevzdani_nz": _("projekt.form.editProjekt.termin_odevzdani_nz.tooltip"),
         }
 
     def __init__(self, *args, required, **kwargs):
@@ -277,6 +310,8 @@ class EditProjektForm(forms.ModelForm):
                 self.fields[key].required = True if key in required else False
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
     def clean(self):
         cleaned_data = super().clean()
@@ -294,7 +329,7 @@ class EditProjektForm(forms.ModelForm):
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
-    reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True)
+    reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True,help_text=_("projekt.form.navrhZruseniProj.reason.tooltip"))
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
@@ -360,12 +395,12 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni": _("Uživatelské označení"),
         }
         help_texts = {
-            "vedouci_projektu": _("Lorem ipsum."),
-            "kulturni_pamatka": _("Lorem ipsum."),
-            "organizace": _("Lorem ipsum."),
-            "kulturni_pamatka_cislo": _("Lorem ipsum."),
-            "kulturni_pamatka_popis": _("Lorem ipsum."),
-            "uzivatelske_oznaceni": _("Lorem ipsum."),
+            "vedouci_projektu": _("projekt.form.prihlaseniProj.vedouci_projektu.tooltip"),
+            "kulturni_pamatka": _("projekt.form.prihlaseniProj.kulturni_pamatka.tooltip"),
+            "organizace": _("projekt.form.prihlaseniProj.organizace.tooltip"),
+            "kulturni_pamatka_cislo": _("projekt.form.prihlaseniProj.kulturni_pamatka_cislo.tooltip"),
+            "kulturni_pamatka_popis": _("projekt.form.prihlaseniProj.kulturni_pamatka_popis.tooltip"),
+            "uzivatelske_oznaceni": _("projekt.form.prihlaseniProj.uzivatelske_oznaceni.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -409,11 +444,15 @@ class PrihlaseniProjektForm(forms.ModelForm):
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
 
 
 class ZahajitVTerenuForm(forms.ModelForm):
     datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        help_text=_("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip"),
+        
     )
 
     class Meta:
@@ -423,7 +462,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
             "datum_zahajeni": _("Datum zahájení terénních prací"),
         }
         help_texts = {
-            "datum_zahajeni": _("Lorem ipsum."),
+            "datum_zahajeni": _("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip")
         }
 
     def __init__(self, *args, **kwargs):
@@ -461,7 +500,8 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
 class UkoncitVTerenuForm(forms.ModelForm):
     datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti]
+        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+        help_text=_("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
     )
 
     class Meta:
@@ -471,7 +511,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
             "datum_ukonceni": _("Datum ukončení terénních prací"),
         }
         help_texts = {
-            "datum_ukonceni": _("Lorem ipsum."),
+            "datum_ukonceni":  _("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
