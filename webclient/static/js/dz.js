@@ -1,4 +1,22 @@
 Dropzone.autoDiscover = false;
+const get_params = () => {
+    if (typeof object_id !== 'undefined') {
+        return { 'objectID': object_id };
+    }
+    if (typeof file_id !== 'undefined') {
+        return { 'fileID': file_id };
+    }
+    return {}
+};
+const get_description = () => {
+    if (typeof object_id !== 'undefined') {
+        return "Přiložte dokumentaci";
+    }
+    if (typeof file_id !== 'undefined') {
+        return "Přiložte aktualizovaný soubor";
+    }
+    return "";
+};
 window.onload = function () {
     const xhttp = new XMLHttpRequest();
     var csrfcookie = function () {
@@ -43,7 +61,7 @@ window.onload = function () {
     }
 
     var dropzoneOptions = {
-        dictDefaultMessage: 'Přiložte dokumentaci.',
+        dictDefaultMessage: get_description(),
         dictInvalidFileType: "Nepodporovaný typ souboru.",
         acceptedFiles: acceptFile,
         addRemoveLinks: true,
@@ -51,6 +69,7 @@ window.onload = function () {
         dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
         dictRemoveFile: "Odstranit soubor",
         maxFilesize: 100, // MB
+        maxFiles: maxFiles,
         init: function () {
             this.on("success", function (file, response) {
                 file.id = response.id
@@ -79,7 +98,7 @@ window.onload = function () {
             this.removeFile(file);
 
         },
-        params: { 'objectID': object_id }
+        params: get_params(),
     };
     var uploader = document.querySelector('#my-awesome-dropzone');
     var newDropzone = new Dropzone(uploader, dropzoneOptions);

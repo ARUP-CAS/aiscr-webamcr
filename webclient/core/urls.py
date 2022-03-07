@@ -18,6 +18,11 @@ urlpatterns = [
         name="upload_file_dokument",
     ),
     path(
+        "update_file/<int:file_id>",
+        views.update_file,
+        name="update_file",
+    ),
+    path(
         "upload_file/pas/<str:ident_cely>",
         views.upload_file_samostatny_nalez,
         name="upload_file_pas",

@@ -8,7 +8,10 @@
     <th scope="col">{% trans "Velikost" %}</th>
     <th scope="col">{% trans "Datum vytvoření" %}</th>
     {% if show %}
-    <th scope="col">{% trans "Smazat" %}</th>
+      <th scope="col">{% trans "Smazat" %}</th>
+      {% if allow_replace %}
+        <th scope="col">{% trans "Nahradit" %}</th>
+      {% endif %}
     {% endif %}
     <th scope="col">{% trans "Stáhnout" %}</th>
   </tr>
@@ -21,11 +24,18 @@
       <td>{{ soubor.size_bytes }}</td>
       <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
       {% if show %}
-      <td>
-        <a href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
-          <span class="material-icons app-color-danger">delete_forever</span>
-        </a>
-      </td>
+        <td>
+          <a href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
+            <span class="material-icons app-color-danger">delete_forever</span>
+          </a>
+        </td>
+        {% if allow_replace %}
+          <td>
+            <a href="{% url 'core:update_file' soubor.id %}?next={{ next_url }}{{ ident }}">
+              <span class="material-icons app-color-danger">upgrade</span>
+            </a>
+          </td>
+        {% endif %}
       {% endif %}
       <td>
         <a href="{% url 'core:download_file' soubor.id %}" target="_blank">
