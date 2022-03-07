@@ -19,7 +19,7 @@
       <td>{{ soubor.nazev_zkraceny }}</td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_bytes }}</td>
-      <td>{{ soubor.vytvoreno|date:'Y/m/d' }}</td>
+      <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
       {% if show %}
       <td>
         <a href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">

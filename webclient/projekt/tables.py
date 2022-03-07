@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 class ProjektTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
+    datum_zahajeni = tables.columns.DateTimeColumn(format ='Y-m-d')
+    datum_ukonceni = tables.columns.DateTimeColumn(format ='Y-m-d')
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
@@ -43,16 +45,3 @@ class ProjektTable(ColumnShiftTableBootstrap4):
         super(ProjektTable, self).__init__(*args, **kwargs)
         # self.set_hideable_columns(['ident_cely', 'stav']) Uncomment when will be supported
 
-    @staticmethod
-    def render_datum_zahajeni(value):
-        if value:
-            return value.strftime("%Y/%m/%d")
-        else:
-            return "—"
-
-    @staticmethod
-    def render_datum_ukonceni(value):
-        if value:
-            return value.strftime("%Y/%m/%d")
-        else:
-            return "—"

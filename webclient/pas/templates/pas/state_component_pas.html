@@ -9,7 +9,7 @@
               {% trans "Rozepsaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_zapsani.uzivatel }}">
-                {{ history_dates.datum_zapsani.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
       </button>
@@ -22,7 +22,7 @@
               {% trans "Odeslaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_odeslani.uzivatel }}">
-                {{ history_dates.datum_odeslani.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
       </button>
@@ -35,7 +35,7 @@
               {% trans "Potvrzený" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_potvrzeni.uzivatel }}">
-                {{ history_dates.datum_potvrzeni.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
       </button>
@@ -48,7 +48,7 @@
               {% trans "Archivovaný" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_archivace.uzivatel }}">
-                {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+                {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
               </span>
             </span>
       </button>

@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class DokumentTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
+    extra_data__datum_vzniku = tables.columns.DateTimeColumn(format ='Y-m-d')
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())

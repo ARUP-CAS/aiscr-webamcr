@@ -71,7 +71,7 @@
             {% trans "Rozepsaná" %}
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_zapsani.uzivatel }}">
-              {{ history_dates.datum_zapsani.datum|date:'Y/m/d'|default_if_none:"" }}
+              {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
             </span>
           </span>
           </button>
@@ -84,7 +84,7 @@
             {% trans "Odeslaná" %}
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_odeslani.uzivatel }}">
-              {{ history_dates.datum_odeslani.datum|date:'Y/m/d'|default_if_none:"" }}
+              {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
             </span>
           </span>
           </button>
@@ -97,7 +97,7 @@
             {% trans "Archivovaná" %}
             <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                   title="{{ history_dates.datum_archivace.uzivatel }}">
-              {{ history_dates.datum_archivace.datum|date:'Y/m/d'|default_if_none:"" }}
+              {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
             </span>
           </span>
           </button>
@@ -171,14 +171,14 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'Y/m/d'|check_if_none }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
                      readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Datum ukončení" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'Y/m/d'|check_if_none }}"
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
                      readonly>
             </div>
           </div>
