@@ -1,6 +1,9 @@
 import logging
 import mimetypes
 import os
+import re
+import unicodedata
+from string import ascii_uppercase as letters
 
 from core.constants import (
     DOKUMENT_RELATION_TYPE,
@@ -139,17 +142,27 @@ def post_upload(request):
     if projects.exists():
         objekt = projects[0]
         typ_souboru = OTHER_PROJECT_FILES
+        new_name = get_projekt_soubor_name(request.FILES.get("file").name)
     elif documents.exists():
         objekt = documents[0]
         typ_souboru = OTHER_DOCUMENT_FILES
+        new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
     elif finds.exists():
         objekt = finds[0]
         typ_souboru = PHOTO_DOCUMENTATION
+        new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
     else:
         return JsonResponse(
             {
                 "error": "Nelze pripojit soubor k neexistujicimu objektu "
                 + request.POST["objectID"]
+            },
+            status=500,
+        )
+    if new_name == False:
+        return JsonResponse(
+            {
+                "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
             },
             status=500,
         )
@@ -159,26 +172,25 @@ def post_upload(request):
         # After calculating checksum, must move pointer to the beginning
         soubor.file.seek(0)
         old_name = soubor.name
-        soubor.name = checksum + "_" + soubor.name
         s = Soubor(
             path=soubor,
             vazba=objekt.soubory,
-            nazev=soubor.name,
+            nazev=checksum + "_" + new_name,
             # Short name is new name without checksum
-            nazev_zkraceny=old_name,
+            nazev_zkraceny=new_name,
             nazev_puvodni=old_name,
             vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
             mimetype=get_mime_type(old_name),
             size_bytes=soubor.size,
             typ_souboru=typ_souboru,
         )
-        duplikat = Soubor.objects.filter(nazev=s.nazev).order_by("pk")
+        duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
         if not duplikat.exists():
             logger.debug("Saving file object: " + str(s))
             s.save()
             return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
         else:
-            logger.warning("File already exists on the server. Saving copy" + str(s))
+            logger.warning("File already exists on the server. Saving copy " + str(s))
             s.save()
             # Find parent record and send it to the user
             parent_ident = ""
@@ -187,7 +199,8 @@ def post_upload(request):
             if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                 parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
             if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
+                logger.debug(duplikat[0].vazba.samostatny_nalez_souboru)
+                parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.all()[0].ident_cely
             return JsonResponse(
                 {
                     "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
@@ -200,3 +213,53 @@ def post_upload(request):
         logger.warning("No file attached to the announcement form.")
 
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
+
+def get_dokument_soubor_name(dokument, filename):
+    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-","")) + r"[A-Z]?\..*$"
+    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    if not files.exists():
+        return dokument.ident_cely.replace("-","")+os.path.splitext(filename)[1]
+    else:
+        filtered_files=files.filter(nazev__iregex=r"[A-Z]\..*$")
+        if filtered_files.exists():
+            list_last_char = []
+            for file in filtered_files:
+                split_file = os.path.splitext(file.nazev)
+                list_last_char.append(split_file[0][-1])
+            last_char=max(list_last_char)
+            logger.debug(last_char)
+            if last_char != "Z":
+                return (dokument.ident_cely.replace("-","")+letters[(letters.index(last_char)+1)]+os.path.splitext(filename)[1])
+            else:
+                logger.error("Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran.")
+                return False
+
+        else:
+            return (dokument.ident_cely.replace("-","")+"A")
+        
+    
+def get_finds_soubor_name(find, filename):
+    my_regex = r"^\d*_" + re.escape(find.ident_cely.replace("-","")) + r"F\d{2}\..*$"
+    files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    if not files.exists():
+        return (find.ident_cely.replace("-","")+"F01")+os.path.splitext(filename)[1]
+    else:
+        list_last_char = []
+        for file in files:
+            split_file = os.path.splitext(file.nazev)
+            list_last_char.append(split_file[0][-2:])
+        logger.debug(list_last_char)
+        logger.debug(files)
+        last_char=max(list_last_char)
+        if last_char != "99":
+            return find.ident_cely.replace("-","")+"F"+ str(int(last_char)+1).zfill(2)+os.path.splitext(filename)[1]
+        else:
+            logger.error("Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran.")
+            return False
+
+def get_projekt_soubor_name(file_name):
+    split_file = os.path.splitext(file_name)
+    nfkd_form = unicodedata.normalize('NFKD', split_file[0])
+    only_ascii = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    return (re.sub('[^A-Za-z0-9_]', '_', only_ascii)+split_file[1])
+    # potrebne odstranit constraint soubor_filepath_key
