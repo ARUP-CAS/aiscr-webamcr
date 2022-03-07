@@ -48,6 +48,8 @@ RUN chmod +x /scripts/*
 RUN mkdir -p /vol/web/media
 # Staic files for the app
 RUN mkdir -p /vol/web/static
+# locales for translations
+RUN mkdir -p /vol/web/locale
 
 RUN adduser user
 RUN passwd -d user

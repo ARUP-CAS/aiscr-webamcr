@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "dj",
     "simple_history",
     "widget_tweaks",
+    "rosetta",
 ]
 
 MIDDLEWARE = [
@@ -136,6 +137,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "cs"
 
+LANGUAGES = [
+    ('cs', 'Czech'),
+    ('en', 'English'),
+]
+
 TIME_ZONE = "Europe/Prague"
 
 USE_I18N = True
@@ -144,6 +150,9 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = ["/vol/web/locale"]
+
+ROSETTA_SHOW_AT_ADMIN_PANEL = True
 # DEFAULT_CHARSET = "utf-8"
 
 STATIC_URL = "/static/static/"

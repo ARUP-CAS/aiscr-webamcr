@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from uzivatel.views import UserRegistrationView, UserLoginView
 
 urlpatterns = [
@@ -47,6 +47,10 @@ urlpatterns = [
     ),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
+if 'rosetta' in settings.INSTALLED_APPS:
+    urlpatterns += [
+        re_path(r'^rosetta/', include('rosetta.urls'))
+    ]
 
 if settings.DEBUG:
     import debug_toolbar

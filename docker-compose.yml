@@ -8,6 +8,7 @@ services:
     volumes:
       - ./webclient:/code
       - ./vol/web:/vol/web
+      - locale_data:/vol/web/locale
     ports:
       - "8000:8000"
     environment:
@@ -25,3 +26,6 @@ services:
       - DJANGO_SETTINGS_MODULE=webclient.settings.dev
     depends_on:
       - web
+
+volumes:
+  locale_data:

@@ -14,7 +14,8 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install GDAL dependencies
 RUN apt-get update
-RUN apt-get install -y python3-pip libgdal-dev locales
+RUN apt-get install -y python3-pip libgdal-dev locales gettext
+
 
 # Ensure locales configured correctly
 RUN locale-gen cs_CZ.utf8
@@ -43,6 +44,8 @@ WORKDIR /code
 RUN mkdir -p /vol/web/media
 # Staic files for the app
 RUN mkdir -p /vol/web/static
+
+RUN mkdir -p /vol/web/locale
 
 RUN adduser user
 RUN passwd -d user
