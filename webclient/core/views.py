@@ -153,7 +153,6 @@ def post_upload(request):
         projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
         finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
-        update = False
         if projects.exists():
             objekt = projects[0]
             typ_souboru = OTHER_PROJECT_FILES
