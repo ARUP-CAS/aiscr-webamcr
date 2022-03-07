@@ -1,3 +1,5 @@
+from distlib.util import cached_property
+
 from core.constants import (
     CESKY,
     JAZYKY,
@@ -65,17 +67,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
+    @cached_property
+    def user_str(self):
+        retezec = f"{self.first_name} {self.last_name} {self.ident_cely}"
+        if self.organizace:
+            retezec += f" {self.organizace}"
+        return retezec
+
     def __str__(self):
-        return (
-            self.first_name
-            + " "
-            + self.last_name
-            + " "
-            + self.ident_cely
-            + " ("
-            + str(self.organizace)
-            + ")"
-        )
+        return self.user_str
 
     def moje_spolupracujici_organizace(self):
         badatel_group = Group.objects.get(id=ROLE_BADATEL_ID)
