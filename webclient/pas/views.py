@@ -64,8 +64,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_detail_context(sn, request):
-    context = {}
-    context["sn"] = sn
+    context = {"sn" : sn}
     context["form"] = CreateSamostatnyNalezForm(
         instance=sn, readonly=True, user=request.user
     )
@@ -146,7 +145,7 @@ def create(request):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = {}
+    context = { "warnings": request.session.pop("temp_data", None) }
     sn = get_object_or_404(
         SamostatnyNalez.objects.select_related(
             "soubory",
@@ -159,7 +158,7 @@ def detail(request, ident_cely):
         ),
         ident_cely=ident_cely,
     )
-    context = get_detail_context(sn=sn, request=request)
+    context.update(get_detail_context(sn=sn, request=request))
     if sn.geom:
         geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
         context["formCoor"] = CoordinatesDokumentForm(
@@ -313,12 +312,10 @@ def odeslat(request, ident_cely):
 
     warnings = sn.check_pred_odeslanim()
     logger.debug(warnings)
-    context = {}
     if warnings:
-        context = get_detail_context(sn=sn, request=request)
-        context["warnings"] = warnings
+        request.session['temp_data'] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
-        return render(request, "pas/detail.html", context)
+        return redirect("pas:detail", ident_cely)
     context = {
         "object": sn,
         "title": _("Odeslání nálezu"),
@@ -513,11 +510,8 @@ def aktivace(request, pk):
         logger.debug(warnings)
         context = {"object": spoluprace}
         if warnings:
-            context["warnings"] = []
+            context["warnings"] = warnings
             messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_AKTIVOVAT)
-            context["warnings"].append(warnings)
-        else:
-            pass
     context["title"] = _("Aktivace spolupráce")
     context["header"] = (
         _("Aktivace spolupráce mezi ")
@@ -542,11 +536,8 @@ def deaktivace(request, pk):
         logger.debug(warnings)
         context = {"object": spoluprace}
         if warnings:
-            context["warnings"] = []
+            context["warnings"] = warnings
             messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_DEAKTIVOVAT)
-            context["warnings"].append(warnings)
-        else:
-            pass
     context["title"] = _("Deaktivace spolupráce")
     context["header"] = (
         _("Deaktivace spolupráce mezi ")
