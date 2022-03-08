@@ -32,7 +32,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             },
         ),
-        ("Permissions", {"fields": ("is_staff", "is_active")}),
+        ("Oprávnění", {"fields": ("is_staff", "is_active", "is_superuser")}),
     )
     add_fieldsets = (
         (
@@ -45,6 +45,7 @@ class CustomUserAdmin(UserAdmin):
                     "password2",
                     "is_staff",
                     "is_active",
+                    "is_superuser",
                     "organizace",
                     "hlavni_role",
                     "first_name",
