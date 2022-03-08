@@ -37,12 +37,13 @@ from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.core.files.base import ContentFile
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
+    TYP_PROJEKTU_PRUZKUM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
+from django.core.files.base import ContentFile
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba, User
@@ -337,7 +338,7 @@ class Projekt(models.Model):
     def check_pred_uzavrenim(self):
         does_not_have_event = len(self.akce_set.all()) == 0
         result = {}
-        if does_not_have_event:
+        if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
             result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
         for a in self.akce_set.all():
             akce_warnings = a.check_pred_odeslanim()

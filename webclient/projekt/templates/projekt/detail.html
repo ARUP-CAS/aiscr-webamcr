@@ -407,7 +407,7 @@
         </div>
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            {% if show.pridat_akci %}
+            {% if show.pridat_akci == True %}
             <a class="btn app-entity-projekt" href="{% url 'arch_z:zapsat' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Vložit další akci' %}">
               <span class="material-icons">add</span>
             </a>
@@ -523,6 +523,10 @@
     </div>
     {% endif %}
 
+    {% if show.dokumenty %}
+    {% include "dokument/dokument_table.html" with type="projekt" zaznam=projekt%}
+    {% endif %}
+    
   </div>
 {% endblock %}
 

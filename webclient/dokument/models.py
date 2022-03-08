@@ -4,6 +4,7 @@ import math
 import logging
 
 from arch_z.models import ArcheologickyZaznam
+from projekt.models import Projekt
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -289,6 +290,14 @@ class DokumentCast(models.Model):
         ArcheologickyZaznam,
         models.DO_NOTHING,
         db_column="archeologicky_zaznam",
+        blank=True,
+        null=True,
+        related_name="casti_dokumentu",
+    )
+    projekt = models.ForeignKey(
+        Projekt,
+        models.DO_NOTHING,
+        db_column="projekt",
         blank=True,
         null=True,
         related_name="casti_dokumentu",
