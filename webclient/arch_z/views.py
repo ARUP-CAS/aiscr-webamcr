@@ -538,6 +538,32 @@ def pripojit_dokument(
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
     return odpojit (request, ident_cely, arch_z_ident_cely, "arch_z")
 
+
+def get_history_dates(historie_vazby):
+    historie = {
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
+    }
+    return historie
+
+
+def get_detail_template_shows(archeologicky_zaznam):
+    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
+    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
+    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
+    show_edit = archeologicky_zaznam.stav not in [
+        AZ_STAV_ARCHIVOVANY,
+    ]
+    show = {
+        "vratit_link": show_vratit,
+        "odeslat_link": show_odeslat,
+        "archivovat_link": show_archivovat,
+        "editovat": show_edit,
+    }
+    return show
+
+
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_pians(request):
