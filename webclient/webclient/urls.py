@@ -17,6 +17,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from uzivatel.views import UserRegistrationView, UserLoginView
+from oznameni import views as oznameni_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -25,8 +26,9 @@ urlpatterns = [
     path("oznameni/", include("oznameni.urls")),
     path("pian/", include("pian.urls")),
     path("projekt/", include("projekt.urls")),
+    path("projekt/oznamovatel/edit/<int:pk>", oznameni_views.edit, name="oznameni_edit"),
     path("pas/", include("pas.urls")),
-    path("arch_z/", include("arch_z.urls")),
+    path("arch-z/", include("arch_z.urls")),
     path("", include("uzivatel.urls")),
     path("dokument/", include("dokument.urls")),
     path("nalez/", include("nalez.urls")),
