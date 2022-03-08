@@ -240,8 +240,5 @@ class CreateAkceForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
-<<<<<<< HEAD
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
-=======
->>>>>>> 13d65913134be67ebc7b8650f28e76f9de02b51b
