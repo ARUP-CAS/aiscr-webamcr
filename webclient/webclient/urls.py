@@ -27,7 +27,7 @@ urlpatterns = [
     path("projekt/", include("projekt.urls")),
     path("pas/", include("pas.urls")),
     path("arch_z/", include("arch_z.urls")),
-    path("uzivatel/", include("uzivatel.urls")),
+    path("", include("uzivatel.urls")),
     path("dokument/", include("dokument.urls")),
     path("nalez/", include("nalez.urls")),
     path("adb/", include("adb.urls")),

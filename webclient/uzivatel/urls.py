@@ -6,6 +6,6 @@ from .views import OsobaAutocomplete
 app_name = "uzivatel"
 
 urlpatterns = [
-    path("osoba/create", views.create_osoba, name="create_osoba"),
-    path("osoby/", OsobaAutocomplete.as_view(), name="osoba-autocomplete"),
+    path("osoba/zapsat", views.create_osoba, name="create_osoba"),
+    path("seznam-osoby/", OsobaAutocomplete.as_view(), name="osoba-autocomplete"),
 ]
