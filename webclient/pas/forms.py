@@ -1,5 +1,5 @@
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
-from core.forms import TwoLevelSelectField
+from core.forms import CheckStavNotChangedForm, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django import forms
@@ -55,6 +55,7 @@ class PotvrditNalezForm(forms.ModelForm):
             "required": _("Nález musí být předán. Vyplňte Ano"),
         },
     )
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
         model = SamostatnyNalez
@@ -89,6 +90,7 @@ class PotvrditNalezForm(forms.ModelForm):
                 Div("evidencni_cislo", css_class="col-sm-6"),
                 Div("predano", css_class="col-sm-6"),
                 Div("pristupnost", css_class="col-sm-6"),
+                Div("old_stav"),
                 css_class="row",
             ),
         )

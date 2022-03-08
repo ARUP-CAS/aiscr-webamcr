@@ -13,7 +13,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
-from core.forms import VratitForm
+from core.forms import CheckStavNotChangedForm, VratitForm
 from core.ident_cely import (
     get_cast_dokumentu_ident,
     get_dokument_rada,
@@ -35,6 +35,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
     DOKUMENT_USPESNE_ODPOJEN,
 )
+from core.views import check_stav_changed
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -506,28 +507,27 @@ def odeslat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav != D_STAV_ZAPSANY:
         raise PermissionDenied()
+     # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, d):
+        return get_detail_view(ident_cely)
     if request.method == "POST":
         d.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
-        if "3D" in ident_cely:
-            return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-        else:
-            return redirect("dokument:detail", ident_cely=ident_cely)
+        return get_detail_view(ident_cely)
     else:
         warnings = d.check_pred_odeslanim()
         logger.debug(warnings)
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
-            if "3D" in ident_cely:
-                return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-            else:
-                return redirect("dokument:detail", ident_cely=ident_cely)
+            return get_detail_view(ident_cely)
+    form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
     context = {
         "object": d,
         "title": _("Odeslání dokumentu"),
         "header": _("Odeslání dokumentu"),
-        "button": _("Odeslat dokument")
+        "button": _("Odeslat dokument"),
+        "form_check": form_check
     }
     return render(request, "core/transakce.html", context)
 
@@ -538,6 +538,9 @@ def archivovat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, d):
+        return get_detail_view(ident_cely)
     if request.method == "POST":
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -561,25 +564,21 @@ def archivovat(request, ident_cely):
                 )
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        if "3D" in ident_cely:
-            return redirect("dokument:detail-model-3D", ident_cely=d.ident_cely)
-        else:
-            return redirect("dokument:detail", ident_cely=d.ident_cely)
+        return get_detail_view(ident_cely)
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
-            if "3D" in ident_cely:
-                return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-            else:
-                return redirect("dokument:detail", ident_cely=ident_cely)
+            return get_detail_view(ident_cely)
+    form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
     context = {
         "object": d,
         "title": _("Archivace dokumentu"),
         "header": _("Archivace dokumentu"),
-        "button": _("Archivovat dokument")
+        "button": _("Archivovat dokument"),
+        "form_check": form_check
     }
     return render(request, "core/transakce.html", context)
 
@@ -590,21 +589,20 @@ def vratit(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
+    if check_stav_changed(request, d):
+        return get_detail_view(ident_cely)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             d.set_vraceny(request.user, d.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
-            if "3D" in ident_cely:
-                return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-            else:
-                return redirect("dokument:detail", ident_cely=ident_cely)
+            return get_detail_view(ident_cely)
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm()
+        form = VratitForm(initial={"old_stav":d.stav})
     return render(request, "core/vratit.html", {"form": form, "objekt": d})
 
 
@@ -612,6 +610,8 @@ def vratit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    if check_stav_changed(request, d):
+        return get_detail_view(ident_cely)
     if request.method == "POST":
 
         historie = d.historie
@@ -869,3 +869,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
     return render(
         request, "dokument/pripojit_dokument.html", {"form": form, "object": zaznam, "typ": redirect_name}
     )
+    
+def get_detail_view(ident_cely):
+    if "3D" in ident_cely:
+        return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+    else:
+        return redirect("dokument:detail", ident_cely=ident_cely)

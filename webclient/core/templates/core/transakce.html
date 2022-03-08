@@ -1,6 +1,7 @@
 {% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block title %}{{ title }} {{ object.ident_cely }}{% endblock %}
 {% block head %}
@@ -21,6 +22,7 @@
         </div>
       {% endif %}
       <div class="text-center">
+        {% crispy form_check %}
         <button type="submit" class="btn btn-primary mr-1" {% if warnings%}disabled{% endif %}>
           {{ button }}
         </button>

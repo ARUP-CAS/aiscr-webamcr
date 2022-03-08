@@ -13,19 +13,19 @@
     <div class="app-right app-controls">
       <div class="btn-group app-entity-akce" role="group">
         {% if show.vratit_link %}
-          <a href="{% url 'arch_z:vratit' zaznam.ident_cely %}" class="btn">
+          <a href="{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}" class="btn">
             <span class="material-icons">arrow_back</span>
             {% trans "Vrátit" %}
           </a>
         {% endif %}
         {% if show.odeslat_link %}
-          <a href="{% url 'arch_z:odeslat' zaznam.ident_cely %}" class="btn">
+          <a href="{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}" class="btn">
             <span class="material-icons">flag</span>
             {% trans "Odeslat" %}
           </a>
         {% endif %}
         {% if show.archivovat_link %}
-          <a href="{% url 'arch_z:archivovat' zaznam.ident_cely %}" class="btn">
+          <a href="{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}" class="btn">
             <span class="material-icons">archive</span>
             {% trans "Archivovat" %}
           </a>
@@ -34,7 +34,7 @@
           {% trans "Další volby" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <a class="dropdown-item" href="{% url 'arch_z:smazat' zaznam.ident_cely %}">{% trans "Smazat akci" %}</a>
+          <a class="dropdown-item" href="{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}">{% trans "Smazat akci" %}</a>
           <a class="dropdown-item" href="{% url 'historie:akce' zaznam.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}">{% trans "akce.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
