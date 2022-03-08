@@ -82,8 +82,8 @@
           <a class="dropdown-item" href="#">{% trans "Odeslat nové potvrzení" %}</a>
           <a class="dropdown-item" href="{% url 'historie:projekt' projekt.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{'https://digiarchiv.aiscr.cz/id/'|add:projekt.ident_cely}}">{% trans "projekt.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{'https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/'|add:projekt.ident_cely|add:'&metadataPrefix=oai_amcr'}}">{% trans "projekt.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:projekt.ident_cely}}">{% trans "projekt.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:projekt.ident_cely|add:OAPI_link_part2}}">{% trans "projekt.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
           {% endif %}
         </div>
       </div>

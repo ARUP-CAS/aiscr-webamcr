@@ -625,10 +625,12 @@ def get_detail_template_shows(archeologicky_zaznam):
     show_edit = archeologicky_zaznam.stav not in [
         AZ_STAV_ARCHIVOVANY,
     ]
+    show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
         "editovat": show_edit,
+        "arch_links": show_arch_links,
     }
     return show

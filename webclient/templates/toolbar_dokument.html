@@ -41,8 +41,8 @@
           <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}">{% trans "Smazat dokument" %}</a>
           <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{'https://digiarchiv.aiscr.cz/id/'|add:d.ident_cely}}">{% trans "dokument.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{'https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/'|add:d.ident_cely|add:'&metadataPrefix=oai_amcr'}}">{% trans "dokument.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}">{% trans "dokument.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:d.ident_cely|add:OAPI_link_part2'}}">{% trans "dokument.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
           {% endif %}
         </div>
       </div>
