@@ -390,7 +390,7 @@
       </div>
       <div class="card-body">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory next_url='/projekt/detail/' ident=projekt.ident_cely %}
+          {% include "core/filetable.html" with soubory=soubory next_url='/projekt/detail/' ident=projekt.ident_cely allow_replace=False %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>

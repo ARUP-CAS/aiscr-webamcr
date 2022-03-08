@@ -121,6 +121,19 @@ def upload_file_dokument(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET"])
+def update_file(request, file_id):
+    ident_cely = ""
+    back_url = ""
+    soubor = get_object_or_404(Soubor, id=file_id)
+    return render(
+        request,
+        "core/upload_file.html",
+        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id},
+    )
+
+
+@login_required
+@require_http_methods(["GET"])
 def upload_file_samostatny_nalez(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav == SN_ARCHIVOVANY:
@@ -134,81 +147,93 @@ def upload_file_samostatny_nalez(request, ident_cely):
 
 @require_http_methods(["POST"])
 def post_upload(request):
-    logger.debug("Uploading file to object: " + request.POST["objectID"])
-    projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
-    documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
-    finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
-    typ_souboru = ""
-    if projects.exists():
-        objekt = projects[0]
-        typ_souboru = OTHER_PROJECT_FILES
-        new_name = get_projekt_soubor_name(request.FILES.get("file").name)
-    elif documents.exists():
-        objekt = documents[0]
-        typ_souboru = OTHER_DOCUMENT_FILES
-        new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
-    elif finds.exists():
-        objekt = finds[0]
-        typ_souboru = PHOTO_DOCUMENTATION
-        new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
+    update = "fileID" in request.POST
+    if not update:
+        logger.debug("Uploading file to object: " + request.POST["objectID"])
+        projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
+        documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
+        finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
+        if projects.exists():
+            objekt = projects[0]
+            typ_souboru = OTHER_PROJECT_FILES
+            new_name = get_projekt_soubor_name(request.FILES.get("file").name)
+        elif documents.exists():
+            objekt = documents[0]
+            typ_souboru = OTHER_DOCUMENT_FILES
+            new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
+        elif finds.exists():
+            objekt = finds[0]
+            typ_souboru = PHOTO_DOCUMENTATION
+            new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
+        else:
+            return JsonResponse(
+                {
+                    "error": "Nelze pripojit soubor k neexistujicimu objektu "
+                    + request.POST["objectID"]
+                },
+                status=500,
+            )
+        if new_name == False:
+            return JsonResponse(
+                {
+                    "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
+                },
+                status=500,
+            )
     else:
-        return JsonResponse(
-            {
-                "error": "Nelze pripojit soubor k neexistujicimu objektu "
-                + request.POST["objectID"]
-            },
-            status=500,
-        )
-    if new_name == False:
-        return JsonResponse(
-            {
-                "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
-            },
-            status=500,
-        )
+        logger.debug("Updating file for soubor " + request.POST["fileID"])
+        s = get_object_or_404(Soubor, id=request.POST["fileID"])
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
         # After calculating checksum, must move pointer to the beginning
         soubor.file.seek(0)
-        old_name = soubor.name
-        s = Soubor(
-            path=soubor,
-            vazba=objekt.soubory,
-            nazev=checksum + "_" + new_name,
-            # Short name is new name without checksum
-            nazev_zkraceny=new_name,
-            nazev_puvodni=old_name,
-            vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
-            mimetype=get_mime_type(old_name),
-            size_bytes=soubor.size,
-            typ_souboru=typ_souboru,
-        )
-        duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
-        if not duplikat.exists():
-            logger.debug("Saving file object: " + str(s))
+        if not update:
+            old_name = soubor.name
+            soubor.name = checksum + "_" + soubor.name
+            s = Soubor(
+                path=soubor,
+                vazba=objekt.soubory,
+                nazev=checksum + "_" + new_name,
+                # Short name is new name without checksum
+                nazev_zkraceny=new_name,
+                nazev_puvodni=old_name,
+                vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
+                mimetype=get_mime_type(old_name),
+                size_bytes=soubor.size,
+                typ_souboru=typ_souboru,
+            )
+            duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
+            if not duplikat.exists():
+                logger.debug("Saving file object: " + str(s))
+                s.save()
+                return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
+            else:
+                logger.warning("File already exists on the server. Saving copy" + str(s))
+                s.save()
+                # Find parent record and send it to the user
+                parent_ident = ""
+                if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
+                    parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
+                if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
+                    parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
+                if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
+                    logger.debug(duplikat[0].vazba.samostatny_nalez_souboru)
+                    parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
+                return JsonResponse(
+                    {
+                        "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                        + parent_ident
+                        + ". Skontrolujte prosím duplicitu."
+                    },
+                    status=200,
+                )
+        else:
+            logger.debug(f"Saving file to object: {s.pk}")
+            s.path = soubor
+            s.size_bytes = soubor.size
             s.save()
             return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
-        else:
-            logger.warning("File already exists on the server. Saving copy " + str(s))
-            s.save()
-            # Find parent record and send it to the user
-            parent_ident = ""
-            if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
-                parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
-            if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
-            if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                logger.debug(duplikat[0].vazba.samostatny_nalez_souboru)
-                parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.all()[0].ident_cely
-            return JsonResponse(
-                {
-                    "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
-                    + parent_ident
-                    + ". Skontrolujte prosím duplicitu."
-                },
-                status=200,
-            )
     else:
         logger.warning("No file attached to the announcement form.")
 
@@ -236,8 +261,8 @@ def get_dokument_soubor_name(dokument, filename):
 
         else:
             return (dokument.ident_cely.replace("-","")+"A")
-        
-    
+
+
 def get_finds_soubor_name(find, filename):
     my_regex = r"^\d*_" + re.escape(find.ident_cely.replace("-","")) + r"F\d{2}\..*$"
     files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)

@@ -30,6 +30,12 @@
 
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
-  <script>var object_id = "{{ ident_cely }}";</script>
-  <script src="{% static 'dz.js' %}"></script>
+    {% if file_id %}
+        <script>var maxFiles = 1;</script>
+        <script>var file_id = "{{ file_id }}";</script>
+    {% else %}
+        <script>var maxFiles = 999;</script>
+        <script>var object_id = "{{ ident_cely }}";</script>
+    {% endif %}
+    <script src="{% static 'dz.js' %}"></script>
 {% endblock %}
