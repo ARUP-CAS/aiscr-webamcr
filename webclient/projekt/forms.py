@@ -330,6 +330,7 @@ class EditProjektForm(forms.ModelForm):
 
 class NavrhnoutZruseniProjektForm(forms.Form):
     reason = forms.CharField(label=_("Důvod návrhu zrušení"), required=True,help_text=_("projekt.form.navrhZruseniProj.reason.tooltip"))
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
@@ -348,6 +349,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
                     css_class="card-header",
                 ),
                 Div("reason", css_class="card-body",),
+                Div("old_stav"),
                 css_class="card app-card-form",
             ),
             Div(
@@ -365,6 +367,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
 
 
 class PrihlaseniProjektForm(forms.ModelForm):
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
     class Meta:
         model = Projekt
         fields = (
@@ -431,6 +434,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
                             Div("kulturni_pamatka", css_class="col-sm-2"),
                             Div("kulturni_pamatka_cislo", css_class="col-sm-2"),
                             Div("kulturni_pamatka_popis", css_class="col-sm-8"),
+                            Div("old_stav"),
                             css_class="row",
                         ),
                         css_class="card-body",
@@ -454,6 +458,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
         help_text=_("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip"),
         
     )
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
         model = Projekt
@@ -479,6 +484,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
                     Div(
                         Div(
                             Div("datum_zahajeni", css_class="col-sm-3"),
+                            Div("old_stav"),
                             css_class="row",
                         ),
                         css_class="card-body",
@@ -503,6 +509,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
     )
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
         model = Projekt
@@ -528,6 +535,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
                     Div(
                         Div(
                             Div("datum_ukonceni", css_class="col-sm-3"),
+                            Div("old_stav"),
                             css_class="row",
                         ),
                         css_class="card-body",

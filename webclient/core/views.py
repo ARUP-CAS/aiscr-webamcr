@@ -5,6 +5,7 @@ import re
 import unicodedata
 from string import ascii_uppercase as letters
 
+from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     DOKUMENT_RELATION_TYPE,
     OTHER_DOCUMENT_FILES,
@@ -16,7 +17,15 @@ from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     SN_ARCHIVOVANY,
 )
-from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
+from core.forms import CheckStavNotChangedForm
+from core.message_constants import (
+    DOKUMENT_NEKDO_ZMENIL_STAV,
+    SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_USPESNE_SMAZAN,
+    AKCI_NEKDO_ZMENIL_STAV,
+    PROJEKT_NEKDO_ZMENIL_STAV
+    )
 from core.models import Soubor
 from core.utils import calculate_crc_32, get_mime_type
 from django.conf import settings
@@ -288,3 +297,37 @@ def get_projekt_soubor_name(file_name):
     only_ascii = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return (re.sub('[^A-Za-z0-9_]', '_', only_ascii)+split_file[1])
     # potrebne odstranit constraint soubor_filepath_key
+
+    
+def check_stav_changed(request, zaznam):
+    if request.method == "POST":
+        # TODO BR-A-5
+        form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
+        if form_check.is_valid():
+            pass
+        else:
+            if "State_changed" in str(form_check.errors):
+                if isinstance(zaznam, SamostatnyNalez):
+                    messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
+                elif isinstance(zaznam, ArcheologickyZaznam):
+                    messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+                elif isinstance(zaznam, Dokument):
+                    messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+                elif isinstance(zaznam, Projekt):
+                    messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+                return True
+
+    else:
+        # check if stav zaznamu is same in DB as was on detail page entered from
+        if request.GET.get('sent_stav', False) and str(request.GET.get('sent_stav'))!= str(zaznam.stav):
+            if isinstance(zaznam, SamostatnyNalez):
+                messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
+            elif isinstance(zaznam, ArcheologickyZaznam):
+                messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+            elif isinstance(zaznam, Dokument):
+                    messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+            elif isinstance(zaznam, Projekt):
+                messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+            return True
+    
+    return False

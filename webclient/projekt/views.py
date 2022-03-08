@@ -33,7 +33,7 @@ from core.constants import (
     RUSENI_PROJ,
 )
 from core.decorators import allowed_user_groups
-from core.forms import VratitForm
+from core.forms import CheckStavNotChangedForm, VratitForm
 from core.message_constants import (
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
@@ -55,6 +55,7 @@ from core.message_constants import (
 )
 from core.utils import get_points_from_envelope
 from dokument.views import odpojit, pripojit
+from core.views import check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -282,6 +283,8 @@ def edit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    if check_stav_changed(request, projekt):
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         resp = projekt.delete()
         logger.debug("Projekt smazan: " + str(resp))
@@ -356,6 +359,9 @@ def schvalit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
         if projekt.ident_cely[0] == "X":
@@ -380,11 +386,13 @@ def schvalit(request, ident_cely):
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         return redirect("/projekt/detail/" + projekt.ident_cely)
+    form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
     context = {
         "object": projekt,
         "title": _("Schválení projektu"),
         "header": _("Schválení projektu"),
         "button": _("Schválit projekt"),
+        "form_check": form_check,
     }
     return render(request, "core/transakce.html", context)
 
@@ -395,6 +403,9 @@ def prihlasit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -407,7 +418,7 @@ def prihlasit(request, ident_cely):
             logger.debug(form.errors)
     else:
         form = PrihlaseniProjektForm(
-            instance=projekt, initial={"organizace": request.user.organizace}
+            instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav}
         )
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
@@ -418,6 +429,9 @@ def zahajit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         form = ZahajitVTerenuForm(request.POST, instance=projekt)
 
@@ -432,7 +446,7 @@ def zahajit_v_terenu(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = ZahajitVTerenuForm(instance=projekt)
+        form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav":projekt.stav})
     return render(
         request,
         "projekt/transakce_v_terenu.html",
@@ -451,6 +465,9 @@ def ukoncit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -464,7 +481,7 @@ def ukoncit_v_terenu(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = UkoncitVTerenuForm(instance=projekt)
+        form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav":projekt.stav})
     return render(
         request,
         "projekt/transakce_v_terenu.html",
@@ -483,6 +500,9 @@ def uzavrit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         # Move all events to state A2
         akce = Akce.objects.filter(projekt=projekt)
@@ -501,7 +521,7 @@ def uzavrit(request, ident_cely):
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
         logger.debug(warnings)
-        
+        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
         if warnings:
             request.session['temp_data'] = []
             for key, item in warnings.items():
@@ -516,7 +536,8 @@ def uzavrit(request, ident_cely):
             "object": projekt,
             "title": _("Uzavření projektu"),
             "header": _("Uzavření projektu"),
-            "button": _("Uzavřít projekt")
+            "button": _("Uzavřít projekt"),
+            "form_check": form_check
         }
 
         return render(request, "core/transakce.html", context)
@@ -528,6 +549,9 @@ def archivovat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         projekt.set_archivovany(request.user)
         projekt.save()
@@ -536,6 +560,7 @@ def archivovat(request, ident_cely):
     else:
         warnings = projekt.check_pred_archivaci()
         logger.debug(warnings)
+        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
         if warnings:
             request.session['temp_data'] = []
             for key, item in warnings.items():
@@ -546,7 +571,8 @@ def archivovat(request, ident_cely):
         "object": projekt,
         "title": _("Archivace projektu"),
         "header": _("Archivace projektu"),
-        "button": _("Archivovat projekt")
+        "button": _("Archivovat projekt"),
+        "form_check": form_check
     }
     return render(request, "core/transakce.html", context)
 
@@ -557,6 +583,8 @@ def navrhnout_ke_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
         raise PermissionDenied()
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         form = NavrhnoutZruseniProjektForm(request.POST)
         if form.is_valid():
@@ -585,7 +613,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
             return redirect ("projekt:detail", ident_cely)
         context = {
             "projekt": projekt,
-            "form": NavrhnoutZruseniProjektForm() 
+            "form": NavrhnoutZruseniProjektForm(initial={"old_stav":projekt.stav}) 
             }
     return render(request, "projekt/navrhnout_zruseni.html", context)
 
@@ -596,17 +624,21 @@ def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
         raise PermissionDenied()
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         projekt.set_zruseny(request.user)
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
         return redirect("/projekt/detail/" + ident_cely)
     else:
+        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
         context = {
             "object": projekt,
             "title": _("Zrušení projektu"),
             "header": _("Zrušení projektu"),
             "button": _("Zrušit projekt"),
+            "form_check": form_check,
         }
     return render(request, "core/transakce.html", context)
 
@@ -617,6 +649,8 @@ def vratit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
         raise PermissionDenied()
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -629,7 +663,7 @@ def vratit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm()
+        form = VratitForm(initial={"old_stav":projekt.stav})
     return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
 
 
@@ -643,7 +677,8 @@ def vratit_navrh_zruseni(request, ident_cely):
         PROJEKT_STAV_ZRUSENY,
     ]:
         raise PermissionDenied()
-
+    if check_stav_changed(request, projekt):
+        return redirect("projekt:detail", ident_cely)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -656,7 +691,7 @@ def vratit_navrh_zruseni(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm()
+        form = VratitForm(initial={"old_stav":projekt.stav})
     return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
 
 @login_required

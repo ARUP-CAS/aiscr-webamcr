@@ -21,7 +21,7 @@ from core.constants import (
     ZAPSANI_AZ,
 )
 from core.exceptions import MaximalEventCount
-from core.forms import VratitForm
+from core.forms import VratitForm, CheckStavNotChangedForm
 from core.ident_cely import get_cast_dokumentu_ident, get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
@@ -75,6 +75,7 @@ from nalez.forms import (
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
 from projekt.models import Projekt
+from core.views import check_stav_changed
 
 logger = logging.getLogger(__name__)
 
@@ -320,23 +321,29 @@ def odeslat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ZAPSANY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, az):
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         az.set_odeslany(request.user)
         az.save()
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ODESLANA)
-        return redirect("/arch_z/detail/" + ident_cely)
+        return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_odeslanim()
         logger.debug(warnings)
+        
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
             return redirect ("arch_z:detail", ident_cely)
+    form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
     context = {
         "object": az,
         "title" : _("Odeslání akce"),
         "header" : _("Odeslání akce"),
         "button" : _("Odeslat akci"),
+        "form_check": form_check
     }
     
     
@@ -349,12 +356,15 @@ def archivovat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, az):
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         # TODO BR-A-5
         az.set_archivovany(request.user)
         az.save()
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
-        return redirect("/arch_z/detail/" + ident_cely)
+        return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_archivaci()
         logger.debug(warnings)
@@ -362,13 +372,13 @@ def archivovat(request, ident_cely):
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
             return redirect ("arch_z:detail", ident_cely)
-        else:
-            pass
+    form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
     context = {
         "object": az,
         "title" : _("Archivace akce"),
         "header" : _("Archivace akce"),
         "button" : _("Archivovat akci"),
+        "form_check": form_check
     }
     return render(request, "core/transakce.html", context)
 
@@ -379,6 +389,8 @@ def vratit(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
+    if check_stav_changed(request, az):
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -411,12 +423,12 @@ def vratit(request, ident_cely):
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
             messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)
-            return redirect("/arch_z/detail/" + ident_cely)
+            return redirect("arch_z:detail", ident_cely)
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm()
+        form = VratitForm(initial={"old_stav":az.stav})
     return render(request, "core/vratit.html", {"form": form, "objekt": az})
 
 
@@ -468,11 +480,9 @@ def zapsat(request, projekt_ident_cely):
                 akce.save()
 
                 messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
-                logger.debug(
-                    f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
-                    f"projekt: {projekt_ident_cely}"
-                )
-                return redirect("/arch_z/detail/" + az.ident_cely)
+                logger.debug(f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
+                             f"projekt: {projekt_ident_cely}")
+                return redirect("arch_z:detail", az.ident_cely)
 
         else:
             logger.warning("arch_z.views.zapsat: " "Form is not valid")
@@ -500,6 +510,8 @@ def zapsat(request, projekt_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
+    if check_stav_changed(request, akce.archeologicky_zaznam):
+        return redirect("arch_z:detail", ident_cely)
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam
