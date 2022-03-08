@@ -684,11 +684,13 @@ def get_detail_template_shows(dokument):
     show_edit = dokument.stav not in [
         D_STAV_ARCHIVOVANY,
     ]
+    show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
         "editovat": show_edit,
+        "arch_links": show_arch_links,
     }
     return show
 

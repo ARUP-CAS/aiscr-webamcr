@@ -114,6 +114,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.constants_import",
+                "core.context_processors.digi_links_from_settings"
             ],
         },
     },
@@ -222,4 +223,10 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': 'memcached:11211',
     }
+}
+
+DIGI_LINKS = {
+    "Digi_archiv_link": 'https://digiarchiv.aiscr.cz/id/',
+    "OAPI_link_part1": 'https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/',
+    "OAPI_link_part2": '&metadataPrefix=oai_amcr',
 }

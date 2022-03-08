@@ -743,6 +743,7 @@ def get_detail_template_shows(projekt, user):
         PROJEKT_STAV_ARCHIVOVANY,
     ]
     show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
+    show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -759,6 +760,7 @@ def get_detail_template_shows(projekt, user):
         "pridat_akci": show_pridat_akci,
         "editovat": show_edit,
         "dokumenty": show_dokumenty,
+        "arch_links": show_arch_links,
     }
     return show
 

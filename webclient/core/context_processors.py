@@ -9,6 +9,7 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
 )
+from django.conf import settings
 
 
 def constants_import(request):
@@ -25,3 +26,6 @@ def constants_import(request):
     }
 
     return constants_dict
+
+def digi_links_from_settings(request):
+    return getattr(settings, "DIGI_LINKS")
