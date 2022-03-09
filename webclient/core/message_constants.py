@@ -47,7 +47,6 @@ AKCE_USPESNE_VRACENA: Final = "Akce úspěšně vrácena."
 AKCI_NELZE_ODESLAT: Final = "Akci nelze odeslat."
 AKCI_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
 AKCI_NEKDO_ZMENIL_STAV: Final = _("akce.message.zmenaStavuNekymJinym.text")
-AKCE_POSLEDNA_USPESNE_ARCHIVOVANA: Final = _("akce.message.archivovanaPoslednaAkce.text")
 
 DOKUMENT_USPESNE_ODESLAN: Final = "Dokument úspěšně odeslán."
 DOKUMENT_USPESNE_ARCHIVOVAN: Final = "Dokument úspěšně archivován."

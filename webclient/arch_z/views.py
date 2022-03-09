@@ -33,7 +33,6 @@ from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    AKCE_POSLEDNA_USPESNE_ARCHIVOVANA,
 )
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
@@ -86,7 +85,10 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = { "warnings": request.session.pop("temp_data", None) }
+    context = {
+        "warnings": request.session.pop("temp_data", None),
+        "arch_projekt_link": request.session.pop("arch_projekt_link", None),
+    }
     old_objekt_post = request.session.pop("_old_objekt_post", None)
     old_predmet_post = request.session.pop("_old_predmet_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
@@ -366,14 +368,10 @@ def archivovat(request, ident_cely):
         # TODO BR-A-5
         az.set_archivovany(request.user)
         az.save()
-        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY)
-        if not all_akce:
-            projekt_archivovat_link = reverse ("projekt:projekt_archivovat", args=(az.akce.projekt.ident_cely,))
-            safe_html = mark_safe(f'<a href="{projekt_archivovat_link}">Ano</a>')
-            html_message = format_html(f"{AKCE_POSLEDNA_USPESNE_ARCHIVOVANA} {safe_html}")
-            messages.add_message(request, messages.SUCCESS, html_message)
-        else:    
-            messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
+        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY)  
+        if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
+            request.session['arch_projekt_link'] = True
+        messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
         return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_archivaci()
@@ -388,7 +386,7 @@ def archivovat(request, ident_cely):
         "title" : _("Archivace akce"),
         "header" : _("Archivace akce"),
         "button" : _("Archivovat akci"),
-        "form_check": form_check
+        "form_check": form_check,
     }
     return render(request, "core/transakce.html", context)
 
