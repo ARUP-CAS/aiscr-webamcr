@@ -1,5 +1,6 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout
+from crispy_forms.layout import HTML, Div, Layout,Field
+from crispy_forms.bootstrap import AppendedText
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserChangeForm
 from django.utils.translation import gettext_lazy as _
@@ -50,6 +51,15 @@ class AuthUserCreationForm(RegistrationForm):
         super(AuthUserCreationForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Field("first_name"),
+            Field("last_name"),
+            Field("email"),
+            Field("telefon"),
+            Field("organizace"),
+            AppendedText('password1', '<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
+            AppendedText('password2', '<i class="bi bi-eye-slash" id="togglePassword2"></i>'),
+            )
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
@@ -69,6 +79,16 @@ class AuthUserChangeForm(UserChangeForm):
 
 
 class AuthUserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(AuthUserLoginForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Field("username"),
+            AppendedText('password', '<i class="bi bi-eye-slash" id="togglePassword"></i>'),
+            )
+        
+
     def get_invalid_login_error(self):
         return ValidationError(
             _("Nesprávne zadaný email nebo heslo."),
