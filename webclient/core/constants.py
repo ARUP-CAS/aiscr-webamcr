@@ -66,6 +66,8 @@ ODESLANI_SN: Final = "SN12"  # 2
 POTVRZENI_SN: Final = "SN23"  # 3
 ARCHIVACE_SN: Final = "SN34"  # 4
 VRACENI_SN: Final = "SN-1"  # 5
+# Soubory
+NAHRANI_SBR: Final = "SBR0"  # 0
 
 # Uzivatel
 ROLE_BADATEL_ID = 1
@@ -113,6 +115,7 @@ EXTERNI_ZDROJ_RELATION_TYPE: Final = "externi_zdroj"
 ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: Final = "archeologicky_zaznam"
 DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
 DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
+SOUBOR_RELATION_TYPE: Final = "soubor"
 
 # Typy souboru
 IMPORTED_FILE: Final = "IMPORT"
