@@ -372,6 +372,7 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         label=_("projekt.form.navrhzruseni.duvod.label"),
         choices=CHOICES,
         widget=forms.RadioSelect,
+        help_text=_("projekt.form.navrhzruseni.duvod.tooltip"),
     )
     projekt_id = forms.CharField(
         label=_("projekt.form.navrhzruseni.projektId.label"), required=False
