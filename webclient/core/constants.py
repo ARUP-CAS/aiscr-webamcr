@@ -115,6 +115,7 @@ EXTERNI_ZDROJ_RELATION_TYPE: Final = "externi_zdroj"
 ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: Final = "archeologicky_zaznam"
 DOKUMENTACNI_JEDNOTKA_RELATION_TYPE: Final = "dokumentacni_jednotka"
 DOKUMENT_CAST_RELATION_TYPE: Final = "dokument_cest"
+SOUBOR_RELATION_TYPE: Final = "soubor"
 
 # Typy souboru
 IMPORTED_FILE: Final = "IMPORT"

@@ -207,12 +207,12 @@ def post_upload(request):
             if not duplikat.exists():
                 logger.debug("Saving file object: " + str(s))
                 s.save()
-                s.zaznamenej_nahrani()
+                s.zaznamenej_nahrani(request.user)
                 return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
             else:
                 logger.warning("File already exists on the server. Saving copy" + str(s))
                 s.save()
-                s.zaznamenej_nahrani()
+                s.zaznamenej_nahrani(request.user)
                 # Find parent record and send it to the user
                 parent_ident = ""
                 if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:

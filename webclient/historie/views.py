@@ -49,3 +49,10 @@ class SpolupraceHistorieListView(HistorieListView):
         return self.model.objects.filter(
             vazba__spoluprace_historie__pk=spoluprace_ident
         ).order_by("-datum_zmeny")
+
+class SouborHistorieListView(HistorieListView):
+    def get_queryset(self):
+        soubor_id = self.kwargs["soubor_id"]
+        return self.model.objects.filter(
+            vazba__soubor_historie=soubor_id
+        ).order_by("-datum_zmeny")

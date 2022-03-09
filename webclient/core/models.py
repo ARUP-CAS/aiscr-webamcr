@@ -1,7 +1,8 @@
+import logging
 import os
 import datetime
 from django.db import models
-from historie.models import Historie
+from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
 
 from .constants import (
@@ -9,7 +10,11 @@ from .constants import (
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     NAHRANI_SBR,
+    SOUBOR_RELATION_TYPE,
 )
+
+logger = logging.getLogger(__name__)
+
 
 def get_upload_to(instance, filename):
     base_path = f"soubory/{datetime.datetime.now().strftime('%Y/%m/%d')}"
@@ -41,6 +46,12 @@ class Soubor(models.Model):
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
+    historie = models.OneToOneField(
+        HistorieVazby,
+        on_delete=models.DO_NOTHING,
+        db_column="historie",
+        related_name="soubor_historie",
+    )
     path = models.FileField(upload_to=get_upload_to, default="empty")
 
     class Meta:
@@ -49,12 +60,20 @@ class Soubor(models.Model):
     def __str__(self):
         return self.nazev
 
+    def create_soubor_vazby(self):
+        logger.debug("Creating history records for soubor ")
+        hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
+        hv.save()
+        self.historie = hv
+        self.save()
+
     def zaznamenej_nahrani(self, user):
+        self.create_soubor_vazby()
         Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.old_name,
-            vazba=self.vazba,
+            poznamka=self.nazev_puvodni,
+            vazba=self.historie,
         ).save()
 
 
