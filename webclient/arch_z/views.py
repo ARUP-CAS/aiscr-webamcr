@@ -33,6 +33,7 @@ from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    AKCE_POSLEDNA_USPESNE_ARCHIVOVANA,
 )
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
@@ -44,7 +45,9 @@ from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.html import format_html, mark_safe
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument, DokumentCast
 from heslar.hesla import (
@@ -363,7 +366,14 @@ def archivovat(request, ident_cely):
         # TODO BR-A-5
         az.set_archivovany(request.user)
         az.save()
-        messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
+        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY)
+        if not all_akce:
+            projekt_archivovat_link = reverse ("projekt:projekt_archivovat", args=(az.akce.projekt.ident_cely,))
+            safe_html = mark_safe(f'<a href="{projekt_archivovat_link}">Ano</a>')
+            html_message = format_html(f"{AKCE_POSLEDNA_USPESNE_ARCHIVOVANA} {safe_html}")
+            messages.add_message(request, messages.SUCCESS, html_message)
+        else:    
+            messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
         return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_archivaci()
