@@ -7,6 +7,7 @@ from core.constants import (
     DOKUMENT_RELATION_TYPE,
     EXTERNI_ZDROJ_RELATION_TYPE,
     IMPORT_EXT_ZD,
+    NAHRANI_SBR,
     NAVRZENI_KE_ZRUSENI_PROJ,
     ODESLANI_AZ,
     ODESLANI_DOK,
@@ -88,6 +89,8 @@ class Historie(models.Model):
         (ZAPSANI_EXT_ZD, "Zápis externí zdroj"),
         (POTVRZENI_EXT_ZD, "Potvrzení externí zdroj"),
         (VRACENI_EXT_ZD, "Vrácení externí zdroj"),
+        # Soubor
+        (NAHRANI_SBR, "Nahrání souboru"),
     )
 
     datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))

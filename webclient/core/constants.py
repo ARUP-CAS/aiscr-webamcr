@@ -66,6 +66,8 @@ ODESLANI_SN: Final = "SN12"  # 2
 POTVRZENI_SN: Final = "SN23"  # 3
 ARCHIVACE_SN: Final = "SN34"  # 4
 VRACENI_SN: Final = "SN-1"  # 5
+# Soubory
+NAHRANI_SBR: Final = "SBR0"  # 0
 
 # Uzivatel
 ROLE_BADATEL_ID = 1

@@ -1,12 +1,14 @@
 import os
 import datetime
 from django.db import models
+from historie.models import Historie
 from uzivatel.models import User
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
+    NAHRANI_SBR,
 )
 
 def get_upload_to(instance, filename):
@@ -46,6 +48,14 @@ class Soubor(models.Model):
 
     def __str__(self):
         return self.nazev
+
+    def zaznamenej_nahrani(self, user):
+        Historie(
+            typ_zmeny=NAHRANI_SBR,
+            uzivatel=user,
+            poznamka=self.old_name,
+            vazba=self.vazba,
+        ).save()
 
 
 class ProjektSekvence(models.Model):
