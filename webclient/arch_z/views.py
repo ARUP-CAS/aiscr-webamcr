@@ -318,24 +318,29 @@ def edit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
+    logger.debug("arch_z.views.odeslat start")
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ZAPSANY:
+        logger.debug("arch_z.views.odeslat permission denied")
         raise PermissionDenied()
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
+        logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
         return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         az.set_odeslany(request.user)
         az.save()
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ODESLANA)
+        logger.debug("arch_z.views.odeslat akce uspesne odeslana " + AKCE_USPESNE_ODESLANA)
         return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_odeslanim()
-        logger.debug(warnings)
+        logger.debug("arch_z.views.odeslat warnings " + str(warnings))
         
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
+            logger.debug("arch_z.views.odeslat akci nelze odeslat " + AKCI_NELZE_ODESLAT)
             return redirect ("arch_z:detail", ident_cely)
     form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
     context = {
@@ -345,8 +350,8 @@ def odeslat(request, ident_cely):
         "button" : _("Odeslat akci"),
         "form_check": form_check
     }
-    
-    
+
+    logger.debug("arch_z.views.odeslat render " + context)
     return render(request, "core/transakce.html", context)
 
 
