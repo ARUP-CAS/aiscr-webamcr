@@ -29,4 +29,5 @@ urlpatterns = [
     ),
     path("download_file/<int:pk>", views.download_file, name="download_file"),
     path("delete_file/<int:pk>", views.delete_file, name="delete_file"),
+    path("id/<str:ident_cely>", views.redirect_ident_view, name="redirect_ident"),
 ]
