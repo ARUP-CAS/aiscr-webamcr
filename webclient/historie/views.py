@@ -3,7 +3,8 @@ from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
 from historie.models import Historie
 from historie.tables import HistorieTable
-
+from core.forms import SouborMetadataForm
+from core.models import Soubor
 
 class HistorieListView(LoginRequiredMixin, SingleTableMixin, ListView):
     table_class = HistorieTable
@@ -51,6 +52,13 @@ class SpolupraceHistorieListView(HistorieListView):
         ).order_by("-datum_zmeny")
 
 class SouborHistorieListView(HistorieListView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        soubor_id = self.kwargs["soubor_id"]
+        soubor = Soubor.objects.get(pk=soubor_id)
+        context["metadata_form"] = SouborMetadataForm(instance=soubor)
+        return context
+
     def get_queryset(self):
         soubor_id = self.kwargs["soubor_id"]
         return self.model.objects.filter(
