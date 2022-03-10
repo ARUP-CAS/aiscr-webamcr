@@ -275,9 +275,11 @@ class Projekt(models.Model):
         ).save()
         self.save()
 
-    def set_zruseny(self, user):
+    def set_zruseny(self, user, poznamka):
         self.stav = PROJEKT_STAV_ZRUSENY
-        Historie(typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie).save()
+        Historie(
+            typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie, poznamka=poznamka
+        ).save()
         self.save()
 
     def set_vracen(self, user, new_state, poznamka):
