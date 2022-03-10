@@ -56,6 +56,10 @@ class Komponenta(models.Model):
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
 
     @property
+    def ident_cely_safe(self):
+        return self.ident_cely.replace("-", "_")
+
+    @property
     def pocet_nalezu(self):
         return self.objekty.all().count() + self.predmety.all().count()
 
