@@ -45,6 +45,10 @@ class DokumentacniJednotka(models.Model):
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
 
+    @property
+    def ident_cely_safe(self):
+        return self.ident_cely.replace("-", "_")
+
     def has_adb(self):
         has_adb = False
         try:
