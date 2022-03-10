@@ -51,6 +51,7 @@ class Soubor(models.Model):
         on_delete=models.DO_NOTHING,
         db_column="historie",
         related_name="soubor_historie",
+        null=True
     )
     path = models.FileField(upload_to=get_upload_to, default="empty")
 
