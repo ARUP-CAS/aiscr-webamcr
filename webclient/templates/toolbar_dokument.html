@@ -10,26 +10,26 @@
       {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
-      {{ d.ident_cely }}
+      {{ d.ident_cely }}{% if backdetail %}<span class="app-pipe"></span><a href="{% url backdetail|add:':detail' backident %}" class="app-entity-color font-weight-normal">{{backtext}}</a>{% endif %}
     </div>
   </div>
   {% if showcontrols %}
     <div class="app-right app-controls">
       <div class="btn-group app-entity-knihovna_3d" role="group">
         {% if show.vratit_link %}
-          <a href="{% url 'dokument:vratit' d.ident_cely %}" class="btn">
+          <a href="{% url 'dokument:vratit' d.ident_cely %}?sent_stav={{d.stav}}" class="btn">
             <span class="material-icons">arrow_back</span>
             {% trans "Vrátit" %}
           </a>
         {% endif %}
         {% if show.odeslat_link %}
-          <a href="{% url 'dokument:odeslat' d.ident_cely %}" class="btn">
+          <a href="{% url 'dokument:odeslat' d.ident_cely %}?sent_stav={{d.stav}}" class="btn">
             <span class="material-icons">flag</span>
             {% trans "Odeslat" %}
           </a>
         {% endif %}
         {% if show.archivovat_link %}
-          <a href="{% url 'dokument:archivovat' d.ident_cely %}" class="btn">
+          <a href="{% url 'dokument:archivovat' d.ident_cely %}?sent_stav={{d.stav}}" class="btn">
             <span class="material-icons">archive</span>
             {% trans "Archivovat" %}
           </a>
@@ -38,7 +38,7 @@
           {% trans "Další volby" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}">{% trans "Smazat dokument" %}</a>
+          <a class="dropdown-item" href="{% url 'dokument:smazat' d.ident_cely %}?sent_stav={{d.stav}}">{% trans "Smazat dokument" %}</a>
           <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}">{% trans "dokument.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>

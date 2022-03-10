@@ -522,3 +522,10 @@
 .custom-select {
   @include transition($custom-forms-transition);
 }
+
+.custom-radio{
+  .custom-control-label{
+    font-weight: normal !important;
+    font-size: 1rem !important;
+  }
+}

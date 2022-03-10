@@ -1,4 +1,5 @@
 from typing import Final
+from django.utils.translation import gettext_lazy as _
 
 FORM_NOT_VALID: Final = "Forma není validní."
 
@@ -37,6 +38,7 @@ PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI: Final = (
     "Projekt nelze navrhnout ke zrušení. Nesmí mít žádné akce."
 )
 PROJEKT_NELZE_SMAZAT: Final = "Projekt nelze smazat."
+PROJEKT_NEKDO_ZMENIL_STAV: Final = _("projekt.message.zmenaStavuNekymJinym.text")
 
 AKCE_USPESNE_ZAPSANA: Final = "Akce úspěšně zapsána."
 AKCE_USPESNE_ODESLANA: Final = "Akce úspěšně odeslána."
@@ -44,6 +46,7 @@ AKCE_USPESNE_ARCHIVOVANA: Final = "Akce úspěšně archivovaná."
 AKCE_USPESNE_VRACENA: Final = "Akce úspěšně vrácena."
 AKCI_NELZE_ODESLAT: Final = "Akci nelze odeslat."
 AKCI_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
+AKCI_NEKDO_ZMENIL_STAV: Final = _("akce.message.zmenaStavuNekymJinym.text")
 
 DOKUMENT_USPESNE_ODESLAN: Final = "Dokument úspěšně odeslán."
 DOKUMENT_USPESNE_ARCHIVOVAN: Final = "Dokument úspěšně archivován."
@@ -54,6 +57,7 @@ DOKUMENT_USPESNE_PRIPOJEN: Final = "Dokument úspěšně připojen."
 DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
 DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
 VYBERTE_PROSIM_POLOHU: Final = "Vyberte prosím lokalizaci na mapě."
+DOKUMENT_NEKDO_ZMENIL_STAV: Final = _("dokument.message.zmenaStavuNekymJinym.text")
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
@@ -70,6 +74,7 @@ SAMOSTATNY_NALEZ_NELZE_ODESLAT: Final = "Samostatný nález nelze odeslat."
 SAMOSTATNY_NALEZ_ODESLAN: Final = "Samostatný nález úspěšně odeslán."
 SAMOSTATNY_NALEZ_POTVRZEN: Final = "Samostatný nález úspěšně potvrzen."
 SAMOSTATNY_NALEZ_ARCHIVOVAN: Final = "Samostatný nález úspěšně archivován."
+SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV: Final = _("pas.message.zmenaStavuNekymJinym.text")
 
 # Spoluprace
 ZADOST_O_SPOLUPRACI_VYTVORENA: Final = "Žádost o spolupráci byla vytvořena."

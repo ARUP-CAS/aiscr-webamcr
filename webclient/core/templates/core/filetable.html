@@ -14,6 +14,7 @@
       {% endif %}
     {% endif %}
     <th scope="col">{% trans "Stáhnout" %}</th>
+    <th scope="col">{% trans "Historie" %}</th>
   </tr>
   </thead>
   <tbody>
@@ -40,6 +41,11 @@
       <td>
         <a href="{% url 'core:download_file' soubor.id %}" target="_blank">
           <span class="material-icons">get_app</span>
+        </a>
+      </td>
+      <td>
+        <a href="{% url 'historie:soubor' soubor.id %}" target="_blank">
+          <span class="material-icons">history</span>
         </a>
       </td>
     </tr>

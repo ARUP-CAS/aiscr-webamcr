@@ -5,6 +5,7 @@ import re
 import unicodedata
 from string import ascii_uppercase as letters
 
+from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     DOKUMENT_RELATION_TYPE,
     OTHER_DOCUMENT_FILES,
@@ -16,7 +17,15 @@ from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     SN_ARCHIVOVANY,
 )
-from core.message_constants import ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_SMAZAN
+from core.forms import CheckStavNotChangedForm
+from core.message_constants import (
+    DOKUMENT_NEKDO_ZMENIL_STAV,
+    SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_USPESNE_SMAZAN,
+    AKCI_NEKDO_ZMENIL_STAV,
+    PROJEKT_NEKDO_ZMENIL_STAV
+    )
 from core.models import Soubor
 from core.utils import calculate_crc_32, get_mime_type
 from django.conf import settings
@@ -26,6 +35,7 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import is_safe_url
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
@@ -82,8 +92,8 @@ def download_file(request, pk):
         ]  # Use mimetypes to get file type
         response = HttpResponse(soubor.path, content_type=content_type)
         response["Content-Length"] = str(len(soubor.path))
-        response["Content-Disposition"] = "inline; filename=" + os.path.basename(
-            soubor.nazev_zkraceny
+        response["Content-Disposition"] = (
+            "attachment; filename=" + soubor.nazev_zkraceny
         )
         return response
     else:
@@ -207,10 +217,12 @@ def post_upload(request):
             if not duplikat.exists():
                 logger.debug("Saving file object: " + str(s))
                 s.save()
+                s.zaznamenej_nahrani(request.user)
                 return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
             else:
                 logger.warning("File already exists on the server. Saving copy" + str(s))
                 s.save()
+                s.zaznamenej_nahrani(request.user)
                 # Find parent record and send it to the user
                 parent_ident = ""
                 if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
@@ -288,3 +300,59 @@ def get_projekt_soubor_name(file_name):
     only_ascii = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
     return (re.sub('[^A-Za-z0-9_]', '_', only_ascii)+split_file[1])
     # potrebne odstranit constraint soubor_filepath_key
+
+    
+def check_stav_changed(request, zaznam):
+    if request.method == "POST":
+        # TODO BR-A-5
+        form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
+        if form_check.is_valid():
+            pass
+        else:
+            if "State_changed" in str(form_check.errors):
+                if isinstance(zaznam, SamostatnyNalez):
+                    messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
+                elif isinstance(zaznam, ArcheologickyZaznam):
+                    messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+                elif isinstance(zaznam, Dokument):
+                    messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+                elif isinstance(zaznam, Projekt):
+                    messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+                return True
+
+    else:
+        # check if stav zaznamu is same in DB as was on detail page entered from
+        if request.GET.get('sent_stav', False) and str(request.GET.get('sent_stav'))!= str(zaznam.stav):
+            if isinstance(zaznam, SamostatnyNalez):
+                messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
+            elif isinstance(zaznam, ArcheologickyZaznam):
+                messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+            elif isinstance(zaznam, Dokument):
+                    messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+            elif isinstance(zaznam, Projekt):
+                messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+            return True
+    
+    return False
+
+@login_required
+@require_http_methods(["GET"])
+def redirect_ident_view(request, ident_cely):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
+        logger.debug("regex match for project with ident %s", ident_cely)
+        return redirect("projekt:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}A", ident_cely)):
+        logger.debug("regex match for archeologicka akce with ident %s", ident_cely)
+        return redirect("arch_z:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(TX|DD)-\d{9}", ident_cely)):
+        logger.debug("regex match for dokument with ident %s", ident_cely)
+        return redirect("dokument:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
+        logger.debug("regex match for dokument 3D with ident %s", ident_cely)
+        return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
+        logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
+        return redirect("pas:detail", ident_cely=ident_cely)
+
+    messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
+    return redirect("core:home")

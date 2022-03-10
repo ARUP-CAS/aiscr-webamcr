@@ -17,7 +17,7 @@ from core.constants import (
     ZAPSANI_SN,
 )
 from core.exceptions import MaximalIdentNumberError
-from core.forms import VratitForm
+from core.forms import CheckStavNotChangedForm, VratitForm
 from core.ident_cely import get_sn_ident
 from core.message_constants import (
     FORM_NOT_VALID,
@@ -38,6 +38,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import get_cadastre_from_point
+from core.views import check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -272,6 +273,9 @@ def vratit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, sn):
+        return redirect("pas:detail", ident_cely)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -284,7 +288,7 @@ def vratit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm()
+        form = VratitForm(initial={"old_stav":sn.stav})
     return render(request, "core/vratit.html", {"form": form, "objekt": sn})
 
 
@@ -305,6 +309,9 @@ def odeslat(request, ident_cely):
     )
     if sn.stav != SN_ZAPSANY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, sn):
+        return redirect("pas:detail", ident_cely)
     if request.method == "POST":
         sn.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
@@ -316,11 +323,13 @@ def odeslat(request, ident_cely):
         request.session['temp_data'] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
         return redirect("pas:detail", ident_cely)
+    form_check = CheckStavNotChangedForm(initial={"old_stav":sn.stav})
     context = {
         "object": sn,
         "title": _("Odeslání nálezu"),
         "header": _("Odeslání nálezu"),
         "button": _("Odeslat nález"),
+        "form_check": form_check,
     }
 
     return render(request, "core/transakce.html", context)
@@ -332,6 +341,8 @@ def potvrdit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
         raise PermissionDenied()
+    if check_stav_changed(request, sn):
+        return redirect("pas:detail", ident_cely)
     if request.method == "POST":
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
@@ -343,7 +354,7 @@ def potvrdit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn)
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav":sn.stav})
     return render(request, "pas/potvrdit.html", {"form": form, "sn": sn})
 
 
@@ -351,16 +362,21 @@ def archivovat(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
         raise PermissionDenied()
+    # Momentalne zbytecne, kdyz tak to padne hore
+    if check_stav_changed(request, sn):
+        return redirect("pas:detail", ident_cely)
     if request.method == "POST":
         sn.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ARCHIVOVAN)
         return redirect("pas:detail", ident_cely=ident_cely)
     else:
         # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
+        form_check = CheckStavNotChangedForm(initial={"old_stav":sn.stav})
         context = {
             "title": _("Archivace nálezu"),
             "header": _("Archivace nálezu ") + sn.ident_cely,
             "button": _("Archivovat nález"),
+            "form_check": form_check,
         }
     return render(request, "core/transakce.html", context)
 
@@ -392,6 +408,8 @@ class SamostatnyNalezListView(
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     nalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
+    if check_stav_changed(request, nalez):
+        return redirect("pas:detail", ident_cely)
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory

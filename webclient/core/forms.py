@@ -1,6 +1,10 @@
 from django import forms
+from crispy_forms.helper import FormHelper
 from django.utils.translation import gettext as _
 from heslar.models import Heslar
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TwoLevelSelectField(forms.CharField):
@@ -35,5 +39,24 @@ class HeslarChoiceFieldField(forms.ChoiceField):
         return super().has_changed(initial, data)
 
 
+class CheckStavNotChangedForm(forms.Form):
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
+
+    def __init__(self, db_stav= None, *args, **kwargs):
+        self.db_stav=db_stav
+        super(CheckStavNotChangedForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        old_stav = self.cleaned_data.get("old_stav")
+        if str(self.db_stav) != str(old_stav):
+            logger.debug("Stav zaznamu se zmenil mezi posunutim stavu.")
+            raise forms.ValidationError("State_changed")
+        return cleaned_data
+
+
 class VratitForm(forms.Form):
     reason = forms.CharField(label=_("Zdůvodnění vrácení"), required=True, help_text= _("core.forms.vratit.tooltip"))
+    old_stav = forms.CharField(required=True, widget=forms.HiddenInput())

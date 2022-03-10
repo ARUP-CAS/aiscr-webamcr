@@ -266,7 +266,7 @@
             <ul class="list-group list-group-flush">
               {% for j in dokumentacni_jednotky %}
                 <li class="list-group-item">
-                  <div class="d-flex align-items-center">
+                  <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
                     {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
                       <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'DJ má potvrzený pian' %}">
@@ -281,8 +281,7 @@
                       <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip"
                             data-placement="top" title="{% trans 'DJ nemá pian' %}">location_disabled</span>
                     {% endif %}
-                    <a href="#" class="flex-fill app-entity-color"
-                       onclick="show_form('detail_dj_form_{{ j.ident_cely }}');get_create_pain_form_action('{{ j.ident_cely }}');">
+                    <a href="#" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
                       <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                       {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
                     </a>
@@ -290,10 +289,10 @@
                   {% if j.komponenty.komponenty.all %}
                     <ul class="app-list-group-in">
                       {% for k in j.komponenty.komponenty.all %}
-                        <li>
+                        <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
                           <div class="d-flex align-items-baseline">
                             <a href="#" class="flex-fill mr-2 app-entity-color"
-                               onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
+                               id="el_komponenta_{{ k.ident_cely_safe }}">
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
                             <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
@@ -745,5 +744,52 @@
           }
       })
 
+      const change_active_element = (new_el) => {
+          if (el_div_currently_selected) {
+              el_div_currently_selected.style.backgroundColor = null;
+          }
+          el_div_currently_selected = new_el;
+          new_el.style.backgroundColor = "rgba(36, 126, 75, 0.1)";
+      }
+
+      const div_komponenta_click = (data) => {
+          const {ident_cely, ident_cely_safe} = data;
+          show_form(`detail_komponenta_form_${ident_cely}`);
+          const el_li_komponenta
+              = document.getElementById(`el_li_komponenta_${ident_cely_safe}`);
+          change_active_element(el_li_komponenta);
+      }
+
+      const div_dokumentacni_jednotka_click = (data) => {
+          const {ident_cely, ident_cely_safe} = data;
+          show_form(`detail_dj_form_${ident_cely}`);
+          get_create_pain_form_action(ident_cely);
+          const el_div_dokumentacni_jednotka
+              = document.getElementById(`el_div_dokumentacni_jednotka_${ident_cely_safe}`);
+          change_active_element(el_div_dokumentacni_jednotka);
+      };
+      let el_div_currently_selected = null;
+      const set_dokumentacni_jednotka_events = (ident_cely, ident_cely_safe) => {
+          const el_dokumentacni_jednotka
+              = document.getElementById(`el_dokumentacni_jednotka_${ident_cely_safe}`);
+          el_dokumentacni_jednotka.addEventListener("click", () => {
+              div_dokumentacni_jednotka_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
+          }, false);
+      };
+      const set_komponenta_events = (ident_cely, ident_cely_safe) => {
+          const el_komponenta
+              = document.getElementById(`el_komponenta_${ident_cely_safe}`);
+          el_komponenta.addEventListener("click", () => {
+              div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
+          }, false);
+      };
+      {% for j in dokumentacni_jednotky %}
+          set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")
+          {% if j.komponenty.komponenty.all %}
+            {% for k in j.komponenty.komponenty.all %}
+                set_komponenta_events("{{ k.ident_cely }}", "{{ k.ident_cely_safe }}")
+            {% endfor %}
+          {% endif %}
+      {% endfor %}
   </script>
 {% endblock %}
