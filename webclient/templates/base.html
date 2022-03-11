@@ -43,6 +43,7 @@
   <script src="{% static '/js/selectpicker-cs.js' %}"></script>
   <script src="{% static 'pridani_title_pro_disabled.js' %}"></script>
   <script src="{% static '/js/timer.js' %}"></script>
+  <script src="{% static 'js/modal_forms.js' %}"></script>
 
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
@@ -76,6 +77,8 @@
         </div>
       {% endfor %}
       </div>
+
+    {% block modal-form %}{%endblock%}
 
     {% block footer %}{% endblock %}
   </div>
