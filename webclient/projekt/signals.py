@@ -22,10 +22,10 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     except sender.DoesNotExist:
         instance_db = None
     if instance_db and instance.termin_odevzdani_nz == instance_db.termin_odevzdani_nz:
-        if instance.datum_ukonceni != instance_db.datum_ukonceni:
-            logger.debug("Zmene datum ukonceni a nezmenene termin_odevzdani_NZ - menim automaticky termin_odevzdani_NZ")
+        if instance.datum_ukonceni != instance_db.datum_ukonceni and instance.datum_ukonceni:
+            logger.debug("Zmenen datum ukonceni a nezmenene termin_odevzdani_NZ - menim automaticky termin_odevzdani_NZ")
             instance.termin_odevzdani_nz = instance.datum_ukonceni
-            instance.termin_odevzdani_nz.replace(year=instance.termin_odevzdani_nz.year + 3)
+            instance.termin_odevzdani_nz = instance.termin_odevzdani_nz.replace(year=instance.termin_odevzdani_nz.year + 3)
 
 def create_projekt_vazby(sender, instance, **kwargs):
     if instance.pk is None:
