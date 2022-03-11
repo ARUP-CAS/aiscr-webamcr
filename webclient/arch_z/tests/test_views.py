@@ -1,3 +1,5 @@
+import datetime
+
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import detail, odeslat, pripojit_dokument, vratit, zapsat
 from core.tests.runner import (
@@ -6,15 +8,19 @@ from core.tests.runner import (
     EXISTING_EVENT_IDENT,
     HLAVNI_TYP_SONDA_ID,
     KATASTR_ODROVICE_ID,
+    D_STAV_ZAPSANY,
+    EXISTING_EVENT_IDENT_INCOMPLETE,
     add_middleware_to_request,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase
-from dokument.models import Dokument
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
-from uzivatel.models import User
+from django.utils.translation import gettext as _
+from dokument.models import Dokument, DokumentCast
+from heslar.hesla import PRISTUPNOST_ANONYM_ID, TYP_DOKUMENTU_NALEZOVA_ZPRAVA
+from heslar.models import Heslar
+from uzivatel.models import User, Organizace, Osoba
 
 
 class UrlTests(TestCase):
@@ -63,11 +69,30 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = zapsat(request, self.existing_projekt_ident)
+        az = ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B").first()
+        az.refresh_from_db()
         self.assertEqual(302, response.status_code)
+        self.assertEqual(az.akce.specifikace_data.pk, 885)
+        self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ANONYM_ID)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertTrue(
             len(ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B")) == 1
         )
+
+    def test_get_odeslat_s_chybami(self):
+        request = self.factory.get("/arch_z/odeslat/")
+        request.user = self.existing_user
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request = add_middleware_to_request(request, MessageMiddleware)
+        request.session.save()
+
+        response = odeslat(request, EXISTING_EVENT_IDENT_INCOMPLETE)
+        self.assertTrue(_("Datum zahájení není vyplněn.") in request.session['temp_data'])
+        self.assertTrue(_("Datum ukončení není vyplněn.") in request.session['temp_data'])
+        self.assertTrue(_("Lokalizace okolností není vyplněna.") in request.session['temp_data'])
+        self.assertTrue(_("Hlavní typ není vyplněn.") in request.session['temp_data'])
+        self.assertTrue(_("Hlavní vedoucí není vyplněn.") in request.session['temp_data'])
+        self.assertEqual(302, response.status_code)
 
     def test_get_odeslat(self):
         request = self.factory.get("/arch_z/odeslat/")

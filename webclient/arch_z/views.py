@@ -335,7 +335,7 @@ def odeslat(request, ident_cely):
         return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_odeslanim()
-        logger.debug("arch_z.views.odeslat warnings " + str(warnings))
+        logger.debug("arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings))
         
         if warnings:
             request.session['temp_data'] = warnings
@@ -351,7 +351,7 @@ def odeslat(request, ident_cely):
         "form_check": form_check
     }
 
-    logger.debug("arch_z.views.odeslat render " + context)
+    logger.debug("arch_z.views.odeslat render ")
     return render(request, "core/transakce.html", context)
 
 
