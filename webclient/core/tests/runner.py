@@ -343,6 +343,7 @@ class AMCRTestRunner(BaseRunner):
             password="foo1234!!!",
             organizace=o,
             hlavni_role=admin_group,
+            is_active=True
         )
         user.save()
         # PROJEKT

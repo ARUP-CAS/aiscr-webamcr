@@ -1,4 +1,5 @@
 from core.constants import SN_ZAPSANY
+from core.message_constants import PROJEKT_NELZE_SMAZAT
 from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
 from django.contrib.gis.geos import Point
 from django.contrib.messages.middleware import MessageMiddleware
@@ -114,8 +115,11 @@ class UrlTests(TestCase):
             stav=SN_ZAPSANY,
         )
         nalez.save()
-        response = smazat(request, ident_cely=self.projekt.ident_cely)
-        self.assertTrue("Projekt nelze smazat." in response.content.decode("utf-8"))
+
+        # Client is used there to follow redirect
+        self.client.force_login(self.existing_user)
+        response = self.client.get(f"/projekt/smazat/{self.projekt.ident_cely}", follow=True)
+        self.assertTrue(PROJEKT_NELZE_SMAZAT in response.content.decode("utf-8"))
 
     def test_post_create_success(self):
         data = {

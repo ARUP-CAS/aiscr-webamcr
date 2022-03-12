@@ -80,6 +80,7 @@ class UrlTests(TestCase):
 
         data = {
             "csrfmiddlewaretoken": "OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm",
+            "old_stav": 1,
         }
         request = self.factory.post("/dokument/odeslat/", data)
         request = add_middleware_to_request(request, SessionMiddleware)

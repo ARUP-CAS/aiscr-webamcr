@@ -1,4 +1,4 @@
-import logging
+import structlog
 import mimetypes
 import os
 import re
@@ -43,7 +43,7 @@ from uzivatel.models import User
 from django.core.exceptions import PermissionDenied
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @login_required
@@ -303,6 +303,7 @@ def get_projekt_soubor_name(file_name):
 
     
 def check_stav_changed(request, zaznam):
+    logger.debug("check_stav_changed.start", zaznam_id=zaznam.pk)
     if request.method == "POST":
         # TODO BR-A-5
         form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
@@ -312,27 +313,45 @@ def check_stav_changed(request, zaznam):
             if "State_changed" in str(form_check.errors):
                 if isinstance(zaznam, SamostatnyNalez):
                     messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
+                    logger.debug("check_stav_changed.state_changed.error", reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                                 form_check_errors=str(form_check.errors))
                 elif isinstance(zaznam, ArcheologickyZaznam):
                     messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+                    logger.debug("check_stav_changed.state_changed.error", reason=AKCI_NEKDO_ZMENIL_STAV,
+                                 form_check_errors=str(form_check.errors))
                 elif isinstance(zaznam, Dokument):
                     messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+                    logger.debug("check_stav_changed.state_changed.error", reason=DOKUMENT_NEKDO_ZMENIL_STAV,
+                                 form_check_errors=str(form_check.errors))
                 elif isinstance(zaznam, Projekt):
                     messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+                    logger.debug("check_stav_changed.state_changed.error", reason=PROJEKT_NEKDO_ZMENIL_STAV,
+                                 form_check_errors=str(form_check.errors))
                 return True
 
     else:
         # check if stav zaznamu is same in DB as was on detail page entered from
-        if request.GET.get('sent_stav', False) and str(request.GET.get('sent_stav'))!= str(zaznam.stav):
+        if request.GET.get('sent_stav', False) and str(request.GET.get('sent_stav')) != str(zaznam.stav):
+            sent_stav = str(request.GET.get('sent_stav'))
+            zaznam_stav = str(zaznam.stav)
             if isinstance(zaznam, SamostatnyNalez):
                 messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
+                logger.debug("check_stav_changed.sent_stav.error", reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
             elif isinstance(zaznam, ArcheologickyZaznam):
                 messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+                logger.debug("check_stav_changed.sent_stav.error", reason=AKCI_NEKDO_ZMENIL_STAV,
+                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
             elif isinstance(zaznam, Dokument):
-                    messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+                messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
+                logger.debug("check_stav_changed.sent_stav.error", reason=DOKUMENT_NEKDO_ZMENIL_STAV,
+                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
             elif isinstance(zaznam, Projekt):
                 messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
+                logger.debug("check_stav_changed.sent_stav.error", reason=PROJEKT_NEKDO_ZMENIL_STAV,
+                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
             return True
-    
+    logger.debug("check_stav_changed.sent_stav.false")
     return False
 
 @login_required

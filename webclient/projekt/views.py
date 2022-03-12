@@ -1,4 +1,4 @@
-import logging
+import structlog
 from core.exceptions import MaximalIdentNumberError
 
 import simplejson as json
@@ -85,7 +85,7 @@ from projekt.models import Projekt
 from projekt.tables import ProjektTable
 from django.contrib.auth.models import Group
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @login_required
@@ -282,13 +282,16 @@ def edit(request, ident_cely):
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    logger.debug("projekt.views.smazat.start", ident_cely=ident_cely)
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
+        logger.debug("projekt.views.smazat.check_stav_changed", ident_cely=ident_cely)
         return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         resp = projekt.delete()
         logger.debug("Projekt smazan: " + str(resp))
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        logger.debug("projekt.views.smazat.success", message=ZAZNAM_USPESNE_SMAZAN)
         return redirect("/projekt/list")
     else:
         warnings = projekt.check_pred_smazanim()
@@ -296,8 +299,10 @@ def smazat(request, ident_cely):
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
-            return redirect ("projekt:detail", ident_cely)
+            logger.debug("projekt.views.smazat.warning", warnings=warnings, ident_cely=ident_cely)
+            return redirect("projekt:detail", ident_cely)
         context = {"objekt": projekt}
+        logger.debug("projekt.views.smazat.finish", ident_cely=ident_cely)
         return render(request, "core/smazat.html", context)
 
 
