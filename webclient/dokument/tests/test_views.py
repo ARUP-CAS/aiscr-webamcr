@@ -10,6 +10,7 @@ from core.tests.runner import (
     TYP_DOKUMENTU_PLAN_SONDY_ID,
     ZACHOVALOST_30_80_ID,
     add_middleware_to_request, EL_CHEFE_ID, ARCHIV_ARUB,
+    TESTOVACI_DOKUMENT_IDENT,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -28,7 +29,7 @@ class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
-        self.existing_dokument = "C-TX-201501985"
+        self.existing_dokument = TESTOVACI_DOKUMENT_IDENT
 
     def test_get_detail(self):
         request = self.factory.get("/dokument/detail/")

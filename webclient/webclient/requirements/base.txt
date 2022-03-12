@@ -20,3 +20,4 @@ django-simple-history==3.0.0
 python-memcached==1.59
 distlib==0.3.4
 django-rosetta==0.9.8
+django-structlog==2.2.0

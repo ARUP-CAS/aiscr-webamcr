@@ -99,6 +99,7 @@ EXISTING_EVENT_IDENT = "C-202000001A"
 EXISTING_EVENT_IDENT_INCOMPLETE = "C-202000001B"
 EXISTING_DOCUMENT_ID = 123654
 DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
+DOKUMENT_CAST_IDENT = "M-TX-202100115-D001"
 
 PIAN_POTVRZEN = 2
 
@@ -431,6 +432,9 @@ class AMCRTestRunner(BaseRunner):
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
+        soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
+                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x")
+        soubor.save()
         d = Dokument(
             id=EXISTING_DOCUMENT_ID,
             rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
@@ -445,15 +449,18 @@ class AMCRTestRunner(BaseRunner):
         )
         d.save()
         DokumentExtraData(dokument=d).save()
+        dc = DokumentCast(dokument=d, archeologicky_zaznam=az_incoplete, ident_cely=DOKUMENT_CAST_IDENT)
+        dc.save()
 
-        vazba_2 = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
-        vazba_2.save()
-        vazba_pian_2 = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
-        vazba_pian_2.save()
-        vazba_soubory_2 = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
-        vazba_soubory_2.save()
+
+        vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+        vazba.save()
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian.save()
+        vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+        vazba_soubory.save()
         soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
-                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory_2, path="x")
+                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x")
         soubor.save()
         dokument_nalezova_zprava = Dokument(
             id=DOCUMENT_NALEZOVA_ZPRAVA_ID,
@@ -464,8 +471,8 @@ class AMCRTestRunner(BaseRunner):
             ident_cely=DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
             stav=D_STAV_ZAPSANY,
             material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
-            historie=vazba_2,
-            soubory=vazba_soubory_2,
+            historie=vazba,
+            soubory=vazba_soubory,
         )
         dokument_nalezova_zprava.save()
         DokumentExtraData(dokument=dokument_nalezova_zprava).save()

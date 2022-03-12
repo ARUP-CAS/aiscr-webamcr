@@ -1,4 +1,4 @@
-import logging
+import structlog
 
 from arch_z.models import ArcheologickyZaznam
 from projekt.models import Projekt
@@ -90,7 +90,7 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @login_required
@@ -515,6 +515,7 @@ def create_model_3D(request):
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    logger.debug("dokument.views.odeslat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ZAPSANY:
         raise PermissionDenied()
      # Momentalne zbytecne, kdyz tak to padne hore
@@ -523,11 +524,12 @@ def odeslat(request, ident_cely):
     if request.method == "POST":
         d.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
+        logger.debug("dokument.views.odeslat.sucess")
         return get_detail_view(ident_cely)
     else:
         warnings = d.check_pred_odeslanim()
-        logger.debug(warnings)
         if warnings:
+            logger.debug("dokument.views.odeslat.warnings", warnings=warnings, ident_cely=ident_cely)
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
             return get_detail_view(ident_cely)
