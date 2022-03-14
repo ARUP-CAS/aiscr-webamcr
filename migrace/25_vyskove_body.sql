@@ -1,0 +1,1 @@
+update public.vyskovy_bod set geom = ST_MakePoint(northing, easting);
