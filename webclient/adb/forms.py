@@ -5,6 +5,7 @@ from crispy_forms.layout import Div, Layout
 from django import forms
 from django.utils.translation import gettext as _
 from django.contrib.gis.forms import PointField
+from django.contrib.gis.geos import Point
 
 
 class CreateADBForm(forms.ModelForm):
@@ -114,6 +115,10 @@ def create_vyskovy_bod_form(pian=None):
     class CreateVyskovyBodForm(forms.ModelForm):
         northing = forms.FloatField(help_text=_("adb.form.vyskovyBod.northing.tooltip"),)
         easting = forms.FloatField(help_text=_("adb.form.vyskovyBod.easting.tooltip"),)
+        def save(self, commit=True):
+            form_data = self.cleaned_data
+            self.instance.geom = Point(form_data['northing'], form_data['easting'])
+            return super(CreateVyskovyBodForm, self).save(commit)
         class Meta:
             model = VyskovyBod
 
@@ -144,6 +149,10 @@ def create_vyskovy_bod_form(pian=None):
             if pian:
                 self.fields["northing"].initial = pian.geom.centroid.x
                 self.fields["easting"].initial = pian.geom.centroid.y
+            else:
+                if self.instance.geom:
+                    self.fields["northing"].initial = self.instance.geom.centroid.x
+                    self.fields["easting"].initial = self.instance.geom.centroid.y
 
             for key in self.fields.keys():
                 if isinstance(self.fields[key].widget, forms.widgets.Select):

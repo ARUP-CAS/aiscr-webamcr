@@ -87,7 +87,7 @@ def zapsat_vyskove_body(request, adb_ident_cely):
         instances = formset.save()
         for vyskovy_bod in instances:
             vyskovy_bod: VyskovyBod
-            vyskovy_bod.geom = Point(x=vyskovy_bod.northing, y=vyskovy_bod.easting)
+            vyskovy_bod.geom = Point(x=vyskovy_bod.geom.x, y=vyskovy_bod.geom.y)
             vyskovy_bod.save()
             # vyskovy_bod.set_ident()
     if formset.is_valid():
