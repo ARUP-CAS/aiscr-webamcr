@@ -436,6 +436,7 @@ def zadost(request):
         form = CreateZadostForm(request.POST)
         if form.is_valid():
             uzivatel_email = form.cleaned_data["email_uzivatele"]
+            uzivatel_text = form.cleaned_data["text"]
             uzivatel = get_object_or_404(User, email=uzivatel_email)
             exists = UzivatelSpoluprace.objects.filter(
                 vedouci=uzivatel, spolupracovnik=request.user
@@ -471,6 +472,7 @@ def zadost(request):
                     typ_zmeny=SPOLUPRACE_ZADOST,
                     uzivatel=request.user,
                     vazba=hv,
+                    poznamka=uzivatel_text,
                 ).save()
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
