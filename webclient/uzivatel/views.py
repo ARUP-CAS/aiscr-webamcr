@@ -14,9 +14,10 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django_registration.backends.activation.views import RegistrationView
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm
 from uzivatel.models import Osoba
+from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 
 logger = logging.getLogger(__name__)
 
@@ -80,3 +81,14 @@ class UserRegistrationView(RegistrationView):
 
 class UserLoginView(LoginView):
     authentication_form = AuthUserLoginForm
+
+
+# overriding logout view for adding message after auto logout
+class UserLogoutView(LogoutView):
+    def dispatch(self, request, *args, **kwargs):
+        if request.GET.get("autologout") == "true":
+            messages.add_message(
+                self.request, messages.SUCCESS, AUTOLOGOUT_AFTER_LOGOUT
+            )
+            logger.debug("something")
+        return super().dispatch(request, *args, **kwargs)

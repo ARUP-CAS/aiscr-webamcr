@@ -41,6 +41,8 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
 from django.core.exceptions import PermissionDenied
+from django_auto_logout.utils import now, seconds_until_idle_time_end
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -356,3 +358,17 @@ def redirect_ident_view(request, ident_cely):
 
     messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
     return redirect("core:home")
+
+# for prolonging session ajax call
+@login_required
+@require_http_methods(["GET"])
+def prolong_session(request):
+    options = getattr(settings, "AUTO_LOGOUT")
+    current_time = now()
+    session_time = seconds_until_idle_time_end(
+        request, options["IDLE_TIME"], current_time
+    )
+    return JsonResponse(
+        {"session_time": session_time},
+        status=200,
+    )

@@ -42,6 +42,7 @@
   <script src="{% static '/js/datepicker-cs.js' %}"></script>
   <script src="{% static '/js/selectpicker-cs.js' %}"></script>
   <script src="{% static 'pridani_title_pro_disabled.js' %}"></script>
+  <script src="{% static '/js/timer.js' %}"></script>
 
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
@@ -65,7 +66,7 @@
        </button>
     </div>-->
 
-    {% if messages %}
+    <div class="message-container">
       {% for message in messages %}
         <div class="alert alert-{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show app-alert-floating" role="alert">
           {{ message }}
@@ -74,7 +75,7 @@
           </button>
         </div>
       {% endfor %}
-    {% endif %}
+      </div>
 
     {% block footer %}{% endblock %}
   </div>
@@ -89,7 +90,7 @@
           todayHighlight: true,
       }));
 
-      $(".app-alert-floating").delay(5000).slideUp(200, function () {
+      $(".app-alert-floating").delay(25000).slideUp(200, function () {
         $(this).alert('close');
       });
   </script>
