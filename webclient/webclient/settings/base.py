@@ -1,6 +1,8 @@
 import json
 import os
 from pathlib import Path
+import structlog
+
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -91,6 +93,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    'django_structlog.middlewares.RequestMiddleware',
     "django_auto_logout.middleware.auto_logout",
 ]
 
@@ -184,6 +187,10 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
+        "json_formatter": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.JSONRenderer(),
+        },
         "timestamp": {
             "format": "{asctime} {levelname} {message}",
             "style": "{",
@@ -297,6 +304,24 @@ DIGI_LINKS = {
     "OAPI_link_part1": 'https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/',
     "OAPI_link_part2": '&metadataPrefix=oai_amcr',
 }
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    context_class=structlog.threadlocal.wrap_dict(dict),
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
 # auto logout settings
 AUTO_LOGOUT = {
     "IDLE_TIME": 3600,
@@ -304,3 +329,4 @@ AUTO_LOGOUT = {
     "MESSAGE": AUTOLOGOUT_AFTER_LOGOUT,
     "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
 }
+  

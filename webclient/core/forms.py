@@ -1,10 +1,13 @@
+import logging
+import structlog
+
 from django import forms
 from crispy_forms.helper import FormHelper
 from django.utils.translation import gettext as _
 from heslar.models import Heslar
-import logging
 
 logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
 
 
 class TwoLevelSelectField(forms.CharField):
@@ -52,7 +55,9 @@ class CheckStavNotChangedForm(forms.Form):
         cleaned_data = super().clean()
         old_stav = self.cleaned_data.get("old_stav")
         if str(self.db_stav) != str(old_stav):
-            logger.debug("Stav zaznamu se zmenil mezi posunutim stavu.")
+            logger_s.debug("CheckStavNotChangedForm.clean.ValidationError",
+                         message="Stav zaznamu se zmenil mezi posunutim stavu.", db_stav=self.db_stav,
+                         old_stav=old_stav)
             raise forms.ValidationError("State_changed")
         return cleaned_data
 

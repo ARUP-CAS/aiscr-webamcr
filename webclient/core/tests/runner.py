@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 
 from arch_z.models import Akce, ArcheologickyZaznam
@@ -16,12 +17,12 @@ from core.constants import (
     ROLE_NEAKTIVNI_UZIVATEL_ID,
     PIAN_RELATION_TYPE
 )
-from core.models import ProjektSekvence, SouborVazby
+from core.models import ProjektSekvence, Soubor, SouborVazby
 from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
-from dokument.models import Dokument, DokumentExtraData
+from dokument.models import Dokument, DokumentCast, DokumentExtraData
 from heslar import hesla
 from heslar.hesla import (
     GEOMETRY_BOD,
@@ -58,7 +59,7 @@ from heslar.models import (
 from historie.models import HistorieVazby
 from komponenta.models import KomponentaVazby
 from oznameni.models import Oznamovatel
-from pian.models import Kladyzm
+from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
 
@@ -70,6 +71,7 @@ PRESNOST_STOVKY_METRU_ID = 1213
 
 HLAVNI_TYP_SONDA_ID = 1234
 TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
+TYP_DOKUMENTU_NALEZOVA_ZPRAVA = 1073
 MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID = 229
 JAZYK_DOKUMENTU_CESTINA_ID = 1256
 TYP_DJ_CELEK_AKCE_ID = 321
@@ -89,11 +91,17 @@ TYP_ORGANIZACE_OSTATNI_ID = 110
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
+DOCUMENT_NALEZOVA_ZPRAVA_IDENT = "C-TX-201501986"
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 EXISTING_PROJECT_IDENT = "C-202000001"
 EXISTING_EVENT_IDENT = "C-202000001A"
+EXISTING_EVENT_IDENT_INCOMPLETE = "C-202000001B"
 EXISTING_DOCUMENT_ID = 123654
+DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
+DOKUMENT_CAST_IDENT = "M-TX-202100115-D001"
+
+PIAN_POTVRZEN = 2
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -236,6 +244,10 @@ class AMCRTestRunner(BaseRunner):
         typ_dokumentu_plan = Heslar(
             id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd
         )
+        typ_dokumentu_nalezova_zprava = Heslar(
+            id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA, heslo="nalezova_zprava", nazev_heslare=htd
+        )
+        typ_dokumentu_nalezova_zprava.save()
         material_dokumentu_digi = Heslar(
             id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
             heslo="digitalni soubor",
@@ -331,6 +343,7 @@ class AMCRTestRunner(BaseRunner):
             password="foo1234!!!",
             organizace=o,
             hlavni_role=admin_group,
+            is_active=True
         )
         user.save()
         # PROJEKT
@@ -351,6 +364,30 @@ class AMCRTestRunner(BaseRunner):
         )
         oznamovatel.save()
 
+        # Osoba
+        osoba = Osoba(
+            id=EL_CHEFE_ID,
+            jmeno="Jakub",
+            prijmeni="Škvarla",
+            vypis="J. Škvarla",
+            vypis_cely="Jakub El Chefe Škvarla",
+        )
+        osoba.save()
+
+        # PROJEKT EVENT
+        az_incoplete = ArcheologickyZaznam(
+            typ_zaznamu="A",
+            ident_cely=EXISTING_EVENT_IDENT_INCOMPLETE,
+            stav=AZ_STAV_ZAPSANY,
+        )
+        az_incoplete.save()
+        a_incomplete = Akce(
+            archeologicky_zaznam=az_incoplete,
+            specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
+        )
+        a_incomplete.projekt = p
+        a_incomplete.save()
+
         # PROJEKT EVENT
         az = ArcheologickyZaznam(
             typ_zaznamu="A",
@@ -361,9 +398,21 @@ class AMCRTestRunner(BaseRunner):
         a = Akce(
             archeologicky_zaznam=az,
             specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
+            datum_zahajeni=datetime.datetime.today(),
+            datum_ukonceni=datetime.datetime.today() + datetime.timedelta(days=1),
+            lokalizace_okolnosti="test",
+            hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
+            hlavni_vedouci=Osoba.objects.first(),
         )
         a.projekt = p
         a.save()
+
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian.save()
+
+        pian = Pian(presnost=Heslar.objects.first(), typ=Heslar.objects.first(), geom=GEOSGeometry('POINT(5 23)'),
+                    zm10=kl10, zm50=kl50, ident_cely="x", historie=vazba_pian, stav=PIAN_POTVRZEN)
+        pian.save()
 
         # Dokumentacni jednotka akce
         kv = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
@@ -372,26 +421,21 @@ class AMCRTestRunner(BaseRunner):
             typ=Heslar.objects.get(id=TYP_DJ_CELEK_AKCE_ID),
             negativni_jednotka=True,
             ident_cely="C-202000001A-D01",
+            pian=pian
         )
         dj.archeologicky_zaznam = az
         dj.komponenty = kv
         dj.save()
 
-        # Osoba
-        osoba = Osoba(
-            id=EL_CHEFE_ID,
-            jmeno="Jakub",
-            prijmeni="Škvarla",
-            vypis="J. Škvarla",
-            vypis_cely="Jakub El Chefe Škvarla",
-        )
-        osoba.save()
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()
         vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
+        soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
+                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x")
+        soubor.save()
         d = Dokument(
             id=EXISTING_DOCUMENT_ID,
             rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
@@ -406,7 +450,35 @@ class AMCRTestRunner(BaseRunner):
         )
         d.save()
         DokumentExtraData(dokument=d).save()
+        dc = DokumentCast(dokument=d, archeologicky_zaznam=az_incoplete, ident_cely=DOKUMENT_CAST_IDENT)
+        dc.save()
 
+
+        vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+        vazba.save()
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian.save()
+        vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
+        vazba_soubory.save()
+        soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
+                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x")
+        soubor.save()
+        dokument_nalezova_zprava = Dokument(
+            id=DOCUMENT_NALEZOVA_ZPRAVA_ID,
+            rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
+            typ_dokumentu=Heslar.objects.get(id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA),
+            organizace=o,
+            pristupnost=zp,
+            ident_cely=DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
+            stav=D_STAV_ZAPSANY,
+            material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
+            historie=vazba,
+            soubory=vazba_soubory,
+        )
+        dokument_nalezova_zprava.save()
+        DokumentExtraData(dokument=dokument_nalezova_zprava).save()
+        dc = DokumentCast(dokument=dokument_nalezova_zprava, archeologicky_zaznam=az)
+        dc.save()
         return temp_return
 
     def teardown_databases(self, *args, **kwargs):
