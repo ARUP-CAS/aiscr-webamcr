@@ -63,7 +63,7 @@ INSTALLED_APPS = [
     "django_registration",
     "compressor",
     "captcha",
-    "core",
+    "core.apps.CoreConfig",
     "uzivatel.apps.UzivatelConfig",
     "ez",
     "historie",
@@ -120,7 +120,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.constants_import",
-                "core.context_processors.digi_links_from_settings"
+                "core.context_processors.digi_links_from_settings",
                 "core.context_processors.auto_logout_client",  # for auto logout aftert idle
             ],
         },
