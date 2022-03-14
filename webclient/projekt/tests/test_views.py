@@ -105,7 +105,6 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = smazat(request, ident_cely=self.projekt.ident_cely)
-        self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertEqual(200, response.status_code)
 
         # Add samostatny nalez
@@ -135,6 +134,7 @@ class UrlTests(TestCase):
             "adresa": "123 street",
             "telefon": "+420587456321",
             "email": "tester@tester.tester",
+            "old_stav": 0,
         }
         request = self.factory.post("/projekt/create/", data)
         request.user = self.existing_user
@@ -158,4 +158,3 @@ class UrlTests(TestCase):
 
         response = create(request)
         self.assertEqual(200, response.status_code)
-        self.assertTrue("error" not in response.content.decode("utf-8"))

@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase
 from oznameni.views import index, post_poi2kat
 
@@ -10,6 +11,7 @@ class UrlTests(TestCase):
 
     def test_get_index(self):
         request = self.factory.get("/oznameni/")
+        request.user = AnonymousUser()
 
         response = index(request)
         self.assertEqual(200, response.status_code)
@@ -33,6 +35,7 @@ class UrlTests(TestCase):
             "longitude": "14.417222",
         }
         request = self.factory.post("/oznameni/", data)
+        request.user = AnonymousUser()
         response = index(request, test_run=True)
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
@@ -44,6 +47,7 @@ class UrlTests(TestCase):
             {"corY": josefov[0], "corX": josefov[1]},
             content_type="application/json",
         )
+        request.user = AnonymousUser()
         response = post_poi2kat(request)
         self.assertEqual(200, response.status_code)
         data = json.loads(response.content)

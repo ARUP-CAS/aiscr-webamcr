@@ -170,6 +170,7 @@ def post_ajax_get_point(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
+    logger_s.debug("create.start")
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
         form_projekt = CreateProjektForm(request.POST)
@@ -216,6 +217,7 @@ def create(request):
             logger.debug("The form projekt is not valid!")
             logger.debug(form_projekt.errors)
     else:
+        logger_s.debug("create.get")
         form_projekt = CreateProjektForm()
         form_oznamovatel = OznamovatelForm(uzamknout_formular=True)
     return render(

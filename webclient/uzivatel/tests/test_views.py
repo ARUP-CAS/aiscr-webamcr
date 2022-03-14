@@ -1,6 +1,7 @@
 from unittest import mock
 
 from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID, add_middleware_to_request
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
 from uzivatel.models import User
@@ -48,6 +49,7 @@ class TestUzivatel(TestCase):
         }
         request = self.factory.post("/accounts/register", data)
         request = add_middleware_to_request(request, SessionMiddleware)
+        request.user = AnonymousUser()
         request.session.save()
 
         user_count_before = User.objects.all().count()
