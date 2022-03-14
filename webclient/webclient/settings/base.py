@@ -6,6 +6,8 @@ import structlog
 
 from django.core.exceptions import ImproperlyConfigured
 
+from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 file_path = (
@@ -92,6 +94,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     'django_structlog.middlewares.RequestMiddleware',
+    "django_auto_logout.middleware.auto_logout",
 ]
 
 ROOT_URLCONF = "webclient.urls"
@@ -118,6 +121,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.constants_import",
                 "core.context_processors.digi_links_from_settings"
+                "core.context_processors.auto_logout_client",  # for auto logout aftert idle
             ],
         },
     },
@@ -134,9 +138,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 LANGUAGE_CODE = "cs"
@@ -177,33 +187,90 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "timestamp": {"format": "{asctime} {levelname} {message}", "style": "{",},
         "json_formatter": {
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.processors.JSONRenderer(),
         },
+        "timestamp": {
+            "format": "{asctime} {levelname} {message}",
+            "style": "{",
+        },
     },
     "handlers": {
-        "console": {"class": "logging.StreamHandler", "formatter": "timestamp",},
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "timestamp",
+        },
     },
     "loggers": {
-        "django": {"handlers": ["console"], "propagate": True,},
-        "historie": {"handlers": ["console"], "level": "DEBUG",},
-        "oznameni": {"handlers": ["console"], "level": "DEBUG",},
-        "projekt": {"handlers": ["console"], "level": "DEBUG",},
-        "heslar": {"handlers": ["console"], "level": "DEBUG",},
-        "core": {"handlers": ["console"], "level": "DEBUG",},
-        "ez": {"handlers": ["console"], "level": "DEBUG",},
-        "pian": {"handlers": ["console"], "level": "DEBUG",},
-        "uzivatel": {"handlers": ["console"], "level": "DEBUG",},
-        "arch_z": {"handlers": ["console"], "level": "DEBUG",},
-        "dokument": {"handlers": ["console"], "level": "DEBUG",},
-        "dj": {"handlers": ["console"], "level": "DEBUG",},
-        "komponenta": {"handlers": ["console"], "level": "DEBUG",},
-        "nalez": {"handlers": ["console"], "level": "DEBUG",},
-        "adb": {"handlers": ["console"], "level": "DEBUG",},
-        "pas": {"handlers": ["console"], "level": "DEBUG",},
-        "neident_akce": {"handlers": ["console"], "level": "DEBUG",},
+        "django": {
+            "handlers": ["console"],
+            "propagate": True,
+        },
+        "historie": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "oznameni": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "projekt": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "heslar": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "core": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "ez": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "pian": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "uzivatel": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "arch_z": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "dokument": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "dj": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "komponenta": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "nalez": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "adb": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "pas": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "neident_akce": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
     },
 }
 
@@ -255,3 +322,11 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
 )
+# auto logout settings
+AUTO_LOGOUT = {
+    "IDLE_TIME": 3600,
+    "IDLE_WARNING_TIME": "10:00",
+    "MESSAGE": AUTOLOGOUT_AFTER_LOGOUT,
+    "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
+}
+  

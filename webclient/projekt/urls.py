@@ -10,10 +10,10 @@ app_name = "projekt"
 urlpatterns = [
     path("", index, name="index"),
     path("detail/<str:ident_cely>", detail, name="detail"),
-    path("create", create, name="create"),
+    path("zapsat", create, name="create"),
     path("edit/<str:ident_cely>", edit, name="edit"),
     path("smazat/<str:ident_cely>", smazat, name="smazat"),
-    path("list", ProjektListView.as_view(), name="list"),
+    path("vyber", ProjektListView.as_view(), name="list"),
     path("schvalit/<str:ident_cely>", schvalit, name="projekt_schvalit"),
     path("prihlasit/<str:ident_cely>", prihlasit, name="projekt_prihlasit"),
     path(
@@ -41,7 +41,7 @@ urlpatterns = [
         name="projekt_vratit_navrh_zruseni",
     ),
     path(
-        "get-points-arround-point",
+        "projekt-zjisti-okolni-projekty",
         post_ajax_get_point,
         name="post_ajax_get_points",
     ),

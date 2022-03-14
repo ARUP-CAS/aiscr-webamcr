@@ -275,12 +275,29 @@ class Projekt(models.Model):
         ).save()
         self.save()
 
-    def set_zruseny(self, user):
+    def set_zruseny(self, user, poznamka):
+        self.datum_ukonceni=None
+        self.termin_odevzdani_nz = None
+        self.datum_zahajeni = None
+        self.vedouci_projektu = None
+        self.uzivatelske_oznaceni = None
+        self.organizace = None
         self.stav = PROJEKT_STAV_ZRUSENY
-        Historie(typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie).save()
+        Historie(
+            typ_zmeny=RUSENI_PROJ, uzivatel=user, vazba=self.historie, poznamka=poznamka
+        ).save()
         self.save()
 
     def set_vracen(self, user, new_state, poznamka):
+        if self.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
+            self.datum_ukonceni=None
+            self.termin_odevzdani_nz = None
+        elif self.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU:
+            self.datum_zahajeni = None
+        elif self.stav == PROJEKT_STAV_PRIHLASENY:
+            self.vedouci_projektu = None
+            self.uzivatelske_oznaceni = None
+            self.organizace = None
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_PROJ,
@@ -291,11 +308,16 @@ class Projekt(models.Model):
         self.save()
 
     def set_znovu_zapsan(self, user, poznamka):
-        zmena = (
-            VRACENI_NAVRHU_ZRUSENI
-            if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
-            else VRACENI_ZRUSENI
-        )
+        if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
+            zmena = VRACENI_NAVRHU_ZRUSENI
+            self.datum_ukonceni=None
+            self.termin_odevzdani_nz = None
+            self.datum_zahajeni = None
+            self.vedouci_projektu = None
+            self.uzivatelske_oznaceni = None
+            self.organizace = None
+        else:
+            zmena = VRACENI_ZRUSENI
         self.stav = PROJEKT_STAV_ZAPSANY
 
         Historie(

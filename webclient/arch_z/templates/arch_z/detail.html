@@ -595,6 +595,9 @@
       {% include "dokument/dokument_table.html" with type="arch_z"%}
     
   </div>
+  {% if arch_projekt_link %}
+  {% include "arch_z/modal-archiv-projekt.html" with zaznam=zaznam %}
+  {% endif %}
 {% endblock %}
 
 {% block script %}
@@ -792,4 +795,9 @@
           {% endif %}
       {% endfor %}
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function (event) {
+      $('#modalArchivProjekt').modal('show');
+  });
+</script>
 {% endblock %}

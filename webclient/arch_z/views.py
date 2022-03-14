@@ -44,7 +44,9 @@ from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.html import format_html, mark_safe
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument, DokumentCast
 from heslar.hesla import (
@@ -83,7 +85,10 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = { "warnings": request.session.pop("temp_data", None) }
+    context = {
+        "warnings": request.session.pop("temp_data", None),
+        "arch_projekt_link": request.session.pop("arch_projekt_link", None),
+    }
     old_objekt_post = request.session.pop("_old_objekt_post", None)
     old_predmet_post = request.session.pop("_old_predmet_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
@@ -368,6 +373,9 @@ def archivovat(request, ident_cely):
         # TODO BR-A-5
         az.set_archivovany(request.user)
         az.save()
+        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY)  
+        if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
+            request.session['arch_projekt_link'] = True
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
         return redirect("arch_z:detail", ident_cely)
     else:
@@ -383,7 +391,7 @@ def archivovat(request, ident_cely):
         "title" : _("Archivace akce"),
         "header" : _("Archivace akce"),
         "button" : _("Archivovat akci"),
-        "form_check": form_check
+        "form_check": form_check,
     }
     return render(request, "core/transakce.html", context)
 
