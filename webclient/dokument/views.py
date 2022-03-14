@@ -1,3 +1,4 @@
+import logging
 import structlog
 
 from arch_z.models import ArcheologickyZaznam
@@ -90,7 +91,8 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 
-logger = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
 
 
 @login_required
@@ -515,23 +517,23 @@ def create_model_3D(request):
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    logger.debug("dokument.views.odeslat.start", ident_cely=ident_cely)
+    logger_s.debug("dokument.views.odeslat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ZAPSANY:
-        logger.debug("dokument.views.odeslat.permission_denied", ident_cely=ident_cely)
+        logger_s.debug("dokument.views.odeslat.permission_denied", ident_cely=ident_cely)
         raise PermissionDenied()
      # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, d):
-        logger.debug("dokument.views.odeslat.check_stav_changed", ident_cely=ident_cely)
+        logger_s.debug("dokument.views.odeslat.check_stav_changed", ident_cely=ident_cely)
         return get_detail_view(ident_cely)
     if request.method == "POST":
         d.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
-        logger.debug("dokument.views.odeslat.sucess")
+        logger_s.debug("dokument.views.odeslat.sucess")
         return get_detail_view(ident_cely)
     else:
         warnings = d.check_pred_odeslanim()
         if warnings:
-            logger.debug("dokument.views.odeslat.warnings", warnings=warnings, ident_cely=ident_cely)
+            logger_s.debug("dokument.views.odeslat.warnings", warnings=warnings, ident_cely=ident_cely)
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
             return get_detail_view(ident_cely)
@@ -543,7 +545,7 @@ def odeslat(request, ident_cely):
         "button": _("Odeslat dokument"),
         "form_check": form_check
     }
-    logger.debug("dokument.views.odeslat.finish", ident_cely=ident_cely)
+    logger_s.debug("dokument.views.odeslat.finish", ident_cely=ident_cely)
     return render(request, "core/transakce.html", context)
 
 
@@ -551,14 +553,14 @@ def odeslat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    logger.debug("dokument.views.archivovat.start", ident_cely=ident_cely)
+    logger_s.debug("dokument.views.archivovat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY:
-        logger.debug("dokument.views.archivovat.permission_denied", ident_cely=ident_cely)
+        logger_s.debug("dokument.views.archivovat.permission_denied", ident_cely=ident_cely)
         messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
         raise PermissionDenied()
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, d):
-        logger.debug("dokument.views.archivovat.check_stav_changed", ident_cely=ident_cely)
+        logger_s.debug("dokument.views.archivovat.check_stav_changed", ident_cely=ident_cely)
         return get_detail_view(ident_cely)
     if request.method == "POST":
         # Nastav identifikator na permanentny
