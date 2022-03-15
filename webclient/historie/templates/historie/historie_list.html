@@ -2,11 +2,15 @@
 {% load i18n %}
 {% load static %}
 {% load render_table from django_tables2 %}
+{% load crispy_forms_tags %}
 
 {% block title %}{% trans "Historie" %}{% endblock %}
 {% block head %}{% endblock %}
 
 {% block content %}
+  {% if metadata_form %}
+    {% crispy metadata_form %}
+  {% endif %}
   <div class="app-entity-historie">
     {% render_table table %}
   </div>

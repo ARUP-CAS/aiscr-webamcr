@@ -4,6 +4,7 @@ from core.tests.runner import (
     EXISTING_EVENT_IDENT,
     EXISTING_PROJECT_IDENT,
     TESTOVACI_DOKUMENT_IDENT,
+    TESTOVACI_SOUBOR_ID,
     add_middleware_to_request,
 )
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -12,6 +13,7 @@ from historie.views import (
     AkceHistorieListView,
     DokumentHistorieListView,
     ProjektHistorieListView,
+    SouborHistorieListView,
 )
 from uzivatel.models import User
 
@@ -55,3 +57,10 @@ class HistorieTests(TestCase):
             request, ident_cely=TESTOVACI_DOKUMENT_IDENT
         )
         self.assertEqual(200, response.status_code)
+
+    def test_get_soubor_historie(self):
+        self.client.force_login(self.existing_user)
+        response = self.client.get(f"/historie/soubor/{TESTOVACI_SOUBOR_ID}")
+        self.assertEqual(200, response.status_code)
+        self.assertTrue("nazev_zkraceny" in response.content.decode("utf-8"))
+        self.assertTrue("metadata_form" in response.context)
