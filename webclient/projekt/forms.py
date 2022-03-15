@@ -9,6 +9,8 @@ from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 from arch_z import validators
 
+import structlog
+logger_s = structlog.get_logger(__name__)
 
 class CreateProjektForm(forms.ModelForm):
     latitude = forms.FloatField(required=False, widget=HiddenInput())
@@ -489,6 +491,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        archivar = kwargs.pop("archivar", False)
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
         self.fields["kulturni_pamatka"].required = True
@@ -530,6 +533,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+        if archivar:
+            self.fields["organizace"].disabled = True
+            self.fields["organizace"].widget.template_name = "core/select_to_text.html"
 
 
 class ZahajitVTerenuForm(forms.ModelForm):

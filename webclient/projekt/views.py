@@ -425,8 +425,9 @@ def prihlasit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
+        archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
         form = PrihlaseniProjektForm(
-            instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav}
+            instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav},archivar=archivar
         )
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
@@ -878,6 +879,7 @@ def get_required_fields(projekt):
     ):
         required_fields += [
             "datum_ukonceni",
+            "termin_odevzdani_nz"
         ]
     return required_fields
 
