@@ -91,6 +91,7 @@ TYP_ORGANIZACE_OSTATNI_ID = 110
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
+TESTOVACI_SOUBOR_ID = 123
 DOCUMENT_NALEZOVA_ZPRAVA_IDENT = "C-TX-201501986"
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
@@ -461,7 +462,8 @@ class AMCRTestRunner(BaseRunner):
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
         soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
-                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x")
+                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x",
+                        id=TESTOVACI_SOUBOR_ID)
         soubor.save()
         dokument_nalezova_zprava = Dokument(
             id=DOCUMENT_NALEZOVA_ZPRAVA_ID,
