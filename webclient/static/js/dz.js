@@ -35,11 +35,11 @@ window.onload = function () {
         return cookieValue;
     };
     var currentLocation = window.location.pathname;
-    if (currentLocation.includes("upload_file/pas/")) {
+    if (currentLocation.includes("nahrat-soubor/pas/")) {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
 }
-    else if (currentLocation.includes("upload_file/dokument/")) {
+    else if (currentLocation.includes("nahrat-soubor/dokument/")) {
     acceptFile = "application/pdf"
     RejectedFileMessage = reject_dict["rejected_dokument"]
     }
