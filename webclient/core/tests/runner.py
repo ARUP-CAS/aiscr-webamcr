@@ -101,6 +101,8 @@ EXISTING_EVENT_IDENT_INCOMPLETE = "C-202000001B"
 EXISTING_DOCUMENT_ID = 123654
 DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
 DOKUMENT_CAST_IDENT = "M-TX-202100115-D001"
+USER_ARCHEOLOG_EMAIL = "indiana.jones@uchicago.edu"
+USER_ARCHEOLOG_ID = 47
 
 PIAN_POTVRZEN = 2
 
@@ -347,6 +349,17 @@ class AMCRTestRunner(BaseRunner):
             is_active=True
         )
         user.save()
+
+        user_archeolog = User.objects.create_user(
+            email=USER_ARCHEOLOG_EMAIL,
+            password="test123!",
+            organizace=o,
+            hlavni_role=archeolog_group,
+            is_active=True,
+            id=USER_ARCHEOLOG_ID
+        )
+        user_archeolog.save()
+
         # PROJEKT
         p = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
