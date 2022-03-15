@@ -91,14 +91,18 @@
   }
 
   &.app-btn-in-form {
-    @extend .btn-primary, .ml-2, .d-flex, .btn-sm, .align-items-center;
-    height: 32px;
-    margin-bottom: .8rem;
+    @extend .btn-primary,  .btn-sm;
+    margin-left: -0.25rem !important;
   }
 }
 .btn-prolong{
   background: transparent;
   padding: 0;
+}
+
+.input-osoba .form-group .input-group-append .input-group-text{
+  padding-left: 0rem !important;
+  padding-right: 0rem !important;
 }
 
 table {

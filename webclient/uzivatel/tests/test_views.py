@@ -26,7 +26,6 @@ class TestUzivatel(TestCase):
         data = {
             "jmeno": "Tester",
             "prijmeni": "Testovaci",
-            "next": "/testovaci/redirect",
         }
         request = self.factory.post("/uzivatel/osoba/create/", data)
         request.user = User.objects.get(email="amcr@arup.cas.cz")
@@ -34,7 +33,7 @@ class TestUzivatel(TestCase):
         request.session.save()
 
         response = create_osoba(request)
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
 
     def test_post_register(self):

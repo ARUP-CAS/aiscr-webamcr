@@ -85,4 +85,30 @@
         }
     })
   </script>
+  <script src="{% static '/js/create_message.js' %}"></script>
+  <script type="text/javascript">
+    // create osoba scripts
+    var successFunction = function(settings, response) {
+      let dropdown = document.getElementById('id_vedouci_projektu');
+      let newOption = document.createElement('option');
+      newOption.text = response.text;
+      newOption.value = response.value;
+
+      dropdown.add(newOption);
+      
+      $('#id_vedouci_projektu').selectpicker('refresh');
+      $('#id_vedouci_projektu').selectpicker('val', response.value);
+      dropdown.value = response.value;
+      $(settings.modalID).modal("hide");
+    };
+    $(document).ready(function() {
+    
+        $("#create-osoba").modalForm({
+            modalID: "#modal-form",
+            formURL: "{% url 'uzivatel:create_osoba' %}",
+            successFunc: successFunction
+        });
+    
+    });
+    </script>
 {% endblock %}

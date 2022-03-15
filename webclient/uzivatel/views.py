@@ -1,5 +1,7 @@
 import logging
 
+from django.http import JsonResponse
+
 from core.message_constants import (
     FORM_NOT_VALID,
     OSOBA_JIZ_EXISTUJE,
@@ -36,9 +38,6 @@ def create_osoba(request):
 
     if request.method == "POST":
         form = OsobaForm(request.POST)
-        next_url = request.POST.get("next", "/")
-        if not next_url:
-            next_url = "/"
         if form.is_valid():
             try:
                 osoba = form.save(commit=False)
@@ -56,18 +55,24 @@ def create_osoba(request):
                 osoba.vypis = vypis
                 osoba.jmeno = " ".join(osoba.jmeno.split())
                 osoba.save()
-                # Add message to the user
                 messages.add_message(request, messages.SUCCESS, OSOBA_USPESNE_PRIDANA)
             except IntegrityError as ex:
                 logger.debug(str(ex))
                 messages.add_message(request, messages.WARNING, OSOBA_JIZ_EXISTUJE)
+                return render(request, "uzivatel/create_osoba.html", {"form": form})
 
-            # redirect to the page you came from
-            return redirect(next_url)
+            # return JSON response to update dropdown and select and message
+            django_messages = []
+            for message in messages.get_messages(request):
+                django_messages.append({ 
+                    "level": message.level,
+                    "message": message.message,
+                    "extra_tags": message.tags,
+                })
+            return JsonResponse({"text": osoba.vypis_cely, "value":osoba.pk, "messages":django_messages})
         else:
             logger.debug("Form is not valid.")
             logger.debug(form.errors)
-            messages.add_message(request, messages.WARNING, FORM_NOT_VALID)
     else:
         form = OsobaForm()
 

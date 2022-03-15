@@ -1,4 +1,4 @@
-from crispy_forms.bootstrap import FormActions
+from crispy_forms.bootstrap import FormActions, AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout, Submit
 from dal import autocomplete
@@ -293,13 +293,8 @@ class EditProjektForm(forms.ModelForm):
                             css_class="col-sm-12",
                         ),
                         Div(
-                            Div("vedouci_projektu", css_class="flex-fill"),
-                            HTML(
-                                _(
-                                    '<a href="/uzivatel/osoba/create" class="btn app-btn-in-form" rel="tooltip" data-placement="top" title="Přidání osoby"><span class="material-icons">add</span></a>'
-                                )
-                            ),
-                            css_class="col-sm-4 d-flex align-items-end",
+                            AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                            css_class="col-sm-4 input-osoba",
                         ),
                         Div("organizace", css_class="col-sm-4"),
                         Div("uzivatelske_oznaceni", css_class="col-sm-4"),
@@ -511,13 +506,8 @@ class PrihlaseniProjektForm(forms.ModelForm):
                     Div(
                         Div(
                             Div(
-                                Div("vedouci_projektu", css_class="flex-fill"),
-                                HTML(
-                                    _(
-                                        '<a href="{% url \'uzivatel:create_osoba\' %}?next={{ request.path|urlencode }}" class="btn app-btn-in-form" rel="tooltip" data-placement="top" title="Přidání osoby"><span class="material-icons">add</span></a>'
-                                    )
-                                ),
-                                css_class="col-sm-4 d-flex align-items-center",
+                            AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                            css_class="col-sm-4 input-osoba",
                             ),
                             Div("organizace", css_class="col-sm-4"),
                             Div("uzivatelske_oznaceni", css_class="col-sm-4"),

@@ -112,8 +112,8 @@ class OsobaForm(forms.ModelForm):
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
-            "jmeno": _("Jméno"),
-            "prijmeni": _("Příjmení"),
+            "jmeno": _("uzivatel.form.osoba.jmeno.label"),
+            "prijmeni": _("uzivatel.form.osoba.prijmeni.label"),
             # "rok_narozeni": _("Rok narození"),
             # "rok_umrti": _("Rok úmrtí"),
             # "rodne_prijmeni": _("Rodné příjmení"),
@@ -131,25 +131,12 @@ class OsobaForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Přidání osoby")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div("jmeno", css_class="col-sm-6"),
-                        Div("prijmeni", css_class="col-sm-6"),
-                        # Div("rok_narozeni", css_class="col-sm-6"),
-                        # Div("rok_umrti", css_class="col-sm-6"),
-                        # Div("rodne_prijmeni", css_class="col-sm-12"),
-                        css_class="row",
-                    ),
-                    css_class="card-body",
-                ),
-                css_class="card app-card-form",
+                Div("jmeno", css_class="col-sm-6"),
+                Div("prijmeni", css_class="col-sm-6"),
+                # Div("rok_narozeni", css_class="col-sm-6"),
+                # Div("rok_umrti", css_class="col-sm-6"),
+                # Div("rodne_prijmeni", css_class="col-sm-12"),
+                css_class="row",
             )
         )
         self.helper.form_tag = False
