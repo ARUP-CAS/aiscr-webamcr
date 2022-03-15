@@ -1,4 +1,5 @@
 import logging
+import structlog
 
 import simplejson as json
 from core.constants import (
@@ -62,6 +63,7 @@ from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
 
 
 def get_detail_context(sn, request):
@@ -433,8 +435,10 @@ def smazat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zadost(request):
     if request.method == "POST":
+        logger_s.debug("zadost.start")
         form = CreateZadostForm(request.POST)
         if form.is_valid():
+            logger_s.debug("zadost.form_valid")
             uzivatel_email = form.cleaned_data["email_uzivatele"]
             uzivatel_text = form.cleaned_data["text"]
             uzivatel = get_object_or_404(User, email=uzivatel_email)
@@ -443,12 +447,11 @@ def zadost(request):
             ).exists()
 
             if uzivatel == request.user:
-                logger.debug("Nelze vytvorit spolupraci sam se sebou")
                 messages.add_message(
                     request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
                 )
+                logger_s.debug("zadost.post.error", error=_("Nelze vytvořit spolupráci sám se sebou"))
             elif exists:
-                logger.debug("Spoluprace jiz existuje")
                 messages.add_message(
                     request,
                     messages.ERROR,
@@ -458,6 +461,7 @@ def zadost(request):
                         + " již existuje."
                     ),
                 )
+                logger_s.debug("zadost.post.error", error=_("Spoluprace jiz existuje"), email=uzivatel_email)
             else:
                 hv = HistorieVazby(typ_vazby=UZIVATEL_SPOLUPRACE_RELATION_TYPE)
                 hv.save()
@@ -468,21 +472,24 @@ def zadost(request):
                     historie=hv,
                 )
                 s.save()
-                Historie(
+                hist = Historie(
                     typ_zmeny=SPOLUPRACE_ZADOST,
                     uzivatel=request.user,
                     vazba=hv,
                     poznamka=uzivatel_text,
-                ).save()
+                )
+                hist.save()
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
                 )
+                logger_s.debug("zadost.post.success", hv_id=hv.pk, s_id=s.pk, hist_id=hist.pk, message=ZADOST_O_SPOLUPRACI_VYTVORENA)
                 # TODO send email to archeolog
                 return redirect("pas:spoluprace_list")
         else:
             print("Form is no valid")
             logger.debug(form.errors)
     else:
+        logger_s.debug("zadost.form_invalid")
         form = CreateZadostForm()
 
     return render(
@@ -533,6 +540,8 @@ def aktivace(request, pk):
             context["warnings"] = warnings
             messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_AKTIVOVAT)
     context["title"] = _("Aktivace spolupráce")
+    form_check = CheckStavNotChangedForm(initial={"old_stav": spoluprace.stav})
+    context["form_check"] = form_check
     context["header"] = (
         _("Aktivace spolupráce mezi ")
         + spoluprace.vedouci.email
@@ -559,6 +568,8 @@ def deaktivace(request, pk):
             context["warnings"] = warnings
             messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_DEAKTIVOVAT)
     context["title"] = _("Deaktivace spolupráce")
+    form_check = CheckStavNotChangedForm(initial={"old_stav": spoluprace.stav})
+    context["form_check"] = form_check
     context["header"] = (
         _("Deaktivace spolupráce mezi ")
         + spoluprace.vedouci.email

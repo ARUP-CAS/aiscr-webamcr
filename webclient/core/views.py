@@ -46,7 +46,7 @@ from django_auto_logout.utils import now, seconds_until_idle_time_end
 from django.conf import settings
 
 
-logger = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
 
 

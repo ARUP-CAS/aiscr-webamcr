@@ -1,3 +1,5 @@
+import structlog
+
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.forms import CheckStavNotChangedForm, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
@@ -19,6 +21,8 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
 
+logger_s = structlog.get_logger(__name__)
+
 
 def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
@@ -29,6 +33,7 @@ def validate_uzivatel_email(email):
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
+        logger_s.debug("validate_uzivatel_email.ValidationError", email=email, hlavni_role_id=user[0].hlavni_role.pk)
         raise ValidationError(
             _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
         )
