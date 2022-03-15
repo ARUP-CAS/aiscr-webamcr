@@ -89,3 +89,8 @@ AUTOLOGOUT_AFTER_LOGOUT: Final = _("autologout.message.afterlogout.text")
 AUTOLOGOUT_EXPIRATION_WARNING: Final = _("autologout.message.expirationwarning.text")
 AUTOLOGOUT_REFRESH_ERROR: Final = _("autologout.message.refresherror.text")
 AUTOLOGOUT_REFRESH_SUCCESS: Final = _("autologout.message.refreshsuccess.text")
+
+# DropZone upload messages
+UPLOADFILE_REJECTED_PAS: Final = _("core.message.uploadFile.rejectedPas.text")
+UPLOADFILE_REJECTED_DOKUMENT: Final = _("core.message.uploadFile.rejectedDokument.text")
+UPLOADFILE_REJECTED_ALL: Final = _("core.message.uploadFile.rejectedAll.text")

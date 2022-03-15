@@ -1,6 +1,7 @@
 {% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
+{% load template_tags%}
 
 {% block title %}Upload souborů{% endblock %}
 
@@ -37,5 +38,12 @@
         <script>var maxFiles = 999;</script>
         <script>var object_id = "{{ ident_cely }}";</script>
     {% endif %}
+    <script>
+    var reject_dict = {
+      "rejected_pas" : "{% get_message 'UPLOADFILE_REJECTED_PAS' %}",
+      "rejected_dokument" : "{% get_message 'UPLOADFILE_REJECTED_DOKUMENT' %}",
+      "rejected_all" : "{% get_message 'UPLOADFILE_REJECTED_ALL' %}"
+    };
+  </script>
     <script src="{% static 'dz.js' %}"></script>
 {% endblock %}
