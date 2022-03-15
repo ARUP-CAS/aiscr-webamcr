@@ -38,9 +38,6 @@ def create_osoba(request):
 
     if request.method == "POST":
         form = OsobaForm(request.POST)
-        # next_url = request.POST.get("next", "/")
-        #if not next_url:
-        #    next_url = "/"
         if form.is_valid():
             try:
                 osoba = form.save(commit=False)
@@ -58,7 +55,6 @@ def create_osoba(request):
                 osoba.vypis = vypis
                 osoba.jmeno = " ".join(osoba.jmeno.split())
                 osoba.save()
-                # Add message to the user - otestovat po AMCR-1
                 messages.add_message(request, messages.SUCCESS, OSOBA_USPESNE_PRIDANA)
             except IntegrityError as ex:
                 logger.debug(str(ex))
