@@ -232,23 +232,10 @@
       }
 
 </script>
-
+<script src="{% static '/js/create_message.js' %}"></script>
 <script>
   // for autologout functionality timer and messages
     var time = {{ seconds_until_idle_end|unlocalize }}
-    
-    function createMessage (tag, message, button='False') {
-      if (button === 'True') {
-        return `<div class="alert alert-${tag} alert-dismissible fade show app-alert-floating" role="alert">
-          <button id="prolong_btn" type="button" class="btn btn-prolong">${message}</button>
-          <button aria-label="Close" class="close" data-dismiss="alert" type="button">
-          <span aria-hidden="true">&times;</span></button></div>`;      
-        }
-      return `<div class="alert alert-${tag} alert-dismissible fade show app-alert-floating" role="alert">
-              ${message}
-              <button aria-label="Close" class="close" data-dismiss="alert" type="button">
-              <span aria-hidden="true">&times;</span></button></div>`;
-    }
     var timer = new Timer();
     
     timer.start({countdown: true, startValues: {seconds: time}});
@@ -260,8 +247,7 @@
       var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
       if (idle_warning !== false) {
         if (actual_time === idle_warning) { 
-          msg = createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True')
-          $('.message-container').append(msg);
+          createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True')
         };
       };
     });
@@ -280,16 +266,11 @@
           timer.start({countdown: true, startValues: {seconds: data.session_time}});
           $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
           $(".app-alert-floating").alert('close');
-          msg = createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}))
-          $('.message-container').append(msg);
-          $(".alert").delay(5000).slideUp(200, function() {
-              $(this).alert('close');
-            });
+          createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}))
           },
         error: ()=>{
           $(".app-alert-floating").alert('close');
-          msg = createMessage("danger",({% get_message "AUTOLOGOUT_REFRESH_ERROR" %}))
-          $('.message-container').append(msg);
+          createMessage("danger",({% get_message "AUTOLOGOUT_REFRESH_ERROR" %}))
         }
       })
     });

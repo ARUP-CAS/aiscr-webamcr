@@ -43,7 +43,7 @@
   <script src="{% static '/js/selectpicker-cs.js' %}"></script>
   <script src="{% static 'pridani_title_pro_disabled.js' %}"></script>
   <script src="{% static '/js/timer.js' %}"></script>
-  <script src="{% static 'js/modal_forms.js' %}"></script>
+  <script src="{% static '/js/modal_forms.js' %}"></script>
 
   <title>{% block title %}{% endblock %}</title>
   {% block head %}{% endblock %}
@@ -93,7 +93,7 @@
           todayHighlight: true,
       }));
 
-      $(".app-alert-floating").delay(25000).slideUp(200, function () {
+      $(".app-alert-floating").delay(5000).slideUp(200, function () {
         $(this).alert('close');
       });
   </script>

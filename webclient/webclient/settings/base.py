@@ -325,7 +325,7 @@ structlog.configure(
 # auto logout settings
 AUTO_LOGOUT = {
     "IDLE_TIME": 3600,
-    "IDLE_WARNING_TIME": "10:00",
+    "IDLE_WARNING_TIME": "59:55",
     "MESSAGE": AUTOLOGOUT_AFTER_LOGOUT,
     "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
 }

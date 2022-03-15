@@ -49,11 +49,12 @@
                     addEventHandlers(settings);
                 }
                  else {
+                     // Form is valid
                      if (response.messages.length > 0) {
-                        console.log(response.messages)
-                        createMessage(response.messages)
+                        if (settings.createSuccesMessage === true){
+                            createMessage(response.messages[0].extra_tags,response.messages[0].message)
+                        }
                      }
-                    // Form is valid, submit it
                     succesFunction(settings, response);
                 }
             }
@@ -74,14 +75,6 @@
             settings.successFunc(settings, response)
         }
     };
-    // asi pak pouzit jednu funkci ktera je v AMCR-1
-    var createMessage = function (messages) {
-        html = `<div class="alert alert-${messages[0].extra_tags} alert-dismissible fade show app-alert-floating" role="alert">
-        ${messages[0].message}
-        <button aria-label="Close" class="close" data-dismiss="alert" type="button">
-        <span aria-hidden="true">&times;</span></button></div>`
-        $('.message-container').append(html);
-    }
 
     $.fn.modalForm = function (options) {
         // Default settings
@@ -92,7 +85,8 @@
             formURL: null,
             isDeleteForm: false,
             errorClass: ".invalid",
-            successFunc: successFunction
+            successFunc: successFunction,
+            createSuccesMessage: true
         };
 
         // Extend default settings with provided options
