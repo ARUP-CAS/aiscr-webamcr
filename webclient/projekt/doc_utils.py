@@ -1,15 +1,22 @@
 from io import BytesIO
 
 from reportlab.lib.units import mm, inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
 
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.styles import (ParagraphStyle, getSampleStyleSheet)
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
 pdfmetrics.registerFont(TTFont('OpenSans', 'OpenSans-Regular.ttf'))
+pdfmetrics.registerFont(TTFont('OpenSansBold', 'OpenSans-Bold.ttf'))
+
+header_line_1 = "ARCHEOLOGICKÝ ÚSTAV AV ČR, {#MESTO}, v. v. i."
+header_line_2 = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
+header_line_3 = "{#ADRESA}<br/>{#TELEFON}{#FAX}<br/>e-mail: {#EMAIL}"
+header_line_4 = "V {#V_MESTE} {#DNESNI_DATUM}"
 
 doc_vec = """
 Věc: Potvrzení o splnění oznamovací povinnosti dle § 22, odst. 2 zák. č. 20/1987
@@ -27,21 +34,20 @@ Oznamovatel je v návaznosti na oznámení povinen umožnit Archeologickému ús
 
 doc_sign_1 = "S pozdravem"
 doc_sign_2 = "{#REDITEL}"
-doc_sign_3 = "ředitel"
-doc_sign_4 = "Archeologický ústav AV ČR, {#MESTO}, v. v. i."
+doc_sign_3 = "ředitel<br/>Archeologický ústav AV ČR, {#MESTO}, v. v. i."
 
 doc_attachment_heading_main_1 = "PŘÍLOHA – INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ"
 
 doc_attachment_heading_main_2 = "POUČENÍ O PRÁVECH V SOUVISLOSTI S OCHRANOU OSOBNÍCH ÚDAJŮ"
 
-doc_attachment_heading_1 = "ÚVODNÍ INFORMACE"
+doc_attachment_heading_1 = "<u>ÚVODNÍ INFORMACE</u>"
 
 doc_attachment_par_1 = """
 Prosím, věnujte pozornost následujícímu dokumentu, jehož prostřednictvím Vám poskytujeme informace o zpracování Vašich osobních údajů a o právech souvisejících s Vaší povinností jako stavebníka dle § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči (dále rovněž jen „zákon“), poskytnout informace o záměru provádět stavební činnost na území s archeologickými nálezy nebo jinou činnost, kterou by mohlo být ohroženo provádění archeologických výzkumů, a to buď Archeologickému ústavu AV ČR, Praha, v. v. i., IČ 67985912, se sídlem Letenská 4, 118 01 Praha 1, nebo Archeologickému ústavu AV ČR, Brno, v. v. i., IČ 68081758, se sídlem Čechyňská 363/19, 602 00 Brno, jako oprávněným institucím dle daného ustanovení zákona. Jakékoliv nakládání s osobními údaji se řídí platnými právními předpisy, zejména zákonem o ochraně osobních údajů a nařízením Evropského parlamentu a Rady č. 2016/679 ze dne 27. 4. 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu těchto údajů a o zrušení směrnice 95/46/ES (dále jen „obecné nařízení o ochraně osobních údajů“). V souladu s ustanovením čl. 13 a následujícího obecného nařízení o ochraně osobních údajů Vám jako tzv. subjektům údajů poskytujeme následující informace. Tento dokument je veřejný a slouží k Vašemu řádnému informování o rozsahu, účelu, době zpracování osobních údajů a k poučení o Vašich právech v souvislosti s jejich ochranou.
 """
 
 doc_attachment_heading_2 = """
-KDO JE SPRÁVCEM OSOBNÍCH ÚDAJŮ?
+<u>KDO JE SPRÁVCEM OSOBNÍCH ÚDAJŮ?</u>
 """
 
 doc_attachment_par_2 = """
@@ -49,7 +55,7 @@ Společnými správci osobních údajů jsou Archeologický ústav AV ČR, Praha
 """
 
 doc_attachment_heading_3 = """
-OBECNĚ - CO VŠE PATŘÍ MEZI OSOBNÍ ÚDAJE?
+<u>OBECNĚ - CO VŠE PATŘÍ MEZI OSOBNÍ ÚDAJE?</u>
 """
 
 doc_attachment_par_3 = """
@@ -57,7 +63,7 @@ Osobními údaji jsou veškeré informace vztahující se k identifikované či 
 """
 
 doc_attachment_heading_4 = """
-ZA JAKÝM ÚČELEM A NA JAKÉM ZÁKLADĚ ZPRACOVÁVÁME VAŠE OSOBNÍ ÚDAJE?
+<u>ZA JAKÝM ÚČELEM A NA JAKÉM ZÁKLADĚ ZPRACOVÁVÁME VAŠE OSOBNÍ ÚDAJE?</u>
 """
 
 doc_attachment_par_4 = """
@@ -65,7 +71,7 @@ Vaše osobní údaje zpracováváme, jelikož nám to ukládá zákon, konkrétn
 """
 
 doc_attachment_heading_5 = """
-ROZSAH OSOBNÍCH ÚDAJŮ ZPRACOVÁVANÝCH SPRÁVCEM
+<u>ROZSAH OSOBNÍCH ÚDAJŮ ZPRACOVÁVANÝCH SPRÁVCEM</u>
 """
 
 doc_attachment_par_5 = """
@@ -79,7 +85,7 @@ Informujeme Vás, že Vaše osobní údaje jsou zpracovávány v rozsahu Vámi 
 """
 
 doc_attachment_heading_6 = """
-DOBA ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ
+<u>DOBA ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</u>
 """
 
 doc_attachment_par_6 = """
@@ -87,7 +93,7 @@ Vaše osobní údaje budeme ukládat po dobu nezbytně nutnou maximálně však 
 """
 
 doc_attachment_heading_7 = """
-DALŠÍ INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ
+<u>DALŠÍ INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ</u>
 """
 
 doc_attachment_par_7 = """
@@ -98,7 +104,7 @@ Vaše osobní údaje nepředáváme a nemáme v úmyslu předat do třetí země
 """
 
 doc_attachment_heading_8 = """
-POUČENÍ O PRÁVECH SUBJEKTŮ ÚDAJŮ
+<u>POUČENÍ O PRÁVECH SUBJEKTŮ ÚDAJŮ</u>
 """
 
 doc_attachment_par_8_1 = """
@@ -131,19 +137,43 @@ class PdfCreator:
         )
         canvas.restoreState()
 
-    def get_body_style(self):
-        style = getSampleStyleSheet()
-        body_style = ParagraphStyle('yourtitle',
-                                    fontName="OpenSans",
-                                    fontSize=12,
-                                    parent=style['BodyText'],
-                                    alignment=1,
-                                    spaceAfter=14,
-                                    leading=24)
-        body_style: ParagraphStyle
-        # body_style.set"OpenSans",
-        body_style.alignment = 4
-        return body_style
+    def get_style_dict(self):
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle('amBodyText',
+                                  fontName="OpenSans",
+                                  fontSize=12,
+                                  parent=styles['BodyText'],
+                                  alignment=TA_JUSTIFY,
+                                  spaceAfter=14,
+                                  leading=20))
+        styles.add(ParagraphStyle("amBodyTextCenter",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_CENTER))
+        styles.add(ParagraphStyle("amHeading1",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_CENTER,
+                                  fontName="OpenSansBold"))
+        styles.add(ParagraphStyle("amDatum",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_RIGHT))
+        styles.add(ParagraphStyle("amVec",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_LEFT,
+                                  fontName="OpenSansBold"))
+        styles.add(ParagraphStyle("amHeading2",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_CENTER,
+                                  fontName="OpenSansBold"))
+        styles.add(ParagraphStyle("amPodpis1",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_CENTER))
+        styles.add(ParagraphStyle("amPodpis2",
+                                  parent=styles["amBodyText"],
+                                  alignment=TA_CENTER))
+        styles.add(ParagraphStyle("amPodpis3",
+                                  parent=styles["amPodpis2"],
+                                  fontSize=10))
+        return styles
 
     def build_pdf(self):
         pdf_buffer = BytesIO()
@@ -155,20 +185,33 @@ class PdfCreator:
             rightMargin=BASE_MARGIN,
             bottomMargin=BASE_MARGIN
         )
-        body_style = self.get_body_style()
-        page_1 = [
-            Paragraph(doc_vec, body_style),
-            Paragraph(doc_par_1, body_style),
-            Paragraph(doc_par_2, body_style),
-            Paragraph(doc_par_3, body_style),
-            Paragraph(doc_sign_1, body_style),
-            Paragraph(doc_sign_2, body_style),
-            Paragraph(doc_sign_3, body_style),
-            Paragraph(doc_sign_4, body_style),
+        styles = self.get_style_dict()
+        body_style = styles["amBodyText"]
+        header = [
+            Paragraph(header_line_1, styles["amHeading1"]),
+            Paragraph(header_line_2, styles["amBodyTextCenter"]),
+            Paragraph(header_line_3, styles["amBodyTextCenter"]),
+            Paragraph(header_line_4, styles["amDatum"]),
         ]
+
+        tbl_data = [
+            [Paragraph(doc_sign_1, styles["amPodpis1"]), Paragraph("", styles["amBodyText"])],
+            [Paragraph("", styles["amBodyText"]), Paragraph(doc_sign_2, styles["amPodpis2"])],
+            [Paragraph("", styles["amBodyText"]), Paragraph(doc_sign_3, styles["amPodpis3"])],
+        ]
+        tbl = Table(tbl_data)
+
+        page_1 = [
+            Paragraph(doc_vec, styles["amVec"]),
+            Paragraph(doc_par_1, body_style),
+            Paragraph(doc_par_2, styles["amHeading2"]),
+            Paragraph(doc_par_3, body_style),
+            tbl
+        ]
+
         attachment = [
-            Paragraph(doc_attachment_heading_main_1, body_style),
-            Paragraph(doc_attachment_heading_main_2, body_style),
+            Paragraph(doc_attachment_heading_main_1, styles["amHeading2"]),
+            Paragraph(doc_attachment_heading_main_2, styles["amHeading2"]),
             Paragraph(doc_attachment_heading_1, body_style),
             Paragraph(doc_attachment_par_1, body_style),
             Paragraph(doc_attachment_heading_2, body_style),
@@ -190,7 +233,7 @@ class PdfCreator:
             Paragraph(doc_attachment_par_8_4, body_style),
         ]
         my_doc.build(
-            page_1 + attachment,
+            header + page_1 + attachment,
             onFirstPage=self.add_page_number,
             onLaterPages=self.add_page_number,
         )
