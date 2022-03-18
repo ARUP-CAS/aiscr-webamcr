@@ -102,7 +102,7 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = odeslat(request, EXISTING_EVENT_IDENT)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(302, response.status_code)
 
     def test_get_vratit(self):
         request = self.factory.get("/arch-z/vratit/")
