@@ -234,8 +234,8 @@ def post_upload(request):
                 if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                     parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
                 if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                    logger.debug(duplikat[0].vazba.samostatny_nalez_souboru)
-                    parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.ident_cely
+                    logger.debug(duplikat[0].vazba.samostatny_nalez_souboru.get())
+                    parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
                 return JsonResponse(
                     {
                         "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "

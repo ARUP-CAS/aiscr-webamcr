@@ -39,7 +39,7 @@ class CreateKomponentaForm(forms.ModelForm):
             "poznamka": _("komponenta.form.poznamka.tooltip"),
         }
 
-    def __init__(self, obdobi_choices, areal_choices, *args, readonly=False, **kwargs):
+    def __init__(self, obdobi_choices, areal_choices, *args, readonly=False,required=None,required_next=None, **kwargs):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
             label=_("Období"),
@@ -80,3 +80,10 @@ class CreateKomponentaForm(forms.ModelForm):
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
                 self.fields[key].help_text = ""
+                self.fields[key].required = False
+            if required or required_next:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""

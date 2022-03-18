@@ -39,7 +39,7 @@ map.on('click', function (e) {
 
 var fill_katastr=()=>{
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/pas/pas-get-katastr');
+    xhr.open('POST', '/pas/pas-zjisti-katastr');
     xhr.setRequestHeader('Content-type', 'application/json');
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);

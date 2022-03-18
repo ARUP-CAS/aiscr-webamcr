@@ -120,7 +120,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.form.dokumentExtraData.duveryhodnost.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, **kwargs):
+    def __init__(self, *args, readonly=False,required=None,required_next=None, **kwargs):
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
@@ -207,6 +207,12 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+            if required:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
         self.fields["rada"].disabled = edit_prohibited
 
 
@@ -292,7 +298,7 @@ class EditDokumentForm(forms.ModelForm):
             "posudky": _("dokument.form.createDokument.posudky.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, **kwargs):
+    def __init__(self, *args, readonly=False,required=None, required_next=None, **kwargs):
         create = kwargs.pop("create", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
@@ -305,17 +311,11 @@ class EditDokumentForm(forms.ModelForm):
                 "id", "heslo"
             )
         )
-        self.fields["posudky"].required = False
         self.fields["typ_dokumentu"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
             .filter(id__in=ALLOWED_DOKUMENT_TYPES)
             .values_list("id", "heslo")
         )
-        self.fields["ulozeni_originalu"].required = True
-        self.fields["rok_vzniku"].required = True
-        self.fields["licence"].required = True
-        self.fields["popis"].required = True
-        self.fields["poznamka"].required = False
         if create:
             self.fields["jazyky"].initial = [
                 Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, heslo="CS").pk
@@ -356,6 +356,13 @@ class EditDokumentForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+                self.fields[key].required = False
+            if required:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
         self.fields["datum_zverejneni"].disabled = True
 
         
@@ -403,10 +410,10 @@ class CreateModelDokumentForm(forms.ModelForm):
             "rok_vzniku": _("dokument.form.createModel.rok_vzniku.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, **kwargs):
+    def __init__(self, *args, readonly=False,required=None, required_next=None, **kwargs):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
-        self.fields["popis"].required = True
+        # self.fields["popis"].required = True
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["oznaceni_originalu"].widget.attrs["rows"] = 1
         self.fields["typ_dokumentu"].choices = [("", "")] + list(
@@ -437,6 +444,13 @@ class CreateModelDokumentForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+                self.fields[key].required = False
+            if required:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
@@ -480,10 +494,10 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "sirka": _("dokument.form.modelExtraData.sirka.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, **kwargs):
+    def __init__(self, *args, readonly=False,required=None, required_next=None, **kwargs):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
-        self.fields["format"].required = True
+        # self.fields["format"].required = True
         # Disabled hodnoty se neposilaji na server
         self.fields["vyska"].widget.attrs["disabled"] = "disabled"
         self.fields["sirka"].widget.attrs["disabled"] = "disabled"
@@ -516,6 +530,13 @@ class CreateModelExtraDataForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+                self.fields[key].required = False
+            if required:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
 
 class PripojitDokumentForm(forms.Form):
     def __init__(self, projekt=None, *args, **kwargs):

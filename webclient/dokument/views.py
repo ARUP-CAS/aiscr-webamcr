@@ -112,7 +112,6 @@ def detail(request, ident_cely):
             "material_originalu",
             "typ_dokumentu",
             "rada",
-            "pristupnost",
         ),
         ident_cely=ident_cely,
     )
@@ -158,7 +157,6 @@ def detail_model_3D(request, ident_cely):
         Dokument.objects.select_related(
             "soubory",
             "organizace",
-            "extra_data__format",
             "typ_dokumentu",
         ),
         ident_cely=ident_cely,
@@ -277,11 +275,15 @@ def edit(request, ident_cely):
         extra_data.save()
     else:
         extra_data = dokument.extra_data
+    required_fields = get_required_fields_dokument(dokument)
+    required_fields_next = get_required_fields_dokument(dokument,next=1)
     if request.method == "POST":
-        form_d = EditDokumentForm(request.POST, instance=dokument)
+        form_d = EditDokumentForm(request.POST, instance=dokument, required=get_required_fields_dokument(dokument), required_next=get_required_fields_dokument(dokument,1),)
         form_extra = EditDokumentExtraDataForm(
             request.POST,
             instance=extra_data,
+            required=required_fields,
+            required_next=required_fields_next,
         )
         if form_d.is_valid() and form_extra.is_valid():
             logger.debug("webclient.dokument.views: Both forms are valid")
@@ -302,12 +304,18 @@ def edit(request, ident_cely):
                 f"webclient.dokument.views form_extra.errors: {form_extra.errors}"
             )
     else:
-        form_d = EditDokumentForm(instance=dokument)
+        form_d = EditDokumentForm(
+            instance=dokument,
+            required=required_fields,
+            required_next=required_fields_next,
+            )
         form_extra = EditDokumentExtraDataForm(
             rada=dokument.rada,
             let=(dokument.let.id if dokument.let else ""),
             dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
             instance=extra_data,
+            required=required_fields,
+            required_next=required_fields_next,
         )
 
     return render(
@@ -330,10 +338,20 @@ def edit_model_3D(request, ident_cely):
         raise PermissionDenied()
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    required_fields = get_required_fields_model3D(dokument)
+    required_fields_next = get_required_fields_model3D(dokument,next=1)
     if request.method == "POST":
-        form_d = CreateModelDokumentForm(request.POST, instance=dokument)
+        form_d = CreateModelDokumentForm(
+            request.POST,
+            instance=dokument,
+            required=required_fields,
+            required_next=required_fields_next,
+        )
         form_extra = CreateModelExtraDataForm(
-            request.POST, instance=dokument.extra_data
+            request.POST,
+            instance=dokument.extra_data,
+            required=required_fields,
+            required_next=required_fields_next,
         )
         form_coor = CoordinatesDokumentForm(
             request.POST
@@ -343,6 +361,8 @@ def edit_model_3D(request, ident_cely):
             areal_choices,
             request.POST,
             instance=dokument.get_komponenta(),
+            required=required_fields,
+            required_next=required_fields_next,
         )
         geom = None
         try:
@@ -371,10 +391,22 @@ def edit_model_3D(request, ident_cely):
             logger.debug(form_extra.errors)
             logger.debug(form_komponenta.errors)
     else:
-        form_d = CreateModelDokumentForm(instance=dokument)
-        form_extra = CreateModelExtraDataForm(instance=dokument.extra_data)
+        form_d = CreateModelDokumentForm(
+            instance=dokument,
+            required=get_required_fields_model3D(dokument),
+            required_next=get_required_fields_model3D(dokument,1),
+            )
+        form_extra = CreateModelExtraDataForm(
+            instance=dokument.extra_data,
+            required=get_required_fields_model3D(dokument),
+            required_next=get_required_fields_model3D(dokument,1),
+            )
         form_komponenta = CreateKomponentaForm(
-            obdobi_choices, areal_choices, instance=dokument.get_komponenta()
+            obdobi_choices,
+            areal_choices,
+            instance=dokument.get_komponenta(),
+            required=get_required_fields_model3D(dokument),
+            required_next=get_required_fields_model3D(dokument,1),
         )
         if dokument.extra_data.geom:
             geom = (
@@ -430,11 +462,25 @@ def zapsat_do_projektu(request, proj_ident_cely):
 def create_model_3D(request):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    required_fields = get_required_fields_model3D()
+    required_fields_next = get_required_fields_model3D(next=1)
     if request.method == "POST":
-        form_d = CreateModelDokumentForm(request.POST)
-        form_extra = CreateModelExtraDataForm(request.POST)
+        form_d = CreateModelDokumentForm(
+            request.POST,
+            required=required_fields,
+            required_next=required_fields_next,
+            )
+        form_extra = CreateModelExtraDataForm(
+            request.POST,
+            required=required_fields,
+            required_next=required_fields_next,
+            )
         form_komponenta = CreateKomponentaForm(
-            obdobi_choices, areal_choices, request.POST
+            obdobi_choices,
+            areal_choices,
+            request.POST,
+            required=required_fields,
+            required_next=required_fields_next,
         )
         geom = None
         try:
@@ -495,9 +541,20 @@ def create_model_3D(request):
             if "geom" in form_extra.errors:
                 messages.add_message(request, messages.ERROR, VYBERTE_PROSIM_POLOHU)
     else:
-        form_d = CreateModelDokumentForm()
-        form_extra = CreateModelExtraDataForm()
-        form_komponenta = CreateKomponentaForm(obdobi_choices, areal_choices)
+        form_d = CreateModelDokumentForm(
+            required=required_fields,
+            required_next=required_fields_next,
+        )
+        form_extra = CreateModelExtraDataForm(
+            required=required_fields,
+            required_next=required_fields_next,
+            )
+        form_komponenta = CreateKomponentaForm(
+            obdobi_choices,
+            areal_choices,
+            required=required_fields,
+            required_next=required_fields_next,
+            )
     return render(
         request,
         "dokument/create_model_3D.html",
@@ -585,7 +642,7 @@ def archivovat(request, ident_cely):
                 )
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        return get_detail_view(ident_cely)
+        return get_detail_view(d.ident_cely)
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)
@@ -716,8 +773,14 @@ def get_detail_template_shows(dokument):
     return show
 
 def zapsat(request, zaznam):
+    required_fields = get_required_fields_dokument()
+    required_fields_next = get_required_fields_dokument(next=1)
     if request.method == "POST":
-        form_d = EditDokumentForm(request.POST)
+        form_d = EditDokumentForm(
+            request.POST,
+            required = required_fields,
+            required_next = required_fields_next,
+            )
         if form_d.is_valid():
             logger.debug("Form is valid")
             dokument = form_d.save(commit=False)
@@ -759,7 +822,11 @@ def zapsat(request, zaznam):
             logger.debug(form_d.errors)
 
     else:
-        form_d = EditDokumentForm(create=True)
+        form_d = EditDokumentForm(
+            create=True,
+            required = required_fields,
+            required_next = required_fields_next,
+            )
 
     return render(
         request,
@@ -896,3 +963,50 @@ def get_detail_view(ident_cely):
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
     else:
         return redirect("dokument:detail", ident_cely=ident_cely)
+
+def get_required_fields_model3D(zaznam=None,next=0):
+    required_fields = []
+    if zaznam:
+        stav = zaznam.stav
+    else:
+        stav=1
+    if stav >= D_STAV_ZAPSANY-next:
+        required_fields = [
+            "autori",
+            "rok_vzniku",
+            "organizace",
+            "typ_dokumentu",
+        ]
+    if stav > D_STAV_ZAPSANY-next:
+        required_fields += [
+            "format",
+            "popis",
+            "duveryhodnost",
+            "obdobi",
+            "areal",
+        ]
+    return required_fields
+
+def get_required_fields_dokument(zaznam=None,next=0):
+    required_fields = []
+    if zaznam:
+        stav = zaznam.stav
+    else:
+        stav=1
+    if stav >= D_STAV_ZAPSANY-next:
+        required_fields = [
+            "rok_vzniku",
+            "autori",
+            "organizace",
+            "typ_dokumentu",
+            "material_originalu",
+            "licence",
+        ]
+    if stav > D_STAV_ZAPSANY-next:
+        required_fields += [
+            "ulozeni_originalu",
+            "popis",
+            "pristupnost",
+            "jazyky",
+        ]
+    return required_fields

@@ -91,9 +91,18 @@ def index(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
+    required_fields = get_required_fields()
+    required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
-        form = CreateSamostatnyNalezForm(request.POST, user=request.user)
-        form_coor = CoordinatesDokumentForm(request.POST)
+        form = CreateSamostatnyNalezForm(
+            request.POST,
+            user=request.user,
+            required=required_fields,
+            required_next=required_fields_next,
+            )
+        form_coor = CoordinatesDokumentForm(
+            request.POST,
+            )
         if form.is_valid():
             geom = None
             try:
@@ -129,8 +138,13 @@ def create(request):
             logger.debug(form.errors)
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
-        form = CreateSamostatnyNalezForm(user=request.user)
-        form_coor = CoordinatesDokumentForm()
+        form = CreateSamostatnyNalezForm(
+            user=request.user,
+            required=required_fields,
+            required_next=required_fields_next,
+            )
+        form_coor = CoordinatesDokumentForm(
+        )
     return render(
         request,
         "pas/create.html",
@@ -184,13 +198,18 @@ def edit(request, ident_cely):
     if sn.stav == SN_ARCHIVOVANY:
         raise PermissionDenied()
     kwargs = {"projekt_disabled": "disabled"}
-    if sn.stav > SN_ZAPSANY:
-        kwargs["fields_required"] = True
+    required_fields = get_required_fields(sn)
+    required_fields_next = get_required_fields(sn,1)
     if request.method == "POST":
         request_post = request.POST.copy()
         request_post["projekt"] = sn.projekt
         form = CreateSamostatnyNalezForm(
-            request_post, instance=sn, user=request.user, **kwargs
+            request_post,
+            instance=sn,
+            user=request.user,
+            required=required_fields,
+            required_next=required_fields_next,
+            **kwargs
         )
         form_coor = CoordinatesDokumentForm(request.POST)
         geom = None
@@ -204,7 +223,7 @@ def edit(request, ident_cely):
         if form.is_valid():
             logger.debug("Form is valid")
             if geom is not None:
-                sn.katastr = get_cadastre_from_point(sn.geom)
+                sn.katastr = get_cadastre_from_point(geom)
                 sn.geom = geom
             form.save()
             if form.changed_data:
@@ -216,7 +235,13 @@ def edit(request, ident_cely):
             logger.debug(form.errors)
 
     else:
-        form = CreateSamostatnyNalezForm(instance=sn, user=request.user, **kwargs)
+        form = CreateSamostatnyNalezForm(
+            instance=sn,
+            user=request.user,
+            required=required_fields,
+            required_next=required_fields_next,
+            **kwargs
+            )
         if sn.geom:
             geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
             form_coor = CoordinatesDokumentForm(
@@ -647,3 +672,30 @@ def post_pas2kat(request):
         )
     else:
         return JsonResponse({"katastr_name": ""}, status=200)
+
+def get_required_fields(zaznam=None,next=0):
+    required_fields = []
+    if zaznam:
+        stav = zaznam.stav
+    else:
+        stav=1
+    if stav >= SN_ZAPSANY-next:
+        required_fields = [
+            "projekt",
+        ]
+    if stav > SN_ZAPSANY-next:
+        required_fields += [
+            "lokalizace",
+            "datum_nalezu",
+            "okolnosti",
+            "hloubka",
+            "katastr",
+            "nalezce",
+            "specifikace",
+            "obdobi",
+            "druh_nalezu",
+            "detector_system_coordinates",
+            "detector_coordinates_x",
+            "detector_coordinates_y",
+        ]
+    return required_fields

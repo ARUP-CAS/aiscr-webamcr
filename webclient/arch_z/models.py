@@ -49,6 +49,7 @@ class ArcheologickyZaznam(models.Model):
         related_name="zaznamy_pristupnosti",
         default=PRISTUPNOST_ANONYM_ID,
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+        blank=True, null=True
     )
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
@@ -58,7 +59,7 @@ class ArcheologickyZaznam(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     katastry = models.ManyToManyField(
-        RuianKatastr, through="ArcheologickyZaznamKatastr"
+        RuianKatastr, through="ArcheologickyZaznamKatastr",blank=True, null=True
     )
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
@@ -135,6 +136,8 @@ class Akce(models.Model):
         db_column="specifikace_data",
         related_name="akce_specifikace_data",
         limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
+        blank=True,
+        null=True
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
@@ -158,6 +161,7 @@ class Akce(models.Model):
         Osoba,
         on_delete=models.DO_NOTHING,
         db_column="hlavni_vedouci",
+        blank=True,
         null=True,
     )
     souhrn_upresneni = models.TextField(blank=True, null=True)
@@ -217,12 +221,13 @@ class Akce(models.Model):
             (self.datum_ukonceni, _("Datum ukončení není vyplněn.")),
             (self.lokalizace_okolnosti, _("Lokalizace okolností není vyplněna.")),
             (self.specifikace_data, _("Specifikace data není vyplněna.")),
+            (self.organizace, _("Organizace není vyplněna.")),
             (self.hlavni_typ, _("Hlavní typ není vyplněn.")),
             (self.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
             (self.archeologicky_zaznam, _("Hlavní katastr není vyplněn.")),
         ]
         for req_field in required_fields:
-            if req_field[0] is None:
+            if not req_field[0]:
                 result.append(req_field[1])
         # There must be a document of type “nálezová zpráva” attached to each related event,
         # or akce.je_nz must be true.

@@ -86,6 +86,7 @@ class Dokument(models.Model):
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+        blank=True, null=True
     )
     material_originalu = models.ForeignKey(
         Heslar,
@@ -135,6 +136,7 @@ class Dokument(models.Model):
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
+        blank=True, null=True,
     )
     osoby = models.ManyToManyField(
         Osoba,
@@ -199,8 +201,29 @@ class Dokument(models.Model):
         self.save()
 
     def check_pred_odeslanim(self):
-        # At least one soubor must be attached to the dokument
         result = []
+        
+        if "3D" in self.ident_cely:
+            if not self.extra_data.format:
+                result.append(_("dokument.formCheckOdeslani.missingFormat.text"))
+            if not self.popis:
+                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+            if not self.extra_data.duveryhodnost:
+                result.append(_("dokument.formCheckOdeslani.missingDuveryhodnost.text"))
+            if not self.casti.all()[0].komponenty.komponenty.all()[0].obdobi:
+                result.append(_("dokument.formCheckOdeslani.missingObdobi.text"))
+            if not self.casti.all()[0].komponenty.komponenty.all()[0].areal:
+                result.append(_("dokument.formCheckOdeslani.missingAreal.text"))
+        else:
+            if not self.pristupnost:
+                result.append(_("dokument.formCheckOdeslani.missingPristupnost.text"))
+            if not self.popis:
+                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+            if not self.ulozeni_originalu:
+                result.append(_("dokument.formCheckOdeslani.missingUlozeniOriginalu.text"))
+            if self.jazyky.all().count() == 0:
+                result.append(_("dokument.formCheckOdeslani.missingJazyky.text"))
+        # At least one soubor must be attached to the dokument
         if self.soubory.soubory.all().count() == 0:
             result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
         return result

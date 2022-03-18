@@ -288,9 +288,19 @@ def edit(request, ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if zaznam.stav == AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
+    required_fields = get_required_fields(zaznam)
+    required_fields_next = get_required_fields(zaznam,1)
     if request.method == "POST":
-        form_az = CreateArchZForm(request.POST, instance=zaznam)
-        form_akce = CreateAkceForm(request.POST, instance=zaznam.akce)
+        form_az = CreateArchZForm(
+            request.POST,
+            instance=zaznam
+            )
+        form_akce = CreateAkceForm(
+            request.POST,
+            instance=zaznam.akce,
+            required=required_fields,
+            required_next=required_fields_next
+            )
 
         if form_az.is_valid() and form_akce.is_valid():
             logger.debug("Form is valid")
@@ -305,7 +315,11 @@ def edit(request, ident_cely):
             logger.debug(form_akce.errors)
     else:
         form_az = CreateArchZForm(instance=zaznam)
-        form_akce = CreateAkceForm(instance=zaznam.akce)
+        form_akce = CreateAkceForm(
+            instance=zaznam.akce,
+            required=required_fields,
+            required_next=required_fields_next
+            )
 
     return render(
         request,
@@ -468,10 +482,15 @@ def zapsat(request, projekt_ident_cely):
         raise PermissionDenied(
             f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
         )
-
+    required_fields = get_required_fields()
+    required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST)
-        form_akce = CreateAkceForm(request.POST)
+        form_akce = CreateAkceForm(
+            request.POST,
+            required=required_fields,
+            required_next=required_fields_next
+            )
 
         if form_az.is_valid() and form_akce.is_valid():
             logger.debug("Form is valid")
@@ -504,7 +523,12 @@ def zapsat(request, projekt_ident_cely):
 
     else:
         form_az = CreateArchZForm(projekt=projekt)
-        form_akce = CreateAkceForm(uzamknout_specifikace=True, projekt=projekt)
+        form_akce = CreateAkceForm(
+            uzamknout_specifikace=True,
+            projekt=projekt,
+            required=required_fields,
+            required_next=required_fields_next
+            )
 
     return render(
         request,
@@ -571,22 +595,6 @@ def get_history_dates(historie_vazby):
         "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
     }
     return historie
-
-
-def get_detail_template_shows(archeologicky_zaznam):
-    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
-    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
-    show_edit = archeologicky_zaznam.stav not in [
-        AZ_STAV_ARCHIVOVANY,
-    ]
-    show = {
-        "vratit_link": show_vratit,
-        "odeslat_link": show_odeslat,
-        "archivovat_link": show_archivovat,
-        "editovat": show_edit,
-    }
-    return show
 
 
 @login_required
@@ -659,3 +667,24 @@ def get_detail_template_shows(archeologicky_zaznam):
         "arch_links": show_arch_links,
     }
     return show
+
+def get_required_fields(zaznam=None,next=0):
+    required_fields = []
+    if zaznam:
+        stav = zaznam.stav
+    else:
+        stav=1
+    if stav >= AZ_STAV_ZAPSANY-next:
+        required_fields = [
+            
+        ]
+    if stav > AZ_STAV_ZAPSANY-next:
+        required_fields += [
+            "hlavni_vedouci",
+            "organizace",
+            "datum_ukonceni",
+            "lokalizace_okolnosti",
+            "hlavni_typ",
+            "datum_zahajeni",
+        ]
+    return required_fields

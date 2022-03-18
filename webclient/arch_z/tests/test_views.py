@@ -30,7 +30,7 @@ class UrlTests(TestCase):
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_detail(self):
-        request = self.factory.get("/arch_z/detail/")
+        request = self.factory.get("/arch-z/detail/")
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request.session.save()
@@ -39,7 +39,7 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_zapsat(self):
-        request = self.factory.get("/arch_z/zapsat/")
+        request = self.factory.get("/arch-z/zapsat/")
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request.session.save()
@@ -62,7 +62,7 @@ class UrlTests(TestCase):
             "hlavni_typ": str(HLAVNI_TYP_SONDA_ID),
             "vedlejsi_typ": "",
         }
-        request = self.factory.post("/arch_z/zapsat/", data)
+        request = self.factory.post("/arch-z/zapsat/", data)
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
@@ -80,7 +80,7 @@ class UrlTests(TestCase):
         )
 
     def test_get_odeslat_s_chybami(self):
-        request = self.factory.get("/arch_z/odeslat/")
+        request = self.factory.get("/arch-z/odeslat/")
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
@@ -95,7 +95,7 @@ class UrlTests(TestCase):
         self.assertEqual(302, response.status_code)
 
     def test_get_odeslat(self):
-        request = self.factory.get("/arch_z/odeslat/")
+        request = self.factory.get("/arch-z/odeslat/")
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
@@ -105,7 +105,7 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_vratit(self):
-        request = self.factory.get("/arch_z/vratit/")
+        request = self.factory.get("/arch-z/vratit/")
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
@@ -114,7 +114,7 @@ class UrlTests(TestCase):
             vratit(request, ident_cely=EXISTING_EVENT_IDENT)
 
     def test_get_pripojit_dokument(self):
-        request = self.factory.get("/arch_z/pripojit/dokument/")
+        request = self.factory.get("/arch-z/pripojit/dokument/")
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
@@ -128,7 +128,7 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "27ZVK57GOldButY8IAxsDdqBlpUtsWBcpykJT7DgTENfOsy7uqkfoSoYWkbXmcu2",
             "dokument": str(EXISTING_DOCUMENT_ID),
         }
-        request = self.factory.post("/arch_z/pripojit/dokument/", data)
+        request = self.factory.post("/arch-z/pripojit/dokument/", data)
         request.user = self.existing_user
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)

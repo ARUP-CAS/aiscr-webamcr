@@ -45,12 +45,10 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": _("arch_z.form.katastry.tooltip"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,required=None,required_next=None, **kwargs):
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
-        self.fields["katastry"].required = False
-        self.fields["hlavni_katastr"].required = False
         self.fields["katastry"].widget.attrs["readonly"] = True
         self.fields["katastry"].widget.attrs["style"] = "pointer-events: none;"
         self.fields["hlavni_katastr"].widget.attrs["readonly"] = True
@@ -82,6 +80,12 @@ class CreateArchZForm(forms.ModelForm):
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
                 self.fields[key].help_text = ""
+            if required or required_next:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
 
 
 class CreateAkceForm(forms.ModelForm):
@@ -92,15 +96,17 @@ class CreateAkceForm(forms.ModelForm):
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("arch_z.form.datum_ukonceni.tooltip"),
+        required=False,
     )
 
     def clean(self):
         cleaned_data = super().clean()
-        if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
-            if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
-                raise forms.ValidationError(
-                    "Datum zahájení nemůže být po datu ukončení"
-                )
+        if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys() :
+            if cleaned_data.get("datum_ukonceni") is not None:
+                if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
+                    raise forms.ValidationError(
+                        "Datum zahájení nemůže být po datu ukončení"
+                    )
         return self.cleaned_data
 
     class Meta:
@@ -156,7 +162,7 @@ class CreateAkceForm(forms.ModelForm):
             "ulozeni_dokumentace": _("arch_z.form.ulozeni_dokumentace.tooltip"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, required=None, required_next=None, **kwargs):
         if "uzamknout_specifikace" in kwargs:
             uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
         else:
@@ -171,7 +177,6 @@ class CreateAkceForm(forms.ModelForm):
                 choices=choices,
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
-            required=True,
             help_text=_("arch_z.form.hlavni_typ.tooltip"),
         )
         self.fields["vedlejsi_typ"] = TwoLevelSelectField(
@@ -180,10 +185,8 @@ class CreateAkceForm(forms.ModelForm):
                 choices=choices,
                 attrs={"class": "selectpicker", "data-live-search": "true"},
             ),
-            required=False,
             help_text=_("arch_z.form.vedlejsi_typ.tooltip"),
         )
-        self.fields["lokalizace_okolnosti"].required = True
         if projekt:
             self.fields["hlavni_vedouci"].initial = projekt.vedouci_projektu
             self.fields["organizace"].initial = projekt.organizace
@@ -192,7 +195,6 @@ class CreateAkceForm(forms.ModelForm):
             self.fields[
                 "lokalizace_okolnosti"
             ].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
-        self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
             self.fields["specifikace_data"].widget.attrs["readonly"] = True
@@ -236,6 +238,12 @@ class CreateAkceForm(forms.ModelForm):
 
         self.helper.form_tag = False
         for key in self.fields.keys():
+            if required or required_next:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:

@@ -120,6 +120,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         label=_("Katastrální území"),
         error_messages={"required": "Je třeba vybrat bod na mapě."},
         help_text=_("pas.form.createSamostatnyNalez.katastr.tooltip"),
+        required=True
     )
 
     class Meta:
@@ -176,9 +177,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka": _("pas.form.createSamostatnyNalez.poznamka.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, user=None, **kwargs):
+    def __init__(self, *args, readonly=False, user=None, required=None,required_next=None, **kwargs):
         projekt_disabed = kwargs.pop("projekt_disabled", False)
-        fields_required = kwargs.pop("fields_required", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 1
         self.fields["pocet"].widget.attrs["rows"] = 1
@@ -212,13 +212,6 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         )
         self.fields["druh_nalezu"].required = False
         self.fields["obdobi"].required = False
-        if fields_required:
-            self.fields["druh_nalezu"].required = True
-            self.fields["lokalizace"].required = True
-            self.fields["datum_nalezu"].required = True
-            self.fields["okolnosti"].required = True
-            self.fields["specifikace"].required = True
-            self.fields["obdobi"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
@@ -243,18 +236,24 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         self.helper.form_tag = False
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
-        if projekt_disabed:
-            self.fields["projekt"].disabled = projekt_disabed
-        if self.instance is not None:
-            self.fields["katastr"].initial = self.instance.katastr
-        for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
-
+                self.fields[key].required = False
+            if required:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+        if projekt_disabed:
+            self.fields["projekt"].disabled = projekt_disabed
+        if self.instance is not None:
+            self.fields["katastr"].initial = self.instance.katastr
+            
 
 class CreateZadostForm(forms.Form):
     email_uzivatele = forms.EmailField(
