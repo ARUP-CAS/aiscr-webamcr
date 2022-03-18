@@ -451,7 +451,7 @@ function geomToText(){
             }
             text +=")"
         }
-        addGeometry(text,global_map_can_edit);
+        addGeometry(amcr_static_geom_precision_wgs84(text),global_map_can_edit);
     });
 
 
@@ -461,7 +461,7 @@ function geomToText(){
 
 
 var addPointToPoiLayerWithForce = (geom, layer,text) => {
-        L.marker(geom, {icon: redIcon,zIndexOffset:2000}).bindPopup(text).addTo(layer);
+        L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: redIcon,zIndexOffset:2000}).bindPopup(text).addTo(layer);
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
@@ -532,19 +532,19 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
 
     if(st_text.includes("POLYGON")){
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
-            coor.push([i.split(" ")[1],i.split(" ")[0]])
+            coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
         })
         mouseOverGeometry(L.polygon(coor).bindTooltip(text,{sticky: true }).addTo(layer));
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
-            coor.push([i.split(" ")[1],i.split(" ")[0]])
+            coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
         })
         mouseOverGeometry(L.polyline(coor).bindTooltip(text,{sticky: true }).addTo(layer));
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
-        coor.push([i.split(" ")[1],i.split(" ")[0]])
+        coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
         if(layer===poi_other){
-            mouseOverGeometry(L.marker([i.split(" ")[1], i.split(" ")[0]], myIco).bindTooltip(text).addTo(layer));
+            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]), myIco).bindTooltip(text).addTo(layer));
         }
 
     }
@@ -558,7 +558,7 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
             x1=x1+parseFloat(i[1])
             c0=c0+1
         }
-        L.marker([x0/c0,x1/c0], myIco).bindPopup(text).addTo(layer);
+        L.marker(amcr_static_coordinate_precision_wgs84([x0/c0,x1/c0]), myIco).bindPopup(text).addTo(layer);
 
     }
 }
@@ -612,7 +612,7 @@ function loadGeomToEdit(ident_cely){
                     let latlngs=layer.getLatLng()
                     if(drawnItemsCount==1){
                         layer.addTo(drawnItems);
-                        L.marker([latlngs.lat,latlngs.lng],{icon: blueIcon}).bindPopup(content).addTo(drawnItemsBuffer);
+                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: blueIcon}).bindPopup(content).addTo(drawnItemsBuffer);
                         //drawnItemsBuffer.push({type:"Marker", coor:layer.getLatLng(), content:content});
                     } else{
                        // L.marker([latlngs.lat,latlngs.lng]).bindPopup(content).addTo(drawnItemsBuffer);
@@ -627,7 +627,7 @@ function loadGeomToEdit(ident_cely){
                     let coordinates=[];
                     for (var i = 0; i < latlngs.length; i++) {
                         for(var j=0; j< latlngs[i].length;j++){
-                            coordinates.push([latlngs[i][j].lat, latlngs[i][j].lng])
+                            coordinates.push(amcr_static_coordinate_precision_wgs84([latlngs[i][j].lat, latlngs[i][j].lng]))
                         }
                     }
                     L.polygon(coordinates).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
@@ -640,7 +640,7 @@ function loadGeomToEdit(ident_cely){
                     let latlngs=layer.getLatLngs()
                     let coordinates=[];
                     for (let i in latlngs){
-                        coordinates.push([latlngs[i].lat,latlngs[i].lng]);
+                        coordinates.push(amcr_static_coordinate_precision_wgs84([latlngs[i].lat,latlngs[i].lng]));
                     }
                     L.polyline(coordinates).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
                     //drawnItemsBuffer.push({type:"Polyline", coor:layer.getLatLngs(), content:content});

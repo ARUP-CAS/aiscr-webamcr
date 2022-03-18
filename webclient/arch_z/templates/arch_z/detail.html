@@ -601,6 +601,7 @@
 {% endblock %}
 
 {% block script %}
+  <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
@@ -641,7 +642,7 @@
           if (form_id.includes("detail_dj_form_")) {
               pian_id = form_id.replace("detail_dj_form_", "")
               let xhr = new XMLHttpRequest();
-              xhr.open('POST', '/arch_z/akce-get-katastr');
+              xhr.open('POST', '/arch-z/akce-zjisti-katastr');
               xhr.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
                   xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -672,7 +673,7 @@
                   }))
 
               let xhr2 = new XMLHttpRequest();
-              xhr2.open('POST', '/arch_z/get-pians-in-cadastre');
+              xhr2.open('POST', '/arch-z/katastr-zjisti-piany');
               xhr2.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
                   xhr2.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -728,7 +729,7 @@
               document.getElementById(detail_to_show).scrollIntoView()
           } else {
               let xhr3 = new XMLHttpRequest();
-              xhr3.open('POST', '/arch_z/akce-get-katastr');
+              xhr3.open('POST', '/arch-z/akce-zjisti-katastr');
               xhr3.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
                   xhr3.setRequestHeader('X-CSRFToken', global_csrftoken);

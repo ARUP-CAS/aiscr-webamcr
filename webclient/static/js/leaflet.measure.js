@@ -19,7 +19,7 @@ L.Control.Measure = L.Control.extend({
     formatDistance: null,
     //  define text color
     textColor: 'black',
-    title:'Measure'
+    title: 'Measure'
   },
 
   initialize: function (options) {
@@ -31,8 +31,8 @@ L.Control.Measure = L.Control.extend({
     var className = 'leaflet-control-zoom leaflet-bar leaflet-control'
     var container = L.DomUtil.create('div', className)
     this._createButton('&#8674;', this.options.title,
-    'leaflet-control-measure leaflet-bar-part leaflet-bar-part-top-and-bottom',
-    container, this._toggleMeasure, this)
+      'leaflet-control-measure leaflet-bar-part leaflet-bar-part-top-and-bottom',
+      container, this._toggleMeasure, this)
 
     if (this.options.keyboard) {
       L.DomEvent.on(document, 'keydown', this._onKeyDown, this)
@@ -62,7 +62,7 @@ L.Control.Measure = L.Control.extend({
   },
 
   _toggleMeasure: function () {
-      this._measuring = !this._measuring
+    this._measuring = !this._measuring
     if (this._measuring) {
       L.DomUtil.addClass(this._container, 'leaflet-control-measure-on')
       this._startMeasuring()
@@ -260,9 +260,9 @@ L.Control.Measure = L.Control.extend({
     var totalRound = this._formatDistance(total)
     var differenceRound = this._formatDistance(difference)
 
-    var text = '<div class="leaflet-measure-tooltip-total" style="color:'+ this.options.textColor +'">' + totalRound + '</div>'
+    var text = '<div class="leaflet-measure-tooltip-total" style="color:' + this.options.textColor + '">' + totalRound + '</div>'
     if (differenceRound > 0 && totalRound !== differenceRound) {
-      text += '<div class="leaflet-measure-tooltip-difference" style="color:'+ this.options.textColor +'">(+' + differenceRound + ')</div>'
+      text += '<div class="leaflet-measure-tooltip-difference" style="color:' + this.options.textColor + '">(+' + differenceRound + ')</div>'
     }
     this._tooltip._icon.innerHTML = text
   },

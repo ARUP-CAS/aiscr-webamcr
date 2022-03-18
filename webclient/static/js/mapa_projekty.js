@@ -1,6 +1,6 @@
 var global_map_can_edit = true;
 
-var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20})
+var poi_other = L.markerClusterGroup({ disableClusteringAtZoom: 20 })
 var poi_sugest = L.layerGroup();
 var poi_correct = L.layerGroup();
 
@@ -29,7 +29,7 @@ L.easyButton('bi bi-skip-backward-fill', function () {
             console.log("Error: Element id_latitude/latitude doesn exists")
         }
     }
-},'Výchozí stav ').addTo(map)
+}, 'Výchozí stav ').addTo(map)
 
 
 var button_map_lock = L.easyButton({
@@ -75,7 +75,7 @@ var redIcon = new L.Icon({
 var getOtherPoi = () => {
 
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/projekt/get-points-arround-point');
+    xhr.open('POST', '/projekt/projekt-zjisti-okolni-projekty');
     xhr.setRequestHeader('Content-type', 'application/json');
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -83,33 +83,19 @@ var getOtherPoi = () => {
     xhr.onload = function () {
         poi_other.clearLayers();
         JSON.parse(this.responseText).points.forEach((point) => {
-            L.marker([point.lat, point.lng]).bindPopup(point.ident_cely).addTo(poi_other)
+            L.marker(amcr_static_coordinate_precision_wgs84([point.lat, point.lng])).bindPopup(point.ident_cely).addTo(poi_other)
         })
     };
     xhr.send(JSON.stringify({ 'NorthWest': map.getBounds().getNorthWest(), 'SouthEast': map.getBounds().getSouthEast() }))
 }
 
-const addPointToPoiLayer = (lat, long, text) => {
-    if (global_map_can_edit) {
-        poi_correct.clearLayers();
-        L.marker([lat, long], { icon: redIcon }).bindPopup(text).addTo(poi_correct);
-        const getUrl = window.location;
-        const select = $("#id_hlavni_katastr");
-        if (select) {
-            fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
-                .then(response => response.json())
-                .then(response => {
-                    select.val(response['value']);
-                })
-        }
-    }
-}
+
 
 var addPointOnLoad = (lat, long, text) => {
     if (text) {
-        L.marker([lat, long], { icon: greenIcon }).bindPopup(text).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: greenIcon }).bindPopup(text).addTo(poi_sugest);
     } else {
-        L.marker([lat, long], { icon: greenIcon }).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: greenIcon }).addTo(poi_sugest);
     }
 
     map.setView([lat, long], 18)
@@ -128,25 +114,42 @@ map.on('moveend', function () {
 });
 
 map.on('click', function (e) {
-    //console.log("Your zoom is: " + map.getZoom())
-    let corX = e.latlng.lat;
-    let corY = e.latlng.lng;
-    if(!global_measuring_toolbox._measuring)
-    if (corY >= 12.2401111182 && corY <= 18.8531441586 && corX >= 48.5553052842 && corX <= 51.1172677679)
-        if (map.getZoom() > 15) {
-            try {
-                document.getElementById('id_latitude').value = corX
-                document.getElementById('id_longitude').value = corY
-            } catch (e) {
-                console.log("Error: Element id_latitude/latitude doesn exists")
+    const addPointToPoiLayer = (lat, long, text) => {
+        if (global_map_can_edit) {
+            poi_correct.clearLayers();
+            L.marker([lat, long], { icon: redIcon }).bindPopup(text).addTo(poi_correct);
+            const getUrl = window.location;
+            const select = $("#id_hlavni_katastr");
+            if (select) {
+                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
+                    .then(response => response.json())
+                    .then(response => {
+                        select.val(response['value']);
+                    })
             }
-            addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
-
-        } else {
-            var zoom = 2;
-            if (map.getZoom() < 10) zoom += 2;
-            else if (map.getZoom() < 13) zoom += 1;
-
-            map.setView(e.latlng, map.getZoom() + zoom);
         }
+    }
+    //console.log("Your zoom is: " + map.getZoom())
+    //console.log("Clicked Position is: "+e.latlng.lat+" "+e.latlng.lng)
+
+    let [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
+    if (!global_measuring_toolbox._measuring)
+        if (corY >= 12.2401111182 && corY <= 18.8531441586 && corX >= 48.5553052842 && corX <= 51.1172677679)
+            if (map.getZoom() > 15) {
+                try {
+                    //console.log("Position is: "+corX+" "+corY)
+                    document.getElementById('id_latitude').value = corX
+                    document.getElementById('id_longitude').value = corY
+                } catch (e) {
+                    console.log("Error: Element id_latitude/latitude doesn exists")
+                }
+                addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+
+            } else {
+                var zoom = 2;
+                if (map.getZoom() < 10) zoom += 2;
+                else if (map.getZoom() < 13) zoom += 1;
+
+                map.setView(e.latlng, map.getZoom() + zoom);
+            }
 });

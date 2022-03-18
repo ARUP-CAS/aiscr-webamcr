@@ -5,73 +5,81 @@
 
 {% block title %}{% trans "Pian" %}{% endblock %}
 {% block head %}
-  <!-- Map imports -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-        crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-          integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-          crossorigin="">
+<!-- Map imports -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+  crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+  integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+  crossorigin="">
   </script>
 
-  <script>
-      var global_csrftoken = '{{ csrf_token }}';
-  </script>
+<script>
+  var global_csrftoken = '{{ csrf_token }}';
+</script>
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
-  <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
-
-
-  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
-        rel='stylesheet'/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
+  rel='stylesheet' />
+
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
+<script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
 
 <!-- static leaflet additional import-->
-<link rel="stylesheet" href="{% static 'leaflet.measure.css' %}"/>
+<link rel="stylesheet" href="{% static 'leaflet.measure.css' %}" />
 <script src="{% static 'leaflet.measure.js' %}"></script>
 <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
-<link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
+<link rel="stylesheet" href="{% static 'leaflet.coor.css' %}" />
 {% endblock %}
 
 {% block content %}
 
-    <div>
-      <style>
-          #projectMap {
-              width: 100%;
-              height: 473px;
-              border-radius: 5px;
-          }
-      </style>
-      <div id="projectMap"></div>
-    </div>
+<div>
+  <style>
+    #projectMap {
+      width: 100%;
+      height: 473px;
+      border-radius: 5px;
+    }
 
-    <form method="post" onsubmit="submitBtn.disabled = true; return true;">
-      <div class="card app-card-form">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "Pian" %}
-          </div>
-        </div>
-        <div class="card-body">
-          {% crispy form %}
-        </div>
+    .leaflet-right .leaflet-control {
+      margin-right: 5px;
+    }
+
+    .leaflet-bottom .leaflet-control {
+      margin-bottom: 5px;
+    }
+  </style>
+  <div id="projectMap"></div>
+</div>
+
+<form method="post" onsubmit="submitBtn.disabled = true; return true;">
+  <div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "Pian" %}
       </div>
-      <button type="submit" id="submitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
-    </form>
+    </div>
+    <div class="card-body">
+      {% crispy form %}
+    </div>
+  </div>
+  <button type="submit" id="submitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+</form>
 
 {% endblock %}
 
 {% block script %}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
-  <script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
-  <script src="{% static 'mapa_akce.js' %}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+<script src="{% static 'mapa_akce.js' %}"></script>
 {% endblock %}

@@ -320,7 +320,7 @@ if(global_map_can_edit){
 map.addLayer(poi_sugest);
 map.addLayer(poi_other);
 
-
+/*
 let points=[
         [50.2866623899293,14.83060419559479,'Moc zajimave'],
         [50.28723821959954,14.82906997203827,'1'],
@@ -341,7 +341,7 @@ for(i=1;i<=100;i++){
     var x1=50.28+(0.01)*Math.random();
     var x2=14.82+(0.01)*Math.random();
     points.push([x1,x2,'Random:'+i]);
-}
+}*/
 
 
 //adding other points to layer
@@ -382,7 +382,7 @@ var addPointOnLoad = (lat, long, text) => {
     map.setView([lat, long], 18)
     getOtherPoi();
 
-    var polyLayers = [];
+  /*  var polyLayers = [];
     var polygon2 = L.polygon([
         [50.2866623899293,14.83060419559479,'Moc zajimave'],
         [50.28723821959954,14.82906997203827,'1'],
@@ -392,7 +392,7 @@ var addPointOnLoad = (lat, long, text) => {
 
     for(layer of polyLayers) {
         poi_sugest.addLayer(layer);
-    }
+    }*/
 }
 
 addPointOnLoad(50.28702571184197,14.830008745193483,"Uživatelem zadaná poloha záměru");

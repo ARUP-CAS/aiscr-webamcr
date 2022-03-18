@@ -66,7 +66,7 @@ var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { at
         cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
 var poi = L.layerGroup();
-var map = L.map('projectMap',{zoomControl:false,  layers: [cuzkZM,poi]}).setView([49.84, 15.17], 7);
+var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layers: [cuzkZM,poi]}).setView([49.84, 15.17], 7);
 
 var baseLayers = {
     "ČÚZK - Základní mapy ČR": cuzkZM,
@@ -103,7 +103,9 @@ map.addControl(global_measuring_toolbox);
 map.addControl(new L.control.coordinates(
     {
     position:"bottomright",
-    useDMS:true,
+    useDMS:false,
+    decimals: 7,
+	decimalSeperator: ",",
     labelTemplateLat:"N {y}",
     labelTemplateLng:"E {x}",
     useLatLngOrder:true,
