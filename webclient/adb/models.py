@@ -41,23 +41,19 @@ class Adb(models.Model):
         db_column="typ_sondy",
         related_name="typy_sond_adb",
         limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
-        blank=True,
-        null=True,
     )
-    trat = models.TextField(blank=True, null=True)
-    parcelni_cislo = models.TextField(blank=True, null=True)
+    trat = models.TextField()
+    parcelni_cislo = models.TextField()
     podnet = models.ForeignKey(
         Heslar,
         on_delete=models.DO_NOTHING,
         limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET},
         db_column="podnet",
-        blank=True,
-        null=True,
     )
     uzivatelske_oznaceni_sondy = models.TextField(blank=True, null=True)
-    stratigraficke_jednotky = models.TextField(blank=True, null=True)
+    stratigraficke_jednotky = models.TextField()
     poznamka = models.TextField(blank=True, null=True)
-    cislo_popisne = models.TextField(blank=True, null=True)
+    cislo_popisne = models.TextField()
     autor_popisu = models.ForeignKey(
         Osoba,
         on_delete=models.DO_NOTHING,

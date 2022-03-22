@@ -33,9 +33,8 @@ crossorigin=""/>
         <!-- Koordinaty -->
         <div class="form-group">
             <label for="detector_system_coordinates">{{ formCoor.detector_system_coordinates.label }}</label>
-            <label for="detector_system_cordinates">{% trans "Souř. S." %}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_system_coordinates class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
+            {% render_field formCoor.detector_system_coordinates class="form-control form-control-sm sysCord required-next"  id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
             <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.detector_system_coordinates.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_system_coordinates|append_attr:"readonly:readonly" class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
@@ -47,7 +46,7 @@ crossorigin=""/>
         <div class="form-group">
             <label for="detector_coordinates_x">{{ formCoor.detector_coordinates_x.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float" id="detector_coordinates_x" %}
+            {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float required-next" id="detector_coordinates_x" %}
             <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_x.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_coordinates_x|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_x"%}
@@ -61,7 +60,7 @@ crossorigin=""/>
         <div class="form-group">
             <label for="detector_coordinates_y">{{ formCoor.detector_coordinates_y.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float"  id="detector_coordinates_y" %}
+            {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float required-next"  id="detector_coordinates_y" %}
             <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_y.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_coordinates_y|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_y"%}

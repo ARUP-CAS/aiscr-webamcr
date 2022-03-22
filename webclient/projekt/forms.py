@@ -9,6 +9,8 @@ from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 from arch_z import validators
 
+import structlog
+logger_s = structlog.get_logger(__name__)
 
 class CreateProjektForm(forms.ModelForm):
     latitude = forms.FloatField(required=False, widget=HiddenInput())
@@ -69,7 +71,7 @@ class CreateProjektForm(forms.ModelForm):
             "oznaceni_stavby": _("projekt.form.createProjekt.oznaceni_stavby.tooltip"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args,required=None,required_next=None, **kwargs):
         super(CreateProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["katastry"].readonly = True
@@ -120,6 +122,12 @@ class CreateProjektForm(forms.ModelForm):
         ].widget.template_name = "core/select_to_textarea.html"
         self.helper.form_tag = False
         for key in self.fields.keys():
+            if required or required_next:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
             if self.fields[key].disabled == True:
@@ -247,7 +255,7 @@ class EditProjektForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, required, **kwargs):
+    def __init__(self, *args, required=None,required_next=None, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
@@ -325,8 +333,12 @@ class EditProjektForm(forms.ModelForm):
             "hlavni_katastr"
         ].widget.template_name = "core/select_to_textarea.html"
         for key in self.fields.keys():
-            if required:
+            if required or required_next:
                 self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
             if self.fields[key].disabled is True:
@@ -489,6 +501,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        archivar = kwargs.pop("archivar", False)
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
         self.fields["kulturni_pamatka"].required = True
@@ -530,6 +543,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+        if archivar:
+            self.fields["organizace"].disabled = True
+            self.fields["organizace"].widget.template_name = "core/select_to_text.html"
 
 
 class ZahajitVTerenuForm(forms.ModelForm):

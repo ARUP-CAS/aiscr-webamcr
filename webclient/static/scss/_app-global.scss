@@ -465,7 +465,14 @@ form {
     }
   }
 }
-
+.form-control{
+  &.required-next {
+    &:not(:focus){
+      border: 1px solid ;
+    border-color: #ffc107;
+    }
+  }
+}
 // test
 /* .app-table-list-container {
   @extend .d-flex, .flex-column, .h-100;

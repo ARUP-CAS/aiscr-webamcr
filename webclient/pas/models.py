@@ -201,6 +201,10 @@ class SamostatnyNalez(models.Model):
             resp.append(_("Nález před odesláním musí mít vyplnen druh nálezu"))
         if not self.geom:
             resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
+        if not self.hloubka:
+            resp.append(_("pas.formCheckOdeslani.missingHloubka.text"))
+        if not self.katastr:
+            resp.append(_("pas.formCheckOdeslani.missingKatastr.text"))
         if not self.soubory.soubory.exists():
             resp.append(_("Nález před odesláním musí mít alespoň jednou fotografii"))
         return resp

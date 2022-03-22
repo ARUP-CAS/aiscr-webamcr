@@ -60,7 +60,7 @@ def detail(request, ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
-    return redirect("/arch_z/detail/" + dj.archeologicky_zaznam.ident_cely)
+    return redirect("arch_z:detail", dj.archeologicky_zaznam.ident_cely)
 
 
 @login_required
@@ -90,7 +90,7 @@ def zapsat(request, arch_z_ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    response = redirect("/arch_z/detail/" + az.ident_cely)
+    response = redirect("arch_z:detail", az.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     return response
 

@@ -76,7 +76,7 @@ class UrlTests(TestCase):
         request.session.save()
         # Dokument lze odeslat
         response = odeslat(request, ident_cely=self.existing_dokument)
-        self.assertEqual(200, response.status_code)
+        self.assertEqual(302, response.status_code)
 
         data = {
             "csrfmiddlewaretoken": "OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm",

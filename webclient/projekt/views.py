@@ -171,9 +171,15 @@ def post_ajax_get_point(request):
 @require_http_methods(["GET", "POST"])
 def create(request):
     logger_s.debug("create.start")
+    required_fields = get_required_fields()
+    required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
-        form_projekt = CreateProjektForm(request.POST)
+        form_projekt = CreateProjektForm(
+            request.POST,
+            required=required_fields,
+            required_next=required_fields_next
+            )
         form_oznamovatel = OznamovatelForm(request.POST)
         if form_projekt.is_valid():
             logger.debug("Projekt form is valid")
@@ -218,7 +224,10 @@ def create(request):
             logger.debug(form_projekt.errors)
     else:
         logger_s.debug("create.get")
-        form_projekt = CreateProjektForm()
+        form_projekt = CreateProjektForm(
+            required=required_fields,
+            required_next=required_fields_next
+        )
         form_oznamovatel = OznamovatelForm(uzamknout_formular=True)
     return render(
         request,
@@ -240,9 +249,15 @@ def edit(request, ident_cely):
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     required_fields = get_required_fields(projekt)
+    required_fields_next = get_required_fields(projekt,1)
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
-        form = EditProjektForm(request.POST, instance=projekt, required=required_fields)
+        form = EditProjektForm(
+            request.POST,
+            instance=projekt,
+            required=required_fields,
+            required_next=required_fields_next
+            )
         if form.is_valid():
             logger.debug("Form is valid")
             lat = form.cleaned_data["latitude"]
@@ -270,7 +285,11 @@ def edit(request, ident_cely):
             logger.debug(form.errors)
 
     else:
-        form = EditProjektForm(instance=projekt, required=required_fields)
+        form = EditProjektForm(
+            instance=projekt, 
+            required=required_fields,
+            required_next=required_fields_next
+            )
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
@@ -425,8 +444,9 @@ def prihlasit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
+        archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
         form = PrihlaseniProjektForm(
-            instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav}
+            instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav},archivar=archivar
         )
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
 
@@ -845,9 +865,13 @@ def get_detail_template_shows(projekt, user):
     return show
 
 
-def get_required_fields(projekt):
+def get_required_fields(zaznam=None,next=0):
     required_fields = []
-    if projekt.stav > PROJEKT_STAV_OZNAMENY:
+    if zaznam:
+        stav = zaznam.stav
+    else:
+        stav=1
+    if stav > PROJEKT_STAV_OZNAMENY-next:
         required_fields = [
             "typ_projektu",
             "hlavni_katastr",
@@ -857,8 +881,8 @@ def get_required_fields(projekt):
             "planovane_zahajeni",
         ]
     if (
-        projekt.stav > PROJEKT_STAV_ZAPSANY
-        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+        stav > PROJEKT_STAV_ZAPSANY-next
+        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
     ):
         required_fields += [
             "vedouci_projektu",
@@ -866,18 +890,19 @@ def get_required_fields(projekt):
             "kulturni_pamatka",
         ]
     if (
-        projekt.stav > PROJEKT_STAV_PRIHLASENY
-        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+        stav > PROJEKT_STAV_PRIHLASENY-next
+        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
     ):
         required_fields += [
             "datum_zahajeni",
         ]
     if (
-        projekt.stav > PROJEKT_STAV_ZAHAJENY_V_TERENU
-        and projekt.stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
+        stav > PROJEKT_STAV_ZAHAJENY_V_TERENU-next
+        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
     ):
         required_fields += [
             "datum_ukonceni",
+            "termin_odevzdani_nz"
         ]
     return required_fields
 
