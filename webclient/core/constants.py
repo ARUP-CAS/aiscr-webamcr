@@ -145,10 +145,12 @@ KLADYZM_KATEGORIE = (
 # Podporovane souradnicove systemy
 COORDINATE_SYSTEM = [(1, "WGS-84"), (2, "S-JTSK")]
 
-DOK_MESTO = "Praha"
-DOK_VE_MESTE = "V Praze"
-DOK_ADRESA = "Letenská 123/4, 118 01 Praha 1"
-DOK_TELEFON = "+420 257 014 310"
-DOK_EMAIL = "oznameni@arup.cas.cz, marik@arup.cas.cz"
-DOC_KOMU = "Archeologickému ústavu AV ČR, Praha, v. v. i."
-DOC_REDITEL = "Mgr. Jan Mařík, Ph.D."
+DOK_MESTO = (_("constants.dok.mesto_praha"), _("constants.dok.mesto_brno"))
+DOK_VE_MESTE = (_("constants.dok.v_praze"), _("constants.dok.v_brne"))
+DOK_ADRESA = (_("constants.dok.adresa_praha"), _("constants.dok.adresa_brno"))
+DOK_TELEFON = {0: _("constants.dok.telefon"), 116: _("constants.dok.telefon_k116"),
+               141: _("constants.dok.telefon_k141"), 108: _("constants.dok.telefon_k108"),
+               124: _("constants.dok.telefon_k124"), 132: _("constants.dok.telefon_k132")}
+DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
+DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
+DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))

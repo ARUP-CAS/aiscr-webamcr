@@ -1,6 +1,8 @@
 import datetime
 from io import BytesIO
 
+from webclient.settings.base import MEDIA_ROOT
+
 from reportlab.lib import utils
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.styles import (ParagraphStyle, getSampleStyleSheet)
@@ -10,8 +12,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, PageBreak, ListFlowable
 
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
-from oznameni.models import Oznamovatel
-from projekt.models import Projekt
+from heslar.models import RuianKraj
 
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
@@ -25,49 +26,16 @@ Title = "Hello world"
 pageinfo = "platypus example"
 
 
-def draw_image(filename, canvas, counter):
-    img = utils.ImageReader(filename)
-    iw, ih = img.getSize()
-    target_height = HEADER_HEIGHT
-    target_width = target_height / ih * iw
-    if counter == 0:
-        x = BASE_MARGIN
-    elif counter == 1:
-        x = PAGESIZE[0] / 2 - target_width / 2
-    elif counter == 2:
-        x = PAGESIZE[0] - BASE_MARGIN - target_width
-    else:
-        return
-    canvas.drawImage(filename, x=x, y=PAGESIZE[1] - target_height - 10 * mm,
-                     width=target_width, height=target_height, mask="auto")
-
-
-def add_page_number(canvas, doc):
-    canvas.saveState()
-    canvas.setFont('OpenSans', 10)
-    page_number_text = "%d" % (doc.page)
-    canvas.drawCentredString(
-        PAGESIZE[0]/2,
-        10 * mm,
-        page_number_text
-    )
-    canvas.restoreState()
-
-
-def draw_header(canvas, doc):
-    counter = 0
-    for filename in HEADER_IMAGES:
-        draw_image(f"static/img/{filename}", canvas, counter)
-        counter += 1
-    add_page_number(canvas, doc)
-
-
-class PdfCreator:
+class OznameniPDFCreator:
     def _generate_text(self):
-        self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO}, v. v. i."
+        dok_index = 0 if self.projekt.ident_cely[0] == "C" else 1
+        self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
         self.texts["header_line_2"] = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
-        self.texts["header_line_3"] = f"{DOK_ADRESA}<br/>{DOK_TELEFON}<br/>e-mail: {DOK_EMAIL}"
-        self.texts["header_line_4"] = f"{DOK_VE_MESTE} {datetime.datetime.today().date().strftime('%d. %m. %Y')}"
+        kraj: RuianKraj = self.projekt.hlavni_katastr.okres.kraj
+        telefon = DOK_TELEFON.get(kraj.kod, DOK_TELEFON.get(0))
+        self.texts["header_line_3"] = f"{DOK_ADRESA[dok_index]}<br/>{telefon}<br/>e-mail: {DOK_EMAIL[dok_index]}"
+        self.texts["header_line_4"] \
+            = f"{DOK_VE_MESTE[dok_index]} {datetime.datetime.today().date().strftime('%d. %m. %Y')}"
 
         self.texts["doc_vec"] = """
         Věc: Potvrzení o splnění oznamovací povinnosti dle § 22, odst. 2 zák. č. 20/1987
@@ -79,7 +47,7 @@ class PdfCreator:
         ohlásil záměr {self.projekt.podnet} (označení stavby: {self.projekt.oznaceni_stavby}; 
         plánované zahájení: {self.projekt.planovane_zahajeni}) na 
         k. ú. {self.projekt.hlavni_katastr} (okr. {self.projekt.katastry}), parc. č. 
-        {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU}. 
+        {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU[dok_index]}. 
         Oznámení provedl {self.projekt.historie.historie_set.first().datum_zmeny} pod evidenčním číslem 
         {self.projekt.ident_cely}. Tímto byla naplněna povinnost oznámit 
         zamýšlenou stavební nebo jinou činnost Archeologickému ústavu podle ustanovení § 22, odst. 2, zákona 
@@ -98,7 +66,7 @@ class PdfCreator:
         """
 
         self.texts["doc_sign_1"] = "S pozdravem"
-        self.texts["doc_sign_2"] = DOC_REDITEL
+        self.texts["doc_sign_2"] = DOC_REDITEL[dok_index]
         self.texts["doc_sign_3"] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO}, v. v. i."
 
         self.texts["doc_attachment_heading_main_1"] = "PŘÍLOHA – INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ"
@@ -242,7 +210,7 @@ class PdfCreator:
         Úřad pro ochranu osobních údajů.
         """
 
-    def create_style_dict(self):
+    def _create_style_dict(self):
         self.styles.add(ParagraphStyle('amBodyText',
                                        fontName="OpenSans",
                                        fontSize=12,
@@ -283,6 +251,40 @@ class PdfCreator:
                                        fontSize=10))
 
     def build_pdf(self):
+        def draw_image(filename, canvas, counter):
+            img = utils.ImageReader(filename)
+            iw, ih = img.getSize()
+            target_height = HEADER_HEIGHT
+            target_width = target_height / ih * iw
+            if counter == 0:
+                x = BASE_MARGIN
+            elif counter == 1:
+                x = PAGESIZE[0] / 2 - target_width / 2
+            elif counter == 2:
+                x = PAGESIZE[0] - BASE_MARGIN - target_width
+            else:
+                return
+            canvas.drawImage(filename, x=x, y=PAGESIZE[1] - target_height - 10 * mm,
+                             width=target_width, height=target_height, mask="auto")
+
+        def add_page_number(canvas, doc):
+            canvas.saveState()
+            canvas.setFont('OpenSans', 10)
+            page_number_text = "%d" % (doc.page)
+            canvas.drawCentredString(
+                PAGESIZE[0] / 2,
+                10 * mm,
+                page_number_text
+            )
+            canvas.restoreState()
+
+        def draw_header(canvas, doc):
+            counter = 0
+            for filename in HEADER_IMAGES:
+                draw_image(f"static/img/{filename}", canvas, counter)
+                counter += 1
+            add_page_number(canvas, doc)
+
         pdf_buffer = BytesIO()
         my_doc = SimpleDocTemplate(
             pdf_buffer,
@@ -349,18 +351,21 @@ class PdfCreator:
         )
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
-        return pdf_value
+        path = f"{MEDIA_ROOT}/oznameni_{self.projekt.ident_cely}.pdf"
+        with open(path, "wb") as file:
+            file.write(pdf_value)
+            size = file.tell()
+        return path
 
-    def __init__(self, oznamovatel: Oznamovatel, projekt: Projekt):
-        self.oznamovatel = oznamovatel
-        self.projekt = projekt
+    def __init__(self, oznamovatel, projekt):
+        from oznameni.models import Oznamovatel
+        self.oznamovatel: Oznamovatel = oznamovatel
+        from projekt.models import Projekt
+        self.projekt: Projekt = projekt
         self.styles = getSampleStyleSheet()
-        self.create_style_dict()
+        self._create_style_dict()
         self.texts = {}
         self._generate_text()
 
 
-projekt: Projekt = Projekt.objects.filter(ident_cely="C-202105941").first()
-creator = PdfCreator(projekt.oznamovatel, projekt)
-with open("output.pdf", "wb") as file:
-    file.write(creator.build_pdf())
+
