@@ -43,10 +43,9 @@
           </a>
         {% endif %}
         {% if show.prihlasit_link %}
-          <a href="{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}?sent_stav={{projekt.stav}}" class="btn">
+        <button id="projekt-prihlasit" class="btn" type="button" name="button">
             <span class="material-icons">login</span>
             {% trans "Přihlásit" %}
-          </a>
         {% endif %}
         {% if show.zahajit_teren_link %}
           <a href="{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}?sent_stav={{projekt.stav}}" class="btn">

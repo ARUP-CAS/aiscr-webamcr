@@ -530,8 +530,30 @@
     
   </div>
   {% include "modals/generovat_potvrzeni.html" with projekt=projekt %}
+
+  <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-osoba-form">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+      <div class="modal-content osoba-form"></div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block script %}
+<script src="{% static '/js/create_message.js' %}"></script>
+  <script type="text/javascript">
+    // projekt stav change scripts
+    var modal
+    $(document).ready(function() {
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "prihlasit-form",
+        modalFormID: "#prihlasit-form",
+      })
+      var prihlasit_modal = new Modal(options, "projekt-prihlasit");
+      modal = prihlasit_modal;
+      console.log(modal)
+    });
+    
 
+    </script>
 {% endblock %}

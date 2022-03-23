@@ -509,32 +509,17 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Přihlášení projektu")),
-                        css_class="app-fx app-left",
+                    AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    css_class="col-sm-4 input-osoba",
                     ),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div(
-                            Div(
-                            AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
-                            css_class="col-sm-4 input-osoba",
-                            ),
-                            Div("organizace", css_class="col-sm-4"),
-                            Div("uzivatelske_oznaceni", css_class="col-sm-4"),
-                            Div("kulturni_pamatka", css_class="col-sm-2"),
-                            Div("kulturni_pamatka_cislo", css_class="col-sm-2"),
-                            Div("kulturni_pamatka_popis", css_class="col-sm-8"),
-                            Div("old_stav"),
-                            css_class="row",
-                        ),
-                        css_class="card-body",
-                    )
-                ),
-                css_class="card app-card-form",
-            )
+                Div("organizace", css_class="col-sm-4"),
+                Div("uzivatelske_oznaceni", css_class="col-sm-4"),
+                Div("kulturni_pamatka", css_class="col-sm-4"),
+                Div("kulturni_pamatka_cislo", css_class="col-sm-4"),
+                Div("kulturni_pamatka_popis", css_class="col-sm-4"),
+                Div("old_stav"),
+                css_class="row",
+            ),
         )
         self.helper.form_tag = False
 

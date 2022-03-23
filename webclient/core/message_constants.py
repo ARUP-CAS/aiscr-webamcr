@@ -3,6 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 FORM_NOT_VALID: Final = "Forma není validní."
 
+PRISTUP_ZAKAZAN: Final = "common.message.pristupZakazan.text"
+
 ZAZNAM_USPESNE_VYTVOREN: Final = "Záznam byl úspěšně vytvořen."
 ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = "Záznam se nepovedlo vytvořit."
 ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."

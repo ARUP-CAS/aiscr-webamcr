@@ -2,7 +2,10 @@
 
     // Open modal & load the form at formURL to the modalContent element
     var modalForm = function (settings) {
-        $(settings.modalID).find(settings.modalContent).load(settings.formURL, function () {
+        $(settings.modalID).find(settings.modalContent).load(settings.formURL, function (response, status, xhr) {
+            if (xhr.status == "403"){
+                window.location.href = JSON.parse(response).redirect
+            }
             $(settings.modalID).modal("show");
             $(settings.modalForm).attr("action", settings.formURL);
             addEventHandlers(settings);
@@ -50,13 +53,16 @@
                 }
                  else {
                      // Form is valid
-                     if (response.messages.length > 0) {
+                     if ($(response).find("messages").length > 0) {
                         if (settings.createSuccesMessage === true){
                             createMessage(response.messages[0].extra_tags,response.messages[0].message)
                         }
                      }
-                    succesFunction(settings, response);
+                     succesFunction(settings,response)
                 }
+            },
+            error: function (response) {
+                window.location.href = response.redirect
             }
         });
     };
@@ -70,7 +76,7 @@
 
     var succesFunction = function (settings, response) {
         if (!settings.successFunc) {
-            $(settings.modalID).modal("hide");
+            window.location.href = response.redirect
         } else {
             settings.successFunc(settings, response)
         }
@@ -85,7 +91,7 @@
             formURL: null,
             isDeleteForm: false,
             errorClass: ".invalid",
-            successFunc: successFunction,
+            successFunc: false,
             createSuccesMessage: true
         };
 

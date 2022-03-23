@@ -53,10 +53,12 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
     MAXIMUM_IDENT_DOSAZEN,
+    PRISTUP_ZAKAZAN,
 )
 from core.utils import get_points_from_envelope
 from dokument.views import odpojit, pripojit
 from core.views import check_stav_changed
+from uzivatel.forms import OsobaForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -65,6 +67,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
@@ -431,17 +434,19 @@ def schvalit(request, ident_cely):
 def prihlasit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+    logger.debug("something")
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
             projekt = form.save(commit=False)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -450,15 +455,16 @@ def prihlasit(request, ident_cely):
         form = PrihlaseniProjektForm(
             instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav},archivar=archivar
         )
-    return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt})
+        osoba_form = OsobaForm()
+    return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt, "osoba_form":osoba_form})
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    if projekt.stav != PROJEKT_STAV_PRIHLASENY:
-        raise PermissionDenied()
+    #if projekt.stav != PROJEKT_STAV_PRIHLASENY:
+    #    raise PermissionDenied()
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
         return redirect("projekt:detail", ident_cely)

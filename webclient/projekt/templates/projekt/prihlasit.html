@@ -1,30 +1,33 @@
-{% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Přihlášení projektu " %}{{ projekt.ident_cely }}{% endblock %}
-{% block head %}
-{% endblock %}
-
-{% block content %}
-  <div class="app-entity-projekt">
-    {% include "toolbar_projekt.html" %}
-    <form method="POST">
-      {% crispy form %}
-      <div class="mt-3">
-        <button type="submit" name="save" class="btn btn-primary mr-1" id="submit-id-save">{% translate 'Přihlásit projekt' %}</button>
-        <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "Zpět" %}</button>
-      </div>
-    </form>
+<form method="POST" id="prihlasit-form">
+  <div class="modal-header">
+    <h5 class="modal-title">{% trans "projekt.modalForm.Prihlasit.header.title" %}</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
   </div>
-{% endblock %}
+  <div class="modal-body">
+    {% crispy form %}
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">{% translate "projekt.modalForm.Prihlasit.button.close.text" %}</button>
+    <button type="submit" class="btn btn-primary">{% translate 'projekt.modalForm.Prihlasit.button.submit.text' %}</button>
+  </div>
+</form>
+
+
+
 
 {% block script %}
   <script src="{% static 'pamatkova_ochrana_validator.js' %}"></script>
   <script src="{% static '/js/create_message.js' %}"></script>
-  <script type="text/javascript">
-    // create osoba scripts
+  <script type="text/javascript" id="js-id-create-osoba">
+    //var prihlasit_modal
+
     var successFunction = function(settings, response) {
       let dropdown = document.getElementById('id_vedouci_projektu');
       let newOption = document.createElement('option');
@@ -36,16 +39,30 @@
       $('#id_vedouci_projektu').selectpicker('refresh');
       $('#id_vedouci_projektu').selectpicker('val', response.value);
       dropdown.value = response.value;
-      $(settings.modalID).modal("hide");
+      $(settings.modalIDD).modal("hide");
     };
-    $(document).ready(function() {
-    
-        $("#create-osoba").modalForm({
-            modalID: "#modal-form",
-            formURL: "{% url 'uzivatel:create_osoba' %}",
-            successFunc: successFunction
-        });
+    window.addEventListener("modalLoaded", function() {
+      var options = Object.assign(defaults, {
+        modalID: "modal-osoba-form",
+        formURL: "{% url 'uzivatel:create_osoba' %}",
+        formID: "create-osoba-form",
+        modalContent: ".modal-content",
+        modalForm: ".modal-content osoba-form",
+        modalFormID: "#create-osoba-form",
+        modalIDD : "#modal-osoba-form",
+        successFunc: successFunction,
+        firstModalID: "#modal-form",
+        secondModal: modal,
+      })
+      var create_osoba_modal = new Modal(options, "create-osoba")
+        //$("#create-osoba").modalForm({
+        //    modalID: "#modal-osoba-form",
+        //    formURL: "{% url 'uzivatel:create_osoba' %}",
+        //    successFunc: successFunction,
+        //    
+        //});
     
     });
+  
     </script>
 {% endblock %}
