@@ -1,11 +1,13 @@
 import datetime
 import logging
+import os
 import zlib
 
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ARCHIVOVANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
+    OTHER_PROJECT_FILES,
     OZNAMENI_PROJ,
     PRIHLASENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
@@ -46,6 +48,7 @@ from heslar.hesla import (
 from django.core.files.base import ContentFile
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
+from projekt.doc_utils import OznameniPDFCreator
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -429,6 +432,40 @@ class Projekt(models.Model):
         sequence.sekvence += 1
         sequence.save()
         self.save()
+
+    def create_confirmation_document(self, additional=False):
+        from core.utils import get_mime_type
+        creator = OznameniPDFCreator(self.oznamovatel, self)
+        filename = creator.build_pdf()
+        filename_without_path = f"oznameni_{self.ident_cely}.pdf"
+        if additional:
+            soubory_count = Soubor.objects.filter(nazev__startswith=filename_without_path[:-4] + "_").count()
+            postfix = chr(65 + soubory_count)
+            filename_without_path = f"oznameni_{self.ident_cely}_{postfix}.pdf"
+        duplikat = Soubor.objects.filter(nazev=filename)
+        if not duplikat.exists():
+            Soubor(
+                path=filename,
+                vazba=self.soubory,
+                nazev=filename_without_path,
+                nazev_zkraceny=filename_without_path,
+                nazev_puvodni=filename_without_path,
+                vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
+                mimetype=get_mime_type(filename_without_path),
+                size_bytes=os.path.getsize(filename),
+                typ_souboru=OTHER_PROJECT_FILES,
+            ).save()
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        confirmation_document = False
+        if self.pk:
+            projekt_db = Projekt.objects.get(pk=self.pk)
+            if self.stav == PROJEKT_STAV_ZAPSANY and projekt_db.stav == PROJEKT_STAV_OZNAMENY and self.has_oznamovatel():
+                confirmation_document = True
+            if confirmation_document:
+                self.create_confirmation_document()
+        super().save(force_insert, force_update, using, update_fields)
 
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})

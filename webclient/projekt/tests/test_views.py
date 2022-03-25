@@ -1,4 +1,5 @@
 from core.constants import SN_ZAPSANY
+from core.models import Soubor
 from core.message_constants import PROJEKT_NELZE_SMAZAT
 from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
 from django.contrib.gis.geos import Point
@@ -158,3 +159,5 @@ class UrlTests(TestCase):
 
         response = create(request)
         self.assertEqual(200, response.status_code)
+
+
