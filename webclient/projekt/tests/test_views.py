@@ -160,11 +160,4 @@ class UrlTests(TestCase):
         response = create(request)
         self.assertEqual(200, response.status_code)
 
-    def test_generovat_oznameni(self):
-        ident_cely = "M-202212541"
-        self.client.force_login(self.existing_user)
-        response = self.client.post(f"/projekt/generovat-oznameni/{ident_cely}", {}, follow=True)
-        self.assertEqual(200, response.status_code)
-        oznameni = Soubor.objects.filter(nazev=f"oznameni_{ident_cely}_A.pdf")
-        self.assertEqual(oznameni.count(), 1)
 
