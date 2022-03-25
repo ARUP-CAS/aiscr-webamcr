@@ -342,6 +342,13 @@ class ProjektFilter(filters.FilterSet):
         distinct=True,
     )
 
+    adb_ident_obsahuje = CharFilter(
+        field_name="akce__archeologicky_zaznam__dokumentacni_jednotky_akce__adb__ident_cely",
+        lookup_expr="icontains",
+        label="ID ADB",
+        distinct=True,
+    )
+
     def filter_planovane_zahajeni(self, queryset, name, value):
         if value.start and value.stop:
             rng = DateRange(
@@ -556,6 +563,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("dokument_ident_obsahuje", css_class="col-sm-2"),
             Div("pian_ident_obsahuje", css_class="col-sm-2"),
             Div("zdroj_ident_obsahuje", css_class="col-sm-2"),
+            Div("adb_ident_obsahuje", css_class="col-sm-2"),
             css_class="row",
         ),
     )
