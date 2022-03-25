@@ -82,6 +82,7 @@ from projekt.forms import (
     UkoncitVTerenuForm,
     ZahajitVTerenuForm,
     ZruseniProjektForm,
+    GenerovatNovePotvrzeniForm
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
@@ -133,6 +134,7 @@ def detail(request, ident_cely):
     context["history_dates"] = get_history_dates(projekt.historie)
     context["show"] = get_detail_template_shows(projekt, request.user)
     context["dokumenty"] = dokumenty
+    context["generovatNovePotvrzeniForm"] = GenerovatNovePotvrzeniForm()
 
     return render(request, "projekt/detail.html", context)
 
@@ -749,7 +751,15 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
 def pripojit_dokument(
     request, proj_ident_cely
 ):
-    return pripojit(request, proj_ident_cely, None, Projekt) 
+    return pripojit(request, proj_ident_cely, None, Projekt)
+
+
+@login_required
+@require_http_methods(["POST"])
+def generovat_oznameni(request, ident_cely):
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    projekt.create_confirmation_document(additional=True)
+    return redirect("projekt:detail", ident_cely=ident_cely)
 
 
 def get_history_dates(historie_vazby):

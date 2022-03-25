@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import index, create, edit, smazat, prihlasit, schvalit, uzavrit, archivovat, detail, zahajit_v_terenu, \
     ukoncit_v_terenu, navrhnout_ke_zruseni, zrusit, vratit, vratit_navrh_zruseni, post_ajax_get_point, \
-    odebrat_sloupec_z_vychozich, odpojit_dokument, pripojit_dokument
+    odebrat_sloupec_z_vychozich, odpojit_dokument, pripojit_dokument, generovat_oznameni
 from .views import ProjektListView
 
 app_name = "projekt"
@@ -60,4 +60,5 @@ urlpatterns = [
         pripojit_dokument,
         name="pripojit_dokument",
     ),
+    path("generovat-oznameni/<str:ident_cely>", generovat_oznameni, name="generovat_oznameni"),
 ]

@@ -684,3 +684,24 @@ class ZruseniProjektForm(forms.Form):
                 ),
             ),
         )
+
+
+class GenerovatNovePotvrzeniForm(forms.Form):
+    odeslat_oznamovateli = forms.BooleanField(label=_("Odeslat oznamovateli"), required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Div(
+                        "odeslat_oznamovateli",
+                        css_class="col-sm-12",
+                        title="projekt.form.GenerovatNovePotvrzeniForm.odeslat_oznamovateliTooltip.text",
+                    ),
+                    css_class="row",
+                ),
+            ),
+        )

@@ -1,4 +1,5 @@
 from core.constants import SN_ZAPSANY
+from core.models import Soubor
 from core.message_constants import PROJEKT_NELZE_SMAZAT
 from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
 from django.contrib.gis.geos import Point
@@ -158,3 +159,12 @@ class UrlTests(TestCase):
 
         response = create(request)
         self.assertEqual(200, response.status_code)
+
+    def test_generovat_oznameni(self):
+        ident_cely = "M-202212541"
+        self.client.force_login(self.existing_user)
+        response = self.client.post(f"/projekt/generovat-oznameni/{ident_cely}", {}, follow=True)
+        self.assertEqual(200, response.status_code)
+        oznameni = Soubor.objects.filter(nazev=f"oznameni_{ident_cely}_A.pdf")
+        self.assertEqual(oznameni.count(), 1)
+

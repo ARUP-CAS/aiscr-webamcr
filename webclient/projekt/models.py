@@ -433,11 +433,15 @@ class Projekt(models.Model):
         sequence.save()
         self.save()
 
-    def create_confirmation_document(self):
-        from core.utils import get_mime_type, calculate_crc_32
+    def create_confirmation_document(self, additional=False):
+        from core.utils import get_mime_type
         creator = OznameniPDFCreator(self.oznamovatel, self)
         filename = creator.build_pdf()
         filename_without_path = f"oznameni_{self.ident_cely}.pdf"
+        if additional:
+            soubory_count = Soubor.objects.filter(nazev__startswith=filename_without_path[:-4] + "_").count()
+            postfix = chr(65 + soubory_count)
+            filename_without_path = f"oznameni_{self.ident_cely}_{postfix}.pdf"
         duplikat = Soubor.objects.filter(nazev=filename)
         if not duplikat.exists():
             Soubor(
