@@ -50,4 +50,6 @@ jobs:
     - name: Django Testing
       working-directory: ./webclient
       run: |
+        mkdir -p /vol/media
+        chmod 777 /vol/media
         python manage.py test --settings=webclient.settings.dev
