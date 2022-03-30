@@ -25,7 +25,7 @@ map.on('click', function (e) {
                     $("#detector_coordinates_x").change();
                     $("#detector_coordinates_y").change();
                     console.log("lll "+corX+"  "+corY)
-                    addUniquePointToPoiLayer(corX, corY, '', false)
+                    addUniquePointToPoiLayer(corX, corY, '', false, true)
                     fill_katastr();
                 } else {
                     map.setView(e.latlng, map.getZoom() + 2)
@@ -137,10 +137,14 @@ var switch_coor_system = (new_system) => {
 //var addPointToPoiLayer = (lat, long, text) => {
 //    L.marker([lat, long]).bindPopup(text).addTo(poi);
 //};
-var addUniquePointToPoiLayer = (lat, long, text, zoom = true) => {
+var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) => {
     var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
     poi.clearLayers()
-    L.marker([corX, corY]).bindPopup("Vámi vyznačená poloha").addTo(poi);
+    if(redPin){
+        L.marker([corX, corY],{icon:pinIconRedPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+    } else {
+        L.marker([corX, corY],{icon:pinIconGreenPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+    }
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);
     }
@@ -165,7 +169,7 @@ function showPosition(position) {
     var latlng = new L.LatLng(latitude, longitude);
 
     map.setView(latlng, 16);
-    addUniquePointToPoiLayer(latitude, longitude, '', false)
+    addUniquePointToPoiLayer(latitude, longitude, '', false, true)
 
     document.getElementById('detector_system_coordinates').value = 1
     point_global_WGS84 = [latitude, longitude];
@@ -173,7 +177,7 @@ function showPosition(position) {
     document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
     document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
 
-    L.marker(latlng).addTo(poi)
+    L.marker(latlng,{icon:pinIconGreenPin}).addTo(poi)
         .bindPopup("Vaše současná poloha")
         .openPopup();
 };

@@ -17,7 +17,7 @@ map.on('click', function (e) {
 
                 $("#vyska").change();
                 $("#sirka").change();
-                addUniquePointToPoiLayer(corX, corY, '', false)
+                addUniquePointToPoiLayer(corX, corY, '', false, true)
             }
         }
     }
@@ -40,10 +40,15 @@ var is_in_czech_republic = (corX, corY) => {
 //var addPointToPoiLayer = (lat, long, text) => {
 //    L.marker([lat, long]).bindPopup(text).addTo(poi);
 //};
-var addUniquePointToPoiLayer = (lat, long, text, zoom = true) => {
+var addUniquePointToPoiLayer = (lat, long, text, zoom = true,redIcon= false) => {
     var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
     poi.clearLayers()
-    L.marker([corX, corY]).bindPopup("Vámi vyznačená poloha").addTo(poi);
+    if(redIcon){
+        L.marker([corX, corY],{icon:pinIconRed3D}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+    }else{
+        L.marker([corX, corY],{icon:pinIconGreen3D}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+    }
+    
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);
     }
@@ -62,7 +67,7 @@ function showPosition(position) {
     var latlng = new L.LatLng(latitude, longitude);
 
     map.setView(latlng, 16);
-    addUniquePointToPoiLayer(latitude, longitude, '', false)
+    addUniquePointToPoiLayer(latitude, longitude, '', false, true)
 
     //point_global_WGS84 = [Math.round(latitude * 1000000) / 1000000, Math.round(longitude * 1000000) / 1000000]
     point_global_WGS84 = [latitude, longitude];

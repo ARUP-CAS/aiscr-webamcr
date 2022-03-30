@@ -601,6 +601,10 @@
 {% endblock %}
 
 {% block script %}
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>

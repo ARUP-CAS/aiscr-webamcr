@@ -60,6 +60,10 @@
 
 
 {% block script %}
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>

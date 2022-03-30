@@ -29,6 +29,10 @@ crossorigin=""/>
 {% endblock %}
 
 {% block script %}
+<script >
+  var static_url = "{% get_static_prefix %}";
+</script>
+<script src="{% static 'mapa_pins.js' %}"></script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'mapa_doc.js' %}"></script>
   <script>
