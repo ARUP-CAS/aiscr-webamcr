@@ -17,9 +17,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.forms import inlineformset_factory
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.urls import reverse
 from adb.models import Adb, VyskovyBod
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -115,10 +118,17 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána adb: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})})
         else:
             logger.warning("Adb nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-
-        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})},status=403)
     else:
-        return render(request, "core/smazat.html", {"objekt": adb})
+        context = {
+        "object": adb,
+        "title": _("adb.modalForm.smazani.title.text"),
+        "id_tag": "smazat-adb-form",
+        "button": _("adb.modalForm.smazani.submit.button"),
+        
+        }
+        return render(request, "core/transakce_modal.html", context)

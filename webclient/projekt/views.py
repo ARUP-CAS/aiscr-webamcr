@@ -65,7 +65,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -311,26 +311,28 @@ def edit(request, ident_cely):
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    logger_s.debug("projekt.views.smazat.start", ident_cely=ident_cely)
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
-        logger_s.debug("projekt.views.smazat.check_stav_changed", ident_cely=ident_cely)
-        return redirect("arch_z:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
-        resp = projekt.delete()
+        projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-        logger_s.debug("projekt.views.smazat.success", resp=resp, message=ZAZNAM_USPESNE_SMAZAN)
-        return redirect("/projekt/list")
+        return JsonResponse({"redirect":reverse("projekt:list")})
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
-            logger_s.debug("projekt.views.smazat.warning", warnings=warnings, ident_cely=ident_cely)
-            return redirect("projekt:detail", ident_cely)
-        context = {"objekt": projekt}
-        logger_s.debug("projekt.views.smazat.finish", ident_cely=ident_cely)
-        return render(request, "core/smazat.html", context)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
+        context = {
+        "object": projekt,
+        "title": _("projekt.modalForm.smazani.title.text"),
+        "id_tag": "smazat-form",
+        "button": _("projekt.modalForm.smazani.submit.button"),
+        "form_check": form_check,
+        }
+        return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -390,10 +392,11 @@ class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterV
 def schvalit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
         if projekt.ident_cely[0] == "X":
@@ -401,13 +404,7 @@ def schvalit(request, ident_cely):
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                context = {
-                    "object": projekt,
-                    "title": _("Schválení projektu"),
-                    "header": _("Schválení projektu"),
-                    "button": _("Schválit projekt"),
-                }
-                return render(request, "core/transakce.html", context)
+                return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
             else:
                 logger.debug(
                     "Projektu "
@@ -417,16 +414,16 @@ def schvalit(request, ident_cely):
                 )
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        return redirect("/projekt/detail/" + projekt.ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':projekt.ident_cely})})
     form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
     context = {
         "object": projekt,
-        "title": _("Schválení projektu"),
-        "header": _("Schválení projektu"),
-        "button": _("Schválit projekt"),
+        "title": _("projekt.modalForm.schvaleni.title.text"),
+        "id_tag": "schvalit-form",
+        "button": _("projekt.modalForm.schvaleni.submit.button"),
         "form_check": form_check,
     }
-    return render(request, "core/transakce.html", context)
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -455,7 +452,7 @@ def prihlasit(request, ident_cely):
         form = PrihlaseniProjektForm(
             instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav},archivar=archivar
         )
-        osoba_form = OsobaForm()
+    osoba_form = OsobaForm()
     return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt, "osoba_form":osoba_form})
 
 
@@ -463,11 +460,12 @@ def prihlasit(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    #if projekt.stav != PROJEKT_STAV_PRIHLASENY:
-    #    raise PermissionDenied()
+    if projekt.stav != PROJEKT_STAV_PRIHLASENY:
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = ZahajitVTerenuForm(request.POST, instance=projekt)
 
@@ -477,7 +475,7 @@ def zahajit_v_terenu(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
             )
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -489,8 +487,9 @@ def zahajit_v_terenu(request, ident_cely):
         {
             "form": form,
             "object": projekt,
-            "title": "Zahájení v terénu",
-            "header": "Zahájení v terénu",
+            "title": _("projekt.modalForm.zahajitvTerenu.title.text"),
+            "id_tag": "zahajit-v-terenu-form",
+            "button": _("projekt.modalForm.zahajitvTerenu.submit.button"),
         },
     )
 
@@ -500,10 +499,11 @@ def zahajit_v_terenu(request, ident_cely):
 def ukoncit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -512,7 +512,7 @@ def ukoncit_v_terenu(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
             )
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -524,8 +524,9 @@ def ukoncit_v_terenu(request, ident_cely):
         {
             "form": form,
             "object": projekt,
-            "title": "Ukončení v terénu",
-            "header": "Ukončení v terénu",
+            "title": _("projekt.modalForm.ukoncitvTerenu.title.text"),
+            "id_tag": "ukoncit-v-terenu-form",
+            "button": _("projekt.modalForm.ukoncitvTerenu.submit.button"),
         },
     )
 
@@ -535,10 +536,11 @@ def ukoncit_v_terenu(request, ident_cely):
 def uzavrit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         # Move all events to state A2
         akce = Akce.objects.filter(projekt=projekt)
@@ -552,7 +554,7 @@ def uzavrit(request, ident_cely):
                         dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
-        return redirect("/projekt/detail/" + ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
@@ -566,17 +568,17 @@ def uzavrit(request, ident_cely):
                 else:
                     request.session['temp_data'].append(f"{key}: {' '.join(item)}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
-            return redirect ("projekt:detail", ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
             
         context = {
             "object": projekt,
-            "title": _("Uzavření projektu"),
-            "header": _("Uzavření projektu"),
-            "button": _("Uzavřít projekt"),
+            "title": _("projekt.modalForm.uzavrit.title.text"),
+            "id_tag": "uzavrit-form",
+            "button": _("projekt.modalForm.uzavrit.submit.button"),
             "form_check": form_check
         }
 
-        return render(request, "core/transakce.html", context)
+        return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -584,15 +586,16 @@ def uzavrit(request, ident_cely):
 def archivovat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         projekt.set_archivovany(request.user)
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
-        return redirect("/projekt/detail/" + ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
     else:
         warnings = projekt.check_pred_archivaci()
         logger.debug(warnings)
@@ -602,15 +605,15 @@ def archivovat(request, ident_cely):
             for key, item in warnings.items():
                 request.session['temp_data'].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ARCHIVOVAT)
-            return redirect ("projekt:detail", ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     context = {
         "object": projekt,
-        "title": _("Archivace projektu"),
-        "header": _("Archivace projektu"),
-        "button": _("Archivovat projekt"),
+        "title": _("projekt.modalForm.archivovat.title.text"),
+        "id_tag": "archivovat-form",
+        "button": _("projekt.modalForm.archivovat.submit.button"),
         "form_check": form_check
     }
-    return render(request, "core/transakce.html", context)
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -618,9 +621,10 @@ def archivovat(request, ident_cely):
 def navrhnout_ke_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = NavrhnoutZruseniProjektForm(request.POST)
         if form.is_valid():
@@ -642,12 +646,14 @@ def navrhnout_ke_zruseni(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
             )
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
-            context = {"projekt": projekt}
-            context["form"] = form
+            context = {
+                "projekt": projekt,
+                "form": form
+                }
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
         logger.debug(warnings)
@@ -660,7 +666,7 @@ def navrhnout_ke_zruseni(request, ident_cely):
             messages.add_message(
                 request, messages.ERROR, PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI
             )
-            return redirect ("projekt:detail", ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
         context = {
             "projekt": projekt,
             "form": NavrhnoutZruseniProjektForm(initial={"old_stav":projekt.stav}) 
@@ -673,9 +679,10 @@ def navrhnout_ke_zruseni(request, ident_cely):
 def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
@@ -683,24 +690,25 @@ def zrusit(request, ident_cely):
             projekt.set_zruseny(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
             context = context = {
                 "object": projekt,
-                "title": _("Zrušení projektu"),
-                "header": _("Zrušení projektu"),
-                "button": _("Zrušit projekt"),
+                "title": _("projekt.modalForm.zruseni.title.text"),
+                "id_tag": "zrusit-form",
+                "button": _("projekt.modalForm.zruseni.submit.button"),
+                "form_check": form_check,
+                "form": form,
             }
-            context["form"] = form
     else:
         form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
         context = {
             "object": projekt,
-            "title": _("Zrušení projektu"),
-            "header": _("Zrušení projektu"),
-            "button": _("Zrušit projekt"),
+            "title": _("projekt.modalForm.zruseni.title.text"),
+            "id_tag": "zrusit-form",
+            "button": _("projekt.modalForm.zruseni.submit.button"),
             "form_check": form_check,
         }
         if projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
@@ -713,7 +721,7 @@ def zrusit(request, ident_cely):
             context["form"] = ZruseniProjektForm(
                 initial={"reason_text": last_history_poznamka}
             )
-    return render(request, "core/transakce.html", context)
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -721,9 +729,10 @@ def zrusit(request, ident_cely):
 def vratit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -731,13 +740,20 @@ def vratit(request, ident_cely):
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
         form = VratitForm(initial={"old_stav":projekt.stav})
-    return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
+    context = {
+        "object": projekt,
+        "form": form,
+        "title": _("projekt.modalForm.vraceni.title.text"),
+        "id_tag": "vratit-form",
+        "button": _("projekt.modalForm.vraceni.submit.button"),
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -749,9 +765,10 @@ def vratit_navrh_zruseni(request, ident_cely):
         PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
         PROJEKT_STAV_ZRUSENY,
     ]:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if check_stav_changed(request, projekt):
-        return redirect("projekt:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -759,13 +776,20 @@ def vratit_navrh_zruseni(request, ident_cely):
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            return redirect("/projekt/detail/" + ident_cely)
+            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
         form = VratitForm(initial={"old_stav":projekt.stav})
-    return render(request, "core/vratit.html", {"form": form, "objekt": projekt})
+    context = {
+        "object": projekt,
+        "form": form,
+        "title": _("projekt.modalForm.vratitNavrhZruseni.title.text"),
+        "id_tag": "vratit-navrh-form",
+        "button": _("projekt.modalForm.vratitNavrhZruseni.submit.button"),
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 @login_required
 @require_http_methods(["GET", "POST"])

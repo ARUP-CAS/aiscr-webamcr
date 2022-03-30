@@ -1,4 +1,7 @@
 import logging
+
+from django.http import JsonResponse
+from django.urls import reverse
 from core.exceptions import MaximalIdentNumberError
 
 from core.ident_cely import get_komponenta_ident
@@ -16,6 +19,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -96,10 +100,17 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána komponenta: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})})
         else:
             logger.warning("Komponenta nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-
-        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})},status=403)
     else:
-        return render(request, "core/smazat.html", {"objekt": k})
+        context = {
+        "object": k,
+        "title": _("komponenta.modalForm.smazani.title.text"),
+        "id_tag": "smazat-komponenta-form",
+        "button": _("komponenta.modalForm.smazani.submit.button"),
+        
+        }
+        return render(request, "core/transakce_modal.html", context)

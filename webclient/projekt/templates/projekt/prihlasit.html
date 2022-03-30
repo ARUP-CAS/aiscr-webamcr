@@ -54,14 +54,8 @@
         firstModalID: "#modal-form",
         secondModal: modal,
       })
-      var create_osoba_modal = new Modal(options, "create-osoba")
-        //$("#create-osoba").modalForm({
-        //    modalID: "#modal-osoba-form",
-        //    formURL: "{% url 'uzivatel:create_osoba' %}",
-        //    successFunc: successFunction,
-        //    
-        //});
-    
+      var create_osoba_modal = new Modal(options, "create-osoba");  
+      checkPamatkovaOchrana(); 
     });
   
     </script>

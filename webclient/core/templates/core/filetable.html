@@ -26,9 +26,9 @@
       <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
       {% if show %}
         <td>
-          <a href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
+          <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
             <span class="material-icons app-color-danger">delete_forever</span>
-          </a>
+          </button>
         </td>
         {% if allow_replace %}
           <td>
@@ -52,3 +52,19 @@
   {% endfor %}
   </tbody>
 </table>
+<script>
+  //script for modal for delete files
+  document.addEventListener('DOMContentLoaded', function (event) {
+    if (document.getElementsByClassName("file-smazat-btn")){
+      elements = document.getElementsByClassName("file-smazat-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "smazat-soubor-form",
+        modalFormID: "#smazat-soubor-form",
+        })
+        console.log(elements.item(i))
+        new Modal(options, elements.item(i).id);
+      }
+    }
+  });
+</script>

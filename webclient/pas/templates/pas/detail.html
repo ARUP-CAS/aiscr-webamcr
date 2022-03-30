@@ -104,4 +104,48 @@
 {% endblock %}
 
 {% block script %}
+<script>
+  //modal scripts
+  document.addEventListener('DOMContentLoaded', function (event) {
+    if ("{{show.odeslat_link}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'pas:odeslat' sn.ident_cely %}?sent_stav={{sn.stav}}",
+      formID: "odeslat-pas-form",
+      modalFormID: "#odeslat-pas-form",
+    })
+    odeslat_akci_modal = new Modal(options, "pas-odeslat");
+    };
+    if ("{{show.vratit_link}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'pas:vratit' sn.ident_cely %}?sent_stav={{sn.stav}}",
+      formID: "vratit-pas-form",
+      modalFormID: "#vratit-pas-form",
+    })
+    vratit_akci_modal = new Modal(options, "pas-vratit");
+    }
+    if ("{{show.archivovat_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'pas:archivovat' sn.ident_cely %}?sent_stav={{sn.stav}}",
+        formID: "archivovat-pas-form",
+        modalFormID: "#archivovat-pas-form",
+      })
+    archivovat_akci_modal = new Modal(options, "pas-archivovat");
+    }
+    if ("{{show.potvrdit_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'pas:potvrdit' sn.ident_cely %}?sent_stav={{sn.stav}}",
+        formID: "potvrdit-pas-form",
+        modalFormID: "#potvrdit-pas-form",
+      })
+      potvrdit_akci_modal = new Modal(options, "pas-potvrdit");
+    }
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'pas:smazat' sn.ident_cely %}?sent_stav={{sn.stav}}",
+      formID: "smazat-pas-form",
+      modalFormID: "#smazat-pas-form",
+    })
+    smazat_akci_modal = new Modal(options, "pas-smazat");
+});
+
+</script>
 {% endblock %}

@@ -1,5 +1,8 @@
 import logging
 
+from django.http import JsonResponse
+from django.urls import reverse
+
 from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN, PIAN_NEPOTVRZEN
 from core.exceptions import NeznamaGeometrieError, MaximalIdentNumberError
 from core.ident_cely import get_temporary_pian_ident
@@ -67,20 +70,20 @@ def odpojit(request, dj_ident_cely):
             pian.delete()
             logger.debug("Pian smazán: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
-        return redirect("arch_z:detail", ident_cely=dj.archeologicky_zaznam.ident_cely)
+        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':dj.archeologicky_zaznam.ident_cely})})
     else:
         context = {
-            "objekt": pian,
-            "header": _("Skutečně odpojit pian ")
+        "object": pian,
+        "title": _("pian.modalForm.odpojeniPian.title.text"),
+        "id_tag": "odpojit-pian-form",
+        "button": _("pian.modalForm.odpojeniPian.submit.button"),
+        "text": _("Skutečně odpojit pian ")
             + pian.ident_cely
             + _(" z dokumentační jednotky ")
             + dj.ident_cely
             + "?",
-            "title": _("Odpojení pianu"),
-            "button": _("Odpojit pian"),
         }
-
-        return render(request, "core/transakce.html", context)
+        return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -93,22 +96,20 @@ def potvrdit(request, dj_ident_cely):
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':dj.archeologicky_zaznam.ident_cely})},status=403)
         else:
             pian.set_potvrzeny(request.user)
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
-            return redirect(
-                "arch_z:detail", ident_cely=dj.archeologicky_zaznam.ident_cely
-            )
-
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':dj.archeologicky_zaznam.ident_cely})})
     context = {
-        "objekt": pian,
-        "header": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
-        "title": _("Potvrzení pianu"),
-        "button": _("Potvrdit pian"),
-    }
-
-    return render(request, "core/transakce.html", context)
+        "object": pian,
+        "title": _("pian.modalForm.potvrditPian.title.text"),
+        "id_tag": "potvrdit-pian-form",
+        "button": _("pian.modalForm.potvrditPian.submit.button"),
+        "text": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
+        }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required

@@ -60,6 +60,8 @@ DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
 DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
 VYBERTE_PROSIM_POLOHU: Final = "Vyberte prosím lokalizaci na mapě."
 DOKUMENT_NEKDO_ZMENIL_STAV: Final = _("dokument.message.zmenaStavuNekymJinym.text")
+DOKUMENT_ODPOJ_ZADNE_RELACE: Final = _("dokument.message.odpojitDokumentBezRelace.text")
+DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM: Final = _("dokument.message.odpojitDokumentBezRelaceMeziZaznamemDokumentem.text")
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
