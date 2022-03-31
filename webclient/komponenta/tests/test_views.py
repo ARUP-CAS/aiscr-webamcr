@@ -64,7 +64,7 @@ class UrlTests(TestCase):
         request = add_middleware_to_request(request, MessageMiddleware)
         request.session.save()
         response = smazat(request, ident_cely="C-202000001A-K001")
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertEqual(
             Komponenta.objects.filter(ident_cely="C-202000001A-K001").count(),
             0,

@@ -92,7 +92,7 @@ class UrlTests(TestCase):
         self.assertTrue(_("Lokalizace okolností není vyplněna.") in request.session['temp_data'])
         self.assertTrue(_("Hlavní typ není vyplněn.") in request.session['temp_data'])
         self.assertTrue(_("Hlavní vedoucí není vyplněn.") in request.session['temp_data'])
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(403, response.status_code)
 
     def test_get_odeslat(self):
         request = self.factory.get("/arch-z/odeslat/")
@@ -102,7 +102,7 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = odeslat(request, EXISTING_EVENT_IDENT)
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
 
     def test_get_vratit(self):
         request = self.factory.get("/arch-z/vratit/")
@@ -110,8 +110,9 @@ class UrlTests(TestCase):
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
         request.session.save()
-        with self.assertRaises(PermissionDenied, msg=""):
-            vratit(request, ident_cely=EXISTING_EVENT_IDENT)
+
+        response = vratit(request, EXISTING_EVENT_IDENT)
+        self.assertEqual(403, response.status_code)
 
     def test_get_pripojit_dokument(self):
         request = self.factory.get("/arch-z/pripojit/dokument/")
@@ -141,6 +142,6 @@ class UrlTests(TestCase):
         documents_after = Dokument.objects.filter(
             casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT
         ).count()
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertEqual(documents_before + 1, documents_after)
