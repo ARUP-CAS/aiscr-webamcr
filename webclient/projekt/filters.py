@@ -200,6 +200,7 @@ class ProjektFilter(filters.FilterSet):
     historie_uzivatel = ModelMultipleChoiceFilter(
         queryset=None,
         label="Uživatel",
+        field_name="historie__historie__uzivatel",
         # widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
