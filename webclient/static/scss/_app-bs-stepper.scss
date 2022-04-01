@@ -2,6 +2,9 @@
 
 // stepper
 .bs-stepper {
+  &.historie-link{
+    cursor: pointer;
+  }
   .bs-stepper-header {
     align-items: unset;
 

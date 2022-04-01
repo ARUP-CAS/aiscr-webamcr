@@ -1,6 +1,6 @@
 {% load i18n %}
 
-<div class="bs-stepper">
+<div class="bs-stepper historie-link" onclick="location.href='{% url 'historie:pas' sn.ident_cely %}';">
   <div class="bs-stepper-header">
     <div class="step {% if sn.stav == 1 %}active{% endif %}">
       <button type="button" class="btn step-trigger">

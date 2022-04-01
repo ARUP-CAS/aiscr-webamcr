@@ -62,7 +62,7 @@
     {% include "toolbar_akce.html" with zaznam=zaznam  showbackdetail=True showcontrols=True %}
 
     <!-- stepper -->
-    <div class="bs-stepper">
+    <div class="bs-stepper historie-link" onclick="location.href='{% url 'historie:akce' zaznam.ident_cely %}';">
       <div class="bs-stepper-header">
         <div class="step {% if zaznam.stav == 1 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
