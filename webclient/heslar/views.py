@@ -1,6 +1,7 @@
 from dal import autocomplete
 from django.contrib.gis.geos import Point
 from django.http import JsonResponse
+from django.db.models import Value, IntegerField
 
 from heslar.models import Heslar, RuianKatastr
 
@@ -9,7 +10,9 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = RuianKatastr.objects.all()
         if self.q:
-            qs = qs.filter(nazev__icontains=self.q)
+            new_qs = qs.filter(nazev__istartswith=self.q).annotate(qs_order=Value(0, IntegerField()))
+            new_qs2 =qs.filter(nazev__icontains=self.q).exclude(nazev__istartswith=self.q).annotate(qs_order=Value(2, IntegerField()))
+            qs = new_qs.union(new_qs2).order_by("qs_order","nazev")
         return qs
 
 
