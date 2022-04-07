@@ -3,6 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 FORM_NOT_VALID: Final = "Forma není validní."
 
+PRISTUP_ZAKAZAN: Final = "common.message.pristupZakazan.text"
+
 ZAZNAM_USPESNE_VYTVOREN: Final = "Záznam byl úspěšně vytvořen."
 ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = "Záznam se nepovedlo vytvořit."
 ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
@@ -58,6 +60,8 @@ DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
 DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
 VYBERTE_PROSIM_POLOHU: Final = "Vyberte prosím lokalizaci na mapě."
 DOKUMENT_NEKDO_ZMENIL_STAV: Final = _("dokument.message.zmenaStavuNekymJinym.text")
+DOKUMENT_ODPOJ_ZADNE_RELACE: Final = _("dokument.message.odpojitDokumentBezRelace.text")
+DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM: Final = _("dokument.message.odpojitDokumentBezRelaceMeziZaznamemDokumentem.text")
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."

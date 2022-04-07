@@ -8,3 +8,15 @@
     }
   }
 }
+.app-modal-form {
+  .modal-body {
+    .bootstrap-select {
+      .dropdown-menu{
+        max-height: 480px !important;
+        .inner{
+          max-height: 400px !important;
+        }
+      }
+    }
+  }
+}

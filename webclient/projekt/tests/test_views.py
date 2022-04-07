@@ -119,7 +119,7 @@ class UrlTests(TestCase):
         # Client is used there to follow redirect
         self.client.force_login(self.existing_user)
         response = self.client.get(f"/projekt/smazat/{self.projekt.ident_cely}", follow=True)
-        self.assertTrue(PROJEKT_NELZE_SMAZAT in response.content.decode("utf-8"))
+        self.assertEqual(403, response.status_code)
 
     def test_post_create_success(self):
         data = {

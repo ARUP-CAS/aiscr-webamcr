@@ -392,46 +392,20 @@ class NavrhnoutZruseniProjektForm(forms.Form):
     enable_submit = True
 
     def __init__(self, *args, **kwargs):
-        if "enable_form_submit" in kwargs:
-            enable_form_submit = kwargs.pop("enable_form_submit")
-        else:
-            enable_form_submit = True
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Návrh zrušení projektu")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
+                "reason",
+                css_class="form-check",
                 ),
-                Div(
-                    Div(
-                        "reason",
-                        css_class="form-check",
-                    ),
-                    Div(
-                        "reason_text",
-                        css_class="col-sm-12",
-                    ),
-                    Div("projekt_id", css_class="col-sm-12"),
-                    Div("old_stav"),
-                ),
-                css_class="card app-card-form",
-            ),
             Div(
-                FormActions(
-                    Submit(
-                        "save", "Navrhnout zrušení", disabled=not enable_form_submit
-                    ),
-                    HTML(
-                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
-                    ),
-                ),
-                css_class="mt-3",
+                "reason_text",
+                css_class="col-sm-12",
             ),
+            Div("projekt_id", css_class="col-sm-12"),
+            Div("old_stav"),        
         )
 
     def clean(self):
@@ -472,6 +446,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "kulturni_pamatka": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true", "size":"7"}
+            ),
         }
         labels = {
             "vedouci_projektu": _("Vedoucí projektu"),
@@ -509,32 +486,17 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        HTML(_("Přihlášení projektu")),
-                        css_class="app-fx app-left",
+                    AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    css_class="col-sm-4 input-osoba",
                     ),
-                    css_class="card-header",
-                ),
-                Div(
-                    Div(
-                        Div(
-                            Div(
-                            AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
-                            css_class="col-sm-4 input-osoba",
-                            ),
-                            Div("organizace", css_class="col-sm-4"),
-                            Div("uzivatelske_oznaceni", css_class="col-sm-4"),
-                            Div("kulturni_pamatka", css_class="col-sm-2"),
-                            Div("kulturni_pamatka_cislo", css_class="col-sm-2"),
-                            Div("kulturni_pamatka_popis", css_class="col-sm-8"),
-                            Div("old_stav"),
-                            css_class="row",
-                        ),
-                        css_class="card-body",
-                    )
-                ),
-                css_class="card app-card-form",
-            )
+                Div("organizace", css_class="col-sm-4"),
+                Div("uzivatelske_oznaceni", css_class="col-sm-4"),
+                Div("kulturni_pamatka", css_class="col-sm-4"),
+                Div("kulturni_pamatka_cislo", css_class="col-sm-4"),
+                Div("kulturni_pamatka_popis", css_class="col-sm-4"),
+                Div("old_stav"),
+                css_class="row",
+            ),
         )
         self.helper.form_tag = False
 
@@ -569,36 +531,13 @@ class ZahajitVTerenuForm(forms.ModelForm):
         super(ZahajitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_zahajeni"].required = True
         self.helper = FormHelper(self)
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Zahájení výzkumu ")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
+                Div("datum_zahajeni", css_class="col-sm-4"),
+                Div("old_stav"),
+                css_class="row",
                 ),
-                Div(
-                    Div(
-                        Div(
-                            Div("datum_zahajeni", css_class="col-sm-3"),
-                            Div("old_stav"),
-                            css_class="row",
-                        ),
-                        css_class="card-body",
-                    )
-                ),
-                css_class="card app-card-form",
-            ),
-            Div(
-                FormActions(
-                    Submit("save", "Zahájit v terénu"),
-                    HTML(
-                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
-                    ),
-                ),
-                css_class="mt-3",
-            ),
         )
 
 
@@ -623,36 +562,13 @@ class UkoncitVTerenuForm(forms.ModelForm):
         super(UkoncitVTerenuForm, self).__init__(*args, **kwargs)
         self.fields["datum_ukonceni"].required = True
         self.helper = FormHelper(self)
+        self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Ukončení výzkumu")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
+                Div("datum_ukonceni", css_class="col-sm-4"),
+                Div("old_stav"),
+                css_class="row",
                 ),
-                Div(
-                    Div(
-                        Div(
-                            Div("datum_ukonceni", css_class="col-sm-3"),
-                            Div("old_stav"),
-                            css_class="row",
-                        ),
-                        css_class="card-body",
-                    ),
-                ),
-                css_class="card app-card-form",
-            ),
-            Div(
-                FormActions(
-                    Submit("save", "Ukončit v terénu"),
-                    HTML(
-                        '<button type="button" class="btn btn-secondary ml-1" onclick="window.history.back();">Zpět</button>'
-                    ),
-                ),
-                css_class="mt-3",
-            ),
         )
 
     def clean(self):
@@ -681,13 +597,11 @@ class ZruseniProjektForm(forms.Form):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    Div(
-                        "reason_text",
-                        css_class="col-sm-12",
-                        title="projekt.form.zruseni.duvodTooltip.text",
-                    ),
-                    css_class="row",
+                    "reason_text",
+                    css_class="col-sm-12",
+                    title="projekt.form.zruseni.duvodTooltip.text",
                 ),
+                css_class="row",
             ),
         )
 

@@ -81,20 +81,18 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
     )
     aktivace = tables.TemplateColumn(
         attrs={
-            "td": {"class": "spoluprace"},
+            "td": {"class": "spoluprace" },
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
         template_name="pas/aktivace_deaktivace_cell.html",
         orderable=False,
     )
-    smazani = tables.LinkColumn(
-        "pas:spoluprace_smazani",
-        text="Smazat",
-        args=[A("pk")],
+    smazani = tables.TemplateColumn(
         attrs={
-            "a": {"class": "btn btn-sm"},
+            "td": {"class": "spoluprace"},
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
+        template_code='{% load i18n %} <button id="spoluprace-smazat-{{record.id}}" class="btn btn-sm spoluprace-smazat-btn" type="button" name="button" href="{% url "pas:spoluprace_smazani" record.id %}">{% trans "Smazat" %}</button>',
         exclude_from_export=True,
         orderable=False,
     )

@@ -11,6 +11,7 @@ from core.tests.runner import (
     ZACHOVALOST_30_80_ID,
     add_middleware_to_request, EL_CHEFE_ID, ARCHIV_ARUB,
     TESTOVACI_DOKUMENT_IDENT,
+    DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -30,6 +31,7 @@ class UrlTests(TestCase):
         self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
         self.existing_dokument = TESTOVACI_DOKUMENT_IDENT
+        self.dokument_with_soubor = DOCUMENT_NALEZOVA_ZPRAVA_IDENT
 
     def test_get_detail(self):
         request = self.factory.get("/dokument/detail/")
@@ -67,16 +69,17 @@ class UrlTests(TestCase):
         requestA.user = self.existing_user
         requestA.session.save()
         # Dokument je ve spatnem stavu
-        with self.assertRaises(PermissionDenied, msg=""):
-            archivovat(requestA, ident_cely=self.existing_dokument)
+        response = archivovat(requestA, ident_cely=self.existing_dokument)
+        self.assertEqual(403, response.status_code)
+
         request = self.factory.get("/dokument/odeslat/")
         request = add_middleware_to_request(request, SessionMiddleware)
         request = add_middleware_to_request(request, MessageMiddleware)
         request.user = self.existing_user
         request.session.save()
         # Dokument lze odeslat
-        response = odeslat(request, ident_cely=self.existing_dokument)
-        self.assertEqual(302, response.status_code)
+        response = odeslat(request, ident_cely=self.dokument_with_soubor)
+        self.assertEqual(200, response.status_code)
 
         data = {
             "csrfmiddlewaretoken": "OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm",
@@ -89,15 +92,14 @@ class UrlTests(TestCase):
         request.session.save()
         # Stav se zmeni na odeslany
         response = odeslat(request, ident_cely=self.existing_dokument)
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertEqual(
             Dokument.objects.get(ident_cely=self.existing_dokument).stav,
             D_STAV_ODESLANY,
         )
         # Nejde archivovat protoze neni prilozen soubor
         response = archivovat(requestA, ident_cely=self.existing_dokument)
-        self.assertEqual(200, response.status_code)
-        self.assertTrue(DOKUMENT_NELZE_ARCHIVOVAT in response.content.decode("utf-8"))
+        self.assertEqual(403, response.status_code)
 
     def test_post_edit(self):
         data = {
