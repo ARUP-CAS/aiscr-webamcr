@@ -4,6 +4,7 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
+{% load crispy_forms_field %}
 
 {% block title %}{% trans "Detail dokumentu" %}{% endblock %}
 {% block head %}
@@ -16,6 +17,35 @@
 
     {% include "state_component_document.html" with dokument=dokument %}
 
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Náhledy 3D modelu / Obrázky s texturou" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -43,13 +73,59 @@
           </ul>
         </div>
       {% endif %}
-          {% crispy formDokument %}
+      <div class="row">
+        <div class="form-group col-sm-2 input-osoba">
+          {% crispy_addon formDokument.autori append='<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
         </div>
-        {% include "dokument/coor_doc.html" %}
-        <div class="card-body">
-          {% crispy formExtraData %}
-          {% crispy formKomponenta %}
+        <div class="form-group col-sm-2">
+          {{ formDokument.rok_vzniku|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.organizace|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.typ_dokumentu|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formExtraData.format|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.oznaceni_originalu|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-6">
+          {{ formDokument.popis|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-6">
+          {{ formDokument.poznamka|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-8">
+          {{ formExtraData.odkaz|as_crispy_field }}
+        </div>
       </div>
+        {% include "dokument/coor_doc.html" %}
+        <div class="row">
+          <div class="col-sm-12">
+            <span class="app-divider-label">{% trans "dokument.template.komponentaDivider.text" %}</span>
+            <hr class="mt-0" />
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.obdobi|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.presna_datace|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.areal|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.aktivity|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formExtraData.duveryhodnost|as_crispy_field }}
+          </div>
+        </div>
       </form>
     </div>
 
@@ -95,34 +171,7 @@
       </div>
     </div>
 
-    <div class="card app-card-form">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Náhledy 3D modelu / Obrázky s texturou" %}
-        </div>
-        {% if show.editovat %}
-        <div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
-               rel="tooltip"
-               data-placement="top" title="{% trans 'Nahrát soubory' %}">
-              <span class="material-icons">publish</span>
-            </a>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-      <div class="card-body">
-        {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True %}
-        {% else %}
-          <div class="app-note">
-            <span class="material-icons">info</span>
-            {% trans "Dokument zatím neobsahuje žádné soubory." %}
-          </div>
-        {% endif %}
-      </div>
-    </div>
+    
   </div>
 
 {% endblock %}
