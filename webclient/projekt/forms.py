@@ -42,8 +42,8 @@ class CreateProjektForm(forms.ModelForm):
             "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "hlavni_katastr": forms.Textarea(
-                attrs={"rows": 1, "cols": 20, "readonly": "readonly"}
+            "hlavni_katastr": forms.TextInput(
+                attrs={"readonly": "readonly"}
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -119,7 +119,7 @@ class CreateProjektForm(forms.ModelForm):
         )
         self.fields[
             "hlavni_katastr"
-        ].widget.template_name = "core/select_to_textarea.html"
+        ].widget.template_name = "core/select_to_text.html"
         self.helper.form_tag = False
         for key in self.fields.keys():
             if required or required_next:
@@ -190,12 +190,10 @@ class EditProjektForm(forms.ModelForm):
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "hlavni_katastr": forms.Textarea(
-                attrs={
-                    "rows": 1,
-                    "cols": 20,
-                    "readonly": "readonly",
-                },
+            "hlavni_katastr": forms.TextInput(
+                attrs=
+                    {"readonly": "readonly"}
+                ,
             ),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
@@ -331,7 +329,7 @@ class EditProjektForm(forms.ModelForm):
         self.helper.form_tag = False
         self.fields[
             "hlavni_katastr"
-        ].widget.template_name = "core/select_to_textarea.html"
+        ].widget.template_name = "core/select_to_text.html"
         for key in self.fields.keys():
             if required or required_next:
                 self.fields[key].required = True if key in required else False
