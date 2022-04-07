@@ -98,9 +98,7 @@
         <div class="collapse mb-3" id="filter">
           <div class="card app-card-form">
             <div class="card-body">
-                {% cache 3600 project_filter %}
                     {% crispy filter.form filter.helper %}
-                {% endcache %}
               <button type="submit" class="btn btn-primary">
                 <span class="material-icons">check</span> {% trans "Vybrat projekty" %}
               </button>
@@ -286,8 +284,7 @@
           for (let i = 0; i < userSelection2.length; i++) {
               const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
               userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
-          }
-
+          } 
       });
 
   </script>
