@@ -31,7 +31,6 @@ from core.message_constants import (
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
     MAXIMUM_AKCII_DOSAZENO,
-    PRISTUP_ZAKAZAN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
@@ -90,8 +89,7 @@ def detail(request, ident_cely):
         "warnings": request.session.pop("temp_data", None),
         "arch_projekt_link": request.session.pop("arch_projekt_link", None),
     }
-    old_objekt_post = request.session.pop("_old_objekt_post", None)
-    old_predmet_post = request.session.pop("_old_predmet_post", None)
+    old_nalez_post = request.session.pop("_old_nalez_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
     old_adb_post = request.session.pop("_old_adb_post", None)
     adb_ident_cely = request.session.pop("adb_ident_cely", None)
@@ -150,7 +148,7 @@ def detail(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
@@ -161,7 +159,7 @@ def detail(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
@@ -245,7 +243,7 @@ def detail(request, ident_cely):
                         readonly=not show["editovat"],
                     ),
                     "form_nalezy_objekty": NalezObjektFormset(
-                        old_objekt_post,
+                        old_nalez_post,
                         instance=komponenta,
                         prefix=komponenta.ident_cely + "_o",
                     )
@@ -254,7 +252,7 @@ def detail(request, ident_cely):
                         instance=komponenta, prefix=komponenta.ident_cely + "_o"
                     ),
                     "form_nalezy_predmety": NalezPredmetFormset(
-                        old_predmet_post,
+                        old_nalez_post,
                         instance=komponenta,
                         prefix=komponenta.ident_cely + "_p",
                     )
@@ -342,18 +340,17 @@ def odeslat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ZAPSANY:
         logger.debug("arch_z.views.odeslat permission denied")
-        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        raise PermissionDenied()
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
         logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         az.set_odeslany(request.user)
         az.save()
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ODESLANA)
         logger.debug("arch_z.views.odeslat akce uspesne odeslana " + AKCE_USPESNE_ODESLANA)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})})
+        return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_odeslanim()
         logger.debug("arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings))
@@ -362,16 +359,18 @@ def odeslat(request, ident_cely):
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
             logger.debug("arch_z.views.odeslat akci nelze odeslat " + AKCI_NELZE_ODESLAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+            return redirect ("arch_z:detail", ident_cely)
     form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
     context = {
         "object": az,
-        "title": _("arch_z.modalForm.odeslatArchz.title.text"),
-        "id_tag": "odeslat-akci-form",
-        "button": _("adb.modalForm.odeslatArchz.submit.button"),
+        "title" : _("Odeslání akce"),
+        "header" : _("Odeslání akce"),
+        "button" : _("Odeslat akci"),
         "form_check": form_check
     }
-    return render(request, "core/transakce_modal.html", context)
+
+    logger.debug("arch_z.views.odeslat render ")
+    return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -379,11 +378,10 @@ def odeslat(request, ident_cely):
 def archivovat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY:
-        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        raise PermissionDenied()
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         # TODO BR-A-5
         az.set_archivovany(request.user)
@@ -392,23 +390,23 @@ def archivovat(request, ident_cely):
         if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
             request.session['arch_projekt_link'] = True
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})})
+        return redirect("arch_z:detail", ident_cely)
     else:
         warnings = az.akce.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+            return redirect ("arch_z:detail", ident_cely)
     form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
     context = {
         "object": az,
-        "title": _("arch_z.modalForm.archivovatArchz.title.text"),
-        "id_tag": "archivovat-akci-form",
-        "button": _("adb.modalForm.archivovatArchz.submit.button"),
+        "title" : _("Archivace akce"),
+        "header" : _("Archivace akce"),
+        "button" : _("Archivovat akci"),
         "form_check": form_check,
     }
-    return render(request, "core/transakce_modal.html", context)
+    return render(request, "core/transakce.html", context)
 
 
 @login_required
@@ -416,10 +414,9 @@ def archivovat(request, ident_cely):
 def vratit(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
-        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        raise PermissionDenied()
     if check_stav_changed(request, az):
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return redirect("arch_z:detail", ident_cely)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -452,20 +449,13 @@ def vratit(request, ident_cely):
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
             messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})})
+            return redirect("arch_z:detail", ident_cely)
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
         form = VratitForm(initial={"old_stav":az.stav})
-    context = {
-        "object": az,
-        "form": form,
-        "title": _("arch_z.modalForm.vratitArchz.title.text"),
-        "id_tag": "vratit-akci-form",
-        "button": _("adb.modalForm.vratitArchz.submit.button"),
-    }
-    return render(request, "core/transakce_modal.html", context)
+    return render(request, "core/vratit.html", {"form": form, "objekt": az})
 
 
 @login_required
@@ -557,7 +547,7 @@ def zapsat(request, projekt_ident_cely):
 def smazat(request, ident_cely):
     akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
     if check_stav_changed(request, akce.archeologicky_zaznam):
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return redirect("arch_z:detail", ident_cely)
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam
@@ -576,19 +566,11 @@ def smazat(request, ident_cely):
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         if projekt:
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':projekt.ident_cely})})
+            return redirect("/projekt/detail/" + projekt.ident_cely)
         else:
-            return JsonResponse({"redirect":reverse("index")})
+            return redirect("/")
     else:
-        form_check = CheckStavNotChangedForm(initial={"old_stav":akce.archeologicky_zaznam.stav})
-        context = {
-        "object": akce,
-        "title": _("arch_z.modalForm.smazani.title.text"),
-        "id_tag": "smazat-akci-form",
-        "button": _("arch_z.modalForm.smazani.submit.button"),
-        "form_check": form_check,
-        }
-        return render(request, "core/transakce_modal.html", context)
+        return render(request, "core/smazat.html", {"objekt": akce})
 
 
 @login_required

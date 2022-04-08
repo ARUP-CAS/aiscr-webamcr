@@ -263,9 +263,11 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 css_class="row",
             ),
             Div(
+                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
                 HTML(_('<hr class="mt-0" />')),
-                css_class="col-sm-12",
+                data_toggle="collapse", href="#historieCollapse", role="button", aria_expanded="false", aria_controls="historieCollapse",
+                css_class="col-sm-12 app-btn-show-more collapsed",
             ),
             Div(
                 Div("historie_typ_zmeny", css_class="col-sm-2"),
@@ -273,7 +275,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-4"),
-                css_class="row",
+                id="historieCollapse", css_class="collapse row",
             ),
         ),
     )

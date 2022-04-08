@@ -158,6 +158,7 @@ def detail(request, ident_cely):
 @require_http_methods(["GET"])
 def detail_model_3D(request, ident_cely):
     context = { "warnings": request.session.pop("temp_data", None) }
+    old_nalez_post = request.session.pop("_old_nalez_post", None)
     dokument = get_object_or_404(
         Dokument.objects.select_related(
             "soubory",
@@ -196,7 +197,7 @@ def detail_model_3D(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
@@ -207,7 +208,7 @@ def detail_model_3D(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
@@ -229,10 +230,10 @@ def detail_model_3D(request, ident_cely):
         obdobi_choices, areal_choices, instance=komponenty[0], readonly=True
     )
     context["formset"] = {
-        "objekt": NalezObjektFormset(
+        "objekt": NalezObjektFormset(old_nalez_post,
             instance=komponenty[0], prefix=komponenty[0].ident_cely + "_o"
         ),
-        "predmet": NalezPredmetFormset(
+        "predmet": NalezPredmetFormset(old_nalez_post,
             instance=komponenty[0], prefix=komponenty[0].ident_cely + "_p"
         ),
         "helper": NalezFormSetHelper(),
