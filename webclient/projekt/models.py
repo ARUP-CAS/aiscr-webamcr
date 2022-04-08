@@ -436,7 +436,7 @@ class Projekt(models.Model):
     def create_confirmation_document(self, additional=False):
         from core.utils import get_mime_type
         creator = OznameniPDFCreator(self.oznamovatel, self)
-        filename = creator.build_pdf()
+        filename = creator.build_document()
         filename_without_path = f"oznameni_{self.ident_cely}.pdf"
         if additional:
             soubory_count = Soubor.objects.filter(nazev__startswith=filename_without_path[:-4] + "_").count()
