@@ -71,6 +71,8 @@ OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
 PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
 PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
 PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."
+PIAN_NEVALIDNI_GEOMETRIE: Final = "Pian má nevalidní geometrii."
+PIAN_VALIDACE_VYPNUTA: Final = "Geometrii Pianu se nepodařilo ověřit."
 
 # SN
 SAMOSTATNY_NALEZ_VRACEN: Final = "Samostatný nález vrácen do předchozího stavu."
@@ -98,3 +100,13 @@ AUTOLOGOUT_REFRESH_SUCCESS: Final = _("autologout.message.refreshsuccess.text")
 UPLOADFILE_REJECTED_PAS: Final = _("core.message.uploadFile.rejectedPas.text")
 UPLOADFILE_REJECTED_DOKUMENT: Final = _("core.message.uploadFile.rejectedDokument.text")
 UPLOADFILE_REJECTED_ALL: Final = _("core.message.uploadFile.rejectedAll.text")
+
+# Validation
+VALIDATION_NOT_VALID: Final = "Geometrie není validní."
+VALIDATION_EMPTY: Final = "Geometrie je prázdná."
+VALIDATION_NOT_SIMPLE: Final = "Geometrie není typu simple geometry."
+VALIDATION_NOT_MULTIPART: Final = "Geometrie je multigeometrií."
+VALIDATION_LINE_LENGTH: Final = "Vzdálenost bodů je nižší než povolená mez."
+
+
+

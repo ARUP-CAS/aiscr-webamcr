@@ -15,7 +15,11 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
     MAXIMUM_IDENT_DOSAZEN,
+    PIAN_NEVALIDNI_GEOMETRIE,
+    PIAN_VALIDACE_VYPNUTA,
+    VALIDATION_EMPTY,
 )
+from core.utils import get_validation_messages
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -30,6 +34,7 @@ from heslar.hesla import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
 from heslar.models import Heslar
 from pian.forms import PianCreateForm
 from pian.models import Kladyzm, Pian
+from django.db import connection
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +44,29 @@ logger = logging.getLogger(__name__)
 def detail(request, ident_cely):
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
     form = PianCreateForm(request.POST, instance=pian, prefix=ident_cely,)
-    if form.is_valid():
+    c = connection.cursor()
+    validation_results=""
+    validation_geom =""
+    try:
+        dict1=dict(request.POST)
+        for key in dict1.keys():
+            if key.endswith("-geom"):
+                validation_geom=dict1.get(key)[0]
+        c.execute("BEGIN")
+        c.callproc("validateGeom", [validation_geom])
+        validation_results = c.fetchone()[0]
+        c.execute("COMMIT")
+    except Exception:
+        validation_results=PIAN_VALIDACE_VYPNUTA
+    finally:
+        c.close()
+    if validation_geom == 'undefined':
+         messages.add_message(request, messages.ERROR, PIAN_NEVALIDNI_GEOMETRIE+" "+get_validation_messages(VALIDATION_EMPTY))
+    elif validation_results == PIAN_VALIDACE_VYPNUTA:
+         messages.add_message(request, messages.ERROR, PIAN_VALIDACE_VYPNUTA)
+    elif validation_results != "valid":
+         messages.add_message(request, messages.ERROR, PIAN_NEVALIDNI_GEOMETRIE+" "+get_validation_messages(validation_results))
+    elif form.is_valid():
         logger.debug("Form is valid")
         form.save()
         if form.changed_data:
@@ -117,7 +144,22 @@ def potvrdit(request, dj_ident_cely):
 def create(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
-    if form.is_valid():
+    c = connection.cursor()
+    validation_results=""
+    try:
+        c.execute("BEGIN")
+        c.callproc("validateGeom", [str(form.data["geom"])])
+        validation_results = c.fetchone()[0]
+        c.execute("COMMIT")
+    except Exception:
+        validation_results=PIAN_VALIDACE_VYPNUTA
+    finally:
+        c.close()
+    if validation_results == PIAN_VALIDACE_VYPNUTA:
+        messages.add_message(request, messages.ERROR, PIAN_VALIDACE_VYPNUTA)
+    elif validation_results != "valid":
+        messages.add_message(request, messages.ERROR, PIAN_NEVALIDNI_GEOMETRIE+" "+get_validation_messages(validation_results))
+    elif form.is_valid():
         logger.debug("pian.views.create: Form is valid")
         pian = form.save(commit=False)
         # Assign base map references
