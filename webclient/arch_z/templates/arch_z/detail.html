@@ -658,7 +658,7 @@
                   map.setView([rs.lat, rs.lng], rs.zoom)
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id)
+                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom)
                   }
                   if(ask_only_once){
                     ask_only_once=false;

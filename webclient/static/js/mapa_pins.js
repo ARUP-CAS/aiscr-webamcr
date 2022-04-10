@@ -24,7 +24,7 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [41, 41]
     });
     var pinIconBluePoint = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue_point.svg',
+    iconUrl: static_url+'/img/pins/pin_blue_point2.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -73,7 +73,7 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [41, 41]
     });
     var pinIconRedPoint = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_red_point.svg',
+    iconUrl: static_url+'/img/pins/pin_red_point2.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -122,7 +122,7 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [41, 41]
     });
     var pinIconGreenPoint = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_green_point.svg',
+    iconUrl: static_url+'/img/pins/pin_green_point2.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
@@ -170,7 +170,7 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [41, 41]
     });
     var pinIconYellowPoint = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_yellow_point.svg',
+    iconUrl: static_url+'/img/pins/pin_yellow_point2.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
