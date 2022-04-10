@@ -5,7 +5,7 @@ map.addLayer(poi);
 map.on('click', function (e) {
     if (!global_measuring_toolbox._measuring) {
         var addPointToPoiLayer = (lat, long, text) => {
-            L.marker([lat, long],{icon: pinIconRed}).bindPopup(text).addTo(poi);
+            L.marker([lat, long],{icon: pinIconRedDf}).bindPopup(text).addTo(poi);
         }
         poi.clearLayers();
         let [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
