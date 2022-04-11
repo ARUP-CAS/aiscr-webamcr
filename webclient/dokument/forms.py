@@ -390,6 +390,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "autori": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "oznaceni_originalu":forms.TextInput(),
         }
         labels = {
             "typ_dokumentu": _("Typ dokumentu"),
@@ -415,7 +416,6 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.fields["popis"].widget.attrs["rows"] = 1
         # self.fields["popis"].required = True
         self.fields["poznamka"].widget.attrs["rows"] = 1
-        self.fields["oznaceni_originalu"].widget.attrs["rows"] = 1
         self.fields["typ_dokumentu"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
             .filter(id__in=MODEL_3D_DOKUMENT_TYPES)
@@ -424,7 +424,6 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.fields["rok_vzniku"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
-            Div(
                 Div("typ_dokumentu", css_class="col-sm-4"),
                 Div("organizace", css_class="col-sm-4"),
                 Div("rok_vzniku", css_class="col-sm-4"),
@@ -432,8 +431,6 @@ class CreateModelDokumentForm(forms.ModelForm):
                 Div("autori", css_class="col-sm-6"),
                 Div("popis", css_class="col-sm-12"),
                 Div("poznamka", css_class="col-sm-12"),
-                css_class="row",
-            ),
         )
         self.helper.form_tag = False
         for key in self.fields.keys():

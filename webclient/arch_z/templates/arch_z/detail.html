@@ -533,9 +533,9 @@
                   {% trans "Nálezy" %}
                 </div>
               </div>
-              <div class="card-body">
+              <div class="card-body formset-table">
                 <h5>{% trans "Objekty" %}</h5>
-                <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+                <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezSubmitButton.disabled = true; return true;">
                   {% if k.form_nalezy_objekty.forms %}
                   {% crispy k.form_nalezy_objekty k.helper %}
                   {% else %}
@@ -544,13 +544,7 @@
                     {% trans "Komponenta neobsahuje žádné objekty." %}
                   </div>
                   {% endif %}
-                  {% if show.editovat %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit objekty" %}</button>
-                  {% endif %}
-                </form>
                 <h5>{% trans "Předměty" %}</h5>
-                <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
                   {% if k.form_nalezy_predmety.forms %}
                   {% crispy k.form_nalezy_predmety k.helper %}
                   {% else %}
@@ -560,7 +554,7 @@
                   </div>
                   {% endif %}
                   {% if show.editovat %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
+                  <button type="submit" id="{{ k.ident_cely }}_editNalezSubmitButton"
                           class="btn btn-primary">{% trans "Upravit předměty" %}</button>
                   {% endif %}
                 </form>
@@ -889,7 +883,17 @@
         modalFormID: "#smazat-akci-form",
       })
       smazat_akci_modal = new Modal(options, "akce-smazat");
-      
+      if (document.getElementsByClassName("objekt-smazat-btn")){
+        elements = document.getElementsByClassName("objekt-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-objekt-form",
+          modalFormID: "#smazat-objekt-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
   });
   
 </script>

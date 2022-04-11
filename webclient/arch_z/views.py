@@ -31,9 +31,9 @@ from core.message_constants import (
     AKCI_NELZE_ARCHIVOVAT,
     AKCI_NELZE_ODESLAT,
     MAXIMUM_AKCII_DOSAZENO,
-    PRISTUP_ZAKAZAN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
+    PRISTUP_ZAKAZAN,
 )
 from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
@@ -90,8 +90,7 @@ def detail(request, ident_cely):
         "warnings": request.session.pop("temp_data", None),
         "arch_projekt_link": request.session.pop("arch_projekt_link", None),
     }
-    old_objekt_post = request.session.pop("_old_objekt_post", None)
-    old_predmet_post = request.session.pop("_old_predmet_post", None)
+    old_nalez_post = request.session.pop("_old_nalez_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
     old_adb_post = request.session.pop("_old_adb_post", None)
     adb_ident_cely = request.session.pop("adb_ident_cely", None)
@@ -150,7 +149,7 @@ def detail(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
@@ -161,7 +160,7 @@ def detail(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
@@ -245,7 +244,7 @@ def detail(request, ident_cely):
                         readonly=not show["editovat"],
                     ),
                     "form_nalezy_objekty": NalezObjektFormset(
-                        old_objekt_post,
+                        old_nalez_post,
                         instance=komponenta,
                         prefix=komponenta.ident_cely + "_o",
                     )
@@ -254,7 +253,7 @@ def detail(request, ident_cely):
                         instance=komponenta, prefix=komponenta.ident_cely + "_o"
                     ),
                     "form_nalezy_predmety": NalezPredmetFormset(
-                        old_predmet_post,
+                        old_nalez_post,
                         instance=komponenta,
                         prefix=komponenta.ident_cely + "_p",
                     )
