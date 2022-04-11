@@ -15,15 +15,18 @@
               {% if type == "arch_z"%}
             <a class="dropdown-item"
                href="{% url 'dokument:zapsat-do-akce' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
-            <a class="dropdown-item"
-               href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">{% trans "Připojit existující dokument" %}</a>
-            <a class="dropdown-item"
-               href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">{% trans "Připojit existující dokument z projektu" %}</a>
+            <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">
+              {% trans "Připojit existující dokument" %}
+            </button>
+            <button id="dokument-pripojit-z-projektu" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">
+              {% trans "Připojit existující dokument z projektu" %}
+            </button>
                {% elif type == "projekt" %}
             <a class="dropdown-item"
                href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
-            <a class="dropdown-item"
-               href="{% url 'projekt:pripojit_dokument' zaznam.ident_cely %}">{% trans "Připojit existující dokument" %}</a>
+            <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'projekt:pripojit_dokument' zaznam.ident_cely %}">
+              {% trans "Připojit existující dokument" %}
+            </button>
                {% endif %}
           </div>
         </div>
@@ -62,9 +65,9 @@
           <td>{{ d.soubory.soubory.all|length }}</td>
           {% if show.editovat %}
           <td>
-            <a href="{% url type|add:':odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
+            <button id="dokument-odpojit-{{d.ident_cely}}" class="dokument-odpojit-btn" type="button" name="button" href="{% url type|add:':odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
               <span class="material-icons app-color-danger">delete_forever</span>
-            </a>
+            </button>
           </td>
           {% endif %}
         </tr>
@@ -84,3 +87,33 @@
     {% endif %}
   </div>
 </div>
+<script>
+  //modal scripts
+  document.addEventListener('DOMContentLoaded', function (event) {
+    if (document.getElementsByClassName("dokument-odpojit-btn")){
+      elements = document.getElementsByClassName("dokument-odpojit-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "odpojit-dokument-form",
+        modalFormID: "#odpojit-dokument-form",
+        })
+        new Modal(options, elements.item(i).id);
+      }
+    }
+    if ("{{show.editovat}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "pripojit-dokument-form",
+        modalFormID: "#pripojit-dokument-form",
+      })
+      dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
+    };
+    if ("{{show.editovat}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "pripojit-dokument-form",
+        modalFormID: "#pripojit-dokument-form",
+      })
+      dokument_pripojit_z_projektu_modal = new Modal(options, "dokument-pripojit-z-projektu");
+    };
+});
+
+</script>

@@ -69,6 +69,10 @@
 {% endblock %}
 
 {% block script %}
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
@@ -101,6 +105,7 @@
               makeFieldDisabled('#id_adresa', disabled)
               makeFieldDisabled('#id_telefon', disabled)
               makeFieldDisabled('#id_email', disabled)
+              makeFieldDisabled('#id_oznaceni_stavby', disabled)
           }
 
           // On change pak podle toho co je vybrano

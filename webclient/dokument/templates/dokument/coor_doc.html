@@ -1,4 +1,6 @@
 {% load static %}
+{% load i18n %}
+{% load crispy_forms_tags %}
 
 {% block head %}
 <!-- Map imports -->
@@ -22,13 +24,29 @@
 {% endblock %}
 
 {% block content %}
-<div class="col-12">
-  {% include "map.html" %}
+<div class="row">
+  <div class="col-sm-12">
+    <span class="app-divider-label">{% trans "dokument.template.mapDivider.text" %}</span>
+    <hr class="mt-0" />
+  </div>
+  <div class="form-group col-sm-2">
+    {{ formExtraData.zeme|as_crispy_field }}
+    {{ formExtraData.region|as_crispy_field }}
+    {{ formExtraData.sirka|as_crispy_field }}
+    {{ formExtraData.vyska|as_crispy_field }}
+  </div>
+  <div class="form-group col-10">
+    {% include "map.html" %}
+  </div>
 </div>
 
 {% endblock %}
 
 {% block script %}
+<script >
+  var static_url = "{% get_static_prefix %}";
+</script>
+<script src="{% static 'mapa_pins.js' %}"></script>
 <script src="{% static 'coor_precision.js' %}"></script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'mapa_doc.js' %}"></script>

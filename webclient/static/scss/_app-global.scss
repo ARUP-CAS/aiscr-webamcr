@@ -129,6 +129,10 @@ table {
           width: 200px;
         }
       }
+      button {
+        border: none;
+        background: none;
+      }
     }
   }
 
@@ -136,6 +140,16 @@ table {
     @include setIcon($position: bottom);
     color: initial;
   }
+}
+.formset-table form table tbody tr div small
+ {
+
+    display:none
+}
+.formset-table form table tbody tr:last-child div small
+ {
+
+    display:inherit
 }
 
 // select form control fix
@@ -386,6 +400,13 @@ form {
 // table list
 .app-table-list-container {
   @extend .d-flex, .flex-column, .h-100; 
+
+  .app-card-form{
+    .material-icons {
+      @include setIcon($size:18, $position: sub);
+      color: $gray-600;
+    }
+  }
 
   .app-table-list-wrapper {
     flex: 1 0 auto;

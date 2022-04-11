@@ -1,11 +1,17 @@
 import logging
+from django.http import JsonResponse
 
-from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
+from django.urls import reverse
+
+from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_EDITOVAN, ZAZNAM_USPESNE_SMAZAN
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms import inlineformset_factory
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
+from django.utils.http import is_safe_url
+from django.conf import settings
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_DRUH_KAT,
@@ -25,8 +31,50 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def smazat_nalez(request, typ, ident_cely):
+    if typ == "objekt":
+        zaznam = get_object_or_404(NalezObjekt, id=ident_cely)
+        context = {
+        "object": zaznam,
+        "title": _("nalez.modalForm.smazaniObjektu.title.text"),
+        "id_tag": "smazat-objekt-form",
+        "button": _("nalez.modalForm.smazaniObjektu.submit.button"),
+        }
+    if typ == "predmet":
+        zaznam = get_object_or_404(NalezPredmet, id=ident_cely)
+        context = {
+        "object": zaznam,
+        "title": _("nalez.modalForm.smazaniPredmetu.title.text"),
+        "id_tag": "smazat-objekt-form",
+        "button": _("nalez.modalForm.smazaniPredmetu.submit.button"),
+        }
+    if request.method == "POST":
+        resp = zaznam.delete()
+        next_url = request.POST.get("next")
+        if next_url:
+            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+                response = next_url
+            else:
+                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                response = reverse("core:home")
+        else:
+            response = reverse("core:home")
+        if resp:
+            logger.debug("Objekt dokumentu byl smazan: " + str(resp))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":response})
+        else:
+            logger.warning("Dokument nebyl smazan: " + str(ident_cely))
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            return JsonResponse({"redirect":response},status=403)
+    else:
+        return render(request, "core/transakce_modal.html", context)
+
+
+@login_required
 @require_http_methods(["POST"])
-def edit_objekt(request, komp_ident_cely):
+def edit_nalez(request, komp_ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(
@@ -38,29 +86,10 @@ def edit_objekt(request, komp_ident_cely):
         form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
         extra=1,
     )
-    formset = NalezObjektFormset(
+    formset_objekt = NalezObjektFormset(
         request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_o"
     )
-    if formset.is_valid():
-        logger.debug("Form is valid")
-        formset.save()
-        if formset.has_changed():
-            logger.debug("Form data was changed")
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-    else:
-        logger.warning("Form is not valid")
-        logger.debug(formset.errors)
-        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        request.session["_old_objekt_post"] = request.POST
-        request.session["komp_ident_cely"] = komp_ident_cely
 
-    return redirect(request.META.get("HTTP_REFERER"))
-
-
-@login_required
-@require_http_methods(["POST"])
-def edit_predmet(request, komp_ident_cely):
-    komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
     specifikce_predmetu_choices = list(
         Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
@@ -75,20 +104,22 @@ def edit_predmet(request, komp_ident_cely):
         ),
         extra=1,
     )
-    formset = NalezPredmetFormset(
+    formset_predmet = NalezPredmetFormset(
         request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
     )
-    if formset.is_valid():
+    if formset_objekt.is_valid() and formset_predmet.is_valid():
         logger.debug("Form is valid")
-        formset.save()
-        if formset.has_changed():
+        formset_predmet.save()
+        formset_objekt.save()
+        if formset_objekt.has_changed() or formset_predmet.has_changed():
             logger.debug("Form data was changed")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
         logger.warning("Form is not valid")
-        logger.debug(formset.errors)
+        logger.debug(formset_predmet.errors)
+        logger.debug(formset_objekt.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        request.session["_old_predmet_post"] = request.POST
+        request.session["_old_nalez_post"] = request.POST
         request.session["komp_ident_cely"] = komp_ident_cely
 
     return redirect(request.META.get("HTTP_REFERER"))

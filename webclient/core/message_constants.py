@@ -3,6 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 FORM_NOT_VALID: Final = "Forma není validní."
 
+PRISTUP_ZAKAZAN: Final = "common.message.pristupZakazan.text"
+
 ZAZNAM_USPESNE_VYTVOREN: Final = "Záznam byl úspěšně vytvořen."
 ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = "Záznam se nepovedlo vytvořit."
 ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
@@ -58,6 +60,8 @@ DOKUMENT_JIZ_BYL_PRIPOJEN: Final = "Dokument již byl připojen!"
 DOKUMENT_USPESNE_ODPOJEN: Final = "Dokument úspěšně odpojen."
 VYBERTE_PROSIM_POLOHU: Final = "Vyberte prosím lokalizaci na mapě."
 DOKUMENT_NEKDO_ZMENIL_STAV: Final = _("dokument.message.zmenaStavuNekymJinym.text")
+DOKUMENT_ODPOJ_ZADNE_RELACE: Final = _("dokument.message.odpojitDokumentBezRelace.text")
+DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM: Final = _("dokument.message.odpojitDokumentBezRelaceMeziZaznamemDokumentem.text")
 
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
@@ -67,6 +71,8 @@ OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."
 PIAN_USPESNE_ODPOJEN: Final = "Pian uspesne odpojen."
 PIAN_USPESNE_POTVRZEN: Final = "Pian uspesne potvrzen."
 PIAN_USPESNE_SMAZAN: Final = "Pian byl smazán."
+PIAN_NEVALIDNI_GEOMETRIE: Final = "Pian má nevalidní geometrii."
+PIAN_VALIDACE_VYPNUTA: Final = "Geometrii Pianu se nepodařilo ověřit."
 
 # SN
 SAMOSTATNY_NALEZ_VRACEN: Final = "Samostatný nález vrácen do předchozího stavu."
@@ -94,3 +100,13 @@ AUTOLOGOUT_REFRESH_SUCCESS: Final = _("autologout.message.refreshsuccess.text")
 UPLOADFILE_REJECTED_PAS: Final = _("core.message.uploadFile.rejectedPas.text")
 UPLOADFILE_REJECTED_DOKUMENT: Final = _("core.message.uploadFile.rejectedDokument.text")
 UPLOADFILE_REJECTED_ALL: Final = _("core.message.uploadFile.rejectedAll.text")
+
+# Validation
+VALIDATION_NOT_VALID: Final = "Geometrie není validní."
+VALIDATION_EMPTY: Final = "Geometrie je prázdná."
+VALIDATION_NOT_SIMPLE: Final = "Geometrie není typu simple geometry."
+VALIDATION_NOT_MULTIPART: Final = "Geometrie je multigeometrií."
+VALIDATION_LINE_LENGTH: Final = "Vzdálenost bodů je nižší než povolená mez."
+
+
+

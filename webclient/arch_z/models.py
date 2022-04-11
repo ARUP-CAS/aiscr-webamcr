@@ -279,14 +279,13 @@ class Akce(models.Model):
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
                 result.append(
-                    _("Dokument ")
-                    + str(dokument_cast.dokument.ident_cely)
-                    + _(" musí mít alespoň 1 přiložený soubor.")
+                    dokument_warning
                 )
                 logger.debug(
                     "Dokument "
                     + dokument_cast.dokument.ident_cely
-                    + " nema prilozeny soubor."
+                    + " warnings: "
+                    + str(dokument_warning)
                 )
         return result
 

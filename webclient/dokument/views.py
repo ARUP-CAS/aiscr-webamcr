@@ -1,4 +1,6 @@
 import logging
+
+from django.urls import reverse
 import structlog
 
 from arch_z.models import ArcheologickyZaznam
@@ -24,11 +26,14 @@ from core.message_constants import (
     DOKUMENT_JIZ_BYL_PRIPOJEN,
     DOKUMENT_NELZE_ARCHIVOVAT,
     DOKUMENT_NELZE_ODESLAT,
+    DOKUMENT_ODPOJ_ZADNE_RELACE,
+    DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_PRIPOJEN,
     DOKUMENT_USPESNE_VRACEN,
     MAXIMUM_IDENT_DOSAZEN,
+    PRISTUP_ZAKAZAN,
     VYBERTE_PROSIM_POLOHU,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
@@ -43,7 +48,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
@@ -153,6 +158,7 @@ def detail(request, ident_cely):
 @require_http_methods(["GET"])
 def detail_model_3D(request, ident_cely):
     context = { "warnings": request.session.pop("temp_data", None) }
+    old_nalez_post = request.session.pop("_old_nalez_post", None)
     dokument = get_object_or_404(
         Dokument.objects.select_related(
             "soubory",
@@ -191,7 +197,7 @@ def detail_model_3D(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     NalezPredmetFormset = inlineformset_factory(
         Komponenta,
@@ -202,7 +208,7 @@ def detail_model_3D(request, ident_cely):
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,
-        can_delete=show["editovat"],
+        can_delete=False,
     )
     context["dokument"] = dokument
     context["komponenta"] = komponenty[0]
@@ -224,10 +230,10 @@ def detail_model_3D(request, ident_cely):
         obdobi_choices, areal_choices, instance=komponenty[0], readonly=True
     )
     context["formset"] = {
-        "objekt": NalezObjektFormset(
+        "objekt": NalezObjektFormset(old_nalez_post,
             instance=komponenty[0], prefix=komponenty[0].ident_cely + "_o"
         ),
-        "predmet": NalezPredmetFormset(
+        "predmet": NalezPredmetFormset(old_nalez_post,
             instance=komponenty[0], prefix=komponenty[0].ident_cely + "_p"
         ),
         "helper": NalezFormSetHelper(),
@@ -577,33 +583,34 @@ def odeslat(request, ident_cely):
     logger_s.debug("dokument.views.odeslat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ZAPSANY:
         logger_s.debug("dokument.views.odeslat.permission_denied", ident_cely=ident_cely)
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
      # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, d):
         logger_s.debug("dokument.views.odeslat.check_stav_changed", ident_cely=ident_cely)
-        return get_detail_view(ident_cely)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     if request.method == "POST":
         d.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger_s.debug("dokument.views.odeslat.sucess")
-        return get_detail_view(ident_cely)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)})
     else:
         warnings = d.check_pred_odeslanim()
         if warnings:
             logger_s.debug("dokument.views.odeslat.warnings", warnings=warnings, ident_cely=ident_cely)
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
-            return get_detail_view(ident_cely)
+            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
     context = {
         "object": d,
-        "title": _("Odeslání dokumentu"),
-        "header": _("Odeslání dokumentu"),
-        "button": _("Odeslat dokument"),
+        "title": _("dokument.modalForm.odeslat.title.text"),
+        "id_tag": "odeslat-dokument-form",
+        "button": _("dokument.modalForm.odeslat.submit.button"),
         "form_check": form_check
     }
     logger_s.debug("dokument.views.odeslat.finish", ident_cely=ident_cely)
-    return render(request, "core/transakce.html", context)
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -613,12 +620,12 @@ def archivovat(request, ident_cely):
     logger_s.debug("dokument.views.archivovat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY:
         logger_s.debug("dokument.views.archivovat.permission_denied", ident_cely=ident_cely)
-        messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, d):
         logger_s.debug("dokument.views.archivovat.check_stav_changed", ident_cely=ident_cely)
-        return get_detail_view(ident_cely)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     if request.method == "POST":
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -627,11 +634,7 @@ def archivovat(request, ident_cely):
                 d.set_permanent_ident_cely(d.ident_cely[2:4] + rada.zkratka)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                context = {"object": d}
-                context["title"] = _("Archivace dokumentu")
-                context["header"] = _("Archivace dokumentu")
-                context["button"] = _("Archivovat dokument")
-                return render(request, "core/transakce.html", context)
+                return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
             else:
                 d.save()
                 logger.debug(
@@ -642,23 +645,23 @@ def archivovat(request, ident_cely):
                 )
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        return get_detail_view(d.ident_cely)
+        return JsonResponse({"redirect":get_detail_json_view(d.ident_cely)})
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
             request.session['temp_data'] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
-            return get_detail_view(ident_cely)
+            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
     context = {
         "object": d,
-        "title": _("Archivace dokumentu"),
-        "header": _("Archivace dokumentu"),
-        "button": _("Archivovat dokument"),
+        "title": _("dokument.modalForm.archivovat.title.text"),
+        "id_tag": "archivovat-dokument-form",
+        "button": _("dokument.modalForm.archivovat.submit.button"),
         "form_check": form_check
     }
-    return render(request, "core/transakce.html", context)
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -666,22 +669,31 @@ def archivovat(request, ident_cely):
 def vratit(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     if check_stav_changed(request, d):
-        return get_detail_view(ident_cely)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             d.set_vraceny(request.user, d.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
-            return get_detail_view(ident_cely)
+            return JsonResponse({"redirect":get_detail_json_view(ident_cely)})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
+            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     else:
         form = VratitForm(initial={"old_stav":d.stav})
-    return render(request, "core/vratit.html", {"form": form, "objekt": d})
+    context = {
+        "object": d,
+        "form": form,
+        "title": _("dokument.modalForm.vraceni.title.text"),
+        "id_tag": "vratit-dokument-form",
+        "button": _("dokument.modalForm.vraceni.submit.button"),
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -689,7 +701,7 @@ def vratit(request, ident_cely):
 def smazat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if check_stav_changed(request, d):
-        return get_detail_view(ident_cely)
+        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     if request.method == "POST":
 
         historie = d.historie
@@ -707,13 +719,21 @@ def smazat(request, ident_cely):
         if resp1:
             logger.debug("Dokument byl smazan: " + str(resp1 + resp2 + resp3))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":reverse("core:home")})
         else:
             logger.warning("Dokument nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-
-        return redirect("core:home")
+            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
     else:
-        return render(request, "core/smazat.html", {"objekt": d})
+        form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
+        context = {
+        "object": d,
+        "title": _("dokument.modalForm.smazani.title.text"),
+        "id_tag": "smazat-dokument-form",
+        "button": _("dokument.modalForm.smazani.submit.button"),
+        "form_check": form_check,
+        }
+        return render(request, "core/transakce_modal.html", context)
 
 
 class DokumentAutocomplete(autocomplete.Select2QuerySetView):
@@ -841,7 +861,9 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
     remove_orphan = False
     if len(relace_dokumentu) == 0:
-        raise Http404("Nelze najít zadne relace dokumentu " + str(ident_doku))
+        logger.debug("Nelze najít zadne relace dokumentu " + str(ident_doku))
+        messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE)
+        return JsonResponse({"redirect":reverse(f"{view}:detail")},status=404)
     if len(relace_dokumentu) == 1:
         orphan_dokument = relace_dokumentu[0].dokument
         if "X-" in orphan_dokument.ident_cely:
@@ -856,14 +878,16 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
                 projekt__ident_cely=ident_zaznamu
             )
         if len(dokument_cast) == 0:
-            raise Http404("Nelze najít relaci mezi zaznamem a dokumentem")
+            logger.debug("Nelze najít relaci mezi zaznamem a dokumentem")
+            messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM)
+            return JsonResponse({"redirect":reverse(f"{view}:detail")},status=404)
         resp = dokument_cast[0].delete()
         logger.debug("Byla smazana cast dokumentu " + str(resp))
         if remove_orphan:
             orphan_dokument.delete()
             logger.debug("Docasny soubor bez relaci odstranen.")
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
-        return redirect(f"{view}:detail", ident_cely=ident_zaznamu)
+        return JsonResponse({"redirect":reverse(f"{view}:detail", kwargs={'ident_cely':ident_zaznamu})})
     else:
         warnings = []
         if remove_orphan:
@@ -874,13 +898,13 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
             )
         return render(
             request,
-            "dokument/transakce_dokument.html",
+            "core/transakce_modal.html",
             {
                 "object": relace_dokumentu[0],
                 "warnings": warnings,
-                "title": _("Odpojení dokumentu"),
-                "header": _("Odpojení dokumentu"),
-                "button": _("Odpojit dokument"),
+                "title": _("dokument.modalForm.odpojit.title.text"),
+                "id_tag": "odpojit-dokument-form",
+                "button": _("dokument.modalForm.odpojit.submit.button"),
             },
         )
 
@@ -893,12 +917,24 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         )
         debug_name = "akci "
         redirect_name = "arch_z"
+        context = {
+        "object": zaznam,
+        "title": _("dokument.modalForm.pripojitDoAkce.title.text"),
+        "id_tag": "pripojit-dokument-form",
+        "button": _("dokument.modalForm.pripojitDoAkce.submit.button"),
+        }
     else:
         casti_zaznamu = DokumentCast.objects.filter(
             projekt__ident_cely=ident_zaznam
         )
         debug_name = "projektu "
         redirect_name = "projekt"
+        context = {
+        "object": zaznam,
+        "title": _("dokument.modalForm.pripojitDoProjektu.title.text"),
+        "id_tag": "pripojit-dokument-form",
+        "button": _("dokument.modalForm.pripojitDoProjektu.submit.button"),
+        }
     if request.method == "POST":
         dokument_ids = request.POST.getlist("dokument")
         
@@ -931,7 +967,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 messages.add_message(
                     request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
                 )
-        return redirect(f"{redirect_name}:detail", ident_cely=ident_zaznam)
+        return JsonResponse({"redirect":reverse(f"{redirect_name}:detail", kwargs={'ident_cely':ident_zaznam})})
     else:
         if proj_ident_cely :
             # Pridavam projektove dokumenty
@@ -954,15 +990,23 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         else:
             # Pridavam vsechny dokumenty
             form = PripojitDokumentForm()
-    return render(
-        request, "dokument/pripojit_dokument.html", {"form": form, "object": zaznam, "typ": redirect_name}
-    )
+        context["form"] = form
+    return render(request, "core/transakce_modal.html", context)
+    #return render(
+    #    request, "dokument/pripojit_dokument.html", {"form": form, "object": zaznam, "typ": redirect_name}
+    #)
     
 def get_detail_view(ident_cely):
     if "3D" in ident_cely:
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
     else:
         return redirect("dokument:detail", ident_cely=ident_cely)
+
+def get_detail_json_view(ident_cely):
+    if "3D" in ident_cely:
+        return reverse("dokument:detail-model-3D", kwargs={'ident_cely':ident_cely})
+    else:
+        return reverse("dokument:detail", kwargs={'ident_cely':ident_cely})
 
 def get_required_fields_model3D(zaznam=None,next=0):
     required_fields = []

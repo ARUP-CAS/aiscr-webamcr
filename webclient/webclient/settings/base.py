@@ -303,6 +303,10 @@ DIGI_LINKS = {
     "Digi_archiv_link": 'https://digiarchiv.aiscr.cz/id/',
     "OAPI_link_part1": 'https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/',
     "OAPI_link_part2": '&metadataPrefix=oai_amcr',
+    "ARU_PRAHA":"https://www.arup.cas.cz/",
+    "ARU_BRNO":"https://www.arub.cz/",
+    "ARUP_MAIL":'<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',
+    "ARUB_MAIL":"<a href='mailto:oznameni@arub.cas.cz'>oznameni@arub.cz</a>",
 }
 
 structlog.configure(

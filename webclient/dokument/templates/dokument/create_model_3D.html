@@ -3,6 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load crispy_forms_field %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
@@ -12,6 +13,7 @@
   <div class="app-entity-knihovna_3d">
     {% include "toolbar_dokument.html" with is_3d=True %}
     <form method="post" onsubmit="newDocumentSubmitBtn.disabled = true; return true;">
+      {% csrf_token %}
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -19,12 +21,59 @@
           </div>
         </div>
         <div class="card-body">
-          {% crispy formDokument %}
+          <div class="row">
+          <div class="form-group col-sm-2 input-osoba">
+            {% crispy_addon formDokument.autori append='<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formDokument.rok_vzniku|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formDokument.organizace|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formDokument.typ_dokumentu|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formExtraData.format|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formDokument.oznaceni_originalu|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-6">
+            {{ formDokument.popis|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-6">
+            {{ formDokument.poznamka|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-8">
+            {{ formExtraData.odkaz|as_crispy_field }}
+          </div>
         </div>
           {% include "dokument/coor_doc.html" %}
-        <div class="card-body">
-          {% crispy formExtraData %}
-          {% crispy formKomponenta %}
+          <div class="row">
+            <div class="col-sm-12">
+              <span class="app-divider-label">{% trans "dokument.template.komponentaDivider.text" %}</span>
+              <hr class="mt-0" />
+            </div>
+            <div class="form-group col-sm-2">
+              {{ formKomponenta.obdobi|as_crispy_field }}
+            </div>
+            <div class="form-group col-sm-2">
+              {{ formKomponenta.presna_datace|as_crispy_field }}
+            </div>
+            <div class="form-group col-sm-2">
+              {{ formKomponenta.areal|as_crispy_field }}
+            </div>
+            <div class="form-group col-sm-2">
+              {{ formKomponenta.aktivity|as_crispy_field }}
+            </div>
+            <div class="form-group col-sm-2">
+            </div>
+            <div class="form-group col-sm-2">
+              {{ formExtraData.duveryhodnost|as_crispy_field }}
+            </div>
+          </div>
         </div>
       </div>
       <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
@@ -33,4 +82,29 @@
 {% endblock %}
 
 {% block script %}
+<script type="text/javascript">
+  // create osoba scripts
+  var successFunction = function(settings, response) {
+    let dropdown = document.getElementById('id_autori');
+    let newOption = document.createElement('option');
+    newOption.text = response.text;
+    newOption.value = response.value;
+
+    dropdown.add(newOption);
+    
+    $('#id_autori').selectpicker('refresh');
+    $('#id_autori').selectpicker('val', response.value);
+    dropdown.value = response.value;
+    $(settings.modalID).modal("hide");
+  };
+  $(document).ready(function() {
+  
+      $("#create-osoba").modalForm({
+          modalID: "#modal-form",
+          formURL: "{% url 'uzivatel:create_osoba' %}",
+          successFunc: successFunction
+      });
+  
+  });
+  </script>
 {% endblock %}

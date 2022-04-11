@@ -37,6 +37,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import is_safe_url
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
+from django.urls import reverse
 from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
@@ -68,21 +69,35 @@ def delete_file(request, pk):
             # Not sure if 404 is the only correct option
             logger.debug("Soubor " + str(items_deleted) + " nebyl smazan.")
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            django_messages = []
+            for message in messages.get_messages(request):
+                django_messages.append({ 
+                    "level": message.level,
+                    "message": message.message,
+                    "extra_tags": message.tags,
+                })
+            return JsonResponse({"messages":django_messages},status=400)
         else:
             logger.debug("Byl smazán soubor: " + str(items_deleted))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")
         if next_url:
             if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
-                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
-                response = redirect(next_url)
+                response = next_url
             else:
-                response = redirect("core:home")
+                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                response = reverse("core:home")
         else:
-            response = redirect("core:home")
-        return response
+            response = reverse("core:home")
+        return JsonResponse({"redirect":response})
     else:
-        return render(request, "core/delete_file.html", {"soubor": s})
+        context = {
+        "object": s,
+        "title": _("core.modalForm.smazaniSouboru.title.text"),
+        "id_tag": "smazat-soubor-form",
+        "button": _("core.modalForm.smazaniSouboru.submit.button"),
+        }
+        return render(request, "core/transakce_modal.html", context)
 
 
 @login_required

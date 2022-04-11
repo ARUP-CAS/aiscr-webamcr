@@ -62,7 +62,7 @@
     {% include "toolbar_akce.html" with zaznam=zaznam  showbackdetail=True showcontrols=True %}
 
     <!-- stepper -->
-    <div class="bs-stepper">
+    <div class="bs-stepper historie-link" onclick="location.href='{% url 'historie:akce' zaznam.ident_cely %}';">
       <div class="bs-stepper-header">
         <div class="step {% if zaznam.stav == 1 %}active{% endif %}">
           <button type="button" class="btn step-trigger">
@@ -373,9 +373,9 @@
                     </a>
                   {% endif %}
                   {% if j.show_approve_pian %}
-                    <a class="dropdown-item" href="{% url 'pian:potvrdit' j.ident_cely %}">
+                    <button id="pian-potvrdit-{{j.adb_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button" name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
                       {% trans 'Potvrdit pian' %}
-                    </a>
+                    </button>
                   {% endif %}
                   {% if j.show_uprav_pian %}
                     <a class="dropdown-item" href="#"
@@ -384,9 +384,9 @@
                     </a>
                   {% endif %}
                   {% if j.show_remove_pian %}
-                    <a class="dropdown-item" href="{% url 'pian:odpojit' j.ident_cely %}">
+                    <button id="pian-odpojit-{{j.adb_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button" name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
                       {% trans 'Odpojit pian' %}
-                    </a>
+                    </button>
                   {% endif %}
                   {% if j.show_add_adb %}
                     <a class="dropdown-item" href="#"
@@ -395,13 +395,13 @@
                     </a>
                   {% endif %}
                   {% if j.show_remove_adb %}
-                    <a class="dropdown-item" href="{% url 'adb:smazat' j.adb_ident_cely %}">
+                    <button id="adb-smazat-{{j.adb_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button" href="{% url 'adb:smazat' j.adb_ident_cely %}">
                       {% trans 'Smazat ADB' %}
-                    </a>
+                    </button>
                   {% endif %}
-                  <a class="dropdown-item" href="{% url 'dj:smazat' j.ident_cely %}">
+                  <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button" href="{% url 'dj:smazat' j.ident_cely %}">
                     {% trans 'Smazat DJ' %}
-                  </a>
+                  </button>
                 </div>
                 <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -506,9 +506,9 @@
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <div class="dropdown-menu" aria-labelledby="others">
-                  <a class="dropdown-item" href="{% url 'komponenta:smazat' k.ident_cely %}">
+                  <button id="komponenta-smazat-{{k.ident_cely}}" class="dropdown-item komponenta-smazat-btn" type="button" name="button" href="{% url 'komponenta:smazat' k.ident_cely %}">
                     {% trans 'Smazat komponentu' %}
-                  </a>
+                  </button>
                 </div>
                 <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -533,9 +533,9 @@
                   {% trans "Nálezy" %}
                 </div>
               </div>
-              <div class="card-body">
+              <div class="card-body formset-table">
                 <h5>{% trans "Objekty" %}</h5>
-                <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezOSubmitButton.disabled = true; return true;">
+                <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezSubmitButton.disabled = true; return true;">
                   {% if k.form_nalezy_objekty.forms %}
                   {% crispy k.form_nalezy_objekty k.helper %}
                   {% else %}
@@ -544,13 +544,7 @@
                     {% trans "Komponenta neobsahuje žádné objekty." %}
                   </div>
                   {% endif %}
-                  {% if show.editovat %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezOSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit objekty" %}</button>
-                  {% endif %}
-                </form>
                 <h5>{% trans "Předměty" %}</h5>
-                <form method="POST" action="{% url 'nalez:edit_predmet' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezPSubmitButton.disabled = true; return true;">
                   {% if k.form_nalezy_predmety.forms %}
                   {% crispy k.form_nalezy_predmety k.helper %}
                   {% else %}
@@ -560,7 +554,7 @@
                   </div>
                   {% endif %}
                   {% if show.editovat %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezPSubmitButton"
+                  <button type="submit" id="{{ k.ident_cely }}_editNalezSubmitButton"
                           class="btn btn-primary">{% trans "Upravit předměty" %}</button>
                   {% endif %}
                 </form>
@@ -601,6 +595,10 @@
 {% endblock %}
 
 {% block script %}
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
@@ -654,7 +652,7 @@
                   map.setView([rs.lat, rs.lng], rs.zoom)
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id)
+                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom)
                   }
                   if(ask_only_once){
                     ask_only_once=false;
@@ -797,8 +795,106 @@
       {% endfor %}
   </script>
   <script>
+    //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
       $('#modalArchivProjekt').modal('show');
+      if (document.getElementsByClassName("adb-smazat-btn")){
+        elements = document.getElementsByClassName("adb-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-adb-form",
+          modalFormID: "#smazat-adb-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("dj-smazat-btn")){
+        elements = document.getElementsByClassName("dj-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-dj-form",
+          modalFormID: "#smazat-dj-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("komponenta-smazat-btn")){
+        elements = document.getElementsByClassName("komponenta-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-komponenta-form",
+          modalFormID: "#smazat-komponenta-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("pian-odpojit-btn")){
+        elements = document.getElementsByClassName("pian-odpojit-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "odpojit-pian-form",
+          modalFormID: "#odpojit-pian-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("pian-potvrdit-btn")){
+        elements = document.getElementsByClassName("pian-potvrdit-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "potvrdit-pian-form",
+          modalFormID: "#potvrdit-pian-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if ("{{show.odeslat_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "odeslat-akci-form",
+        modalFormID: "#odeslat-akci-form",
+      })
+      odeslat_akci_modal = new Modal(options, "akce-odeslat");
+      };
+      if ("{{show.vratit_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "vratit-akci-form",
+        modalFormID: "#vratit-akci-form",
+      })
+      vratit_akci_modal = new Modal(options, "akce-vratit");
+      }
+      if ("{{show.archivovat_link}}" != "False"){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+          formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+          formID: "archivovat-akci-form",
+          modalFormID: "#archivovat-akci-form",
+        })
+      archivovat_akci_modal = new Modal(options, "akce-archivovat");
+      }
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "smazat-akci-form",
+        modalFormID: "#smazat-akci-form",
+      })
+      smazat_akci_modal = new Modal(options, "akce-smazat");
+      if (document.getElementsByClassName("objekt-smazat-btn")){
+        elements = document.getElementsByClassName("objekt-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-objekt-form",
+          modalFormID: "#smazat-objekt-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
   });
+  
 </script>
 {% endblock %}

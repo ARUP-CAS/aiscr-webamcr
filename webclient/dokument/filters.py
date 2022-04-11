@@ -2,6 +2,7 @@ import logging
 
 import crispy_forms
 import django_filters as filters
+from dal import autocomplete
 from django.db import utils
 from django_filters.widgets import DateRangeWidget
 from crispy_forms.layout import Div, Layout, HTML
@@ -72,12 +73,11 @@ class DokumentFilter(filters.FilterSet):
         ),
     )
 
-    autor = MultipleChoiceFilter(
+    autor = ModelMultipleChoiceFilter(
         label=_("Autor"),
         field_name="autori",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
+        queryset=Osoba.objects.all(),
     )
 
     rok_vzniku_od = NumberFilter(
@@ -207,12 +207,11 @@ class DokumentFilter(filters.FilterSet):
         distinct=True,
     )
 
-    historie_uzivatel = MultipleChoiceFilter(
+    historie_uzivatel = ModelMultipleChoiceFilter(
+        queryset=User.objects.all(),
         field_name="historie__historie__uzivatel",
         label="Uživatel",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
 
@@ -232,13 +231,6 @@ class DokumentFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)
-        try:
-            self.filters["autor"].choices = Osoba.objects.all().values_list("id", "vypis_cely")
-            self.filters["historie_uzivatel"].choices = User.objects.all().values_list("id", "first_name")
-        except utils.ProgrammingError as err:
-            self.filters["autor"].choices = []
-            self.filters["historie_uzivatel"].choices = []
-
         self.helper = DokumentFilterFormHelper()
 
 
@@ -271,17 +263,19 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 css_class="row",
             ),
             Div(
+                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
                 HTML(_('<hr class="mt-0" />')),
-                css_class="col-sm-12",
+                data_toggle="collapse", href="#historieCollapse", role="button", aria_expanded="false", aria_controls="historieCollapse",
+                css_class="col-sm-12 app-btn-show-more collapsed",
             ),
             Div(
                 Div("historie_typ_zmeny", css_class="col-sm-2"),
                 Div(
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                Div("historie_uzivatel", css_class="col-sm-2"),
-                css_class="row",
+                Div("historie_uzivatel", css_class="col-sm-4"),
+                id="historieCollapse", css_class="collapse row",
             ),
         ),
     )

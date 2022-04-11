@@ -68,6 +68,11 @@ class VratitForm(forms.Form):
     reason = forms.CharField(label=_("Zdůvodnění vrácení"), required=True, help_text= _("core.forms.vratit.tooltip"))
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
+    def __init__(self, *args, **kwargs):
+        super(VratitForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
 
 class SouborMetadataForm(forms.ModelForm):
     nazev_zkraceny = forms.CharField()

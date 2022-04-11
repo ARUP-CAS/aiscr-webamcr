@@ -4,6 +4,6 @@ from nalez import views
 app_name = "nalez"
 
 urlpatterns = [
-    path("edit-objekt/<str:komp_ident_cely>", views.edit_objekt, name="edit_objekt"),
-    path("edit-predmet/<str:komp_ident_cely>", views.edit_predmet, name="edit_predmet"),
+    path("smazat-nalez/<str:typ>/<str:ident_cely>", views.smazat_nalez, name="smazat_nalez"),
+    path("edit-nalez/<str:komp_ident_cely>", views.edit_nalez, name="edit_nalez"),
 ]
