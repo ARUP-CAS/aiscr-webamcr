@@ -82,7 +82,8 @@ from projekt.forms import (
     UkoncitVTerenuForm,
     ZahajitVTerenuForm,
     ZruseniProjektForm,
-    GenerovatNovePotvrzeniForm
+    GenerovatNovePotvrzeniForm,
+    GenerovatExpertniListForm
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
@@ -135,6 +136,7 @@ def detail(request, ident_cely):
     context["show"] = get_detail_template_shows(projekt, request.user)
     context["dokumenty"] = dokumenty
     context["generovatNovePotvrzeniForm"] = GenerovatNovePotvrzeniForm()
+    context["generovat_expertni_list_form"] = GenerovatExpertniListForm()
 
     return render(request, "projekt/detail.html", context)
 
@@ -780,6 +782,22 @@ def generovat_oznameni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     projekt.create_confirmation_document(additional=True)
     return redirect("projekt:detail", ident_cely=ident_cely)
+
+@login_required
+@require_http_methods(["POST"])
+def generovat_potvrzeni(request, ident_cely):
+    popup_parametry = {
+        "cislo_jednaci": request.POST["cislo_jednaci"],
+        "typ_vyzkumu": request.POST["typ_vyzkumu"],
+        "vysledek": request.POST["vysledek"],
+        "poznamka_podpis": request.POST["poznamka_podpis"]
+    }
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    path, file = projekt.create_expert_list(popup_parametry)
+    response = HttpResponse(content=file)
+    response['Content-Type'] = 'application/rtf'
+    response['Content-Disposition'] = 'attachment; filename="expertni_list.rtf"'
+    return response
 
 
 def get_history_dates(historie_vazby):

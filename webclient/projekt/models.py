@@ -49,6 +49,7 @@ from django.core.files.base import ContentFile
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import OznameniPDFCreator
+from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -455,6 +456,11 @@ class Projekt(models.Model):
                 size_bytes=os.path.getsize(filename),
                 typ_souboru=OTHER_PROJECT_FILES,
             ).save()
+
+    def create_expert_list(self, popup_parametry=None):
+        elc = ExpertniListCreator(self, popup_parametry)
+        path, file = elc.build_document()
+        return path, file
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):

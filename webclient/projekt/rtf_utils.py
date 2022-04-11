@@ -8,7 +8,6 @@ from PyRTF.Styles import TextStyle, TextPropertySet
 from PyRTF.document.paragraph import Cell, Paragraph, Table
 from historie.models import Historie
 from projekt.doc_utils import DocumentCreator
-from projekt.models import Projekt
 from webclient.settings.base import MEDIA_ROOT
 
 sys.path.append('../')
@@ -20,7 +19,7 @@ class ExpertniListCreator(DocumentCreator):
         encoded_char = char.encode('utf-16-be')
         decimals = []
         for i in range(0, len(encoded_char), 2):
-            chunk = encoded_char[i:i+2]
+            chunk = encoded_char[i:i + 2]
             decimals.append(struct.unpack('>H', chunk)[0])
         decimals = [str(item) for item in decimals]
         return decimals
@@ -50,10 +49,18 @@ class ExpertniListCreator(DocumentCreator):
             return ""
 
     def _get_vysledek_text(self):
-        text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném 
-        území záchranný archeologický výzkum podle ustanovení § 22, odst. 2, zákona č. 20/1987 Sb., o státní 
-        památkové péči. V průběhu výzkumu byly vyzvednuty či dokumentovány archeologické nálezy.
-        """
+        if self.popup_parametry["vysledek"] == "pozitivni":
+            text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném 
+            území záchranný archeologický výzkum podle ustanovení § 22, odst. 2, zákona č. 20/1987 Sb., o státní 
+            památkové péči. V průběhu výzkumu byly vyzvednuty či dokumentovány archeologické nálezy.
+            """
+        elif self.popup_parametry["vysledek"] == "negativni":
+            text = """Potvrzujeme, že došlo ke splnění oznamovací povinnosti a bylo umožněno provést na dotčeném 
+            území záchranný archeologický výzkum podle ustanovení § 22, odst. 2, zákona č. 20/1987 Sb., o státní 
+            památkové péči. V průběhu výzkumu nebyly vyzvednuty ani dokumentovány žádné archeologické nálezy.
+            """
+        else:
+            text = self.popup_parametry["poznamka_podpis"]
         return self._convert_text(text.replace("\n", ""))
 
     def _generate_text(self):
@@ -67,8 +74,9 @@ class ExpertniListCreator(DocumentCreator):
         section = Section()
         self.docucment.Sections.append(section)
 
-        p = Paragraph(self._convert_text("Č.j.: [popup.cislo_jednaci]"),
-                      ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
+        if "cislo_jednaci" in self.popup_parametry:
+            p = Paragraph(self._convert_text(f"Č.j.: {self.popup_parametry['cislo_jednaci']}"),
+                          ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
         section.append(p)
         p = Paragraph(self.stylesheet.ParagraphStyles.Heading1,
                       self._convert_text("POTVRZENÍ O PROVEDENÍ ARCHEOLOGICKÉHO VÝZKUMU – EXPERTNÍ LIST"),
@@ -78,28 +86,52 @@ class ExpertniListCreator(DocumentCreator):
         table = Table(TabPropertySet.DEFAULT_WIDTH * 6,
                       TabPropertySet.DEFAULT_WIDTH * 6)
 
-        table_texts = (
+        table_texts = [
             ("Číslo akce/oznámení v centrální evidenci (AMČR):", self.projekt.ident_cely),
             ("Datum přijetí oznámení:", self.historie.datum_zmeny.strftime("%d. %m. %Y") if self.historie else ""),
             ("Interní označení:", self.projekt.uzivatelske_oznaceni),
-            ("Výzkum provedla organizace:", Paragraph(self.stylesheet.ParagraphStyles.BoldText, self._convert_text(self.projekt.organizace))),
-            ("", f"{self.projekt.organizace.adresa}\nE-mail: {self.projekt.organizace.email}\nTel.: {self.projekt.organizace.telefon}"),
+            ("Výzkum provedla organizace:",
+             Paragraph(self.stylesheet.ParagraphStyles.BoldText, self._convert_text(self.projekt.organizace))),
+            ("",
+             f"{self.projekt.organizace.adresa}\nE-mail: {self.projekt.organizace.email}\nTel.: {self.projekt.organizace.telefon}"),
             ("Katastrální území (okres):", self.projekt.hlavni_katastr.nazev),
             ("Lokalizace:", self.projekt.lokalizace),
-            ("Parcelní číslo:", self.projekt.parcelni_cislo),
-            ("Souřadnice(WGS - 84):", f"{self.projekt.geom.centroid.x} {self.projekt.geom.centroid.y}" if self.projekt.geom is not None else None),
-            ("Podnět k provedení výzkumu:", self.projekt.podnet),
-            ("Označení stavby:", self.projekt.oznaceni_stavby),
-            ("Oznamovatel:", self.projekt.oznamovatel.oznamovatel if self.projekt.has_oznamovatel() else ""),
-            ("Zástupce oznamovatele / dodavatel:", self.projekt.oznamovatel.odpovedna_osoba if self.projekt.has_oznamovatel() else ""),
-            ("Datum výzkumu:", f"{self.projekt.datum_zahajeni} - {self.projekt.datum_ukonceni}"),
-            ("Typ výzkumu:", ""),
-            ("Druh evidence:", self._format_akce(self.projekt.akce_set.all())),
-            ("Uložení nálezů / dokumentace:", ""),
-            ("Osoba odpovědná za výzkum:", self.projekt.vedouci_projektu),
-        )
+            ("Parcelní číslo:", self.projekt.parcelni_cislo)
+        ]
+        if self.projekt.geom is not None:
+            table_texts += [
+                ("Souřadnice(WGS - 84):",
+                 f"{self.projekt.geom.centroid.x} {self.projekt.geom.centroid.y}" if self.projekt.geom is not None else None)
+            ]
 
-        bold_text = ParagraphStyle('TableLeftColumnText', bold_text.Copy(), ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
+        table_texts += [
+            ("Podnět k provedení výzkumu:", self.projekt.podnet),
+        ]
+        if self.projekt.oznaceni_stavby is not None:
+            table_texts += [
+                ("Označení stavby:", self.projekt.oznaceni_stavby),
+            ]
+
+        table_texts += [
+            ("Oznamovatel:", self.projekt.oznamovatel.oznamovatel if self.projekt.has_oznamovatel() else ""),
+            ("Zástupce oznamovatele / dodavatel:",
+             self.projekt.oznamovatel.odpovedna_osoba if self.projekt.has_oznamovatel() else ""),
+            ("Datum výzkumu:", f"{self.projekt.datum_zahajeni} - {self.projekt.datum_ukonceni}"),
+            ("Typ výzkumu:", self.popup_parametry["typ_vyzkumu"]),
+        ]
+
+        if self.projekt.akce_set.count() > 0:
+            table_texts += [
+                ("Druh evidence:", self._format_akce(self.projekt.akce_set.all())),
+                ("Uložení nálezů / dokumentace:", ""),
+            ]
+
+        table_texts += [
+            ("Osoba odpovědná za výzkum:", self.projekt.vedouci_projektu),
+        ]
+
+        bold_text = ParagraphStyle('TableLeftColumnText', bold_text.Copy(),
+                                   ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
         self.stylesheet.ParagraphStyles.append(bold_text)
         for row in table_texts:
             c1 = Cell(Paragraph(self._convert_text(row[0]), self.stylesheet.ParagraphStyles.TableLeftColumnText))
@@ -136,16 +168,19 @@ class ExpertniListCreator(DocumentCreator):
 
     @staticmethod
     def _open_file(name):
-        return open('%s.rtf' % name, 'w')
+        return open(name, 'w')
 
     def build_document(self):
         self._generate_text()
-        path = f"{MEDIA_ROOT}/expertni_list_{self.projekt.ident_cely}"
+        path = f"{MEDIA_ROOT}/expertni_list_{self.projekt.ident_cely}.rtf"
         DR = Renderer()
         DR.Write(self.docucment, self._open_file(path))
-        return path
+        rtf_file = open(path)
+        return path, rtf_file
 
     def __init__(self, projekt, popup_parametry=None):
+        from projekt.models import Projekt
+
         self.projekt: Projekt = projekt
         self.docucment = Document()
         self.stylesheet = self.docucment.StyleSheet
@@ -155,9 +190,3 @@ class ExpertniListCreator(DocumentCreator):
             self.historie: Historie = historie_query.last()
         else:
             self.historie = None
-
-
-elc = ExpertniListCreator(Projekt.objects.get(ident_cely="C-202105929"))
-elc.build_document()
-
-

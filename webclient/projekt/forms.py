@@ -1,15 +1,17 @@
+import structlog
 from crispy_forms.bootstrap import FormActions, AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout, Submit
 from dal import autocomplete
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+
+from arch_z import validators
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
-from arch_z import validators
 
-import structlog
 logger_s = structlog.get_logger(__name__)
 
 class CreateProjektForm(forms.ModelForm):
@@ -706,6 +708,68 @@ class GenerovatNovePotvrzeniForm(forms.Form):
                         "odeslat_oznamovateli",
                         css_class="col-sm-12",
                         title="projekt.form.GenerovatNovePotvrzeniForm.odeslat_oznamovateliTooltip.text",
+                    ),
+                    css_class="row",
+                ),
+            ),
+        )
+
+
+class GenerovatExpertniListForm(forms.Form):
+    TYP_VYZKUMU_CHOICES = [
+        ("predstihovy", _("projekt.form.GenerovatExpertniListForm.predstihovy.typ_vyzkumu.text")),
+        ("zachranny", _("projekt.form.GenerovatExpertniListForm.zachranny.typ_vyzkumu.text")),
+        ("dohled", _("projekt.form.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
+    ]
+    VYSLEDEK_CHOICES = [
+        ("pozitivni", _("projekt.form.GenerovatExpertniListForm.vysledek.pozitivni.text")),
+        ("negativni", _("projekt.form.GenerovatExpertniListForm.vysledek..text")),
+        ("jine", _("projekt.form.GenerovatExpertniListForm.vysledek.jine.text")),
+    ]
+
+    cislo_jednaci = forms.CharField(label=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.label"),
+                                    required=False,
+                                    help_text=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
+    typ_vyzkumu = forms.ChoiceField(
+        label=_("projekt.form.GenerovatExpertniListForm.typ_vyzkumu.label"),
+        choices=TYP_VYZKUMU_CHOICES,
+        widget=forms.Select,
+        help_text=_("projekt.form.GenerovatExpertniListForm.typ_vyzkumu.tooltip"),
+    )
+    vysledek = forms.ChoiceField(
+        label=_("projekt.form.GenerovatExpertniListForm.vysledek.label"),
+        choices=VYSLEDEK_CHOICES,
+        widget=forms.Select,
+        help_text=_("projekt.form.GenerovatExpertniListForm.vysledek.tooltip"),
+    )
+    poznamka_podpis = forms.CharField(
+        label=_("projekt.form.GenerovatExpertniListForm.poznamka_podpis.label"),
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div(
+                    Div(
+                        "cislo_jednaci",
+                        css_class="col-sm-12",
+                    ),
+                    Div(
+                        "typ_vyzkumu",
+                        css_class="col-sm-12",
+                    ),
+                    Div(
+                        "vysledek",
+                        css_class="col-sm-12",
+                    ),
+                    Div(
+                        "poznamka_podpis",
+                        css_class="col-sm-12",
                     ),
                     css_class="row",
                 ),
