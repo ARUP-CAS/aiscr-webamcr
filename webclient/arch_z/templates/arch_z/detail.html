@@ -596,7 +596,8 @@
     
   </div>
   {% if arch_projekt_link %}
-  {% include "arch_z/modal-archiv-projekt.html" with zaznam=zaznam %}
+  <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
+  </button>
   {% endif %}
 {% endblock %}
 
@@ -803,7 +804,16 @@
   <script>
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
-      $('#modalArchivProjekt').modal('show');
+      if ("{{arch_projekt_link}}" !== "None"){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
+        formID: "archivovat-form",
+        modalFormID: "#archivovat-form",
+        })
+        arch_projekt = new Modal(options, "archive_projekt");
+        document.getElementById("archive_projekt").click()  
+      };
+        
       if (document.getElementsByClassName("adb-smazat-btn")){
         elements = document.getElementsByClassName("adb-smazat-btn")
         for (let i = 0; i < elements.length; i++){

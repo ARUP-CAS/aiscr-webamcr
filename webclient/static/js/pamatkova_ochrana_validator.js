@@ -29,6 +29,8 @@ function disableFields() {
     element_pamat_popis.disabled = true;
     element_pamat_cislo.required = false;
     element_pamat_popis.required = false;
+    element_pamat_popis.classList.remove("required-next")
+    element_pamat_cislo.classList.remove("required-next")
     if (label_pamat_cislo.getElementsByTagName("span").length > 0){
         label_pamat_cislo.getElementsByTagName("span")[0].remove()
     }
@@ -46,11 +48,17 @@ function enableFields() {
     if (pamatkova_ochrana.required == true) {
         element_pamat_cislo.required = true;
         label_pamat_cislo.classList.add("requiredField");
+        if (!element_pamat_cislo.classList.contains("required-next")){
+            element_pamat_cislo.classList.add("required-next")
+        }
         if (label_pamat_cislo.getElementsByTagName("span").length == 0){
             label_pamat_cislo.insertAdjacentHTML("beforeend",'<span class="asteriskField">*</span>')
         }
         element_pamat_popis.required = true;
         label_pamat_popis.classList.add("requiredField");
+        if (!element_pamat_popis.classList.contains("required-next")){
+            element_pamat_popis.classList.add("required-next")
+        }
         if (label_pamat_popis.getElementsByTagName("span").length == 0){
             label_pamat_popis.insertAdjacentHTML("beforeend",'<span class="asteriskField">*</span>')
         }

@@ -368,7 +368,7 @@ def odeslat(request, ident_cely):
         "object": az,
         "title": _("arch_z.modalForm.odeslatArchz.title.text"),
         "id_tag": "odeslat-akci-form",
-        "button": _("adb.modalForm.odeslatArchz.submit.button"),
+        "button": _("arch_z.modalForm.odeslatArchz.submit.button"),
         "form_check": form_check
     }
     return render(request, "core/transakce_modal.html", context)
@@ -405,7 +405,7 @@ def archivovat(request, ident_cely):
         "object": az,
         "title": _("arch_z.modalForm.archivovatArchz.title.text"),
         "id_tag": "archivovat-akci-form",
-        "button": _("adb.modalForm.archivovatArchz.submit.button"),
+        "button": _("arch_z.modalForm.archivovatArchz.submit.button"),
         "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
@@ -463,7 +463,7 @@ def vratit(request, ident_cely):
         "form": form,
         "title": _("arch_z.modalForm.vratitArchz.title.text"),
         "id_tag": "vratit-akci-form",
-        "button": _("adb.modalForm.vratitArchz.submit.button"),
+        "button": _("arch_z.modalForm.vratitArchz.submit.button"),
     }
     return render(request, "core/transakce_modal.html", context)
 

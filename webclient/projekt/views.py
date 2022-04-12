@@ -606,13 +606,23 @@ def archivovat(request, ident_cely):
                 request.session['temp_data'].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ARCHIVOVAT)
             return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
-    context = {
-        "object": projekt,
-        "title": _("projekt.modalForm.archivovat.title.text"),
-        "id_tag": "archivovat-form",
-        "button": _("projekt.modalForm.archivovat.submit.button"),
-        "form_check": form_check
-    }
+    if request.GET.get('from_arch') == "true":
+        context = {
+            "object": projekt,
+            "title": _("arch_z.modal.archivovatProjekt.title"),
+            "text": _("arch_z.modal.archivovatProjekt.text"),
+            "id_tag": "archivovat-form",
+            "button": _("arch_z.modal.archivovatProjekt.confirmButton.text"),
+            "form_check": form_check
+        }
+    else:
+        context = {
+            "object": projekt,
+            "title": _("projekt.modalForm.archivovat.title.text"),
+            "id_tag": "archivovat-form",
+            "button": _("projekt.modalForm.archivovat.submit.button"),
+            "form_check": form_check
+        }
     return render(request, "core/transakce_modal.html", context)
 
 
@@ -911,7 +921,7 @@ def get_required_fields(zaznam=None,next=0):
         stav = zaznam.stav
     else:
         stav=1
-    if stav > PROJEKT_STAV_OZNAMENY-next:
+    if stav >= PROJEKT_STAV_OZNAMENY-next:
         required_fields = [
             "typ_projektu",
             "hlavni_katastr",
@@ -941,7 +951,13 @@ def get_required_fields(zaznam=None,next=0):
         and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
     ):
         required_fields += [
-            "datum_ukonceni",
+            "datum_ukonceni"
+        ]
+    if (
+        stav > PROJEKT_STAV_UKONCENY_V_TERENU-next
+        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
+    ):
+        required_fields += [
             "termin_odevzdani_nz"
         ]
     return required_fields

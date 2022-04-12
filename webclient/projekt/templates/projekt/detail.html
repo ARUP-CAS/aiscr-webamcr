@@ -304,19 +304,27 @@
             <span class="app-divider-label">{% trans "Terenní část" %}</span>
             <hr class="mt-0" />
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum zahájení výzkumu" %}</label>
               <input class="form-control" type="text" value="{{ projekt.datum_zahajeni|date:'d.m.Y'|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-1">
+            <div class="form-group">
+            </div>
+          </div>
+          <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Datum ukončení výzkumu" %}</label>
               <input class="form-control" type="text" value="{{ projekt.datum_ukonceni|date:'d.m.Y'|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-1">
+            <div class="form-group">
+            </div>
+          </div>
+          <div class="col-sm-3">
             <div class="form-group">
               <label for="formGroupExampleInput">{% trans "Termín odevzdání" %}</label>
               <input class="form-control" type="text" value="{{ projekt.termin_odevzdani_nz|date:'d.m.Y'|check_if_none }}" readonly><!--missings-->
@@ -426,12 +434,12 @@
           <thead>
             <tr>
               <th>{% trans "Ident cely" %}</th>
-              <th>{% trans "Přístupnost" %}</th>
               <th>{% trans "Katastry" %}</th>
               <th>{% trans "Vedoucí" %}</th>
               <th>{% trans "Datum" %}</th>
-              <th>{% trans "Typ" %}</th>
-              <th>{% trans "Uživatelské označení" %}</th>
+              <th>{% trans "Přístupnost" %}</th>
+              <!--th>{% trans "Typ" %}</th-->
+              <!--th>{% trans "Uživatelské označení" %}</th-->
               <th>{% trans "Stav" %}</th>
             </tr>
           </thead>
@@ -444,15 +452,15 @@
                     {{ a.archeologicky_zaznam.ident_cely }}
                   </a>
                 </td>
-                <td>{{ a.archeologicky_zaznam.pristupnost }}</td>
                 <td>
                   <strong>{{ a.archeologicky_zaznam.hlavni_katastr }}</strong>
                   {% if a.archeologicky_zaznam.katastry.all %}, {{ a.archeologicky_zaznam.katastry.all|katastry_to_list }}{% endif %}
                 </td>
                 <td>{{ a.hlavni_vedouci }}</td>
                 <td>{{ a.datum_zahajeni|date:'Y-m-d' }} - {{ a.datum_ukonceni|date:'Y-m-d' }}</td>
-                <td>{{ a.hlavni_typ|check_if_none }}, {{ a.vedlejsi_typ|check_if_none }}</td>
-                <td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni|check_if_none }}</td>
+                <td>{{ a.archeologicky_zaznam.pristupnost }}</td>
+                <!--td>{{ a.hlavni_typ|check_if_none }}, {{ a.vedlejsi_typ|check_if_none }}</td-->
+                <!--td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni|check_if_none }}</td-->
                 <td><div class="badge">{{ a.archeologicky_zaznam.get_stav_display }}</div></td>
               </tr>
             {% endfor %}
@@ -488,11 +496,11 @@
             <tr>
               <th>{% trans "Ident cely" %}</th>
               <th>{% trans "Katastr" %}</th>
-              <th>{% trans "Lokalizace" %}</th>
+              <!--th>{% trans "Lokalizace" %}</th-->
               <th>{% trans "Období" %}</th>
-              <th>{% trans "Nález" %}</th>
+              <!--th>{% trans "Nález" %}</th>
               <th>{% trans "Materiál" %}</th>
-              <th>{% trans "Nálezce" %}</th>
+              <th>{% trans "Nálezce" %}</th-->
               <th>{% trans "Datum nálezu" %}</th>
               <th>{% trans "Stav" %}</th>
             </tr>
@@ -507,11 +515,11 @@
                   </a>
                 </td>
                 <td>{{ nalez.katastr }}</td>
-                <td>{{ nalez.lokalizace }}</td>
+                <!--td>{{ nalez.lokalizace }}</td-->
                 <td>{{ nalez.obdobi }}</td>
-                <td>{{ nalez.druh_nalezu }}</td>
+                <!--td>{{ nalez.druh_nalezu }}</td>
                 <td>{{ nalez.specifikace }}</td>
-                <td>{{ nalez.nalezce }}</td>
+                <td>{{ nalez.nalezce }}</td-->
                 <td>{{ nalez.datum_nalezu|date:'Y/m/d' }}</td>
                 <td><div class="badge">{{ nalez.get_stav_display }}</div></td>
               </tr>

@@ -208,13 +208,13 @@ class ProjektFilter(filters.FilterSet):
     akce_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__ident_cely",
         lookup_expr="icontains",
-        label="ID",
+        label=_("ID akce"),
         distinct=True,
     )
 
     akce_zjisteni = ChoiceFilter(
         method="filter_has_positive_find",
-        label="Zjištění",
+        label=_("Terénní zjištění"),
         choices=[("True", "pozitivní"), ("False", "negativní")],
         widget=Select,
         distinct=True,
