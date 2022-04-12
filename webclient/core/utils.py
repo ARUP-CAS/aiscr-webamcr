@@ -7,6 +7,14 @@ from heslar.models import RuianKatastr
 from pian.models import Pian
 from projekt.models import Projekt
 
+from core.message_constants import (
+    VALIDATION_NOT_VALID,
+VALIDATION_EMPTY,
+VALIDATION_NOT_SIMPLE,
+VALIDATION_NOT_MULTIPART,
+VALIDATION_LINE_LENGTH,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -124,3 +132,21 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
     except Exception:
         logger.debug("No pians")
         return None
+
+def get_validation_messages(text):
+    if text == 'Not valid':
+        return VALIDATION_NOT_VALID
+    elif text == 'Geometry is empty':
+        return VALIDATION_EMPTY
+    elif text == 'Geometry is not simple':
+        return  VALIDATION_NOT_SIMPLE
+    elif text == 'Geometry is multipart':
+        return VALIDATION_NOT_MULTIPART
+    elif text == 'Min. legth of line excesed':
+        return VALIDATION_LINE_LENGTH
+    elif text == 'Parse error':
+        return VALIDATION_NOT_VALID
+    else:
+        return text
+
+

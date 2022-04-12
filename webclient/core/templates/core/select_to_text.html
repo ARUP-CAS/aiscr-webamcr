@@ -2,5 +2,6 @@
 {% load template_filters %}
 
 <input class="textinput textInput form-control" id="{{ widget.id}}" name="{{ widget.name}}" readonly="True" type="text"
-    value="{{ widget.optgroups|ifinlist:widget.value }}"
+    value="{% if widget.optgroups %}{{ widget.optgroups|ifinlist:widget.value }}{% elif widget.value %}{{ widget.value|get_katastr_name }}{% endif %}" 
+    {% include "django/forms/widgets/attrs.html" %}
 />

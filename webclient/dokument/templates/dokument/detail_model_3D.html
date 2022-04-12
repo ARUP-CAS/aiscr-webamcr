@@ -4,6 +4,7 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
+{% load crispy_forms_field %}
 
 {% block title %}{% trans "Detail dokumentu" %}{% endblock %}
 {% block head %}
@@ -15,85 +16,6 @@
     {% include "toolbar_dokument.html" with d=dokument  showcontrols=True is_3d=True %}
 
     {% include "state_component_document.html" with dokument=dokument %}
-
-    <div class="card app-card-form">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Detail" %}
-        </div>
-        {% if show.editovat %}
-        <div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <a class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
-              <span class="material-icons">edit</span>
-            </a>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-      <form>
-      <div class="card-body">
-        {% if warnings %}
-        <div class="alert alert-info" role="alert">
-          <ul>
-            {% for warning in warnings %}
-              <li>{{ warning }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-      {% endif %}
-          {% crispy formDokument %}
-        </div>
-        {% include "dokument/coor_doc.html" %}
-        <div class="card-body">
-          {% crispy formExtraData %}
-          {% crispy formKomponenta %}
-      </div>
-      </form>
-    </div>
-
-    <div class="card app-card-form">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Bližší specifikace obsahu (předměty a objekty)" %}
-        </div>
-      </div>
-      <div class="card-body">
-        <h5>{% trans "Objekty" %}</h5>
-        <form class="mb-3" method="POST" action="{% url 'nalez:edit_objekt' komponenta.ident_cely %}"
-              onsubmit="editNalezOSubmitButton.disabled = true; return true;">
-          {% if formset.objekt.forms %}
-          {% crispy formset.objekt formset.helper %}
-          {% else %}
-          <div class="app-note">
-            <span class="material-icons">info</span>
-            {% trans "Dokument neobsahuje žádné objekty." %}
-          </div>
-          {% endif %}
-          {% if show.editovat %}
-          <button type="submit" id="editNalezOSubmitButton"
-                  class="btn btn-primary">{% trans "Upravit objekty" %}</button>
-          {% endif %}
-        </form>
-        <h5>{% trans "Předměty" %}</h5>
-        <form method="POST" action="{% url 'nalez:edit_predmet' komponenta.ident_cely %}"
-              onsubmit="editNalezPSubmitButton.disabled = true; return true;">
-          {% if formset.predmet.forms %}
-          {% crispy formset.predmet formset.helper %}
-          {% else %}
-          <div class="app-note">
-            <span class="material-icons">info</span>
-            {% trans "Dokument neobsahuje žádné předměty." %}
-          </div>
-          {% endif %}
-          {% if show.editovat %}
-          <button type="submit" id="editNalezPSubmitButton"
-                  class="btn btn-primary">{% trans "Upravit předměty" %}</button>
-          {% endif %}
-        </form>
-      </div>
-    </div>
 
     <div class="card app-card-form">
       <div class="card-header">
@@ -123,6 +45,124 @@
         {% endif %}
       </div>
     </div>
+    
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <form>
+      <div class="card-body">
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      <div class="row">
+        <div class="form-group col-sm-2 input-osoba">
+          {% crispy_addon formDokument.autori append='<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.rok_vzniku|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.organizace|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.typ_dokumentu|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formExtraData.format|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-2">
+          {{ formDokument.oznaceni_originalu|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-6">
+          {{ formDokument.popis|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-6">
+          {{ formDokument.poznamka|as_crispy_field }}
+        </div>
+        <div class="form-group col-sm-8">
+          {{ formExtraData.odkaz|as_crispy_field }}
+        </div>
+      </div>
+        {% include "dokument/coor_doc.html" %}
+        <div class="row">
+          <div class="col-sm-12">
+            <span class="app-divider-label">{% trans "dokument.template.komponentaDivider.text" %}</span>
+            <hr class="mt-0" />
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.obdobi|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.presna_datace|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.areal|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formKomponenta.aktivity|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formExtraData.duveryhodnost|as_crispy_field }}
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Bližší specifikace obsahu (předměty a objekty)" %}
+        </div>
+      </div>
+      <div class="card-body formset-table">
+        <h5>{% trans "Objekty" %}</h5>
+        <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' komponenta.ident_cely %}"
+              onsubmit="editNalezSubmitButton.disabled = true; return true;">
+          {% if formset.objekt.forms %}
+          {% crispy formset.objekt formset.helper %}
+          {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument neobsahuje žádné objekty." %}
+          </div>
+          {% endif %}
+        <h5>{% trans "Předměty" %}</h5>
+          {% if formset.predmet.forms %}
+          {% crispy formset.predmet formset.helper %}
+          {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument neobsahuje žádné předměty." %}
+          </div>
+          {% endif %}
+          {% if show.editovat %}
+          <button type="submit" id="editNalezSubmitButton"
+                  class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
+          {% endif %}
+        </form>
+      </div>
+    </div> 
   </div>
 
 {% endblock %}
@@ -133,6 +173,53 @@
           document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový model 3D"
 
       })
+  </script>
+  <script>
+    //modal scripts
+    document.addEventListener('DOMContentLoaded', function (event) {
+      if ("{{show.odeslat_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'dokument:odeslat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+        formID: "odeslat-dokument-form",
+        modalFormID: "#odeslat-dokument-form",
+      })
+      odeslat_akci_modal = new Modal(options, "dokument-odeslat");
+      };
+      if ("{{show.vratit_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'dokument:vratit' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+        formID: "vratit-dokument-form",
+        modalFormID: "#vratit-dokument-form",
+      })
+      vratit_akci_modal = new Modal(options, "dokument-vratit");
+      }
+      if ("{{show.archivovat_link}}" != "False"){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+          formURL: "{% url 'dokument:archivovat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+          formID: "archivovat-dokument-form",
+          modalFormID: "#archivovat-dokument-form",
+        })
+      archivovat_akci_modal = new Modal(options, "dokument-archivovat");
+      }
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'dokument:smazat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+        formID: "smazat-dokument-form",
+        modalFormID: "#smazat-dokument-form",
+      })
+      smazat_akci_modal = new Modal(options, "dokument-smazat");
+      if (document.getElementsByClassName("objekt-smazat-btn")){
+        elements = document.getElementsByClassName("objekt-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-objekt-form",
+          modalFormID: "#smazat-objekt-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+  });
+  
   </script>
 
 

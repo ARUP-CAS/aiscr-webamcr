@@ -13,34 +13,34 @@
     <div class="app-right app-controls">
       <div class="btn-group app-entity-samostatny_nalez" role="group">
         {% if show.vratit_link %}
-          <a href="{% url 'pas:vratit' sn.ident_cely %}?sent_stav={{sn.stav}}" class="btn">
+          <button id="pas-vratit" class="btn" type="button" name="button">
             <span class="material-icons">arrow_back</span>
             {% trans "Vrátit" %}
-          </a>
+          </button>
         {% endif %}
         {% if show.odeslat_link %}
-          <a href="{% url 'pas:odeslat' sn.ident_cely %}?sent_stav={{sn.stav}}" class="btn">
+          <button id="pas-odeslat" class="btn" type="button" name="button">
             <span class="material-icons">flag</span>
             {% trans "Odeslat" %}
-          </a>
+          </button>
         {% endif %}
         {% if show.potvrdit_link %}
-          <a href="{% url 'pas:potvrdit' sn.ident_cely %}?sent_stav={{sn.stav}}" class="btn">
+          <button id="pas-potvrdit" class="btn" type="button" name="button">
             <span class="material-icons">flag</span>
-            {% trans "Potvrdit" %}
-          </a>
+            {% trans "Odeslat" %}
+          </button>
         {% endif %}
         {% if show.archivovat_link %}
-          <a href="{% url 'pas:archivovat' sn.ident_cely %}?sent_stav={{sn.stav}}" class="btn">
+          <button id="pas-archivovat" class="btn" type="button" name="button">
             <span class="material-icons">archive</span>
             {% trans "Archivovat" %}
-          </a>
+          </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           {% trans "Další volby" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <a class="dropdown-item" href="{% url 'pas:smazat' sn.ident_cely %}?sent_stav={{sn.stav}}">{% trans "Smazat nález" %}</a>
+          <button id="pas-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat Nalez" %}</button>
           <a class="dropdown-item" href="{% url 'historie:pas' sn.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}">{% trans "pas.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>

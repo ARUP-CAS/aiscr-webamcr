@@ -60,6 +60,10 @@
 
 
 {% block script %}
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
@@ -100,16 +104,48 @@
       $('#id_vedouci_projektu').selectpicker('refresh');
       $('#id_vedouci_projektu').selectpicker('val', response.value);
       dropdown.value = response.value;
-      $(settings.modalID).modal("hide");
+      $(settings.modalIDD).modal("hide");
     };
-    $(document).ready(function() {
-    
-        $("#create-osoba").modalForm({
-            modalID: "#modal-form",
-            formURL: "{% url 'uzivatel:create_osoba' %}",
-            successFunc: successFunction
-        });
-    
+    document.addEventListener('DOMContentLoaded', function (event) {
+      var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'uzivatel:create_osoba' %}",
+      formID: "create-osoba-form",
+      modalFormID: "#create-osoba-form",
+      modalIDD : "#modal-form",
+      successFunc:successFunction,
+    })
+    create_osoba_modal = new Modal(options, "create-osoba"); 
     });
     </script>
+    <script>
+      // oznaceni stavby podle typu projektu
+      $(document).ready(function () {
+          const selectElement = document.getElementById('id_typ_projektu');
+          const ZACHRANNY_OPTION = 1
+
+          function makeFieldDisabled(field, disabled){
+              $(field).prop('readonly', disabled);
+              $(field).prop('required', !disabled);
+              $(field).val("");
+          }
+
+          function makeOznamovatelDisabled(disabled){
+              makeFieldDisabled('#id_oznaceni_stavby', disabled)
+          }
+          if (selectElement.value != ZACHRANNY_OPTION) {
+            makeOznamovatelDisabled(true)
+          } else {
+            makeOznamovatelDisabled(false)
+          }
+
+          // On change pak podle toho co je vybrano
+          $(selectElement).on('changed.bs.select', function (e, clickedIndex) {
+              if (clickedIndex != ZACHRANNY_OPTION) {
+                  makeOznamovatelDisabled(true)
+              } else {
+                  makeOznamovatelDisabled(false)
+              }
+          });
+      })
+  </script>
 {% endblock %}

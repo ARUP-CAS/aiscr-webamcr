@@ -12,13 +12,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
 from django_registration.backends.activation.views import RegistrationView
 from django.contrib.auth.views import LoginView, LogoutView
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm
-from uzivatel.models import Osoba
+from uzivatel.models import Osoba, User
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,27 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
             qs = qs.filter(vypis_cely__icontains=self.q)
         return qs
 
+class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = User.objects.all()
+        if self.q:
+            qs = qs.filter(
+                Q(first_name__icontains=self.q)
+                |Q(last_name__icontains=self.q)
+                |Q(ident_cely__icontains=self.q)
+                |Q(organizace__nazev_zkraceny__icontains=self.q)
+            )
+        return qs
+
+class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Osoba.objects.all()
+        if self.q:
+            qs = qs.filter(vypis_cely__icontains=self.q)
+        qs.values_list(
+            "id", "vypis_cely"
+        ),
+        return qs
 
 @login_required
 @require_http_methods(["POST", "GET"])

@@ -20,8 +20,11 @@ from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.utils.translation import gettext as _
 from komponenta.models import KomponentaVazby
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
@@ -105,10 +108,17 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána dokumentacni jednotka: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})})
         else:
             logger.warning("DJ nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-
-        return redirect("arch_z:detail", ident_cely=arch_z_ident_cely)
+            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})},status=403)
     else:
-        return render(request, "core/smazat.html", {"objekt": dj})
+        context = {
+        "object": dj,
+        "title": _("dj.modalForm.smazani.title.text"),
+        "id_tag": "smazat-dj-form",
+        "button": _("dj.modalForm.smazani.submit.button"),
+        
+        }
+        return render(request, "core/transakce_modal.html", context)

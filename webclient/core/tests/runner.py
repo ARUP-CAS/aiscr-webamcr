@@ -22,7 +22,7 @@ from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
-from dokument.models import Dokument, DokumentCast, DokumentExtraData
+from dokument.models import Dokument, DokumentCast, DokumentExtraData, DokumentJazyk
 from heslar import hesla
 from heslar.hesla import (
     GEOMETRY_BOD,
@@ -63,6 +63,9 @@ from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Konstanty pouzite v testech
 PRESNOST_DESITKY_METRU_ID = 56
 PRESNOST_JEDNOTKY_METRU_ID = 567
@@ -74,6 +77,7 @@ TYP_DOKUMENTU_PLAN_SONDY_ID = 1096
 TYP_DOKUMENTU_NALEZOVA_ZPRAVA = 1073
 MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID = 229
 JAZYK_DOKUMENTU_CESTINA_ID = 1256
+ULOZENI_ORIGINALU_ID = 5588
 TYP_DJ_CELEK_AKCE_ID = 321
 OBDOBI_STREDNI_PALEOLIT_ID = 336
 AREAL_HRADISTE_ID = 337
@@ -262,7 +266,8 @@ class AMCRTestRunner(BaseRunner):
         typ_dokumentu_plan.save()
         material_dokumentu_digi.save()
         rada_dokumentu_text.save()
-        Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd).save()
+        Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd, heslo_en="cesky").save()
+        Heslar(id=ULOZENI_ORIGINALU_ID, heslo="uloz+orig", nazev_heslare=hjd).save()
         Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj).save()
         Heslar(
             id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd
@@ -417,6 +422,7 @@ class AMCRTestRunner(BaseRunner):
             lokalizace_okolnosti="test",
             hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
             hlavni_vedouci=Osoba.objects.first(),
+            organizace=o,
         )
         a.projekt = p
         a.save()
@@ -447,9 +453,7 @@ class AMCRTestRunner(BaseRunner):
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
-        soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
-                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x")
-        soubor.save()
+        #Dokument d bez souboru
         d = Dokument(
             id=EXISTING_DOCUMENT_ID,
             rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
@@ -461,8 +465,11 @@ class AMCRTestRunner(BaseRunner):
             material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
             historie=vazba,
             soubory=vazba_soubory,
+            popis="popis",
+            ulozeni_originalu=Heslar.objects.get(id=ULOZENI_ORIGINALU_ID),
         )
         d.save()
+        DokumentJazyk(id=1,dokument=d,jazyk=Heslar.objects.get(id=JAZYK_DOKUMENTU_CESTINA_ID),).save()
         DokumentExtraData(dokument=d).save()
         dc = DokumentCast(dokument=d, archeologicky_zaznam=az_incoplete, ident_cely=DOKUMENT_CAST_IDENT)
         dc.save()
@@ -489,8 +496,11 @@ class AMCRTestRunner(BaseRunner):
             material_originalu=Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID),
             historie=vazba,
             soubory=vazba_soubory,
+            popis="popis",
+            ulozeni_originalu=Heslar.objects.get(id=ULOZENI_ORIGINALU_ID),
         )
         dokument_nalezova_zprava.save()
+        DokumentJazyk(id=2,dokument=dokument_nalezova_zprava,jazyk=Heslar.objects.get(id=JAZYK_DOKUMENTU_CESTINA_ID),).save()
         DokumentExtraData(dokument=dokument_nalezova_zprava).save()
         dc = DokumentCast(dokument=dokument_nalezova_zprava, archeologicky_zaznam=az)
         dc.save()

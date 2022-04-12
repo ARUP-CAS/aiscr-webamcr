@@ -3,42 +3,6 @@ var global_map_can_edit=false;
 var global_map_can_grab_geom_from_map=false;
 var global_map_element="id_geom";
 
-var blueIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [18, 29],
-    iconAnchor: [9, 29],
-    popupAnchor: [1, -24],
-    shadowSize: [29, 29]
-    })
-
-var redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [18, 29],
-    iconAnchor: [9, 29],
-    popupAnchor: [1, -24],
-    shadowSize: [29, 29]
-    })
-
-var greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [18, 29],
-    iconAnchor: [9, 29],
-    popupAnchor: [1, -24],
-    shadowSize: [29, 29]
-    })
-
-var goldIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [18, 29],
-    iconAnchor: [9, 29],
-    popupAnchor: [1, -24],
-    shadowSize: [29, 29]
-    })
-
 var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
     cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
     cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
@@ -276,7 +240,7 @@ var drawControl = new L.Control.Draw( {
         circle: false, // Turns off this drawing tool
         rectangle: false,
         marker: {
-            icon: redIcon
+            icon: pinIconRedPoint
         },
         circlemarker: false,
         },
@@ -394,7 +358,7 @@ map.on('draw:created', function(e) {
             let corX = e.layer._latlng.lat;
             let corY = e.layer._latlng.lng;
                 if( global_map_can_edit){
-                    L.marker([corX, corY], {icon: redIcon}).bindPopup('Navržený pian').addTo(drawnItems);
+                    L.marker([corX, corY], {icon: pinIconRedPoint}).bindPopup('Navržený pian').addTo(drawnItems);
 
                 }
         } else{
@@ -458,88 +422,116 @@ function geomToText(){
 
 }
 
+var mouseOverGeometry =(geom)=>{
+    function getContent(e){
+        let content="";
+        try{
+            content = e.target.getPopup().getContent();
+        }catch(ee){
+            content = e.target.getTooltip().getContent();
+        }
+        return content;
+    }
 
+    geom.on('click', function (e) {
+        if(measureControl._measuring){
+            measureControl._stopMeasuring()
+        }
+        if(global_map_can_grab_geom_from_map!==false){
+            $.ajax({
+                type: "GET",
+                url:"/pian/list-pians/?q="+getContent(e),
+                dataType: 'json',
+                success: function(data){
+                  if(data.results.length>0){
+                  $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
+                  }
+                  //global_map_can_grab_geom_from_map=false;
 
-var addPointToPoiLayerWithForce = (geom, layer,text) => {
-        L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: redIcon,zIndexOffset:2000}).bindPopup(text).addTo(layer);
+                },
+                error: ()=>{
+                   // global_map_can_grab_geom_from_map=false;
+                }
+              })
+        }
+    })
+
+    geom.on('mouseover', function() {
+        if (geom instanceof L.Marker){
+            this.options.iconOld=this.options.icon;
+            if(this.options.changeIcon){
+                this.setIcon(pinIconYellow);
+            }else{
+                this.setIcon(pinIconYellowPoint);
+            }
+        } else {
+            this.options.iconOld=this.options.color;
+            this.setStyle({color: 'gold'});
+        }
+    });
+
+    geom.on('mouseout', function() {
+        //
+        if (geom instanceof L.Marker){
+        this.setIcon(this.options.iconOld);
+        } else {
+            this.setStyle({color:this.options.iconOld});
+        }
+        delete this.options.iconOld;
+    })
+}
+
+var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
+    console.log(text)
+    console.log(geom)
+    let coor=[]
+    if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRed,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
+        if(st_text.includes("POLYGON")){
+            st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
+                coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]));
+            })
+            mouseOverGeometry(L.polygon(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
+        }else if(st_text.includes("LINESTRING")){
+            st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
+                coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
+            })
+            mouseOverGeometry(L.polyline(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
+        } 
+    } else{
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
+    }
+    
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
-    let myIco={icon: blueIcon};
+    let myIco={icon: pinIconBluePoint};
+    let myIco2={icon: pinIconBlue};
+    let myColor= {color:"rgb(51, 153, 255)"};
 
-    function mouseOverGeometry(geom){
-        function getContent(e){
-            let content="";
-            try{
-                content = e.target.getPopup().getContent();
-            }catch(ee){
-                content = e.target.getTooltip().getContent();
-            }
-            return content;
-        }
-
-        geom.on('click', function (e) {
-            if(measureControl._measuring){
-                measureControl._stopMeasuring()
-            }
-            if(global_map_can_grab_geom_from_map!==false){
-                $.ajax({
-                    type: "GET",
-                    url:"/pian/list-pians/?q="+getContent(e),
-                    dataType: 'json',
-                    success: function(data){
-                      if(data.results.length>0){
-                      $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
-                      }
-                      //global_map_can_grab_geom_from_map=false;
-
-                    },
-                    error: ()=>{
-                       // global_map_can_grab_geom_from_map=false;
-                    }
-                  })
-            }
-        })
-
-        geom.on('mouseover', function() {
-
-            if (geom instanceof L.Marker){
-                this.options.iconOld=this.options.icon;
-                this.setIcon(goldIcon);
-            } else {
-                this.options.iconOld=this.options.color;
-                this.setStyle({color: 'red'});
-            }
-        });
-
-        geom.on('mouseout', function() {
-            //
-            if (geom instanceof L.Marker){
-            this.setIcon(this.options.iconOld);
-            } else {
-                this.setStyle({color:this.options.iconOld});
-            }
-            delete this.options.iconOld;
-        })
-    }
+    
 
     if (layer===poi_dj){
         //console.log(text+" orange "+st_text)
-        myIco={icon: greenIcon,zIndexOffset:1000};
-    } else if(layer==gm_correct){
-        myIco={icon: redIcon};
-    }
+        myIco={icon: pinIconGreenPoint,zIndexOffset:1000};
+        myIco2={icon: pinIconGreen,zIndexOffset:1000,changeIcon:true};
+        myColor={color:'green',zIndexOffset:1000,};
+    } /*else if(layer==gm_correct){
+        myIco={icon: pinIconRedPoint};
+        myIco2={icon: pinIconRed};
+        myColor='red';
+    }*/
 
     if(st_text.includes("POLYGON")){
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
         })
-        mouseOverGeometry(L.polygon(coor).bindTooltip(text,{sticky: true }).addTo(layer));
+        mouseOverGeometry(L.polygon(coor,myColor).bindTooltip(text,{sticky: true }).addTo(layer));
     }else if(st_text.includes("LINESTRING")){
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
         })
-        mouseOverGeometry(L.polyline(coor).bindTooltip(text,{sticky: true }).addTo(layer));
+        mouseOverGeometry(L.polyline(coor,myColor).bindTooltip(text,{sticky: true }).addTo(layer));
     } else if(st_text.includes("POINT")){
         let i=st_text.split("(")[1].split(")")[0];
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
@@ -558,9 +550,14 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
             x1=x1+parseFloat(i[1])
             c0=c0+1
         }
-        L.marker(amcr_static_coordinate_precision_wgs84([x0/c0,x1/c0]), myIco).bindPopup(text).addTo(layer);
+        if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
+            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([x0/c0,x1/c0]), myIco2).bindTooltip(text).addTo(layer));
+        }else{
+            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([x0/c0,x1/c0]), myIco).bindTooltip(text).addTo(layer));
+        }
 
     }
+    drawnItems.bringToFront();
 }
 
 function addLogText(text) {
@@ -591,9 +588,13 @@ function clearUnfinishedEditGeometry(){
 }
 
 function loadGeomToEdit(ident_cely){
+    console.log("load")
     drawnItems.clearLayers();
     drawnItemsBuffer.clearLayers();
     let drawnItemsCount=0;
+    let layerColor="green";
+    let PolylineColor= '#97009c';
+    let PolygonColor= '#662d91' ;
     map.eachLayer(function (layer) {
         if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Marker ){
             let content="";
@@ -612,17 +613,20 @@ function loadGeomToEdit(ident_cely){
                     let latlngs=layer.getLatLng()
                     if(drawnItemsCount==1){
                         layer.addTo(drawnItems);
-                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: blueIcon}).bindPopup(content).addTo(drawnItemsBuffer);
-                        //drawnItemsBuffer.push({type:"Marker", coor:layer.getLatLng(), content:content});
+                        //UNDO-layer-start
+                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: pinIconBluePoint}).bindPopup(content).addTo(drawnItemsBuffer);
+                        //UNDO-layer-end
                     } else{
-                       // L.marker([latlngs.lat,latlngs.lng]).bindPopup(content).addTo(drawnItemsBuffer);
                         layer.remove();
                     }
                 } else if (layer instanceof L.Polygon){
                     if(drawnItemsCount>1){
                         drawnItems.clearLayers();
                     }
+                    layerColor=layer.options.color;
+                    layer.setStyle({color: PolygonColor});
                     layer.addTo(drawnItems);
+                    //UNDO-layer-start
                     let latlngs=layer.getLatLngs()
                     let coordinates=[];
                     for (var i = 0; i < latlngs.length; i++) {
@@ -630,20 +634,23 @@ function loadGeomToEdit(ident_cely){
                             coordinates.push(amcr_static_coordinate_precision_wgs84([latlngs[i][j].lat, latlngs[i][j].lng]))
                         }
                     }
-                    L.polygon(coordinates).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
-                    //drawnItemsBuffer.push({type:"Polygon", coor:layer.getLatLngs(), content:content});
+                    L.polygon(coordinates,{color:layerColor}).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
+                    //UNDO-layer-end
                 } else if (layer instanceof L.Polyline) {
                     if(drawnItemsCount>1){
                         drawnItems.clearLayers();
                     }
+                    layerColor=layer.options.color;
+                    layer.setStyle({color: PolylineColor});
                     layer.addTo(drawnItems);
+                    //UNDO-layer-start
                     let latlngs=layer.getLatLngs()
                     let coordinates=[];
                     for (let i in latlngs){
                         coordinates.push(amcr_static_coordinate_precision_wgs84([latlngs[i].lat,latlngs[i].lng]));
                     }
-                    L.polyline(coordinates).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
-                    //drawnItemsBuffer.push({type:"Polyline", coor:layer.getLatLngs(), content:content});
+                    L.polyline(coordinates,{color:layerColor}).bindTooltip(content,{sticky:true}).addTo(drawnItemsBuffer);
+                    //UNDO-layer-end
                 }
             }
         }

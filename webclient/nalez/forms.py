@@ -1,5 +1,6 @@
 from core.forms import HeslarChoiceFieldField, TwoLevelSelectField
 from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Fieldset, Layout, Div, HTML
 from django import forms
 from django.utils.translation import gettext as _
 from nalez.models import NalezObjekt, NalezPredmet
@@ -8,20 +9,21 @@ from nalez.models import NalezObjekt, NalezPredmet
 class NalezFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.template = "bootstrap4/table_inline_formset.html"
+        self.template = "inline_formset.html"
         self.form_tag = False
 
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
 def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=True):
     class CreateNalezObjektForm(forms.ModelForm):
+        typ = forms.CharField(widget=forms.HiddenInput())
         class Meta:
             model = NalezObjekt
-            fields = ("druh", "specifikace", "pocet", "poznamka")
+            fields = ["druh", "specifikace", "pocet", "poznamka"]
             labels = {"pocet": _("Počet"), "poznamka": _("Poznámka")}
             widgets = {
-                "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-                "pocet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+                "poznamka": forms.TextInput(),
+                "pocet": forms.TextInput(),
             }
             help_texts = {
                 "pocet": _("nalez.form.nalezObjekt.pocet.tooltip"),
@@ -54,6 +56,8 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
             )
             self.fields["specifikace"].required = False
 
+            self.fields["typ"].initial="objekt"
+
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
                 if self.fields[key].disabled == True:
@@ -70,10 +74,11 @@ def create_nalez_predmet_form(
     druh_projekt_choices, specifikce_predmetu_choices, not_readonly=True
 ):
     class CreateNalezPredmetForm(forms.ModelForm):
+        typ = forms.CharField(widget=forms.HiddenInput())
         class Meta:
             model = NalezPredmet
 
-            fields = ("druh", "specifikace", "pocet", "poznamka")
+            fields = ["druh", "specifikace", "pocet", "poznamka"]
 
             labels = {
                 "pocet": _("Počet"),
@@ -81,8 +86,8 @@ def create_nalez_predmet_form(
             }
 
             widgets = {
-                "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-                "pocet": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+                "poznamka": forms.TextInput(),
+                "pocet": forms.TextInput(),
             }
             help_texts = {
                 "pocet": _("nalez.form.nalezPredmet.pocet.tooltip"),
@@ -109,6 +114,8 @@ def create_nalez_predmet_form(
                 "data-live-search": "true",
             }
             self.fields["specifikace"].required = True
+
+            self.fields["typ"].initial="predmet"
 
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly

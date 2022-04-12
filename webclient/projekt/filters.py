@@ -117,10 +117,9 @@ class ProjektFilter(filters.FilterSet):
     )
 
     vedouci_projektu = ModelMultipleChoiceFilter(
+        queryset=Osoba.objects.all(),
         label=_("Vedoucí"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
         distinct=True,
     )
     organizace = ModelMultipleChoiceFilter(
@@ -198,12 +197,10 @@ class ProjektFilter(filters.FilterSet):
     )
 
     historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=None,
+        queryset=User.objects.all(),
         label="Uživatel",
-        # widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        field_name="historie__historie__uzivatel",
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
 
@@ -251,13 +248,11 @@ class ProjektFilter(filters.FilterSet):
         distinct=True,
     )
 
-    akce_vedouci = ModelMultipleChoiceFilter(
+    akce_vedouci = MultipleChoiceFilter(
         label="Vedoucí",
-        # method="filtr_akce_vedouci",
-        queryset=None,
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        )
+        method="filtr_akce_vedouci",
+        choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+        widget=autocomplete.Select2Multiple(url="uzivatel:osoba-autocomplete-choices",)
     )
 
     akce_vedouci_organizace = MultipleChoiceFilter(
@@ -472,7 +467,7 @@ class ProjektFilter(filters.FilterSet):
 
     def filtr_akce_vedouci(self, queryset, name, value):
         return queryset.filter(
-            Q(akce__hlavni_vedouci__in=value) | Q(akce__akcevedouci__vedouci__in=value)
+            Q(akce__hlavni_vedouci__id__in=value) | Q(akce__akcevedouci__vedouci__id__in=value)
         )
 
     def filtr_akce_organizace(self, queryset, name, value):
@@ -494,14 +489,14 @@ class ProjektFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
-        try:
-            self.filters["historie_uzivatel"].extra.update({"queryset": User.objects.all()})
-            self.filters["akce_vedouci"].extra.update({"queryset": Osoba.objects.all()})
-            self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
-        except utils.ProgrammingError as err:
-            self.filters["historie_uzivatel"].choices = []
-            self.filters["akce_vedouci"].choices = []
-            self.filters["vedouci_projektu"].extra.update({"queryset": None})
+        #try:
+            #self.filters["historie_uzivatel"].extra.update({"queryset": User.objects.all()})
+            #self.filters["akce_vedouci"].extra.update({"queryset": Osoba.objects.all()})
+            #self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
+        #except utils.ProgrammingError as err:
+            #self.filters["historie_uzivatel"].choices = []
+            #self.filters["akce_vedouci"].choices = []
+            #self.filters["vedouci_projektu"].extra.update({"queryset": None})
         self.helper = ProjektFilterFormHelper()
 
 
@@ -531,7 +526,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             ),
             Div("historie_typ_zmeny", css_class="col-sm-2"),
             Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-            Div("historie_uzivatel", css_class="col-sm-2"),
+            Div("historie_uzivatel", css_class="col-sm-4"),
             Div(
                 HTML(_('<span class="app-divider-label">Výběr podle akcí</span>')),
                 HTML(_('<hr class="mt-0" />')),

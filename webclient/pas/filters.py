@@ -3,6 +3,7 @@ import logging
 import crispy_forms
 import django_filters
 import django_filters as filters
+from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
 from django.contrib.auth.models import Group
 from django.db import utils
@@ -83,10 +84,8 @@ class SamostatnyNalezFilter(filters.FilterSet):
     popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",)
 
     nalezce = ModelMultipleChoiceFilter(
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
     )
 
     predano_organizace = ModelMultipleChoiceFilter(
@@ -141,12 +140,11 @@ class SamostatnyNalezFilter(filters.FilterSet):
         distinct=True,
     )
 
-    historie_uzivatel = MultipleChoiceFilter(
+    historie_uzivatel = ModelMultipleChoiceFilter(
+        queryset=User.objects.all(),
         field_name="historie__historie__uzivatel",
         label="Uživatel",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
 
@@ -162,12 +160,6 @@ class SamostatnyNalezFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
-        try:
-            self.filters["nalezce"].choices = Osoba.objects.all()
-            self.filters["historie_uzivatel"].choices = [(user.id, str(user)) for user in User.objects.all()]
-        except utils.ProgrammingError as err:
-            self.filters["nalezce"].choices = []
-            self.filters["historie_uzivatel"].choices = []
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_popisne_udaje(self, queryset, name, value):
@@ -248,7 +240,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             ),
             Div("historie_typ_zmeny", css_class="col-sm-2"),
             Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-            Div("historie_uzivatel", css_class="col-sm-2"),
+            Div("historie_uzivatel", css_class="col-sm-4"),
             css_class="row",
         ),
     )

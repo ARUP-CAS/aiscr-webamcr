@@ -122,4 +122,50 @@
       type="text/javascript"
       src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
   </script>
+  <script>
+    //modal scripts
+    document.addEventListener('DOMContentLoaded', function (event) {
+      if (document.getElementsByClassName("spoluprace-aktivovat-btn")){
+        elements = document.getElementsByClassName("spoluprace-aktivovat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "aktivace-spoluprace-form",
+          modalFormID: "#aktivace-spoluprace-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("spoluprace-deaktivovat-btn")){
+        elements = document.getElementsByClassName("spoluprace-deaktivovat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "deaktivace-spoluprace-form",
+          modalFormID: "#deaktivace-spoluprace-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("spoluprace-smazat-btn")){
+        elements = document.getElementsByClassName("spoluprace-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazani-spoluprace-form",
+          modalFormID: "#smazani-spoluprace-form",
+          })
+          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      $("tbody tr").each(function() {
+        var item = $(this).find(".aktivace.spoluprace ");
+        item.attr('data-original-title' , item.children().text());
+        var item_smazani = $(this).find(".smazani.spoluprace ");
+        item_smazani.attr('data-original-title' , item_smazani.children().text());
+      });
+      
+  });
+  
+  </script>
 {% endblock %}

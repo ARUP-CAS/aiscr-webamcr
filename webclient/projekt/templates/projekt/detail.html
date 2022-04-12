@@ -41,7 +41,7 @@
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" with projekt=projekt showcontrols=True %}
 
-    <div class="bs-stepper">
+    <div class="bs-stepper historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
       <div class="bs-stepper-header">
         <div class="step {% if projekt.stav == 0 %}active{% endif %}">
           <button type="button" class="btn step-trigger projekt">
@@ -241,6 +241,10 @@
           </div>
           <div class="col-sm-3">
             <div id="projectMap"></div>
+            <script >
+              var static_url = "{% get_static_prefix %}";
+            </script>
+            <script src="{% static 'mapa_pins.js' %}"></script>
             <script src="{% static 'coor_precision.js' %}"></script>
             <script src="{% static 'mapa_basic.js' %}"></script>
             <script src="{% static 'mapa_projekty.js' %}"></script>
@@ -531,8 +535,109 @@
   </div>
   {% include "modals/generovat_potvrzeni.html" with projekt=projekt %}
   {% include "modals/vytvorit_expertni_list.html" with projekt=projekt %}
+
+  <div class="modal osoba-form fade app-modal-form" tabindex="-1" role="dialog" id="modal-osoba-form">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+      <div class="modal-content osoba-form"></div>
+    </div>
+  </div>
+
 {% endblock %}
 
 {% block script %}
+<script src="{% static '/js/create_message.js' %}"></script>
+  <script type="text/javascript">
+    // projekt stav change scripts
+    var modal
+    $(document).ready(function() {
+      if ("{{show.prihlasit_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "prihlasit-form",
+        modalFormID: "#prihlasit-form",
+      })
+      modal = new Modal(options, "projekt-prihlasit");
+      }
+      else if ("{{show.zahajit_teren_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "zahajit-v-terenu-form",
+        modalFormID: "#zahajit-v-terenu-form",
+      })
+      modal = new Modal(options, "projekt-zahajit-v-terenu");
+      }
+      else if ("{{show.ukoncit_teren_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "ukoncit-v-terenu-form",
+        modalFormID: "#ukoncit-v-terenu-form",
+      })
+      modal = new Modal(options, "projekt-ukoncit-v-terenu");
+      }
+      else if ("{{show.uzavrit_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "uzavrit-form",
+        modalFormID: "#uzavrit-form",
+      })
+      modal = new Modal(options, "projekt-uzavrit");
+      }
+      else if ("{{show.archivovat_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_archivovat' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "archivovat-form",
+        modalFormID: "#archivovat-form",
+      })
+      modal = new Modal(options, "projekt-archivovat");
+      }
+      if ("{{show.vratit_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_vratit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "vratit-form",
+        modalFormID: "#vratit-form",
+      })
+      var vratit_modal = new Modal(options, "projekt-vratit");
+      }//otestovat odtial
+      if ("{{show.znovu_zapsat_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_vratit_navrh_zruseni' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "vratit-navrh-form",
+        modalFormID: "#vratit-navrh-form",
+      })//ok
+      var vratit_navrh_zruseni_modal = new Modal(options, "projekt-vratit-navrh-zruseni");
+      }
+      if ("{{show.navrhnout_zruseni_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_navrhnout_ke_zruseni' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "navrh-zruseni-form",
+        modalFormID: "#navrh-zruseni-form",
+      })
+      var navrh_zruseni_modal = new Modal(options, "projekt-navrh-zruseni");
+      }//ok
+      if ("{{show.zrusit_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_zrusit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "zrusit-form",
+        modalFormID: "#zrusit-form",
+      })//ok
+      var zrusit_modal = new Modal(options, "projekt-zrusit");
+      }
+      if ("{{show.schvalit_link}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_schvalit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "schvalit-form",
+        modalFormID: "#schvalit-form",
+      })
+      var schvalit_modal = new Modal(options, "projekt-schvalit");
+      }
+      options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:smazat' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "smazat-form",
+        modalFormID: "#smazat-form",
+      })
+      var smazat_modal = new Modal(options, "projekt-smazat");
+    });
+    
 
+    </script>
 {% endblock %}

@@ -52,25 +52,6 @@ var button_map_lock = L.easyButton({
     }]
 }).addTo(map);
 
-//https://github.com/pointhi/leaflet-color-markers
-var greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-})
-
-var redIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-})
-
 //adding other points to layer
 var getOtherPoi = () => {
 
@@ -83,7 +64,9 @@ var getOtherPoi = () => {
     xhr.onload = function () {
         poi_other.clearLayers();
         JSON.parse(this.responseText).points.forEach((point) => {
-            L.marker(amcr_static_coordinate_precision_wgs84([point.lat, point.lng])).bindPopup(point.ident_cely).addTo(poi_other)
+            if(poi_sugest.getLayers()[0]._latlng.lat!=point.lat || poi_sugest.getLayers()[0]._latlng.lng!=point.lng){
+            L.marker(amcr_static_coordinate_precision_wgs84([point.lat, point.lng]), { icon: pinIconBlueDf }).bindPopup(point.ident_cely).addTo(poi_other)
+            }
         })
     };
     xhr.send(JSON.stringify({ 'NorthWest': map.getBounds().getNorthWest(), 'SouthEast': map.getBounds().getSouthEast() }))
@@ -93,9 +76,9 @@ var getOtherPoi = () => {
 
 var addPointOnLoad = (lat, long, text) => {
     if (text) {
-        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: greenIcon }).bindPopup(text).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconGreenDf }).bindPopup(text).addTo(poi_sugest);
     } else {
-        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: greenIcon }).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconGreenDf }).addTo(poi_sugest);
     }
 
     map.setView([lat, long], 18)
@@ -117,7 +100,7 @@ map.on('click', function (e) {
     const addPointToPoiLayer = (lat, long, text) => {
         if (global_map_can_edit) {
             poi_correct.clearLayers();
-            L.marker([lat, long], { icon: redIcon }).bindPopup(text).addTo(poi_correct);
+            L.marker([lat, long], { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
             const getUrl = window.location;
             const select = $("#id_hlavni_katastr");
             if (select) {

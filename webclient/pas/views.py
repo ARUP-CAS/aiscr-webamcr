@@ -1,4 +1,6 @@
 import logging
+
+from django.urls import reverse
 import structlog
 
 import simplejson as json
@@ -23,6 +25,7 @@ from core.ident_cely import get_sn_ident
 from core.message_constants import (
     FORM_NOT_VALID,
     MAXIMUM_IDENT_DOSAZEN,
+    PRISTUP_ZAKAZAN,
     SAMOSTATNY_NALEZ_ARCHIVOVAN,
     SAMOSTATNY_NALEZ_NELZE_ODESLAT,
     SAMOSTATNY_NALEZ_ODESLAN,
@@ -299,10 +302,11 @@ def edit_ulozeni(request, ident_cely):
 def vratit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
-        return redirect("pas:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -310,13 +314,20 @@ def vratit(request, ident_cely):
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
-            return redirect("pas:detail", ident_cely=ident_cely)
+            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
         form = VratitForm(initial={"old_stav":sn.stav})
-    return render(request, "core/vratit.html", {"form": form, "objekt": sn})
+    context = {
+        "object": sn,
+        "form": form,
+        "title": _("pas.modalForm.vraceni.title.text"),
+        "id_tag": "vratit-pas-form",
+        "button": _("pas.modalForm.vraceni.submit.button"),
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -335,31 +346,32 @@ def odeslat(request, ident_cely):
         ident_cely=ident_cely,
     )
     if sn.stav != SN_ZAPSANY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
-        return redirect("pas:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         sn.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
-        return redirect("pas:detail", ident_cely=ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
 
     warnings = sn.check_pred_odeslanim()
     logger.debug(warnings)
     if warnings:
         request.session['temp_data'] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
-        return redirect("pas:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     form_check = CheckStavNotChangedForm(initial={"old_stav":sn.stav})
     context = {
         "object": sn,
-        "title": _("Odeslání nálezu"),
-        "header": _("Odeslání nálezu"),
-        "button": _("Odeslat nález"),
+        "title": _("pas.modalForm.odeslat.title.text"),
+        "id_tag": "odeslat-pas-form",
+        "button": _("pas.modalForm.odeslat.submit.button"),
         "form_check": form_check,
     }
 
-    return render(request, "core/transakce.html", context)
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -367,45 +379,55 @@ def odeslat(request, ident_cely):
 def potvrdit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if check_stav_changed(request, sn):
-        return redirect("pas:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
             sn = form.save(commit=False)
             sn.set_potvrzeny(request.user)
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
-            return redirect("pas:detail", ident_cely=ident_cely)
+            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
         form = PotvrditNalezForm(instance=sn, initial={"old_stav":sn.stav})
-    return render(request, "pas/potvrdit.html", {"form": form, "sn": sn})
+    context = {
+        "object": sn,
+        "form": form,
+        "title": _("pas.modalForm.potvrdit.title.text"),
+        "id_tag": "potvrdit-pas-form",
+        "button": _("pas.modalForm.potvrdit.submit.button"),
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 def archivovat(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
-        raise PermissionDenied()
+        messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
-        return redirect("pas:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         sn.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ARCHIVOVAN)
-        return redirect("pas:detail", ident_cely=ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
     else:
         # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
         form_check = CheckStavNotChangedForm(initial={"old_stav":sn.stav})
         context = {
-            "title": _("Archivace nálezu"),
-            "header": _("Archivace nálezu ") + sn.ident_cely,
-            "button": _("Archivovat nález"),
-            "form_check": form_check,
-        }
-    return render(request, "core/transakce.html", context)
+        "object": sn,
+        "title": _("pas.modalForm.archivovat.title.text"),
+        "id_tag": "archivovat-pas-form",
+        "button": _("pas.modalForm.archivovat.submit.button"),
+        "form_check": form_check
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 class SamostatnyNalezListView(
@@ -436,7 +458,7 @@ class SamostatnyNalezListView(
 def smazat(request, ident_cely):
     nalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
-        return redirect("pas:detail", ident_cely)
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory
@@ -447,13 +469,21 @@ def smazat(request, ident_cely):
         if resp1:
             logger.debug("Nalez byl smazan: " + str(resp1 + resp2 + resp3))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":reverse("core:home")})
         else:
-            logger.warning("Dokument nebyl smazan: " + str(ident_cely))
+            logger.warning("Nalez nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-
-        return redirect("core:home")
+            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     else:
-        return render(request, "core/smazat.html", {"objekt": nalez})
+        form_check = CheckStavNotChangedForm(initial={"old_stav":nalez.stav})
+        context = {
+        "object": nalez,
+        "title": _("pas.modalForm.smazani.title.text"),
+        "id_tag": "smazat-pas-form",
+        "button": _("pas.modalForm.smazani.submit.button"),
+        "form_check": form_check,
+        }
+        return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -556,25 +586,24 @@ def aktivace(request, pk):
     if request.method == "POST":
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
-        return redirect("pas:spoluprace_list")
+        return JsonResponse({"redirect":reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_aktivaci()
         logger.debug(warnings)
-        context = {"object": spoluprace}
         if warnings:
-            context["warnings"] = warnings
-            messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_AKTIVOVAT)
-    context["title"] = _("Aktivace spolupráce")
-    form_check = CheckStavNotChangedForm(initial={"old_stav": spoluprace.stav})
-    context["form_check"] = form_check
-    context["header"] = (
-        _("Aktivace spolupráce mezi ")
+            messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}")
+            return JsonResponse({"redirect":reverse("pas:spoluprace_list")},status=403)
+    context = {
+        "object": spoluprace,
+        "title": (_("Aktivace spolupráce mezi ")
         + spoluprace.vedouci.email
         + " a "
         + spoluprace.spolupracovnik.email
-    )
-    context["button"] = _("Aktivovat spolupráci")
-    return render(request, "core/transakce.html", context)
+    ),
+        "id_tag": "aktivace-spoluprace-form",
+        "button": _("pas.spoluprace.modalForm.aktivace.submit.button"),
+        }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -584,25 +613,24 @@ def deaktivace(request, pk):
     if request.method == "POST":
         spoluprace.set_neaktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
-        return redirect("pas:spoluprace_list")
+        return JsonResponse({"redirect":reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_deaktivaci()
         logger.debug(warnings)
-        context = {"object": spoluprace}
         if warnings:
-            context["warnings"] = warnings
-            messages.add_message(request, messages.ERROR, SPOLUPRACI_NELZE_DEAKTIVOVAT)
-    context["title"] = _("Deaktivace spolupráce")
-    form_check = CheckStavNotChangedForm(initial={"old_stav": spoluprace.stav})
-    context["form_check"] = form_check
-    context["header"] = (
-        _("Deaktivace spolupráce mezi ")
+            messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}")
+            return JsonResponse({"redirect":reverse("pas:spoluprace_list")},status=403)
+    context = {
+        "object": spoluprace,
+        "title": (_("Deaktivace spolupráce mezi ")
         + spoluprace.vedouci.email
         + " a "
         + spoluprace.spolupracovnik.email
-    )
-    context["button"] = _("Deaktivovat spolupráci")
-    return render(request, "core/transakce.html", context)
+    ),
+        "id_tag": "deaktivace-spoluprace-form",
+        "button": _("pas.spoluprace.modalForm.deaktivace.submit.button"),
+        }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
@@ -617,15 +645,24 @@ def smazat_spolupraci(request, pk):
         if resp1:
             logger.debug("Spoluprace byla smazana: " + str(resp1 + resp2))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":reverse("pas:spoluprace_list")})
         else:
             logger.warning("Spoluprace nebyla smazana: " + str(pk))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            return JsonResponse({"redirect":reverse("pas:spoluprace_list")},status=403)
 
-        return redirect("pas:spoluprace_list")
     else:
-        return render(
-            request, "core/smazat.html", {"objekt": spoluprace, "spoluprace": True}
-        )
+        context = {
+        "object": spoluprace,
+        "title": (_("pas.spoluprace.modalForm.smazani.title.text")
+        + spoluprace.vedouci.email
+        + _(" a ")
+        + spoluprace.spolupracovnik.email
+    ),
+        "id_tag": "smazani-spoluprace-form",
+        "button": _("pas.spoluprace.modalForm.smazani.submit.button"),
+        }
+    return render(request, "core/transakce_modal.html", context)
 
 
 def get_history_dates(historie_vazby):

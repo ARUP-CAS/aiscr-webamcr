@@ -1,34 +1,37 @@
-{% extends "base_logged_in.html" %}
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Navržení zrušení projektu" %}{{ projekt.ident_cely }}{% endblock %}
-{% block head %}
-{% endblock %}
-
-{% block content %}
-  <div class="app-entity-projekt">
-    {% include "toolbar_projekt.html" %}
-    <form method="post">
-			{% crispy form %}
-		</form>
+<form method="POST" id="navrh-zruseni-form">
+  <div class="modal-header">
+    <h5 class="modal-title">{% trans "projekt.modalForm.navrhZruseni.header.title" %} {{ projekt.ident_cely }}</h5>
+    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
   </div>
-{% endblock %}
+  <div class="modal-body">
+    {% crispy form %}
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">{% translate "projekt.modalForm.navrhZruseni.button.close.text" %}</button>
+    <button type="submit" class="btn btn-primary">{% translate 'projekt.modalForm.navrhZruseni.button.submit.text' %}</button>
+  </div>
+</form>
 
 {% block script %}
 <script>
-  window.onload = function() {
+  
+  window.addEventListener('modalLoaded', (event) => {
     $('#div_id_reason_text').hide();
     $('#div_id_projekt_id').hide();
-    
     if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option1') {
       $('#div_id_projekt_id').show();
       };
     if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option6') {
       $('#div_id_reason_text').show();
       };
-};
+});
   $('input:radio[name="reason"]').change(
     function(){
         if ($(this).is(':checked') && $(this).val() == 'option1') {
