@@ -136,6 +136,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def _old_role(self):
         return User.objects.get(pk=self.pk).hlavni_role.pk
 
+    @property
+    def is_archiver_or_more(self):
+        return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
+
     def save(self, *args, **kwargs):
         logger_s.debug("User.save.start")
         if not self._state.adding and ((self.hlavni_role.pk == ROLE_BADATEL_ID and self._old_role

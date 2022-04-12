@@ -457,6 +457,14 @@ class Projekt(models.Model):
                 typ_souboru=OTHER_PROJECT_FILES,
             ).save()
 
+    @property
+    def expert_list_can_be_created(self):
+        if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
+            return False
+        if self.stav not in (PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_UKONCENY_V_TERENU):
+            return False
+        return True
+
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
         path, file = elc.build_document()
