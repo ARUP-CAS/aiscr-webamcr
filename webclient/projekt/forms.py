@@ -318,9 +318,11 @@ class EditProjektForm(forms.ModelForm):
                             HTML(_('<hr class="mt-0" />')),
                             css_class="col-sm-12",
                         ),
-                        Div("datum_zahajeni", css_class="col-sm-4"),
-                        Div("datum_ukonceni", css_class="col-sm-4"),
-                        Div("termin_odevzdani_nz", css_class="col-sm-4"),
+                        Div("datum_zahajeni", css_class="col-sm-3"),
+                        Div(css_class="col-sm-1"),
+                        Div("datum_ukonceni", css_class="col-sm-3"),
+                        Div(css_class="col-sm-1"),
+                        Div("termin_odevzdani_nz", css_class="col-sm-3"),
                         css_class="row",
                     ),
                     css_class="card-body",
@@ -441,13 +443,13 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "vedouci_projektu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker required-next", "data-live-search": "true"}
             ),
             "kulturni_pamatka": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker required-next", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true", "size":"7"}
+                attrs={"class": "selectpicker required-next", "data-live-search": "true", "size":"7"}
             ),
         }
         labels = {
@@ -482,6 +484,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         super(PrihlaseniProjektForm, self).__init__(*args, **kwargs)
         self.fields["vedouci_projektu"].required = True
         self.fields["kulturni_pamatka"].required = True
+        self.fields["organizace"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
