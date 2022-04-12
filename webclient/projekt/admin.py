@@ -17,5 +17,3 @@ class ProjektAdmin(admin.ModelAdmin):
         "historie",
     )
 
-
-admin.site.register(Projekt, ProjektAdmin)
