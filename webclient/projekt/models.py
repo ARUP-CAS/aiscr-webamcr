@@ -49,6 +49,7 @@ from django.core.files.base import ContentFile
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import OznameniPDFCreator
+from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -436,7 +437,7 @@ class Projekt(models.Model):
     def create_confirmation_document(self, additional=False):
         from core.utils import get_mime_type
         creator = OznameniPDFCreator(self.oznamovatel, self)
-        filename = creator.build_pdf()
+        filename = creator.build_document()
         filename_without_path = f"oznameni_{self.ident_cely}.pdf"
         if additional:
             soubory_count = Soubor.objects.filter(nazev__startswith=filename_without_path[:-4] + "_").count()
@@ -455,6 +456,19 @@ class Projekt(models.Model):
                 size_bytes=os.path.getsize(filename),
                 typ_souboru=OTHER_PROJECT_FILES,
             ).save()
+
+    @property
+    def expert_list_can_be_created(self):
+        if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
+            return False
+        if self.stav not in (PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_UKONCENY_V_TERENU):
+            return False
+        return True
+
+    def create_expert_list(self, popup_parametry=None):
+        elc = ExpertniListCreator(self, popup_parametry)
+        path, file = elc.build_document()
+        return path, file
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):

@@ -534,12 +534,14 @@
     
   </div>
   {% include "modals/generovat_potvrzeni.html" with projekt=projekt %}
+  {% include "modals/vytvorit_expertni_list.html" with projekt=projekt %}
 
   <div class="modal osoba-form fade app-modal-form" tabindex="-1" role="dialog" id="modal-osoba-form">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
       <div class="modal-content osoba-form"></div>
     </div>
   </div>
+
 {% endblock %}
 
 {% block script %}

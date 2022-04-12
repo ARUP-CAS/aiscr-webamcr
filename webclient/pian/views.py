@@ -3,6 +3,8 @@ import logging
 from django.http import JsonResponse
 from django.urls import reverse
 
+import structlog
+
 from core.constants import KLADYZM10, KLADYZM50, PIAN_POTVRZEN, PIAN_NEPOTVRZEN
 from core.exceptions import NeznamaGeometrieError, MaximalIdentNumberError
 from core.ident_cely import get_temporary_pian_ident
@@ -37,7 +39,7 @@ from pian.models import Kladyzm, Pian
 from django.db import connection
 
 logger = logging.getLogger(__name__)
-
+logger_s = structlog.get_logger(__name__)
 
 @login_required
 @require_http_methods(["POST"])
@@ -142,6 +144,7 @@ def potvrdit(request, dj_ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def create(request, dj_ident_cely):
+    logger_s.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
     c = connection.cursor()
@@ -151,7 +154,9 @@ def create(request, dj_ident_cely):
         c.callproc("validateGeom", [str(form.data["geom"])])
         validation_results = c.fetchone()[0]
         c.execute("COMMIT")
-    except Exception:
+        logger_s.debug("pian.views.create.commit", validation_results=validation_results)
+    except Exception as ex:
+        logger_s.warning("pian.views.create.validation_exception", exception=ex)
         validation_results=PIAN_VALIDACE_VYPNUTA
     finally:
         c.close()

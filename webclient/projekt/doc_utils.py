@@ -1,6 +1,6 @@
+from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
-import os
 
 from webclient.settings.base import MEDIA_ROOT
 
@@ -27,7 +27,18 @@ Title = "Hello world"
 pageinfo = "platypus example"
 
 
-class OznameniPDFCreator:
+class DocumentCreator(ABC):
+
+    @abstractmethod
+    def _generate_text(self):
+        pass
+
+    @abstractmethod
+    def build_document(self):
+        pass
+
+
+class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
         dok_index = 0 if self.projekt.ident_cely[0] == "C" else 1
         self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
@@ -261,7 +272,7 @@ class OznameniPDFCreator:
                                        parent=self.styles["amPodpis2"],
                                        fontSize=10))
 
-    def build_pdf(self):
+    def build_document(self):
         def draw_image(filename, canvas, counter):
             img = utils.ImageReader(filename)
             iw, ih = img.getSize()
@@ -377,6 +388,5 @@ class OznameniPDFCreator:
         self._create_style_dict()
         self.texts = {}
         self._generate_text()
-
 
 
