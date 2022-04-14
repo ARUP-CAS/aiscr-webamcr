@@ -511,3 +511,10 @@ form {
     }
   }
 } */
+.bi-geo-alt.btn-outline-dark:hover{
+  background-color: $gray-400;
+  color: $gray-800;
+  &.btn-readonly{
+    background-color: $gray-200
+  }
+}

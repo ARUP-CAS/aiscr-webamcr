@@ -274,6 +274,8 @@ def edit(request, ident_cely):
 def edit_ulozeni(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
+    if check_stav_changed(request, sn):
+        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
     if request.method == "POST":
         form = PotvrditNalezForm(
             request.POST, instance=sn, predano_required=predano_required
@@ -284,17 +286,20 @@ def edit_ulozeni(request, ident_cely):
             if form.changed_data:
                 logger.debug(form.changed_data)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-            return redirect("pas:detail", ident_cely=ident_cely)
+            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
         else:
             logger.debug("The form is not valid!")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn, predano_required=predano_required)
-    return render(
-        request,
-        "pas/edit.html",
-        {"form": form},
-    )
+        form = PotvrditNalezForm(instance=sn, predano_required=predano_required,initial={"old_stav":sn.stav})
+    context = {
+        "object": sn,
+        "form": form,
+        "title": _("pas.modalForm.editUlozeni.title.text"),
+        "id_tag": "edit-ulozeni-pas-form",
+        "button": _("pas.modalForm.editUlozeni.submit.button"),
+    }
+    return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
