@@ -12,12 +12,11 @@ CREATE OR REPLACE VIEW soubor_s_cilovou_slozkou AS
 		-- SD - vše co má vazbu na DT Dokument
 		WHEN soubor_vazby.typ_vazby = 'dokument'  THEN
 			CASE
-				WHEN heslar_typ_dokumetu.zkratka = 'DT' THEN 'SD/'
 				WHEN heslar_typ_dokumetu.zkratka IN ('ZA', 'ZL') THEN '!DO NOT MIGRATE'
+				ELSE 'SD/'
 			END
 	END AS hlavni_slozka,
-	TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') AS podslozka,
-	heslar_typ_dokumetu.zkratka AS rada_dokumentu
+	TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') AS podslozka
 	FROM public.soubor
 	INNER JOIN public.soubor_vazby on soubor.vazba = soubor_vazby.id
 	LEFT OUTER JOIN public.dokument on dokument.soubory = soubor_vazby.id

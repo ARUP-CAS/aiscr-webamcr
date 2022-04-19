@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import datetime
 from django.db import models
 from historie.models import Historie, HistorieVazby
@@ -17,8 +18,25 @@ logger = logging.getLogger(__name__)
 
 
 def get_upload_to(instance, filename):
-    base_path = f"soubory/{datetime.datetime.now().strftime('%Y/%m/%d')}"
+    instance: Soubor
+    vazba: SouborVazby = instance.vazba
+    if vazba.typ_vazby == "projekt":
+        regex_oznameni = re.compile(r"\w*oznameni_?(?:X-)?[A-Z][-_]\w*\.pdf")
+        regex_log_dokumentace = re.compile(r"\w*log_dokumentace.pdf")
+        if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(instance.nazev):
+            folder = "AG/"
+        else:
+            folder = "PD/"
+    elif vazba.typ_vazby == "samostatny_nalez":
+        folder = "FN/"
+    elif vazba.typ_vazby == "dokument":
+        folder = "SD/"
+    else:
+        folder = ""
+    base_path = f"soubory/{folder}{datetime.datetime.now().strftime('%Y/%m/%d')}"
     return os.path.join(base_path, instance.nazev)
+
+
 class SouborVazby(models.Model):
 
     CHOICES = (
