@@ -696,6 +696,7 @@
             map_show_edit(true, false)
             loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
+          document.getElementById(shown_form_id).scrollIntoView();
       }
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
@@ -725,7 +726,7 @@
               setCookie("show-form", "", "");
           } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
-              document.getElementById(detail_to_show).scrollIntoView()
+              document.getElementById(detail_to_show).scrollIntoView();
           } else {
               let xhr3 = new XMLHttpRequest();
               xhr3.open('POST', '/arch-z/akce-zjisti-katastr');
