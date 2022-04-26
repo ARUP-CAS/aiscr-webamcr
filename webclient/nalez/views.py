@@ -122,4 +122,6 @@ def edit_nalez(request, komp_ident_cely):
         request.session["_old_nalez_post"] = request.POST
         request.session["komp_ident_cely"] = komp_ident_cely
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
+    return response
