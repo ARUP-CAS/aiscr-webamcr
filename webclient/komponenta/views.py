@@ -56,7 +56,9 @@ def detail(request, ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+    return response
 
 
 @login_required
@@ -66,11 +68,13 @@ def zapsat(request, dj_ident_cely):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
+    komp_ident_cely = None
     if form.is_valid():
         logger.debug("Form is valid")
         komponenta = form.save(commit=False)
         try:
             komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
+            komp_ident_cely = komponenta.ident_cely
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_KOMPONENT_DOSAZENO)
         else:
@@ -84,7 +88,10 @@ def zapsat(request, dj_ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    if komp_ident_cely:
+        response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
+    return response
 
 
 @login_required

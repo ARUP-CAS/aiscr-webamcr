@@ -253,7 +253,7 @@
             {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
-                <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form')"
+                <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form');document.getElementById('create_dj_form').scrollIntoView();"
                         rel="tooltip" data-placement="top"
                         title="{% trans 'Přidat dokumentační jednotku' %}">
                   <span class="material-icons">add</span>
@@ -696,6 +696,7 @@
             map_show_edit(true, false)
             loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
+          document.getElementById(shown_form_id).scrollIntoView();
       }
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
@@ -721,11 +722,11 @@
           let element_of_the_detail = document.getElementById(detail_to_show)
           if (show_form_cookie) {
               show_form(show_form_cookie);
+              setCookie("show-form", "", "/");
               get_create_pain_form_action(show_form);
-              setCookie("show-form", "", "");
           } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
-              document.getElementById(detail_to_show).scrollIntoView()
+              document.getElementById(detail_to_show).scrollIntoView();
           } else {
               let xhr3 = new XMLHttpRequest();
               xhr3.open('POST', '/arch-z/akce-zjisti-katastr');
@@ -761,6 +762,7 @@
           const el_li_komponenta
               = document.getElementById(`el_li_komponenta_${ident_cely_safe}`);
           change_active_element(el_li_komponenta);
+          document.getElementById(`detail_komponenta_form_${ident_cely}`).scrollIntoView();
       }
 
       const div_dokumentacni_jednotka_click = (data) => {
@@ -770,6 +772,7 @@
           const el_div_dokumentacni_jednotka
               = document.getElementById(`el_div_dokumentacni_jednotka_${ident_cely_safe}`);
           change_active_element(el_div_dokumentacni_jednotka);
+          document.getElementById(`detail_dj_form_${ident_cely}`).scrollIntoView();
       };
       let el_div_currently_selected = null;
       const set_dokumentacni_jednotka_events = (ident_cely, ident_cely_safe) => {
