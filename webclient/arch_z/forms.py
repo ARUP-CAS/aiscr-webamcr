@@ -4,13 +4,22 @@ from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
 
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
 from . import validators
+
+
+def create_akce_vedouci_objekt_form(not_readonly=True):
+    class CreateAkceVedouciObjektForm(forms.ModelForm):
+        class Meta:
+            model = AkceVedouci
+            fields = ["vedouci", "organizace"]
+
+    return CreateAkceVedouciObjektForm
 
 
 class CreateArchZForm(forms.ModelForm):

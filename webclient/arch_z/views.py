@@ -6,8 +6,9 @@ from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
     CreateAkceForm,
     CreateArchZForm,
+    create_akce_vedouci_objekt_form
 )
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -162,6 +163,19 @@ def detail(request, ident_cely):
         extra=1 if show["editovat"] else 0,
         can_delete=False,
     )
+    OstatniVedouciObjektFormset = inlineformset_factory(
+        Akce,
+        AkceVedouci,
+        form=create_akce_vedouci_objekt_form(
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+    ostatni_vedouci_objekt_formset = OstatniVedouciObjektFormset(
+        old_nalez_post,
+        instance=zaznam.akce,
+        prefix="_p",
+    )
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
@@ -267,6 +281,7 @@ def detail(request, ident_cely):
 
     context["dj_form_create"] = dj_form_create
     context["pian_form_create"] = pian_form_create
+    context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
