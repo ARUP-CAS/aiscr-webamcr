@@ -91,6 +91,9 @@
       .card {
         &.app-card-form  {
           .card-header {
+            background-color: rgba($color, 1.0) ;
+            color: #fff;
+
             .btn-group {
               .btn {
                 &:hover {
