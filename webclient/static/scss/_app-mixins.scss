@@ -166,11 +166,14 @@
               background-color: $color;
               border: $color;
               color: $white;
+              display:flex;
+              border: 1px solid #dee2e6;
             }
           }
 
           .page-link {
             color: $color;
+            display:flex;
           }
         }
       }

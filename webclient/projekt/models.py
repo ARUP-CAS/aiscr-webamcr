@@ -70,7 +70,7 @@ class Projekt(models.Model):
     )
 
     stav = models.SmallIntegerField(
-        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stavy")
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav")
     )
     typ_projektu = models.ForeignKey(
         Heslar,
@@ -78,13 +78,13 @@ class Projekt(models.Model):
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
-        verbose_name=_("Typy projektů"),
+        verbose_name=_("Typ projektů"),
     )
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
     kulturni_pamatka_popis = models.TextField(blank=True, null=True)
     parcelni_cislo = models.TextField(blank=True, null=True)
-    podnet = models.TextField(blank=True, null=True, verbose_name=_("Podněty"))
+    podnet = models.TextField(blank=True, null=True, verbose_name=_("Podnět"))
     uzivatelske_oznaceni = models.TextField(
         blank=True, null=True, verbose_name=_("Uživatelské označení")
     )
@@ -97,10 +97,10 @@ class Projekt(models.Model):
         verbose_name=_("Vedoucí projektů"),
     )
     datum_zahajeni = models.DateField(
-        blank=True, null=True, verbose_name=_("Data zahájení")
+        blank=True, null=True, verbose_name=_("Datum zahájení")
     )
     datum_ukonceni = models.DateField(
-        blank=True, null=True, verbose_name=_("Data ukončení")
+        blank=True, null=True, verbose_name=_("Datum ukončení")
     )
     planovane_zahajeni_text = models.TextField(blank=True, null=True)
     kulturni_pamatka = models.ForeignKey(
@@ -110,11 +110,11 @@ class Projekt(models.Model):
         blank=True,
         null=True,
         limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
-        verbose_name=_("Památky"),
+        verbose_name=_("Památka"),
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(
-        unique=True, blank=True, null=True, verbose_name=_("Identifikátory")
+        unique=True, blank=True, null=True, verbose_name=_("Identifikátor")
     )
     geom = pgmodels.PointField(blank=True, null=True)
     soubory = models.OneToOneField(
@@ -135,7 +135,7 @@ class Projekt(models.Model):
         Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
     )
     oznaceni_stavby = models.TextField(
-        blank=True, null=True, verbose_name=_("Označení staveb")
+        blank=True, null=True, verbose_name=_("Označení stavby")
     )
     planovane_zahajeni = DateRangeField(
         blank=True, null=True, verbose_name=_("Plánované zahájení")
@@ -146,7 +146,7 @@ class Projekt(models.Model):
         on_delete=models.DO_NOTHING,
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
-        verbose_name=_("Hlavní katastry"),
+        verbose_name=_("Hlavní katastr"),
     )
 
     def __str__(self):
