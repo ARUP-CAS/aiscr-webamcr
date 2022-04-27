@@ -4,6 +4,7 @@ import simplejson as json
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
+    AkceVedouciFormSetHelper,
     CreateAkceForm,
     CreateArchZForm,
     create_akce_vedouci_objekt_form
@@ -163,18 +164,18 @@ def detail(request, ident_cely):
         extra=1 if show["editovat"] else 0,
         can_delete=False,
     )
-    OstatniVedouciObjektFormset = inlineformset_factory(
+    ostatni_vedouci_objekt_formset = inlineformset_factory(
         Akce,
         AkceVedouci,
         form=create_akce_vedouci_objekt_form(
         ),
-        extra=1 if show["editovat"] else 0,
+        extra=0,
         can_delete=False,
     )
-    ostatni_vedouci_objekt_formset = OstatniVedouciObjektFormset(
-        old_nalez_post,
+    ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+        None,
         instance=zaznam.akce,
-        prefix="_p",
+        prefix="",
     )
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
@@ -282,6 +283,7 @@ def detail(request, ident_cely):
     context["dj_form_create"] = dj_form_create
     context["pian_form_create"] = pian_form_create
     context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
+    context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
@@ -317,10 +319,25 @@ def edit(request, ident_cely):
             required_next=required_fields_next
             )
 
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            request.POST,
+            instance=zaznam.akce,
+            prefix="_osv",
+        )
+
         if form_az.is_valid() and form_akce.is_valid():
             logger.debug("Form is valid")
             form_az.save()
             form_akce.save()
+            ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("arch_z:detail", ident_cely=ident_cely)
@@ -335,6 +352,20 @@ def edit(request, ident_cely):
             required=required_fields,
             required_next=required_fields_next
             )
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+                readonly=False
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            None,
+            instance=zaznam.akce,
+            prefix="_osv",
+        )
 
     return render(
         request,
@@ -342,6 +373,8 @@ def edit(request, ident_cely):
         {
             "formAZ": form_az,
             "formAkce": form_akce,
+            "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
+            "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "title": _("Editace archeologického záznamu"),
             "header": _("Archeologický záznam"),
             "button": _("Uložit změny"),
