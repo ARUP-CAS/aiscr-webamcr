@@ -10,6 +10,7 @@ from core.tests.runner import (
     KATASTR_ODROVICE_ID,
     D_STAV_ZAPSANY,
     EXISTING_EVENT_IDENT_INCOMPLETE,
+    AMCR_TESTOVACI_ORGANIZACE_ID,
     add_middleware_to_request,
 )
 from django.contrib.messages.middleware import MessageMiddleware
@@ -61,6 +62,22 @@ class UrlTests(TestCase):
             "ulozeni_nalezu": "",
             "hlavni_typ": str(HLAVNI_TYP_SONDA_ID),
             "vedlejsi_typ": "",
+            "_osv-TOTAL_FORMS": 2,
+            "_osv-INITIAL_FORMS": 1,
+            "_osv-MIN_NUM_FORMS": 0,
+            "_osv-MAX_NUM_FORMS": 1000,
+            "_osv-__prefix__-vedouci": "",
+            "_osv-__prefix__-organizace": "",
+            "_osv-__prefix__-id": "",
+            "_osv-__prefix__-akce": 1276681,
+            "_osv-0-vedouci": EL_CHEFE_ID,
+            "_osv-0-organizace": AMCR_TESTOVACI_ORGANIZACE_ID,
+            "_osv-0-id": "",
+            "_osv-0-akce": "",
+            "_osv-1-vedouci": "",
+            "_osv-1-organizace": "",
+            "_osv-1-id": "",
+            "_osv-1-akce": ""
         }
         request = self.factory.post("/arch-z/zapsat/", data)
         request.user = self.existing_user
@@ -71,10 +88,9 @@ class UrlTests(TestCase):
         response = zapsat(request, self.existing_projekt_ident)
         az = ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B").first()
         az.refresh_from_db()
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertEqual(az.akce.specifikace_data.pk, 885)
         self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ANONYM_ID)
-        self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertTrue(
             len(ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B")) == 1
         )

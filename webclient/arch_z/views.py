@@ -552,8 +552,21 @@ def zapsat(request, projekt_ident_cely):
             required=required_fields,
             required_next=required_fields_next
             )
-
-        if form_az.is_valid() and form_akce.is_valid():
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+                readonly=False
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            request.POST,
+            instance=None,
+            prefix="_osv",
+        )
+        if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
             logger.debug("Form is valid")
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
@@ -572,6 +585,26 @@ def zapsat(request, projekt_ident_cely):
                 akce.projekt = projekt
                 akce.save()
 
+                ostatni_vedouci_objekt_formset = inlineformset_factory(
+                    Akce,
+                    AkceVedouci,
+                    form=create_akce_vedouci_objekt_form(
+                        readonly=False
+                    ),
+                    extra=1,
+                    can_delete=False,
+                )
+                ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+                    request.POST,
+                    instance=akce,
+                    prefix="_osv",
+                )
+                if ostatni_vedouci_objekt_formset.is_valid():
+                    ostatni_vedouci_objekt_formset.save()
+                else:
+                    logger.warning("arch_z.views.zapsat: " "Form is not valid")
+                    logger.debug(ostatni_vedouci_objekt_formset.errors)
+
                 messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
                 logger.debug(f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
                              f"projekt: {projekt_ident_cely}")
@@ -583,6 +616,20 @@ def zapsat(request, projekt_ident_cely):
             logger.debug(form_akce.errors)
 
     else:
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+                readonly=False
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            None,
+            instance=None,
+            prefix="_osv",
+        )
         form_az = CreateArchZForm(projekt=projekt)
         form_akce = CreateAkceForm(
             uzamknout_specifikace=True,
@@ -597,6 +644,8 @@ def zapsat(request, projekt_ident_cely):
         {
             "formAZ": form_az,
             "formAkce": form_akce,
+            "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
+            "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "title": _("Nová projektová akce"),
             "header": _("Nová projektová akce"),
             "button": _("Vytvoř akci"),
