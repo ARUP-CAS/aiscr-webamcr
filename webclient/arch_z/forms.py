@@ -58,8 +58,10 @@ def create_akce_vedouci_objekt_form(readonly=True):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             if self.readonly:
-                self.fields["organizace"].widget.attrs["value"] = str(self.instance.organizace)
-                self.fields["vedouci"].widget.attrs["value"] = str(self.instance.vedouci)
+                if hasattr(self.instance, "organizace"):
+                    self.fields["organizace"].widget.attrs["value"] = str(self.instance.organizace)
+                if hasattr(self.instance, "vedouci"):
+                    self.fields["vedouci"].widget.attrs["value"] = str(self.instance.vedouci)
 
     return CreateAkceVedouciObjektForm
 

@@ -41,6 +41,7 @@ from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from dokument.views import odpojit, pripojit
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -48,6 +49,7 @@ from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import is_safe_url
 from django.utils.translation import gettext as _
 from django.utils.html import format_html, mark_safe
 from django.views.decorators.http import require_http_methods
@@ -168,6 +170,7 @@ def detail(request, ident_cely):
         Akce,
         AkceVedouci,
         form=create_akce_vedouci_objekt_form(
+            readonly=True
         ),
         extra=0,
         can_delete=False,
@@ -284,6 +287,7 @@ def detail(request, ident_cely):
     context["pian_form_create"] = pian_form_create
     context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
     context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
+    context["ostatni_vedouci_objekt_formset_readonly"] = True
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
@@ -325,7 +329,7 @@ def edit(request, ident_cely):
             form=create_akce_vedouci_objekt_form(
             ),
             extra=1,
-            can_delete=False,
+            can_delete=True,
         )
         ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
             request.POST,
@@ -333,7 +337,7 @@ def edit(request, ident_cely):
             prefix="_osv",
         )
 
-        if form_az.is_valid() and form_akce.is_valid():
+        if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
             logger.debug("Form is valid")
             form_az.save()
             form_akce.save()
@@ -375,6 +379,7 @@ def edit(request, ident_cely):
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
+            "ostatni_vedouci_objekt_formset_readonly": False,
             "title": _("Editace archeologického záznamu"),
             "header": _("Archeologický záznam"),
             "button": _("Uložit změny"),
@@ -752,3 +757,20 @@ def get_required_fields(zaznam=None,next=0):
             "datum_zahajeni",
         ]
     return required_fields
+
+
+@login_required
+@require_http_methods(["GET"])
+def smazat_akce_vedoucí(request, akce_vedouci_id):
+    zaznam = AkceVedouci.objects.get(id=akce_vedouci_id)
+    resp = zaznam.delete()
+    next_url = request.GET.get("next")
+    if next_url:
+        if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            response = next_url
+        else:
+            logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+            response = reverse("core:home")
+    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+    response = redirect(next_url)
+    return response
