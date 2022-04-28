@@ -4,13 +4,66 @@ from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
 
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
 from . import validators
+
+
+class AkceVedouciFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.template = "inline_formset_vedouci.html"
+        self.form_tag = False
+
+
+def create_akce_vedouci_objekt_form(readonly=True):
+    class CreateAkceVedouciObjektForm(forms.ModelForm):
+        class Meta:
+            model = AkceVedouci
+            fields = ["vedouci", "organizace"]
+
+            labels = {
+                "vedouci": _("Vedoucí"),
+                "organizace": _("Organizace"),
+            }
+            if readonly:
+                widgets = {
+                    "vedouci": forms.TextInput(
+                        attrs={"readonly": "readonly"}
+                    ),
+                    "organizace": forms.TextInput(
+                        attrs={"readonly": "readonly"}
+                    ),
+                }
+            else:
+                widgets = {
+                    "vedouci": forms.Select(
+                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                    ),
+                    "organizace": forms.Select(
+                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                    ),
+                }
+
+            help_texts = {
+                "vedouci": _("arch_z.form.vedouci.tooltip"),
+                "organizace": _("arch_z.form.organizace.tooltip"),
+            }
+
+        def __init__(self, *args, required=None, required_next=None, **kwargs):
+            super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
+            self.readonly = readonly
+            if self.readonly and hasattr(self, "instance"):
+                if hasattr(self.instance, "organizace"):
+                    self.fields["organizace"].widget.attrs["value"] = str(self.instance.organizace)
+                if hasattr(self.instance, "vedouci"):
+                    self.fields["vedouci"].widget.attrs["value"] = str(self.instance.vedouci)
+
+    return CreateAkceVedouciObjektForm
 
 
 class CreateArchZForm(forms.ModelForm):

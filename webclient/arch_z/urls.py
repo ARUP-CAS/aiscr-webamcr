@@ -33,4 +33,5 @@ urlpatterns = [
         views.post_ajax_get_pians,
         name="post_ajax_get_pians",
     ),
+    path("akce-vedouci-smazat/<int:akce_vedouci_id>", views.smazat_akce_vedoucí, name="smazat_akce_vedouci"),
 ]

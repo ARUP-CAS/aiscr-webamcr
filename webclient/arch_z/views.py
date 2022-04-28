@@ -4,10 +4,12 @@ import simplejson as json
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
+    AkceVedouciFormSetHelper,
     CreateAkceForm,
     CreateArchZForm,
+    create_akce_vedouci_objekt_form
 )
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -39,6 +41,7 @@ from core.utils import get_all_pians_with_dj, get_centre_from_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from dokument.views import odpojit, pripojit
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -46,6 +49,7 @@ from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import is_safe_url
 from django.utils.translation import gettext as _
 from django.utils.html import format_html, mark_safe
 from django.views.decorators.http import require_http_methods
@@ -162,6 +166,20 @@ def detail(request, ident_cely):
         extra=1 if show["editovat"] else 0,
         can_delete=False,
     )
+    ostatni_vedouci_objekt_formset = inlineformset_factory(
+        Akce,
+        AkceVedouci,
+        form=create_akce_vedouci_objekt_form(
+            readonly=True
+        ),
+        extra=0,
+        can_delete=False,
+    )
+    ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+        None,
+        instance=zaznam.akce,
+        prefix="",
+    )
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
@@ -267,6 +285,9 @@ def detail(request, ident_cely):
 
     context["dj_form_create"] = dj_form_create
     context["pian_form_create"] = pian_form_create
+    context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
+    context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
+    context["ostatni_vedouci_objekt_formset_readonly"] = True
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
@@ -302,10 +323,25 @@ def edit(request, ident_cely):
             required_next=required_fields_next
             )
 
-        if form_az.is_valid() and form_akce.is_valid():
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+            ),
+            extra=1,
+            can_delete=True,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            request.POST,
+            instance=zaznam.akce,
+            prefix="_osv",
+        )
+
+        if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
             logger.debug("Form is valid")
             form_az.save()
             form_akce.save()
+            ostatni_vedouci_objekt_formset.save()
             if form_az.changed_data or form_akce.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("arch_z:detail", ident_cely=ident_cely)
@@ -320,6 +356,20 @@ def edit(request, ident_cely):
             required=required_fields,
             required_next=required_fields_next
             )
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+                readonly=False
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            None,
+            instance=zaznam.akce,
+            prefix="_osv",
+        )
 
     return render(
         request,
@@ -327,6 +377,9 @@ def edit(request, ident_cely):
         {
             "formAZ": form_az,
             "formAkce": form_akce,
+            "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
+            "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
+            "ostatni_vedouci_objekt_formset_readonly": False,
             "title": _("Editace archeologického záznamu"),
             "header": _("Archeologický záznam"),
             "button": _("Uložit změny"),
@@ -499,8 +552,21 @@ def zapsat(request, projekt_ident_cely):
             required=required_fields,
             required_next=required_fields_next
             )
-
-        if form_az.is_valid() and form_akce.is_valid():
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+                readonly=False
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            request.POST,
+            instance=None,
+            prefix="_osv",
+        )
+        if form_az.is_valid() and form_akce.is_valid() and ostatni_vedouci_objekt_formset.is_valid():
             logger.debug("Form is valid")
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
@@ -519,6 +585,26 @@ def zapsat(request, projekt_ident_cely):
                 akce.projekt = projekt
                 akce.save()
 
+                ostatni_vedouci_objekt_formset = inlineformset_factory(
+                    Akce,
+                    AkceVedouci,
+                    form=create_akce_vedouci_objekt_form(
+                        readonly=False
+                    ),
+                    extra=1,
+                    can_delete=False,
+                )
+                ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+                    request.POST,
+                    instance=akce,
+                    prefix="_osv",
+                )
+                if ostatni_vedouci_objekt_formset.is_valid():
+                    ostatni_vedouci_objekt_formset.save()
+                else:
+                    logger.warning("arch_z.views.zapsat: " "Form is not valid")
+                    logger.debug(ostatni_vedouci_objekt_formset.errors)
+
                 messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
                 logger.debug(f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
                              f"projekt: {projekt_ident_cely}")
@@ -530,6 +616,20 @@ def zapsat(request, projekt_ident_cely):
             logger.debug(form_akce.errors)
 
     else:
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(
+                readonly=False
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            None,
+            instance=None,
+            prefix="_osv",
+        )
         form_az = CreateArchZForm(projekt=projekt)
         form_akce = CreateAkceForm(
             uzamknout_specifikace=True,
@@ -544,6 +644,8 @@ def zapsat(request, projekt_ident_cely):
         {
             "formAZ": form_az,
             "formAkce": form_akce,
+            "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
+            "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "title": _("Nová projektová akce"),
             "header": _("Nová projektová akce"),
             "button": _("Vytvoř akci"),
@@ -704,3 +806,20 @@ def get_required_fields(zaznam=None,next=0):
             "datum_zahajeni",
         ]
     return required_fields
+
+
+@login_required
+@require_http_methods(["GET"])
+def smazat_akce_vedoucí(request, akce_vedouci_id):
+    zaznam = AkceVedouci.objects.get(id=akce_vedouci_id)
+    resp = zaznam.delete()
+    next_url = request.GET.get("next")
+    if next_url:
+        if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            response = next_url
+        else:
+            logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+            response = reverse("core:home")
+    messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+    response = redirect(next_url)
+    return response
