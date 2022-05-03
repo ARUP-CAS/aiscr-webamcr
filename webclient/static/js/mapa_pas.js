@@ -87,7 +87,7 @@ var is_in_czech_republic = (corX, corY) => {
 let set_numeric_coordinates = async () => {
     corX = document.getElementById('detector_coordinates_x').value;
     corY = document.getElementById('detector_coordinates_y').value;
-    console.log(corX+" . "+corY)
+    //console.log(corX+" . "+corY)
     if (is_in_czech_republic(corX, corY)) {
         if (document.getElementById('detector_system_coordinates').value == 1) {
             jtsk_coor = convertToJTSK(corX, corY);
@@ -100,7 +100,7 @@ let set_numeric_coordinates = async () => {
             fill_katastr();
             return true;
         } else if (document.getElementById('detector_system_coordinates').value == 2) {
-            $.getJSON("https://epsg.io/trans?x=" + (corX).toFixed(2) + "&y=" + (corY).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
+            $.getJSON("https://epsg.io/trans?x=" + Number(corX).toFixed(2) + "&y=" + Number(corY).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
                 //point_global_WGS84 = [Math.round(data.y * 1000000.0) / 1000000.0, Math.round(data.x * 1000000.0) / 1000000.0]
                 //point_global_JTSK = [Math.round(corX * 100.0) / 100.0, Math.round(corY * 100.0) / 100.0]
                 point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.y, data.x])
