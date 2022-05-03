@@ -87,6 +87,10 @@ var is_in_czech_republic = (corX, corY) => {
 let set_numeric_coordinates = async () => {
     corX = document.getElementById('detector_coordinates_x').value;
     corY = document.getElementById('detector_coordinates_y').value;
+    if(Math.sign(corX) == Math.sign(corY) && document.getElementById('detector_system_coordinates').value == 2){
+        corX=-1.0*Math.abs(corX);
+        corY=-1.0*Math.abs(corY);
+    }
     //console.log(corX+" . "+corY)
     if (is_in_czech_republic(corX, corY)) {
         if (document.getElementById('detector_system_coordinates').value == 1) {
@@ -127,8 +131,8 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
     } else if (new_system == 2 && point_global_JTSK[0] != 0) {
-        document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
-        document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+        document.getElementById('detector_coordinates_x').value = Math.abs(point_global_JTSK[0]);
+        document.getElementById('detector_coordinates_y').value = Math.abs(point_global_JTSK[1]);
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
     }
