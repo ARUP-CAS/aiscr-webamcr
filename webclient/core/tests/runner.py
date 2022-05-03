@@ -47,10 +47,13 @@ from heslar.hesla import (
     SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_ZACHRANNY_ID,
     HESLAR_DOKUMENT_ULOZENI,
+    HESLAR_PREDMET_SPECIFIKACE,
+    HESLAR_PREDMET_DRUH,
 )
 from heslar.models import (
     Heslar,
     HeslarDokumentTypMaterialRada,
+    HeslarHierarchie,
     HeslarNazev,
     RuianKatastr,
     RuianKraj,
@@ -109,6 +112,9 @@ USER_ARCHEOLOG_EMAIL = "indiana.jones@uchicago.edu"
 USER_ARCHEOLOG_ID = 47
 
 PIAN_POTVRZEN = 2
+
+PREDMET_ID = 200
+PREDMET_SPECIFIKACE_ID = 999
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -215,6 +221,8 @@ class AMCRTestRunner(BaseRunner):
         hak = HeslarNazev(id=HESLAR_AREAL, nazev="heslar_areal")
         hza = HeslarNazev(id=HESLAR_DOKUMENT_ZACHOVALOST, nazev="heslar_zachovalost")
         hdu = HeslarNazev(id=HESLAR_DOKUMENT_ULOZENI, nazev="heslar_dokument_ulozeni")
+        hps = HeslarNazev(id=HESLAR_PREDMET_SPECIFIKACE, nazev="heslar_predmet_specifikace")
+        hpdr = HeslarNazev(id=HESLAR_PREDMET_DRUH, nazev="heslar_predmet_druh")
         nazvy_heslaru = [
             hn,
             hp,
@@ -233,6 +241,8 @@ class AMCRTestRunner(BaseRunner):
             hdr,
             hza,
             hdu,
+            hps,
+            hpdr
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -282,6 +292,11 @@ class AMCRTestRunner(BaseRunner):
             id=OBDOBI_STREDNI_PALEOLIT_ID, heslo="Stredni paleolit", nazev_heslare=hok
         ).save()
         Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
+        predmet = Heslar(id=PREDMET_ID,heslo="luk",nazev_heslare=hpdr)
+        predmet.save()
+        specifikace = Heslar(id=PREDMET_SPECIFIKACE_ID,heslo="drevo",nazev_heslare=hps)
+        specifikace.save()
+        HeslarHierarchie(heslo_podrazene=specifikace,heslo_nadrazene=predmet,typ="výchozí hodnota").save()
 
         kl10 = Kladyzm(
             gid=2,
