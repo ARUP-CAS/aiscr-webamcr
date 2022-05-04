@@ -334,3 +334,4 @@ AUTO_LOGOUT = {
     "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
 }
   
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'

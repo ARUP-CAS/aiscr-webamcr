@@ -13,8 +13,16 @@ logger = logging.getLogger(__name__)
 class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
-    katastr = tables.Column(verbose_name=_("Katastrální území"))
-    datum_nalezu = tables.columns.DateTimeColumn(format ='Y-m-d')
+    katastr = tables.Column(verbose_name=_("Katastrální území"),default="")
+    datum_nalezu = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
+    lokalizace = tables.columns.Column(default="")
+    obdobi = tables.columns.Column(default="")
+    druh_nalezu = tables.columns.Column(default="")
+    specifikace = tables.columns.Column(default="")
+    nalezce = tables.columns.Column(default="")
+    evidencni_cislo = tables.columns.Column(default="")
+    predano = tables.columns.Column(default="")
+    predano_organizace = tables.columns.Column(default="")
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
@@ -51,26 +59,30 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
 class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
 
-    stav = tables.Column(verbose_name="Stav", attrs={"td": {"class": "spoluprace"}},)
+    stav = tables.Column(verbose_name="Stav", attrs={"td": {"class": "spoluprace"}},default="")
     vedouci = tables.Column(
         accessor=("vedouci__name_and_id"),
         verbose_name="Vedoucí",
         attrs={"td": {"class": "spoluprace"}},
+        default="",
     )
     organizace_vedouci = tables.Column(
         accessor=("vedouci__organizace"),
         verbose_name="Organizace (Vedoucí)",
         attrs={"td": {"class": "spoluprace"}},
+        default="",
     )
     spolupracovnik = tables.Column(
         accessor="spolupracovnik__name_and_id",
         verbose_name="Spolupracovník",
         attrs={"td": {"class": "spoluprace"}},
+        default="",
     )
     organizace_spolupracovnik = tables.Column(
         accessor=("spolupracovnik__organizace"),
         verbose_name="Organizace (Spolupracovník)",
         attrs={"td": {"class": "spoluprace"}},
+        default="",
     )
 
     historie = tables.LinkColumn(
