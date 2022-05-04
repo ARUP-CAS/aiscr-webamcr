@@ -26,6 +26,7 @@ from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models import DEFERRED
+from django.db.models.functions import Collate
 from django.utils import timezone
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
@@ -195,7 +196,7 @@ class Organizace(models.Model):
 
     class Meta:
         db_table = "organizace"
-        ordering = ["nazev_zkraceny"]
+        ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
 
 
 class Osoba(models.Model):

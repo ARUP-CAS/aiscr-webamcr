@@ -58,15 +58,15 @@ logger = logging.getLogger(__name__)
 class Projekt(models.Model):
 
     CHOICES = (
-        (PROJEKT_STAV_OZNAMENY, "Oznámen"),
-        (PROJEKT_STAV_ZAPSANY, "Zapsán"),
-        (PROJEKT_STAV_PRIHLASENY, "Přihlášen"),
-        (PROJEKT_STAV_ZAHAJENY_V_TERENU, "Zahájen v terénu"),
-        (PROJEKT_STAV_UKONCENY_V_TERENU, "Ukončen v terénu"),
-        (PROJEKT_STAV_UZAVRENY, "Uzavřen"),
-        (PROJEKT_STAV_ARCHIVOVANY, "Archivován"),
-        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "Navržen ke zrušení"),
-        (PROJEKT_STAV_ZRUSENY, "Zrušen"),
+        (PROJEKT_STAV_OZNAMENY, "P0 - Oznámen"),
+        (PROJEKT_STAV_ZAPSANY, "P1 - Zapsán"),
+        (PROJEKT_STAV_PRIHLASENY, "P2 - Přihlášen"),
+        (PROJEKT_STAV_ZAHAJENY_V_TERENU, "P3 - Zahájen v terénu"),
+        (PROJEKT_STAV_UKONCENY_V_TERENU, "P4 - Ukončen v terénu"),
+        (PROJEKT_STAV_UZAVRENY, "P5 - Uzavřen"),
+        (PROJEKT_STAV_ARCHIVOVANY, "P6 - Archivován"),
+        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "P7 - Navržen ke zrušení"),
+        (PROJEKT_STAV_ZRUSENY, "P8 - Zrušen"),
     )
 
     stav = models.SmallIntegerField(

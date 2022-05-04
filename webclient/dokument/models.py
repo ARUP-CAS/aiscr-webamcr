@@ -50,9 +50,9 @@ logger = logging.getLogger(__name__)
 class Dokument(models.Model):
 
     STATES = (
-        (D_STAV_ZAPSANY, "Zapsán"),
-        (D_STAV_ODESLANY, "Odeslán"),
-        (D_STAV_ARCHIVOVANY, "Archivován"),
+        (D_STAV_ZAPSANY, "D1 - Zapsán"),
+        (D_STAV_ODESLANY, "D2 - Odeslán"),
+        (D_STAV_ARCHIVOVANY, "D3 - Archivován"),
     )
 
     let = models.ForeignKey(
