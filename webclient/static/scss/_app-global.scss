@@ -401,6 +401,14 @@ form {
 .app-table-list-container {
   @extend .d-flex, .flex-column, .h-100; 
 
+  &.app-entity-historie {
+    height: 95% !important;
+  }
+  &.app-entity-soubor{
+    .app-toolbar{
+    margin: 0rem -1rem 1rem -1rem !important;
+    }
+  }
   .app-card-form{
     .material-icons {
       @include setIcon($size:18, $position: sub);
