@@ -36,9 +36,9 @@ class ArcheologickyZaznam(models.Model):
 
     CHOICES = ((TYP_ZAZNAMU_LOKALITA, "Lokalita"), (TYP_ZAZNAMU_AKCE, "Akce"))
     STATES = (
-        (AZ_STAV_ZAPSANY, "Zapsána"),
-        (AZ_STAV_ODESLANY, "Odeslána"),
-        (AZ_STAV_ARCHIVOVANY, "Archivována"),
+        (AZ_STAV_ZAPSANY, "A1 - Zapsána"),
+        (AZ_STAV_ODESLANY, "A2 - Odeslána"),
+        (AZ_STAV_ARCHIVOVANY, "A3 - Archivována"),
     )
 
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)

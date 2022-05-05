@@ -35,10 +35,10 @@ from uzivatel.models import Organizace, Osoba, User
 class SamostatnyNalez(models.Model):
 
     PAS_STATES = [
-        (SN_ZAPSANY, _("zapsaný")),
-        (SN_ODESLANY, _("odeslaný")),  # Odeslaný
-        (SN_POTVRZENY, _("potvrzený")),  # Potvrzeny
-        (SN_ARCHIVOVANY, _("archivovaný")),
+        (SN_ZAPSANY, _("SN1 - zapsaný")),
+        (SN_ODESLANY, _("SN2 - odeslaný")),  # Odeslaný
+        (SN_POTVRZENY, _("SN3 - potvrzený")),  # Potvrzeny
+        (SN_ARCHIVOVANY, _("SN4 - archivovaný")),
     ]
 
     evidencni_cislo = models.TextField(blank=True, null=True)

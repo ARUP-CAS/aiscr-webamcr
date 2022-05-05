@@ -162,6 +162,7 @@ class RuianKraj(models.Model):
 
     class Meta:
         db_table = "ruian_kraj"
+        ordering = ["nazev"]
 
     def __str__(self):
         return self.nazev
@@ -179,6 +180,7 @@ class RuianOkres(models.Model):
 
     class Meta:
         db_table = "ruian_okres"
+        ordering = ["nazev"]
 
     def __str__(self):
         return self.nazev
