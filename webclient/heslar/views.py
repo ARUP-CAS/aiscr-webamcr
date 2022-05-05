@@ -3,8 +3,7 @@ from django.contrib.gis.geos import Point
 from django.http import JsonResponse
 from django.db.models import Value, IntegerField
 
-from heslar.models import Heslar, RuianKatastr
-
+from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
@@ -56,3 +55,16 @@ def zjisti_katastr_souradnic(request):
         )
     else:
         return JsonResponse({})
+
+def zjisti_vychozi_hodnotu(request):
+    nadrazene = request.GET.get("nadrazene", 0)
+    try:
+        vychozi_hodnota = HeslarHierarchie.objects.get(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
+        return JsonResponse(
+            data = {
+                "id": vychozi_hodnota.heslo_podrazene.pk
+            },
+            status=200
+        )
+    except HeslarHierarchie.DoesNotExist:
+        return JsonResponse(data = {},status=400)
