@@ -11,6 +11,7 @@ class NalezFormSetHelper(FormHelper):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
+        self.form_id = "objekt"
 
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments

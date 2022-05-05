@@ -106,8 +106,9 @@ class CreateADBForm(forms.ModelForm):
 class VyskovyBodFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.template = "bootstrap4/table_inline_formset.html"
+        self.template = "inline_formset.html"
         self.form_tag = False
+        self.form_id = "vb"
 
 
 def create_vyskovy_bod_form(pian=None):

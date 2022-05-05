@@ -23,6 +23,8 @@ from django.views.decorators.http import require_http_methods
 from django.urls import reverse
 from adb.models import Adb, VyskovyBod
 from django.utils.translation import gettext as _
+from django.utils.http import is_safe_url
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -131,4 +133,36 @@ def smazat(request, ident_cely):
         "button": _("adb.modalForm.smazani.submit.button"),
         
         }
+        return render(request, "core/transakce_modal.html", context)
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def smazat_vb(request, ident_cely):
+    zaznam = get_object_or_404(VyskovyBod, id=ident_cely)
+    context = {
+        "object": zaznam,
+        "title": _("vb.modalForm.smazaniVB.title.text"),
+        "id_tag": "smazat-vb-form",
+        "button": _("vb.modalForm.smazaniVB.submit.button"),
+        }
+    if request.method == "POST":
+        resp = zaznam.delete()
+        next_url = request.POST.get("next")
+        if next_url:
+            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+                response = next_url
+            else:
+                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                response = redirect(request.META.get("HTTP_REFERER"))
+        else:
+            response = redirect(request.META.get("HTTP_REFERER"))
+        if resp:
+            logger.debug("Objekt dokumentu byl smazan: " + str(resp))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            return JsonResponse({"redirect":response})
+        else:
+            logger.warning("Dokument nebyl smazan: " + str(ident_cely))
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+            return JsonResponse({"redirect":response},status=403)
+    else:
         return render(request, "core/transakce_modal.html", context)
