@@ -87,7 +87,11 @@ var is_in_czech_republic = (corX, corY) => {
 let set_numeric_coordinates = async () => {
     corX = document.getElementById('detector_coordinates_x').value;
     corY = document.getElementById('detector_coordinates_y').value;
-    console.log(corX+" . "+corY)
+    if(Math.sign(corX) == Math.sign(corY) && document.getElementById('detector_system_coordinates').value == 2){
+        corX=-1.0*Math.abs(corX);
+        corY=-1.0*Math.abs(corY);
+    }
+    //console.log(corX+" . "+corY)
     if (is_in_czech_republic(corX, corY)) {
         if (document.getElementById('detector_system_coordinates').value == 1) {
             jtsk_coor = convertToJTSK(corX, corY);
@@ -100,7 +104,7 @@ let set_numeric_coordinates = async () => {
             fill_katastr();
             return true;
         } else if (document.getElementById('detector_system_coordinates').value == 2) {
-            $.getJSON("https://epsg.io/trans?x=" + (corX).toFixed(2) + "&y=" + (corY).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
+            $.getJSON("https://epsg.io/trans?x=" + Number(corX).toFixed(2) + "&y=" + Number(corY).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
                 //point_global_WGS84 = [Math.round(data.y * 1000000.0) / 1000000.0, Math.round(data.x * 1000000.0) / 1000000.0]
                 //point_global_JTSK = [Math.round(corX * 100.0) / 100.0, Math.round(corY * 100.0) / 100.0]
                 point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.y, data.x])
@@ -127,8 +131,8 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
     } else if (new_system == 2 && point_global_JTSK[0] != 0) {
-        document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
-        document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+        document.getElementById('detector_coordinates_x').value = Math.abs(point_global_JTSK[0]);
+        document.getElementById('detector_coordinates_y').value = Math.abs(point_global_JTSK[1]);
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
     }

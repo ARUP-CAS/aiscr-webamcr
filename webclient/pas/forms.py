@@ -66,7 +66,7 @@ class PotvrditNalezForm(forms.ModelForm):
         model = SamostatnyNalez
         fields = ("predano_organizace", "evidencni_cislo", "predano", "pristupnost")
         widgets = {
-            "evidencni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "evidencni_cislo": forms.TextInput(),
             "predano_organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -91,10 +91,10 @@ class PotvrditNalezForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("predano_organizace", css_class="col-sm-6"),
-                Div("evidencni_cislo", css_class="col-sm-6"),
-                Div("predano", css_class="col-sm-6"),
-                Div("pristupnost", css_class="col-sm-6"),
+                Div("predano_organizace", css_class="col-sm-3"),
+                Div("evidencni_cislo", css_class="col-sm-3"),
+                Div("predano", css_class="col-sm-3"),
+                Div("pristupnost", css_class="col-sm-3"),
                 Div("old_stav"),
                 css_class="row",
             ),
@@ -149,6 +149,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "specifikace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
+            "presna_datace": forms.TextInput(),
+            "pocet": forms.TextInput(),
         }
         labels = {
             "nalezce": _("Nálezce"),

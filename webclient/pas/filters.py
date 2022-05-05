@@ -15,6 +15,7 @@ from django_filters import (
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
     DateFromToRangeFilter,
+    NumberFilter,
 )
 from django_filters.widgets import DateRangeWidget
 
@@ -122,6 +123,20 @@ class SamostatnyNalezFilter(filters.FilterSet):
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
+
+    datum_nalezu = DateFromToRangeFilter(
+        label=_("pas.filters.datumNalezu.label"),
+        field_name="datum_nalezu",
+        widget=DateRangeWidget(attrs={"type": "date"}),
+        distinct=True,
+    )
+
+    hloubka_od = NumberFilter(
+        field_name="hloubka", label=_("pas.filters.hloubka.label"), lookup_expr="gte"
+    )
+
+    hloubka_do = NumberFilter(field_name="hloubka", label=" ", lookup_expr="lte")
+
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=filter(lambda x: x[0].startswith("SN"), Historie.CHOICES),
@@ -152,9 +167,7 @@ class SamostatnyNalezFilter(filters.FilterSet):
         model = SamostatnyNalez
         fields = {
             "ident_cely": ["icontains"],
-            "datum_nalezu": ["lt", "gt"],
             "predano": ["exact"],
-            "hloubka": ["lt", "gt"],
             "pristupnost": ["exact"],
         }
 
@@ -216,8 +229,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
         Div(
             Div("ident_cely__icontains", css_class="col-sm-2"),
             Div("nalezce", css_class="col-sm-2"),
-            Div("datum_nalezu__gt", css_class="col-sm-2"),
-            Div("datum_nalezu__lt", css_class="col-sm-2"),
+            Div("datum_nalezu", css_class="col-sm-4 app-daterangepicker"),
             Div("predano_organizace", css_class="col-sm-2"),
             Div("predano", css_class="col-sm-2"),
             Div("katastr", css_class="col-sm-2"),
@@ -229,8 +241,8 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             Div("druh_nalezu", css_class="col-sm-2"),
             Div("specifikace", css_class="col-sm-2"),
             Div("okolnosti", css_class="col-sm-2"),
-            Div("hloubka__gt", css_class="col-sm-2"),
-            Div("hloubka__lt", css_class="col-sm-2"),
+            Div("hloubka_od", css_class="col-sm-2"),
+            Div("hloubka_do", css_class="col-sm-2"),
             Div("pristupnost", css_class="col-sm-2"),
             Div("stav", css_class="col-sm-2"),
             Div(

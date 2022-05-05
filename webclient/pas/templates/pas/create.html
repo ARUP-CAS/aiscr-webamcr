@@ -1,7 +1,9 @@
 {% extends "base_logged_in.html" %}
+{% load widget_tweaks %}
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_filters %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
@@ -11,6 +13,7 @@
   <div class="app-entity-samostatny_nalez">
     {% include "toolbar_pas.html" %}
     <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
+      {% csrf_token %}
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
@@ -18,12 +21,8 @@
           </div>
         </div>
         <div class="card-body">
-          {% crispy form %}
-          
-        </div>
-        {% include "pas/coor_pas.html" %}
-      </div>
-      <div class="card-body">
+          {% include "pas/coor_pas_v2.html" %} 
+        </div>  
       </div>
       <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
     </form>
