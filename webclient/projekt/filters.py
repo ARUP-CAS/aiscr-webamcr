@@ -54,18 +54,18 @@ class ProjektFilter(filters.FilterSet):
 
     ident_cely = CharFilter(lookup_expr="icontains",distinct=True,)
 
-    oblast = ChoiceFilter(
+    oblast = MultipleChoiceFilter(
         choices=OBLAST_CHOICES,
         label=_("Územní příslušnost"),
         method="filter_by_oblast",
-        widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+        widget=SelectMultiple(attrs={"class": "selectpicker", "data-live-search": "true"}),
         distinct=True,
     )
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
         label=_("Typ"),
-        widget=SelectMultiple(attrs={"class": "selectpicker"}),
+        widget=SelectMultiple(attrs={"class": "selectpicker", "data-live-search": "true"}),
         distinct=True,
     )
 
@@ -212,11 +212,13 @@ class ProjektFilter(filters.FilterSet):
         distinct=True,
     )
 
-    akce_zjisteni = ChoiceFilter(
+    akce_zjisteni = MultipleChoiceFilter(
         method="filter_has_positive_find",
         label=_("Terénní zjištění"),
         choices=[("True", "pozitivní"), ("False", "negativní")],
-        widget=Select,
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
         distinct=True,
     )
 
@@ -306,12 +308,14 @@ class ProjektFilter(filters.FilterSet):
         ),
         distinct=True,
     )
-    akce_je_nz = ChoiceFilter(
+    akce_je_nz = MultipleChoiceFilter(
         choices=[("True", "Ano"), ("False", "Ne")],
         field_name="akce__je_nz",
         lookup_expr="iexact",
         label="ZAA jako NZ",
-        widget=Select,
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
         distinct=True,
     )
 
@@ -389,19 +393,23 @@ class ProjektFilter(filters.FilterSet):
         )
 
     def filter_has_positive_find(self, queryset, name, value):
-        if value == "True":
+        if "True" in value and "False" in value:
+            return queryset
+        elif "True" in value:
             return queryset.filter(
                 akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
-            )
-        elif value == "False":
+            ).distinct()
+        elif "False" in value:
             return queryset.exclude(
                 akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
 
     def filter_by_oblast(self, queryset, name, value):
-        if value == OBLAST_CECHY:
+        if OBLAST_CECHY in value and OBLAST_MORAVA in value:
+            return queryset
+        if OBLAST_CECHY in value:
             return queryset.filter(ident_cely__contains="C-")
-        if value == OBLAST_MORAVA:
+        if OBLAST_MORAVA in value:
             return queryset.filter(ident_cely__contains="M-")
         return queryset
 
