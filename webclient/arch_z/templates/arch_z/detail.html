@@ -530,11 +530,6 @@
           <div class="card-body">
             <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
               {% crispy k.form %}
-              {% if show.editovat %}
-              <button type="submit" id="editKompSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
-              {% endif %}
-            </form>
 
             <div class="card app-card-form app-card-inner">
               <div class="card-header">
@@ -544,7 +539,6 @@
               </div>
               <div class="card-body formset-table">
                 <h5>{% trans "Objekty" %}</h5>
-                <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezSubmitButton.disabled = true; return true;">
                   {% if k.form_nalezy_objekty.forms %}
                   {% crispy k.form_nalezy_objekty k.helper %}
                   {% else %}
@@ -562,13 +556,13 @@
                     {% trans "Komponenta neobsahuje žádné předměty." %}
                   </div>
                   {% endif %}
-                  {% if show.editovat %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit předměty" %}</button>
-                  {% endif %}
-                </form>
               </div>
             </div>
+            {% if show.editovat %}
+              <button type="submit" id="editKompSubmitButton"
+                      class="btn btn-primary">{% trans "Uložit změnu" %}</button>
+            {% endif %}
+            </form>
           </div>
         </div>
       {% endfor %}
