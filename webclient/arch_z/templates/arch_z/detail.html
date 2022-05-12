@@ -441,7 +441,7 @@
                     {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
                   </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body formset-table">
                   <form method="POST" action="{% url 'adb:detail' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
                     {% crispy j.adb_form %}
                     <button type="submit" id="editAdbSubmitButton"
@@ -832,7 +832,6 @@
           formID: "smazat-adb-form",
           modalFormID: "#smazat-adb-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -843,7 +842,6 @@
           formID: "smazat-dj-form",
           modalFormID: "#smazat-dj-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -854,7 +852,6 @@
           formID: "smazat-komponenta-form",
           modalFormID: "#smazat-komponenta-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -865,7 +862,6 @@
           formID: "odpojit-pian-form",
           modalFormID: "#odpojit-pian-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -876,7 +872,6 @@
           formID: "potvrdit-pian-form",
           modalFormID: "#potvrdit-pian-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -917,7 +912,16 @@
           formID: "smazat-objekt-form",
           modalFormID: "#smazat-objekt-form",
           })
-          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("vb-smazat-btn")){
+        elements = document.getElementsByClassName("vb-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-vb-form",
+          modalFormID: "#smazat-vb-form",
+          })
           new Modal(options, elements.item(i).id);
         }
       }

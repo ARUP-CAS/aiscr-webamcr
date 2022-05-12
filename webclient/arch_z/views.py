@@ -188,6 +188,7 @@ def detail(request, ident_cely):
             VyskovyBod,
             form=create_vyskovy_bod_form(pian=jednotka.pian),
             extra=1,
+            can_delete=False,
         )
         has_adb = jednotka.has_adb()
         show_adb_add = (
