@@ -2,18 +2,18 @@ import logging
 import mimetypes
 import zlib
 
+from core.message_constants import (
+    VALIDATION_EMPTY,
+    VALIDATION_LINE_LENGTH,
+    VALIDATION_NOT_MULTIPART,
+    VALIDATION_NOT_SIMPLE,
+    VALIDATION_NOT_VALID,
+)
 from dj.models import DokumentacniJednotka
+from django.db import connection
 from heslar.models import RuianKatastr
 from pian.models import Pian
 from projekt.models import Projekt
-
-from core.message_constants import (
-    VALIDATION_NOT_VALID,
-VALIDATION_EMPTY,
-VALIDATION_NOT_SIMPLE,
-VALIDATION_NOT_MULTIPART,
-VALIDATION_LINE_LENGTH,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -133,20 +133,91 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
         logger.debug("No pians")
         return None
 
+
+def get_num_pians_from_envelope(left, bottom, right, top):
+    query = (
+        "select count(*) from public.pian pian where "
+        "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
+    )
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        cursor.execute(query, [left, bottom, right, top])
+        return cursor.fetchone()[0]
+    except IndexError:
+        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+def get_pians_from_envelope(left, bottom, right, top, ident_cely):
+    query = (
+        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,"
+        " dj.ident_cely as dj,pian.presnost as presnost "
+        " from public.pian pian "
+        " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely like %s "
+        "where pian.geom is not null and "
+        "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 8000"
+    )
+    try:
+        try:
+            ident_cely = ident_cely + "%"
+        except ValueError:
+            ident_cely = ""
+
+        pians = Pian.objects.raw(query, [ident_cely, left, bottom, right, top])
+        return pians
+    except IndexError:
+        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+# CREATE TABLE amcr_clusters_table AS
+# WITH query AS (
+# select st_clusterkmeans(geom,500) OVER() cid, geom from pian LIMIT 6000
+# )
+# SELECT cid,  COUNT(*),st_centroid(st_union(geom)) FROM query GROUP BY cid
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
+def get_heat_map(left, bottom, right, top):
+    query = "select cid, count, ST_AsText(st_centroid) as geometry from amcr_clusters_table2"
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        cursor.execute(query)
+        return dictfetchall(cursor)
+    except IndexError:
+        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+def get_heat_map_density(left, bottom, right, top):
+    query = "select max(count) from amcr_clusters_table2"
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        cursor.execute(query)
+        return cursor.fetchone()[0]
+    except IndexError:
+        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
 def get_validation_messages(text):
-    if text == 'Not valid':
+    if text == "Not valid":
         return VALIDATION_NOT_VALID
-    elif text == 'Geometry is empty':
+    elif text == "Geometry is empty":
         return VALIDATION_EMPTY
-    elif text == 'Geometry is not simple':
-        return  VALIDATION_NOT_SIMPLE
-    elif text == 'Geometry is multipart':
+    elif text == "Geometry is not simple":
+        return VALIDATION_NOT_SIMPLE
+    elif text == "Geometry is multipart":
         return VALIDATION_NOT_MULTIPART
-    elif text == 'Min. legth of line excesed':
+    elif text == "Min. legth of line excesed":
         return VALIDATION_LINE_LENGTH
-    elif text == 'Parse error':
+    elif text == "Parse error":
         return VALIDATION_NOT_VALID
     else:
         return text
-
-

@@ -3,6 +3,7 @@ var global_map_can_edit=false;
 var global_map_can_grab_geom_from_map=false;
 var global_map_element="id_geom";
 
+
 var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
     cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
     cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
@@ -14,6 +15,11 @@ var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
 var poi_dj = L.layerGroup();
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
+var heatPoints = [];
+var heatLayer = L.heatLayer(heatPoints);
+
+var global_clusters=false;
+var global_heat=false;
 
 var map = L.map('djMap', {
     layers: [cuzkZM, poi_other],
@@ -317,7 +323,7 @@ map.on('contextmenu',(e) => {
 
 function disableSavePianButton(){
     console.log("disableSavePianButton")
-    console.log(document.getElementById(global_map_element).value)
+    //console.log(document.getElementById(global_map_element).value)
     if(document.getElementById(global_map_element).value==='undefined'){
         document.getElementById("editPianButton").disabled = true;
         console.log("disableSavePianButton:disa")
@@ -350,7 +356,7 @@ map.on('draw:created', function(e) {
     if(global_map_can_edit){
         var type = e.layerType;
         var la = e.layer;
-        console.log(e)
+        //console.log(e)
 
         if (type === 'marker'){
             drawnItems.clearLayers();
@@ -482,8 +488,8 @@ var mouseOverGeometry =(geom)=>{
 }
 
 var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
-    console.log(text)
-    console.log(geom)
+    //console.log(text)
+    //console.log(geom)
     let coor=[]
     if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRed,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
@@ -497,11 +503,11 @@ var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
             })
             mouseOverGeometry(L.polyline(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
-        } 
+        }
     } else{
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
     }
-    
+
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
@@ -509,7 +515,7 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let myIco2={icon: pinIconBlue};
     let myColor= {color:"rgb(51, 153, 255)"};
 
-    
+
 
     if (layer===poi_dj){
         //console.log(text+" orange "+st_text)
@@ -557,13 +563,14 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         }
 
     }
+    //heatPoints.push()
     drawnItems.bringToFront();
 }
 
 function addLogText(text) {
     //addLogText(text);
     //geomToText();
-    console.log(text)
+    //console.log(text)
 }
 
 function addGeometry(text) {
@@ -661,4 +668,96 @@ function loadGeomToEdit(ident_cely){
         drawControl._toolbars.edit._modes.edit.handler.enable();
     }
 
+}
+
+//switchMap ();
+var boundsLock=0;
+
+map.on('zoomend', function() {
+    console.log("zoomed")
+    switchMap(true)
+});
+
+
+
+map.on('moveend', function() {
+    console.log("moved");
+    switchMap(false)
+    //var bounds = map.getBounds();
+    //var northWest = bounds.getNorthWest(),
+    //    southEast = bounds.getSouthEast();
+   // console.log("Change: "+northWest+"  "+southEast)
+   //var geomCount=0;
+   //if(map.getZoom()>=15){
+});
+
+heatPoints = heatPoints.map(function (p) {
+    var bounds = map.getBounds();
+    var northWest = bounds.getNorthWest(),
+        southEast = bounds.getSouthEast();
+    if(northWest.lat>=p[0] && southEast.lat<=p[0]){
+                if(northWest.lng<=p[1] && southEast.lng>=p[1]){
+                    return [p[0], p[1]];
+                }
+            }
+});
+
+
+
+switchMap = function(overview=false){
+    var bounds = map.getBounds();
+    let zoom=map.getZoom();
+    var northWest = bounds.getNorthWest(),
+        southEast = bounds.getSouthEast();
+    if(overview || bounds.northWest != boundsLock.northWest){
+        console.log("Change: "+northWest+"  "+southEast+" "+zoom);
+        boundsLock=bounds;
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/arch-z/akce-get-piany');
+        xhr.setRequestHeader('Content-type', 'application/json');
+        if (typeof global_csrftoken !== 'undefined') {
+            xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+        }
+        xhr.send(JSON.stringify(
+            {
+                'northWest': northWest,
+                'southEast': southEast,
+                'zoom': zoom,
+                'dj_ident_cely':global_map_projekt_ident,
+            }));
+        xhr.onload = function () {
+            //console.log(JSON.parse(this.responseText))
+            poi_other.clearLayers();
+            poi_dj.clearLayers();
+            //gm_correct.clearLayers();
+                let resAl=JSON.parse(this.responseText).algorithm
+                if(resAl == "detail"){
+                    let resPoints=JSON.parse(this.responseText).points
+                    //let dj_head=form_id.replace("detail_dj_form_", "")
+                    resPoints.forEach((i)=>{
+                    if(i.dj != null){
+                        //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
+                        addPointToPoiLayerWithForceG(i.geom,poi_dj,i.ident_cely,true)
+                    }
+                    else {
+                        addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
+                    }
+                    })
+                    map.removeLayer(heatLayer);
+                }else {
+                    console.log("heat");
+                    let resHeat=JSON.parse(this.responseText).heat
+                    resHeat.forEach((i)=>{
+
+                        geom=i.geom.split("(")[1].split(")")[0].split(" ");
+                        heatPoints.push([geom[1],geom[0],i.density])//chyba je to geome
+                       // console.log("h"+[geom[0],geom[1]])
+                    })
+                    heatLayer=L.heatLayer(heatPoints);
+                    map.addLayer(heatLayer);
+                    poi_other.clearLayers();
+                    poi_dj.clearLayers();
+                }
+        }
+    }
 }

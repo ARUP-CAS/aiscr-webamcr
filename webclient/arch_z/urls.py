@@ -33,4 +33,9 @@ urlpatterns = [
         views.post_ajax_get_pians,
         name="post_ajax_get_pians",
     ),
+    path(
+        "akce-get-piany",
+        views.post_ajax_get_pians_limit,
+        name="post_ajax_get_pians_limit",
+    ),
 ]

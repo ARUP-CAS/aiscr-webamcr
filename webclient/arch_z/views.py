@@ -3,10 +3,7 @@ import logging
 import simplejson as json
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
-from arch_z.forms import (
-    CreateAkceForm,
-    CreateArchZForm,
-)
+from arch_z.forms import CreateAkceForm, CreateArchZForm
 from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_AZ,
@@ -21,8 +18,8 @@ from core.constants import (
     ZAPSANI_AZ,
 )
 from core.exceptions import MaximalEventCount
-from core.forms import VratitForm, CheckStavNotChangedForm
-from core.ident_cely import get_cast_dokumentu_ident, get_project_event_ident
+from core.forms import CheckStavNotChangedForm, VratitForm
+from core.ident_cely import get_project_event_ident
 from core.message_constants import (
     AKCE_USPESNE_ARCHIVOVANA,
     AKCE_USPESNE_ODESLANA,
@@ -35,10 +32,17 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.utils import get_all_pians_with_dj, get_centre_from_akce
+from core.utils import (
+    get_all_pians_with_dj,
+    get_centre_from_akce,
+    get_heat_map,
+    get_heat_map_density,
+    get_num_pians_from_envelope,
+    get_pians_from_envelope,
+)
+from core.views import check_stav_changed
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
-from dokument.views import odpojit, pripojit
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -47,9 +51,9 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.utils.html import format_html, mark_safe
 from django.views.decorators.http import require_http_methods
-from dokument.models import Dokument, DokumentCast
+from dokument.models import Dokument
+from dokument.views import odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -78,7 +82,6 @@ from nalez.forms import (
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
 from projekt.models import Projekt
-from core.views import check_stav_changed
 
 logger = logging.getLogger(__name__)
 
@@ -290,18 +293,15 @@ def edit(request, ident_cely):
     if zaznam.stav == AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     required_fields = get_required_fields(zaznam)
-    required_fields_next = get_required_fields(zaznam,1)
+    required_fields_next = get_required_fields(zaznam, 1)
     if request.method == "POST":
-        form_az = CreateArchZForm(
-            request.POST,
-            instance=zaznam
-            )
+        form_az = CreateArchZForm(request.POST, instance=zaznam)
         form_akce = CreateAkceForm(
             request.POST,
             instance=zaznam.akce,
             required=required_fields,
-            required_next=required_fields_next
-            )
+            required_next=required_fields_next,
+        )
 
         if form_az.is_valid() and form_akce.is_valid():
             logger.debug("Form is valid")
@@ -319,8 +319,8 @@ def edit(request, ident_cely):
         form_akce = CreateAkceForm(
             instance=zaznam.akce,
             required=required_fields,
-            required_next=required_fields_next
-            )
+            required_next=required_fields_next,
+        )
 
     return render(
         request,
@@ -343,33 +343,54 @@ def odeslat(request, ident_cely):
     if az.stav != AZ_STAV_ZAPSANY:
         logger.debug("arch_z.views.odeslat permission denied")
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
         logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         az.set_odeslany(request.user)
         az.save()
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ODESLANA)
-        logger.debug("arch_z.views.odeslat akce uspesne odeslana " + AKCE_USPESNE_ODESLANA)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})})
+        logger.debug(
+            "arch_z.views.odeslat akce uspesne odeslana " + AKCE_USPESNE_ODESLANA
+        )
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})}
+        )
     else:
         warnings = az.akce.check_pred_odeslanim()
-        logger.debug("arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings))
-        
+        logger.debug(
+            "arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings)
+        )
+
         if warnings:
-            request.session['temp_data'] = warnings
+            request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
-            logger.debug("arch_z.views.odeslat akci nelze odeslat " + AKCI_NELZE_ODESLAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
+            logger.debug(
+                "arch_z.views.odeslat akci nelze odeslat " + AKCI_NELZE_ODESLAT
+            )
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                },
+                status=403,
+            )
+    form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
     context = {
         "object": az,
         "title": _("arch_z.modalForm.odeslatArchz.title.text"),
         "id_tag": "odeslat-akci-form",
         "button": _("adb.modalForm.odeslatArchz.submit.button"),
-        "form_check": form_check
+        "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -380,27 +401,44 @@ def archivovat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         # TODO BR-A-5
         az.set_archivovany(request.user)
         az.save()
-        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY)  
+        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
+            archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
+        )
         if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
-            request.session['arch_projekt_link'] = True
+            request.session["arch_projekt_link"] = True
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})})
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})}
+        )
     else:
         warnings = az.akce.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
-            request.session['temp_data'] = warnings
+            request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav":az.stav})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                },
+                status=403,
+            )
+    form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
     context = {
         "object": az,
         "title": _("arch_z.modalForm.archivovatArchz.title.text"),
@@ -417,9 +455,15 @@ def vratit(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if check_stav_changed(request, az):
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -452,12 +496,18 @@ def vratit(request, ident_cely):
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
             messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm(initial={"old_stav":az.stav})
+        form = VratitForm(initial={"old_stav": az.stav})
     context = {
         "object": az,
         "form": form,
@@ -496,10 +546,8 @@ def zapsat(request, projekt_ident_cely):
     if request.method == "POST":
         form_az = CreateArchZForm(request.POST)
         form_akce = CreateAkceForm(
-            request.POST,
-            required=required_fields,
-            required_next=required_fields_next
-            )
+            request.POST, required=required_fields, required_next=required_fields_next
+        )
 
         if form_az.is_valid() and form_akce.is_valid():
             logger.debug("Form is valid")
@@ -512,7 +560,9 @@ def zapsat(request, projekt_ident_cely):
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
             else:
                 az.save()
-                form_az.save_m2m()  # This must be called to save many to many (katastry) since we are doing commit = False
+                form_az.save_m2m()
+                # This must be called to save many to many (katastry)
+                # since we are doing commit = False
                 az.set_zapsany(request.user)
                 akce = form_akce.save(commit=False)
                 akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
@@ -521,8 +571,10 @@ def zapsat(request, projekt_ident_cely):
                 akce.save()
 
                 messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
-                logger.debug(f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
-                             f"projekt: {projekt_ident_cely}")
+                logger.debug(
+                    f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
+                    f"projekt: {projekt_ident_cely}"
+                )
                 return redirect("arch_z:detail", az.ident_cely)
 
         else:
@@ -536,8 +588,8 @@ def zapsat(request, projekt_ident_cely):
             uzamknout_specifikace=True,
             projekt=projekt,
             required=required_fields,
-            required_next=required_fields_next
-            )
+            required_next=required_fields_next,
+        )
 
     return render(
         request,
@@ -557,7 +609,10 @@ def zapsat(request, projekt_ident_cely):
 def smazat(request, ident_cely):
     akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
     if check_stav_changed(request, akce.archeologicky_zaznam):
-        return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     projekt = akce.projekt
     if request.method == "POST":
         az = akce.archeologicky_zaznam
@@ -576,42 +631,39 @@ def smazat(request, ident_cely):
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         if projekt:
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':projekt.ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": projekt.ident_cely}
+                    )
+                }
+            )
         else:
-            return JsonResponse({"redirect":reverse("index")})
+            return JsonResponse({"redirect": reverse("index")})
     else:
-        form_check = CheckStavNotChangedForm(initial={"old_stav":akce.archeologicky_zaznam.stav})
+        form_check = CheckStavNotChangedForm(
+            initial={"old_stav": akce.archeologicky_zaznam.stav}
+        )
         context = {
-        "object": akce,
-        "title": _("arch_z.modalForm.smazani.title.text"),
-        "id_tag": "smazat-akci-form",
-        "button": _("arch_z.modalForm.smazani.submit.button"),
-        "form_check": form_check,
+            "object": akce,
+            "title": _("arch_z.modalForm.smazani.title.text"),
+            "id_tag": "smazat-akci-form",
+            "button": _("arch_z.modalForm.smazani.submit.button"),
+            "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def pripojit_dokument(
-    request, arch_z_ident_cely, proj_ident_cely=None
-):  
+def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
     return pripojit(request, arch_z_ident_cely, proj_ident_cely, ArcheologickyZaznam)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
-    return odpojit (request, ident_cely, arch_z_ident_cely, "arch_z")
-
-
-def get_history_dates(historie_vazby):
-    historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
-    }
-    return historie
+    return odpojit(request, ident_cely, arch_z_ident_cely, "arch_z")
 
 
 @login_required
@@ -636,6 +688,80 @@ def post_ajax_get_pians(request):
         return JsonResponse({"points": []}, status=200)
 
 
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_pians_limit(request):
+    body = json.loads(request.body.decode("utf-8"))
+    logger.debug(request.body.decode("utf-8"))
+    logger.debug(body["zoom"])
+    logger.debug(body["southEast"]["lat"])
+    # DEBUG {"
+    # northWest":{"lat":50.01239997944656,"lng":14.618017673492433},
+    # "southEast":{"lat":50.00964206670656,"lng":14.63383197784424},"zoom":17}
+    num = get_num_pians_from_envelope(
+        body["southEast"]["lng"],
+        body["northWest"]["lat"],
+        body["northWest"]["lng"],
+        body["southEast"]["lat"],
+    )
+    logger.debug("pocet geometrii")
+    logger.debug(num)
+    if num < 5000:
+        pians = get_pians_from_envelope(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["dj_ident_cely"],
+        )
+        back = []
+        for pian in pians:
+            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
+            back.append(
+                {
+                    "id": pian.id,
+                    "ident_cely": pian.ident_cely,
+                    "geom": pian.geometry.replace(", ", ","),
+                    "dj": pian.dj,
+                    "presnost": pian.presnost.zkratka,
+                }
+            )
+        if len(pians) > 0:
+            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+    else:
+        density = get_heat_map_density(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+        )
+
+        heats = get_heat_map(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+        )
+        back = []
+        logger.debug(heats)
+        for heat in heats:
+            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
+            back.append(
+                {
+                    "id": heat["cid"],
+                    "pocet": heat["count"],
+                    "density": heat["count"] / density,
+                    "geom": heat["geometry"].replace(", ", ","),
+                }
+            )
+        if len(heat) > 0:
+            return JsonResponse({"heat": back, "algorithm": "heat"}, status=200)
+        else:
+            return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
+
+
 @require_http_methods(["POST"])
 def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
@@ -658,6 +784,7 @@ def post_akce2kat(request):
                 status=200,
             )
     return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)
+
 
 def get_history_dates(historie_vazby):
     historie = {
@@ -685,17 +812,16 @@ def get_detail_template_shows(archeologicky_zaznam):
     }
     return show
 
-def get_required_fields(zaznam=None,next=0):
+
+def get_required_fields(zaznam=None, next=0):
     required_fields = []
     if zaznam:
         stav = zaznam.stav
     else:
-        stav=1
-    if stav >= AZ_STAV_ZAPSANY-next:
-        required_fields = [
-            
-        ]
-    if stav > AZ_STAV_ZAPSANY-next:
+        stav = 1
+    if stav >= AZ_STAV_ZAPSANY - next:
+        required_fields = []
+    if stav > AZ_STAV_ZAPSANY - next:
         required_fields += [
             "hlavni_vedouci",
             "organizace",

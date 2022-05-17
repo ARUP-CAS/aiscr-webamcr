@@ -1,15 +1,16 @@
+import datetime
 import logging
 import os
-import datetime
+
 from django.db import models
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
+    NAHRANI_SBR,
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
-    NAHRANI_SBR,
     SOUBOR_RELATION_TYPE,
 )
 
@@ -19,6 +20,8 @@ logger = logging.getLogger(__name__)
 def get_upload_to(instance, filename):
     base_path = f"soubory/{datetime.datetime.now().strftime('%Y/%m/%d')}"
     return os.path.join(base_path, instance.nazev)
+
+
 class SouborVazby(models.Model):
 
     CHOICES = (
@@ -46,13 +49,13 @@ class Soubor(models.Model):
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
-    historie = models.OneToOneField(
-        HistorieVazby,
-        on_delete=models.DO_NOTHING,
-        db_column="historie",
-        related_name="soubor_historie",
-        null=True
-    )
+    # historie = models.OneToOneField(
+    #    HistorieVazby,
+    #    on_delete=models.DO_NOTHING,
+    #    db_column="historie",
+    #    related_name="soubor_historie",
+    #    null=True
+    # )
     path = models.FileField(upload_to=get_upload_to, default="empty")
 
     class Meta:
@@ -85,6 +88,3 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
-
-
-
