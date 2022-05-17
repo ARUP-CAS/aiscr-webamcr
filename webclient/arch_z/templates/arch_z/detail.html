@@ -421,15 +421,19 @@
             </div>
           </div>
           <div class="card-body">
-            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
-              {% crispy j.form %}
-              {% if show.editovat %}
-              <button type="submit" id="editDjSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
-              {% endif %}
-            </form>
+            {% if not j.adb_form %}
+              <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
+                {% crispy j.form %}
+                {% if show.editovat %}
+                <button type="submit" id="editDjSubmitButton"
+                        class="btn btn-primary">{% trans "Uložit změny" %}</button>
+                {% endif %}
+              </form>
+            {% endif %}
 
             {% if j.adb_form %}
+            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
+              {% crispy j.form %}
               <div class="card app-card-form app-card-inner">
                 <div class="card-header">
                   <div class="app-fx app-left">
@@ -437,19 +441,15 @@
                   </div>
                 </div>
                 <div class="card-body">
-                  <form method="POST" action="{% url 'adb:detail' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
+                    <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}" />
                     {% crispy j.adb_form %}
-                    <button type="submit" id="editAdbSubmitButton"
-                            class="btn btn-primary">{% trans "Upravit ADB" %}</button>
-                  </form>
-                  <form method="POST" action="{% url 'adb:zapsat_vyskove_body' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
                     <h5>{% trans "Výškové body" %}</h5>
+                    <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}" />
                     {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
-                    <button type="submit" id="editAdbVyskoveBodySubmitButton"
-                            class="btn btn-primary">{% trans "Upravit Výškové body" %}</button>
-                  </form>
                 </div>
               </div>
+              <button type="submit" id="editDjSubmitButton"
+                      class="btn btn-primary">{% trans "Uložit změny" %}</button>
             {% endif %}
           </div>
         </div>
@@ -540,7 +540,8 @@
               <div class="card-body formset-table">
                 <h5>{% trans "Objekty" %}</h5>
                   {% if k.form_nalezy_objekty.forms %}
-                  {% crispy k.form_nalezy_objekty k.helper %}
+                    <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
+                    {% crispy k.form_nalezy_objekty k.helper %}
                   {% else %}
                   <div class="app-note">
                     <span class="material-icons">info</span>
