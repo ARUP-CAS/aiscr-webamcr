@@ -1,16 +1,17 @@
+import datetime
 import logging
 import os
 import re
-import datetime
+
 from django.db import models
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
+    NAHRANI_SBR,
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
-    NAHRANI_SBR,
     SOUBOR_RELATION_TYPE,
 )
 
@@ -23,7 +24,9 @@ def get_upload_to(instance, filename):
     if vazba.typ_vazby == "projekt":
         regex_oznameni = re.compile(r"\w*oznameni_?(?:X-)?[A-Z][-_]\w*\.pdf")
         regex_log_dokumentace = re.compile(r"\w*log_dokumentace.pdf")
-        if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(instance.nazev):
+        if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(
+            instance.nazev
+        ):
             folder = "AG/"
         else:
             folder = "PD/"
@@ -64,13 +67,13 @@ class Soubor(models.Model):
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
-    historie = models.OneToOneField(
-        HistorieVazby,
-        on_delete=models.DO_NOTHING,
-        db_column="historie",
-        related_name="soubor_historie",
-        null=True
-    )
+    # historie = models.OneToOneField(
+    #    HistorieVazby,
+    #    on_delete=models.DO_NOTHING,
+    #    db_column="historie",
+    #    related_name="soubor_historie",
+    #    null=True
+    # )
     path = models.FileField(upload_to=get_upload_to, default="empty")
 
     class Meta:
@@ -103,6 +106,3 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
-
-
-
