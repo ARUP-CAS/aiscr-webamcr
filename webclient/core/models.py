@@ -67,13 +67,13 @@ class Soubor(models.Model):
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
-    # historie = models.OneToOneField(
-    #    HistorieVazby,
-    #    on_delete=models.DO_NOTHING,
-    #    db_column="historie",
-    #    related_name="soubor_historie",
-    #    null=True
-    # )
+    historie = models.OneToOneField(
+        HistorieVazby,
+        on_delete=models.DO_NOTHING,
+        db_column="historie",
+        related_name="soubor_historie",
+        null=True
+    )
     path = models.FileField(upload_to=get_upload_to, default="empty")
 
     class Meta:
