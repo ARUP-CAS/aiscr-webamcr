@@ -5,6 +5,7 @@ import datetime
 from django.db import models
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
+from PyPDF2 import PdfFileReader
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
@@ -94,6 +95,15 @@ class Soubor(models.Model):
             poznamka=self.nazev_puvodni,
             vazba=self.historie,
         ).save()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.path.path.endswith(".pdf"):
+            reader = PdfFileReader(self.path)
+            self.rozsah = len(reader.pages)
+        else:
+            self.rozsah = 1
+        super().save(*args, **kwargs)
 
 
 class ProjektSekvence(models.Model):
