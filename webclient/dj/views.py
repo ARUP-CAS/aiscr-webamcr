@@ -2,6 +2,8 @@ import logging
 
 from django.db.models import Q
 
+from adb.forms import CreateADBForm, create_vyskovy_bod_form
+from adb.models import Adb, VyskovyBod
 from core.exceptions import MaximalIdentNumberError
 
 from arch_z.models import ArcheologickyZaznam
@@ -20,6 +22,8 @@ from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.gis.geos import Point
+from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -62,6 +66,51 @@ def detail(request, ident_cely):
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+
+    if "adb_detail" in request.POST:
+        ident_cely = request.POST.get("adb_detail")
+        adb = get_object_or_404(Adb, ident_cely=ident_cely)
+        form = CreateADBForm(request.POST, instance=adb, prefix=ident_cely, )
+        if form.is_valid():
+            logger.debug("Form is valid")
+            form.save()
+            if form.changed_data:
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.warning("Form is not valid")
+            logger.debug(form.errors)
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+            request.session["_old_adb_post"] = request.POST
+            request.session["adb_ident_cely"] = ident_cely
+            logger.debug(ident_cely)
+
+    if "adb_zapsat_vyskove_body" in request.POST:
+        adb_ident_cely = request.POST.get("adb_zapsat_vyskove_body")
+        adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
+        vyskovy_bod_formset = inlineformset_factory(
+            Adb, VyskovyBod, form=create_vyskovy_bod_form(), extra=3,
+        )
+        formset = vyskovy_bod_formset(
+            request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
+        )
+        if formset.is_valid():
+            logger.debug("Formset is valid")
+            instances = formset.save()
+            for vyskovy_bod in instances:
+                vyskovy_bod: VyskovyBod
+                vyskovy_bod.geom = Point(x=vyskovy_bod.northing, y=vyskovy_bod.easting)
+                vyskovy_bod.save()
+                # vyskovy_bod.set_ident()
+        if formset.is_valid():
+            logger.debug("Form is valid")
+            if (
+                    formset.has_changed()
+            ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.warning("Form is not valid")
+            logger.debug(formset.errors)
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect("arch_z:detail", dj.archeologicky_zaznam.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
