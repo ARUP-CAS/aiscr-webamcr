@@ -1,0 +1,1 @@
+update public.adb set ident_cely = replace(ident_cely, '-00', '') where ident_cely ~ '^ADB-\w{6}-00\d{4}$';
