@@ -21,7 +21,7 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 class CreateDJForm(forms.ModelForm):
     def get_typ_queryset(self, jednotky, instance: DokumentacniJednotka=None):
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
-        logger.debug(jednotky)
+        #logger.debug(jednotky)
         if instance is not None and jednotky is not None and hasattr(instance, "typ") \
                 and instance.typ is not None and instance.typ.heslo.lower() == "část akce":
             queryset = queryset.filter(Q(heslo__iexact="část akce"))
@@ -43,7 +43,7 @@ class CreateDJForm(forms.ModelForm):
             elif jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
                 queryset = queryset.filter(heslo__iexact="část akce")
 
-        logger.debug(queryset)
+        #logger.debug(queryset)
         return queryset
 
     class Meta:
@@ -72,6 +72,7 @@ class CreateDJForm(forms.ModelForm):
         self,
         *args,
         not_readonly=True,
+        pian_potvrzen=False,
         **kwargs,
     ):
         jednotky = kwargs.pop("jednotky", None)
@@ -88,6 +89,8 @@ class CreateDJForm(forms.ModelForm):
                 css_class="row align-items-end",
             ),
         )
+        if pian_potvrzen:
+            self.fields["pian"].widget.attrs["disabled"]="disabled"
         for key in self.fields.keys():
             self.fields[key].disabled = not not_readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):

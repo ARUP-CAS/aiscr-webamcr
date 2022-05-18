@@ -411,6 +411,11 @@
                   <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button" href="{% url 'dj:smazat' j.ident_cely %}">
                     {% trans 'Smazat DJ' %}
                   </button>
+                  {% if j.show_pripojit_pian %}
+                    <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button" onclick=update_pian("{{j.ident_cely}}")>
+                      {% trans 'Připojit PIAN podle ID' %}
+                    </button>
+                  {% endif %}
                 </div>
                 <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -440,7 +445,7 @@
                     {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
                   </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body formset-table">
                     <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}" />
                     {% crispy j.adb_form %}
                     <h5>{% trans "Výškové body" %}</h5>
@@ -822,7 +827,6 @@
           formID: "smazat-adb-form",
           modalFormID: "#smazat-adb-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -833,7 +837,6 @@
           formID: "smazat-dj-form",
           modalFormID: "#smazat-dj-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -844,7 +847,6 @@
           formID: "smazat-komponenta-form",
           modalFormID: "#smazat-komponenta-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -855,7 +857,6 @@
           formID: "odpojit-pian-form",
           modalFormID: "#odpojit-pian-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -866,7 +867,6 @@
           formID: "potvrdit-pian-form",
           modalFormID: "#potvrdit-pian-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -907,11 +907,27 @@
           formID: "smazat-objekt-form",
           modalFormID: "#smazat-objekt-form",
           })
-          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("vb-smazat-btn")){
+        elements = document.getElementsByClassName("vb-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-vb-form",
+          modalFormID: "#smazat-vb-form",
+          })
           new Modal(options, elements.item(i).id);
         }
       }
   });
   
+</script>
+<script>
+    var update_pian = function (dj_ident) {
+      id = "#id_" + dj_ident + "-pian"
+        console.log("najdene")
+        $(id).prop('disabled', false);
+    };  
 </script>
 {% endblock %}
