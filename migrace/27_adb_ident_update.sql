@@ -1,1 +1,2 @@
-update public.adb set ident_cely = replace(ident_cely, '-00', '') where ident_cely ~ '^ADB-\w{6}-00\d{4}$';
+update public.vyskovy_bod set ident_cely = regexp_replace(ident_cely, '^(X?-?ADB-\w{6})-(\d{4}-V\d{4}$)', '\1-00\2')
+where ident_cely ~ '^X?-?ADB-\w{6}-\d{4}-V\d{4}$';
