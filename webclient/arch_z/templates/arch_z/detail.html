@@ -608,6 +608,7 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
+  <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
@@ -791,12 +792,14 @@
               div_dokumentacni_jednotka_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
       };
+      const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
       const set_komponenta_events = (ident_cely, ident_cely_safe) => {
           const el_komponenta
               = document.getElementById(`el_komponenta_${ident_cely_safe}`);
           el_komponenta.addEventListener("click", () => {
               div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
+          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url)
       };
       {% for j in dokumentacni_jednotky %}
           set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")

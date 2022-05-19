@@ -4,7 +4,12 @@ get_vychozi_hodnota_podrazeneho = function (nadrazeneID, podrazeneID, start_url)
     const xhttp = new XMLHttpRequest();
     xhttp.onload = function() {
       if (this.status == 200){
-        $(podrazeneID).selectpicker('val', JSON.parse(this.responseText).id);
+        var array = []
+        for (var i = 0; i < JSON.parse(this.responseText).length; i++) {
+          array = array.concat(JSON.parse(this.responseText)[i].id) 
+        }
+        console.log(array)
+        $(podrazeneID).selectpicker('val', array);
         $(podrazeneID).selectpicker('refresh');
       }
       else {
@@ -12,9 +17,8 @@ get_vychozi_hodnota_podrazeneho = function (nadrazeneID, podrazeneID, start_url)
         $(podrazeneID).selectpicker('refresh');
       }
     }
-    url = start_url + this.value
-    console.log(url)
-    xhttp.open("GET", url);
+    next_url = start_url + this.value
+    xhttp.open("GET", next_url);
     xhttp.send();
     });
     }
