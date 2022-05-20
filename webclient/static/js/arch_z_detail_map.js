@@ -709,7 +709,7 @@ switchMap = function(overview=false){
     let zoom=map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
-    if(overview || bounds.northWest != boundsLock.northWest){
+    if(overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest){
         console.log("Change: "+northWest+"  "+southEast+" "+zoom);
         boundsLock=bounds;
         let xhr = new XMLHttpRequest();
