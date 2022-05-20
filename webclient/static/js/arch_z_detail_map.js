@@ -386,42 +386,59 @@ function geomToText(){
     // POLYGON((-71.1776585052917 42.3902909739571,-71.177682
     // POINT(-71.064544 42.28787)');
     var text="";
+    var jtsk_text=""
+    var jtsk_coor=[]
+    let coordinates = [];
     drawnItems.eachLayer(function(layer) {
          if (layer instanceof L.Marker) {
             //addLogText('im an instance of L marker');
             //console.log(layer)
             let latlngs=layer.getLatLng()
             text="POINT("+latlngs.lng+" "+latlngs.lat+")"
+            jtsk_coor = convertToJTSK(latlngs.lat, latlngs.lng);
+            jtsk_text="POINT("+jtsk_coor[0]+" "+jtsk_coor[1]+")"
+            //coordinates.push([latlngs.lng, latlngs.lat])
         }
         else if (layer instanceof L.Polygon) {
             //addLogText('im an instance of L polygon');
             text="POLYGON(("
-            let coordinates = [];
+            jtsk_text="POLYGON(("
             let latlngs=layer.getLatLngs()
             for (var i = 0; i < latlngs.length; i++) {
                 for(var j=0; j< latlngs[i].length;j++){
-                    coordinates.push([latlngs[i][j].lat, latlngs[i][j].lng])
+                    coordinates.push([latlngs[i][j].lng, latlngs[i][j].lat])
                     text +=( latlngs[i][j].lng+" "+latlngs[i][j].lat) + ", ";
+                    jtsk_coor = convertToJTSK(latlngs[i][j].lat, latlngs[i][j].lng);
+                    jtsk_text +=( jtsk_coor[0]+" "+jtsk_coor[1]) + ", ";
                 }
             }
             // Musi koncit na zacatek
             text += coordinates[0][1] + " " + coordinates[0][0]
             text +="))"
+            jtsk_coor = convertToJTSK(coordinates[0][1], coordinates[0][0]);
+            jtsk_text += jtsk_coor[0] + " " + jtsk_coor[1]
+            jtsk_text +="))"
         }
         else if (layer instanceof L.Polyline) {
             //addLogText('im an instance of L polyline');
             text="LINESTRING("
+            jtsk_text="LINESTRING("
             let it=0;
-            let coordinates=layer.getLatLngs()
+            coordinates=layer.getLatLngs()
             for (let i in coordinates){
-                if(it>0) text +=","
+                if(it>0) {text +=","; jtsk_text +=",";}
 
                 it++;
                 text +=( coordinates[i].lng+" "+coordinates[i].lat);
+                jtsk_coor = convertToJTSK(coordinates[i].lat, coordinates[i].lng);
+                jtsk_text +=( jtsk_coor[0]+" "+jtsk_coor[1]);
             }
             text +=")"
+            jtsk_text +=")"
         }
         addGeometry(amcr_static_geom_precision_wgs84(text),global_map_can_edit);
+        console.log(amcr_static_geom_precision_wgs84(text))
+        console.log(amcr_static_geom_precision_jtsk(jtsk_text))
     });
 
 
@@ -758,6 +775,7 @@ switchMap = function(overview=false){
                     poi_other.clearLayers();
                     poi_dj.clearLayers();
                 }
+                console.log("loaded")
         }
     }
 }
