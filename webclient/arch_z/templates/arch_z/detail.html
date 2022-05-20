@@ -32,9 +32,6 @@
         rel='stylesheet'/>
 
   <!--Mark Cluster-->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
 
 
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
@@ -47,6 +44,16 @@
   <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
   <script src="/static/static/autocomplete_light/select2.js"></script>
   <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+
+
+
+  <script src="{% static 'simpleheat.js' %}"></script>
+  <script src="{% static 'HeatLayer.js' %}"></script>
+  <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
+  <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+
+
   <script>
       var global_csrftoken = '{{ csrf_token }}';
   </script>
@@ -594,9 +601,9 @@
     {% endfor %}
 
     <!-- dokumenty -->
-    
+
       {% include "dokument/dokument_table.html" with type="arch_z"%}
-    
+
   </div>
   {% if arch_projekt_link %}
   <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
@@ -665,42 +672,12 @@
                       drawnItems.clearLayers();
                       addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom)
                   }
-                  if(ask_only_once){
-                    ask_only_once=false;
-                  xhr2.send(JSON.stringify(
-                      {
-                          'dj_ident_cely': form_id.replace("detail_dj_form_", ""),
-                          'lat':rs.lat,
-                          'lng':rs.lng,
-                      }))
-                  }
               };
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
                       'pian': pian_id,
                   }))
-
-              let xhr2 = new XMLHttpRequest();
-              xhr2.open('POST', '/arch-z/katastr-zjisti-piany');
-              xhr2.setRequestHeader('Content-type', 'application/json');
-              if (typeof global_csrftoken !== 'undefined') {
-                  xhr2.setRequestHeader('X-CSRFToken', global_csrftoken);
-              }
-              xhr2.onload = function () {
-                poi_other.clearLayers();
-                let res=JSON.parse(this.responseText).points
-                let dj_head=form_id.replace("detail_dj_form_", "")
-                res.forEach((i)=>{
-                  if(i.dj != null){
-                    //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
-                    addPointToPoiLayerWithForceG(i.geom,poi_dj,i.ident_cely,true)
-                  }
-                  else {
-                    addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
-                  }
-                })
-              };
 
           }else if (form_id.includes("detail_pian_form_")){
             map_show_edit(true, false)
@@ -811,6 +788,8 @@
       {% endfor %}
   </script>
   <script>
+    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    //console.log("zaznam "+global_map_projekt_ident)
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
       if ("{{arch_projekt_link}}" !== "None"){
@@ -820,9 +799,9 @@
         modalFormID: "#archivovat-form",
         })
         arch_projekt = new Modal(options, "archive_projekt");
-        document.getElementById("archive_projekt").click()  
+        document.getElementById("archive_projekt").click()
       };
-        
+
       if (document.getElementsByClassName("adb-smazat-btn")){
         elements = document.getElementsByClassName("adb-smazat-btn")
         for (let i = 0; i < elements.length; i++){
@@ -924,13 +903,13 @@
         }
       }
   });
-  
+
 </script>
 <script>
     var update_pian = function (dj_ident) {
       id = "#id_" + dj_ident + "-pian"
         console.log("najdene")
         $(id).prop('disabled', false);
-    };  
+    };
 </script>
 {% endblock %}
