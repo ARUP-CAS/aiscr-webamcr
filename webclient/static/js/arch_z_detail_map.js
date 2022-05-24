@@ -2,6 +2,8 @@ var global_map_can_edit=false;
 
 var global_map_can_grab_geom_from_map=false;
 var global_map_element="id_geom";
+var global_map_element_sjtsk="id_geom_sjtsk";
+console.log("zmena def.geom :"+global_map_element)
 
 
 var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
@@ -339,7 +341,8 @@ map.on('draw:edited', function (e) {
 });
 map.on('draw:deleted', function(e) {
     addLogText("deleted")
-    addGeometry()
+    addWGS84Geometry()
+    addSJTSKGeometry()
     disableSavePianButton();
     //console.log(document.getElementById(global_map_element));
     //console.log(document.getElementById("editPianButton"))//editPianButton
@@ -413,7 +416,7 @@ function geomToText(){
                 }
             }
             // Musi koncit na zacatek
-            text += coordinates[0][1] + " " + coordinates[0][0]
+            text += coordinates[0][0] + " " + coordinates[0][1]
             text +="))"
             jtsk_coor = convertToJTSK(coordinates[0][1], coordinates[0][0]);
             jtsk_text += jtsk_coor[0] + " " + jtsk_coor[1]
@@ -436,9 +439,8 @@ function geomToText(){
             text +=")"
             jtsk_text +=")"
         }
-        addGeometry(amcr_static_geom_precision_wgs84(text),global_map_can_edit);
-        console.log(amcr_static_geom_precision_wgs84(text))
-        console.log(amcr_static_geom_precision_jtsk(jtsk_text))
+        addWGS84Geometry(amcr_static_geom_precision_wgs84(text),global_map_can_edit);
+        addSJTSKGeometry(amcr_static_geom_precision_jtsk(jtsk_text),global_map_can_edit);
     });
 
 
@@ -590,11 +592,24 @@ function addLogText(text) {
     //console.log(text)
 }
 
-function addGeometry(text) {
+function addWGS84Geometry(text) {
     console.log("add-geometry: "+global_map_element)
     let geom=document.getElementById(global_map_element);
     if(geom){
+        console.log("+w")
         geom.value=text;
+    }
+    if(poi_sugest.getLayers().size){
+        edit_buttons.enable();
+    }
+}
+
+function addSJTSKGeometry(text) {
+    console.log("add-geometry: "+global_map_element_sjtsk)
+    let geom_sjtsk=document.getElementById(global_map_element_sjtsk);
+    if(geom_sjtsk){
+        geom_sjtsk.value=text;
+        console.log("+j")
     }
     if(poi_sugest.getLayers().size){
         edit_buttons.enable();
@@ -603,6 +618,8 @@ function addGeometry(text) {
 
 function clearUnfinishedEditGeometry(){
     global_map_element="id_geom";
+    global_map_element_sjtsk="id_geom_sjtsk";
+    console.log("zmena def.geom :"+global_map_element)
     global_map_can_grab_geom_from_map=false;
     map_show_edit(false, false)
     drawnItems.clearLayers();
@@ -680,9 +697,14 @@ function loadGeomToEdit(ident_cely){
         }
     })
     if(drawnItemsCount){
+        
         global_map_element="id_"+ident_cely+"-geom"
+        global_map_element_sjtsk="id_"+ident_cely+"-geom_sjtsk"
+        console.log("zmena def.geom :"+global_map_element)
         geomToText();
         drawControl._toolbars.edit._modes.edit.handler.enable();
+    } else{
+        console.log("zmena def.geom :chyba")
     }
 
 }

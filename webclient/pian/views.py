@@ -53,11 +53,14 @@ def detail(request, ident_cely):
         dict1=dict(request.POST)
         for key in dict1.keys():
             if key.endswith("-geom"):
+                #logger.debug("++ "+key)
+                #logger.debug("++ "+dict1.get(key)[0])
                 validation_geom=dict1.get(key)[0]
-        c.execute("BEGIN")
-        c.callproc("validateGeom", [validation_geom])
-        validation_results = c.fetchone()[0]
-        c.execute("COMMIT")
+                c.execute("BEGIN")
+                c.callproc("validateGeom", [validation_geom])
+                validation_results = c.fetchone()[0]
+                #logger.debug(validation_results)
+                c.execute("COMMIT")
     except Exception:
         validation_results=PIAN_VALIDACE_VYPNUTA
     finally:
