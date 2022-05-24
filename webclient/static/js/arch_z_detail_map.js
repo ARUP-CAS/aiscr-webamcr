@@ -748,6 +748,7 @@ switchMap = function(overview=false){
     let zoom=map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
+    if(!global_map_can_edit){
     if(overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest){
         console.log("Change: "+northWest+"  "+southEast+" "+zoom);
         boundsLock=bounds;
@@ -798,6 +799,7 @@ switchMap = function(overview=false){
                     poi_dj.clearLayers();
                 }
                 console.log("loaded")
+        }
         }
     }
 }
