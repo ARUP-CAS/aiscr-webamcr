@@ -1059,6 +1059,8 @@ class SamostatnyNalez(models.Model):
         Heslar, models.DO_NOTHING, db_column="okolnosti", blank=True, null=True
     )
     geom = models.GeometryField(srid=0, blank=True, null=True)
+    geom_sjtsk = models.GeometryField(srid=0, blank=True, null=True)
+    geom_system = models.TextField(blank=False, null=False)
     pristupnost = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="pristupnost")
     obdobi = models.ForeignKey(
         Heslar, models.DO_NOTHING, db_column="obdobi", blank=True, null=True

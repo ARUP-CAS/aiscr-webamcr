@@ -69,6 +69,8 @@ class SamostatnyNalez(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
     )
     geom = pgmodels.PointField(blank=True, null=True)
+    geom_sjtsk = pgmodels.PointField(blank=True, null=True)
+    geom_system = models.TextField(blank=False, null=False)
     pristupnost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
