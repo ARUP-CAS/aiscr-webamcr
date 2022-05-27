@@ -70,7 +70,7 @@ class SamostatnyNalez(models.Model):
     )
     geom = pgmodels.PointField(blank=True, null=True)
     geom_sjtsk = pgmodels.PointField(blank=True, null=True)
-    geom_system = models.TextField(blank=False, null=False)
+    geom_system = models.TextField(blank=False, null=False,default='wgs84')
     pristupnost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
