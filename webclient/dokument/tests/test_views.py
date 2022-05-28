@@ -12,13 +12,14 @@ from core.tests.runner import (
     add_middleware_to_request, EL_CHEFE_ID, ARCHIV_ARUB,
     TESTOVACI_DOKUMENT_IDENT,
     DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
+    EXISTING_DOCUMENT_ID,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase
 from dokument.models import Dokument
-from dokument.views import archivovat, create_model_3D, detail, edit, odeslat
+from dokument.views import archivovat, create_model_3D, detail, edit, odeslat, get_dokument_table_row
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from uzivatel.models import User
@@ -135,3 +136,15 @@ class UrlTests(TestCase):
             and updated_dokument.extra_data.zachovalost
             == Heslar.objects.get(id=ZACHOVALOST_30_80_ID)
         )
+
+    def test_get_table_row(self):
+        data = {
+            "dok_id": EXISTING_DOCUMENT_ID,
+        }
+        request = self.factory.get("/dokument/dokument-radek-tabulky",data)
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request.user = self.existing_user
+        request.session.save()
+
+        response = get_dokument_table_row(request)
+        self.assertContains(response, TESTOVACI_DOKUMENT_IDENT)
