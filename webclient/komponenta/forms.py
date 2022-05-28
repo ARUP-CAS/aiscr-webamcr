@@ -2,7 +2,7 @@ import logging
 
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
+from crispy_forms.layout import Div, Layout, HTML, Field
 from django import forms
 from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_AKTIVITA
@@ -19,7 +19,7 @@ class CreateKomponentaForm(forms.ModelForm):
 
         labels = {
             "presna_datace": _("Přesná datace"),
-            "jistota": _("Nejistá datace"),
+            "jistota": "",
             "aktivity": _("Aktivity"),
             "poznamka": _("Poznámka"),
         }
@@ -64,11 +64,19 @@ class CreateKomponentaForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("obdobi", css_class="col-sm-6"),
-                Div("jistota", css_class="col-sm-6"),
-                Div("presna_datace", css_class="col-sm-6"),
-                Div("areal", css_class="col-sm-6"),
-                Div("aktivity", css_class="col-sm-6"),
+                Div("obdobi", css_class="col-sm-2"),
+                Div(
+                    Div(
+                        HTML(
+                    '<label class="label">%(translation)s</label>' % {"translation":_("Jistota")}),
+                    Field("jistota"),
+                    css_class="form-group inline-checkbox"),
+                    css_class="col-sm-2"
+                ),
+                #Div("jistota", css_class="col-sm-6"),
+                Div("presna_datace", css_class="col-sm-2"),
+                Div("areal", css_class="col-sm-2"),
+                Div("aktivity", css_class="col-sm-4"),
                 Div("poznamka", css_class="col-sm-12"),
                 css_class="row",
             ),

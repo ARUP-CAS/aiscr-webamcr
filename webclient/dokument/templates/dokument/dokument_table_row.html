@@ -1,0 +1,24 @@
+<tr>
+    <td class="app-ident-cely">
+      <a href="{% url 'dokument:detail' d.ident_cely %}">
+        <span class="material-icons">description</span>
+        {{ d.ident_cely }}
+      </a>
+    </td>
+    <td>
+      <div class="badge">{{ d.get_stav_display }}</div>
+    </td>
+    <td>{{ d.typ_dokumentu }}</td>
+    <td>{{ d.popis }}</td>
+    <td>{{ d.soubory.soubory.all|length }}</td>
+    {% if show.editovat %}
+    <td>
+      <button id="dokument-odpojit-{{d.ident_cely}}" class="dokument-odpojit-btn" type="button" name="button" href="{% url type|add:':odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
+        <span class="material-icons app-color-danger">delete_forever</span>
+      </button>
+    </td>
+    {% endif %}
+    {% if pripojit %}
+    <td><input type="checkbox" name="dokument" value="{{d.id}}"></td>
+    {% endif %}
+</tr>

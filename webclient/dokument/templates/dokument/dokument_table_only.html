@@ -1,0 +1,23 @@
+{% load i18n %}
+<table class="table table-striped table-hover table-sm mb-0">
+    <thead>
+    <tr>
+      <th>{% trans "Identifikátor" %}</th>
+      <th>{% trans "Stav" %}</th>
+      <th>{% trans "Typ dokumentu" %}</th>
+      <th>{% trans "Popis" %}</th>
+      <th>{% trans "Počet souborů" %}</th>
+      {% if show.editovat %}
+      <th>{% trans "Odpojit dokument" %}</th>
+      {% endif %}
+      {% if pripojit %}
+      <th>{% trans "Pripojit dokument" %}</th>
+      {% endif %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for d in dokumenty %}
+        {% include "dokument/dokument_table_row.html" %}
+    {% endfor %}
+    </tbody>
+  </table>

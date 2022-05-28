@@ -67,11 +67,14 @@
           <div class="form-group col-sm-2">
             {{ formAZ.pristupnost|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-2">
+          <div class="form-group col-sm-2 inline-checkbox">
+            <label class="label" >
+              {%trans "Odeslat ZAA jako NZ" %}
+          </label>
             {{ formAkce.je_nz|as_crispy_field }}
           </div>
         </div>
-        <div class="row">
+        <div class="row formset-table">
           {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
         </div>
       </div>

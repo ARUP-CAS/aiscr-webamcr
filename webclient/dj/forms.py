@@ -1,7 +1,8 @@
 import logging
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout
+from crispy_forms.layout import Div, Layout, HTML, Field
+from crispy_forms.bootstrap import InlineCheckboxes
 from dal import autocomplete
 from django.db.models import Q
 
@@ -52,7 +53,7 @@ class CreateDJForm(forms.ModelForm):
 
         labels = {
             "typ": _("Typ"),
-            "negativni_jednotka": _("Negativní zjištění"),
+            "negativni_jednotka": "",
             "nazev": _("Název"),
             "pian": _("Pian"),
         }
@@ -81,11 +82,18 @@ class CreateDJForm(forms.ModelForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Div("typ", css_class="col-sm-3"),
-                Div("nazev", css_class="col-sm-3"),
-                Div("negativni_jednotka", css_class="col-sm-3"),
-                Div("pian", css_class="col-sm-3"),
-                css_class="row align-items-end",
+                Div("typ", css_class="col-sm-2"),
+                Div("pian", css_class="col-sm-4"),
+                Div("nazev", css_class="col-sm-4"),
+                Div(
+                    Div(
+                        HTML(
+                    '<label class="label">%(translation)s</label>' % {"translation":_("Negativni jednotka")}),
+                    Field("negativni_jednotka"),
+                    css_class="form-group inline-checkbox"),
+                    css_class="col-sm-2"
+                ),
+                css_class="row",
             ),
         )
         for key in self.fields.keys():
