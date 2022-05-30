@@ -1,51 +1,55 @@
+import json
 import logging
-import structlog
 import mimetypes
 import os
 import re
 import unicodedata
 from string import ascii_uppercase as letters
 
+import structlog
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
+    D_STAV_ARCHIVOVANY,
     DOKUMENT_RELATION_TYPE,
     OTHER_DOCUMENT_FILES,
     OTHER_PROJECT_FILES,
     PHOTO_DOCUMENTATION,
     PROJEKT_RELATION_TYPE,
-    SAMOSTATNY_NALEZ_RELATION_TYPE,
-    D_STAV_ARCHIVOVANY,
     PROJEKT_STAV_ARCHIVOVANY,
+    SAMOSTATNY_NALEZ_RELATION_TYPE,
     SN_ARCHIVOVANY,
 )
 from core.forms import CheckStavNotChangedForm
 from core.message_constants import (
+    AKCI_NEKDO_ZMENIL_STAV,
     DOKUMENT_NEKDO_ZMENIL_STAV,
+    PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
-    AKCI_NEKDO_ZMENIL_STAV,
-    PROJEKT_NEKDO_ZMENIL_STAV
-    )
+)
 from core.models import Soubor
-from core.utils import calculate_crc_32, get_mime_type
+from core.utils import (
+    calculate_crc_32,
+    get_mime_type,
+    get_multi_transform_towgs84,
+    get_transform_towgs84,
+)
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils.http import is_safe_url
-from django.views.decorators.http import require_http_methods
-from django.utils.translation import gettext as _
 from django.urls import reverse
+from django.utils.http import is_safe_url
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
+from django_auto_logout.utils import now, seconds_until_idle_time_end
 from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
-from django.core.exceptions import PermissionDenied
-from django_auto_logout.utils import now, seconds_until_idle_time_end
-from django.conf import settings
-
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -71,12 +75,14 @@ def delete_file(request, pk):
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             django_messages = []
             for message in messages.get_messages(request):
-                django_messages.append({ 
-                    "level": message.level,
-                    "message": message.message,
-                    "extra_tags": message.tags,
-                })
-            return JsonResponse({"messages":django_messages},status=400)
+                django_messages.append(
+                    {
+                        "level": message.level,
+                        "message": message.message,
+                        "extra_tags": message.tags,
+                    }
+                )
+            return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("Byl smazán soubor: " + str(items_deleted))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
@@ -89,13 +95,13 @@ def delete_file(request, pk):
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
-        return JsonResponse({"redirect":response})
+        return JsonResponse({"redirect": response})
     else:
         context = {
-        "object": s,
-        "title": _("core.modalForm.smazaniSouboru.title.text"),
-        "id_tag": "smazat-soubor-form",
-        "button": _("core.modalForm.smazaniSouboru.submit.button"),
+            "object": s,
+            "title": _("core.modalForm.smazaniSouboru.title.text"),
+            "id_tag": "smazat-soubor-form",
+            "button": _("core.modalForm.smazaniSouboru.submit.button"),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -237,9 +243,13 @@ def post_upload(request):
                 logger.debug("Saving file object: " + str(s))
                 s.save()
                 s.zaznamenej_nahrani(request.user)
-                return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
+                return JsonResponse(
+                    {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
+                )
             else:
-                logger.warning("File already exists on the server. Saving copy" + str(s))
+                logger.warning(
+                    "File already exists on the server. Saving copy" + str(s)
+                )
                 s.save()
                 s.zaznamenej_nahrani(request.user)
                 # Find parent record and send it to the user
@@ -250,7 +260,9 @@ def post_upload(request):
                     parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
                 if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
                     logger.debug(duplikat[0].vazba.samostatny_nalez_souboru.get())
-                    parent_ident = duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
+                    parent_ident = (
+                        duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
+                    )
                 return JsonResponse(
                     {
                         "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
@@ -270,35 +282,46 @@ def post_upload(request):
 
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
 
+
 def get_dokument_soubor_name(dokument, filename):
-    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-","")) + r"[A-Z]?\..*$"
+    my_regex = (
+        r"^\d*_" + re.escape(dokument.ident_cely.replace("-", "")) + r"[A-Z]?\..*$"
+    )
     files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
     if not files.exists():
-        return dokument.ident_cely.replace("-","")+os.path.splitext(filename)[1]
+        return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
-        filtered_files=files.filter(nazev__iregex=r"[A-Z]\..*$")
+        filtered_files = files.filter(nazev__iregex=r"[A-Z]\..*$")
         if filtered_files.exists():
             list_last_char = []
             for file in filtered_files:
                 split_file = os.path.splitext(file.nazev)
                 list_last_char.append(split_file[0][-1])
-            last_char=max(list_last_char)
+            last_char = max(list_last_char)
             logger.debug(last_char)
             if last_char != "Z":
-                return (dokument.ident_cely.replace("-","")+letters[(letters.index(last_char)+1)]+os.path.splitext(filename)[1])
+                return (
+                    dokument.ident_cely.replace("-", "")
+                    + letters[(letters.index(last_char) + 1)]
+                    + os.path.splitext(filename)[1]
+                )
             else:
-                logger.error("Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran.")
+                logger.error(
+                    "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
+                )
                 return False
 
         else:
-            return (dokument.ident_cely.replace("-","")+"A")
+            return dokument.ident_cely.replace("-", "") + "A"
 
 
 def get_finds_soubor_name(find, filename):
-    my_regex = r"^\d*_" + re.escape(find.ident_cely.replace("-","")) + r"F\d{2}\..*$"
+    my_regex = r"^\d*_" + re.escape(find.ident_cely.replace("-", "")) + r"F\d{2}\..*$"
     files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)
     if not files.exists():
-        return (find.ident_cely.replace("-","")+"F01")+os.path.splitext(filename)[1]
+        return (find.ident_cely.replace("-", "") + "F01") + os.path.splitext(filename)[
+            1
+        ]
     else:
         list_last_char = []
         for file in files:
@@ -306,21 +329,29 @@ def get_finds_soubor_name(find, filename):
             list_last_char.append(split_file[0][-2:])
         logger.debug(list_last_char)
         logger.debug(files)
-        last_char=max(list_last_char)
+        last_char = max(list_last_char)
         if last_char != "99":
-            return find.ident_cely.replace("-","")+"F"+ str(int(last_char)+1).zfill(2)+os.path.splitext(filename)[1]
+            return (
+                find.ident_cely.replace("-", "")
+                + "F"
+                + str(int(last_char) + 1).zfill(2)
+                + os.path.splitext(filename)[1]
+            )
         else:
-            logger.error("Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran.")
+            logger.error(
+                "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
+            )
             return False
+
 
 def get_projekt_soubor_name(file_name):
     split_file = os.path.splitext(file_name)
-    nfkd_form = unicodedata.normalize('NFKD', split_file[0])
-    only_ascii = u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
-    return (re.sub('[^A-Za-z0-9_]', '_', only_ascii)+split_file[1])
+    nfkd_form = unicodedata.normalize("NFKD", split_file[0])
+    only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+    return re.sub("[^A-Za-z0-9_]", "_", only_ascii) + split_file[1]
     # potrebne odstranit constraint soubor_filepath_key
 
-    
+
 def check_stav_changed(request, zaznam):
     logger_s.debug("check_stav_changed.start", zaznam_id=zaznam.pk)
     if request.method == "POST":
@@ -331,47 +362,90 @@ def check_stav_changed(request, zaznam):
         else:
             if "State_changed" in str(form_check.errors):
                 if isinstance(zaznam, SamostatnyNalez):
-                    messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
-                    logger_s.debug("check_stav_changed.state_changed.error", reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                                 form_check_errors=str(form_check.errors))
+                    messages.add_message(
+                        request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV
+                    )
+                    logger_s.debug(
+                        "check_stav_changed.state_changed.error",
+                        reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                        form_check_errors=str(form_check.errors),
+                    )
                 elif isinstance(zaznam, ArcheologickyZaznam):
-                    messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
-                    logger_s.debug("check_stav_changed.state_changed.error", reason=AKCI_NEKDO_ZMENIL_STAV,
-                                 form_check_errors=str(form_check.errors))
+                    messages.add_message(
+                        request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV
+                    )
+                    logger_s.debug(
+                        "check_stav_changed.state_changed.error",
+                        reason=AKCI_NEKDO_ZMENIL_STAV,
+                        form_check_errors=str(form_check.errors),
+                    )
                 elif isinstance(zaznam, Dokument):
-                    messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
-                    logger_s.debug("check_stav_changed.state_changed.error", reason=DOKUMENT_NEKDO_ZMENIL_STAV,
-                                 form_check_errors=str(form_check.errors))
+                    messages.add_message(
+                        request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV
+                    )
+                    logger_s.debug(
+                        "check_stav_changed.state_changed.error",
+                        reason=DOKUMENT_NEKDO_ZMENIL_STAV,
+                        form_check_errors=str(form_check.errors),
+                    )
                 elif isinstance(zaznam, Projekt):
-                    messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
-                    logger_s.debug("check_stav_changed.state_changed.error", reason=PROJEKT_NEKDO_ZMENIL_STAV,
-                                 form_check_errors=str(form_check.errors))
+                    messages.add_message(
+                        request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV
+                    )
+                    logger_s.debug(
+                        "check_stav_changed.state_changed.error",
+                        reason=PROJEKT_NEKDO_ZMENIL_STAV,
+                        form_check_errors=str(form_check.errors),
+                    )
                 return True
 
     else:
         # check if stav zaznamu is same in DB as was on detail page entered from
-        if request.GET.get('sent_stav', False) and str(request.GET.get('sent_stav')) != str(zaznam.stav):
-            sent_stav = str(request.GET.get('sent_stav'))
+        if request.GET.get("sent_stav", False) and str(
+            request.GET.get("sent_stav")
+        ) != str(zaznam.stav):
+            sent_stav = str(request.GET.get("sent_stav"))
             zaznam_stav = str(zaznam.stav)
             if isinstance(zaznam, SamostatnyNalez):
-                messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV)
-                logger_s.debug("check_stav_changed.sent_stav.error", reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
+                messages.add_message(
+                    request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV
+                )
+                logger_s.debug(
+                    "check_stav_changed.sent_stav.error",
+                    reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                    zaznam_stav=zaznam_stav,
+                    sent_stav=sent_stav,
+                )
             elif isinstance(zaznam, ArcheologickyZaznam):
                 messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
-                logger_s.debug("check_stav_changed.sent_stav.error", reason=AKCI_NEKDO_ZMENIL_STAV,
-                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
+                logger_s.debug(
+                    "check_stav_changed.sent_stav.error",
+                    reason=AKCI_NEKDO_ZMENIL_STAV,
+                    zaznam_stav=zaznam_stav,
+                    sent_stav=sent_stav,
+                )
             elif isinstance(zaznam, Dokument):
-                messages.add_message(request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV)
-                logger_s.debug("check_stav_changed.sent_stav.error", reason=DOKUMENT_NEKDO_ZMENIL_STAV,
-                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
+                messages.add_message(
+                    request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV
+                )
+                logger_s.debug(
+                    "check_stav_changed.sent_stav.error",
+                    reason=DOKUMENT_NEKDO_ZMENIL_STAV,
+                    zaznam_stav=zaznam_stav,
+                    sent_stav=sent_stav,
+                )
             elif isinstance(zaznam, Projekt):
                 messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
-                logger_s.debug("check_stav_changed.sent_stav.error", reason=PROJEKT_NEKDO_ZMENIL_STAV,
-                             zaznam_stav=zaznam_stav, sent_stav=sent_stav)
+                logger_s.debug(
+                    "check_stav_changed.sent_stav.error",
+                    reason=PROJEKT_NEKDO_ZMENIL_STAV,
+                    zaznam_stav=zaznam_stav,
+                    sent_stav=sent_stav,
+                )
             return True
     logger_s.debug("check_stav_changed.sent_stav.false")
     return False
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -395,6 +469,7 @@ def redirect_ident_view(request, ident_cely):
     messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
     return redirect("core:home")
 
+
 # for prolonging session ajax call
 @login_required
 @require_http_methods(["GET"])
@@ -408,3 +483,32 @@ def prolong_session(request):
         {"session_time": session_time},
         status=200,
     )
+
+
+@login_required
+@require_http_methods(["POST"])
+def tr_wgs84(request):
+    body = json.loads(request.body.decode("utf-8"))
+    [cx, cy] = get_transform_towgs84(body["cy"], body["cx"])
+    if cx is not None:
+        return JsonResponse(
+            {"cx": cx, "cy": cy},
+            status=200,
+        )
+    else:
+        return JsonResponse({"cx": "", "cy": ""}, status=200)
+
+
+@login_required
+@require_http_methods(["POST"])
+def tr_mwgs84(request):
+    logger.debug("multi-trans")
+    body = json.loads(request.body.decode("utf-8"))["points"]
+    points = get_multi_transform_towgs84(body)
+    if points is not None:
+        return JsonResponse(
+            {"points": points},
+            status=200,
+        )
+    else:
+        return JsonResponse({"points": None}, status=200)

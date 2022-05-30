@@ -908,6 +908,8 @@ class Pian(models.Model):
     presnost = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="presnost")
     typ = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="typ")
     geom = models.GeometryField(srid=0)
+    geom_sjtsk = models.GeometryField(blank=True, null=True,srid=5514)
+    geom_system = models.TextField(blank=False, null=False,max_length=6,default='wgs84')
     buffer = models.GeometryField(srid=0)
     zm10 = models.ForeignKey(Kladyzm, models.DO_NOTHING, db_column="zm10")
     zm50 = models.ForeignKey(Kladyzm, models.DO_NOTHING, db_column="zm50")
@@ -1059,6 +1061,8 @@ class SamostatnyNalez(models.Model):
         Heslar, models.DO_NOTHING, db_column="okolnosti", blank=True, null=True
     )
     geom = models.GeometryField(srid=0, blank=True, null=True)
+    geom_sjtsk = models.GeometryField(srid=0, blank=True, null=True)
+    geom_system = models.TextField(blank=False, null=False,max_length=6,default='wgs84')
     pristupnost = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="pristupnost")
     obdobi = models.ForeignKey(
         Heslar, models.DO_NOTHING, db_column="obdobi", blank=True, null=True

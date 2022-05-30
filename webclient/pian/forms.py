@@ -8,10 +8,11 @@ from pian.models import Pian
 class PianCreateForm(forms.ModelForm):
 
     geom = GeometryField(srid=4326, required=True, widget=HiddenInput())
+    geom_sjtsk = GeometryField(srid=5514, required=True, widget=HiddenInput())
 
     class Meta:
         model = Pian
-        fields = ("presnost", "geom")
+        fields = ("presnost", "geom","geom_sjtsk")
         labels = {"presnost": _("Přesnost")}
         help_texts = {"presnost":_("pian.form.presnost.tooltip"),}
 

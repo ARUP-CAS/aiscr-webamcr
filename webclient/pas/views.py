@@ -108,11 +108,16 @@ def create(request):
             )
         if form.is_valid():
             geom = None
+            geom_sjtsk = None
             try:
-                dx = float(form_coor.data.get("detector_coordinates_x"))
-                dy = float(form_coor.data.get("detector_coordinates_y"))
-                if dx > 0 and dy > 0:
-                    geom = Point(dy, dx)
+                wgs84_dx = float(form_coor.data.get("coordinate_wgs84_x"))
+                wgs84_dy = float(form_coor.data.get("coordinate_wgs84_y"))
+                if wgs84_dx > 0 and wgs84_dy > 0:
+                    geom = Point(wgs84_dy, wgs84_dx)
+                sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
+                sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
+                if sjtsk_dx > 0 and sjtsk_dy > 0:
+                    geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
             except Exception:
                 logger.error("Chybny format souradnic")
             # latitude = form.cleaned_data["latitude"]
@@ -126,12 +131,13 @@ def create(request):
                 sn.stav = SN_ZAPSANY
                 sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
                 sn.predano_organizace = sn.projekt.organizace
-                if geom:
-                    # if latitude and longitude:
-                    #    sn.geom = Point(longitude, latitude)
+                sn.geom_system=form_coor.data.get("coordinate_system")
+                if geom is not None:
+                    sn.katastr = get_cadastre_from_point(geom)
                     sn.geom = geom
-                    sn.katastr = get_cadastre_from_point(sn.geom)
-                sn.save()
+                if geom_sjtsk is not None:
+                    sn.geom_sjtsk = geom_sjtsk
+                form.save()
                 sn.set_zapsany(request.user)
                 form.save_m2m()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
@@ -180,12 +186,22 @@ def detail(request, ident_cely):
     )
     context.update(get_detail_context(sn=sn, request=request))
     if sn.geom:
-        geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
+        geom="0 0"
+        if(sn.geom):
+            geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
+        geom_sjtsk="0 0"
+        if(sn.geom_sjtsk):
+            geom_sjtsk = str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+        system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
-                "detector_system_coordinates": "WGS-84",
-                "detector_coordinates_x": geom.split(" ")[1],
-                "detector_coordinates_y": geom.split(" ")[0],
+                "detector_coordinates_x": geom.split(" ")[1] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[1],
+                "detector_coordinates_y": geom.split(" ")[0] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[0],
+                "coordinate_wgs84_x": geom.split(" ")[1],
+                "coordinate_wgs84_y": geom.split(" ")[0],
+                "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
+                "coordinate_sjtsk_y": geom_sjtsk.split(" ")[0],
+                "coordinate_system": system,
             }
         )  # Zmen musis poslat data do formulare
         context["global_map_can_edit"] = False
@@ -216,18 +232,26 @@ def edit(request, ident_cely):
         )
         form_coor = CoordinatesDokumentForm(request.POST)
         geom = None
+        geom_sjtsk = None
         try:
-            dx = float(form_coor.data.get("detector_coordinates_x"))
-            dy = float(form_coor.data.get("detector_coordinates_y"))
-            if dx > 0 and dy > 0:
-                geom = Point(dy, dx)
-        except Exception:
-            logger.error("Chybny format souradnic")
+            wgs84_dx = float(form_coor.data.get("coordinate_wgs84_x"))
+            wgs84_dy = float(form_coor.data.get("coordinate_wgs84_y"))
+            if wgs84_dx > 0 and wgs84_dy > 0:
+                geom = Point(wgs84_dy, wgs84_dx)
+            sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
+            sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
+            if sjtsk_dx > 0 and sjtsk_dy > 0:
+                geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
+        except Exception as e:
+            logger.error("Chybny format souradnic: "+e)
         if form.is_valid():
             logger.debug("Form is valid")
+            sn.geom_system=form_coor.data.get("coordinate_system")
             if geom is not None:
                 sn.katastr = get_cadastre_from_point(geom)
                 sn.geom = geom
+            if geom_sjtsk is not None:
+                sn.geom_sjtsk = geom_sjtsk
             form.save()
             if form.changed_data:
                 logger.debug(form.changed_data)
@@ -246,12 +270,22 @@ def edit(request, ident_cely):
             **kwargs
             )
         if sn.geom:
-            geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
+            geom="0 0"
+            if(sn.geom):
+                geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
+            geom_sjtsk="0 0"
+            if(sn.geom_sjtsk):
+                geom_sjtsk = str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+            system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
             form_coor = CoordinatesDokumentForm(
                 initial={
-                    "detector_system_coordinates": "WGS-84",
-                    "detector_coordinates_x": geom.split(" ")[1],
-                    "detector_coordinates_y": geom.split(" ")[0],
+                    "detector_coordinates_x": geom.split(" ")[1] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[1],
+                    "detector_coordinates_y": geom.split(" ")[0] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[0],
+                    "coordinate_wgs84_x": geom.split(" ")[1],
+                    "coordinate_wgs84_y": geom.split(" ")[0],
+                    "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
+                    "coordinate_sjtsk_y": geom_sjtsk.split(" ")[0],
+                    "coordinate_system": system,
                 }
             )  # Zmen musis poslat data do formulare
         else:
@@ -263,8 +297,6 @@ def edit(request, ident_cely):
             "global_map_can_edit": True,
             "formCoor": form_coor,
             "form": form,
-            "global_map_can_edit": True,
-            "formCoor": form_coor,
         },
     )
 

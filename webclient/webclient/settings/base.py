@@ -1,12 +1,10 @@
 import json
 import os
 from pathlib import Path
+
 import structlog
-
-
-from django.core.exceptions import ImproperlyConfigured
-
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -82,6 +80,7 @@ INSTALLED_APPS = [
     "simple_history",
     "widget_tweaks",
     "rosetta",
+    "django_cron",
 ]
 
 MIDDLEWARE = [
@@ -93,8 +92,13 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    'django_structlog.middlewares.RequestMiddleware',
+    "django_structlog.middlewares.RequestMiddleware",
     "django_auto_logout.middleware.auto_logout",
+]
+
+CRON_CLASSES = [
+    "cron.job01.MyCronJobPianToJTSK",
+    "cron.job02.MyCronJobPianToWGS84",
 ]
 
 ROOT_URLCONF = "webclient.urls"
@@ -152,8 +156,8 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "cs"
 
 LANGUAGES = [
-    ('cs', 'Czech'),
-    ('en', 'English'),
+    ("cs", "Czech"),
+    ("en", "English"),
 ]
 
 TIME_ZONE = "Europe/Prague"
@@ -271,6 +275,10 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
         },
+        "django_cron": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
     },
 }
 
@@ -293,20 +301,20 @@ ACCOUNT_ACTIVATION_DAYS = 10
 AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': 'memcached:11211',
+    "default": {
+        "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
+        "LOCATION": "memcached:11211",
     }
 }
 
 DIGI_LINKS = {
-    "Digi_archiv_link": 'https://digiarchiv.aiscr.cz/id/',
-    "OAPI_link_part1": 'https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/',
-    "OAPI_link_part2": '&metadataPrefix=oai_amcr',
-    "ARU_PRAHA":"https://www.arup.cas.cz/",
-    "ARU_BRNO":"https://www.arub.cz/",
-    "ARUP_MAIL":'<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',
-    "ARUB_MAIL":"<a href='mailto:oznameni@arub.cas.cz'>oznameni@arub.cz</a>",
+    "Digi_archiv_link": "https://digiarchiv.aiscr.cz/id/",
+    "OAPI_link_part1": "https://api.aiscr.cz/dapro/oai?verb=GetRecord&identifier=https://api.aiscr.cz/id/",
+    "OAPI_link_part2": "&metadataPrefix=oai_amcr",
+    "ARU_PRAHA": "https://www.arup.cas.cz/",
+    "ARU_BRNO": "https://www.arub.cz/",
+    "ARUP_MAIL": '<a href="mailto:oznameni@arup.cas.cz">oznameni@arup.cas.cz</a>',
+    "ARUB_MAIL": "<a href='mailto:oznameni@arub.cas.cz'>oznameni@arub.cz</a>",
 }
 
 structlog.configure(
@@ -333,5 +341,5 @@ AUTO_LOGOUT = {
     "MESSAGE": AUTOLOGOUT_AFTER_LOGOUT,
     "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
 }
-  
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

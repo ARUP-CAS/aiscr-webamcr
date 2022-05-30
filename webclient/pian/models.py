@@ -41,6 +41,8 @@ class Pian(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
+    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True,srid=5514)
+    geom_system = models.TextField(blank=False, null=False,max_length=6)
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.DO_NOTHING,
