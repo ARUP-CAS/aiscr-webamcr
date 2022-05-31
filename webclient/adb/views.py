@@ -16,7 +16,6 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.gis.geos import Point
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -98,9 +97,6 @@ def zapsat_vyskove_body(request, adb_ident_cely):
         instances = formset.save()
         for vyskovy_bod in instances:
             vyskovy_bod: VyskovyBod
-            vyskovy_bod.geom = Point(
-                x=vyskovy_bod.northing, y=vyskovy_bod.easting, z=vyskovy_bod.niveleta
-            )
             vyskovy_bod.save()
             # vyskovy_bod.set_ident()
     if formset.is_valid():

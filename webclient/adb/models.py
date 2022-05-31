@@ -3,6 +3,7 @@ import logging
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.geos import Point
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
@@ -115,6 +116,15 @@ class VyskovyBod(models.Model):
     def save(self, *args, **kwargs):
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
+        if self.northing != 0.0:
+            self.geom = Point(
+                x=self.northing,
+                y=self.easting,
+                z=self.niveleta,
+            )
+            self.niveleta = 0.0
+            self.easting = 0.0
+            self.northing = 0.0
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
