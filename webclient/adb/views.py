@@ -1,7 +1,7 @@
 import logging
 
-from adb.forms import CreateADBForm, create_vyskovy_bod_form, VyskovyBodFormSetHelper
-from adb.models import Adb
+from adb.forms import CreateADBForm, create_vyskovy_bod_form
+from adb.models import Adb, VyskovyBod
 from core.exceptions import DJNemaPianError, MaximalIdentNumberError
 from core.ident_cely import get_adb_ident
 from core.message_constants import (
@@ -13,18 +13,17 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from dj.models import DokumentacniJednotka
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods
 from django.urls import reverse
-from adb.models import Adb, VyskovyBod
-from django.utils.translation import gettext as _
 from django.utils.http import is_safe_url
-from django.conf import settings
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,11 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
-    form = CreateADBForm(request.POST, instance=adb, prefix=ident_cely,)
+    form = CreateADBForm(
+        request.POST,
+        instance=adb,
+        prefix=ident_cely,
+    )
     if form.is_valid():
         logger.debug("Form is valid")
         form.save()
@@ -82,7 +85,10 @@ def zapsat(request, dj_ident_cely):
 def zapsat_vyskove_body(request, adb_ident_cely):
     adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
     vyskovy_bod_formset = inlineformset_factory(
-        Adb, VyskovyBod, form=create_vyskovy_bod_form(), extra=3,
+        Adb,
+        VyskovyBod,
+        form=create_vyskovy_bod_form(),
+        extra=3,
     )
     formset = vyskovy_bod_formset(
         request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
@@ -92,7 +98,9 @@ def zapsat_vyskove_body(request, adb_ident_cely):
         instances = formset.save()
         for vyskovy_bod in instances:
             vyskovy_bod: VyskovyBod
-            vyskovy_bod.geom = Point(x=vyskovy_bod.northing, y=vyskovy_bod.easting)
+            vyskovy_bod.geom = Point(
+                x=vyskovy_bod.northing, y=vyskovy_bod.easting, z=vyskovy_bod.niveleta
+            )
             vyskovy_bod.save()
             # vyskovy_bod.set_ident()
     if formset.is_valid():
@@ -120,20 +128,33 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána adb: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
+                    )
+                }
+            )
         else:
             logger.warning("Adb nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})},status=403)
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
+                    )
+                },
+                status=403,
+            )
     else:
         context = {
-        "object": adb,
-        "title": _("adb.modalForm.smazani.title.text"),
-        "id_tag": "smazat-adb-form",
-        "button": _("adb.modalForm.smazani.submit.button"),
-        
+            "object": adb,
+            "title": _("adb.modalForm.smazani.title.text"),
+            "id_tag": "smazat-adb-form",
+            "button": _("adb.modalForm.smazani.submit.button"),
         }
         return render(request, "core/transakce_modal.html", context)
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -144,7 +165,7 @@ def smazat_vb(request, ident_cely):
         "title": _("vb.modalForm.smazaniVB.title.text"),
         "id_tag": "smazat-vb-form",
         "button": _("vb.modalForm.smazaniVB.submit.button"),
-        }
+    }
     if request.method == "POST":
         resp = zaznam.delete()
         next_url = request.POST.get("next")
@@ -159,10 +180,10 @@ def smazat_vb(request, ident_cely):
         if resp:
             logger.debug("Objekt dokumentu byl smazan: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":response})
+            return JsonResponse({"redirect": response})
         else:
             logger.warning("Dokument nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":response},status=403)
+            return JsonResponse({"redirect": response}, status=403)
     else:
         return render(request, "core/transakce_modal.html", context)

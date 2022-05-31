@@ -1,37 +1,35 @@
 import logging
 
-from django.db.models import Q
-
 from adb.forms import CreateADBForm, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
-from core.exceptions import MaximalIdentNumberError
-
 from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
+from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_dj_ident
 from core.message_constants import (
+    MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
-    MAXIMUM_DJ_DOSAZENO,
 )
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
+from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
-from komponenta.models import KomponentaVazby
+from django.views.decorators.http import require_http_methods
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
+from komponenta.models import KomponentaVazby
 
 logger = logging.getLogger(__name__)
 
@@ -47,20 +45,24 @@ def detail(request, ident_cely):
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         if dj.typ.heslo == "Celek akce":
-            dokumentacni_jednotka_query = \
-                DokumentacniJednotka.objects.filter(Q(archeologicky_zaznam=dj.archeologicky_zaznam) &
-                                                    ~Q(ident_cely=dj.ident_cely))
+            dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
+                & ~Q(ident_cely=dj.ident_cely)
+            )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
-                dokumentacni_jednotka.typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP)
-                                                                  & Q(heslo__iexact="část akce")).first()
+                dokumentacni_jednotka.typ = Heslar.objects.filter(
+                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="část akce")
+                ).first()
                 dokumentacni_jednotka.save()
         elif dj.typ.heslo == "Sonda":
-            dokumentacni_jednotka_query = \
-                DokumentacniJednotka.objects.filter(Q(archeologicky_zaznam=dj.archeologicky_zaznam) &
-                                                    ~Q(ident_cely=dj.ident_cely))
+            dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
+                & ~Q(ident_cely=dj.ident_cely)
+            )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
-                dokumentacni_jednotka.typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP)
-                                                                  & Q(heslo__iexact="sonda")).first()
+                dokumentacni_jednotka.typ = Heslar.objects.filter(
+                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="sonda")
+                ).first()
                 dokumentacni_jednotka.save()
     else:
         logger.warning("Form is not valid")
@@ -70,7 +72,11 @@ def detail(request, ident_cely):
     if "adb_detail" in request.POST:
         ident_cely = request.POST.get("adb_detail")
         adb = get_object_or_404(Adb, ident_cely=ident_cely)
-        form = CreateADBForm(request.POST, instance=adb, prefix=ident_cely, )
+        form = CreateADBForm(
+            request.POST,
+            instance=adb,
+            prefix=ident_cely,
+        )
         if form.is_valid():
             logger.debug("Form is valid")
             form.save()
@@ -88,7 +94,10 @@ def detail(request, ident_cely):
         adb_ident_cely = request.POST.get("adb_zapsat_vyskove_body")
         adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
         vyskovy_bod_formset = inlineformset_factory(
-            Adb, VyskovyBod, form=create_vyskovy_bod_form(), extra=3,
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(),
+            extra=3,
         )
         formset = vyskovy_bod_formset(
             request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
@@ -98,13 +107,17 @@ def detail(request, ident_cely):
             instances = formset.save()
             for vyskovy_bod in instances:
                 vyskovy_bod: VyskovyBod
-                vyskovy_bod.geom = Point(x=vyskovy_bod.northing, y=vyskovy_bod.easting)
+                vyskovy_bod.geom = Point(
+                    x=vyskovy_bod.northing,
+                    y=vyskovy_bod.easting,
+                    z=vyskovy_bod.niveleta,
+                )
                 vyskovy_bod.save()
                 # vyskovy_bod.set_ident()
         if formset.is_valid():
             logger.debug("Form is valid")
             if (
-                    formset.has_changed()
+                formset.has_changed()
             ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
@@ -159,17 +172,29 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána dokumentacni jednotka: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
+                    )
+                }
+            )
         else:
             logger.warning("DJ nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})},status=403)
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
+                    )
+                },
+                status=403,
+            )
     else:
         context = {
-        "object": dj,
-        "title": _("dj.modalForm.smazani.title.text"),
-        "id_tag": "smazat-dj-form",
-        "button": _("dj.modalForm.smazani.submit.button"),
-        
+            "object": dj,
+            "title": _("dj.modalForm.smazani.title.text"),
+            "id_tag": "smazat-dj-form",
+            "button": _("dj.modalForm.smazani.submit.button"),
         }
         return render(request, "core/transakce_modal.html", context)
