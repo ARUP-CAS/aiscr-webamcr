@@ -18,7 +18,7 @@ var gm_correct = L.layerGroup();
 var poi_dj = L.layerGroup();
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
 var heatPoints = [];
-var heatLayer = L.heatLayer(heatPoints);
+var heatLayer  = L.heatLayer(heatPoints);
 
 var global_clusters=false;
 var global_heat=false;
@@ -697,7 +697,7 @@ function loadGeomToEdit(ident_cely){
         }
     })
     if(drawnItemsCount){
-        
+
         global_map_element="id_"+ident_cely+"-geom"
         global_map_element_sjtsk="id_"+ident_cely+"-geom_sjtsk"
         console.log("zmena def.geom :"+global_map_element)
@@ -769,6 +769,8 @@ switchMap = function(overview=false){
             //console.log(JSON.parse(this.responseText))
             poi_other.clearLayers();
             poi_dj.clearLayers();
+            heatPoints=[]
+            map.removeLayer(heatLayer);
             //gm_correct.clearLayers();
                 let resAl=JSON.parse(this.responseText).algorithm
                 if(resAl == "detail"){
@@ -783,15 +785,15 @@ switchMap = function(overview=false){
                         addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
                     }
                     })
-                    map.removeLayer(heatLayer);
-                }else {
+                }else{
                     console.log("heat");
                     let resHeat=JSON.parse(this.responseText).heat
                     resHeat.forEach((i)=>{
 
                         geom=i.geom.split("(")[1].split(")")[0].split(" ");
-                        heatPoints.push([geom[1],geom[0],i.density])//chyba je to geome
-                       // console.log("h"+[geom[0],geom[1]])
+                        for(let j=0;j<i.pocet;j++){
+                            heatPoints.push([geom[1],geom[0]])//chyba je to geome
+                        }
                     })
                     heatLayer=L.heatLayer(heatPoints);
                     map.addLayer(heatLayer);

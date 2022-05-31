@@ -854,12 +854,13 @@ def post_ajax_get_pians_limit(request):
             body["southEast"]["lat"],
         )
         back = []
-        logger.debug(heats)
+        cid = 0
         for heat in heats:
             # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
+            cid += 1
             back.append(
                 {
-                    "id": heat["cid"],
+                    "id": str(cid),
                     "pocet": heat["count"],
                     "density": heat["count"] / density,
                     "geom": heat["geometry"].replace(", ", ","),
