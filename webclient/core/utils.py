@@ -185,7 +185,7 @@ def dictfetchall(cursor):
 
 
 def get_heat_map(left, bottom, right, top):
-    query = "select cid, count, ST_AsText(st_centroid) as geometry from amcr_clusters_table2"
+    query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
@@ -197,7 +197,7 @@ def get_heat_map(left, bottom, right, top):
 
 
 def get_heat_map_density(left, bottom, right, top):
-    query = "select max(count) from amcr_clusters_table2"
+    query = "select max(count) from amcr_heat_pian_l2"
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
