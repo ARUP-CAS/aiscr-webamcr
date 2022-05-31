@@ -1,10 +1,9 @@
 from adb.models import Adb, VyskovyBod
-from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
+from cron.convertToSJTSK import convertToJTSK
 from django import forms
 from django.utils.translation import gettext as _
-from django.contrib.gis.forms import PointField
 
 
 class CreateADBForm(forms.ModelForm):
@@ -50,7 +49,9 @@ class CreateADBForm(forms.ModelForm):
 
         help_texts = {
             "typ_sondy": _("adb.form.typSondy.tooltip"),
-            "uzivatelske_oznaceni_sondy": _("adb.form.uzivatelske_oznaceni_sondy.tooltip"),
+            "uzivatelske_oznaceni_sondy": _(
+                "adb.form.uzivatelske_oznaceni_sondy.tooltip"
+            ),
             "trat": _("adb.form.trat.tooltip"),
             "cislo_popisne": _("adb.form.cislo_popisne.tooltip"),
             "parcelni_cislo": _("adb.form.parcelni_cislo.tooltip"),
@@ -111,10 +112,21 @@ class VyskovyBodFormSetHelper(FormHelper):
         self.form_id = "vb"
 
 
-def create_vyskovy_bod_form(pian=None):
+def create_vyskovy_bod_form(pian=None, niveleta=None):
     class CreateVyskovyBodForm(forms.ModelForm):
-        northing = forms.FloatField(help_text=_("adb.form.vyskovyBod.northing.tooltip"),)
-        easting = forms.FloatField(help_text=_("adb.form.vyskovyBod.easting.tooltip"),)
+        northing = forms.FloatField(
+            label=_("Y"),
+            help_text=_("adb.form.vyskovyBod.northing.tooltip"),
+        )
+        easting = forms.FloatField(
+            label=_("X"),
+            help_text=_("adb.form.vyskovyBod.easting.tooltip"),
+        )
+        niveleta = forms.FloatField(
+            label=_("Niveleta"),
+            help_text=_("adb.form.vyskovyBod.easting.tooltip"),
+        )
+
         class Meta:
             model = VyskovyBod
 
@@ -129,22 +141,25 @@ def create_vyskovy_bod_form(pian=None):
                 "ident_cely": forms.Textarea(attrs={"rows": 1, "10": 40}),
             }
             help_texts = {
-            "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),
-            "typ": _("adb.form.vyskovyBod.typ.tooltip"),
-            "niveleta": _("adb.form.vyskovyBod.niveleta.tooltip"),
-            "northing": _("adb.form.vyskovyBod.northing.tooltip"),
-            "easting": _("adb.form.vyskovyBod.easting.tooltip"),
-        }
+                "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),
+                "typ": _("adb.form.vyskovyBod.typ.tooltip"),
+                "niveleta": _("adb.form.vyskovyBod.niveleta.tooltip"),
+                "northing": _("adb.form.vyskovyBod.northing.tooltip"),
+                "easting": _("adb.form.vyskovyBod.easting.tooltip"),
+            }
 
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
             self.fields["ident_cely"].disabled = True
             self.fields["ident_cely"].required = False
-            self.fields["northing"].label = "X"
-            self.fields["easting"].label = "Y"
+            # self.fields["northing"].label = "X"
+            # self.fields["easting"].label = "Y"
             if pian:
-                self.fields["northing"].initial = pian.geom.centroid.x
-                self.fields["easting"].initial = pian.geom.centroid.y
+                [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
+                self.fields["northing"].initial = round(x, 2)
+                self.fields["easting"].initial = round(y, 2)
+            if niveleta:
+                self.fields["niveleta"].initial = niveleta
 
             for key in self.fields.keys():
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
