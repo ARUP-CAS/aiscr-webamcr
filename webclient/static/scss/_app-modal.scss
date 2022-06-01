@@ -1,4 +1,6 @@
 // --- MODAL ---
+@import 'app-mixins';
+@import 'app-variables';
 
 .app-modal-partneri {
   .app-logos {
@@ -16,6 +18,24 @@
         .inner{
           max-height: 400px !important;
         }
+      }
+    }
+  }
+  .table {
+    tbody {
+      a {
+        color: #5882c4;
+        white-space: nowrap;
+        span {
+          color: #5882c4;
+          }
+        }
+      .badge {
+        background-color: #5882c4;
+        color: #fff;
+      }
+      button {
+        color: #5882c4;
       }
     }
   }

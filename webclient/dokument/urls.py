@@ -25,4 +25,5 @@ urlpatterns = [
     path(
         "model/detail/<str:ident_cely>", views.detail_model_3D, name="detail-model-3D"
     ),
+    path("dokument-radek-tabulky",views.get_dokument_table_row, name="get_dokument_table_row")
 ]

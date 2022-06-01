@@ -186,7 +186,7 @@ class CreateAkceForm(forms.ModelForm):
             "lokalizace_okolnosti": _("Lokalizace okolností"),
             "ulozeni_nalezu": _("Uložení nálezu"),
             "souhrn_upresneni": _("Poznámka"),
-            "je_nz": _("Odeslat ZAA jako NZ"),
+            "je_nz": "",
             "specifikace_data": _("Specifikace data"),
             "ulozeni_dokumentace": _("Uložení dokumentace"),
         }

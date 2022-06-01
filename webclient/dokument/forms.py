@@ -557,18 +557,3 @@ class PripojitDokumentForm(forms.Form):
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
-
-
-class PripojitProjDocForm(forms.Form):
-    def __init__(self, *args, projekt_docs, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["dokument"] = forms.MultipleChoiceField(
-            label=_("Projektové dokumenty k připojení"),
-            required=True,
-            choices=projekt_docs + [("", "")],
-            widget=forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"},
-            ),
-        )
-        self.helper = FormHelper(self)
-        self.helper.form_tag = False

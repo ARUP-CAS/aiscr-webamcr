@@ -1,6 +1,7 @@
 import logging
 
 from django.urls import reverse
+import requests
 import structlog
 
 from arch_z.models import ArcheologickyZaznam
@@ -48,9 +49,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
@@ -64,7 +66,6 @@ from dokument.forms import (
     EditDokumentExtraDataForm,
     EditDokumentForm,
     PripojitDokumentForm,
-    PripojitProjDocForm,
 )
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
 from dokument.tables import DokumentTable
@@ -972,6 +973,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         if proj_ident_cely :
             # Pridavam projektove dokumenty
             projektove_dokumenty = set()
+            proj_dok_list = set()
             dokumenty_akce = set(
                 Dokument.objects.filter(
                     casti__archeologicky_zaznam__ident_cely=ident_zaznam
@@ -986,15 +988,25 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                         projektove_dokumenty.add(
                             (cast.dokument.id, cast.dokument.ident_cely)
                         )
-            form = PripojitProjDocForm(projekt_docs=list(projektove_dokumenty))
+                        proj_dok_list.add(cast.dokument)
+            context["dokumenty"] = proj_dok_list
+            context["pripojit"] = proj_dok_list
+            return render(request, "core/transakce_table_modal.html", context)
         else:
             # Pridavam vsechny dokumenty
             form = PripojitDokumentForm()
         context["form"] = form
-    return render(request, "core/transakce_modal.html", context)
-    #return render(
-    #    request, "dokument/pripojit_dokument.html", {"form": form, "object": zaznam, "typ": redirect_name}
-    #)
+        context["hide_table"] = True
+    return render(request, "core/transakce_table_modal.html", context)
+
+@login_required
+@require_http_methods(["GET"])
+def get_dokument_table_row(request):
+    context={
+        "d":Dokument.objects.get(id=request.GET.get("dok_id",""))
+    }
+    return HttpResponse(render_to_string("dokument/dokument_table_row.html",context))
+
     
 def get_detail_view(ident_cely):
     if "3D" in ident_cely:
