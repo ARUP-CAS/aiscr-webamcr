@@ -20,9 +20,63 @@
       <div class="card-body">
         {{ formAZ|as_crispy_errors }}
         {{ formAkce|as_crispy_errors }}
-        {% crispy formAZ %}
-        {% crispy formAkce %}
         <div class="row">
+          <div class="form-group col-sm-2">
+            {{ formAZ.hlavni_katastr|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-4">
+            {{ formAZ.katastry|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.hlavni_vedouci|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.organizace|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAZ.uzivatelske_oznaceni|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.hlavni_typ|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.vedlejsi_typ|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.specifikace_data|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.datum_zahajeni|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAkce.datum_ukonceni|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-12">
+            {{ formAkce.lokalizace_okolnosti|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-12">
+            {{ formAkce.souhrn_upresneni|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-4">
+            {{ formAkce.ulozeni_nalezu|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-4">
+            {{ formAkce.ulozeni_dokumentace|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2">
+            {{ formAZ.pristupnost|as_crispy_field }}
+          </div>
+          <div class="form-group col-sm-2 inline-checkbox">
+            <label class="label" >
+              {%trans "Odeslat ZAA jako NZ" %}
+          </label>
+            {{ formAkce.je_nz|as_crispy_field }}
+          </div>
+        </div>
+        <div class="row formset-table">
           {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
         </div>
       </div>

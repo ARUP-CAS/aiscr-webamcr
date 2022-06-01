@@ -151,6 +151,16 @@ table {
 
     display:inherit
 }
+.formset-table table tbody tr div small
+ {
+
+    display:none
+}
+.formset-table table tbody tr:last-child div small
+ {
+
+    display:inherit
+}
 
 // select form control fix
 .select2-container {
@@ -253,6 +263,10 @@ form {
         @include setIcon(18);
       }
     }
+  }
+  &.inline-checkbox small{
+    left: -1.5rem;
+    position: inherit;
   }
 }
 

@@ -128,8 +128,10 @@ class Modal {
                 }
                  else {
                      // Form is valid
-                     if ($(response).find("messages").length > 0) {
+                     if (response.messages) {
+                        console.log("somthing11")
                         if (settings.createSuccesMessage === true){
+                            console.log("somthing")
                             createMessage(response.messages[0].extra_tags,response.messages[0].message)
                         }
                      }
@@ -144,7 +146,12 @@ class Modal {
 
     succesFunction (settings, response) {
         if (!settings.successFunc) {
-            window.location.href = response.redirect
+            if (response.redirect){
+                window.location.href = response.redirect
+            }
+            else{
+                $(settings.modalIDD).modal("hide");
+            }
         } else {
             settings.successFunc(settings, response)
         }

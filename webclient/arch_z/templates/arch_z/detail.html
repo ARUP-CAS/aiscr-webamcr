@@ -139,7 +139,7 @@
         </div>
       {% endif %}
         <div class="row">
-          <div class="col-sm-4">
+          <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Hlavní katastr" %}</label>
               <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr|check_if_none }}"
@@ -148,104 +148,109 @@
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <label>{% trans "Přístupnost" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.pristupnost|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
               <label>{% trans "Další katastry" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-12">
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Hlavní vedoucí" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Organizace" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Uživatelské označení" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni|check_if_none }}"
                         readonly>{{ zaznam.uzivatelske_oznaceni|check_if_none }}</textarea>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Hlavní vedoucí" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci|check_if_none }}" readonly>
+              <label>{% trans "Hlavní typ" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace|check_if_none }}" readonly>
+              <label>{% trans "Vedlejší typ" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="form-group col-sm-2">
+          </div>
+          <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Specifikace data" %}</label>
               <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
                      readonly>
             </div>
           </div>
-          <div class="col-sm-4">
+          <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Datum ukončení" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
                      readonly>
             </div>
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Lokalizace okolností" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2"
                         placeholder="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}</textarea>
             </div>
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Poznámka" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.souhrn_upresneni|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
                         readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
             </div>
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení dokumentace" %}</label>
               <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
                         readonly>{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}</textarea>
             </div>
           </div>
-          <div class="col-sm-3">
+          <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Hlavní typ" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ|check_if_none }}" readonly>
+              <label>{% trans "Přístupnost" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.pristupnost|check_if_none }}" readonly>
             </div>
           </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Vedlejší typ" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
-            <div class="form-group">
-              <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.souhrn_upresneni|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-3">
+          <div class="col-sm-2 je_nz">
             <div class="form-group">
               <label>{% trans "Odeslat ZAA jako NZ" %}</label>
-              <input class="form-control" type="text"
-                     value="{% if zaznam.akce.je_nz == True %}Ano{% endif %} {% if zaznam.akce.je_nz == False %}Ne{% endif %}"
-                     readonly>
+              <div class="custom-control custom-checkbox" id="div_id_je_nz">
+                <input class="checkboxinput custom-control-input" id="id_je_nz" name="je_nz" type="checkbox" readonly disabled="disabled" 
+                {% if zaznam.akce.je_nz == True %}checked="checked"{% endif %} {% if zaznam.akce.je_nz == False %}{% endif %}>
+                <label class="custom-control-label" for="id_je_nz">
+                </label>
+                </div>
             </div>
           </div>
         </div>
-        <div class="row">
+        <div class="row formset-table">
 <!--                  {% if ostatni_vedouci_objekt_formset.forms %}-->
                   {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
 <!--                  {% else %}-->
@@ -903,6 +908,20 @@
           new Modal(options, elements.item(i).id);
         }
       }
+      var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'uzivatel:create_osoba' %}",
+      formID: "create-osoba-form",
+      modalFormID: "#create-osoba-form",
+      modalIDD : "#modal-form",
+    })
+    create_autor_popisu_modal = new Modal(options, "create-autor-popisu"); 
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'uzivatel:create_osoba' %}",
+      formID: "create-osoba-form",
+      modalFormID: "#create-osoba-form",
+      modalIDD : "#modal-form",
+    })
+    create_autor_revize_modal = new Modal(options, "create-autor-revize");
   });
 
 </script>
