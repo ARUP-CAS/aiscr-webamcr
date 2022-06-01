@@ -1,14 +1,14 @@
 import logging
 
+from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
 from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.geos import Point
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
-from core.exceptions import MaximalIdentNumberError
-from django.core.validators import MaxValueValidator, MinValueValidator
-
 
 logger = logging.getLogger(__name__)
 
@@ -108,15 +108,34 @@ class VyskovyBod(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
     niveleta = models.FloatField()
-    geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
     northing = models.FloatField()
     easting = models.FloatField()
+    geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
     poradi = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
+        if self.northing != 0.0:
+            self.geom = Point(
+                x=self.northing,
+                y=self.easting,
+                z=self.niveleta,
+            )
+            self.niveleta = 0.0
+            self.easting = 0.0
+            self.northing = 0.0
         super(VyskovyBod, self).save(*args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        super(VyskovyBod, self).__init__(*args, **kwargs)
+        if self.geom is not None:
+            geom_length = len(self.geom)
+            if geom_length > 1:
+                self.northing = round(self.geom[0], 2)
+                self.easting = round(self.geom[1], 2)
+            if geom_length == 3:
+                self.niveleta = round(self.geom[2], 2)
 
     class Meta:
         db_table = "vyskovy_bod"
@@ -124,7 +143,10 @@ class VyskovyBod(models.Model):
 
 class AdbSekvence(models.Model):
     kladysm5 = models.OneToOneField(
-        "Kladysm5", models.DO_NOTHING, db_column="kladysm5_id", null=False,
+        "Kladysm5",
+        models.DO_NOTHING,
+        db_column="kladysm5_id",
+        null=False,
     )
     sekvence = models.IntegerField()
 

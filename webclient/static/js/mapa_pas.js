@@ -24,7 +24,11 @@ map.on('click', function (e) {
                     }
                     $("#detector_coordinates_x").change();
                     $("#detector_coordinates_y").change();
-                    console.log("lll "+corX+"  "+corY)
+
+                    document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
+                    document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
+                    document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
+                    document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
                     addUniquePointToPoiLayer(corX, corY, '', false, true)
                     fill_katastr();
                 } else {
@@ -57,6 +61,54 @@ var fill_katastr = () => {
             'cX': parseFloat(point_global_WGS84[1]),
             'cY': parseFloat(point_global_WGS84[0]),
         }))
+};
+
+
+var transformSinglePoint = async(y_plus,x_plus) => {
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/transformace-single-wgs84');
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+    } else {
+        console.log("neni X-CSRFToken token")
+    }
+    xhr.onload = function () {
+        rs = JSON.parse(this.responseText)
+        point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.cx,rs.cy])
+        addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
+        fill_katastr();
+        document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
+        document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
+        document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
+        document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+
+    };
+    xhr.send(JSON.stringify({"cy" : y_plus, "cx" : x_plus}))
+};
+
+    /*var ipoints=[]
+    ipoints.push([646760.290, 1060814.217])
+    ipoints.push([646860.290, 1050814.217])
+    ipoints.push([646960.290, 1040814.217])
+    ipoints.push([647960.290, 1040814.217])
+    transformMultiPoins(ipoints)*/
+
+var transformMultiPoins = async(ipoints) => {
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/transformace-multi-wgs84');
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+    } else {
+        console.log("neni X-CSRFToken token")
+    }
+    xhr.onload = function () {
+        rs = JSON.parse(this.responseText)
+        console.log(rs)
+
+    };
+    xhr.send(JSON.stringify({"points" : ipoints}))
 };
 
 var is_in_czech_republic = (corX, corY) => {
@@ -102,17 +154,15 @@ let set_numeric_coordinates = async () => {
             //point_global_JTSK = [-Math.round(jtsk_coor[0] * 100) / 100, -Math.round(jtsk_coor[1] * 100) / 100]
             //addUniquePointToPoiLayer($("#detector_coordinates_x").val(), $("#detector_coordinates_y").val())
             fill_katastr();
+            document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
+            document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
+            document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
+            document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
             return true;
         } else if (document.getElementById('detector_system_coordinates').value == 2) {
-            $.getJSON("https://epsg.io/trans?x=" + Number(corX).toFixed(2) + "&y=" + Number(corY).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
-                //point_global_WGS84 = [Math.round(data.y * 1000000.0) / 1000000.0, Math.round(data.x * 1000000.0) / 1000000.0]
-                //point_global_JTSK = [Math.round(corX * 100.0) / 100.0, Math.round(corY * 100.0) / 100.0]
-                point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.y, data.x])
-                point_global_JTSK = amcr_static_coordinate_precision_jtsk([corX, corY], false)
-                addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
-                fill_katastr();
-                return true;
-            })
+            point_global_JTSK = amcr_static_coordinate_precision_jtsk([corX, corY], false)
+            transformSinglePoint(Math.abs(Number(corX).toFixed(2)),Math.abs(Number(corY).toFixed(2)));//+y+x
+
         }
     }
     return false;
@@ -130,17 +180,16 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
+        document.getElementById('id_coordinate_system').value="wgs84";
     } else if (new_system == 2 && point_global_JTSK[0] != 0) {
         document.getElementById('detector_coordinates_x').value = Math.abs(point_global_JTSK[0]);
         document.getElementById('detector_coordinates_y').value = Math.abs(point_global_JTSK[1]);
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
+        document.getElementById('id_coordinate_system').value="sjtsk";
     }
 };
 
-//var addPointToPoiLayer = (lat, long, text) => {
-//    L.marker([lat, long]).bindPopup(text).addTo(poi);
-//};
 var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) => {
     var [corX, corY] = amcr_static_coordinate_precision_wgs84([lat, long]);
     poi.clearLayers()
@@ -185,3 +234,32 @@ function showPosition(position) {
         .bindPopup("Vaše současná poloha")
         .openPopup();
 };
+
+$(document).ready(function () {
+    let [cor_wgs84_x, cor_wgs84_y] = amcr_static_coordinate_precision_wgs84([my_wgs84_x,my_wgs84_y]);
+    let [cor_sjtsk_x, cor_sjtsk_y] = amcr_static_coordinate_precision_jtsk([my_sjtsk_x,my_sjtsk_y]);
+
+    point_global_WGS84=[cor_wgs84_x, cor_wgs84_y];
+    if(cor_sjtsk_x==0){
+        point_global_JTSK = amcr_static_coordinate_precision_jtsk(convertToJTSK(point_global_WGS84[0],point_global_WGS84[1]))
+    } else{
+        point_global_JTSK =[cor_sjtsk_x, cor_sjtsk_y];
+    }
+
+    if(my_wgs84_x){
+        if(global_map_can_edit){
+            addUniquePointToPoiLayer(cor_wgs84_x, cor_wgs84_y)
+        } else {
+            global_map_can_edit=false
+            addReadOnlyUniquePointToPoiLayer(cor_wgs84_x, cor_wgs84_y)
+        }
+    }
+
+    if(my_sys=="S-JTSK"){
+        console.log("prepnu na sjtsk")
+        document.getElementById('detector_system_coordinates').value = 2
+    }else {
+        document.getElementById('detector_system_coordinates').value = 1
+    }
+
+})

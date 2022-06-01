@@ -19,15 +19,21 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from uzivatel.models import Osoba
-
+import logging
+logger = logging.getLogger(__name__)
 
 class CoordinatesDokumentForm(forms.Form):
     detector_system_coordinates = forms.ChoiceField(
-        label=_("Souř. systém"), choices=COORDINATE_SYSTEM, required=False, help_text= _("dokument.form.coordinates.detector.tooltip"),
+        label=_("Souř. systém"), choices=COORDINATE_SYSTEM,required=False, help_text= _("dokument.form.coordinates.detector.tooltip"),
     )
     detector_coordinates_x = forms.CharField(label=_("Šířka (N / Y)"), required=False, help_text= _("dokument.form.coordinates.cor_x.tooltip"),)
     detector_coordinates_y = forms.CharField(label=_("Délka (E / X)"), required=False, help_text= _("dokument.form.coordinates.cor_y.tooltip"),)
 
+    coordinate_wgs84_x = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_wgs84_y = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_x = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_sjtsk_y = forms.FloatField(required=False, widget=HiddenInput())
+    coordinate_system = forms.CharField(required=False, widget=HiddenInput())
 
 class EditDokumentExtraDataForm(forms.ModelForm):
     rada = forms.CharField(label="Řada", required=False)

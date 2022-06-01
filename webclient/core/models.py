@@ -1,16 +1,18 @@
+import datetime
 import logging
 import os
 import re
-import datetime
+
 from django.db import models
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
+from PyPDF2 import PdfFileReader
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
+    NAHRANI_SBR,
     PROJEKT_RELATION_TYPE,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
-    NAHRANI_SBR,
     SOUBOR_RELATION_TYPE,
 )
 
@@ -23,7 +25,9 @@ def get_upload_to(instance, filename):
     if vazba.typ_vazby == "projekt":
         regex_oznameni = re.compile(r"\w*oznameni_?(?:X-)?[A-Z][-_]\w*\.pdf")
         regex_log_dokumentace = re.compile(r"\w*log_dokumentace.pdf")
-        if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(instance.nazev):
+        if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(
+            instance.nazev
+        ):
             folder = "AG/"
         else:
             folder = "PD/"
@@ -95,6 +99,15 @@ class Soubor(models.Model):
             vazba=self.historie,
         ).save()
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.path.path.endswith(".pdf"):
+            reader = PdfFileReader(self.path)
+            self.rozsah = len(reader.pages)
+        else:
+            self.rozsah = 1
+        super().save(*args, **kwargs)
+
 
 class ProjektSekvence(models.Model):
     rada = models.CharField(max_length=1)
@@ -103,6 +116,3 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
-
-
-

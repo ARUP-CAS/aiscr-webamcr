@@ -48,7 +48,12 @@ class DateRangeWidget(forms.TextInput):
 
 
 class OznamovatelForm(forms.ModelForm):
-    telefon = forms.CharField(validators=[validate_phone_number],help_text= _("oznameni.forms.telefon.tooltip"),)
+    telefon = forms.CharField(
+        validators=[validate_phone_number],
+        help_text= _("oznameni.forms.telefon.tooltip"),
+        widget=forms.TextInput(
+            attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
+        ),)
     email = forms.EmailField(help_text= _("oznameni.forms.telefon.tooltip"),)
 
     class Meta:

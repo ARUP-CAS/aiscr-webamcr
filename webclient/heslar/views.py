@@ -4,7 +4,8 @@ from django.http import JsonResponse
 from django.db.models import Value, IntegerField
 
 from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
-
+import logging
+logger = logging.getLogger(__name__)
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = RuianKatastr.objects.all()
@@ -58,13 +59,18 @@ def zjisti_katastr_souradnic(request):
 
 def zjisti_vychozi_hodnotu(request):
     nadrazene = request.GET.get("nadrazene", 0)
-    try:
-        vychozi_hodnota = HeslarHierarchie.objects.get(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
+    vychozi_hodnota = HeslarHierarchie.objects.filter(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
+    if vychozi_hodnota.exists():
+        queryset = vychozi_hodnota.values_list('heslo_podrazene', flat=True)
+        logger.debug(queryset)
+        list = []
+        for id in queryset:
+            list.append({"id":id})
+        logger.debug(list)
         return JsonResponse(
-            data = {
-                "id": vychozi_hodnota.heslo_podrazene.pk
-            },
-            status=200
+            data = list,
+            status=200,
+            safe=False
         )
-    except HeslarHierarchie.DoesNotExist:
+    else:
         return JsonResponse(data = {},status=400)

@@ -18,6 +18,8 @@
         </div>
       </div>
       <div class="card-body">
+        {{ formAZ|as_crispy_errors }}
+        {{ formAkce|as_crispy_errors }}
         <div class="row">
           <div class="form-group col-sm-2">
             {{ formAZ.hlavni_katastr|as_crispy_field }}

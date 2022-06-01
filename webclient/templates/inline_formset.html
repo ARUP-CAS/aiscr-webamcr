@@ -55,9 +55,15 @@
                     <td>
                         
                         {% if form.id.value and show.editovat %}
+                        {% if form_id and form_id == "vb" %}
+                        <button id="vb-smazat-{{form.id.value}}" class="vb-smazat-btn" type="button" name="button" href="{% url 'adb:smazat-vb' form.id.value %}?next={{ request.get_full_path }}">
+                            <span class="material-icons app-color-danger">delete_forever</span>
+                          </button>
+                        {% elif form_id and form_id == "objekt" %}
                         <button id="objekt-smazat-{{form.id.value}}" class="objekt-smazat-btn" type="button" name="button" href="{% url 'nalez:smazat_nalez' form.typ.value form.id.value %}?next={{ request.get_full_path }}">
                             <span class="material-icons app-color-danger">delete_forever</span>
                           </button>
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>

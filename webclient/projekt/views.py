@@ -933,13 +933,13 @@ def get_detail_template_shows(projekt, user):
     return show
 
 
-def get_required_fields(zaznam=None,next=0):
+def get_required_fields(zaznam=None, next=0):
     required_fields = []
     if zaznam:
         stav = zaznam.stav
     else:
-        stav=1
-    if stav >= PROJEKT_STAV_OZNAMENY-next:
+        stav = 1
+    if stav >= PROJEKT_STAV_OZNAMENY - next:
         required_fields = [
             "typ_projektu",
             "hlavni_katastr",
@@ -949,8 +949,7 @@ def get_required_fields(zaznam=None,next=0):
             "planovane_zahajeni",
         ]
     if (
-        stav > PROJEKT_STAV_ZAPSANY-next
-        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
+            PROJEKT_STAV_ZAPSANY - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
     ):
         required_fields += [
             "vedouci_projektu",
@@ -958,22 +957,19 @@ def get_required_fields(zaznam=None,next=0):
             "kulturni_pamatka",
         ]
     if (
-        stav > PROJEKT_STAV_PRIHLASENY-next
-        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
+            PROJEKT_STAV_PRIHLASENY - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
     ):
         required_fields += [
             "datum_zahajeni",
         ]
     if (
-        stav > PROJEKT_STAV_ZAHAJENY_V_TERENU-next
-        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
+            PROJEKT_STAV_ZAHAJENY_V_TERENU - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
     ):
         required_fields += [
             "datum_ukonceni"
         ]
     if (
-        stav > PROJEKT_STAV_UKONCENY_V_TERENU-next
-        and stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI-next
+            PROJEKT_STAV_UKONCENY_V_TERENU - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
     ):
         required_fields += [
             "termin_odevzdani_nz"

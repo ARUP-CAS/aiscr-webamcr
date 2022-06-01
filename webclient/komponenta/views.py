@@ -4,7 +4,9 @@ from django.http import JsonResponse
 from django.urls import reverse
 from core.exceptions import MaximalIdentNumberError
 
-from core.ident_cely import get_komponenta_ident
+from adb.forms import CreateADBForm, create_vyskovy_bod_form
+from core.exceptions import DJNemaPianError, MaximalIdentNumberError
+from core.ident_cely import get_adb_ident, get_komponenta_ident
 from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
@@ -17,6 +19,7 @@ from core.message_constants import (
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.forms import inlineformset_factory
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 from django.utils.translation import gettext as _
@@ -25,10 +28,21 @@ from heslar.hesla import (
     HESLAR_AREAL_KAT,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
+    HESLAR_OBJEKT_DRUH,
+    HESLAR_OBJEKT_DRUH_KAT,
+    HESLAR_OBJEKT_SPECIFIKACE,
+    HESLAR_OBJEKT_SPECIFIKACE_KAT,
+    HESLAR_PREDMET_DRUH,
+    HESLAR_PREDMET_DRUH_KAT,
+    HESLAR_PREDMET_SPECIFIKACE,
 )
+from heslar.models import Heslar
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
+from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
+from nalez.models import NalezObjekt, NalezPredmet
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +69,55 @@ def detail(request, ident_cely):
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+
+    if "nalez_edit_nalez" in request.POST:
+        druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
+        specifikace_objekt_choices = heslar_12(
+            HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
+        )
+        NalezObjektFormset = inlineformset_factory(
+            Komponenta,
+            NalezObjekt,
+            form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
+            extra=1,
+        )
+        formset_objekt = NalezObjektFormset(
+            request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_o"
+        )
+
+        druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
+        specifikce_predmetu_choices = list(
+            Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
+                "id", "heslo"
+            )
+        )
+        NalezPredmetFormset = inlineformset_factory(
+            Komponenta,
+            NalezPredmet,
+            form=create_nalez_predmet_form(
+                druh_predmet_choices, specifikce_predmetu_choices
+            ),
+            extra=1,
+        )
+        formset_predmet = NalezPredmetFormset(
+            request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
+        )
+        if formset_objekt.is_valid() and formset_predmet.is_valid():
+            logger.debug("Form is valid")
+            formset_predmet.save()
+            formset_objekt.save()
+            if formset_objekt.has_changed() or formset_predmet.has_changed():
+                logger.debug("Form data was changed")
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.warning("Form is not valid")
+            logger.debug(formset_predmet.errors)
+            logger.debug(formset_objekt.errors)
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+            request.session["_old_nalez_post"] = request.POST
+            request.session["komp_ident_cely"] = ident_cely
+
+
 
     response = redirect(request.META.get("HTTP_REFERER"))
     response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)

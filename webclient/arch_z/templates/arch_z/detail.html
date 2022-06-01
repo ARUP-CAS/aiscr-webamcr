@@ -32,9 +32,6 @@
         rel='stylesheet'/>
 
   <!--Mark Cluster-->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
 
 
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
@@ -47,6 +44,16 @@
   <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
   <script src="/static/static/autocomplete_light/select2.js"></script>
   <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+
+
+  <script src="{% static 'convertToJTSK.js' %}"></script>
+  <script src="{% static 'simpleheat.js' %}"></script>
+  <script src="{% static 'HeatLayer.js' %}"></script>
+  <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
+  <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+
+
   <script>
       var global_csrftoken = '{{ csrf_token }}';
   </script>
@@ -416,6 +423,11 @@
                   <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button" href="{% url 'dj:smazat' j.ident_cely %}">
                     {% trans 'Smazat DJ' %}
                   </button>
+                  {% if j.show_pripojit_pian %}
+                    <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button" onclick=update_pian("{{j.ident_cely}}")>
+                      {% trans 'Připojit PIAN podle ID' %}
+                    </button>
+                  {% endif %}
                 </div>
                 <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
@@ -426,35 +438,35 @@
             </div>
           </div>
           <div class="card-body">
-            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
-              {% crispy j.form %}
-              {% if show.editovat %}
-              <button type="submit" id="editDjSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit jednotku" %}</button>
-              {% endif %}
-            </form>
+            {% if not j.adb_form %}
+              <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
+                {% crispy j.form %}
+                {% if show.editovat %}
+                <button type="submit" id="editDjSubmitButton"
+                        class="btn btn-primary">{% trans "Uložit změny" %}</button>
+                {% endif %}
+              </form>
+            {% endif %}
 
             {% if j.adb_form %}
+            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
+              {% crispy j.form %}
               <div class="card app-card-form app-card-inner">
                 <div class="card-header">
                   <div class="app-fx app-left">
                     {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
                   </div>
                 </div>
-                <div class="card-body">
-                  <form method="POST" action="{% url 'adb:detail' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
+                <div class="card-body formset-table">
+                    <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}" />
                     {% crispy j.adb_form %}
-                    <button type="submit" id="editAdbSubmitButton"
-                            class="btn btn-primary">{% trans "Upravit ADB" %}</button>
-                  </form>
-                  <form method="POST" action="{% url 'adb:zapsat_vyskove_body' j.adb_ident_cely %}" onsubmit="editAdbSubmitButton.disabled = true; return true;">
                     <h5>{% trans "Výškové body" %}</h5>
+                    <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}" />
                     {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
-                    <button type="submit" id="editAdbVyskoveBodySubmitButton"
-                            class="btn btn-primary">{% trans "Upravit Výškové body" %}</button>
-                  </form>
                 </div>
               </div>
+              <button type="submit" id="editDjSubmitButton"
+                      class="btn btn-primary">{% trans "Uložit změny" %}</button>
             {% endif %}
           </div>
         </div>
@@ -535,11 +547,6 @@
           <div class="card-body">
             <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
               {% crispy k.form %}
-              {% if show.editovat %}
-              <button type="submit" id="editKompSubmitButton"
-                      class="btn btn-primary">{% trans "Upravit komponentu" %}</button>
-              {% endif %}
-            </form>
 
             <div class="card app-card-form app-card-inner">
               <div class="card-header">
@@ -549,9 +556,9 @@
               </div>
               <div class="card-body formset-table">
                 <h5>{% trans "Objekty" %}</h5>
-                <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' k.ident_cely %}" onsubmit="{{ k.ident_cely }}_editNalezSubmitButton.disabled = true; return true;">
                   {% if k.form_nalezy_objekty.forms %}
-                  {% crispy k.form_nalezy_objekty k.helper %}
+                    <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
+                    {% crispy k.form_nalezy_objekty k.helper %}
                   {% else %}
                   <div class="app-note">
                     <span class="material-icons">info</span>
@@ -567,13 +574,13 @@
                     {% trans "Komponenta neobsahuje žádné předměty." %}
                   </div>
                   {% endif %}
-                  {% if show.editovat %}
-                  <button type="submit" id="{{ k.ident_cely }}_editNalezSubmitButton"
-                          class="btn btn-primary">{% trans "Upravit předměty" %}</button>
-                  {% endif %}
-                </form>
               </div>
             </div>
+            {% if show.editovat %}
+              <button type="submit" id="editKompSubmitButton"
+                      class="btn btn-primary">{% trans "Uložit změnu" %}</button>
+            {% endif %}
+            </form>
           </div>
         </div>
       {% endfor %}
@@ -599,9 +606,9 @@
     {% endfor %}
 
     <!-- dokumenty -->
-    
+
       {% include "dokument/dokument_table.html" with type="arch_z"%}
-    
+
   </div>
   {% if arch_projekt_link %}
   <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
@@ -613,6 +620,7 @@
   <script >
     var static_url = "{% get_static_prefix %}";
   </script>
+  <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
@@ -669,42 +677,12 @@
                       drawnItems.clearLayers();
                       addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom)
                   }
-                  if(ask_only_once){
-                    ask_only_once=false;
-                  xhr2.send(JSON.stringify(
-                      {
-                          'dj_ident_cely': form_id.replace("detail_dj_form_", ""),
-                          'lat':rs.lat,
-                          'lng':rs.lng,
-                      }))
-                  }
               };
               xhr.send(JSON.stringify(
                   {
                       'cadastre': document.getElementById("main_cadastre_id").value,
                       'pian': pian_id,
                   }))
-
-              let xhr2 = new XMLHttpRequest();
-              xhr2.open('POST', '/arch-z/katastr-zjisti-piany');
-              xhr2.setRequestHeader('Content-type', 'application/json');
-              if (typeof global_csrftoken !== 'undefined') {
-                  xhr2.setRequestHeader('X-CSRFToken', global_csrftoken);
-              }
-              xhr2.onload = function () {
-                poi_other.clearLayers();
-                let res=JSON.parse(this.responseText).points
-                let dj_head=form_id.replace("detail_dj_form_", "")
-                res.forEach((i)=>{
-                  if(i.dj != null){
-                    //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
-                    addPointToPoiLayerWithForceG(i.geom,poi_dj,i.ident_cely,true)
-                  }
-                  else {
-                    addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
-                  }
-                })
-              };
 
           }else if (form_id.includes("detail_pian_form_")){
             map_show_edit(true, false)
@@ -727,6 +705,7 @@
 
       function show_grap_geom_from_map(dj){
         global_map_can_grab_geom_from_map=dj;
+        map_show_edit(true)
       }
 
       document.addEventListener('DOMContentLoaded', function (event) {
@@ -796,12 +775,14 @@
               div_dokumentacni_jednotka_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
       };
+      const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
       const set_komponenta_events = (ident_cely, ident_cely_safe) => {
           const el_komponenta
               = document.getElementById(`el_komponenta_${ident_cely_safe}`);
           el_komponenta.addEventListener("click", () => {
               div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
+          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url)
       };
       {% for j in dokumentacni_jednotky %}
           set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")
@@ -813,6 +794,8 @@
       {% endfor %}
   </script>
   <script>
+    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    //console.log("zaznam "+global_map_projekt_ident)
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
       if ("{{arch_projekt_link}}" !== "None"){
@@ -822,9 +805,9 @@
         modalFormID: "#archivovat-form",
         })
         arch_projekt = new Modal(options, "archive_projekt");
-        document.getElementById("archive_projekt").click()  
+        document.getElementById("archive_projekt").click()
       };
-        
+
       if (document.getElementsByClassName("adb-smazat-btn")){
         elements = document.getElementsByClassName("adb-smazat-btn")
         for (let i = 0; i < elements.length; i++){
@@ -832,7 +815,6 @@
           formID: "smazat-adb-form",
           modalFormID: "#smazat-adb-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -843,7 +825,6 @@
           formID: "smazat-dj-form",
           modalFormID: "#smazat-dj-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -854,7 +835,6 @@
           formID: "smazat-komponenta-form",
           modalFormID: "#smazat-komponenta-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -865,7 +845,6 @@
           formID: "odpojit-pian-form",
           modalFormID: "#odpojit-pian-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -876,7 +855,6 @@
           formID: "potvrdit-pian-form",
           modalFormID: "#potvrdit-pian-form",
           })
-          console.log(elements.item(i))
           new Modal(options, elements.item(i).id);
         }
       }
@@ -917,7 +895,16 @@
           formID: "smazat-objekt-form",
           modalFormID: "#smazat-objekt-form",
           })
-          console.log(elements.item(i))
+          new Modal(options, elements.item(i).id);
+        }
+      }
+      if (document.getElementsByClassName("vb-smazat-btn")){
+        elements = document.getElementsByClassName("vb-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          var options = Object.assign(defaults, {modalID: "modal-form",
+          formID: "smazat-vb-form",
+          modalFormID: "#smazat-vb-form",
+          })
           new Modal(options, elements.item(i).id);
         }
       }
@@ -936,6 +923,13 @@
     })
     create_autor_revize_modal = new Modal(options, "create-autor-revize");
   });
-  
+
+</script>
+<script>
+    var update_pian = function (dj_ident) {
+      id = "#id_" + dj_ident + "-pian"
+        console.log("najdene")
+        $(id).prop('disabled', false);
+    };
 </script>
 {% endblock %}
