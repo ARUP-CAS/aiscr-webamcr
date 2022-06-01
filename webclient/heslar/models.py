@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from heslar.hesla import (
     HESLAR_DOKUMENT_MATERIAL,

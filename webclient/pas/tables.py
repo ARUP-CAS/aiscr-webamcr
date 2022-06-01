@@ -61,9 +61,10 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
 
     stav = tables.Column(verbose_name="Stav", attrs={"td": {"class": "spoluprace"}},default="")
     vedouci = tables.Column(
-        accessor=("vedouci__name"),
+        accessor="vedouci__name_and_id",
         verbose_name="Vedoucí",
         attrs={"td": {"class": "spoluprace"}},
+        order_by=("vedouci__last_name", "vedouci__first_name", "vedouci__ident_cely"),
         default="",
     )
     organizace_vedouci = tables.Column(
@@ -73,9 +74,10 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         default="",
     )
     spolupracovnik = tables.Column(
-        accessor="spolupracovnik__name",
+        accessor="spolupracovnik__name_and_id",
         verbose_name="Spolupracovník",
         attrs={"td": {"class": "spoluprace"}},
+        order_by=("vedouci__last_name", "vedouci__first_name", "vedouci__ident_cely"),
         default="",
     )
     organizace_spolupracovnik = tables.Column(

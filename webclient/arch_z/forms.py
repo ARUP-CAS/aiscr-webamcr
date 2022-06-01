@@ -154,11 +154,11 @@ class CreateAkceForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_ukonceni") is not None:
+        if cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is None:
+            raise forms.ValidationError(_("Je-li vyplněno datum ukončení, musí být vyplněno i datum zahájení"))
+        elif cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is not None:
             if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
-                raise forms.ValidationError(
-                    "Datum zahájení nemůže být po datu ukončení"
-                )
+                raise forms.ValidationError(_("Datum zahájení nemůže být po datu ukončení"))
         return self.cleaned_data
 
     class Meta:
