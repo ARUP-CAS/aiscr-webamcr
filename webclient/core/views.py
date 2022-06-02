@@ -242,7 +242,11 @@ def post_upload(request):
             if not duplikat.exists():
                 logger.debug("Saving file object: " + str(s))
                 s.save()
-                s.zaznamenej_nahrani(request.user)
+                if not request.user.is_authenticated:
+                    user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
+                    s.zaznamenej_nahrani(user_admin)
+                else:
+                    s.zaznamenej_nahrani(request.user)
                 return JsonResponse(
                     {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
                 )
@@ -251,7 +255,11 @@ def post_upload(request):
                     "File already exists on the server. Saving copy" + str(s)
                 )
                 s.save()
-                s.zaznamenej_nahrani(request.user)
+                if not request.user.is_authenticated:
+                    user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
+                    s.zaznamenej_nahrani(user_admin)
+                else:
+                    s.zaznamenej_nahrani(request.user)
                 # Find parent record and send it to the user
                 parent_ident = ""
                 if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
@@ -265,9 +273,9 @@ def post_upload(request):
                     )
                 return JsonResponse(
                     {
-                        "duplicate": "Soubor sme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
-                        + parent_ident
-                        + ". Skontrolujte prosím duplicitu."
+                        "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
+                        + parent_ident + ". "
+                        + _("Zkontrolujte prosím duplicitu.")
                     },
                     status=200,
                 )
