@@ -465,7 +465,7 @@ var mouseOverGeometry =(geom)=>{
         if(global_map_can_grab_geom_from_map!==false){
             $.ajax({
                 type: "GET",
-                url:"/pian/list-pians/?q="+getContent(e),
+                url:"/pian/seznam-pian/?q="+getContent(e),
                 dataType: 'json',
                 success: function(data){
                   if(data.results.length>0){
