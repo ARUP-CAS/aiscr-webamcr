@@ -201,7 +201,7 @@ class Akce(models.Model):
                     )
                 )
         for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
-            if dj.pian.stav != PIAN_POTVRZEN:
+            if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
                         "Dokumentační jednotka "
