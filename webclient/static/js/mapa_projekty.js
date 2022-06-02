@@ -102,12 +102,12 @@ map.on('click', function (e) {
             poi_correct.clearLayers();
             L.marker([lat, long], { icon: pinIconRedDf }).bindPopup(text).addTo(poi_correct);
             const getUrl = window.location;
-            const select = document.getElementsByName("hlavni_katastr");
+            const select = $("input[name='hlavni_katastr']");
             if (select) {
                 fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
                     .then(response => response.json())
                     .then(response => {
-                        select.value = response['value'];
+                        select.val(response['value']);
                     })
             }
         }
