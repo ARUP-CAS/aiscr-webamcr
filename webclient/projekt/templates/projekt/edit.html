@@ -123,13 +123,13 @@
           const selectElement = document.getElementById('id_typ_projektu');
           const ZACHRANNY_OPTION = 1
 
-          function makeFieldDisabled(field, disabled){
+          const makeFieldDisabled = (field, disabled) => {
               $(field).prop('readonly', disabled);
               $(field).prop('required', !disabled);
               $(field).val("");
           }
 
-          function makeOznamovatelDisabled(disabled){
+          const makeOznamovatelDisabled = (disabled) => {
               makeFieldDisabled('#id_oznaceni_stavby', disabled)
           }
           if (selectElement.value != ZACHRANNY_OPTION) {

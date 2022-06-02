@@ -110,7 +110,7 @@ class OznamovatelForm(forms.ModelForm):
                         Div("email", css_class="col-sm-3"),
                         css_class="row",
                     ),
-                    css_class="card-body",
+                    css_class="card-body oznamovatel-form-card",
                 ),
                 css_class="card app-card-form",
             )

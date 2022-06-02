@@ -106,6 +106,17 @@
               makeFieldDisabled('#id_telefon', disabled)
               makeFieldDisabled('#id_email', disabled)
               makeFieldDisabled('#id_oznaceni_stavby', disabled)
+              const form_card = document.querySelectorAll(".oznamovatel-form-card")[0];
+              const elements = form_card.querySelectorAll(".asteriskField");
+              if (disabled) {
+                for (const element of elements) {
+                    element.innerHTML = "";
+                }
+              } else {
+                 for (const element of elements) {
+                    element.innerHTML = "*";
+                }
+              }
           }
 
           // On change pak podle toho co je vybrano
