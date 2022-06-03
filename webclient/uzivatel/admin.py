@@ -55,7 +55,8 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    search_fields = ("email",)
+    search_fields = ("email", "organizace__nazev_zkraceny", "ident_cely", "hlavni_role__name", "first_name", "last_name",
+                     "telefon")
     ordering = ("email",)
 
     def has_delete_permission(self, request, obj=None):

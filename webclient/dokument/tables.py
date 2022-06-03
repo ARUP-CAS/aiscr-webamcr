@@ -11,11 +11,10 @@ logger = logging.getLogger(__name__)
 class DokumentTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
-    extra_data__datum_vzniku = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
     typ_dokumentu = tables.columns.Column(default="")
     organizace__nazev_zkraceny = tables.columns.Column(default="")
     popis = tables.columns.Column(default="")
-    extra_data__datum_vzniku = tables.columns.Column(default="")
+    rok_vzniku = tables.columns.Column(default="")
     extra_data__format = tables.columns.Column(default="")
     extra_data__odkaz = tables.columns.Column(default="")
     extra_data__duveryhodnost = tables.columns.Column(default="")
@@ -40,7 +39,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
             "typ_dokumentu",
             "organizace__nazev_zkraceny",
             "popis",
-            "extra_data__datum_vzniku",
+            "rok_vzniku",
             "extra_data__format",
             "extra_data__odkaz",
             "extra_data__duveryhodnost",

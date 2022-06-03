@@ -53,7 +53,6 @@ alter table akce drop column vedouci_akce_ostatni;
 alter table akce drop column dalsi_katastry;
 alter table akce drop column katastr;
 alter table akce drop column okres;
-alter table akce drop column organizace;
 alter table akce drop column organizace_ostatni;
 --2. dokument autor, jazyk_dokumentu, typ_dokumentu_posudek
 alter table dokument drop column autor;
