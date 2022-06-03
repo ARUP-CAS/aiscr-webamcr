@@ -101,6 +101,10 @@ class Soubor(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        try:
+            self.path
+        except self.DoesNotExist:
+            super().save(*args, **kwargs)
         if self.path.path.endswith(".pdf"):
             reader = PdfFileReader(self.path)
             self.rozsah = len(reader.pages)
