@@ -237,7 +237,8 @@ def detail_model_3D(request, ident_cely):
         "predmet": NalezPredmetFormset(old_nalez_post,
             instance=komponenty[0], prefix=komponenty[0].ident_cely + "_p"
         ),
-        "helper": NalezFormSetHelper(),
+        "helper_predmet": NalezFormSetHelper(typ="predmet"),
+        "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }
     context["history_dates"] = get_history_dates(dokument.historie)
     context["show"] = show
