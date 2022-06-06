@@ -71,7 +71,7 @@ def delete_file(request, pk):
         items_deleted = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
-            logger.debug("Soubor " + str(items_deleted) + " nebyl smazan.")
+            logger.debug("Soubor " + str(s) + " nebyl smazan.")
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             django_messages = []
             for message in messages.get_messages(request):
@@ -293,13 +293,14 @@ def post_upload(request):
 
 def get_dokument_soubor_name(dokument, filename):
     my_regex = (
-        r"^\d*_" + re.escape(dokument.ident_cely.replace("-", "")) + r"[A-Z]?\..*$"
+        r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
     )
     files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    logger.debug(files)
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
-        filtered_files = files.filter(nazev__iregex=r"[A-Z]\..*$")
+        filtered_files = files.filter(nazev_zkraceny__iregex=r"[A-Z]$")
         if filtered_files.exists():
             list_last_char = []
             for file in filtered_files:
