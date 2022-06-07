@@ -140,7 +140,7 @@
         <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' komponenta.ident_cely %}"
               onsubmit="editNalezSubmitButton.disabled = true; return true;">
           {% if formset.objekt.forms %}
-          {% crispy formset.objekt formset.helper %}
+          {% crispy formset.objekt formset.helper_objekt %}
           {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
@@ -149,7 +149,7 @@
           {% endif %}
         <h5>{% trans "Předměty" %}</h5>
           {% if formset.predmet.forms %}
-          {% crispy formset.predmet formset.helper %}
+          {% crispy formset.predmet formset.helper_predmet %}
           {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
@@ -168,10 +168,20 @@
 {% endblock %}
 
 {% block script %}
+<script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script>
       $(document).ready(function () {
           document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový model 3D"
-
+          ident_cely = "{{dokument.ident_cely}}";
+          const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene=";
+          objekty = document.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
+          for (let i = 0; i < objekty.length; i++) {
+            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-K001_o-${i}-druh`,`#id_${ident_cely}-K001_o-${i}-specifikace`,url);
+          }
+          predmety = document.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
+          for (let i = 0; i < predmety.length; i++) {
+            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-K001_p-${i}-druh`,`#id_${ident_cely}-K001_p-${i}-specifikace`,url);
+          } 
       })
   </script>
   <script>

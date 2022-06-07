@@ -558,7 +558,7 @@
                 <h5>{% trans "Objekty" %}</h5>
                   {% if k.form_nalezy_objekty.forms %}
                     <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
-                    {% crispy k.form_nalezy_objekty k.helper %}
+                    {% crispy k.form_nalezy_objekty k.helper_objekt %}
                   {% else %}
                   <div class="app-note">
                     <span class="material-icons">info</span>
@@ -567,7 +567,7 @@
                   {% endif %}
                 <h5>{% trans "Předměty" %}</h5>
                   {% if k.form_nalezy_predmety.forms %}
-                  {% crispy k.form_nalezy_predmety k.helper %}
+                  {% crispy k.form_nalezy_predmety k.helper_predmet %}
                   {% else %}
                   <div class="app-note">
                     <span class="material-icons">info</span>
@@ -739,6 +739,7 @@
                       'pian': '',
                   }))
           }
+          get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
       })
 
       const change_active_element = (new_el) => {
@@ -755,7 +756,17 @@
           const el_li_komponenta
               = document.getElementById(`el_li_komponenta_${ident_cely_safe}`);
           change_active_element(el_li_komponenta);
-          document.getElementById(`detail_komponenta_form_${ident_cely}`).scrollIntoView();
+          div_komponenta = document.getElementById(`detail_komponenta_form_${ident_cely}`)
+          div_komponenta.scrollIntoView();
+          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url);
+          objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
+          for (let i = 0; i < objekty.length; i++) {
+            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_o-${i}-druh`,`#id_${ident_cely}_o-${i}-specifikace`,url);
+          }
+          predmety = div_komponenta.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
+          for (let i = 0; i < predmety.length; i++) {
+            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_p-${i}-druh`,`#id_${ident_cely}_p-${i}-specifikace`,url);
+          } 
       }
 
       const div_dokumentacni_jednotka_click = (data) => {
@@ -782,7 +793,7 @@
           el_komponenta.addEventListener("click", () => {
               div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
-          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url)
+          
       };
       {% for j in dokumentacni_jednotky %}
           set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")

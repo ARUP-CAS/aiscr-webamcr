@@ -291,7 +291,8 @@ def detail(request, ident_cely):
                     else NalezPredmetFormset(
                         instance=komponenta, prefix=komponenta.ident_cely + "_p"
                     ),
-                    "helper": NalezFormSetHelper(),
+                    "helper_predmet": NalezFormSetHelper(typ="predmet"),
+                    "helper_objekt": NalezFormSetHelper(typ="objekt"),
                 }
             )
 
