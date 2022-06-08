@@ -826,18 +826,10 @@ def generovat_oznameni(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def generovat_potvrzeni(request, ident_cely):
-    popup_parametry = {
-        "cislo_jednaci": request.POST["cislo_jednaci"],
-        "typ_vyzkumu": request.POST["typ_vyzkumu"],
-        "vysledek": request.POST["vysledek"],
-        "poznamka_podpis": request.POST["poznamka_podpis"]
-    }
+    odeslat_oznamovateli = request.POST.get("odeslat_oznamovateli", False)
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    path, file = projekt.create_expert_list(popup_parametry)
-    response = HttpResponse(content=file)
-    response['Content-Type'] = 'application/rtf'
-    response['Content-Disposition'] = 'attachment; filename="expertni_list.rtf"'
-    return response
+    projekt.create_confirmation_document(additional=True)
+    return redirect("projekt:detail", ident_cely=ident_cely)
 
 
 def get_history_dates(historie_vazby):

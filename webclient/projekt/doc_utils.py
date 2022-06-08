@@ -11,6 +11,7 @@ from reportlab.lib.units import mm, inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, PageBreak, ListFlowable
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
 
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
 from heslar.models import RuianKraj
@@ -22,6 +23,8 @@ HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png
 
 pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
 pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
+registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+
 
 Title = "Hello world"
 pageinfo = "platypus example"
@@ -40,7 +43,7 @@ class DocumentCreator(ABC):
 
 class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
-        dok_index = 0 if self.projekt.ident_cely[0] == "C" else 1
+        dok_index = 0 if "C" in self.projekt.ident_cely else 1
         self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
         self.texts["header_line_2"] = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
         # Condition check for automated testing
@@ -51,7 +54,7 @@ class OznameniPDFCreator(DocumentCreator):
         telefon = DOK_TELEFON.get(kraj.kod, DOK_TELEFON.get(0))
         self.texts["header_line_3"] = f"{DOK_ADRESA[dok_index]}<br/>{telefon}<br/>e-mail: {DOK_EMAIL[dok_index]}"
         self.texts["header_line_4"] \
-            = f"{DOK_VE_MESTE[dok_index]} {datetime.datetime.today().date().strftime('%d. %m. %Y')}"
+            = f"{DOK_VE_MESTE[dok_index]} {datetime.datetime.today().date().strftime('%d. %m. %Y').replace(' 0', ' ')}"
 
         self.texts["doc_vec"] = """
         Věc: Potvrzení o splnění oznamovací povinnosti dle § 22, odst. 2 zák. č. 20/1987
@@ -64,17 +67,18 @@ class OznameniPDFCreator(DocumentCreator):
             datum_zmeny = datetime.datetime.today()
 
         self.texts["doc_par_1"] = f"""
-        Potvrzujeme, že {self.oznamovatel.oznamovatel} ({self.oznamovatel.adresa}; tel: {self.oznamovatel.telefon}; 
+        Potvrzujeme, že <strong>{self.oznamovatel.oznamovatel}</strong> ({self.oznamovatel.adresa}; tel: {self.oznamovatel.telefon}; 
         email: {self.oznamovatel.email}), jehož zastupuje {self.oznamovatel.odpovedna_osoba}, 
-        ohlásil záměr {self.projekt.podnet} (označení stavby: {self.projekt.oznaceni_stavby}; 
-        plánované zahájení: {self.projekt.planovane_zahajeni}) na 
-        k. ú. {self.projekt.hlavni_katastr} (okr. {self.projekt.katastry}), parc. č. 
+        ohlásil záměr <strong>{self.projekt.podnet}</strong> (označení stavby: {self.projekt.oznaceni_stavby}; 
+        plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ')} - 
+        {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ')} na 
+        k. ú. <strong>{self.projekt.hlavni_katastr} (okr. {self.projekt.hlavni_katastr.okres})</strong>, parc. č. 
         {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU[dok_index]}. 
-        Oznámení provedl {datum_zmeny.strftime('%d. %. %Y')} pod evidenčním číslem 
-        {self.projekt.ident_cely}. Tímto byla naplněna povinnost oznámit 
+        Oznámení provedl <strong>{datum_zmeny.strftime('%d. %m. %Y').replace(' 0', ' ')}</strong> pod evidenčním číslem 
+        <strong>{self.projekt.ident_cely}</strong>. <strong>Tímto byla naplněna povinnost oznámit 
         zamýšlenou stavební nebo jinou činnost Archeologickému ústavu podle ustanovení § 22, odst. 2, zákona 
         č. 20/1987 Sb. Po schválení a registraci oznámení konkrétní organizací oprávněnou provádět archeologické 
-        výzkumy Vás budeme informovat.
+        výzkumy Vás budeme informovat.</strong>
         """
 
         self.texts[
@@ -102,9 +106,9 @@ class OznameniPDFCreator(DocumentCreator):
         o zpracování Vašich osobních údajů a o právech souvisejících s Vaší povinností jako stavebníka dle 
         § 22 odst. 2 zákona č. 20/1987 Sb., o státní památkové péči (dále rovněž jen „zákon“), poskytnout informace 
         o záměru provádět stavební činnost na území s archeologickými nálezy nebo jinou činnost, kterou by m
-        ohlo být ohroženo provádění archeologických výzkumů, a to buď Archeologickému ústavu AV ČR, Praha, 
-        v. v. i., IČ 67985912, se sídlem Letenská 4, 118 01 Praha 1, nebo Archeologickému ústavu 
-        AV ČR, Brno, v. v. i., IČ 68081758, se sídlem Čechyňská 363/19, 602 00 Brno, jako oprávněným institucím 
+        ohlo být ohroženo provádění archeologických výzkumů, a to buď <strong>Archeologickému ústavu AV ČR, Praha, 
+        v. v. i., IČ 67985912, se sídlem Letenská 4, 118 01 Praha 1,</strong> nebo <strong>Archeologickému ústavu 
+        AV ČR, Brno, v. v. i., IČ 68081758, se sídlem Čechyňská 363/19, 602 00 Brno,</strong> jako oprávněným institucím 
         dle daného ustanovení zákona. Jakékoliv nakládání s osobními údaji se řídí platnými právními předpisy, 
         zejména zákonem o ochraně osobních údajů a nařízením Evropského parlamentu a Rady č. 2016/679 
         ze dne 27. 4. 2016 o ochraně fyzických osob v souvislosti se zpracováním osobních údajů a o volném pohybu 
@@ -122,7 +126,7 @@ class OznameniPDFCreator(DocumentCreator):
         self.texts["doc_attachment_par_2"] = """
         Společnými správci osobních údajů jsou Archeologický ústav AV ČR, Praha, v. v. i., IČ:67985912, 
         se sídlem Letenská 4, 118 01 Praha 1, a Archeologický ústav AV ČR, Brno, v. v. i., IČ:68081758, 
-        se sídlem Čechyňská 363/19, 602 00 Brno (dále jen „Správce“ či „Archeologický ústav“).
+        se sídlem Čechyňská 363/19, 602 00 Brno (dále jen <strong>„Správce“</strong> či <strong>„Archeologický ústav“</strong>).
         """
 
         self.texts["doc_attachment_heading_3"] = """
