@@ -121,6 +121,7 @@ def detail(request, ident_cely):
 
     response = redirect("arch_z:detail", dj.archeologicky_zaznam.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}", max_age=1000)
     return response
 
 
@@ -153,6 +154,7 @@ def zapsat(request, arch_z_ident_cely):
 
     response = redirect("arch_z:detail", az.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}", max_age=1000)
     return response
 
 

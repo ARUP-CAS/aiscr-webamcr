@@ -124,4 +124,5 @@ def edit_nalez(request, komp_ident_cely):
 
     response = redirect(request.META.get("HTTP_REFERER"))
     response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
+    response.set_cookie("set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000)
     return response

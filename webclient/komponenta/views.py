@@ -121,6 +121,7 @@ def detail(request, ident_cely):
 
     response = redirect(request.META.get("HTTP_REFERER"))
     response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+    response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
     return response
 
 
@@ -154,6 +155,7 @@ def zapsat(request, dj_ident_cely):
     response = redirect(request.META.get("HTTP_REFERER"))
     if komp_ident_cely:
         response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
+        response.set_cookie("set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000)
     return response
 
 
