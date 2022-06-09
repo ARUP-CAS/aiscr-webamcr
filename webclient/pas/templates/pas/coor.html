@@ -35,7 +35,7 @@ crossorigin=""/>
   {{ formCoor.coordinate_sjtsk_y|as_crispy_field }}
 </div>
 <div class="row">
-    <div class="col-sm-4 row">
+    <div class="form-group col-sm-4 row">
       <div class="form-group col-sm-6">
       {{ form.projekt|as_crispy_field }}
       </div>
@@ -75,8 +75,8 @@ crossorigin=""/>
         <div class="form-group map">
             <label for="detector_coordinates_y">{% trans "Poloha" %}</label>
             {% if global_map_can_edit %}
-            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" class="btn btn-amcr btn-outline-gray btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
-              <i class="bi bi-geo-alt btn-outline-dark" style="font-size: 1rem;"></i>
+            <button type="button" data-toggle="tooltip" data-placement="top" title="{% trans "Současná poloha" %}" class="btn btn-amcr btn-primary btn-sm form-control form-control-sm" onclick="getLocation()" id="currentLocation">
+              <i class="bi bi-geo-alt" style="font-size: 1rem;"></i>
             </button>
             <small class="form-text text-muted" id="hint_id_currentLocation">{% trans "pas.form.createSamostatnyNalez.currentLocation.tooltip" %}</small>
             {% else %}
@@ -121,25 +121,27 @@ crossorigin=""/>
       <span class="app-divider-label">{% trans "pas.template.nalezDivider.text" %}</span>
       <hr class="mt-0" />
     </div>
-    <div class="form-group col-sm-12 row">
-      <div class="form-group col-sm-2">
+    <div class="col-sm-4 row">
+      <div class="form-group col-sm-6">
       {{ form.obdobi|as_crispy_field }}
       </div>
-      <div class="form-group col-sm-2">
+      <div class="form-group col-sm-6">
       {{ form.presna_datace|as_crispy_field }}
+      </div>
     </div>
-    <div class="form-group col-sm-2">
-      {{ form.druh_nalezu|as_crispy_field }}
-    </div>
-    <div class="form-group col-sm-2">
-      {{ form.specifikace|as_crispy_field }}
-    </div>
-    <div class="form-group col-sm-2">
-      {{ form.pocet|as_crispy_field }}
+    <div class="col-sm-8 row">
+      <div class="form-group col-sm-3">
+        {{ form.druh_nalezu|as_crispy_field }}
+      </div>
+      <div class="form-group col-sm-3">
+        {{ form.specifikace|as_crispy_field }}
+      </div>
+      <div class="form-group col-sm-3">
+        {{ form.pocet|as_crispy_field }}
+      </div>
     </div>
     <div class="form-group col-sm-12">
       {{ form.poznamka|as_crispy_field }}
-    </div>
     </div>
   </div> 
 
