@@ -42,6 +42,8 @@ jobs:
     - name: Run Migrations for auth
       working-directory: ./webclient
       run: |
+        mkdir -p /vol/web/media
+        chmod -R 777 /vol/web
         python manage.py migrate auth --settings=webclient.settings.dev
     - name: Run Migrations
       working-directory: ./webclient
