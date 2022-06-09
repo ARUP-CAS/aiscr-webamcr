@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
+import os
 
 from webclient.settings.base import MEDIA_ROOT
 
@@ -377,6 +378,8 @@ class OznameniPDFCreator(DocumentCreator):
         )
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
         path = f"{MEDIA_ROOT}/oznameni_{self.projekt.ident_cely}.pdf"
         with open(path, "wb") as file:
             file.write(pdf_value)

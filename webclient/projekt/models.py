@@ -470,16 +470,11 @@ class Projekt(models.Model):
         path, file = elc.build_document()
         return path, file
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
-        confirmation_document = False
-        if self.pk:
-            projekt_db = Projekt.objects.get(pk=self.pk)
-            if self.stav == PROJEKT_STAV_ZAPSANY and projekt_db.stav == PROJEKT_STAV_OZNAMENY and self.has_oznamovatel():
-                confirmation_document = True
-            if confirmation_document:
-                self.create_confirmation_document()
-        super().save(force_insert, force_update, using, update_fields)
+    @property
+    def should_generate_confirmation_document(self):
+        if self.stav == PROJEKT_STAV_ZAPSANY and self.has_oznamovatel():
+            return True
+        return False
 
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
