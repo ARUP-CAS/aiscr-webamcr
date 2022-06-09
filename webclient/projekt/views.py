@@ -224,6 +224,8 @@ def create(request):
                     oznamovatel = form_oznamovatel.save(commit=False)
                     oznamovatel.projekt = p
                     oznamovatel.save()
+                if p.should_generate_confirmation_document:
+                    p.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
