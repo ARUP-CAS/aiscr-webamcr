@@ -41,10 +41,10 @@
   <div class="app-entity-projekt">
     {% include "toolbar_projekt.html" with projekt=projekt showcontrols=True %}
 
-    <div class="bs-stepper historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
+    <div class="bs-stepper">
       <div class="bs-stepper-header">
         <div class="step {% if projekt.stav == 0 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">0</span>
             <span class="bs-stepper-label">
               {% trans "Oznámený" %}
@@ -56,7 +56,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">1</span>
             <span class="bs-stepper-label">
               {% trans "Zapsaný" %}
@@ -68,7 +68,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">2</span>
             <span class="bs-stepper-label">
               {% trans "Přihlášený" %}
@@ -80,7 +80,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">3</span>
             <span class="bs-stepper-label">
               {% trans "Zahájen v terénu" %}
@@ -92,7 +92,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 4 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">4</span>
             <span class="bs-stepper-label">
               {% trans "Ukončen v terénu" %}
@@ -104,7 +104,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 5 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">5</span>
             <span class="bs-stepper-label">
               {% trans "Uzavřený" %}
@@ -116,7 +116,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 6 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">6</span>
             <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
@@ -128,7 +128,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 7 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">7</span>
             <span class="bs-stepper-label">
               {% trans "Navržen ke zrušení" %}
@@ -140,7 +140,7 @@
         </div>
         <div class="line projekt"></div>
         <div class="step {% if projekt.stav == 8 %}active{% endif %}">
-          <button type="button" class="btn step-trigger projekt">
+          <button type="button" class="btn step-trigger projekt historie-link" onclick="location.href='{% url 'historie:projekt' projekt.ident_cely %}';">
             <span class="bs-stepper-circle">8</span>
             <span class="bs-stepper-label">
               {% trans "Zrušen" %}
@@ -647,5 +647,14 @@
     });
     
 
+    </script>
+    <script>
+      $(document).ready(function () {
+      $('[rel="tooltip"]').tooltip({
+        container : '.bs-stepper',
+        html : true,
+        boundary: 'window'
+      });
+    });
     </script>
 {% endblock %}

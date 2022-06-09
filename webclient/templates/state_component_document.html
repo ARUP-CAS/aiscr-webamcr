@@ -1,9 +1,9 @@
 {% load i18n %}
 
-<div class="bs-stepper historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
+<div class="bs-stepper">
   <div class="bs-stepper-header">
     <div class="step {% if dokument.stav == 1 %}active{% endif %}">
-      <button type="button" class="btn step-trigger">
+      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
         <span class="bs-stepper-label">
               {% trans "Rozepsaný" %}
@@ -16,7 +16,7 @@
     </div>
     <div class="line"></div>
     <div class="step {% if dokument.stav == 2 %}active{% endif %}">
-      <button type="button" class="btn step-trigger">
+      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
         <span class="bs-stepper-label">
               {% trans "Odeslaný" %}
@@ -29,7 +29,7 @@
     </div>
     <div class="line"></div>
     <div class="step {% if dokument.stav == 3 %}active{% endif %}">
-      <button type="button" class="btn step-trigger">
+      <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
         <span class="bs-stepper-label">
               {% trans "Archivovaný" %}
