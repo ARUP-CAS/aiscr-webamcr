@@ -4,7 +4,7 @@
       <div class="app-fx app-left">
         {% trans "Dokumenty" %}
       </div>
-      {% if show.editovat %}
+      {% if show.editovat and show.pripojit_dokumenty %}
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
@@ -36,7 +36,7 @@
         <div class="card-body">
     {% if dokumenty %}
       {% include "dokument/dokument_table_only.html" %}
-    {% elif type == "akce" %}
+    {% elif type == "arch_z" %}
     <div class="app-note">
       <span class="material-icons">info</span>
       {% trans "Akce zatím neobsahuje žádné dokumenty." %}

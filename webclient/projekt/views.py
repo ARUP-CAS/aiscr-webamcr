@@ -906,6 +906,12 @@ def get_detail_template_shows(projekt, user):
     ]
     show_dokumenty = projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID
     show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
+    show_akce = projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID
+    show_pripojit_dokumenty = projekt.stav in [
+        PROJEKT_STAV_ZAHAJENY_V_TERENU, 
+        PROJEKT_STAV_UKONCENY_V_TERENU,
+        PROJEKT_STAV_UZAVRENY
+    ]
     show = {
         "oznamovatel": show_oznamovatel,
         "prihlasit_link": show_prihlasit,
@@ -923,6 +929,8 @@ def get_detail_template_shows(projekt, user):
         "editovat": show_edit,
         "dokumenty": show_dokumenty,
         "arch_links": show_arch_links,
+        "akce": show_akce,
+        "pripojit_dokumenty": show_pripojit_dokumenty,
     }
     return show
 

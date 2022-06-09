@@ -920,6 +920,7 @@ def get_detail_template_shows(archeologicky_zaznam):
         "archivovat_link": show_archivovat,
         "editovat": show_edit,
         "arch_links": show_arch_links,
+        "pripojit_dokumenty": True,
     }
     return show
 
