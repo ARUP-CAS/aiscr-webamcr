@@ -43,8 +43,8 @@
           <button id="pas-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat Nalez" %}</button>
           <a class="dropdown-item" href="{% url 'historie:pas' sn.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}">{% trans "pas.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{OAPI_link_part1|add:sn.ident_cely|add:OAPI_link_part2}}">{% trans "pas.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "pas.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:sn.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "pas.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
           {% endif %}
         </div>
       </div>
