@@ -226,7 +226,7 @@ class Projekt(models.Model):
     def set_archivovany(self, user):
         if self.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and self.has_oznamovatel():
             # Removing personal information from the projekt announcement
-            self.oznamovatel.remove_data()
+            self.oznamovatel.delete()
             # making txt file with deleted files
             today = datetime.datetime.now()
             soubory = self.soubory.soubory.exclude(
@@ -241,8 +241,8 @@ class Projekt(models.Model):
                     "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
                     % today.strftime("%d. %m. %Y")
                 )
-                for nazev in soubory.values_list("nazev_zkraceny"):
-                    file_content += nazev[0] + ", "
+                file_content += ", ".join(soubory.values_list("nazev_zkraceny", flat=True))
+                    #file_content += nazev[0] + ", "
                 prev = 0
                 prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
                 new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)

@@ -570,7 +570,16 @@ def uzavrit(request, ident_cely):
                 if key == "has_event":
                     request.session['temp_data'].append(item)
                 else:
-                    request.session['temp_data'].append(f"{key}: {' '.join(item)}")
+                    items = ""
+                    for i, list_items in enumerate(item):
+                        if isinstance(list_items, list):
+                            items += list_items.pop(0)
+                            items += ', '.join(list_items)
+                        else:
+                            items += list_items
+                        if i+1 < len(item):
+                            items += ", "
+                    request.session['temp_data'].append(f"{key}: {items}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
             return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
             
