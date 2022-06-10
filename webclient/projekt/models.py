@@ -241,8 +241,7 @@ class Projekt(models.Model):
                     "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
                     % today.strftime("%d. %m. %Y")
                 )
-                file_content += ", ".join(soubory.values_list("nazev_zkraceny", flat=True))
-                    #file_content += nazev[0] + ", "
+                file_content += "\n".join(soubory.values_list("nazev_zkraceny", flat=True))
                 prev = 0
                 prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
                 new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)

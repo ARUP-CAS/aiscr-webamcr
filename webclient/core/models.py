@@ -105,7 +105,7 @@ class Soubor(models.Model):
             self.path
         except self.DoesNotExist:
             super().save(*args, **kwargs)
-        if self.path.path.endswith(".pdf"):
+        if self.path and self.path.path.endswith(".pdf"):
             reader = PdfFileReader(self.path)
             self.rozsah = len(reader.pages)
         else:
