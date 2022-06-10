@@ -218,9 +218,6 @@ def detail(request, ident_cely):
                 jednotky=jednotky,
                 prefix=jednotka.ident_cely,
                 not_readonly=show["editovat"],
-                pian_potvrzen=True
-                if jednotka.pian and jednotka.pian.stav == PIAN_POTVRZEN
-                else False,
             ),
             "show_add_adb": show_adb_add,
             "show_add_komponenta": show_add_komponenta,
@@ -231,8 +228,6 @@ def detail(request, ident_cely):
             and show["editovat"],
             "show_approve_pian": show_approve_pian,
             "show_pripojit_pian": True
-            if jednotka.pian and jednotka.pian.stav == PIAN_POTVRZEN
-            else False,
         }
         if has_adb:
             logger.debug(jednotka.ident_cely)
