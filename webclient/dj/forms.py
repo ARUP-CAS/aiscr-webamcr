@@ -73,7 +73,6 @@ class CreateDJForm(forms.ModelForm):
         self,
         *args,
         not_readonly=True,
-        pian_potvrzen=False,
         **kwargs,
     ):
         jednotky = kwargs.pop("jednotky", None)
@@ -97,8 +96,7 @@ class CreateDJForm(forms.ModelForm):
                 css_class="row",
             ),
         )
-        if pian_potvrzen:
-            self.fields["pian"].widget.attrs["disabled"]="disabled"
+        self.fields["pian"].widget.attrs["disabled"]="disabled"
         for key in self.fields.keys():
             self.fields[key].disabled = not not_readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
