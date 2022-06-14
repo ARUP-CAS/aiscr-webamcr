@@ -65,7 +65,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -836,12 +836,12 @@ def generovat_oznameni(request, ident_cely):
 
 @login_required
 @require_http_methods(["POST"])
-def generovat_potvrzeni(request, ident_cely):
-    odeslat_oznamovateli = request.POST.get("odeslat_oznamovateli", False)
+def generovat_expertni_list(request, ident_cely):
+    popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    projekt.create_confirmation_document(additional=True)
-    return redirect("projekt:detail", ident_cely=ident_cely)
-
+    path = projekt.create_expert_list(popup_parametry)
+    file = open(path, "rb")
+    return FileResponse(file)
 
 def get_history_dates(historie_vazby):
     # Transakce do stavu "Zapsan" jsou 2

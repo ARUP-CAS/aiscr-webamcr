@@ -60,7 +60,7 @@ class ExpertniListCreator(DocumentCreator):
             památkové péči. V průběhu výzkumu nebyly vyzvednuty ani dokumentovány žádné archeologické nálezy.
             """
         else:
-            text = self.popup_parametry["poznamka_podpis"]
+            text = self.popup_parametry["poznamka_popis"]
         return self._convert_text(text.replace("\n", ""))
 
     def _generate_text(self):
@@ -175,8 +175,7 @@ class ExpertniListCreator(DocumentCreator):
         path = f"{MEDIA_ROOT}/expertni_list_{self.projekt.ident_cely}.rtf"
         DR = Renderer()
         DR.Write(self.docucment, self._open_file(path))
-        rtf_file = open(path)
-        return path, rtf_file
+        return path
 
     def __init__(self, projekt, popup_parametry=None):
         from projekt.models import Projekt

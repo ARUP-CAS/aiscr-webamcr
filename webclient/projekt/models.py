@@ -466,8 +466,8 @@ class Projekt(models.Model):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path, file = elc.build_document()
-        return path, file
+        path = elc.build_document()
+        return path
 
     @property
     def should_generate_confirmation_document(self):

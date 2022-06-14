@@ -26,8 +26,13 @@
 <script>
     const btn_expertni_list_submit = document.getElementById("expertni_list_submit");
     const sel_vysledek = document.getElementById("id_vysledek");
-    const txt_popis = document.getElementById("id_poznamka_podpis");
+    const txt_popis = document.getElementById("id_poznamka_popis");
     sel_vysledek.addEventListener("change", (event) => {
         txt_popis.required = event.target.value === "jine";
+        if (event.target.value === "jine") {
+            txt_popis.disabled = null;
+        } else {
+            txt_popis.disabled = "disabled";
+        }
     });
 </script>
