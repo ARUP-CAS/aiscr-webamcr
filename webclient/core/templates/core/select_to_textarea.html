@@ -1,4 +1,4 @@
 {% load crispy_forms_field %}
 {% load template_filters %}
 
-<textarea class="textarea form-control" name="{{ widget.name}}" {% include "django/forms/widgets/attrs.html" %}>{% if widget.value %}{{ widget.value|get_katastr_name }}{% endif %}</textarea>
+<textarea {% include "django/forms/widgets/attrs.html" %}  name="{{ widget.name}}">{% if widget.value %}{{ widget.value|get_katastr_name }}{% endif %}</textarea>
