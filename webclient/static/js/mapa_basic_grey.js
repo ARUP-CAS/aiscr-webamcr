@@ -57,8 +57,7 @@ L.tileLayer.grayscale = function (url, options) {
 };
 
 
-var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
-        osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM grey map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
+var     osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: 'OSM grey map', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
         cuzkWMS = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'KN', maxZoom:25, maxNativeZoom: 20, minZoom: 17, opacity: 0.5 }),
         cuzkWMS2 = L.tileLayer.wms('http://services.cuzk.cz/wms/wms.asp?', { layers: 'prehledka_kat_uz', maxZoom:25, maxNativeZoom: 20, minZoom: 12, opacity: 0.5 }),
         cuzkOrt = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/ortofoto_wm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'ortofoto_wm', maxZoom:25, maxNativeZoom: 19, minZoom: 6 }),
@@ -72,7 +71,6 @@ var baseLayers = {
     "ČÚZK - Základní mapy ČR": cuzkZM,
     "ČÚZK - Ortofotomapa": cuzkOrt,
     "ČÚZK - Stínovaný reliéf 5G": cuzkEL,
-    "OpenStreetMap": osmColor,
     "OpenStreetMap šedá": osmGrey,
 };
 
