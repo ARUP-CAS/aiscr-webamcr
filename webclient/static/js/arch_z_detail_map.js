@@ -379,12 +379,14 @@ map.on('contextmenu',(e) => {
 function disableSavePianButton(){
     console.log("disableSavePianButton")
     //console.log(document.getElementById(global_map_element).value)
-    if(document.getElementById(global_map_element).value==='undefined'){
-        document.getElementById("editPianButton").disabled = true;
-        console.log("disableSavePianButton:disa")
-    } else {
-        document.getElementById("editPianButton").disabled = false;
-        console.log("disableSavePianButton:enable")
+    if(document.getElementById("editPianButton")!=null){
+        if(document.getElementById(global_map_element).value==='undefined'){
+            document.getElementById("editPianButton").disabled = true;
+            console.log("disableSavePianButton:disa")
+        } else {
+            document.getElementById("editPianButton").disabled = false;
+            console.log("disableSavePianButton:enable")
+        }
     }
 }
 
