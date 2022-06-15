@@ -95,7 +95,16 @@
 
           function makeFieldDisabled(field, disabled){
               $(field).prop('readonly', disabled);
-              $(field).prop('required', !disabled);
+              if (field !='#id_oznaceni_stavby'){
+                $(field).prop('required', !disabled);
+                console.log($(field))
+                if (disabled){
+                  $(field)[0].classList.remove("required-next")
+                }
+                else{
+                  $(field)[0].classList.add("required-next")
+                }
+              }
               $(field).val("");
           }
 
@@ -117,6 +126,12 @@
                     element.innerHTML = "*";
                 }
               }
+          }
+
+          if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
+            makeOznamovatelDisabled(true)
+          } else {
+            makeOznamovatelDisabled(false)
           }
 
           // On change pak podle toho co je vybrano

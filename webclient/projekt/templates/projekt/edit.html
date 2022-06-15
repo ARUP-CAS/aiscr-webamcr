@@ -125,25 +125,22 @@
 
           const makeFieldDisabled = (field, disabled) => {
               $(field).prop('readonly', disabled);
-              $(field).prop('required', !disabled);
               $(field).val("");
+              console.log(disabled)
           }
-
-          const makeOznamovatelDisabled = (disabled) => {
-              makeFieldDisabled('#id_oznaceni_stavby', disabled)
-          }
-          if (selectElement.value != ZACHRANNY_OPTION) {
-            makeOznamovatelDisabled(true)
+          console.log(selectElement.selectedIndex )
+          if (selectElement.selectedIndex != ZACHRANNY_OPTION) {
+            makeFieldDisabled('#id_oznaceni_stavby', true)
           } else {
-            makeOznamovatelDisabled(false)
+            makeFieldDisabled('#id_oznaceni_stavby', false)
           }
 
           // On change pak podle toho co je vybrano
           $(selectElement).on('changed.bs.select', function (e, clickedIndex) {
               if (clickedIndex != ZACHRANNY_OPTION) {
-                  makeOznamovatelDisabled(true)
+                makeFieldDisabled('#id_oznaceni_stavby', true)
               } else {
-                  makeOznamovatelDisabled(false)
+                makeFieldDisabled('#id_oznaceni_stavby', false)
               }
           });
       })

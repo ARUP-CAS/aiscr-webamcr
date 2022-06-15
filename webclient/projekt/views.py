@@ -187,7 +187,11 @@ def create(request):
             required=required_fields,
             required_next=required_fields_next
             )
-        form_oznamovatel = OznamovatelForm(request.POST)
+        if request.POST["typ_projektu"] == TYP_PROJEKTU_ZACHRANNY_ID:
+            required=True
+        else:
+            required=False
+        form_oznamovatel = OznamovatelForm(request.POST,required=required)
         if form_projekt.is_valid():
             logger.debug("Projekt form is valid")
             lat = form_projekt.cleaned_data["latitude"]
