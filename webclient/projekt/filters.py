@@ -37,6 +37,7 @@ from projekt.models import Projekt
 from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba, User
 from historie.models import Historie
+from dokument.filters import HistorieFilter
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class Users(QuerySet):
         return self.select_related("first_name", "last_name")
 
 
-class ProjektFilter(filters.FilterSet):
+class ProjektFilter(HistorieFilter):
 
     ident_cely = CharFilter(lookup_expr="icontains",distinct=True,)
 
