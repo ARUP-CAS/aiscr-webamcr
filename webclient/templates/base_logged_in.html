@@ -237,6 +237,42 @@
   // for autologout functionality timer and messages
     var time = {{ seconds_until_idle_end|unlocalize }}
     var timer = new Timer();
+    var interval = null;
+    let document_title = document.title;
+
+    document.head = document.head || document.getElementsByTagName('head')[0];
+
+    var fav_not = "{%  static '/loga/favicon-dot.png' %}"
+    var fav = "{%  static '/loga/favicon.png' %}"
+    function changeFavicon(src) {
+      var link = document.createElement('link'),
+      oldLink = document.getElementById('dynamic-favicon');
+      link.id = 'dynamic-favicon';
+      link.rel = 'shortcut icon';
+      link.href = src;
+      if (oldLink) {
+        document.head.removeChild(oldLink);
+      }
+      document.head.appendChild(link);
+    }
+    function startNotify(src) {
+      changeFavicon(src)
+      let period_count = 1;
+      interval = setInterval(function() {
+        if ((period_count % 2 )== 1){
+          document.title = '\u200E';
+        }
+        else {
+          document.title = document_title; 
+        }
+        period_count = period_count + 1
+      }, 500); 
+    }
+    function stopNotify(src){
+      changeFavicon(src);
+      clearInterval(interval);
+      document.title = document_title;
+    }
     
     timer.start({countdown: true, startValues: {seconds: time}});
     $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
@@ -247,7 +283,8 @@
       var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
       if (idle_warning !== false) {
         if (actual_time === idle_warning) { 
-          createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True')
+          startNotify(fav_not)                
+          createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True','True','False')
         };
       };
     });
@@ -262,15 +299,18 @@
         dataType: 'json',
         success: function(data){
           console.log("session prolonged"+data.session_time)
+          $(".app-alert-floating").alert('close');
           timer.stop();
           timer.start({countdown: true, startValues: {seconds: data.session_time}});
           $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
-          $(".app-alert-floating").alert('close');
-          createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}))
-          },
+          createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}));
+          stopNotify(fav) 
+        },
+          
         error: ()=>{
           $(".app-alert-floating").alert('close');
           createMessage("danger",({% get_message "AUTOLOGOUT_REFRESH_ERROR" %}))
+          stopNotify(fav)
         }
       })
     });
