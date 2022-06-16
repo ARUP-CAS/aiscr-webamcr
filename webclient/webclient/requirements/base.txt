@@ -26,3 +26,4 @@ reportlab==3.6.8
 PyRTF3==0.47.5
 PyPDF2==1.27.12
 django-cron==0.6.0
+Pillow==9.1.1
