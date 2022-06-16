@@ -657,8 +657,8 @@ class GenerovatExpertniListForm(forms.Form):
         widget=forms.Select,
         help_text=_("projekt.form.GenerovatExpertniListForm.vysledek.tooltip"),
     )
-    poznamka_podpis = forms.CharField(
-        label=_("projekt.form.GenerovatExpertniListForm.poznamka_podpis.label"),
+    poznamka_popis = forms.CharField(
+        label=_("projekt.form.GenerovatExpertniListForm.poznamka_popis.label"),
         required=False,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
     )
@@ -667,6 +667,7 @@ class GenerovatExpertniListForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.fields["poznamka_popis"].disabled = True
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -683,7 +684,7 @@ class GenerovatExpertniListForm(forms.Form):
                         css_class="col-sm-12",
                     ),
                     Div(
-                        "poznamka_podpis",
+                        "poznamka_popis",
                         css_class="col-sm-12",
                     ),
                     css_class="row",

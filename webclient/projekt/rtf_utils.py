@@ -15,20 +15,22 @@ sys.path.append('../')
 
 class ExpertniListCreator(DocumentCreator):
     @staticmethod
-    def _utf16_decimals(char):
+    def _utf16_decimals(char, chunk_size=2):
         encoded_char = char.encode('utf-16-be')
+        # convert every `chunk_size` bytes to an integer
         decimals = []
-        for i in range(0, len(encoded_char), 2):
-            chunk = encoded_char[i:i + 2]
-            decimals.append(struct.unpack('>H', chunk)[0])
-        decimals = [str(item) for item in decimals]
-        return decimals
+        for i in range(0, len(encoded_char), chunk_size):
+            chunk = encoded_char[i:i + chunk_size]
+            decimals.append(int.from_bytes(chunk, 'big'))
+        decimals = [str(x) for x in decimals]
+        decimals = "".join(decimals)
+        return f"\\u{decimals}G"
 
     @staticmethod
     def _convert_text(text):
-        if text is None:
+        if text is None or len(str(text)) == 0:
             return ""
-        text = ["\\u" + ExpertniListCreator._utf16_decimals(char)[0] for char in str(text)]
+        text = [ExpertniListCreator._utf16_decimals(char) for char in str(text)]
         text = "".join(text)
         return text
 
@@ -60,7 +62,7 @@ class ExpertniListCreator(DocumentCreator):
             památkové péči. V průběhu výzkumu nebyly vyzvednuty ani dokumentovány žádné archeologické nálezy.
             """
         else:
-            text = self.popup_parametry["poznamka_podpis"]
+            text = self.popup_parametry["poznamka_popis"]
         return self._convert_text(text.replace("\n", ""))
 
     def _generate_text(self):
@@ -93,7 +95,9 @@ class ExpertniListCreator(DocumentCreator):
             ("Výzkum provedla organizace:",
              Paragraph(self.stylesheet.ParagraphStyles.BoldText, self._convert_text(self.projekt.organizace))),
             ("",
-             f"{self.projekt.organizace.adresa}\nE-mail: {self.projekt.organizace.email}\nTel.: {self.projekt.organizace.telefon}"),
+             f"{self.projekt.organizace.adresa}"),
+            ("", f"E-mail: {self.projekt.organizace.email}"),
+            ("", f"Tel.: {self.projekt.organizace.telefon}"),
             ("Katastrální území (okres):", self.projekt.hlavni_katastr.nazev),
             ("Lokalizace:", self.projekt.lokalizace),
             ("Parcelní číslo:", self.projekt.parcelni_cislo)
@@ -175,8 +179,7 @@ class ExpertniListCreator(DocumentCreator):
         path = f"{MEDIA_ROOT}/expertni_list_{self.projekt.ident_cely}.rtf"
         DR = Renderer()
         DR.Write(self.docucment, self._open_file(path))
-        rtf_file = open(path)
-        return path, rtf_file
+        return path
 
     def __init__(self, projekt, popup_parametry=None):
         from projekt.models import Projekt
