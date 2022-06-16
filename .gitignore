@@ -68,6 +68,7 @@ CACHE/
 docs/_build/
 
 #Media documents - emails and soubory
+vol/web/media
 vol/web/media/emails
 vol/web/media/soubory
 

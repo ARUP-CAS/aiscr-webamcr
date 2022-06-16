@@ -83,6 +83,8 @@ class OznamovatelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         uzamknout_formular = kwargs.pop("uzamknout_formular", False)
+        required = kwargs.pop("required", True)
+        required_next = kwargs.pop("required_next", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
         if uzamknout_formular:
             self.fields["oznamovatel"].widget.attrs["readonly"] = True
@@ -90,6 +92,10 @@ class OznamovatelForm(forms.ModelForm):
             self.fields["adresa"].widget.attrs["readonly"] = True
             self.fields["telefon"].widget.attrs["readonly"] = True
             self.fields["email"].widget.attrs["readonly"] = True
+        if required == False:
+            logger.debug(required)
+            for field in self.fields:
+                self.fields[field].required=False
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
@@ -116,6 +122,12 @@ class OznamovatelForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
+        if required_next:
+            for key in self.fields:
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next')
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next'
 
 
 class ProjektOznameniForm(forms.ModelForm):

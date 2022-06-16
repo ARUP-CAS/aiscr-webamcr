@@ -117,7 +117,7 @@ def edit(request, pk):
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
-        form = OznamovatelForm(request.POST, instance=oznameni)
+        form = OznamovatelForm(request.POST, instance=oznameni,required_next=True)
         if form.is_valid():
             form.save()
             if form.changed_data:
@@ -128,7 +128,7 @@ def edit(request, pk):
             logger.debug(form.errors)
 
     else:
-        form = OznamovatelForm(instance=oznameni)
+        form = OznamovatelForm(instance=oznameni,required_next=True)
 
     return render(request, "oznameni/edit.html", {"form": form, "oznameni": oznameni})
 
