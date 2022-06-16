@@ -300,7 +300,7 @@ def get_dokument_soubor_name(dokument, filename):
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
-        filtered_files = files.filter(nazev_zkraceny__iregex=r"[A-Z]$")
+        filtered_files = files.filter(nazev_zkraceny__iregex=r"(([A-Z]\.\w+)$)")
         if filtered_files.exists():
             list_last_char = []
             for file in filtered_files:
@@ -321,16 +321,14 @@ def get_dokument_soubor_name(dokument, filename):
                 return False
 
         else:
-            return dokument.ident_cely.replace("-", "") + "A"
+            return dokument.ident_cely.replace("-", "") + "A" + os.path.splitext(filename)[1]
 
 
 def get_finds_soubor_name(find, filename):
-    my_regex = r"^\d*_" + re.escape(find.ident_cely.replace("-", "")) + r"F\d{2}\..*$"
+    my_regex = r"^\d+_" + re.escape(find.ident_cely.replace("-", "")) + r"(F\d{2}\.\w+)$"
     files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)
     if not files.exists():
-        return (find.ident_cely.replace("-", "") + "F01") + os.path.splitext(filename)[
-            1
-        ]
+        return (find.ident_cely.replace("-", "") + "F01") + os.path.splitext(filename)[1]
     else:
         list_last_char = []
         for file in files:
