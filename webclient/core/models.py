@@ -109,7 +109,7 @@ class Soubor(models.Model):
         if self.path and self.path.path.lower().endswith("pdf"):
             reader = PdfFileReader(self.path)
             self.rozsah = len(reader.pages)
-        elif self.path and self.path.path.lower().endswith("tiff"):
+        elif self.path and self.path.path.lower().endswith("tif"):
             img = Image.open(self.path)
             self.rozsah = img.n_frames
         else:
