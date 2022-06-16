@@ -717,6 +717,7 @@
 
       document.addEventListener('DOMContentLoaded', function (event) {
           // Focus on detail set by the cookie and display it
+          get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
           let detail_to_show = getCookie("detail-id-shown")
           const show_form_cookie = getCookie("show-form");
           const set_active_cookie = getCookie("set-active");
@@ -752,7 +753,6 @@
                       'pian': '',
                   }))
           }
-          get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
       })
 
       const div_komponenta_click = (data) => {
