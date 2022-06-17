@@ -102,8 +102,10 @@ class SouborHistorieListView(HistorieListView):
         context["entity"] = context["typ"]
         soubor = Soubor.objects.get(pk=soubor_id)
         context["metadata_form"] = SouborMetadataForm(instance=soubor)
-        if soubor.vazba is not None and soubor.vazba.projekt_souboru is not None:
+        try:
             context["projekt"] = soubor.vazba.projekt_souboru
+        except RelatedObjectDoesNotExist as err:
+            context["projekt"] = None
         return context
 
     def get_queryset(self):
