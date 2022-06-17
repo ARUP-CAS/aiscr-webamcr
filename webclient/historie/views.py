@@ -102,6 +102,7 @@ class SouborHistorieListView(HistorieListView):
         context["entity"] = context["typ"]
         soubor = Soubor.objects.get(pk=soubor_id)
         context["metadata_form"] = SouborMetadataForm(instance=soubor)
+        context["projekt"] = soubor.vazba.projekt_souboru
         return context
 
     def get_queryset(self):
