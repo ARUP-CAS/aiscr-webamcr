@@ -35,11 +35,12 @@ from heslar.models import Heslar, RuianKraj, RuianOkres
 from historie.models import Historie
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
+from dokument.filters import HistorieFilter
 
 logger = logging.getLogger(__name__)
 
 
-class SamostatnyNalezFilter(filters.FilterSet):
+class SamostatnyNalezFilter(HistorieFilter):
 
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
