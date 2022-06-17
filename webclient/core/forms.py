@@ -80,11 +80,10 @@ class SouborMetadataForm(forms.ModelForm):
     nazev = forms.CharField()
     mimetype = forms.CharField()
     size_bytes = forms.CharField()
-    vytvoreno_field = forms.DateField(label=_("SouborMetadataForm.vytvoreno_field.label"))
 
     class Meta:
         model = Soubor
-        fields = ("nazev_zkraceny", "nazev_puvodni", "rozsah", "nazev", "mimetype", "size_bytes", "vytvoreno_field")
+        fields = ("nazev_zkraceny", "nazev_puvodni", "rozsah", "nazev", "mimetype", "size_bytes")
 
     def __init__(self, *args, **kwargs):
         super(SouborMetadataForm, self).__init__(*args, **kwargs)
@@ -92,20 +91,17 @@ class SouborMetadataForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("nazev_zkraceny", css_class="col-sm-2"),
-                Div("nazev_puvodni", css_class="col-sm-2"),
+                Div("nazev_puvodni", css_class="col-sm-3"),
                 Div("rozsah", css_class="col-sm-1"),
                 Div("nazev", css_class="col-sm-2"),
                 Div("mimetype", css_class="col-sm-2"),
                 Div("size_bytes", css_class="col-sm-2"),
-                Div("vytvoreno_field", css_class="col-sm-1"),
                 css_class="row",
             ),
         )
-        self.fields["vytvoreno_field"].initial = self.instance.vytvoreno
         self.fields["nazev_zkraceny"].widget.attrs["readonly"] = True
         self.fields["nazev_puvodni"].widget.attrs["readonly"] = True
         self.fields["rozsah"].widget.attrs["readonly"] = True
         self.fields["nazev"].widget.attrs["readonly"] = True
         self.fields["mimetype"].widget.attrs["readonly"] = True
         self.fields["size_bytes"].widget.attrs["readonly"] = True
-        self.fields["vytvoreno_field"].widget.attrs["readonly"] = True
