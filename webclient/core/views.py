@@ -218,6 +218,9 @@ def post_upload(request):
     else:
         logger.debug("Updating file for soubor " + request.POST["fileID"])
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
+        fullname = os.path.join(settings.MEDIA_ROOT, s.path.path)
+        if os.path.exists(fullname):
+            os.remove(fullname)
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
