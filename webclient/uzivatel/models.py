@@ -74,9 +74,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def user_str(self):
-        retezec = f"{self.first_name} {self.last_name} {self.ident_cely}"
+        retezec = f"{self.last_name} {self.first_name} ({self.ident_cely}, "
         if self.organizace:
-            retezec += f" {self.organizace}"
+            retezec += f"{self.organizace})"
         return retezec
 
     def __str__(self):

@@ -226,7 +226,7 @@ def create(request, dj_ident_cely):
 
 class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        qs = Pian.objects.all()
+        qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return qs
