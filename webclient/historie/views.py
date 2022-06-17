@@ -6,6 +6,7 @@ from historie.tables import HistorieTable
 from core.forms import SouborMetadataForm
 from core.models import Soubor
 from django_tables2.export import ExportMixin
+from projekt.models import Projekt
 
 class HistorieListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, ListView):
     table_class = HistorieTable
@@ -104,7 +105,7 @@ class SouborHistorieListView(HistorieListView):
         context["metadata_form"] = SouborMetadataForm(instance=soubor)
         try:
             context["projekt"] = soubor.vazba.projekt_souboru
-        except RelatedObjectDoesNotExist as err:
+        except Projekt.DoesNotExist:
             context["projekt"] = None
         return context
 
