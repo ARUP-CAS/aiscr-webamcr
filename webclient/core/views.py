@@ -506,10 +506,10 @@ def redirect_ident_view(request, ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)):
         logger.debug("regex match for obsah/cast dokumentu 3D with ident %s", ident_cely)
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(re.fullmatch("\D{2}-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)):
         logger.debug("regex match for dokument with ident %s", ident_cely)
         return redirect("dokument:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("\D{2}-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)):
         logger.debug("regex match for obsah/cast dokumentu with ident %s", ident_cely)
         return redirect("dokument:detail", ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
