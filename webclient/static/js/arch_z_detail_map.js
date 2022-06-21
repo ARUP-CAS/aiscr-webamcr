@@ -844,6 +844,7 @@ switchMap = function(overview=false){
         if (typeof global_csrftoken !== 'undefined') {
             xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
         }
+        map.spin(false);
         map.spin(true);
         xhr.send(JSON.stringify(
             {
