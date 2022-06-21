@@ -8,7 +8,7 @@ var pinIconPurpleEmpty = new L.Icon({
     shadowSize: [29, 29]
     });
     var pinIconPurple = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue.svg',
+    iconUrl: static_url+'/img/pins/pin_purple.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
@@ -16,7 +16,7 @@ var pinIconPurpleEmpty = new L.Icon({
     shadowSize: [29, 29]
     });
     var pinIconPurpleHW = new L.Icon({
-    iconUrl: static_url+'/img/pin_purple.svg',
+    iconUrl: static_url+'/img/pins/pin_purple.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [13, 21],
     iconAnchor: [9, 21],
@@ -40,7 +40,7 @@ var pinIconPurpleEmpty = new L.Icon({
     shadowSize: [29, 29]
     });
     var pinIconPurpleDf = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue.svg',
+    iconUrl: static_url+'/img/pins/pin_purple.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],

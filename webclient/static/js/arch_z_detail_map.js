@@ -71,6 +71,7 @@ var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
 var poi_dj = L.layerGroup();
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
+var poi_other_dp = L.layerGroup();
 var heatPoints = [];
 var heatmapOptions=
 		{
@@ -108,6 +109,7 @@ var map = L.map('djMap', {
 
 map.addLayer(poi_sugest);
 map.addLayer(poi_other);
+map.addLayer(poi_other_dp);
 map.addLayer(poi_dj);
 
 var baseLayers = {
@@ -588,21 +590,21 @@ var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
     let coor=[]
     if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
         //ToDo" 21.06.2022 pinIconYellow
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedHW,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconYellowHW,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
         if(st_text.includes("POLYGON")){
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]));
             })
-            mouseOverGeometry(L.polygon(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
+            mouseOverGeometry(L.polygon(coor,{color:'gold'}).bindTooltip(text,{sticky: true }).addTo(layer));
         }else if(st_text.includes("LINESTRING")){
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
             })
-            mouseOverGeometry(L.polyline(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
+            mouseOverGeometry(L.polyline(coor,{color:'gold'}).bindTooltip(text,{sticky: true }).addTo(layer));
         }
     } else{
         //ToDo" 21.06.2022 pinIconYellowPoint
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconYellowPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
     }
 
 }
@@ -643,7 +645,10 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         }
 
     }
-    if(overview && coor.length>0 && layer!==poi_other){
+    if(overview && coor.length>0 && layer!==poi_other){ //ToDo: vypnout def. body && layer!==poi_other)
+        if(layer===poi_other){
+            layer=poi_other_dp;
+        }
         x0=0.0;
         x1=0.0
         c0=0
@@ -856,6 +861,7 @@ switchMap = function(overview=false){
         xhr.onload = function () {
             //console.log(JSON.parse(this.responseText))
             poi_other.clearLayers();
+            poi_other_dp.clearLayers();
             poi_dj.clearLayers();
             heatPoints=[]
             map.removeLayer(heatLayer);
@@ -864,7 +870,9 @@ switchMap = function(overview=false){
                 if(resAl == "detail"){
                     let resPoints=JSON.parse(this.responseText).points
                     //let dj_head=form_id.replace("detail_dj_form_", "")
+                    var pocet=0;
                     resPoints.forEach((i)=>{
+                        pocet+=1;
                     if(i.dj != null){
                         //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
                         addPointToPoiLayerWithForceG(i.geom,poi_dj,i.ident_cely,true)
@@ -873,6 +881,9 @@ switchMap = function(overview=false){
                         addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
                     }
                     })
+                    if(pocet>50){
+                        map.removeLayer(poi_other_dp);
+                    }
                 }else{
                     let resHeat=JSON.parse(this.responseText).heat
                     resHeat.forEach((i)=>{
@@ -884,6 +895,7 @@ switchMap = function(overview=false){
                     heatLayer=L.heatLayer(heatPoints,heatmapOptions);
                     map.addLayer(heatLayer);
                     poi_other.clearLayers();
+                    poi_other_dp.clearLayers();
                     poi_dj.clearLayers();
                 }
                 map.spin(false);
