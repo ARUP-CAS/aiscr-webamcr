@@ -561,7 +561,7 @@ var mouseOverGeometry =(geom)=>{
         if (geom instanceof L.Marker){
             this.options.iconOld=this.options.icon;
             if(this.options.changeIcon){
-                this.setIcon(pinIconYellow);
+                this.setIcon(pinIconYellowHW);
             }else{
                 this.setIcon(pinIconYellowPoint);
             }
@@ -588,7 +588,7 @@ var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
     let coor=[]
     if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
         //ToDo" 21.06.2022 pinIconYellow
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRed,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedHW,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
         if(st_text.includes("POLYGON")){
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]));
@@ -609,15 +609,15 @@ var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
     let myIco={icon: pinIconPurplePoint};
-    let myIco2={icon: pinIconPurple};
-    let myColor= {color:"rgb(51, 153, 255)"};
+    let myIco2={icon: pinIconPurpleHW};
+    let myColor= {color:"rgb(151, 0, 156)"};
 
 
 
     if (layer===poi_dj){
         //console.log(text+" orange "+st_text)
         myIco={icon: pinIconGreenPoint,zIndexOffset:1000};
-        myIco2={icon: pinIconGreen,zIndexOffset:1000,changeIcon:true};
+        myIco2={icon: pinIconGreenHW,zIndexOffset:1000,changeIcon:true};
         myColor={color:'green',zIndexOffset:1000,};
     } /*else if(layer==gm_correct){
         myIco={icon: pinIconRedPoint};
