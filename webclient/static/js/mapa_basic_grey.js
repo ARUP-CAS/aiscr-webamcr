@@ -64,8 +64,7 @@ var     osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{
         cuzkEL = L.tileLayer.wms('http://ags.cuzk.cz/arcgis2/services/dmr5g/ImageServer/WMSServer?', { layers: 'dmr5g:GrayscaleHillshade', maxZoom: 25, maxNativeZoom: 20, minZoom: 6 }),
         cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
-var poi = L.layerGroup();
-var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layers: [cuzkZM,poi]}).setView([49.84, 15.17], 7);
+var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layers: [cuzkZM]}).setView([49.84, 15.17], 7);
 
 var baseLayers = {
     "ČÚZK - Základní mapy ČR": cuzkZM,
@@ -76,11 +75,10 @@ var baseLayers = {
 
 var overlays = {
     "ČÚZK - Katastrální mapa": cuzkWMS,
-    "ČÚZK - Katastrální území": cuzkWMS2,
-    "AMČR Zájmové body": poi
+    "ČÚZK - Katastrální území": cuzkWMS2
 };
 
-L.control.layers(baseLayers,overlays).addTo(map);
+global_map_layers = L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 map.addControl(new L.Control.Fullscreen({
     title: {

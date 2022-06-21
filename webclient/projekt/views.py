@@ -1,13 +1,13 @@
 import logging
-import structlog
-from core.exceptions import MaximalIdentNumberError
 
 import simplejson as json
+import structlog
 from arch_z.models import Akce
-from dokument.models import Dokument
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ZAPSANY,
+    D_STAV_ZAPSANY,
+    NAVRZENI_KE_ZRUSENI_PROJ,
     OZNAMENI_PROJ,
     PRIHLASENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
@@ -16,26 +16,27 @@ from core.constants import (
     PROJEKT_STAV_PRIHLASENY,
     PROJEKT_STAV_UKONCENY_V_TERENU,
     PROJEKT_STAV_UZAVRENY,
+    PROJEKT_STAV_VYTVORENY,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
-    PROJEKT_STAV_VYTVORENY,
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
+    RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
     UZAVRENI_PROJ,
-    ZAHAJENI_V_TERENU_PROJ,
-    ZAPSANI_PROJ,
-    D_STAV_ZAPSANY,
     VRACENI_NAVRHU_ZRUSENI,
     VRACENI_ZRUSENI,
-    NAVRZENI_KE_ZRUSENI_PROJ,
-    RUSENI_PROJ,
+    ZAHAJENI_V_TERENU_PROJ,
+    ZAPSANI_PROJ,
 )
 from core.decorators import allowed_user_groups
+from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
 from core.message_constants import (
+    MAXIMUM_IDENT_DOSAZEN,
+    PRISTUP_ZAKAZAN,
     PROJEKT_NELZE_ARCHIVOVAT,
     PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI,
     PROJEKT_NELZE_SMAZAT,
@@ -52,20 +53,22 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
-    MAXIMUM_IDENT_DOSAZEN,
-    PRISTUP_ZAKAZAN,
 )
-from core.utils import get_points_from_envelope
-from dokument.views import odpojit, pripojit
+from core.utils import (
+    get_heatmap_project,
+    get_heatmap_project_density,
+    get_num_projects_from_envelope,
+    get_projects_from_envelope,
+)
 from core.views import check_stav_changed
-from uzivatel.forms import OsobaForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -73,6 +76,8 @@ from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from django_tables2.export import ExportMixin
+from dokument.models import Dokument
+from dokument.views import odpojit, pripojit
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import RuianKatastr
 from oznameni.forms import OznamovatelForm
@@ -80,17 +85,17 @@ from projekt.filters import ProjektFilter
 from projekt.forms import (
     CreateProjektForm,
     EditProjektForm,
+    GenerovatExpertniListForm,
+    GenerovatNovePotvrzeniForm,
     NavrhnoutZruseniProjektForm,
     PrihlaseniProjektForm,
     UkoncitVTerenuForm,
     ZahajitVTerenuForm,
     ZruseniProjektForm,
-    GenerovatNovePotvrzeniForm,
-    GenerovatExpertniListForm
 )
 from projekt.models import Projekt
 from projekt.tables import ProjektTable
-from django.contrib.auth.models import Group
+from uzivatel.forms import OsobaForm
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -105,7 +110,7 @@ def index(request):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = { "warnings": request.session.pop("temp_data", None) }
+    context = {"warnings": request.session.pop("temp_data", None)}
     projekt = get_object_or_404(
         Projekt.objects.select_related(
             "kulturni_pamatka", "typ_projektu", "vedouci_projektu", "organizace"
@@ -147,31 +152,78 @@ def detail(request, ident_cely):
 # @csrf_exempt
 @login_required
 @require_http_methods(["POST"])
-def post_ajax_get_point(request):
+def post_ajax_get_projects_limit(request):
     body = json.loads(request.body.decode("utf-8"))
-    # logger.debug(body)
-    projekty = get_points_from_envelope(
-        body["SouthEast"]["lng"],
-        body["SouthEast"]["lat"],
-        body["NorthWest"]["lng"],
-        body["NorthWest"]["lat"],
+    # logger.debug(request.body.decode("utf-8"))
+    # logger.debug(body["zoom"])
+    # logger.debug(body["southEast"]["lat"])
+    # DEBUG {"
+    # northWest":{"lat":50.01239997944656,"lng":14.618017673492433},
+    # "southEast":{"lat":50.00964206670656,"lng":14.63383197784424},"zoom":17}
+    # get_points_from_envelope
+    num = get_num_projects_from_envelope(
+        body["southEast"]["lng"],
+        body["northWest"]["lat"],
+        body["northWest"]["lng"],
+        body["southEast"]["lat"],
     )
-    # logger.debug("pocet projektu: "+str(len(projekty)))
-    back = []
-    for projekt in projekty:
-        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
-        back.append(
-            {
-                "id": projekt.id,
-                "ident_cely": projekt.ident_cely,
-                "lat": projekt.lat,
-                "lng": projekt.lng,
-            }
+    logger.debug("projekt pocet geometrii")
+    logger.debug(num)
+    if num < 5000:
+        pians = get_projects_from_envelope(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
         )
-    if len(projekty) > 0:
-        return JsonResponse({"points": back}, status=200)
+        back = []
+        for pian in pians:
+            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
+            back.append(
+                {
+                    "id": pian.id,
+                    "ident_cely": pian.ident_cely,
+                    "geom": pian.geometry.replace(", ", ","),
+                }
+            )
+        if len(pians) > 0:
+            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
     else:
-        return JsonResponse({"points": []}, status=200)
+        density = get_heatmap_project_density(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["zoom"],
+        )
+        logger.debug("projekt density %s", density)
+
+        heats = get_heatmap_project(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["zoom"],
+        )
+        back = []
+        cid = 0
+        for heat in heats:
+            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
+            cid += 1
+            back.append(
+                {
+                    "id": str(cid),
+                    "pocet": heat["count"],
+                    "density": 0,
+                    "geom": heat["geometry"].replace(", ", ","),
+                }
+            )
+        if len(heat) > 0:
+            return JsonResponse({"heat": back, "algorithm": "heat"}, status=200)
+        else:
+            return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 
 
 @login_required
@@ -183,15 +235,13 @@ def create(request):
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
         form_projekt = CreateProjektForm(
-            request.POST,
-            required=required_fields,
-            required_next=required_fields_next
-            )
+            request.POST, required=required_fields, required_next=required_fields_next
+        )
         if request.POST["typ_projektu"] == TYP_PROJEKTU_ZACHRANNY_ID:
-            required=True
+            required = True
         else:
-            required=False
-        form_oznamovatel = OznamovatelForm(request.POST,required=required)
+            required = False
+        form_oznamovatel = OznamovatelForm(request.POST, required=required)
         if form_projekt.is_valid():
             logger.debug("Projekt form is valid")
             lat = form_projekt.cleaned_data["latitude"]
@@ -238,8 +288,7 @@ def create(request):
     else:
         logger_s.debug("create.get")
         form_projekt = CreateProjektForm(
-            required=required_fields,
-            required_next=required_fields_next
+            required=required_fields, required_next=required_fields_next
         )
         form_oznamovatel = OznamovatelForm(uzamknout_formular=True)
     return render(
@@ -262,15 +311,15 @@ def edit(request, ident_cely):
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     required_fields = get_required_fields(projekt)
-    required_fields_next = get_required_fields(projekt,1)
+    required_fields_next = get_required_fields(projekt, 1)
     if request.method == "POST":
         request.POST = katastr_text_to_id(request)
         form = EditProjektForm(
             request.POST,
             instance=projekt,
             required=required_fields,
-            required_next=required_fields_next
-            )
+            required_next=required_fields_next,
+        )
         if form.is_valid():
             logger.debug("Form is valid")
             lat = form.cleaned_data["latitude"]
@@ -299,10 +348,10 @@ def edit(request, ident_cely):
 
     else:
         form = EditProjektForm(
-            instance=projekt, 
+            instance=projekt,
             required=required_fields,
-            required_next=required_fields_next
-            )
+            required_next=required_fields_next,
+        )
         if projekt.geom is not None:
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
@@ -321,24 +370,34 @@ def edit(request, ident_cely):
 def smazat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-        return JsonResponse({"redirect":reverse("projekt:list")})
+        return JsonResponse({"redirect": reverse("projekt:list")})
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:
-            request.session['temp_data'] = warnings
+            request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_SMAZAT)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
-        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                },
+                status=403,
+            )
+        form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         context = {
-        "object": projekt,
-        "title": _("projekt.modalForm.smazani.title.text"),
-        "id_tag": "smazat-form",
-        "button": _("projekt.modalForm.smazani.submit.button"),
-        "form_check": form_check,
+            "object": projekt,
+            "title": _("projekt.modalForm.smazani.title.text"),
+            "id_tag": "smazat-form",
+            "button": _("projekt.modalForm.smazani.submit.button"),
+            "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -401,10 +460,16 @@ def schvalit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         projekt.set_schvaleny(request.user)
         if projekt.ident_cely[0] == "X":
@@ -412,7 +477,14 @@ def schvalit(request, ident_cely):
                 projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+                return JsonResponse(
+                    {
+                        "redirect": reverse(
+                            "projekt:detail", kwargs={"ident_cely": ident_cely}
+                        )
+                    },
+                    status=403,
+                )
             else:
                 logger.debug(
                     "Projektu "
@@ -422,8 +494,14 @@ def schvalit(request, ident_cely):
                 )
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':projekt.ident_cely})})
-    form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
+        return JsonResponse(
+            {
+                "redirect": reverse(
+                    "projekt:detail", kwargs={"ident_cely": projekt.ident_cely}
+                )
+            }
+        )
+    form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
     context = {
         "object": projekt,
         "title": _("projekt.modalForm.schvaleni.title.text"),
@@ -440,10 +518,16 @@ def prihlasit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     logger.debug("something")
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
@@ -451,17 +535,29 @@ def prihlasit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
         archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
         form = PrihlaseniProjektForm(
-            instance=projekt, initial={"organizace": request.user.organizace, "old_stav":projekt.stav},archivar=archivar
+            instance=projekt,
+            initial={"organizace": request.user.organizace, "old_stav": projekt.stav},
+            archivar=archivar,
         )
     osoba_form = OsobaForm()
-    return render(request, "projekt/prihlasit.html", {"form": form, "projekt": projekt, "osoba_form":osoba_form})
+    return render(
+        request,
+        "projekt/prihlasit.html",
+        {"form": form, "projekt": projekt, "osoba_form": osoba_form},
+    )
 
 
 @login_required
@@ -470,10 +566,16 @@ def zahajit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = ZahajitVTerenuForm(request.POST, instance=projekt)
 
@@ -483,12 +585,18 @@ def zahajit_v_terenu(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_ZAHAJEN_V_TERENU
             )
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav":projekt.stav})
+        form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
         request,
         "projekt/transakce_v_terenu.html",
@@ -508,10 +616,16 @@ def ukoncit_v_terenu(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = UkoncitVTerenuForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -520,12 +634,18 @@ def ukoncit_v_terenu(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_UKONCEN_V_TERENU
             )
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav":projekt.stav})
+        form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
         request,
         "projekt/transakce_v_terenu.html",
@@ -545,10 +665,16 @@ def uzavrit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         # Move all events to state A2
         akce = Akce.objects.filter(projekt=projekt)
@@ -562,37 +688,46 @@ def uzavrit(request, ident_cely):
                         dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
+        )
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
         logger.debug(warnings)
-        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
-            request.session['temp_data'] = []
+            request.session["temp_data"] = []
             for key, item in warnings.items():
                 if key == "has_event":
-                    request.session['temp_data'].append(item)
+                    request.session["temp_data"].append(item)
                 else:
                     items = ""
                     for i, list_items in enumerate(item):
                         if isinstance(list_items, list):
                             items += list_items.pop(0)
-                            items += ', '.join(list_items)
+                            items += ", ".join(list_items)
                         else:
                             items += list_items
-                        if i+1 < len(item):
+                        if i + 1 < len(item):
                             items += ", "
-                    request.session['temp_data'].append(f"{key}: {items}")
+                    request.session["temp_data"].append(f"{key}: {items}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_UZAVRIT)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
-            
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                },
+                status=403,
+            )
+
         context = {
             "object": projekt,
             "title": _("projekt.modalForm.uzavrit.title.text"),
             "id_tag": "uzavrit-form",
             "button": _("projekt.modalForm.uzavrit.submit.button"),
-            "form_check": form_check
+            "form_check": form_check,
         }
 
         return render(request, "core/transakce_modal.html", context)
@@ -604,33 +739,48 @@ def archivovat(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         projekt.set_archivovany(request.user)
         projekt.save()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ARCHIVOVAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}
+        )
     else:
         warnings = projekt.check_pred_archivaci()
         logger.debug(warnings)
-        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
-            request.session['temp_data'] = []
+            request.session["temp_data"] = []
             for key, item in warnings.items():
-                request.session['temp_data'].append(f"{key}: {item}")
+                request.session["temp_data"].append(f"{key}: {item}")
             messages.add_message(request, messages.ERROR, PROJEKT_NELZE_ARCHIVOVAT)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
-    if request.GET.get('from_arch') == "true":
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                },
+                status=403,
+            )
+    if request.GET.get("from_arch") == "true":
         context = {
             "object": projekt,
             "title": _("arch_z.modal.archivovatProjekt.title"),
             "text": _("arch_z.modal.archivovatProjekt.text"),
             "id_tag": "archivovat-form",
             "button": _("arch_z.modal.archivovatProjekt.confirmButton.text"),
-            "form_check": form_check
+            "form_check": form_check,
         }
     else:
         context = {
@@ -638,7 +788,7 @@ def archivovat(request, ident_cely):
             "title": _("projekt.modalForm.archivovat.title.text"),
             "id_tag": "archivovat-form",
             "button": _("projekt.modalForm.archivovat.submit.button"),
-            "form_check": form_check
+            "form_check": form_check,
         }
     return render(request, "core/transakce_modal.html", context)
 
@@ -649,9 +799,15 @@ def navrhnout_ke_zruseni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = NavrhnoutZruseniProjektForm(request.POST)
         if form.is_valid():
@@ -673,31 +829,41 @@ def navrhnout_ke_zruseni(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, PROJEKT_USPESNE_NAVRZEN_KE_ZRUSENI
             )
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
-            context = {
-                "projekt": projekt,
-                "form": form
-                }
+            context = {"projekt": projekt, "form": form}
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
         logger.debug(warnings)
-        
+
         if warnings:
-            request.session['temp_data'] = []
+            request.session["temp_data"] = []
             for key, item in warnings.items():
                 if key == "has_event":
-                    request.session['temp_data'].append(item)
+                    request.session["temp_data"].append(item)
             messages.add_message(
                 request, messages.ERROR, PROJEKT_NELZE_NAVRHNOUT_KE_ZRUSENI
             )
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                },
+                status=403,
+            )
         context = {
             "projekt": projekt,
-            "form": NavrhnoutZruseniProjektForm(initial={"old_stav":projekt.stav}) 
-            }
+            "form": NavrhnoutZruseniProjektForm(initial={"old_stav": projekt.stav}),
+        }
     return render(request, "projekt/navrhnout_zruseni.html", context)
 
 
@@ -707,9 +873,15 @@ def zrusit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = ZruseniProjektForm(request.POST)
         if form.is_valid():
@@ -717,7 +889,13 @@ def zrusit(request, ident_cely):
             projekt.set_zruseny(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -730,7 +908,7 @@ def zrusit(request, ident_cely):
                 "form": form,
             }
     else:
-        form_check = CheckStavNotChangedForm(initial={"old_stav":projekt.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         context = {
             "object": projekt,
             "title": _("projekt.modalForm.zruseni.title.text"),
@@ -757,9 +935,15 @@ def vratit(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -767,12 +951,18 @@ def vratit(request, ident_cely):
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm(initial={"old_stav":projekt.stav})
+        form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
         "object": projekt,
         "form": form,
@@ -793,9 +983,15 @@ def vratit_navrh_zruseni(request, ident_cely):
         PROJEKT_STAV_ZRUSENY,
     ]:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if check_stav_changed(request, projekt):
-        return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -803,12 +999,18 @@ def vratit_navrh_zruseni(request, ident_cely):
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            return JsonResponse({"redirect":reverse("projekt:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "projekt:detail", kwargs={"ident_cely": ident_cely}
+                    )
+                }
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm(initial={"old_stav":projekt.stav})
+        form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
         "object": projekt,
         "form": form,
@@ -818,16 +1020,16 @@ def vratit_navrh_zruseni(request, ident_cely):
     }
     return render(request, "core/transakce_modal.html", context)
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def odpojit_dokument(request, ident_cely, proj_ident_cely):
-    return odpojit (request, ident_cely, proj_ident_cely, "projekt")
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def pripojit_dokument(
-    request, proj_ident_cely
-):
+def odpojit_dokument(request, ident_cely, proj_ident_cely):
+    return odpojit(request, ident_cely, proj_ident_cely, "projekt")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def pripojit_dokument(request, proj_ident_cely):
     return pripojit(request, proj_ident_cely, None, Projekt)
 
 
@@ -838,6 +1040,7 @@ def generovat_oznameni(request, ident_cely):
     projekt.create_confirmation_document(additional=True)
     return redirect("projekt:detail", ident_cely=ident_cely)
 
+
 @login_required
 @require_http_methods(["POST"])
 def generovat_expertni_list(request, ident_cely):
@@ -846,6 +1049,7 @@ def generovat_expertni_list(request, ident_cely):
     path = projekt.create_expert_list(popup_parametry)
     file = open(path, "rb")
     return FileResponse(file)
+
 
 def get_history_dates(historie_vazby):
     # Transakce do stavu "Zapsan" jsou 2
@@ -921,9 +1125,9 @@ def get_detail_template_shows(projekt, user):
     show_arch_links = projekt.stav == PROJEKT_STAV_ARCHIVOVANY
     show_akce = projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID
     show_pripojit_dokumenty = projekt.stav in [
-        PROJEKT_STAV_ZAHAJENY_V_TERENU, 
+        PROJEKT_STAV_ZAHAJENY_V_TERENU,
         PROJEKT_STAV_UKONCENY_V_TERENU,
-        PROJEKT_STAV_UZAVRENY
+        PROJEKT_STAV_UZAVRENY,
     ]
     show = {
         "oznamovatel": show_oznamovatel,
@@ -963,32 +1167,28 @@ def get_required_fields(zaznam=None, next=0):
             "parcelni_cislo",
             "planovane_zahajeni",
         ]
-    if (
-            PROJEKT_STAV_ZAPSANY - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
-    ):
+    if PROJEKT_STAV_ZAPSANY - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next:
         required_fields += [
             "vedouci_projektu",
             "organizace",
             "kulturni_pamatka",
         ]
-    if (
-            PROJEKT_STAV_PRIHLASENY - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
-    ):
+    if PROJEKT_STAV_PRIHLASENY - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next:
         required_fields += [
             "datum_zahajeni",
         ]
     if (
-            PROJEKT_STAV_ZAHAJENY_V_TERENU - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
+        PROJEKT_STAV_ZAHAJENY_V_TERENU - next
+        < stav
+        < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
     ):
-        required_fields += [
-            "datum_ukonceni"
-        ]
+        required_fields += ["datum_ukonceni"]
     if (
-            PROJEKT_STAV_UKONCENY_V_TERENU - next < stav < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
+        PROJEKT_STAV_UKONCENY_V_TERENU - next
+        < stav
+        < PROJEKT_STAV_NAVRZEN_KE_ZRUSENI - next
     ):
-        required_fields += [
-            "termin_odevzdani_nz"
-        ]
+        required_fields += ["termin_odevzdani_nz"]
     return required_fields
 
 

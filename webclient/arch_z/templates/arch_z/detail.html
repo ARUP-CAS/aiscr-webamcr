@@ -242,7 +242,7 @@
             <div class="form-group">
               <label>{% trans "Odeslat ZAA jako NZ" %}</label>
               <div class="custom-control custom-checkbox" id="div_id_je_nz">
-                <input class="checkboxinput custom-control-input" id="id_je_nz" name="je_nz" type="checkbox" readonly disabled="disabled" 
+                <input class="checkboxinput custom-control-input" id="id_je_nz" name="je_nz" type="checkbox" readonly disabled="disabled"
                 {% if zaznam.akce.je_nz == True %}checked="checked"{% endif %} {% if zaznam.akce.je_nz == False %}{% endif %}>
                 <label class="custom-control-label" for="id_je_nz">
                 </label>
@@ -623,6 +623,8 @@
   <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
+  <script src="{% static 'spin/spin.min.js' %}"></script>
+  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
@@ -806,7 +808,7 @@
           el_komponenta.addEventListener("click", () => {
               div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
-          
+
       };
       {% for j in dokumentacni_jednotky %}
           set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")
@@ -938,7 +940,7 @@
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
     })
-    create_autor_popisu_modal = new Modal(options, "create-autor-popisu"); 
+    create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
     var options = Object.assign(defaults, {modalID: "modal-form",
       formURL: "{% url 'uzivatel:create_osoba' %}",
       formID: "create-osoba-form",

@@ -19,10 +19,12 @@
 		crossorigin="">
 	</script>
 
-   <!--Mark Cluster-->
-   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css">
-   <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster-src.js" crossorigin=""></script>
-   <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js" crossorigin=""></script>
+  <script src="{% static 'convertToJTSK.js' %}"></script>
+  <script src="{% static 'simpleheat.js' %}"></script>
+  <script src="{% static 'HeatLayer.js' %}"></script>
+  <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
+  <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
 	<!--Leaflet FullScreen-->
 	<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
 	<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
@@ -66,6 +68,8 @@
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
+  <script src="{% static 'spin/spin.min.js' %}"></script>
+  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script>
       global_map_can_edit = true;
@@ -100,7 +104,7 @@
       newOption.value = response.value;
 
       dropdown.add(newOption);
-      
+
       $('#id_vedouci_projektu').selectpicker('refresh');
       $('#id_vedouci_projektu').selectpicker('val', response.value);
       dropdown.value = response.value;
@@ -114,7 +118,7 @@
       modalIDD : "#modal-form",
       successFunc:successFunction,
     })
-    create_osoba_modal = new Modal(options, "create-osoba"); 
+    create_osoba_modal = new Modal(options, "create-osoba");
     });
     </script>
     <script>

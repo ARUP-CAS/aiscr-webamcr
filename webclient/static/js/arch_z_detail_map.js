@@ -3,6 +3,7 @@ var global_map_can_edit=false;
 var global_map_can_grab_geom_from_map=false;
 var global_map_element="id_geom";
 var global_map_element_sjtsk="id_geom_sjtsk";
+var global_map_can_load_pians=true;
 console.log("zmena def.geom :"+global_map_element)
 
 L.TileLayer.Grayscale = L.TileLayer.extend({
@@ -71,7 +72,27 @@ var gm_correct = L.layerGroup();
 var poi_dj = L.layerGroup();
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
 var heatPoints = [];
-var heatLayer  = L.heatLayer(heatPoints);
+var heatmapOptions=
+		{
+			"maxOpacity": 1.00,
+			"minOpacity": 0.0,
+			"scaleRadius": true,
+			"useLocalExtrema": true,
+			"latField": "lat",
+			"lngField": "lng",
+			"valueField": "pocet",
+			"gradient":
+			{
+				"0.00": "rgb(255,0,255)",
+				"0.15": "rgb(0,0,255)",
+				"0.25": "rgb(0,255,0)",
+				"0.45": "rgb(255,255,0)",
+				"0.65": "rgb(255,170,0)",
+				"0.95": "rgb(255,0,0)",
+				"1.00": "rgb(255,0,0)"
+			}
+		};
+var heatLayer  = L.heatLayer(heatPoints,heatmapOptions);
 
 var global_clusters=false;
 var global_heat=false;
@@ -102,7 +123,7 @@ var overlays = {
     "AMČR Piany": poi_other
 };
 
-L.control.layers(baseLayers,overlays).addTo(map);
+var control=L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 
 map.addControl(new L.Control.Fullscreen({
@@ -291,12 +312,12 @@ var drawControl = new L.Control.Draw( {
             message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
         },
         shapeOptions: {
-            color: '#97009c'
+            color: '#ba0d27'
         }
         },
         // disable toolbar item by setting it to false
         polyline: {
-        shapeOptions: {color: '#662d91' }
+        shapeOptions: {color: '#ba0d27' }
         },
         circle: false, // Turns off this drawing tool
         rectangle: false,
@@ -566,6 +587,7 @@ var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
     //console.log(geom)
     let coor=[]
     if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
+        //ToDo" 21.06.2022 pinIconYellow
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRed,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
         if(st_text.includes("POLYGON")){
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
@@ -579,14 +601,15 @@ var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
             mouseOverGeometry(L.polyline(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
         }
     } else{
+        //ToDo" 21.06.2022 pinIconYellowPoint
         mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
     }
 
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
     let coor=[]
-    let myIco={icon: pinIconBluePoint};
-    let myIco2={icon: pinIconBlue};
+    let myIco={icon: pinIconPurplePoint};
+    let myIco2={icon: pinIconPurple};
     let myColor= {color:"rgb(51, 153, 255)"};
 
 
@@ -689,8 +712,8 @@ function loadGeomToEdit(ident_cely){
     drawnItemsBuffer.clearLayers();
     let drawnItemsCount=0;
     let layerColor="green";
-    let PolylineColor= '#97009c';
-    let PolygonColor= '#662d91' ;
+    let PolylineColor= '#ba0d27';
+    let PolygonColor= '#ba0d27' ;
     map.eachLayer(function (layer) {
         if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Marker ){
             let content="";
@@ -710,7 +733,7 @@ function loadGeomToEdit(ident_cely){
                     if(drawnItemsCount==1){
                         layer.addTo(drawnItems);
                         //UNDO-layer-start
-                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: pinIconBluePoint}).bindPopup(content).addTo(drawnItemsBuffer);
+                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: pinIconPurplePoint}).bindPopup(content).addTo(drawnItemsBuffer);
                         //UNDO-layer-end
                     } else{
                         layer.remove();
@@ -767,10 +790,10 @@ function loadGeomToEdit(ident_cely){
 //switchMap ();
 var boundsLock=0;
 
-map.on('zoomend', function() {
-    console.log("zoomed")
-    switchMap(true)
-});
+//map.on('zoomend', function() {
+//    console.log("zoomed")
+//    switchMap(true)
+//});
 
 
 
@@ -796,6 +819,14 @@ heatPoints = heatPoints.map(function (p) {
             }
 });
 
+map.on('overlayadd overlayremove', function (e) {
+    if (control._handlingClick) {
+        if(e.name=="AMČR Piany"){
+            //console.log(global_map_can_load_pians)
+            global_map_can_load_pians=!global_map_can_load_pians;
+        }
+    }
+});
 
 
 switchMap = function(overview=false){
@@ -803,7 +834,7 @@ switchMap = function(overview=false){
     let zoom=map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
-    if(!global_map_can_edit){
+    if( global_map_can_load_pians){
     if(overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest){
         console.log("Change: "+northWest+"  "+southEast+" "+zoom);
         boundsLock=bounds;
@@ -813,6 +844,7 @@ switchMap = function(overview=false){
         if (typeof global_csrftoken !== 'undefined') {
             xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
         }
+        map.spin(true);
         xhr.send(JSON.stringify(
             {
                 'northWest': northWest,
@@ -841,21 +873,20 @@ switchMap = function(overview=false){
                     }
                     })
                 }else{
-                    console.log("heat");
                     let resHeat=JSON.parse(this.responseText).heat
                     resHeat.forEach((i)=>{
-
                         geom=i.geom.split("(")[1].split(")")[0].split(" ");
                         for(let j=0;j<i.pocet;j++){
                             heatPoints.push([geom[1],geom[0]])//chyba je to geome
                         }
                     })
-                    heatLayer=L.heatLayer(heatPoints);
+                    heatLayer=L.heatLayer(heatPoints,heatmapOptions);
                     map.addLayer(heatLayer);
                     poi_other.clearLayers();
                     poi_dj.clearLayers();
                 }
-                console.log("loaded")
+                map.spin(false);
+                //console.log("loaded")
         }
         }
     }

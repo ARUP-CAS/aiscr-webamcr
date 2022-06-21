@@ -1,9 +1,29 @@
 from django.urls import path
 
-from .views import index, create, edit, smazat, prihlasit, schvalit, uzavrit, archivovat, detail, zahajit_v_terenu, \
-    ukoncit_v_terenu, navrhnout_ke_zruseni, zrusit, vratit, vratit_navrh_zruseni, post_ajax_get_point, \
-    odebrat_sloupec_z_vychozich, odpojit_dokument, pripojit_dokument, generovat_oznameni, generovat_expertni_list
-from .views import ProjektListView
+from .views import (
+    ProjektListView,
+    archivovat,
+    create,
+    detail,
+    edit,
+    generovat_expertni_list,
+    generovat_oznameni,
+    index,
+    navrhnout_ke_zruseni,
+    odebrat_sloupec_z_vychozich,
+    odpojit_dokument,
+    post_ajax_get_projects_limit,
+    prihlasit,
+    pripojit_dokument,
+    schvalit,
+    smazat,
+    ukoncit_v_terenu,
+    uzavrit,
+    vratit,
+    vratit_navrh_zruseni,
+    zahajit_v_terenu,
+    zrusit,
+)
 
 app_name = "projekt"
 
@@ -41,9 +61,9 @@ urlpatterns = [
         name="projekt_vratit_navrh_zruseni",
     ),
     path(
-        "projekt-zjisti-okolni-projekty",
-        post_ajax_get_point,
-        name="post_ajax_get_points",
+        "akce-get-projekty",
+        post_ajax_get_projects_limit,
+        name="post_ajax_get_projects_limit",
     ),
     path(
         "odebrat-sloupec-z-vychozich",
@@ -60,6 +80,14 @@ urlpatterns = [
         pripojit_dokument,
         name="pripojit_dokument",
     ),
-    path("generovat-oznameni/<str:ident_cely>", generovat_oznameni, name="generovat_oznameni"),
-    path("generovat-expertni-list/<str:ident_cely>", generovat_expertni_list, name="generovat_expertni_list"),
+    path(
+        "generovat-oznameni/<str:ident_cely>",
+        generovat_oznameni,
+        name="generovat_oznameni",
+    ),
+    path(
+        "generovat-expertni-list/<str:ident_cely>",
+        generovat_expertni_list,
+        name="generovat_expertni_list",
+    ),
 ]

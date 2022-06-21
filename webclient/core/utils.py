@@ -173,6 +173,36 @@ def get_pians_from_envelope(left, bottom, right, top, ident_cely):
         return None
 
 
+def get_num_projects_from_envelope(left, bottom, right, top):
+    query = (
+        "select count(*) from public.projekt p where "
+        "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
+    )
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        cursor.execute(query, [left, bottom, right, top])
+        return cursor.fetchone()[0]
+    except IndexError:
+        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+def get_projects_from_envelope(left, bottom, right, top):
+    query = (
+        "select p.id,p.ident_cely,ST_AsText(p.geom) as geometry "
+        "from public.projekt p "
+        "where p.geom is not null and "
+        "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 8000"
+    )
+    try:
+        pians = Projekt.objects.raw(query, [left, bottom, right, top])
+        return pians
+    except IndexError:
+        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
 # CREATE TABLE amcr_clusters_table AS
 # WITH query AS (
 # select st_clusterkmeans(geom,500) OVER() cid, geom from pian LIMIT 6000
@@ -184,24 +214,67 @@ def dictfetchall(cursor):
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
-def get_heat_map(left, bottom, right, top):
+def get_heatmap_pian(left, bottom, right, top, zoom):
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
+    query_zoom = "select count*3 as count, ST_AsText(st_centroid) as geometry "
+    "from amcr_heat_pian_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
-        cursor.execute(query)
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
         logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
         return None
 
 
-def get_heat_map_density(left, bottom, right, top):
+def get_heatmap_pian_density(left, bottom, right, top, zoom):
     query = "select max(count) from amcr_heat_pian_l2"
+    query_zoom = "select max(count) from amcr_heat_pian_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
-        cursor.execute(query)
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
+        return cursor.fetchone()[0]
+    except IndexError:
+        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+def get_heatmap_project(left, bottom, right, top, zoom):
+    query = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_l2"
+    query_zoom = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_lx2 "
+    "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
+        return dictfetchall(cursor)
+    except IndexError:
+        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        return None
+
+
+def get_heatmap_project_density(left, bottom, right, top, zoom):
+    query = "select max(count) from amcr_heat_projekt_l2"
+    query_zoom = "select max(count) from amcr_heat_projekt_lx2 "
+    "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
         logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
