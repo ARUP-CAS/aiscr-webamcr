@@ -190,7 +190,7 @@ def detail(request, ident_cely):
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
             VyskovyBod,
-            form=create_vyskovy_bod_form(pian=jednotka.pian),
+            form=create_vyskovy_bod_form(pian=jednotka.pian,not_readonly=show["editovat"]),
             extra=1,
             can_delete=False,
         )
@@ -233,11 +233,11 @@ def detail(request, ident_cely):
             logger.debug(jednotka.ident_cely)
             dj_form_detail["adb_form"] = (
                 CreateADBForm(
-                    old_adb_post, instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+                    old_adb_post, instance=jednotka.adb, prefix=jednotka.adb.ident_cely, readonly=not show["editovat"],
                 )
                 if jednotka.adb.ident_cely == adb_ident_cely
                 else CreateADBForm(
-                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely
+                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely, readonly=not show["editovat"],
                 )
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
@@ -924,13 +924,14 @@ def get_required_fields(zaznam=None, next=0):
     else:
         stav = 1
     if stav >= AZ_STAV_ZAPSANY - next:
-        required_fields = []
+        required_fields = [
+            "lokalizace_okolnosti",
+        ]
     if stav > AZ_STAV_ZAPSANY - next:
         required_fields += [
             "hlavni_vedouci",
             "organizace",
             "datum_ukonceni",
-            "lokalizace_okolnosti",
             "hlavni_typ",
             "datum_zahajeni",
         ]

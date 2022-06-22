@@ -207,28 +207,29 @@
           </div>
           <div class="col-sm-12">
             <div class="form-group">
-              <label>{% trans "Lokalizace okolností" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2"
+              <label>{% trans "Lokalizace/okolnosti" %}</label>
+              <textarea class="textarea form-control" cols="40" rows="1"
                         placeholder="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.souhrn_upresneni|check_if_none }}" readonly>
+              <textarea class="textarea form-control" cols="40" rows="4" placeholder="{{ zaznam.akce.souhrn_upresneni|check_if_none }}"
+                        readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
+              <textarea class="textarea form-control" cols="40" rows="1" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
                         readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení dokumentace" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
+              <textarea class="textarea form-control" cols="40" rows="1" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
                         readonly>{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}</textarea>
             </div>
           </div>
@@ -241,12 +242,7 @@
           <div class="col-sm-2 je_nz">
             <div class="form-group">
               <label>{% trans "Odeslat ZAA jako NZ" %}</label>
-              <div class="custom-control custom-checkbox" id="div_id_je_nz">
-                <input class="checkboxinput custom-control-input" id="id_je_nz" name="je_nz" type="checkbox" readonly disabled="disabled"
-                {% if zaznam.akce.je_nz == True %}checked="checked"{% endif %} {% if zaznam.akce.je_nz == False %}{% endif %}>
-                <label class="custom-control-label" for="id_je_nz">
-                </label>
-                </div>
+              <input class="form-control" type="text" value="{{ zaznam.akce.je_nz|true_false }}" readonly>
             </div>
           </div>
         </div>
@@ -341,6 +337,7 @@
                 min-height: 400px;
                 height: 100%;
                 border-radius: 5px;
+                padding-top: 75%;
             }
         </style>
         <div id="djMap" class="app-card-shadow"></div>
@@ -465,8 +462,10 @@
                     {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
                 </div>
               </div>
+              {% if show.editovat %}
               <button type="submit" id="editDjSubmitButton"
                       class="btn btn-primary">{% trans "Uložit změny" %}</button>
+              {% endif %}
             {% endif %}
           </div>
         </div>
@@ -637,12 +636,13 @@
       let ask_only_once=true;
 
       const btw_add_dj = document.getElementById("button-add-dj");
-      btw_add_dj.addEventListener("click", () => {
-          if (el_div_currently_selected) {
-              el_div_currently_selected.style.backgroundColor = null;
-          }
-      });
-
+      if (btw_add_dj){
+        btw_add_dj.addEventListener("click", () => {
+            if (el_div_currently_selected) {
+                el_div_currently_selected.style.backgroundColor = null;
+            }
+        });
+      }
       function setCookie(name, value, path) {
           var cookieString = name + '=' + value + ';path=' + path
           document.cookie = cookieString
