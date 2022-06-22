@@ -6,6 +6,7 @@ var osmColor = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', { at
     cuzkZM = L.tileLayer('http://ags.cuzk.cz/arcgis/rest/services/zmwm/MapServer/tile/{z}/{y}/{x}?blankTile=false', { layers: 'zmwm', maxZoom: 25,maxNativeZoom:19, minZoom: 6 });
 
 
+var poi = L.layerGroup();
 var map = L.map('projectMap',{attributionControl:false,zoomControl:false,  layers: [cuzkZM]}).setView([49.84, 15.17], 7);
 
 var baseLayers = {

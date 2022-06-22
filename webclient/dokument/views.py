@@ -386,7 +386,7 @@ def edit_model_3D(request, ident_cely):
             if dx > 0 and dy > 0:
                 geom = Point(dy, dx)
         except Exception:
-            logger.error("Chybny format souradnic")
+            logger.error("Dokument.Chybny format souradnic:1")
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             form_d.save()
             if geom is not None:
@@ -505,7 +505,7 @@ def create_model_3D(request):
             if dx > 0 and dy > 0:
                 geom = Point(dy, dx)
         except Exception:
-            logger.error("Chybny format souradnic")
+            logger.error("Dokument.Chybny format souradnic:2")
 
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
             logger.debug("Forms are valid")

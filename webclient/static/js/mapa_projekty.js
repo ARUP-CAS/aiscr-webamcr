@@ -82,9 +82,9 @@ var button_map_lock = L.easyButton({
 
 var addPointOnLoad = (lat, long, text) => {
     if (text) {
-        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconGreenDf }).bindPopup(text).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf,zIndexOffset:2000 }).bindPopup(text).addTo(poi_sugest);
     } else {
-        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconGreenDf }).addTo(poi_sugest);
+        L.marker(amcr_static_coordinate_precision_wgs84([lat, long]), { icon: pinIconYellowDf,zIndexOffset:2000 }).addTo(poi_sugest);
     }
 
     map.setView([lat, long], 18)
@@ -185,7 +185,7 @@ switchMap = function(overview=false){
                     resPoints.forEach((i)=>{
                     let ge=i.geom.split("(")[1].split(")")[0];
 
-                    L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1],ge.split(" ")[0]]), { icon: pinIconPurpleDf }).bindPopup(i.ident_cely).addTo(poi_other)
+                    L.marker(amcr_static_coordinate_precision_wgs84([ge.split(" ")[1],ge.split(" ")[0]]), { icon: pinIconPurpleDf,zIndexOffset:1000 }).bindPopup(i.ident_cely).addTo(poi_other)
                     })
                 }else{
                     let resHeat=JSON.parse(this.responseText).heat
