@@ -346,7 +346,7 @@ def edit(request, ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("Form is valid")
+            logger.debug("ArchZ.Form is valid:1")
             form_az.save()
             form_akce.save()
             ostatni_vedouci_objekt_formset.save()
@@ -623,7 +623,7 @@ def zapsat(request, projekt_ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("Form is valid")
+            logger.debug("ArchZ.Form is valid:2")
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE

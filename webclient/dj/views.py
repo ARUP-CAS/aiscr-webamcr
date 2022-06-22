@@ -39,11 +39,13 @@ def detail(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("Dj.Form is valid:1")
         dj = form.save()
         if form.changed_data:
+            logger.debug("changed data")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         if dj.typ.heslo == "Celek akce":
+            logger.debug("celek akce")
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
                 & ~Q(ident_cely=dj.ident_cely)
@@ -54,6 +56,7 @@ def detail(request, ident_cely):
                 ).first()
                 dokumentacni_jednotka.save()
         elif dj.typ.heslo == "Sonda":
+            logger.debug("sonda")
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
                 & ~Q(ident_cely=dj.ident_cely)
@@ -69,6 +72,7 @@ def detail(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "adb_detail" in request.POST:
+        logger.debug("adb_detail")
         ident_cely = request.POST.get("adb_detail")
         adb = get_object_or_404(Adb, ident_cely=ident_cely)
         form = CreateADBForm(
@@ -77,7 +81,7 @@ def detail(request, ident_cely):
             prefix=ident_cely,
         )
         if form.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("Dj.Form is valid:")
             form.save()
             if form.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -90,6 +94,7 @@ def detail(request, ident_cely):
             logger.debug(ident_cely)
 
     if "adb_zapsat_vyskove_body" in request.POST:
+        logger.debug("adb_zapsat_vyskove_body")
         adb_ident_cely = request.POST.get("adb_zapsat_vyskove_body")
         adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
         vyskovy_bod_formset = inlineformset_factory(
@@ -109,7 +114,7 @@ def detail(request, ident_cely):
                 vyskovy_bod.save()
                 # vyskovy_bod.set_ident()
         if formset.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("Dj.Form is valid:3")
             if (
                 formset.has_changed()
             ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
@@ -121,7 +126,11 @@ def detail(request, ident_cely):
 
     response = redirect("arch_z:detail", dj.archeologicky_zaznam.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
-    response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}", max_age=1000)
+    response.set_cookie(
+        "set-active",
+        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        max_age=1000,
+    )
     return response
 
 
@@ -131,7 +140,7 @@ def zapsat(request, arch_z_ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     form = CreateDJForm(request.POST)
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("Dj.Form is valid:4")
         vazba = KomponentaVazby(typ_vazby=DOKUMENTACNI_JEDNOTKA_RELATION_TYPE)
         vazba.save()  # TODO rewrite to signals
 
@@ -154,7 +163,11 @@ def zapsat(request, arch_z_ident_cely):
 
     response = redirect("arch_z:detail", az.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
-    response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}", max_age=1000)
+    response.set_cookie(
+        "set-active",
+        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        max_age=1000,
+    )
     return response
 
 

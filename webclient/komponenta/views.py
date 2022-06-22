@@ -1,28 +1,25 @@
 import logging
 
-from django.http import JsonResponse
-from django.urls import reverse
 from core.exceptions import MaximalIdentNumberError
-
-from adb.forms import CreateADBForm, create_vyskovy_bod_form
-from core.exceptions import DJNemaPianError, MaximalIdentNumberError
-from core.ident_cely import get_adb_ident, get_komponenta_ident
+from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
+    MAXIMUM_KOMPONENT_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
-    MAXIMUM_KOMPONENT_DOSAZENO,
 )
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms import inlineformset_factory
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods
+from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -43,7 +40,6 @@ from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -61,7 +57,7 @@ def detail(request, ident_cely):
         prefix=ident_cely,
     )
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("K.Form is valid:1")
         form.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -78,7 +74,9 @@ def detail(request, ident_cely):
         NalezObjektFormset = inlineformset_factory(
             Komponenta,
             NalezObjekt,
-            form=create_nalez_objekt_form(druh_objekt_choices, specifikace_objekt_choices),
+            form=create_nalez_objekt_form(
+                druh_objekt_choices, specifikace_objekt_choices
+            ),
             extra=1,
         )
         formset_objekt = NalezObjektFormset(
@@ -103,7 +101,7 @@ def detail(request, ident_cely):
             request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
         )
         if formset_objekt.is_valid() and formset_predmet.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("K.Form is valid:2")
             formset_predmet.save()
             formset_objekt.save()
             if formset_objekt.has_changed() or formset_predmet.has_changed():
@@ -117,11 +115,13 @@ def detail(request, ident_cely):
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
-
-
     response = redirect(request.META.get("HTTP_REFERER"))
-    response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
-    response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
+    response.set_cookie(
+        "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
+    )
+    response.set_cookie(
+        "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
+    )
     return response
 
 
@@ -134,7 +134,7 @@ def zapsat(request, dj_ident_cely):
     form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
     komp_ident_cely = None
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("K.Form is valid:3")
         komponenta = form.save(commit=False)
         try:
             komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
@@ -154,8 +154,14 @@ def zapsat(request, dj_ident_cely):
 
     response = redirect(request.META.get("HTTP_REFERER"))
     if komp_ident_cely:
-        response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
-        response.set_cookie("set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000)
+        response.set_cookie(
+            "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000
+        )
+        response.set_cookie(
+            "set-active",
+            f"el_komponenta_{komp_ident_cely.replace('-', '_')}",
+            max_age=1000,
+        )
     return response
 
 
@@ -172,17 +178,29 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána komponenta: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})})
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
+                    )
+                }
+            )
         else:
             logger.warning("Komponenta nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":reverse("arch_z:detail", kwargs={'ident_cely':arch_z_ident_cely})},status=403)
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
+                    )
+                },
+                status=403,
+            )
     else:
         context = {
-        "object": k,
-        "title": _("komponenta.modalForm.smazani.title.text"),
-        "id_tag": "smazat-komponenta-form",
-        "button": _("komponenta.modalForm.smazani.submit.button"),
-        
+            "object": k,
+            "title": _("komponenta.modalForm.smazani.title.text"),
+            "id_tag": "smazat-komponenta-form",
+            "button": _("komponenta.modalForm.smazani.submit.button"),
         }
         return render(request, "core/transakce_modal.html", context)

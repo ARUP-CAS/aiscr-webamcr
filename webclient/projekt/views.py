@@ -321,7 +321,7 @@ def edit(request, ident_cely):
             required_next=required_fields_next,
         )
         if form.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("Projekt Form is valid:1")
             lat = form.cleaned_data["latitude"]
             long = form.cleaned_data["longitude"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting

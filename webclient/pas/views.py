@@ -1,9 +1,7 @@
 import logging
 
-from django.urls import reverse
-import structlog
-
 import simplejson as json
+import structlog
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -50,6 +48,7 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
@@ -70,7 +69,7 @@ logger_s = structlog.get_logger(__name__)
 
 
 def get_detail_context(sn, request):
-    context = {"sn" : sn}
+    context = {"sn": sn}
     context["form"] = CreateSamostatnyNalezForm(
         instance=sn, readonly=True, user=request.user
     )
@@ -102,10 +101,10 @@ def create(request):
             user=request.user,
             required=required_fields,
             required_next=required_fields_next,
-            )
+        )
         form_coor = CoordinatesDokumentForm(
             request.POST,
-            )
+        )
         if form.is_valid():
             geom = None
             geom_sjtsk = None
@@ -131,7 +130,7 @@ def create(request):
                 sn.stav = SN_ZAPSANY
                 sn.pristupnost = Heslar.objects.get(id=PRISTUPNOST_ARCHEOLOG_ID)
                 sn.predano_organizace = sn.projekt.organizace
-                sn.geom_system=form_coor.data.get("coordinate_system")
+                sn.geom_system = form_coor.data.get("coordinate_system")
                 if geom is not None:
                     sn.katastr = get_cadastre_from_point(geom)
                     sn.geom = geom
@@ -151,9 +150,8 @@ def create(request):
             user=request.user,
             required=required_fields,
             required_next=required_fields_next,
-            )
-        form_coor = CoordinatesDokumentForm(
         )
+        form_coor = CoordinatesDokumentForm()
     return render(
         request,
         "pas/create.html",
@@ -171,7 +169,7 @@ def create(request):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = { "warnings": request.session.pop("temp_data", None) }
+    context = {"warnings": request.session.pop("temp_data", None)}
     sn = get_object_or_404(
         SamostatnyNalez.objects.select_related(
             "soubory",
@@ -186,17 +184,23 @@ def detail(request, ident_cely):
     )
     context.update(get_detail_context(sn=sn, request=request))
     if sn.geom:
-        geom="0 0"
-        if(sn.geom):
+        geom = "0 0"
+        if sn.geom:
             geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
-        geom_sjtsk="0 0"
-        if(sn.geom_sjtsk):
-            geom_sjtsk = str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+        geom_sjtsk = "0 0"
+        if sn.geom_sjtsk:
+            geom_sjtsk = (
+                str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+            )
         system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
-                "detector_coordinates_x": geom.split(" ")[1] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[1],
-                "detector_coordinates_y": geom.split(" ")[0] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[0],
+                "detector_coordinates_x": geom.split(" ")[1]
+                if (system == "WGS-84")
+                else geom_sjtsk.split(" ")[1],
+                "detector_coordinates_y": geom.split(" ")[0]
+                if (system == "WGS-84")
+                else geom_sjtsk.split(" ")[0],
                 "coordinate_wgs84_x": geom.split(" ")[1],
                 "coordinate_wgs84_y": geom.split(" ")[0],
                 "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
@@ -218,7 +222,7 @@ def edit(request, ident_cely):
         raise PermissionDenied()
     kwargs = {"projekt_disabled": "disabled"}
     required_fields = get_required_fields(sn)
-    required_fields_next = get_required_fields(sn,1)
+    required_fields_next = get_required_fields(sn, 1)
     if request.method == "POST":
         request_post = request.POST.copy()
         request_post["projekt"] = sn.projekt
@@ -228,7 +232,7 @@ def edit(request, ident_cely):
             user=request.user,
             required=required_fields,
             required_next=required_fields_next,
-            **kwargs
+            **kwargs,
         )
         form_coor = CoordinatesDokumentForm(request.POST)
         geom = None
@@ -243,10 +247,10 @@ def edit(request, ident_cely):
             if sjtsk_dx > 0 and sjtsk_dy > 0:
                 geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
         except Exception as e:
-            logger.error("Chybny format souradnic: "+e)
+            logger.error("Chybny format souradnic: " + e)
         if form.is_valid():
-            logger.debug("Form is valid")
-            sn.geom_system=form_coor.data.get("coordinate_system")
+            logger.debug("PAS Form is valid:1")
+            sn.geom_system = form_coor.data.get("coordinate_system")
             if geom is not None:
                 sn.katastr = get_cadastre_from_point(geom)
                 sn.geom = geom
@@ -267,20 +271,26 @@ def edit(request, ident_cely):
             user=request.user,
             required=required_fields,
             required_next=required_fields_next,
-            **kwargs
-            )
+            **kwargs,
+        )
         if sn.geom:
-            geom="0 0"
-            if(sn.geom):
+            geom = "0 0"
+            if sn.geom:
                 geom = str(sn.geom).split("(")[1].replace(", ", ",").replace(")", "")
-            geom_sjtsk="0 0"
-            if(sn.geom_sjtsk):
-                geom_sjtsk = str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+            geom_sjtsk = "0 0"
+            if sn.geom_sjtsk:
+                geom_sjtsk = (
+                    str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
+                )
             system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
             form_coor = CoordinatesDokumentForm(
                 initial={
-                    "detector_coordinates_x": geom.split(" ")[1] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[1],
-                    "detector_coordinates_y": geom.split(" ")[0] if(system=="WGS-84" ) else geom_sjtsk.split(" ")[0],
+                    "detector_coordinates_x": geom.split(" ")[1]
+                    if (system == "WGS-84")
+                    else geom_sjtsk.split(" ")[1],
+                    "detector_coordinates_y": geom.split(" ")[0]
+                    if (system == "WGS-84")
+                    else geom_sjtsk.split(" ")[0],
                     "coordinate_wgs84_x": geom.split(" ")[1],
                     "coordinate_wgs84_y": geom.split(" ")[0],
                     "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
@@ -307,23 +317,32 @@ def edit_ulozeni(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
     if check_stav_changed(request, sn):
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = PotvrditNalezForm(
             request.POST, instance=sn, predano_required=predano_required
         )
         if form.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("PAS Form is valid:2")
             form.save()
             if form.changed_data:
                 logger.debug(form.changed_data)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
+            )
         else:
             logger.debug("The form is not valid!")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn, predano_required=predano_required,initial={"old_stav":sn.stav})
+        form = PotvrditNalezForm(
+            instance=sn,
+            predano_required=predano_required,
+            initial={"old_stav": sn.stav},
+        )
     context = {
         "object": sn,
         "form": form,
@@ -340,10 +359,16 @@ def vratit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
@@ -351,12 +376,14 @@ def vratit(request, ident_cely):
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
-            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = VratitForm(initial={"old_stav":sn.stav})
+        form = VratitForm(initial={"old_stav": sn.stav})
     context = {
         "object": sn,
         "form": form,
@@ -384,22 +411,33 @@ def odeslat(request, ident_cely):
     )
     if sn.stav != SN_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         sn.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ODESLAN)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
+        )
 
     warnings = sn.check_pred_odeslanim()
     logger.debug(warnings)
     if warnings:
-        request.session['temp_data'] = warnings
+        request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav":sn.stav})
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
+    form_check = CheckStavNotChangedForm(initial={"old_stav": sn.stav})
     context = {
         "object": sn,
         "title": _("pas.modalForm.odeslat.title.text"),
@@ -417,21 +455,29 @@ def potvrdit(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if check_stav_changed(request, sn):
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
             sn = form.save(commit=False)
             sn.set_potvrzeny(request.user)
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
-            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
+            return JsonResponse(
+                {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
+            )
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav":sn.stav})
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav})
     context = {
         "object": sn,
         "form": form,
@@ -446,24 +492,32 @@ def archivovat(request, ident_cely):
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, sn):
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         sn.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_ARCHIVOVAN)
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})})
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
+        )
     else:
         # TODO nejake kontroly? warnings = sn.check_pred_archivaci()
-        form_check = CheckStavNotChangedForm(initial={"old_stav":sn.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": sn.stav})
         context = {
-        "object": sn,
-        "title": _("pas.modalForm.archivovat.title.text"),
-        "id_tag": "archivovat-pas-form",
-        "button": _("pas.modalForm.archivovat.submit.button"),
-        "form_check": form_check
-    }
+            "object": sn,
+            "title": _("pas.modalForm.archivovat.title.text"),
+            "id_tag": "archivovat-pas-form",
+            "button": _("pas.modalForm.archivovat.submit.button"),
+            "form_check": form_check,
+        }
     return render(request, "core/transakce_modal.html", context)
 
 
@@ -495,7 +549,10 @@ class SamostatnyNalezListView(
 def smazat(request, ident_cely):
     nalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
-        return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+        return JsonResponse(
+            {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+            status=403,
+        )
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory
@@ -506,19 +563,22 @@ def smazat(request, ident_cely):
         if resp1:
             logger.debug("Nalez byl smazan: " + str(resp1 + resp2 + resp3))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":reverse("core:home")})
+            return JsonResponse({"redirect": reverse("core:home")})
         else:
             logger.warning("Nalez nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":reverse("pas:detail", kwargs={'ident_cely':ident_cely})},status=403)
+            return JsonResponse(
+                {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
+                status=403,
+            )
     else:
-        form_check = CheckStavNotChangedForm(initial={"old_stav":nalez.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})
         context = {
-        "object": nalez,
-        "title": _("pas.modalForm.smazani.title.text"),
-        "id_tag": "smazat-pas-form",
-        "button": _("pas.modalForm.smazani.submit.button"),
-        "form_check": form_check,
+            "object": nalez,
+            "title": _("pas.modalForm.smazani.title.text"),
+            "id_tag": "smazat-pas-form",
+            "button": _("pas.modalForm.smazani.submit.button"),
+            "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -542,7 +602,10 @@ def zadost(request):
                 messages.add_message(
                     request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
                 )
-                logger_s.debug("zadost.post.error", error=_("Nelze vytvořit spolupráci sám se sebou"))
+                logger_s.debug(
+                    "zadost.post.error",
+                    error=_("Nelze vytvořit spolupráci sám se sebou"),
+                )
             elif exists:
                 messages.add_message(
                     request,
@@ -553,7 +616,11 @@ def zadost(request):
                         + " již existuje."
                     ),
                 )
-                logger_s.debug("zadost.post.error", error=_("Spoluprace jiz existuje"), email=uzivatel_email)
+                logger_s.debug(
+                    "zadost.post.error",
+                    error=_("Spoluprace jiz existuje"),
+                    email=uzivatel_email,
+                )
             else:
                 hv = HistorieVazby(typ_vazby=UZIVATEL_SPOLUPRACE_RELATION_TYPE)
                 hv.save()
@@ -574,7 +641,13 @@ def zadost(request):
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
                 )
-                logger_s.debug("zadost.post.success", hv_id=hv.pk, s_id=s.pk, hist_id=hist.pk, message=ZADOST_O_SPOLUPRACI_VYTVORENA)
+                logger_s.debug(
+                    "zadost.post.success",
+                    hv_id=hv.pk,
+                    s_id=s.pk,
+                    hist_id=hist.pk,
+                    message=ZADOST_O_SPOLUPRACI_VYTVORENA,
+                )
                 # TODO send email to archeolog
                 return redirect("pas:spoluprace_list")
         else:
@@ -623,23 +696,28 @@ def aktivace(request, pk):
     if request.method == "POST":
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
-        return JsonResponse({"redirect":reverse("pas:spoluprace_list")})
+        return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_aktivaci()
         logger.debug(warnings)
         if warnings:
-            messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}")
-            return JsonResponse({"redirect":reverse("pas:spoluprace_list")},status=403)
+            messages.add_message(
+                request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}"
+            )
+            return JsonResponse(
+                {"redirect": reverse("pas:spoluprace_list")}, status=403
+            )
     context = {
         "object": spoluprace,
-        "title": (_("Aktivace spolupráce mezi ")
-        + spoluprace.vedouci.email
-        + " a "
-        + spoluprace.spolupracovnik.email
-    ),
+        "title": (
+            _("Aktivace spolupráce mezi ")
+            + spoluprace.vedouci.email
+            + " a "
+            + spoluprace.spolupracovnik.email
+        ),
         "id_tag": "aktivace-spoluprace-form",
         "button": _("pas.spoluprace.modalForm.aktivace.submit.button"),
-        }
+    }
     return render(request, "core/transakce_modal.html", context)
 
 
@@ -650,23 +728,28 @@ def deaktivace(request, pk):
     if request.method == "POST":
         spoluprace.set_neaktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_DEAKTIVOVANA)
-        return JsonResponse({"redirect":reverse("pas:spoluprace_list")})
+        return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_deaktivaci()
         logger.debug(warnings)
         if warnings:
-            messages.add_message(request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}")
-            return JsonResponse({"redirect":reverse("pas:spoluprace_list")},status=403)
+            messages.add_message(
+                request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}"
+            )
+            return JsonResponse(
+                {"redirect": reverse("pas:spoluprace_list")}, status=403
+            )
     context = {
         "object": spoluprace,
-        "title": (_("Deaktivace spolupráce mezi ")
-        + spoluprace.vedouci.email
-        + " a "
-        + spoluprace.spolupracovnik.email
-    ),
+        "title": (
+            _("Deaktivace spolupráce mezi ")
+            + spoluprace.vedouci.email
+            + " a "
+            + spoluprace.spolupracovnik.email
+        ),
         "id_tag": "deaktivace-spoluprace-form",
         "button": _("pas.spoluprace.modalForm.deaktivace.submit.button"),
-        }
+    }
     return render(request, "core/transakce_modal.html", context)
 
 
@@ -682,22 +765,25 @@ def smazat_spolupraci(request, pk):
         if resp1:
             logger.debug("Spoluprace byla smazana: " + str(resp1 + resp2))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":reverse("pas:spoluprace_list")})
+            return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
         else:
             logger.warning("Spoluprace nebyla smazana: " + str(pk))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":reverse("pas:spoluprace_list")},status=403)
+            return JsonResponse(
+                {"redirect": reverse("pas:spoluprace_list")}, status=403
+            )
 
     else:
         context = {
-        "object": spoluprace,
-        "title": (_("pas.spoluprace.modalForm.smazani.title.text")
-        + spoluprace.vedouci.email
-        + _(" a ")
-        + spoluprace.spolupracovnik.email
-    ),
-        "id_tag": "smazani-spoluprace-form",
-        "button": _("pas.spoluprace.modalForm.smazani.submit.button"),
+            "object": spoluprace,
+            "title": (
+                _("pas.spoluprace.modalForm.smazani.title.text")
+                + spoluprace.vedouci.email
+                + _(" a ")
+                + spoluprace.spolupracovnik.email
+            ),
+            "id_tag": "smazani-spoluprace-form",
+            "button": _("pas.spoluprace.modalForm.smazani.submit.button"),
         }
     return render(request, "core/transakce_modal.html", context)
 
@@ -747,17 +833,18 @@ def post_pas2kat(request):
     else:
         return JsonResponse({"katastr_name": ""}, status=200)
 
-def get_required_fields(zaznam=None,next=0):
+
+def get_required_fields(zaznam=None, next=0):
     required_fields = []
     if zaznam:
         stav = zaznam.stav
     else:
-        stav=1
-    if stav >= SN_ZAPSANY-next:
+        stav = 1
+    if stav >= SN_ZAPSANY - next:
         required_fields = [
             "projekt",
         ]
-    if stav > SN_ZAPSANY-next:
+    if stav > SN_ZAPSANY - next:
         required_fields += [
             "lokalizace",
             "datum_nalezu",
