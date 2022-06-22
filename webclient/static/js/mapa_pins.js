@@ -1,46 +1,54 @@
 
-var pinIconBlueEmpty = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue_empty.svg',
+var pinIconPurpleEmpty = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple_empty.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
-    var pinIconBlue = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue.svg',
+    var pinIconPurple = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
-    var pinIconBlue3D = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue_3d.svg',
+    var pinIconPurpleHW = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple.svg',
+    shadowUrl: static_url+'/img/pins/marker-shadow.png',
+    iconSize: [13, 21],
+    iconAnchor: [9, 21],
+    popupAnchor: [1, -17],
+    shadowSize: [21, 21]
+    });
+    var pinIconPurple3D = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple_3d.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
-    var pinIconBluePoint = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue_point2.svg',
+    var pinIconPurplePoint = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple_point2.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
-    var pinIconBlueDf = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue_df.svg',
+    var pinIconPurpleDf = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
-    var pinIconBluePin = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_blue_pin.svg',
+    var pinIconPurplePin = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_purple_pin.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
@@ -64,6 +72,14 @@ var pinIconBlueEmpty = new L.Icon({
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
+    var pinIconRedHW = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_red.svg',
+    shadowUrl: static_url+'/img/pins/marker-shadow.png',
+    iconSize: [13, 21],
+    iconAnchor: [9, 21],
+    popupAnchor: [1, -17],
+    shadowSize: [21, 21]
+    });
     var pinIconRed3D = new L.Icon({
     iconUrl: static_url+'/img/pins/pin_red_3d.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
@@ -81,6 +97,14 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [29, 29]
     });
     var pinIconRedDf = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_red.svg',
+    shadowUrl: static_url+'/img/pins/marker-shadow.png',
+    iconSize: [18, 29],
+    iconAnchor: [9, 29],
+    popupAnchor: [1, -24],
+    shadowSize: [29, 29]
+    });
+    var pinIconRedProject = new L.Icon({
     iconUrl: static_url+'/img/pins/pin_red_df.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
@@ -113,6 +137,14 @@ var pinIconBlueEmpty = new L.Icon({
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
+    var pinIconGreenHW = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_green.svg',
+    shadowUrl: static_url+'/img/pins/marker-shadow.png',
+    iconSize: [13, 21],
+    iconAnchor: [9, 21],
+    popupAnchor: [1, -17],
+    shadowSize: [21, 21]
+    });
     var pinIconGreen3D = new L.Icon({
     iconUrl: static_url+'/img/pins/pin_green_3d.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
@@ -130,7 +162,7 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [29, 29]
     });
     var pinIconGreenDf = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_green_df.svg',
+    iconUrl: static_url+'/img/pins/pin_green.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],
@@ -161,6 +193,14 @@ var pinIconBlueEmpty = new L.Icon({
     popupAnchor: [1, -24],
     shadowSize: [29, 29]
     });
+    var pinIconYellowHW = new L.Icon({
+    iconUrl: static_url+'/img/pins/pin_yellow.svg',
+    shadowUrl: static_url+'/img/pins/marker-shadow.png',
+    iconSize: [13, 21],
+    iconAnchor: [9, 21],
+    popupAnchor: [1, -17],
+    shadowSize: [21, 21]
+    });
     var pinIconYellow3D = new L.Icon({
     iconUrl: static_url+'/img/pins/pin_yellow_3d.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
@@ -178,7 +218,7 @@ var pinIconBlueEmpty = new L.Icon({
     shadowSize: [29, 29]
     });
     var pinIconYellowDf = new L.Icon({
-    iconUrl: static_url+'/img/pins/pin_yellow_df.svg',
+    iconUrl: static_url+'/img/pins/pin_yellow.svg',
     shadowUrl: static_url+'/img/pins/marker-shadow.png',
     iconSize: [18, 29],
     iconAnchor: [9, 29],

@@ -1,11 +1,7 @@
 import logging
 
-from django.urls import reverse
-import requests
 import structlog
-
 from arch_z.models import ArcheologickyZaznam
-from projekt.models import Projekt
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -31,6 +27,7 @@ from core.message_constants import (
     DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
+    DOKUMENT_USPESNE_ODPOJEN,
     DOKUMENT_USPESNE_PRIPOJEN,
     DOKUMENT_USPESNE_VRACEN,
     MAXIMUM_IDENT_DOSAZEN,
@@ -40,7 +37,6 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
-    DOKUMENT_USPESNE_ODPOJEN,
 )
 from core.views import check_stav_changed
 from dal import autocomplete
@@ -49,10 +45,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse, JsonResponse
 from django.forms import inlineformset_factory
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
@@ -96,6 +93,7 @@ from nalez.forms import (
     create_nalez_predmet_form,
 )
 from nalez.models import NalezObjekt, NalezPredmet
+from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -110,7 +108,7 @@ def index_model_3D(request):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = { "warnings": request.session.pop("temp_data", None) }
+    context = {"warnings": request.session.pop("temp_data", None)}
     dokument = get_object_or_404(
         Dokument.objects.select_related(
             "soubory",
@@ -158,7 +156,7 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET"])
 def detail_model_3D(request, ident_cely):
-    context = { "warnings": request.session.pop("temp_data", None) }
+    context = {"warnings": request.session.pop("temp_data", None)}
     old_nalez_post = request.session.pop("_old_nalez_post", None)
     dokument = get_object_or_404(
         Dokument.objects.select_related(
@@ -231,11 +229,15 @@ def detail_model_3D(request, ident_cely):
         obdobi_choices, areal_choices, instance=komponenty[0], readonly=True
     )
     context["formset"] = {
-        "objekt": NalezObjektFormset(old_nalez_post,
-            instance=komponenty[0], prefix=komponenty[0].ident_cely + "_o"
+        "objekt": NalezObjektFormset(
+            old_nalez_post,
+            instance=komponenty[0],
+            prefix=komponenty[0].ident_cely + "_o",
         ),
-        "predmet": NalezPredmetFormset(old_nalez_post,
-            instance=komponenty[0], prefix=komponenty[0].ident_cely + "_p"
+        "predmet": NalezPredmetFormset(
+            old_nalez_post,
+            instance=komponenty[0],
+            prefix=komponenty[0].ident_cely + "_p",
         ),
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
@@ -284,9 +286,14 @@ def edit(request, ident_cely):
     else:
         extra_data = dokument.extra_data
     required_fields = get_required_fields_dokument(dokument)
-    required_fields_next = get_required_fields_dokument(dokument,next=1)
+    required_fields_next = get_required_fields_dokument(dokument, next=1)
     if request.method == "POST":
-        form_d = EditDokumentForm(request.POST, instance=dokument, required=get_required_fields_dokument(dokument), required_next=get_required_fields_dokument(dokument,1),)
+        form_d = EditDokumentForm(
+            request.POST,
+            instance=dokument,
+            required=get_required_fields_dokument(dokument),
+            required_next=get_required_fields_dokument(dokument, 1),
+        )
         form_extra = EditDokumentExtraDataForm(
             request.POST,
             instance=extra_data,
@@ -316,7 +323,7 @@ def edit(request, ident_cely):
             instance=dokument,
             required=required_fields,
             required_next=required_fields_next,
-            )
+        )
         form_extra = EditDokumentExtraDataForm(
             rada=dokument.rada,
             let=(dokument.let.id if dokument.let else ""),
@@ -347,7 +354,7 @@ def edit_model_3D(request, ident_cely):
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     required_fields = get_required_fields_model3D(dokument)
-    required_fields_next = get_required_fields_model3D(dokument,next=1)
+    required_fields_next = get_required_fields_model3D(dokument, next=1)
     if request.method == "POST":
         form_d = CreateModelDokumentForm(
             request.POST,
@@ -402,19 +409,19 @@ def edit_model_3D(request, ident_cely):
         form_d = CreateModelDokumentForm(
             instance=dokument,
             required=get_required_fields_model3D(dokument),
-            required_next=get_required_fields_model3D(dokument,1),
-            )
+            required_next=get_required_fields_model3D(dokument, 1),
+        )
         form_extra = CreateModelExtraDataForm(
             instance=dokument.extra_data,
             required=get_required_fields_model3D(dokument),
-            required_next=get_required_fields_model3D(dokument,1),
-            )
+            required_next=get_required_fields_model3D(dokument, 1),
+        )
         form_komponenta = CreateKomponentaForm(
             obdobi_choices,
             areal_choices,
             instance=dokument.get_komponenta(),
             required=get_required_fields_model3D(dokument),
-            required_next=get_required_fields_model3D(dokument,1),
+            required_next=get_required_fields_model3D(dokument, 1),
         )
         if dokument.extra_data.geom:
             geom = (
@@ -460,6 +467,7 @@ def zapsat_do_akce(request, arch_z_ident_cely):
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     return zapsat(request, zaznam)
 
+
 def zapsat_do_projektu(request, proj_ident_cely):
     zaznam = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     return zapsat(request, zaznam)
@@ -477,12 +485,12 @@ def create_model_3D(request):
             request.POST,
             required=required_fields,
             required_next=required_fields_next,
-            )
+        )
         form_extra = CreateModelExtraDataForm(
             request.POST,
             required=required_fields,
             required_next=required_fields_next,
-            )
+        )
         form_komponenta = CreateKomponentaForm(
             obdobi_choices,
             areal_choices,
@@ -556,13 +564,13 @@ def create_model_3D(request):
         form_extra = CreateModelExtraDataForm(
             required=required_fields,
             required_next=required_fields_next,
-            )
+        )
         form_komponenta = CreateKomponentaForm(
             obdobi_choices,
             areal_choices,
             required=required_fields,
             required_next=required_fields_next,
-            )
+        )
     return render(
         request,
         "dokument/create_model_3D.html",
@@ -584,32 +592,42 @@ def odeslat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     logger_s.debug("dokument.views.odeslat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ZAPSANY:
-        logger_s.debug("dokument.views.odeslat.permission_denied", ident_cely=ident_cely)
+        logger_s.debug(
+            "dokument.views.odeslat.permission_denied", ident_cely=ident_cely
+        )
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
-     # Momentalne zbytecne, kdyz tak to padne hore
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
+    # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, d):
-        logger_s.debug("dokument.views.odeslat.check_stav_changed", ident_cely=ident_cely)
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+        logger_s.debug(
+            "dokument.views.odeslat.check_stav_changed", ident_cely=ident_cely
+        )
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         d.set_odeslany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODESLAN)
         logger_s.debug("dokument.views.odeslat.sucess")
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)})
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
     else:
         warnings = d.check_pred_odeslanim()
         if warnings:
-            logger_s.debug("dokument.views.odeslat.warnings", warnings=warnings, ident_cely=ident_cely)
-            request.session['temp_data'] = warnings
+            logger_s.debug(
+                "dokument.views.odeslat.warnings",
+                warnings=warnings,
+                ident_cely=ident_cely,
+            )
+            request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ODESLAT)
-            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
+            return JsonResponse(
+                {"redirect": get_detail_json_view(ident_cely)}, status=403
+            )
+    form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
     context = {
         "object": d,
         "title": _("dokument.modalForm.odeslat.title.text"),
         "id_tag": "odeslat-dokument-form",
         "button": _("dokument.modalForm.odeslat.submit.button"),
-        "form_check": form_check
+        "form_check": form_check,
     }
     logger_s.debug("dokument.views.odeslat.finish", ident_cely=ident_cely)
     return render(request, "core/transakce_modal.html", context)
@@ -621,13 +639,17 @@ def archivovat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     logger_s.debug("dokument.views.archivovat.start", ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY:
-        logger_s.debug("dokument.views.archivovat.permission_denied", ident_cely=ident_cely)
+        logger_s.debug(
+            "dokument.views.archivovat.permission_denied", ident_cely=ident_cely
+        )
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, d):
-        logger_s.debug("dokument.views.archivovat.check_stav_changed", ident_cely=ident_cely)
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+        logger_s.debug(
+            "dokument.views.archivovat.check_stav_changed", ident_cely=ident_cely
+        )
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
@@ -636,7 +658,9 @@ def archivovat(request, ident_cely):
                 d.set_permanent_ident_cely(d.ident_cely[2:4] + rada.zkratka)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
-                return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+                return JsonResponse(
+                    {"redirect": get_detail_json_view(ident_cely)}, status=403
+                )
             else:
                 d.save()
                 logger.debug(
@@ -647,21 +671,23 @@ def archivovat(request, ident_cely):
                 )
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
-        return JsonResponse({"redirect":get_detail_json_view(d.ident_cely)})
+        return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})
     else:
         warnings = d.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
-            request.session['temp_data'] = warnings
+            request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT)
-            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
-    form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
+            return JsonResponse(
+                {"redirect": get_detail_json_view(ident_cely)}, status=403
+            )
+    form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
     context = {
         "object": d,
         "title": _("dokument.modalForm.archivovat.title.text"),
         "id_tag": "archivovat-dokument-form",
         "button": _("dokument.modalForm.archivovat.submit.button"),
-        "form_check": form_check
+        "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -672,22 +698,24 @@ def vratit(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if check_stav_changed(request, d):
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             d.set_vraceny(request.user, d.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
-            return JsonResponse({"redirect":get_detail_json_view(ident_cely)})
+            return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
-            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+            return JsonResponse(
+                {"redirect": get_detail_json_view(ident_cely)}, status=403
+            )
     else:
-        form = VratitForm(initial={"old_stav":d.stav})
+        form = VratitForm(initial={"old_stav": d.stav})
     context = {
         "object": d,
         "form": form,
@@ -703,7 +731,7 @@ def vratit(request, ident_cely):
 def smazat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if check_stav_changed(request, d):
-        return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
 
         historie = d.historie
@@ -721,19 +749,21 @@ def smazat(request, ident_cely):
         if resp1:
             logger.debug("Dokument byl smazan: " + str(resp1 + resp2 + resp3))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":reverse("core:home")})
+            return JsonResponse({"redirect": reverse("core:home")})
         else:
             logger.warning("Dokument nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":get_detail_json_view(ident_cely)},status=403)
+            return JsonResponse(
+                {"redirect": get_detail_json_view(ident_cely)}, status=403
+            )
     else:
-        form_check = CheckStavNotChangedForm(initial={"old_stav":d.stav})
+        form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
         context = {
-        "object": d,
-        "title": _("dokument.modalForm.smazani.title.text"),
-        "id_tag": "smazat-dokument-form",
-        "button": _("dokument.modalForm.smazani.submit.button"),
-        "form_check": form_check,
+            "object": d,
+            "title": _("dokument.modalForm.smazani.title.text"),
+            "id_tag": "smazat-dokument-form",
+            "button": _("dokument.modalForm.smazani.submit.button"),
+            "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -794,17 +824,18 @@ def get_detail_template_shows(dokument):
     }
     return show
 
+
 def zapsat(request, zaznam):
     required_fields = get_required_fields_dokument()
     required_fields_next = get_required_fields_dokument(next=1)
     if request.method == "POST":
         form_d = EditDokumentForm(
             request.POST,
-            required = required_fields,
-            required_next = required_fields_next,
-            )
+            required=required_fields,
+            required_next=required_fields_next,
+        )
         if form_d.is_valid():
-            logger.debug("Form is valid")
+            logger.debug("Dokument.Form is valid")
             dokument = form_d.save(commit=False)
             dokument.rada = get_dokument_rada(
                 dokument.typ_dokumentu, dokument.material_originalu
@@ -846,9 +877,9 @@ def zapsat(request, zaznam):
     else:
         form_d = EditDokumentForm(
             create=True,
-            required = required_fields,
-            required_next = required_fields_next,
-            )
+            required=required_fields,
+            required_next=required_fields_next,
+        )
 
     return render(
         request,
@@ -859,13 +890,14 @@ def zapsat(request, zaznam):
         },
     )
 
+
 def odpojit(request, ident_doku, ident_zaznamu, view):
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
     remove_orphan = False
     if len(relace_dokumentu) == 0:
         logger.debug("Nelze najít zadne relace dokumentu " + str(ident_doku))
         messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE)
-        return JsonResponse({"redirect":reverse(f"{view}:detail")},status=404)
+        return JsonResponse({"redirect": reverse(f"{view}:detail")}, status=404)
     if len(relace_dokumentu) == 1:
         orphan_dokument = relace_dokumentu[0].dokument
         if "X-" in orphan_dokument.ident_cely:
@@ -876,20 +908,26 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
                 archeologicky_zaznam__ident_cely=ident_zaznamu
             )
         else:
-            dokument_cast = relace_dokumentu.filter(
-                projekt__ident_cely=ident_zaznamu
-            )
+            dokument_cast = relace_dokumentu.filter(projekt__ident_cely=ident_zaznamu)
         if len(dokument_cast) == 0:
             logger.debug("Nelze najít relaci mezi zaznamem a dokumentem")
-            messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM)
-            return JsonResponse({"redirect":reverse(f"{view}:detail")},status=404)
+            messages.add_message(
+                request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM
+            )
+            return JsonResponse({"redirect": reverse(f"{view}:detail")}, status=404)
         resp = dokument_cast[0].delete()
         logger.debug("Byla smazana cast dokumentu " + str(resp))
         if remove_orphan:
             orphan_dokument.delete()
             logger.debug("Docasny soubor bez relaci odstranen.")
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
-        return JsonResponse({"redirect":reverse(f"{view}:detail", kwargs={'ident_cely':ident_zaznamu})})
+        return JsonResponse(
+            {
+                "redirect": reverse(
+                    f"{view}:detail", kwargs={"ident_cely": ident_zaznamu}
+                )
+            }
+        )
     else:
         warnings = []
         if remove_orphan:
@@ -910,6 +948,7 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
             },
         )
 
+
 def pripojit(request, ident_zaznam, proj_ident_cely, typ):
     zaznam = get_object_or_404(typ, ident_cely=ident_zaznam)
     logger.debug(zaznam.__class__.__name__)
@@ -920,26 +959,24 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         debug_name = "akci "
         redirect_name = "arch_z"
         context = {
-        "object": zaznam,
-        "title": _("dokument.modalForm.pripojitDoAkce.title.text"),
-        "id_tag": "pripojit-dokument-form",
-        "button": _("dokument.modalForm.pripojitDoAkce.submit.button"),
+            "object": zaznam,
+            "title": _("dokument.modalForm.pripojitDoAkce.title.text"),
+            "id_tag": "pripojit-dokument-form",
+            "button": _("dokument.modalForm.pripojitDoAkce.submit.button"),
         }
     else:
-        casti_zaznamu = DokumentCast.objects.filter(
-            projekt__ident_cely=ident_zaznam
-        )
+        casti_zaznamu = DokumentCast.objects.filter(projekt__ident_cely=ident_zaznam)
         debug_name = "projektu "
         redirect_name = "projekt"
         context = {
-        "object": zaznam,
-        "title": _("dokument.modalForm.pripojitDoProjektu.title.text"),
-        "id_tag": "pripojit-dokument-form",
-        "button": _("dokument.modalForm.pripojitDoProjektu.submit.button"),
+            "object": zaznam,
+            "title": _("dokument.modalForm.pripojitDoProjektu.title.text"),
+            "id_tag": "pripojit-dokument-form",
+            "button": _("dokument.modalForm.pripojitDoProjektu.submit.button"),
         }
     if request.method == "POST":
         dokument_ids = request.POST.getlist("dokument")
-        
+
         for dokument_id in dokument_ids:
             dokument = get_object_or_404(Dokument, id=dokument_id)
             relace = casti_zaznamu.filter(dokument__id=dokument_id)
@@ -947,7 +984,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 dc_ident = get_cast_dokumentu_ident(dokument)
                 if isinstance(zaznam, ArcheologickyZaznam):
                     DokumentCast(
-                        archeologicky_zaznam=zaznam, dokument=dokument, ident_cely=dc_ident
+                        archeologicky_zaznam=zaznam,
+                        dokument=dokument,
+                        ident_cely=dc_ident,
                     ).save()
                 else:
                     DokumentCast(
@@ -969,9 +1008,15 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 messages.add_message(
                     request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
                 )
-        return JsonResponse({"redirect":reverse(f"{redirect_name}:detail", kwargs={'ident_cely':ident_zaznam})})
+        return JsonResponse(
+            {
+                "redirect": reverse(
+                    f"{redirect_name}:detail", kwargs={"ident_cely": ident_zaznam}
+                )
+            }
+        )
     else:
-        if proj_ident_cely :
+        if proj_ident_cely:
             # Pridavam projektove dokumenty
             projektove_dokumenty = set()
             proj_dok_list = set()
@@ -1000,41 +1045,42 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         context["hide_table"] = True
     return render(request, "core/transakce_table_modal.html", context)
 
+
 @login_required
 @require_http_methods(["GET"])
 def get_dokument_table_row(request):
-    context={
-        "d":Dokument.objects.get(id=request.GET.get("dok_id",""))
-    }
-    return HttpResponse(render_to_string("dokument/dokument_table_row.html",context))
+    context = {"d": Dokument.objects.get(id=request.GET.get("dok_id", ""))}
+    return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
-    
+
 def get_detail_view(ident_cely):
     if "3D" in ident_cely:
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
     else:
         return redirect("dokument:detail", ident_cely=ident_cely)
 
+
 def get_detail_json_view(ident_cely):
     if "3D" in ident_cely:
-        return reverse("dokument:detail-model-3D", kwargs={'ident_cely':ident_cely})
+        return reverse("dokument:detail-model-3D", kwargs={"ident_cely": ident_cely})
     else:
-        return reverse("dokument:detail", kwargs={'ident_cely':ident_cely})
+        return reverse("dokument:detail", kwargs={"ident_cely": ident_cely})
 
-def get_required_fields_model3D(zaznam=None,next=0):
+
+def get_required_fields_model3D(zaznam=None, next=0):
     required_fields = []
     if zaznam:
         stav = zaznam.stav
     else:
-        stav=1
-    if stav >= D_STAV_ZAPSANY-next:
+        stav = 1
+    if stav >= D_STAV_ZAPSANY - next:
         required_fields = [
             "autori",
             "rok_vzniku",
             "organizace",
             "typ_dokumentu",
         ]
-    if stav > D_STAV_ZAPSANY-next:
+    if stav > D_STAV_ZAPSANY - next:
         required_fields += [
             "format",
             "popis",
@@ -1044,13 +1090,14 @@ def get_required_fields_model3D(zaznam=None,next=0):
         ]
     return required_fields
 
-def get_required_fields_dokument(zaznam=None,next=0):
+
+def get_required_fields_dokument(zaznam=None, next=0):
     required_fields = []
     if zaznam:
         stav = zaznam.stav
     else:
-        stav=1
-    if stav >= D_STAV_ZAPSANY-next:
+        stav = 1
+    if stav >= D_STAV_ZAPSANY - next:
         required_fields = [
             "rok_vzniku",
             "autori",
@@ -1059,7 +1106,7 @@ def get_required_fields_dokument(zaznam=None,next=0):
             "material_originalu",
             "licence",
         ]
-    if stav > D_STAV_ZAPSANY-next:
+    if stav > D_STAV_ZAPSANY - next:
         required_fields += [
             "ulozeni_originalu",
             "popis",

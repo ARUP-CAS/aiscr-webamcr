@@ -41,8 +41,8 @@ from core.message_constants import (
 from core.utils import (
     get_all_pians_with_dj,
     get_centre_from_akce,
-    get_heat_map,
-    get_heat_map_density,
+    get_heatmap_pian,
+    get_heatmap_pian_density,
     get_num_pians_from_envelope,
     get_pians_from_envelope,
 )
@@ -227,7 +227,7 @@ def detail(request, ident_cely):
             and jednotka.pian.stav == PIAN_NEPOTVRZEN
             and show["editovat"],
             "show_approve_pian": show_approve_pian,
-            "show_pripojit_pian": True
+            "show_pripojit_pian": True,
         }
         if has_adb:
             logger.debug(jednotka.ident_cely)
@@ -346,7 +346,7 @@ def edit(request, ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("Form is valid")
+            logger.debug("ArchZ.Form is valid:1")
             form_az.save()
             form_akce.save()
             ostatni_vedouci_objekt_formset.save()
@@ -623,7 +623,7 @@ def zapsat(request, projekt_ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("Form is valid")
+            logger.debug("ArchZ.Form is valid:2")
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
@@ -797,12 +797,6 @@ def post_ajax_get_pians(request):
 @require_http_methods(["POST"])
 def post_ajax_get_pians_limit(request):
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug(request.body.decode("utf-8"))
-    logger.debug(body["zoom"])
-    logger.debug(body["southEast"]["lat"])
-    # DEBUG {"
-    # northWest":{"lat":50.01239997944656,"lng":14.618017673492433},
-    # "southEast":{"lat":50.00964206670656,"lng":14.63383197784424},"zoom":17}
     num = get_num_pians_from_envelope(
         body["southEast"]["lng"],
         body["northWest"]["lat"],
@@ -836,18 +830,21 @@ def post_ajax_get_pians_limit(request):
         else:
             return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
     else:
-        density = get_heat_map_density(
+        density = get_heatmap_pian_density(
             body["southEast"]["lng"],
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
+            body["zoom"],
         )
+        logger.debug("density %s", density)
 
-        heats = get_heat_map(
+        heats = get_heatmap_pian(
             body["southEast"]["lng"],
             body["northWest"]["lat"],
             body["northWest"]["lng"],
             body["southEast"]["lat"],
+            body["zoom"],
         )
         back = []
         cid = 0
