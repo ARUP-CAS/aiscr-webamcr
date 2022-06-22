@@ -19,8 +19,8 @@ map.on('click', function (e) {
                         document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
                         document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
                     } else if (document.getElementById('detector_system_coordinates').value == 2) {
-                        document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
-                        document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+                        document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0])
+                        document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1])
                     }
                     $("#detector_coordinates_x").change();
                     $("#detector_coordinates_y").change();
@@ -158,6 +158,8 @@ let set_numeric_coordinates = async () => {
             document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
             document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
             document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+            document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
+            document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
             return true;
         } else if (document.getElementById('detector_system_coordinates').value == 2) {
             point_global_JTSK = amcr_static_coordinate_precision_jtsk([corX, corY], false)
@@ -182,8 +184,8 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_y').readOnly = false;
         document.getElementById('id_coordinate_system').value="wgs84";
     } else if (new_system == 2 && point_global_JTSK[0] != 0) {
-        document.getElementById('detector_coordinates_x').value = Math.abs(point_global_JTSK[0]);
-        document.getElementById('detector_coordinates_y').value = Math.abs(point_global_JTSK[1]);
+        document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
+        document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1]);
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
         document.getElementById('id_coordinate_system').value="sjtsk";
@@ -196,7 +198,7 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) =>
     if(redPin){
         L.marker([corX, corY],{icon:pinIconRedPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
     } else {
-        L.marker([corX, corY],{icon:pinIconGreenPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+        L.marker([corX, corY],{icon:pinIconYellowPin}).bindPopup("Vámi vyznačená poloha").addTo(poi);
     }
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);
@@ -236,6 +238,11 @@ function showPosition(position) {
 };
 
 $(document).ready(function () {
+    my_wgs84_x = document.getElementById('id_coordinate_wgs84_x').value;
+    my_wgs84_y = document.getElementById('id_coordinate_wgs84_y').value;
+    my_sjtsk_x = document.getElementById('id_coordinate_sjtsk_x').value;
+    my_sjtsk_y = document.getElementById('id_coordinate_sjtsk_y').value;
+    my_sys = document.getElementById('id_coordinate_system').value;
     let [cor_wgs84_x, cor_wgs84_y] = amcr_static_coordinate_precision_wgs84([my_wgs84_x,my_wgs84_y]);
     let [cor_sjtsk_x, cor_sjtsk_y] = amcr_static_coordinate_precision_jtsk([my_sjtsk_x,my_sjtsk_y]);
 

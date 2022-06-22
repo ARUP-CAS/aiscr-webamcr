@@ -118,7 +118,7 @@ def create(request):
                 if sjtsk_dx > 0 and sjtsk_dy > 0:
                     geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
             except Exception:
-                logger.error("Chybny format souradnic")
+                logger.error("PAS.Chybny format souradnic:1")
             # latitude = form.cleaned_data["latitude"]
             # longitude = form.cleaned_data["longitude"]
             sn = form.save(commit=False)
@@ -247,7 +247,7 @@ def edit(request, ident_cely):
             if sjtsk_dx > 0 and sjtsk_dy > 0:
                 geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
         except Exception as e:
-            logger.error("Chybny format souradnic: " + e)
+            logger.error("PAS.Chybny format souradnic:2 " + e)
         if form.is_valid():
             logger.debug("PAS Form is valid:1")
             sn.geom_system = form_coor.data.get("coordinate_system")
