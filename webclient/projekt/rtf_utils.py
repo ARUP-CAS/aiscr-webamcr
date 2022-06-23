@@ -68,10 +68,24 @@ class ExpertniListCreator(DocumentCreator):
     def _generate_text(self):
         result = StyleSheet()
         normal_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
+        normal_text_par_style = ParagraphStyle('NormalText', normal_text.Copy(),
+                                               ParagraphPropertySet(alignment=ParagraphPropertySet.JUSTIFY))
+        self.stylesheet.ParagraphStyles.append(normal_text_par_style)
+
         bold_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
         bold_text.textProps.bold = True
-        bold_text_par_style = ParagraphStyle('BoldText', bold_text.Copy())
+        bold_text_par_style = ParagraphStyle('BoldText', bold_text.Copy(), ParagraphPropertySet(space_before=30))
         self.stylesheet.ParagraphStyles.append(bold_text_par_style)
+
+        italic_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
+        italic_text.textProps.italic = True
+        italic_text_par_style = ParagraphStyle('ItalicText', italic_text.Copy())
+        self.stylesheet.ParagraphStyles.append(italic_text_par_style)
+
+        footer_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22, colour=result.Colours.Grey))
+        footer_text_par_style = ParagraphStyle('FooterText', footer_text.Copy(),
+                                               ParagraphPropertySet(alignment=ParagraphPropertySet.CENTER))
+        self.stylesheet.ParagraphStyles.append(footer_text_par_style)
 
         section = Section()
         self.docucment.Sections.append(section)
@@ -89,7 +103,8 @@ class ExpertniListCreator(DocumentCreator):
                       TabPropertySet.DEFAULT_WIDTH * 6)
 
         table_texts = [
-            ("Číslo akce/oznámení v centrální evidenci (AMČR):", self.projekt.ident_cely),
+            ("Číslo akce/oznámení v centrální evidenci (AMČR):",
+             Paragraph(self.stylesheet.ParagraphStyles.BoldText,self.projekt.ident_cely)),
             ("Datum přijetí oznámení:", self.historie.datum_zmeny.strftime("%d. %m. %Y") if self.historie else ""),
             ("Interní označení:", self.projekt.uzivatelske_oznaceni),
             ("Výzkum provedla organizace:",
@@ -105,7 +120,7 @@ class ExpertniListCreator(DocumentCreator):
         if self.projekt.geom is not None:
             table_texts += [
                 ("Souřadnice(WGS - 84):",
-                 f"{self.projekt.geom.centroid.x} {self.projekt.geom.centroid.y}" if self.projekt.geom is not None else None)
+                 f"{self.projekt.geom.centroid.x}N, {self.projekt.geom.centroid.y}E" if self.projekt.geom is not None else None)
             ]
 
         table_texts += [
@@ -135,14 +150,17 @@ class ExpertniListCreator(DocumentCreator):
         ]
 
         bold_text = ParagraphStyle('TableLeftColumnText', bold_text.Copy(),
-                                   ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
+                                   ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT, space_before=30))
         self.stylesheet.ParagraphStyles.append(bold_text)
+        right_text = ParagraphStyle('TableRightColumnText', normal_text.Copy(),
+                                   ParagraphPropertySet(alignment=ParagraphPropertySet.LEFT, space_before=30))
+        self.stylesheet.ParagraphStyles.append(right_text)
         for row in table_texts:
             c1 = Cell(Paragraph(self._convert_text(row[0]), self.stylesheet.ParagraphStyles.TableLeftColumnText))
             if row[1] is not None:
                 if type(row[1]) is str:
                     if len(row[1]) > 0:
-                        c2 = Cell(Paragraph(self._convert_text(row[1]), self.stylesheet.ParagraphStyles.Normal))
+                        c2 = Cell(Paragraph(self._convert_text(row[1]), self.stylesheet.ParagraphStyles.TableRightColumnText))
                     else:
                         continue
                 else:
@@ -155,20 +173,29 @@ class ExpertniListCreator(DocumentCreator):
         p = Paragraph(self.stylesheet.ParagraphStyles.Heading2, self._convert_text("Výsledek (poznámka):"))
         section.append(p)
 
-        p = Paragraph(self._get_vysledek_text(), ParagraphPropertySet(alignment=ParagraphPropertySet.JUSTIFY))
+        p = Paragraph(self.stylesheet.ParagraphStyles.NormalText, self._get_vysledek_text())
         section.append(p)
 
         p = Paragraph(self._convert_text(f"Dne {datetime.datetime.now().strftime('%d. %m. %Y')}"),
                       ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
         section.append(p)
 
+        p = Paragraph("", ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
+        section.append(p)
+        section.append(p)
+        section.append(p)
+
         p = Paragraph(self._convert_text("................................................"),
                       ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
         section.append(p)
 
-        p = Paragraph(self._convert_text("razítko a podpis"),
+        p = Paragraph(self.stylesheet.ParagraphStyles.ItalicText, self._convert_text("razítko a podpis"),
                       ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
         section.append(p)
+
+        p = Paragraph(self.stylesheet.ParagraphStyles.FooterText,
+                      self._convert_text("Dokument byl vytvořen v systému Archeologická mapa České republiky (AMČR) web: http://www.archeologickamapa.cz/, e-mail: info@amapa.cz"))
+        section.Footer.append(p)
 
     @staticmethod
     def _open_file(name):
