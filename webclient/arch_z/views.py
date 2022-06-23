@@ -924,11 +924,10 @@ def get_required_fields(zaznam=None, next=0):
     else:
         stav = 1
     if stav >= AZ_STAV_ZAPSANY - next:
-        required_fields = [
-            "lokalizace_okolnosti",
-        ]
+        required_fields = []
     if stav > AZ_STAV_ZAPSANY - next:
         required_fields += [
+            "lokalizace_okolnosti",
             "hlavni_vedouci",
             "organizace",
             "datum_ukonceni",
