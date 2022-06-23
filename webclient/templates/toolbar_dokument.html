@@ -10,7 +10,7 @@
       {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
-      {{ d.ident_cely }}{% if backdetail %}<span class="app-pipe"></span><a href="{% url backdetail|add:':detail' backident %}" class="app-entity-color font-weight-normal">{{backtext}}</a>{% endif %}
+      {{ d.ident_cely }}{% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
     </div>
   </div>
   {% if showcontrols %}

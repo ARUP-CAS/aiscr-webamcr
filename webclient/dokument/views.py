@@ -93,6 +93,7 @@ from nalez.forms import (
     create_nalez_predmet_form,
 )
 from nalez.models import NalezObjekt, NalezPredmet
+from urllib.parse import urlparse
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -142,15 +143,41 @@ def detail(request, ident_cely):
         context["soubory"] = dokument.soubory.soubory.all()
     else:
         context["soubory"] = None
+    response = render(request, "dokument/detail.html", context)
     casti = dokument.casti.all()
-    logger.debug(casti)
-    if casti[0].archeologicky_zaznam:
-        context["backdetail"] = "arch_z"
-        context["backident"] = casti[0].archeologicky_zaznam.ident_cely
-        context["backtext"] = _("dokument.toolbar.backtoarch_z.text")
+    referer = urlparse(request.META.get('HTTP_REFERER',False)).path
+    referer_next = urlparse(request.META.get('HTTP_REFERER',False)).query
+    if referer:
+        ident_referer = referer.split("/")[-1]
+        if ident_cely == ident_referer:
+            pass
+        elif "arch-z/akce/detail/" in referer or "/projekt/detail/" in referer:
+            fount = False
+            for cast in casti:
+                if cast.archeologicky_zaznam:
+                    if cast.archeologicky_zaznam.ident_cely == ident_referer:
+                        logger.debug("back option for akce found")
+                        response.set_cookie("zpet", reverse('arch_z:detail', args=(ident_referer,)), max_age=1000)
+                        found = True
+                        break
+                if cast.projekt:
+                    if cast.projekt.ident_cely == ident_referer:
+                        logger.debug("back option for projekt found")
+                        response.set_cookie("zpet", reverse('projekt:detail', args=(ident_referer,)), max_age=1000)
+                        found = True
+                        break
+            if found == False:
+                logger.debug("no back option for projekt/akce found")
+                response.delete_cookie("zpet")
+        elif "nahrat-soubor" in referer and ident_cely in referer_next:
+            logger.debug("referer is nahradit soubor so back option not changed")
+        else:
+            logger.debug("referer is other so no back option")
+            response.delete_cookie("zpet")
     else:
-        context["backdetail"] = False
-    return render(request, "dokument/detail.html", context)
+        logger.debug("no referer so no back option")
+        response.delete_cookie("zpet")
+    return response
 
 
 @login_required
