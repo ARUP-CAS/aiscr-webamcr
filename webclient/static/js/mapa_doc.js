@@ -46,7 +46,7 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true,redIcon= false) => 
     if(redIcon){
         L.marker([corX, corY],{icon:pinIconRed3D}).bindPopup("Vámi vyznačená poloha").addTo(poi);
     }else{
-        L.marker([corX, corY],{icon:pinIconGreen3D}).bindPopup("Vámi vyznačená poloha").addTo(poi);
+        L.marker([corX, corY],{icon:pinIconYellow3D}).bindPopup("Vámi vyznačená poloha").addTo(poi);
     }
     
     if (corX && corY && zoom) {

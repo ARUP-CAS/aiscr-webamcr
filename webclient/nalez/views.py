@@ -1,17 +1,21 @@
 import logging
-from django.http import JsonResponse
 
-from django.urls import reverse
-
-from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_SE_NEPOVEDLO_SMAZAT, ZAZNAM_USPESNE_EDITOVAN, ZAZNAM_USPESNE_SMAZAN
+from core.message_constants import (
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    ZAZNAM_SE_NEPOVEDLO_SMAZAT,
+    ZAZNAM_USPESNE_EDITOVAN,
+    ZAZNAM_USPESNE_SMAZAN,
+)
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.forms import inlineformset_factory
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_http_methods
-from django.utils.translation import gettext as _
+from django.urls import reverse
 from django.utils.http import is_safe_url
-from django.conf import settings
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
 from heslar.hesla import (
     HESLAR_OBJEKT_DRUH,
     HESLAR_OBJEKT_DRUH_KAT,
@@ -36,18 +40,18 @@ def smazat_nalez(request, typ, ident_cely):
     if typ == "objekt":
         zaznam = get_object_or_404(NalezObjekt, id=ident_cely)
         context = {
-        "object": zaznam,
-        "title": _("nalez.modalForm.smazaniObjektu.title.text"),
-        "id_tag": "smazat-objekt-form",
-        "button": _("nalez.modalForm.smazaniObjektu.submit.button"),
+            "object": zaznam,
+            "title": _("nalez.modalForm.smazaniObjektu.title.text"),
+            "id_tag": "smazat-objekt-form",
+            "button": _("nalez.modalForm.smazaniObjektu.submit.button"),
         }
     if typ == "predmet":
         zaznam = get_object_or_404(NalezPredmet, id=ident_cely)
         context = {
-        "object": zaznam,
-        "title": _("nalez.modalForm.smazaniPredmetu.title.text"),
-        "id_tag": "smazat-objekt-form",
-        "button": _("nalez.modalForm.smazaniPredmetu.submit.button"),
+            "object": zaznam,
+            "title": _("nalez.modalForm.smazaniPredmetu.title.text"),
+            "id_tag": "smazat-objekt-form",
+            "button": _("nalez.modalForm.smazaniPredmetu.submit.button"),
         }
     if request.method == "POST":
         resp = zaznam.delete()
@@ -63,11 +67,11 @@ def smazat_nalez(request, typ, ident_cely):
         if resp:
             logger.debug("Objekt dokumentu byl smazan: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect":response})
+            return JsonResponse({"redirect": response})
         else:
             logger.warning("Dokument nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect":response},status=403)
+            return JsonResponse({"redirect": response}, status=403)
     else:
         return render(request, "core/transakce_modal.html", context)
 
@@ -108,7 +112,7 @@ def edit_nalez(request, komp_ident_cely):
         request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
     )
     if formset_objekt.is_valid() and formset_predmet.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("Nalez Form is valid")
         formset_predmet.save()
         formset_objekt.save()
         if formset_objekt.has_changed() or formset_predmet.has_changed():
@@ -123,6 +127,10 @@ def edit_nalez(request, komp_ident_cely):
         request.session["komp_ident_cely"] = komp_ident_cely
 
     response = redirect(request.META.get("HTTP_REFERER"))
-    response.set_cookie("show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000)
-    response.set_cookie("set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000)
+    response.set_cookie(
+        "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000
+    )
+    response.set_cookie(
+        "set-active", f"el_komponenta_{komp_ident_cely.replace('-', '_')}", max_age=1000
+    )
     return response

@@ -36,6 +36,9 @@
         </div>
         <div id="id-app-entity-item" class="app-entity-item">
           {{ident_cely}}
+          {% if typ == "soubor" and projekt %}
+            <a class="app-entity-color font-weight-normal" href="{% url 'projekt:detail' projekt.ident_cely %}">Zpět na detail projektu</a>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -118,7 +121,6 @@
     </form>
     {% render_table table 'projekt/bootstrap4.html' %}
   </div>
-  <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
 {% endblock %}
 
 {% block script %}
