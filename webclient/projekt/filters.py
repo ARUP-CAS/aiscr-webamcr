@@ -252,10 +252,10 @@ class ProjektFilter(HistorieFilter):
     )
 
     akce_vedouci = MultipleChoiceFilter(
-        label="Vedoucí",
         method="filtr_akce_vedouci",
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        widget=autocomplete.Select2Multiple(url="uzivatel:osoba-autocomplete-choices",)
+        widget=autocomplete.Select2Multiple(url="uzivatel:osoba-autocomplete-choices",),
+        distinct=True,
     )
 
     akce_vedouci_organizace = MultipleChoiceFilter(
@@ -375,7 +375,7 @@ class ProjektFilter(HistorieFilter):
             | Q(akce__ulozeni_nalezu__icontains=value)
             | Q(akce__ulozeni_dokumentace__icontains=value)
             | Q(akce__archeologicky_zaznam__uzivatelske_oznaceni__icontains=value)
-        )
+        ).distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
         return queryset.filter(
@@ -391,7 +391,7 @@ class ProjektFilter(HistorieFilter):
             | Q(oznamovatel__adresa__icontains=value)
             | Q(oznamovatel__telefon__icontains=value)
             | Q(oznamovatel__email__icontains=value)
-        )
+        ).distinct()
 
     def filter_has_positive_find(self, queryset, name, value):
         if "True" in value and "False" in value:
@@ -438,51 +438,51 @@ class ProjektFilter(HistorieFilter):
         return queryset.filter(
             Q(hlavni_katastr__nazev__icontains=value)
             | Q(katastry__nazev__icontains=value)
-        )
+        ).distinct()
 
     def filtr_katastr_kraj(self, queryset, name, value):
         return queryset.filter(
             Q(hlavni_katastr__okres__kraj__in=value)
             | Q(katastry__okres__kraj__in=value)
-        )
+        ).distinct()
 
     def filtr_katastr_okres(self, queryset, name, value):
         return queryset.filter(
             Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)
-        )
+        ).distinct()
 
     def filter_akce_typ(self, queryset, name, value):
         return queryset.filter(
             Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)
-        )
+        ).distinct()
 
     def filtr_akce_katastr(self, queryset, name, value):
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__nazev__icontains=value)
             | Q(akce__archeologicky_zaznam__katastry__nazev__icontains=value)
-        )
+        ).distinct()
 
     def filtr_akce_katastr_kraj(self, queryset, name, value):
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
             | Q(akce__archeologicky_zaznam__katastry__okres__kraj__in=value)
-        )
+        ).distinct()
 
     def filtr_akce_katastr_okres(self, queryset, name, value):
         return queryset.filter(
             Q(akce__archeologicky_zaznam__hlavni_katastr__okres__in=value)
             | Q(akce__archeologicky_zaznam__katastry__okres__in=value)
-        )
+        ).distinct()
 
     def filtr_akce_vedouci(self, queryset, name, value):
         return queryset.filter(
             Q(akce__hlavni_vedouci__id__in=value) | Q(akce__akcevedouci__vedouci__id__in=value)
-        )
+        ).distinct()
 
     def filtr_akce_organizace(self, queryset, name, value):
         return queryset.filter(
             Q(akce__organizace__in=value) | Q(akce__akcevedouci__organizace__in=value)
-        )
+        ).distinct()
 
     def filtr_dokumenty_ident(self, queryset, name, value):
         return queryset.filter(
