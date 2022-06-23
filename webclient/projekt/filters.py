@@ -31,6 +31,7 @@ from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
+    HESLAR_AKCE_TYP_KAT,
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
 from projekt.models import Projekt
@@ -38,6 +39,7 @@ from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba, User
 from historie.models import Historie
 from dokument.filters import HistorieFilter
+from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
@@ -281,9 +283,10 @@ class ProjektFilter(HistorieFilter):
         distinct=True,
     )
     typ_akce = MultipleChoiceFilter(
-        choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
-            "id", "heslo"
-        ),
+        #choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
+        #    "id", "heslo"
+        #),
+        choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
         method="filter_akce_typ",
         label="Typ",
         widget=SelectMultiple(

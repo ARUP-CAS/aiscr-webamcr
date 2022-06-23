@@ -19,10 +19,14 @@ from dokument.models import Dokument
 from historie.models import Historie
 from django.db.models import Q
 from heslar.hesla import (
+    HESLAR_AREAL_KAT,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_FORMAT,
+    HESLAR_OBJEKT_DRUH_KAT,
+    HESLAR_OBJEKT_SPECIFIKACE_KAT,
+    HESLAR_PREDMET_DRUH_KAT,
     MODEL_3D_DOKUMENT_TYPES,
     HESLAR_ZEME,
     HESLAR_AREAL,
@@ -35,6 +39,8 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from uzivatel.models import Organizace, User, Osoba
 from django.utils.translation import gettext as _
+
+from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
@@ -135,23 +141,19 @@ class DokumentFilter(HistorieFilter):
         distinct=True,
     )
 
-    obdobi = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(
-            nazev_heslare=HESLAR_OBDOBI
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
-        field_name="casti__komponenty__komponenty__obdobi",
+    obdobi = MultipleChoiceFilter(
+        method = "filter_obdobi",
         label=_("Období"),
+        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
-    areal = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(
-            nazev_heslare=HESLAR_AREAL
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
-        field_name="casti__komponenty__komponenty__areal",
+    areal = MultipleChoiceFilter(
+        method = "filter_areal",
         label=_("Areál"),
+        choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -170,12 +172,10 @@ class DokumentFilter(HistorieFilter):
         distinct=True,
     )
 
-    predmet_druh = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(
-            nazev_heslare=HESLAR_PREDMET_DRUH
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
-        field_name="casti__komponenty__komponenty__predmety__druh",
+    predmet_druh = MultipleChoiceFilter(
+        method = "filter_predmety_druh",
         label=_("Druh předmětu"),
+        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -193,24 +193,20 @@ class DokumentFilter(HistorieFilter):
         ),
         distinct=True,
     )
-    objekt_druh = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(
-            nazev_heslare=HESLAR_OBJEKT_DRUH
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
-        field_name="casti__komponenty__komponenty__objekty__druh",
+    objekt_druh = MultipleChoiceFilter(
+        method = "filter_objekty_druh",
         label=_("Druh objektu"),
+        choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
         distinct=True,
     )
 
-    objekt_specifikace = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(
-            nazev_heslare=HESLAR_OBJEKT_SPECIFIKACE
-        ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
-        field_name="casti__komponenty__komponenty__objekty__specifikace",
+    objekt_specifikace = MultipleChoiceFilter(
+        method = "filter_objekty_specifikace",
         label=_("Specifikace objektu"),
+        choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -255,6 +251,20 @@ class DokumentFilter(HistorieFilter):
             | Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
         )
 
+    def filter_obdobi(self, queryset, name, value):
+        return queryset.filter(casti__komponenty__komponenty__obdobi__in=value)
+
+    def filter_areal(self, queryset, name, value):
+        return queryset.filter(casti__komponenty__komponenty__areal__in=value)
+    
+    def filter_predmety_druh(self, queryset, name, value):
+        return queryset.filter(casti__komponenty__komponenty__predmety__druh__in=value)
+
+    def filter_objekty_druh(self, queryset, name, value):
+        return queryset.filter(casti__komponenty__komponenty__objekty__druh__in=value)
+
+    def filter_objekty_specifikace(self, queryset, name, value):
+        return queryset.filter(casti__komponenty__komponenty__objekty__specifikace__in=value)
     class Meta:
         model = Dokument
         exclude = []

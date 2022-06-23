@@ -29,13 +29,17 @@ from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
     HESLAR_OBDOBI,
     HESLAR_PREDMET_DRUH,
+    HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
+    HESLAR_OBDOBI_KAT,
+
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
 from historie.models import Historie
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
-from dokument.filters import HistorieFilter
+from dokument.filters import HistorieFilter    
+from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
@@ -97,8 +101,10 @@ class SamostatnyNalezFilter(HistorieFilter):
         ),
     )
 
-    obdobi = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_OBDOBI),
+    obdobi = MultipleChoiceFilter(
+        method = "filter_obdobi",
+        label=_("Období"),
+        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -111,8 +117,10 @@ class SamostatnyNalezFilter(HistorieFilter):
         ),
     )
 
-    druh_nalezu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_DRUH),
+    druh_nalezu = MultipleChoiceFilter(
+        method = "filter_druh_nalezu)",
+        label=_("Druh nálezu"),
+        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -175,6 +183,13 @@ class SamostatnyNalezFilter(HistorieFilter):
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezFilter, self).__init__(*args, **kwargs)
         self.helper = SamostatnyNalezFilterFormHelper()
+
+    def filter_obdobi(self, queryset, name, value):
+        return queryset.filter(obdobi__in=value)
+
+    def filter_druh_nalezu(self, queryset, name, value):
+        return queryset.filter(druh_nalezu__in=value)
+
 
     def filter_popisne_udaje(self, queryset, name, value):
         return queryset.filter(
