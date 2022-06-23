@@ -4,6 +4,7 @@ import logging
 from django import template
 from psycopg2._range import DateRange
 from heslar.models import RuianKatastr
+from django.utils.translation import gettext_lazy as _
 
 register = template.Library()
 
@@ -88,3 +89,10 @@ def check_if_none(value):
 def get_katastr_name(value):
     katastr = RuianKatastr.objects.get(pk=value)
     return katastr.nazev + " (" + katastr.okres.nazev + ")"
+
+@register.filter
+def true_false(value):
+    if value and value == True:
+        return _("Ano")
+    else:
+        return _("Ne")
