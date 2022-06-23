@@ -39,7 +39,7 @@ urlpatterns = [
         name="smazat_akce_vedouci",
     ),
     path(
-        "akce-get-piany",
+        "katastr-zjisti-piany",
         views.post_ajax_get_pians_limit,
         name="post_ajax_get_pians_limit",
     ),

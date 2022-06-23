@@ -49,6 +49,11 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PREDMET_DRUH,
+    HESLAR_PREDMET_DRUH_KAT,
+    HESLAR_OBDOBI_KAT,
+    HESLAR_OBJEKT_DRUH,
+    HESLAR_OBJEKT_SPECIFIKACE_KAT,
+    HESLAR_OBJEKT_SPECIFIKACE,
 )
 from heslar.models import (
     Heslar,
@@ -83,6 +88,7 @@ JAZYK_DOKUMENTU_CESTINA_ID = 1256
 ULOZENI_ORIGINALU_ID = 5588
 TYP_DJ_CELEK_AKCE_ID = 321
 OBDOBI_STREDNI_PALEOLIT_ID = 336
+OBDOBI_NADRIZENE_ID = 330
 AREAL_HRADISTE_ID = 337
 RADA_DOKUMENTU_TEXT_ID = 547
 ZACHOVALOST_30_80_ID = 658
@@ -218,6 +224,7 @@ class AMCRTestRunner(BaseRunner):
         hjd = HeslarNazev(id=HESLAR_JAZYK, nazev="heslar_jazyk_dokumentu")
         hpd = HeslarNazev(id=HESLAR_POSUDEK_TYP, nazev="heslar_posudek")
         hok = HeslarNazev(id=HESLAR_OBDOBI, nazev="heslar_obdobi")
+        hokkat = HeslarNazev(id=HESLAR_OBDOBI_KAT, nazev="heslat_odbobi_kat")
         hak = HeslarNazev(id=HESLAR_AREAL, nazev="heslar_areal")
         hza = HeslarNazev(id=HESLAR_DOKUMENT_ZACHOVALOST, nazev="heslar_zachovalost")
         hdu = HeslarNazev(id=HESLAR_DOKUMENT_ULOZENI, nazev="heslar_dokument_ulozeni")
@@ -237,6 +244,7 @@ class AMCRTestRunner(BaseRunner):
             hpd,
             hdj,
             hok,
+            hokkat,
             hak,
             hdr,
             hza,
@@ -288,9 +296,15 @@ class AMCRTestRunner(BaseRunner):
         zp = Heslar(id=PRISTUPNOST_ANONYM_ID, nazev_heslare=hpr)
         zp.save()
         typ_muzeum.save()
-        Heslar(
+        hok_podrizene = Heslar(
             id=OBDOBI_STREDNI_PALEOLIT_ID, heslo="Stredni paleolit", nazev_heslare=hok
-        ).save()
+        )
+        hok_podrizene.save()
+        hok_nadrizene = Heslar(
+            id=OBDOBI_NADRIZENE_ID, heslo="Stredni paleolit", nazev_heslare=hokkat
+        )
+        hok_nadrizene.save()
+        HeslarHierarchie(heslo_podrazene=hok_podrizene,heslo_nadrazene=hok_nadrizene,typ="podřízenost").save()
         Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
         predmet = Heslar(id=PREDMET_ID,heslo="luk",nazev_heslare=hpdr)
         predmet.save()

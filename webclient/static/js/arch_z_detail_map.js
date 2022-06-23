@@ -838,7 +838,7 @@ switchMap = function(overview=false){
         addLogText("Change: "+northWest+"  "+southEast+" "+zoom);
         boundsLock=bounds;
         let xhr = new XMLHttpRequest();
-        xhr.open('POST', '/arch-z/akce-get-piany');
+        xhr.open('POST', '/arch-z/katastr-zjisti-piany');
         xhr.setRequestHeader('Content-type', 'application/json');
         if (typeof global_csrftoken !== 'undefined') {
             xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
