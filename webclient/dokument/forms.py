@@ -519,8 +519,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
                 Div("region", css_class="col-sm-3"),
                 Div("vyska", css_class="col-sm-3"),
                 Div("sirka", css_class="col-sm-3"),
-                Div("coordinate_x", css_class="hidden"),
-                Div("coordinate_y", css_class="hidden"),
                 css_class="row",
             ),
         )

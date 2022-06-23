@@ -4,6 +4,7 @@ import crispy_forms
 import django_filters as filters
 from dal import autocomplete
 from django.db import utils
+from django.db import models
 from django_filters.widgets import DateRangeWidget
 from crispy_forms.layout import Div, Layout, HTML
 from django.forms import SelectMultiple, NumberInput
@@ -38,7 +39,36 @@ from django.utils.translation import gettext as _
 logger = logging.getLogger(__name__)
 
 
-class DokumentFilter(filters.FilterSet):
+class HistorieFilter(filters.FilterSet):
+    def filter_queryset(self, queryset):
+        """
+        Filter the queryset with the underlying form's `cleaned_data`. You must
+        call `is_valid()` or `errors` before calling this method.
+        This method should be overridden if additional filtering needs to be
+        applied to the queryset before it is cached.
+        """
+        zmena = self.form.cleaned_data["historie_typ_zmeny"]
+        uzivatel = self.form.cleaned_data["historie_uzivatel"]
+        datum = self.form.cleaned_data["historie_datum_zmeny_od"]
+        filtered = Historie.objects.all()
+        if zmena:
+            filtered = filtered.filter(typ_zmeny__in=zmena)
+        if uzivatel:
+            filtered = filtered.filter(uzivatel__in=uzivatel)
+        if datum and datum.start:
+            filtered = filtered.filter(datum_zmeny__gte=datum.start)
+        if datum and datum.stop:
+            filtered = filtered.filter(datum_zmeny__lte=datum.stop)
+        queryset = queryset.filter(historie__historie__in=filtered)
+        for name, value in self.form.cleaned_data.items():
+            queryset = self.filters[name].filter(queryset, value)
+            assert isinstance(queryset, models.QuerySet), \
+                "Expected '%s.%s' to return a QuerySet, but got a %s instead." \
+                % (type(self).__name__, name, type(queryset).__name__)
+        return queryset
+
+
+class DokumentFilter(HistorieFilter):
 
     ident_cely = CharFilter(lookup_expr="icontains", label="ID")
 
@@ -233,6 +263,7 @@ class DokumentFilter(filters.FilterSet):
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
 
+    
 
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"

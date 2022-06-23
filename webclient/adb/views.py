@@ -37,7 +37,7 @@ def detail(request, ident_cely):
         prefix=ident_cely,
     )
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("Adb. Form is valid:1")
         form.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -58,7 +58,7 @@ def zapsat(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = CreateADBForm(request.POST)
     if form.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("Adb. Form is valid:2")
         adb = form.save(commit=False)
         if not dj.pian:
             raise DJNemaPianError(dj)
@@ -100,7 +100,7 @@ def zapsat_vyskove_body(request, adb_ident_cely):
             vyskovy_bod.save()
             # vyskovy_bod.set_ident()
     if formset.is_valid():
-        logger.debug("Form is valid")
+        logger.debug("Adb Form is valid3")
         if (
             formset.has_changed()
         ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu

@@ -11,7 +11,7 @@
 
 {% block content %}
   <div class="app-entity-dokument">
-    {% include "toolbar_dokument.html" with d=dokument  showcontrols=True  is_3d=False%}
+    {% include "toolbar_dokument.html" with d=dokument  showcontrols=True  is_3d=False showback=True%}
 
     {% include "state_component_document.html" with dokument=dokument %}
 
@@ -166,5 +166,30 @@
     smazat_akci_modal = new Modal(options, "dokument-smazat");
 });
 
+</script>
+<script>
+  //Functionality for back button based on cookie
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+  const akce_back = "{% trans 'document.detail.back.akce.title' %}"
+  const projekt_back = "{% trans 'document.detail.back.projekt.title' %}"
+  document.addEventListener('DOMContentLoaded', function (event) {
+    let back = document.getElementById("document-back")
+    if (back){
+      let zpet = getCookie("zpet")
+      if (zpet){
+        back.style.display = "inline";
+        back.querySelectorAll('a')[0].href=zpet;
+        if (zpet.includes('akce')){
+          back.querySelectorAll('a')[0].textContent=akce_back;
+        }
+        else{
+          back.querySelectorAll('a')[0].textContent=projekt_back;
+        }
+      }
+    }
+  });
 </script>
 {% endblock %}

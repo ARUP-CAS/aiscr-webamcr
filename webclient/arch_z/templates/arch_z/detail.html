@@ -207,28 +207,29 @@
           </div>
           <div class="col-sm-12">
             <div class="form-group">
-              <label>{% trans "Lokalizace okolností" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2"
+              <label>{% trans "Lokalizace/okolnosti" %}</label>
+              <textarea class="textarea form-control" cols="40" rows="1"
                         placeholder="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.souhrn_upresneni|check_if_none }}" readonly>
+              <textarea class="textarea form-control" cols="40" rows="4" placeholder="{{ zaznam.akce.souhrn_upresneni|check_if_none }}"
+                        readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
+              <textarea class="textarea form-control" cols="40" rows="1" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
                         readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení dokumentace" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
+              <textarea class="textarea form-control" cols="40" rows="1" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
                         readonly>{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}</textarea>
             </div>
           </div>
@@ -241,12 +242,7 @@
           <div class="col-sm-2 je_nz">
             <div class="form-group">
               <label>{% trans "Odeslat ZAA jako NZ" %}</label>
-              <div class="custom-control custom-checkbox" id="div_id_je_nz">
-                <input class="checkboxinput custom-control-input" id="id_je_nz" name="je_nz" type="checkbox" readonly disabled="disabled" 
-                {% if zaznam.akce.je_nz == True %}checked="checked"{% endif %} {% if zaznam.akce.je_nz == False %}{% endif %}>
-                <label class="custom-control-label" for="id_je_nz">
-                </label>
-                </div>
+              <input class="form-control" type="text" value="{{ zaznam.akce.je_nz|true_false }}" readonly>
             </div>
           </div>
         </div>
@@ -274,7 +270,7 @@
             {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
-                <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form');document.getElementById('create_dj_form').scrollIntoView();"
+                <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form');document.getElementById('karta-dokumentacni-jednotky').scrollIntoView();"
                         rel="tooltip" data-placement="top"
                         title="{% trans 'Přidat dokumentační jednotku' %}">
                   <span class="material-icons">add</span>
@@ -341,6 +337,7 @@
                 min-height: 400px;
                 height: 100%;
                 border-radius: 5px;
+                padding-top: 75%;
             }
         </style>
         <div id="djMap" class="app-card-shadow"></div>
@@ -465,8 +462,10 @@
                     {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
                 </div>
               </div>
+              {% if show.editovat %}
               <button type="submit" id="editDjSubmitButton"
                       class="btn btn-primary">{% trans "Uložit změny" %}</button>
+              {% endif %}
             {% endif %}
           </div>
         </div>
@@ -623,6 +622,8 @@
   <script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'coor_precision.js' %}"></script>
+  <script src="{% static 'spin/spin.min.js' %}"></script>
+  <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
@@ -635,12 +636,13 @@
       let ask_only_once=true;
 
       const btw_add_dj = document.getElementById("button-add-dj");
-      btw_add_dj.addEventListener("click", () => {
-          if (el_div_currently_selected) {
-              el_div_currently_selected.style.backgroundColor = null;
-          }
-      });
-
+      if (btw_add_dj){
+        btw_add_dj.addEventListener("click", () => {
+            if (el_div_currently_selected) {
+                el_div_currently_selected.style.backgroundColor = null;
+            }
+        });
+      }
       function setCookie(name, value, path) {
           var cookieString = name + '=' + value + ';path=' + path
           document.cookie = cookieString
@@ -695,7 +697,7 @@
             map_show_edit(true, false)
             loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
-          document.getElementById(shown_form_id).scrollIntoView();
+          document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
       }
 
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
@@ -717,6 +719,7 @@
 
       document.addEventListener('DOMContentLoaded', function (event) {
           // Focus on detail set by the cookie and display it
+          get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
           let detail_to_show = getCookie("detail-id-shown")
           const show_form_cookie = getCookie("show-form");
           const set_active_cookie = getCookie("set-active");
@@ -732,7 +735,7 @@
               get_create_pain_form_action(show_form);
           } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
-              document.getElementById(detail_to_show).scrollIntoView();
+              document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
           } else {
               let xhr3 = new XMLHttpRequest();
               xhr3.open('POST', '/arch-z/akce-zjisti-katastr');
@@ -752,7 +755,6 @@
                       'pian': '',
                   }))
           }
-          get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
       })
 
       const div_komponenta_click = (data) => {
@@ -762,7 +764,7 @@
               = document.getElementById(`el_li_komponenta_${ident_cely_safe}`);
           change_active_element(el_li_komponenta);
           div_komponenta = document.getElementById(`detail_komponenta_form_${ident_cely}`)
-          div_komponenta.scrollIntoView();
+          document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
           get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url);
           objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
           for (let i = 0; i < objekty.length; i++) {
@@ -781,7 +783,7 @@
           const el_div_dokumentacni_jednotka
               = document.getElementById(`el_div_dokumentacni_jednotka_${ident_cely_safe}`);
           change_active_element(el_div_dokumentacni_jednotka);
-          document.getElementById(`detail_dj_form_${ident_cely}`).scrollIntoView();
+          document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
       };
 
       const change_active_element = (new_el) => {
@@ -806,7 +808,7 @@
           el_komponenta.addEventListener("click", () => {
               div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
           }, false);
-          
+
       };
       {% for j in dokumentacni_jednotky %}
           set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")
@@ -938,7 +940,7 @@
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
     })
-    create_autor_popisu_modal = new Modal(options, "create-autor-popisu"); 
+    create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
     var options = Object.assign(defaults, {modalID: "modal-form",
       formURL: "{% url 'uzivatel:create_osoba' %}",
       formID: "create-osoba-form",

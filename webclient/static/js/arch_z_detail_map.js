@@ -3,7 +3,8 @@ var global_map_can_edit=false;
 var global_map_can_grab_geom_from_map=false;
 var global_map_element="id_geom";
 var global_map_element_sjtsk="id_geom_sjtsk";
-console.log("zmena def.geom :"+global_map_element)
+var global_map_can_load_pians=true;
+addLogText("zmena def.geom :"+global_map_element)
 
 L.TileLayer.Grayscale = L.TileLayer.extend({
     options: {
@@ -70,8 +71,29 @@ var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
 var poi_dj = L.layerGroup();
 var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
+var poi_other_dp = L.layerGroup();
 var heatPoints = [];
-var heatLayer  = L.heatLayer(heatPoints);
+var heatmapOptions=
+		{
+			"maxOpacity": 1.00,
+			"minOpacity": 0.0,
+			"scaleRadius": true,
+			"useLocalExtrema": true,
+			"latField": "lat",
+			"lngField": "lng",
+			"valueField": "pocet",
+			"gradient":
+			{
+				"0.00": "rgb(255,0,255)",
+				"0.15": "rgb(0,0,255)",
+				"0.25": "rgb(0,255,0)",
+				"0.45": "rgb(255,255,0)",
+				"0.65": "rgb(255,170,0)",
+				"0.95": "rgb(255,0,0)",
+				"1.00": "rgb(255,0,0)"
+			}
+		};
+var heatLayer  = L.heatLayer(heatPoints,heatmapOptions);
 
 var global_clusters=false;
 var global_heat=false;
@@ -87,6 +109,7 @@ var map = L.map('djMap', {
 
 map.addLayer(poi_sugest);
 map.addLayer(poi_other);
+map.addLayer(poi_other_dp);
 map.addLayer(poi_dj);
 
 var baseLayers = {
@@ -102,7 +125,7 @@ var overlays = {
     "AMČR Piany": poi_other
 };
 
-L.control.layers(baseLayers,overlays).addTo(map);
+var control=L.control.layers(baseLayers,overlays).addTo(map);
 L.control.scale(metric = "true").addTo(map);
 
 map.addControl(new L.Control.Fullscreen({
@@ -291,12 +314,12 @@ var drawControl = new L.Control.Draw( {
             message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
         },
         shapeOptions: {
-            color: '#97009c'
+            color: '#ba0d27'
         }
         },
         // disable toolbar item by setting it to false
         polyline: {
-        shapeOptions: {color: '#662d91' }
+        shapeOptions: {color: '#ba0d27' }
         },
         circle: false, // Turns off this drawing tool
         rectangle: false,
@@ -328,6 +351,7 @@ map.addControl(new L.control.coordinates({
 }));
 
 function map_show_edit(show, show_go_back){
+    addLogText("arch_z_detail_map.map_show_edit: "+!global_map_can_edit)
     global_map_can_edit=show;
     if(!show){
         map.removeControl(edit_buttons)
@@ -350,6 +374,7 @@ function map_show_edit(show, show_go_back){
 map_show_edit(false)
 
 map.on('contextmenu',(e) => {
+    addLogText("arch_z_detail_map.contextmenu")
 
     var features = [];
     map.contextmenu.removeAllItems();
@@ -358,7 +383,6 @@ map.on('contextmenu',(e) => {
        if (layer instanceof L.Polyline || layer instanceof L.Polygon ){
          if(layer.getBounds().contains(e.latlng)) {
           features.push(layer.getTooltip().getContent());
-           //console.log(layer.getTooltip().getContent());
            map.contextmenu.addItem({
            text: layer.getTooltip().getContent(),
            callback: function (){layer.bringToFront() }
@@ -372,49 +396,47 @@ map.on('contextmenu',(e) => {
      } else {
       map.contextmenu.showAt(e.latlng, features)
      }
-
-   //  console.log(markersLayer.length())
 });
 
 function disableSavePianButton(){
-    console.log("disableSavePianButton")
-    //console.log(document.getElementById(global_map_element).value)
+    addLogText("arch_z_detail_map.disableSavePianButton")
+    addLogText("disableSavePianButton")
     if(document.getElementById("editPianButton")!=null){
         if(document.getElementById(global_map_element).value==='undefined'){
             document.getElementById("editPianButton").disabled = true;
-            console.log("disableSavePianButton:disa")
+            addLogText("disableSavePianButton:disa")
         } else {
             document.getElementById("editPianButton").disabled = false;
-            console.log("disableSavePianButton:enable")
+            addLogText("disableSavePianButton:enable")
         }
     }
 }
 
 map.on('draw:edited', function (e) {
+    addLogText("arch_z_detail_map.draw:edited")
     addLogText("edited")
     geomToText();
 });
 map.on('draw:deleted', function(e) {
+    addLogText("arch_z_detail_map.draw:drawstart")
     addLogText("deleted")
     addWGS84Geometry()
     addSJTSKGeometry()
     disableSavePianButton();
-    //console.log(document.getElementById(global_map_element));
-    //console.log(document.getElementById("editPianButton"))//editPianButton
-
 })
 
 map.on('draw:drawstart',function(e){
+    addLogText("arch_z_detail_map.draw:drawstart")
     if(measureControl._measuring){
         measureControl._stopMeasuring()
     }
    })
 
 map.on('draw:created', function(e) {
+    addLogText("arch_z_detail_map.draw:created")
     if(global_map_can_edit){
         var type = e.layerType;
         var la = e.layer;
-        //console.log(e)
 
         if (type === 'marker'){
             drawnItems.clearLayers();
@@ -439,7 +461,8 @@ map.on('draw:created', function(e) {
 
 
 
-function geomToText(){
+function geomToText(){//Desc: This fce moves edited geometry into HTML element
+    addLogText("arch_z_detail_map.geomToText")
     // LINESTRING(-71.160281 42.258729,-71.160837
     // POLYGON((-71.1776585052917 42.3902909739571,-71.177682
     // POINT(-71.064544 42.28787)');
@@ -449,8 +472,6 @@ function geomToText(){
     let coordinates = [];
     drawnItems.eachLayer(function(layer) {
          if (layer instanceof L.Marker) {
-            //addLogText('im an instance of L marker');
-            //console.log(layer)
             let latlngs=layer.getLatLng()
             text="POINT("+latlngs.lng+" "+latlngs.lat+")"
             jtsk_coor = convertToJTSK(latlngs.lat, latlngs.lng);
@@ -517,7 +538,7 @@ var mouseOverGeometry =(geom)=>{
         if(measureControl._measuring){
             measureControl._stopMeasuring()
         }
-        if(global_map_can_grab_geom_from_map!==false){
+        if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit){
             $.ajax({
                 type: "GET",
                 url:"/pian/seznam-pian/?q="+getContent(e),
@@ -537,64 +558,69 @@ var mouseOverGeometry =(geom)=>{
     })
 
     geom.on('mouseover', function() {
-        if (geom instanceof L.Marker){
-            this.options.iconOld=this.options.icon;
-            if(this.options.changeIcon){
-                this.setIcon(pinIconYellow);
-            }else{
-                this.setIcon(pinIconYellowPoint);
+        if(!global_map_can_edit){
+            if (geom instanceof L.Marker){
+                this.options.iconOld=this.options.icon;
+                if(this.options.changeIcon){
+                    this.setIcon(pinIconYellowHW);
+                }else{
+                    this.setIcon(pinIconYellowPoint);
+                }
+            } else {
+                this.options.iconOld=this.options.color;
+                this.setStyle({color: 'gold'});
             }
-        } else {
-            this.options.iconOld=this.options.color;
-            this.setStyle({color: 'gold'});
         }
     });
 
     geom.on('mouseout', function() {
-        //
-        if (geom instanceof L.Marker){
-        this.setIcon(this.options.iconOld);
-        } else {
-            this.setStyle({color:this.options.iconOld});
+        if(!global_map_can_edit){
+            if (geom instanceof L.Marker){
+                this.setIcon(this.options.iconOld);
+            } else {
+                this.setStyle({color:this.options.iconOld});
+            }
+            delete this.options.iconOld;
         }
-        delete this.options.iconOld;
     })
 }
 
 var addPointToPoiLayerWithForce = (geom, layer,text,st_text) => {
-    //console.log(text)
-    //console.log(geom)
+    addLogText("arch_z_detail_map.addPointToPoiLayerWithForce")
     let coor=[]
     if(st_text.includes("POLYGON") || st_text.includes("LINESTRING")){
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRed,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
+        //ToDo" 21.06.2022 pinIconYellow
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconYellowHW,zIndexOffset:2000,changeIcon:true}).bindPopup(text).addTo(layer));
         if(st_text.includes("POLYGON")){
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]));
             })
-            mouseOverGeometry(L.polygon(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
+            mouseOverGeometry(L.polygon(coor,{color:'gold'}).bindTooltip(text,{sticky: true }).addTo(layer));
         }else if(st_text.includes("LINESTRING")){
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
             })
-            mouseOverGeometry(L.polyline(coor,{color:'red'}).bindTooltip(text,{sticky: true }).addTo(layer));
+            mouseOverGeometry(L.polyline(coor,{color:'gold'}).bindTooltip(text,{sticky: true }).addTo(layer));
         }
     } else{
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconRedPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
+        //ToDo" 21.06.2022 pinIconYellowPoint
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), {icon: pinIconYellowPoint,zIndexOffset:2000}).bindPopup(text).addTo(layer));
     }
 
 }
 var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
+    addLogText("arch_z_detail_map.addPointToPoiLayerWithForceG")
     let coor=[]
-    let myIco={icon: pinIconBluePoint};
-    let myIco2={icon: pinIconBlue};
-    let myColor= {color:"rgb(51, 153, 255)"};
+    let myIco={icon: pinIconPurplePoint};
+    let myIco2={icon: pinIconPurpleHW};
+    let myColor= {color:"rgb(151, 0, 156)"};
 
 
 
     if (layer===poi_dj){
         //console.log(text+" orange "+st_text)
         myIco={icon: pinIconGreenPoint,zIndexOffset:1000};
-        myIco2={icon: pinIconGreen,zIndexOffset:1000,changeIcon:true};
+        myIco2={icon: pinIconGreenHW,zIndexOffset:1000,changeIcon:true};
         myColor={color:'green',zIndexOffset:1000,};
     } /*else if(layer==gm_correct){
         myIco={icon: pinIconRedPoint};
@@ -620,7 +646,10 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
         }
 
     }
-    if(overview && coor.length>0 && layer!==poi_other){
+    if(overview && coor.length>0 && layer!==poi_other){ //ToDo: vypnout def. body && layer!==poi_other)
+        if(layer===poi_other){
+            layer=poi_other_dp;
+        }
         x0=0.0;
         x1=0.0
         c0=0
@@ -642,16 +671,13 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
 }
 
 function addLogText(text) {
-    //addLogText(text);
-    //geomToText();
-    //console.log(text)
+    console.log(text)
 }
 
 function addWGS84Geometry(text) {
-    console.log("add-geometry: "+global_map_element)
+    addLogText("arch_z_detail_map.addWGS84Geometry: "+global_map_element+" "+text)
     let geom=document.getElementById(global_map_element);
     if(geom){
-        console.log("+w")
         geom.value=text;
     }
     if(poi_sugest.getLayers().size){
@@ -660,11 +686,10 @@ function addWGS84Geometry(text) {
 }
 
 function addSJTSKGeometry(text) {
-    console.log("add-geometry: "+global_map_element_sjtsk)
+    addLogText("arch_z_detail_map.addSJTSKGeometry: "+global_map_element_sjtsk+" "+text)
     let geom_sjtsk=document.getElementById(global_map_element_sjtsk);
     if(geom_sjtsk){
         geom_sjtsk.value=text;
-        console.log("+j")
     }
     if(poi_sugest.getLayers().size){
         edit_buttons.enable();
@@ -672,25 +697,27 @@ function addSJTSKGeometry(text) {
 }
 
 function clearUnfinishedEditGeometry(){
+    addLogText("arch_z_detail_map.clearUnfinishedEditGeometry")
     global_map_element="id_geom";
     global_map_element_sjtsk="id_geom_sjtsk";
-    console.log("zmena def.geom :"+global_map_element)
+    addLogText("zmena def.geom :"+global_map_element)
     global_map_can_grab_geom_from_map=false;
     map_show_edit(false, false)
     drawnItems.clearLayers();
     drawnItemsBuffer.eachLayer(function (layer){
         layer.addTo(poi_dj)
     })
+
 }
 
 function loadGeomToEdit(ident_cely){
-    console.log("load")
+    addLogText("arch_z_detail_map.loadGeomToEdit")
     drawnItems.clearLayers();
     drawnItemsBuffer.clearLayers();
     let drawnItemsCount=0;
     let layerColor="green";
-    let PolylineColor= '#97009c';
-    let PolygonColor= '#662d91' ;
+    let PolylineColor= '#ba0d27';
+    let PolygonColor= '#ba0d27' ;
     map.eachLayer(function (layer) {
         if (layer instanceof L.Polyline || layer instanceof L.Polygon || layer instanceof L.Marker ){
             let content="";
@@ -708,9 +735,11 @@ function loadGeomToEdit(ident_cely){
                 if(layer instanceof L.Marker){
                     let latlngs=layer.getLatLng()
                     if(drawnItemsCount==1){
+                        layer.setIcon(pinIconRedPoint);
+                        layer.unbindTooltip();
                         layer.addTo(drawnItems);
                         //UNDO-layer-start
-                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: pinIconBluePoint}).bindPopup(content).addTo(drawnItemsBuffer);
+                        L.marker(amcr_static_coordinate_precision_wgs84([latlngs.lat,latlngs.lng]),{icon: pinIconRedPoint}).bindPopup(content).addTo(drawnItemsBuffer);
                         //UNDO-layer-end
                     } else{
                         layer.remove();
@@ -755,11 +784,11 @@ function loadGeomToEdit(ident_cely){
 
         global_map_element="id_"+ident_cely+"-geom"
         global_map_element_sjtsk="id_"+ident_cely+"-geom_sjtsk"
-        console.log("zmena def.geom :"+global_map_element)
+        addLogText("zmena def.geom :"+global_map_element)
         geomToText();
         drawControl._toolbars.edit._modes.edit.handler.enable();
     } else{
-        console.log("zmena def.geom :chyba")
+        addLogText("zmena def.geom :chyba")
     }
 
 }
@@ -767,22 +796,16 @@ function loadGeomToEdit(ident_cely){
 //switchMap ();
 var boundsLock=0;
 
-map.on('zoomend', function() {
-    console.log("zoomed")
-    switchMap(true)
-});
+//map.on('zoomend', function() {
+//    console.log("zoomed")
+//    switchMap(true)
+//});
 
 
 
 map.on('moveend', function() {
-    console.log("moved");
+    addLogText("arch_z_detail_map.moveend")
     switchMap(false)
-    //var bounds = map.getBounds();
-    //var northWest = bounds.getNorthWest(),
-    //    southEast = bounds.getSouthEast();
-   // console.log("Change: "+northWest+"  "+southEast)
-   //var geomCount=0;
-   //if(map.getZoom()>=15){
 });
 
 heatPoints = heatPoints.map(function (p) {
@@ -796,16 +819,23 @@ heatPoints = heatPoints.map(function (p) {
             }
 });
 
-
+map.on('overlayadd overlayremove', function (e) {
+    if (control._handlingClick) {
+        if(e.name=="AMČR Piany"){
+            global_map_can_load_pians=!global_map_can_load_pians;
+        }
+    }
+});
 
 switchMap = function(overview=false){
+    addLogText("arch_z_detail_map.switchMap")
     var bounds = map.getBounds();
     let zoom=map.getZoom();
     var northWest = bounds.getNorthWest(),
         southEast = bounds.getSouthEast();
-    if(!global_map_can_edit){
+    if( global_map_can_load_pians){
     if(overview || bounds.northWest != boundsLock.northWest || !boundsLock.northWest){
-        console.log("Change: "+northWest+"  "+southEast+" "+zoom);
+        addLogText("Change: "+northWest+"  "+southEast+" "+zoom);
         boundsLock=bounds;
         let xhr = new XMLHttpRequest();
         xhr.open('POST', '/arch-z/akce-get-piany');
@@ -813,6 +843,8 @@ switchMap = function(overview=false){
         if (typeof global_csrftoken !== 'undefined') {
             xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
         }
+        map.spin(false);
+        map.spin(true);
         xhr.send(JSON.stringify(
             {
                 'northWest': northWest,
@@ -821,9 +853,11 @@ switchMap = function(overview=false){
                 'dj_ident_cely':global_map_projekt_ident,
             }));
         xhr.onload = function () {
-            //console.log(JSON.parse(this.responseText))
             poi_other.clearLayers();
+            poi_other_dp.clearLayers();
+            if(!global_map_can_edit){
             poi_dj.clearLayers();
+            }
             heatPoints=[]
             map.removeLayer(heatLayer);
             //gm_correct.clearLayers();
@@ -831,31 +865,38 @@ switchMap = function(overview=false){
                 if(resAl == "detail"){
                     let resPoints=JSON.parse(this.responseText).points
                     //let dj_head=form_id.replace("detail_dj_form_", "")
+                    var pocet=0;
                     resPoints.forEach((i)=>{
+                        pocet+=1;
                     if(i.dj != null){
                         //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
+                        if(!global_map_can_edit){
                         addPointToPoiLayerWithForceG(i.geom,poi_dj,i.ident_cely,true)
+                        }
                     }
                     else {
                         addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
                     }
                     })
+                    if(pocet>50){
+                        map.removeLayer(poi_other_dp);
+                    }
                 }else{
-                    console.log("heat");
                     let resHeat=JSON.parse(this.responseText).heat
                     resHeat.forEach((i)=>{
-
                         geom=i.geom.split("(")[1].split(")")[0].split(" ");
                         for(let j=0;j<i.pocet;j++){
                             heatPoints.push([geom[1],geom[0]])//chyba je to geome
                         }
                     })
-                    heatLayer=L.heatLayer(heatPoints);
+                    heatLayer=L.heatLayer(heatPoints,heatmapOptions);
                     map.addLayer(heatLayer);
                     poi_other.clearLayers();
+                    poi_other_dp.clearLayers();
                     poi_dj.clearLayers();
                 }
-                console.log("loaded")
+                map.spin(false);
+                addLogText("layer.loaded")
         }
         }
     }

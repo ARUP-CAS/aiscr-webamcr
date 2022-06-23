@@ -1,13 +1,14 @@
 import logging
 
 import simplejson as json
+from core.constants import PROJEKT_STAV_ARCHIVOVANY
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
 from core.utils import get_cadastre_from_point
-from core.constants import PROJEKT_STAV_ARCHIVOVANY
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -15,8 +16,6 @@ from django.views.decorators.http import require_http_methods
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
-from django.core.exceptions import PermissionDenied
-
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
@@ -32,10 +31,16 @@ def index(request, test_run=False):
         form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
         logger.debug(f"oznameni.views.index form_ozn.is_valid {form_ozn.is_valid()}")
-        logger.debug(f"oznameni.views.index form_projekt.is_valid {form_projekt.is_valid()}")
+        logger.debug(
+            f"oznameni.views.index form_projekt.is_valid {form_projekt.is_valid()}"
+        )
 
-        if form_ozn.is_valid() and form_projekt.is_valid() and (test_run or form_captcha.is_valid()):
-            logger.debug("Form is valid")
+        if (
+            form_ozn.is_valid()
+            and form_projekt.is_valid()
+            and (test_run or form_captcha.is_valid())
+        ):
+            logger.debug("Oznameni Form is valid")
             o = form_ozn.save(commit=False)
             p = form_projekt.save(commit=False)
             p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
@@ -117,7 +122,7 @@ def edit(request, pk):
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
-        form = OznamovatelForm(request.POST, instance=oznameni,required_next=True)
+        form = OznamovatelForm(request.POST, instance=oznameni, required_next=True)
         if form.is_valid():
             form.save()
             if form.changed_data:
@@ -128,7 +133,7 @@ def edit(request, pk):
             logger.debug(form.errors)
 
     else:
-        form = OznamovatelForm(instance=oznameni,required_next=True)
+        form = OznamovatelForm(instance=oznameni, required_next=True)
 
     return render(request, "oznameni/edit.html", {"form": form, "oznameni": oznameni})
 

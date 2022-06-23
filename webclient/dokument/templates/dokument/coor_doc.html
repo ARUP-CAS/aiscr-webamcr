@@ -34,6 +34,8 @@
     {{ formExtraData.region|as_crispy_field }}
     {{ formExtraData.sirka|as_crispy_field }}
     {{ formExtraData.vyska|as_crispy_field }}
+    {{ formExtraData.coordinate_x|as_crispy_field }}
+    {{ formExtraData.coordinate_y|as_crispy_field }}
   </div>
   <div class="form-group col-10">
     {% include "map.html" %}

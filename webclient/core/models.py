@@ -7,6 +7,7 @@ from django.db import models
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
 from PyPDF2 import PdfFileReader
+from PIL import Image
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
@@ -105,9 +106,12 @@ class Soubor(models.Model):
             self.path
         except self.DoesNotExist:
             super().save(*args, **kwargs)
-        if self.path and self.path.path.endswith(".pdf"):
+        if self.path and self.path.path.lower().endswith("pdf"):
             reader = PdfFileReader(self.path)
             self.rozsah = len(reader.pages)
+        elif self.path and self.path.path.lower().endswith("tif"):
+            img = Image.open(self.path)
+            self.rozsah = img.n_frames
         else:
             self.rozsah = 1
         super().save(*args, **kwargs)

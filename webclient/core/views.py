@@ -50,6 +50,8 @@ from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
+from komponenta.models import Komponenta
+from adb.models import Adb, VyskovyBod
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -158,7 +160,7 @@ def upload_file_dokument(request, ident_cely):
 @require_http_methods(["GET"])
 def update_file(request, file_id):
     ident_cely = ""
-    back_url = ""
+    back_url = request.GET.get('next')
     soubor = get_object_or_404(Soubor, id=file_id)
     return render(
         request,
@@ -218,6 +220,9 @@ def post_upload(request):
     else:
         logger.debug("Updating file for soubor " + request.POST["fileID"])
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
+        fullname = os.path.join(settings.MEDIA_ROOT, s.path.path)
+        if os.path.exists(fullname):
+            os.remove(fullname)
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
@@ -460,18 +465,74 @@ def redirect_ident_view(request, ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
         logger.debug("regex match for project with ident %s", ident_cely)
         return redirect("projekt:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}A", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
         logger.debug("regex match for archeologicka akce with ident %s", ident_cely)
         return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(TX|DD)-\d{9}", ident_cely)):
-        logger.debug("regex match for dokument with ident %s", ident_cely)
-        return redirect("dokument:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6}\D{1}", ident_cely)):
+        logger.debug("regex match for samostatna akce with ident %s", ident_cely)
+        # return redirect("arch_z:detail", ident_cely=ident_cely) # TO DO redirect samostatna akce
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7}", ident_cely)):
+        logger.debug("regex match for lokality with ident %s", ident_cely)
+        # return redirect("arch_z:detail", ident_cely=ident_cely) # TO DO redirect Lokality
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
+        logger.debug("regex match for dokumentacni jednotka with ident %s", ident_cely)
+        response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])
+        response.set_cookie("show-form", f"detail_dj_form_{ident_cely}", max_age=1000)
+        response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{ident_cely.replace('-', '_')}", max_age=1000)
+        return response
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-K\d{3}", ident_cely)):
+        logger.debug("regex match for Komponenta on dokumentacni jednotka with ident %s", ident_cely)
+        response = redirect("arch_z:detail", ident_cely=ident_cely[:-5])
+        response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+        response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
+        return response
+    if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
+        logger.debug("regex match for ADB with ident %s", ident_cely)
+        dj_ident = Adb.objects.get(ident_cely=ident_cely).dokumentacni_jednotka.ident_cely
+        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
+        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
+        response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}", max_age=1000)
+        return response
+    if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
+        logger.debug("regex match for Vyskovy bod with ident %s", ident_cely)
+        dj_ident = VyskovyBod.objects.get(ident_cely=ident_cely).adb.dokumentacni_jednotka.ident_cely
+        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
+        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
+        response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}", max_age=1000)
+        return response
+    if bool(re.fullmatch("(P|N)-\d{4}-\d{6}", ident_cely)):
+        logger.debug("regex match for PIAN with ident %s", ident_cely)
+        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
         logger.debug("regex match for dokument 3D with ident %s", ident_cely)
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)):
+        logger.debug("regex match for obsah/cast dokumentu 3D with ident %s", ident_cely)
+        return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)):
+        logger.debug("regex match for dokument with ident %s", ident_cely)
+        return redirect("dokument:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)):
+        logger.debug("regex match for obsah/cast dokumentu with ident %s", ident_cely)
+        return redirect("dokument:detail", ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
         logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
         return redirect("pas:detail", ident_cely=ident_cely)
+    if bool(re.fullmatch("(X-BIB|BIB)-\d{7}", ident_cely)):
+        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+    if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
+        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+    if bool(re.fullmatch("(HES)-\d{6}", ident_cely)):
+        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+    if bool(re.fullmatch("(ORG)-\d{6}", ident_cely)):
+        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+    if bool(re.fullmatch("(OS)-\d{6}", ident_cely)):
+        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
 
     messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
     return redirect("core:home")

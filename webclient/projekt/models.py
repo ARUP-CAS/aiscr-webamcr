@@ -224,14 +224,16 @@ class Projekt(models.Model):
         self.save()
 
     def set_archivovany(self, user):
-        if self.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID and self.has_oznamovatel():
+        if self.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
             # Removing personal information from the projekt announcement
-            self.oznamovatel.delete()
+            if self.has_oznamovatel():
+                self.oznamovatel.delete()
             # making txt file with deleted files
             today = datetime.datetime.now()
             soubory = self.soubory.soubory.exclude(
                 nazev_zkraceny__regex="^log_dokumentace_"
             )
+            logger.debug(soubory)
             if soubory.count() > 0:
                 filename = (
                     "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
@@ -466,8 +468,8 @@ class Projekt(models.Model):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path, file = elc.build_document()
-        return path, file
+        path = elc.build_document()
+        return path
 
     @property
     def should_generate_confirmation_document(self):

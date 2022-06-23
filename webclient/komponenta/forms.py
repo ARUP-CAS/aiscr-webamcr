@@ -19,7 +19,7 @@ class CreateKomponentaForm(forms.ModelForm):
 
         labels = {
             "presna_datace": _("Přesná datace"),
-            "jistota": "",
+            "jistota": _("Jistota"),
             "aktivity": _("Aktivity"),
             "poznamka": _("Poznámka"),
         }
@@ -27,7 +27,7 @@ class CreateKomponentaForm(forms.ModelForm):
         widgets = {
             "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "presna_datace": forms.TextInput(),
-            "jistota": forms.CheckboxInput(),
+            "jistota": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
             "aktivity": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -65,15 +65,7 @@ class CreateKomponentaForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("obdobi", css_class="col-sm-2"),
-                Div(
-                    Div(
-                        HTML(
-                    '<label class="label">%(translation)s</label>' % {"translation":_("Jistota")}),
-                    Field("jistota"),
-                    css_class="form-group inline-checkbox"),
-                    css_class="col-sm-2"
-                ),
-                #Div("jistota", css_class="col-sm-6"),
+                Div("jistota",css_class="col-sm-2"),
                 Div("presna_datace", css_class="col-sm-2"),
                 Div("areal", css_class="col-sm-2"),
                 Div("aktivity", css_class="col-sm-4"),

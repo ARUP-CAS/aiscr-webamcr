@@ -10,7 +10,7 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form method="POST" action="{% url "projekt:generovat_expertni_list" projekt.ident_cely %}">
+      <form method="POST" action="{% url "projekt:generovat_oznameni" projekt.ident_cely %}">
         <div class="modal-body">
           {% crispy generovatNovePotvrzeniForm %}
         </div>
