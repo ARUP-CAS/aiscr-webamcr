@@ -44,7 +44,7 @@ jobs:
       run: |
         sudo mkdir -p /vol/web/media
         sudo chmod -R 777 /vol/web
-        python manage.py migrate heslar --settings=webclient.settings.dev
+        python manage.py migrate heslar --skip-checks --settings=webclient.settings.dev
     - name: Run Migrations for auth
       working-directory: ./webclient
       run: |
