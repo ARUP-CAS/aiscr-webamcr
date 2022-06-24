@@ -32,6 +32,7 @@
   <script src="{% static 'leaflet.measure.js' %}"></script>
   <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
   <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'daterangepicker.css' %}"/>
 {% endblock %}
 
 {% block content %}
@@ -132,4 +133,9 @@
   <script src="{% static 'mapa_pins.js' %}"></script>
   <script src="{% static 'mapa_oznameni.js' %}"></script>
   <script src="{% static 'daterangepicker.js' %}"></script>
+  <script>
+    window.onload = function (){
+      load_daterangepicker("div_id_planovane_zahajeni")
+    };
+  </script>
 {% endblock %}

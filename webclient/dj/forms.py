@@ -43,8 +43,9 @@ class CreateDJForm(forms.ModelForm):
                     queryset = queryset.filter(Q(heslo__iexact="část akce") | Q(heslo__iexact="celek akce"))
             elif jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
                 queryset = queryset.filter(heslo__iexact="část akce")
+            else:
+                queryset = queryset.filter(Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce"))
 
-        #logger.debug(queryset)
         return queryset
 
     class Meta:
