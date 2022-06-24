@@ -4,6 +4,7 @@
 FROM ubuntu:focal
 
 # Update base container install
+RUN apt-get clean
 RUN apt-get update
 #RUN apt-get upgrade -y
 
