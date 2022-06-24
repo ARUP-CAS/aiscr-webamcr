@@ -14,7 +14,7 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install GDAL dependencies
 RUN apt-get update
-RUN apt-get install -y python3-pip libgdal-dev locales
+RUN apt-get install -y python3-pip libgdal-dev locales gettext
 
 # Ensure locales configured correctly
 RUN locale-gen cs_CZ.utf8
@@ -56,5 +56,7 @@ RUN passwd -d user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 USER user
+
+RUN mkdir /code/locale
 
 CMD ["entrypoint.sh"]
