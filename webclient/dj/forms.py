@@ -53,14 +53,15 @@ class CreateDJForm(forms.ModelForm):
 
         labels = {
             "typ": _("Typ"),
-            "negativni_jednotka": "",
+            "negativni_jednotka": _("Negativni jednotka"),
             "nazev": _("Název"),
-            "pian": _("Pian"),
+            "pian": _("PIAN"),
         }
 
         widgets = {
             "nazev": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
+            "negativni_jednotka": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
         }
         help_texts = {
             "typ": _("dj.form.typ.tooltip"),
@@ -83,16 +84,9 @@ class CreateDJForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("typ", css_class="col-sm-2"),
-                Div("pian", css_class="col-sm-4"),
+                Div("pian", css_class="col-sm-2"),
                 Div("nazev", css_class="col-sm-4"),
-                Div(
-                    Div(
-                        HTML(
-                    '<label class="label">%(translation)s</label>' % {"translation":_("Negativni jednotka")}),
-                    Field("negativni_jednotka"),
-                    css_class="form-group inline-checkbox"),
-                    css_class="col-sm-2"
-                ),
+                Div("negativni_jednotka", css_class="col-sm-2"),
                 css_class="row",
             ),
         )

@@ -89,7 +89,8 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
-            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "pristupnost":forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"},)
         }
         help_texts = {
             "hlavni_katastr": _("arch_z.form.hlavni_katastr.tooltip"),
@@ -103,7 +104,7 @@ class CreateArchZForm(forms.ModelForm):
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].widget.attrs["readonly"] = True
-        self.fields["katastry"].widget.attrs["style"] = "pointer-events: none;"
+        self.fields["katastry"].widget.attrs["style"] = "pointer-events: none; height: calc(1.5em + 0.5rem + 2px);"
         self.fields["hlavni_katastr"].widget.attrs["readonly"] = True
         self.fields["hlavni_katastr"].widget.attrs["style"] = "pointer-events: none;"
         if projekt:
@@ -182,10 +183,10 @@ class CreateAkceForm(forms.ModelForm):
             "hlavni_vedouci": _("Hlavní vedoucí"),
             "datum_zahajeni": _("Datum zahájení"),
             "datum_ukonceni": _("Datum ukončení"),
-            "lokalizace_okolnosti": _("Lokalizace okolností"),
-            "ulozeni_nalezu": _("Uložení nálezu"),
+            "lokalizace_okolnosti": _("Lokalizace/okolnosti"),
+            "ulozeni_nalezu": _("Uložení nálezů"),
             "souhrn_upresneni": _("Poznámka"),
-            "je_nz": "",
+            "je_nz": _("Odeslat ZAA jako NZ"),
             "specifikace_data": _("Specifikace data"),
             "ulozeni_dokumentace": _("Uložení dokumentace"),
         }
@@ -197,10 +198,12 @@ class CreateAkceForm(forms.ModelForm):
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "souhrn_upresneni": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "ulozeni_dokumentace": forms.Textarea(attrs={"rows": 2, "cols": 40}),
+            "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
+            "ulozeni_dokumentace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "je_nz": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
+            "specifikace_data": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"},)
         }
 
         help_texts = {
@@ -281,7 +284,7 @@ class CreateAkceForm(forms.ModelForm):
                 Div("souhrn_upresneni", css_class="col-sm-4"),
                 Div("hlavni_typ", css_class="col-sm-4"),
                 Div("vedlejsi_typ", css_class="col-sm-4"),
-                Div("je_nz", css_class="col-sm-4 d-flex align-items-end"),
+                Div("je_nz", css_class="col-sm-4"),
                 Div("specifikace_data", css_class="col-sm-4"),
                 Div("ulozeni_dokumentace", css_class="col-sm-4"),
                 css_class="row",

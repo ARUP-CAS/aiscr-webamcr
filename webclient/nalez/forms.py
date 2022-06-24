@@ -58,7 +58,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
             self.fields["specifikace"].required = False
 
             self.fields["typ"].initial="objekt"
-
+            
             for key in self.fields.keys():
                 self.fields[key].disabled = not not_readonly
                 if self.fields[key].disabled == True:
