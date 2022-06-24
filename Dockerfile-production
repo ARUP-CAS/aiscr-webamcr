@@ -58,6 +58,6 @@ RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 USER user
 
-RUN mkdir /vol/web/locale
+RUN mkdir -p /vol/web/locale
 
 CMD ["entrypoint.sh"]
