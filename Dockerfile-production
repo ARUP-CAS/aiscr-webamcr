@@ -4,7 +4,7 @@
 FROM ubuntu:focal
 
 # Update base container install
-RUN apt-get clean
+# RUN apt-get clean
 RUN apt-get update
 #RUN apt-get upgrade -y
 
@@ -58,6 +58,6 @@ RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 USER user
 
-RUN mkdir /code/locale
+RUN mkdir /vol/web/locale
 
 CMD ["entrypoint.sh"]
