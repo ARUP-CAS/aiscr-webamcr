@@ -50,14 +50,12 @@ RUN mkdir -p /vol/web/media
 # Staic files for the app
 RUN mkdir -p /vol/web/static
 # locales for translations
-RUN mkdir -p /vol/web/locale
+RUN mkdir -p /code/locale
 
 RUN adduser user
 RUN passwd -d user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 USER user
-
-RUN mkdir -p /vol/web/locale
 
 CMD ["entrypoint.sh"]
