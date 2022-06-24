@@ -61,7 +61,7 @@ body {
 }
 
 .form-group {
-   margin-bottom: 0px!important;
+   margin-bottom: 0.15rem!important;
 }
 
 .card-body {
@@ -80,4 +80,26 @@ table td {
 table th {
   padding-top: 0.1rem!important;
   padding-bottom: 0.1rem!important;
+}
+
+.form-control-sm, .form-control, .app-daterangepicker .form-group > div .textinput  {
+  height: 1.5rem!important;
+  padding-top: 0!important;
+  padding-bottom: 0!important;
+}
+
+.bootstrap-select .dropdown-toggle {
+  padding-top: 0!important;
+  padding-bottom: 0!important;
+}
+
+.dropdown-toggle {
+  height: 20px!important;
+  line-height: 1!important;
+}
+
+.app-btn-in-form {
+  height: 18px!important;
+  padding-top: 0!important;
+  padding-bottom: 0!important;
 }
