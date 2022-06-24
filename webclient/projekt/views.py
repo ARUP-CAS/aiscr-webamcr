@@ -682,10 +682,10 @@ def uzavrit(request, ident_cely):
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
                 logger.debug("Setting event to state A2")
                 a.archeologicky_zaznam.set_odeslany(request.user)
-                for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
-                    if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
-                        logger.debug("Setting dokument to state D2")
-                        dokument_cast.dokument.set_odeslany(request.user)
+            for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
+                if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
+                    logger.debug("Setting dokument to state D2")
+                    dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return JsonResponse(
