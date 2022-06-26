@@ -7,6 +7,7 @@ app_name = "pas"
 urlpatterns = [
     path("", views.index, name="index"),
     path("zapsat", views.create, name="create"),
+    path("zapsat/<str:ident_cely>", views.create, name="create-from-project"),
     path("detail/<str:ident_cely>", views.detail, name="detail"),
     path("edit/<str:ident_cely>", views.edit, name="edit"),
     path("edit/ulozeni/<str:ident_cely>", views.edit_ulozeni, name="edit_ulozeni"),
