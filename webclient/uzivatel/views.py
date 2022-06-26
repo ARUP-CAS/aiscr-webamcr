@@ -32,27 +32,28 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
             qs = qs.filter(vypis_cely__icontains=self.q)
         return qs
 
+
 class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        qs = User.objects.all()
+        qs = User.objects.all().order_by("last_name")
         if self.q:
             qs = qs.filter(
                 Q(first_name__icontains=self.q)
-                |Q(last_name__icontains=self.q)
-                |Q(ident_cely__icontains=self.q)
-                |Q(organizace__nazev_zkraceny__icontains=self.q)
+                | Q(last_name__icontains=self.q)
+                | Q(ident_cely__icontains=self.q)
+                | Q(organizace__nazev_zkraceny__icontains=self.q)
             )
         return qs
+
 
 class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Osoba.objects.all()
         if self.q:
             qs = qs.filter(vypis_cely__icontains=self.q)
-        qs.values_list(
-            "id", "vypis_cely"
-        ),
+        qs.values_list("id", "vypis_cely"),
         return qs
+
 
 @login_required
 @require_http_methods(["POST", "GET"])
@@ -86,12 +87,20 @@ def create_osoba(request):
             # return JSON response to update dropdown and select and message
             django_messages = []
             for message in messages.get_messages(request):
-                django_messages.append({ 
-                    "level": message.level,
-                    "message": message.message,
-                    "extra_tags": message.tags,
-                })
-            return JsonResponse({"text": osoba.vypis_cely, "value":osoba.pk, "messages":django_messages})
+                django_messages.append(
+                    {
+                        "level": message.level,
+                        "message": message.message,
+                        "extra_tags": message.tags,
+                    }
+                )
+            return JsonResponse(
+                {
+                    "text": osoba.vypis_cely,
+                    "value": osoba.pk,
+                    "messages": django_messages,
+                }
+            )
         else:
             logger.debug("Form is not valid.")
             logger.debug(form.errors)

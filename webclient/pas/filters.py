@@ -32,13 +32,12 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_OBDOBI_KAT,
-
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
 from historie.models import Historie
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
-from dokument.filters import HistorieFilter    
+from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
@@ -77,7 +76,10 @@ class SamostatnyNalezFilter(HistorieFilter):
         ),
     )
 
-    katastr = CharFilter(lookup_expr="nazev__icontains", label=_("Katastr"),)
+    katastr = CharFilter(
+        lookup_expr="nazev__icontains",
+        label=_("Katastr"),
+    )
 
     vlastnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace").all(),
@@ -87,7 +89,10 @@ class SamostatnyNalezFilter(HistorieFilter):
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
-    popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",)
+    popisne_udaje = CharFilter(
+        method="filter_popisne_udaje",
+        label="Popisné údaje",
+    )
 
     nalezce = ModelMultipleChoiceFilter(
         widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
@@ -102,7 +107,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
 
     obdobi = MultipleChoiceFilter(
-        method = "filter_obdobi",
+        method="filter_obdobi",
         label=_("Období"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
         widget=SelectMultiple(
@@ -118,7 +123,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
 
     druh_nalezu = MultipleChoiceFilter(
-        method = "filter_druh_nalezu)",
+        method="filter_druh_nalezu)",
         label=_("Druh nálezu"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
         widget=SelectMultiple(
@@ -190,7 +195,6 @@ class SamostatnyNalezFilter(HistorieFilter):
     def filter_druh_nalezu(self, queryset, name, value):
         return queryset.filter(druh_nalezu__in=value)
 
-
     def filter_popisne_udaje(self, queryset, name, value):
         return queryset.filter(
             Q(lokalizace__icontains=value)
@@ -208,20 +212,17 @@ class SamostatnyNalezFilter(HistorieFilter):
 
 class UzivatelSpolupraceFilter(filters.FilterSet):
     vedouci = ModelMultipleChoiceFilter(
+        queryset=User.objects.select_related("organizace"),
         field_name="vedouci",
         label="Vedoucí",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
     spolupracovnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace"),
         field_name="spolupracovnik",
         label="Spolupracovník",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
     class Meta:
@@ -231,8 +232,13 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
         try:
-            self.filters["vedouci"].extra.update({"queryset": User.objects.select_related("organizace").filter(
-                hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID))})
+            self.filters["vedouci"].extra.update(
+                {
+                    "queryset": User.objects.select_related("organizace").filter(
+                        hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+                    )
+                }
+            )
         except utils.ProgrammingError as err:
             self.filters["vedouci"].extra.update({"queryset": None})
 
