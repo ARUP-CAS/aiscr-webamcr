@@ -181,11 +181,15 @@ class Projekt(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
+        if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
+            self.create_confirmation_document()
 
     def set_zapsany(self, user):
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
+        if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
+            self.create_confirmation_document()
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
