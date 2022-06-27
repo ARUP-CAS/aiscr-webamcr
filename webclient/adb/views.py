@@ -124,7 +124,7 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána adb: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse(
+            response = JsonResponse(
                 {
                     "redirect": reverse(
                         "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
@@ -134,7 +134,7 @@ def smazat(request, ident_cely):
         else:
             logger.warning("Adb nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse(
+            response = JsonResponse(
                 {
                     "redirect": reverse(
                         "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
@@ -142,6 +142,8 @@ def smazat(request, ident_cely):
                 },
                 status=403,
             )
+        response.set_cookie("show-form", f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
+        return response
     else:
         context = {
             "object": adb,
@@ -149,7 +151,9 @@ def smazat(request, ident_cely):
             "id_tag": "smazat-adb-form",
             "button": _("adb.modalForm.smazani.submit.button"),
         }
-        return render(request, "core/transakce_modal.html", context)
+        response = render(request, "core/transakce_modal.html", context)
+        response.set_cookie("show-form", f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
+        return response
 
 
 @login_required
@@ -176,10 +180,12 @@ def smazat_vb(request, ident_cely):
         if resp:
             logger.debug("Objekt dokumentu byl smazan: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": response})
+            response = JsonResponse({"redirect": response})
         else:
             logger.warning("Dokument nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect": response}, status=403)
+            response = JsonResponse({"redirect": response}, status=403)
+        response.set_cookie("show-form", f"detail_dj_form_{zaznam.adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
+        return response
     else:
         return render(request, "core/transakce_modal.html", context)
