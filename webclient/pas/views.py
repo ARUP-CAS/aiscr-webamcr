@@ -92,7 +92,7 @@ def index(request):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def create(request):
+def create(request, ident_cely=None):
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -150,6 +150,7 @@ def create(request):
             user=request.user,
             required=required_fields,
             required_next=required_fields_next,
+            project_ident=ident_cely,
         )
         form_coor = CoordinatesDokumentForm()
     return render(

@@ -486,13 +486,15 @@
         <div class="app-fx app-left">
           {% trans "Samostatné nálezy" %}
         </div>
+        {% if show.pridat_sam_nalez == True %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-projekt" href="" rel="tooltip" data-placement="top" title="{% trans 'Vložit další nález' %}">
+            <a class="btn app-entity-projekt" href="{% url 'pas:create-from-project' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Vložit další nález' %}">
               <span class="material-icons">add</span>
             </a>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="card-body ">
         {% if samostatne_nalezy %}

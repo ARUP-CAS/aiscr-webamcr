@@ -33,7 +33,11 @@ def validate_uzivatel_email(email):
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
-        logger_s.debug("validate_uzivatel_email.ValidationError", email=email, hlavni_role_id=user[0].hlavni_role.pk)
+        logger_s.debug(
+            "validate_uzivatel_email.ValidationError",
+            email=email,
+            hlavni_role_id=user[0].hlavni_role.pk,
+        )
         raise ValidationError(
             _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
         )
@@ -78,7 +82,9 @@ class PotvrditNalezForm(forms.ModelForm):
         }
         help_texts = {
             "evidencni_cislo": _("pas.form.potvrditNalez.evidencni_cislo.tooltip"),
-            "predano_organizace": _("pas.form.potvrditNalez.predano_organizace.tooltip"),
+            "predano_organizace": _(
+                "pas.form.potvrditNalez.predano_organizace.tooltip"
+            ),
             "pristupnost": _("pas.form.potvrditNalez.pristupnost.tooltip"),
         }
 
@@ -120,7 +126,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         label=_("Katastrální území"),
         error_messages={"required": "Je třeba vybrat bod na mapě."},
         help_text=_("pas.form.createSamostatnyNalez.katastr.tooltip"),
-        required=True
+        required=True,
     )
 
     class Meta:
@@ -179,7 +185,16 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka": _("pas.form.createSamostatnyNalez.poznamka.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, user=None, required=None,required_next=None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        readonly=False,
+        user=None,
+        required=None,
+        required_next=None,
+        project_ident=None,
+        **kwargs
+    ):
         projekt_disabed = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
         self.fields["lokalizace"].widget.attrs["rows"] = 1
@@ -194,6 +209,9 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             help_text=_("pas.form.createSamostatnyNalez.projekt.tooltip"),
+            initial=Projekt.objects.filter(ident_cely=project_ident)[0]
+            if project_ident
+            else None,
         )
         self.fields["katastr"].widget.attrs["readonly"] = True
         self.fields["druh_nalezu"] = TwoLevelSelectField(
@@ -248,14 +266,18 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
         if projekt_disabed:
             self.fields["projekt"].disabled = projekt_disabed
         if self.instance is not None:
             self.fields["katastr"].initial = self.instance.katastr
-            
+
 
 class CreateZadostForm(forms.Form):
     email_uzivatele = forms.EmailField(
