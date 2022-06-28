@@ -22,6 +22,12 @@ class AkceVedouciFormSetHelper(FormHelper):
 
 def create_akce_vedouci_objekt_form(readonly=True):
     class CreateAkceVedouciObjektForm(forms.ModelForm):
+        def clean(self):
+            cleaned_data = super().clean()
+            if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or\
+                (cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None):
+                raise forms.ValidationError(_("create_akce_vedouci_objekt_form.clean.error"))
+
         class Meta:
             model = AkceVedouci
             fields = ["vedouci", "organizace"]
