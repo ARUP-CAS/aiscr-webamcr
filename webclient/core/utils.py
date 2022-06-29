@@ -216,8 +216,10 @@ def dictfetchall(cursor):
 
 def get_heatmap_pian(left, bottom, right, top, zoom):
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
-    query_zoom = "select count*3 as count, ST_AsText(st_centroid) as geometry "
-    "from amcr_heat_pian_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    query_zoom = (
+        "select count*3 as count, ST_AsText(st_centroid) as geometry "
+        "from amcr_heat_pian_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    )
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
@@ -249,8 +251,10 @@ def get_heatmap_pian_density(left, bottom, right, top, zoom):
 
 def get_heatmap_project(left, bottom, right, top, zoom):
     query = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_l2"
-    query_zoom = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_lx2 "
-    "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    query_zoom = (
+        "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_lx2 "
+        "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    )
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
@@ -266,8 +270,10 @@ def get_heatmap_project(left, bottom, right, top, zoom):
 
 def get_heatmap_project_density(left, bottom, right, top, zoom):
     query = "select max(count) from amcr_heat_projekt_l2"
-    query_zoom = "select max(count) from amcr_heat_projekt_lx2 "
-    "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    query_zoom = (
+        "select max(count) from amcr_heat_projekt_lx2 "
+        "where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    )
     try:
         # num = Pian.objects.raw(query, [left, bottom, right, top])
         cursor = connection.cursor()
