@@ -55,7 +55,7 @@ crossorigin=""/>
       {{ form.hloubka|as_crispy_field }}
       </div>
       <div>
-        
+
       </div>
       <div class="form-group col-sm-6">
         <!-- Koordinaty-->
@@ -114,7 +114,7 @@ crossorigin=""/>
         {{ form.lokalizace|as_crispy_field }}
       </div>
     </div>
-    <div class="form-group col-sm-8">    
+    <div class="col-sm-8">
         {% include "map.html" %}
     </div>
     <div class="col-sm-12">
@@ -143,7 +143,7 @@ crossorigin=""/>
     <div class="form-group col-sm-12">
       {{ form.poznamka|as_crispy_field }}
     </div>
-  </div> 
+  </div>
 
 {% endblock %}
 {% block script %}
@@ -186,7 +186,7 @@ crossorigin=""/>
                     set_numeric_coordinates()
                 }
             });
-            
+
                 })
     </script>
 {% endblock %}
