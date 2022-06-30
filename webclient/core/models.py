@@ -100,6 +100,14 @@ class Soubor(models.Model):
             vazba=self.historie,
         ).save()
 
+    def zaznamenej_nahrani_nove_verze(self, user):
+        Historie(
+            typ_zmeny=NAHRANI_SBR,
+            uzivatel=user,
+            poznamka=self.nazev_puvodni,
+            vazba=self.historie,
+        ).save()
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         try:
