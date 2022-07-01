@@ -280,7 +280,9 @@ def post_upload(request):
                     {
                         "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
                         + parent_ident + ". "
-                        + _("Zkontrolujte prosím duplicitu.")
+                        + _("Zkontrolujte prosím duplicitu."),
+                        "filename": s.nazev_zkraceny, 
+                        "id": s.pk
                     },
                     status=200,
                 )
