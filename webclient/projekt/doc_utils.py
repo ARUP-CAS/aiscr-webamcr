@@ -380,7 +380,11 @@ class OznameniPDFCreator(DocumentCreator):
         pdf_buffer.close()
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        path = f"{MEDIA_ROOT}/oznameni_{self.projekt.ident_cely}.pdf"
+        directory = f"{MEDIA_ROOT}/soubory/AG/{datetime.datetime.today().year}/{datetime.datetime.today().month}" \
+               f"/{datetime.datetime.today().day}/"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        path = f"{directory}oznameni_{self.projekt.ident_cely}.pdf"
         with open(path, "wb") as file:
             file.write(pdf_value)
             size = file.tell()
