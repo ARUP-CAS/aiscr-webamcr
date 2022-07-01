@@ -266,23 +266,26 @@
           document.title = document_title; 
         }
         period_count = period_count + 1
-      }, 500); 
+      }, 1000); 
+      notifyShown = true
     }
     function stopNotify(src){
       changeFavicon(src);
       clearInterval(interval);
       document.title = document_title;
+      notifyShown = false
     }
+    var notifyShown = false
     
     timer.start({countdown: true, startValues: {seconds: time}});
     $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
     
     timer.addEventListener('secondsUpdated', function (e) {
-      var actual_time = timer.getTimeValues().toString(['minutes', 'seconds'])
+      var actual_time = timer.getTimeValues().toString(['minutes', 'seconds']).padStart(5,"0")
       $('#time').html(actual_time);
       var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
       if (idle_warning !== false) {
-        if (actual_time === idle_warning) { 
+        if (actual_time <= idle_warning.padStart(5,"0") && notifyShown === false) { 
           startNotify(fav_not)                
           createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True','True','False')
         };
