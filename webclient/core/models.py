@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def get_upload_to(instance, filename):
     instance: Soubor
     vazba: SouborVazby = instance.vazba
-    if vazba.typ_vazby == "projekt":
+    if vazba.typ_vazby == PROJEKT_RELATION_TYPE:
         regex_oznameni = re.compile(r"\w*oznameni_?(?:X-)?[A-Z][-_]\w*\.pdf")
         regex_log_dokumentace = re.compile(r"\w*log_dokumentace.pdf")
         if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(
@@ -32,9 +32,9 @@ def get_upload_to(instance, filename):
             folder = "AG/"
         else:
             folder = "PD/"
-    elif vazba.typ_vazby == "samostatny_nalez":
+    elif vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
         folder = "FN/"
-    elif vazba.typ_vazby == "dokument":
+    elif vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
         folder = "SD/"
     else:
         folder = ""
