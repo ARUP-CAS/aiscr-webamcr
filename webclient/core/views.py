@@ -162,6 +162,7 @@ def update_file(request, file_id):
     ident_cely = ""
     back_url = request.GET.get('next')
     soubor = get_object_or_404(Soubor, id=file_id)
+    soubor.zaznamenej_nahrani_nove_verze(request.user)
     return render(
         request,
         "core/upload_file.html",
