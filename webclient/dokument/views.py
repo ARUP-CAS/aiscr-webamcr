@@ -145,8 +145,8 @@ def detail(request, ident_cely):
         context["soubory"] = None
     response = render(request, "dokument/detail.html", context)
     casti = dokument.casti.all()
-    referer = urlparse(request.META.get('HTTP_REFERER',False)).path
-    referer_next = urlparse(request.META.get('HTTP_REFERER',False)).query
+    referer = urlparse(request.META.get("HTTP_REFERER", False)).path
+    referer_next = urlparse(request.META.get("HTTP_REFERER", False)).query
     if referer:
         ident_referer = referer.split("/")[-1]
         if ident_cely == ident_referer:
@@ -157,13 +157,21 @@ def detail(request, ident_cely):
                 if cast.archeologicky_zaznam:
                     if cast.archeologicky_zaznam.ident_cely == ident_referer:
                         logger.debug("back option for akce found")
-                        response.set_cookie("zpet", reverse('arch_z:detail', args=(ident_referer,)), max_age=1000)
+                        response.set_cookie(
+                            "zpet",
+                            reverse("arch_z:detail", args=(ident_referer,)),
+                            max_age=1000,
+                        )
                         found = True
                         break
                 if cast.projekt:
                     if cast.projekt.ident_cely == ident_referer:
                         logger.debug("back option for projekt found")
-                        response.set_cookie("zpet", reverse('projekt:detail', args=(ident_referer,)), max_age=1000)
+                        response.set_cookie(
+                            "zpet",
+                            reverse("projekt:detail", args=(ident_referer,)),
+                            max_age=1000,
+                        )
                         found = True
                         break
             if found == False:
@@ -927,7 +935,7 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
         return JsonResponse({"redirect": reverse(f"{view}:detail")}, status=404)
     if len(relace_dokumentu) == 1:
         orphan_dokument = relace_dokumentu[0].dokument
-        if "X-" in orphan_dokument.ident_cely:
+        if orphan_dokument.stav == D_STAV_ARCHIVOVANY:
             remove_orphan = True
     if request.method == "POST":
         if view == "arch_z":
