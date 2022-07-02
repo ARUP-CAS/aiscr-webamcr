@@ -935,7 +935,7 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
         return JsonResponse({"redirect": reverse(f"{view}:detail")}, status=404)
     if len(relace_dokumentu) == 1:
         orphan_dokument = relace_dokumentu[0].dokument
-        if orphan_dokument.stav == D_STAV_ARCHIVOVANY:
+        if orphan_dokument.ident_cely.startswith("X-"):
             remove_orphan = True
     if request.method == "POST":
         if view == "arch_z":
