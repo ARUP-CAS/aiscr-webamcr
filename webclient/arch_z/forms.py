@@ -273,7 +273,7 @@ class CreateAkceForm(forms.ModelForm):
                         Div("hlavni_vedouci", css_class="col-sm-10"),
                         Div(
                             HTML(
-                                '<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
+                                '<a href="{% url "heslar:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
                             ),
                             css_class="col-sm-2",
                             style="display: flex; align-items: center;",

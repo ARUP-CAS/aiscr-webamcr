@@ -112,7 +112,7 @@ class DokumentFilter(HistorieFilter):
     autor = ModelMultipleChoiceFilter(
         label=_("Autor"),
         field_name="autori",
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
