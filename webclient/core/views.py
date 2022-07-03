@@ -87,7 +87,8 @@ def delete_file(request, pk):
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("Byl smazán soubor: " + str(items_deleted))
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            if not request.POST.get("dropzone",False):
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")
         if next_url:
             if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
