@@ -141,7 +141,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     datum_nalezu = DateFromToRangeFilter(
         label=_("pas.filters.datumNalezu.label"),
         field_name="datum_nalezu",
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 
@@ -165,7 +165,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     historie_datum_zmeny_od = DateFromToRangeFilter(
         label="Datum změny (od-do)",
         field_name="historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 

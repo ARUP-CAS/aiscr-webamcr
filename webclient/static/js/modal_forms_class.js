@@ -188,6 +188,7 @@ class Modal {
             format: "dd.mm.yyyy",
             language: 'cs',
             todayHighlight: true,
+            endDate: new Date(2100,12,31)
         });
     }
 }
