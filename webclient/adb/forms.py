@@ -190,7 +190,6 @@ def create_vyskovy_bod_form(pian=None, niveleta=None,not_readonly=True):
 
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
-            self.fields["ident_cely"].disabled = True
             self.fields["ident_cely"].required = False
             # self.fields["northing"].label = "X"
             # self.fields["easting"].label = "Y"
@@ -209,5 +208,6 @@ def create_vyskovy_bod_form(pian=None, niveleta=None,not_readonly=True):
                             key
                         ].widget.template_name = "core/select_to_text.html"
                     self.fields[key].help_text = ""
+            self.fields["ident_cely"].disabled = True
 
     return CreateVyskovyBodForm
