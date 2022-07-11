@@ -1,11 +1,11 @@
 {% load i18n %}
 
 {% if record.stav == 1 %}
-  <button id="spoluprace-aktivovat-{{record.id}}" class="btn btn-sm spoluprace-aktivovat-btn" type="button" name="button" href="{% url 'pas:spoluprace_aktivace' record.id %}">
+  <button id="spoluprace-aktivovat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-aktivovat-btn" type="button" name="button" href="{% url 'pas:spoluprace_aktivace' record.id %}">
     {% trans 'Aktivovat' %}
   </button>
 {% else %}
-<button id="spoluprace-deaktivovat-{{record.id}}" class="btn btn-sm spoluprace-deaktivovat-btn" type="button" name="button" href="{% url 'pas:spoluprace_deaktivace' record.id %}">
+<button id="spoluprace-deaktivovat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-deaktivovat-btn" type="button" name="button" href="{% url 'pas:spoluprace_deaktivace' record.id %}">
   {% trans 'Deaktivovat' %}
 </button>
 {% endif %}

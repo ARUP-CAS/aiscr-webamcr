@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
-    katastr = tables.Column(verbose_name=_("Katastrální území"),default="")
-    datum_nalezu = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
+    katastr = tables.Column(verbose_name=_("Katastrální území"), default="")
+    datum_nalezu = tables.columns.DateTimeColumn(format="Y-m-d", default="")
     lokalizace = tables.columns.Column(default="")
     obdobi = tables.columns.Column(default="")
     druh_nalezu = tables.columns.Column(default="")
@@ -59,7 +59,9 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
 
 class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
 
-    stav = tables.Column(verbose_name="Stav", attrs={"td": {"class": "spoluprace"}},default="")
+    stav = tables.Column(
+        verbose_name="Stav", attrs={"td": {"class": "spoluprace"}}, default=""
+    )
     vedouci = tables.Column(
         accessor="vedouci__name_and_id",
         verbose_name="Vedoucí",
@@ -91,11 +93,11 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         "historie:spoluprace",
         text="Historie",
         args=[A("pk")],
-        attrs={"a": {"class": "btn btn-sm"}},
+        attrs={"a": {"class": "btn btn-sm btn-spoluprace-vyber"}},
     )
     aktivace = tables.TemplateColumn(
         attrs={
-            "td": {"class": "spoluprace" },
+            "td": {"class": "spoluprace"},
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
         template_name="pas/aktivace_deaktivace_cell.html",
@@ -106,7 +108,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
             "td": {"class": "spoluprace"},
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
-        template_code='{% load i18n %} <button id="spoluprace-smazat-{{record.id}}" class="btn btn-sm spoluprace-smazat-btn" type="button" name="button" href="{% url "pas:spoluprace_smazani" record.id %}">{% trans "Smazat" %}</button>',
+        template_code='{% load i18n %} <button id="spoluprace-smazat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-smazat-btn" type="button" name="button" href="{% url "pas:spoluprace_smazani" record.id %}">{% trans "Smazat" %}</button>',
         exclude_from_export=True,
         orderable=False,
     )
