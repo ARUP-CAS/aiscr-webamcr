@@ -196,6 +196,10 @@ table {
     height: $app-form-control-fix-height;
     padding: 0.1rem 0.5rem;
   }
+  
+  .dropdown-menu .dropdown-menu.inner {
+    float: inline-end;
+  }
 }
 
 // date range picker
