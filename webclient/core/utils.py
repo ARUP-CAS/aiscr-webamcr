@@ -153,7 +153,9 @@ def get_num_pians_from_envelope(left, bottom, right, top):
 
 def get_pians_from_envelope(left, bottom, right, top, ident_cely):
     query = (
-        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,"
+        "select pian.id,pian.ident_cely,"
+        " ST_AsText(pian.geom) as geometry,"
+        " ST_AsText(st_centroid(pian.geom)) as centroid, "
         " dj.ident_cely as dj,pian.presnost as presnost "
         " from public.pian pian "
         " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely like %s "

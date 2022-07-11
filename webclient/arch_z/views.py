@@ -190,7 +190,9 @@ def detail(request, ident_cely):
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
             VyskovyBod,
-            form=create_vyskovy_bod_form(pian=jednotka.pian,not_readonly=show["editovat"]),
+            form=create_vyskovy_bod_form(
+                pian=jednotka.pian, not_readonly=show["editovat"]
+            ),
             extra=1,
             can_delete=False,
         )
@@ -233,11 +235,16 @@ def detail(request, ident_cely):
             logger.debug(jednotka.ident_cely)
             dj_form_detail["adb_form"] = (
                 CreateADBForm(
-                    old_adb_post, instance=jednotka.adb, prefix=jednotka.adb.ident_cely, readonly=not show["editovat"],
+                    old_adb_post,
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
                 )
                 if jednotka.adb.ident_cely == adb_ident_cely
                 else CreateADBForm(
-                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely, readonly=not show["editovat"],
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
                 )
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
@@ -803,6 +810,7 @@ def post_ajax_get_pians_limit(request):
         body["northWest"]["lng"],
         body["southEast"]["lat"],
     )
+    clusters = num >= 500
     logger.debug("pocet geometrii")
     logger.debug(num)
     if num < 5000:
@@ -820,15 +828,28 @@ def post_ajax_get_pians_limit(request):
                 {
                     "id": pian.id,
                     "ident_cely": pian.ident_cely,
-                    "geom": pian.geometry.replace(", ", ","),
+                    "geom": pian.geometry.replace(", ", ",")
+                    if not clusters
+                    else pian.centroid.replace(", ", ","),
                     "dj": pian.dj,
                     "presnost": pian.presnost.zkratka,
                 }
             )
         if len(pians) > 0:
-            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+            return JsonResponse(
+                {
+                    "points": back,
+                    "algorithm": "detail",
+                    "count": num,
+                    "clusters": clusters,
+                },
+                status=200,
+            )
         else:
-            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+            return JsonResponse(
+                {"points": [], "algorithm": "detail", "count": 0, "clusters": clusters},
+                status=200,
+            )
     else:
         density = get_heatmap_pian_density(
             body["southEast"]["lng"],
