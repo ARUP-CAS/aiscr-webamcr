@@ -284,14 +284,12 @@ def edit(request, ident_cely):
                     str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
                 )
             system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
+            gx = geom.split(" ")[1] if system == "WGS-84" else geom_sjtsk.split(" ")[1]
+            gy = geom.split(" ")[0] if system == "WGS-84" else geom_sjtsk.split(" ")[0]
             form_coor = CoordinatesDokumentForm(
                 initial={
-                    "detector_coordinates_x": geom.split(" ")[1]
-                    if (system == "WGS-84")
-                    else geom_sjtsk.split(" ")[1],
-                    "detector_coordinates_y": geom.split(" ")[0]
-                    if (system == "WGS-84")
-                    else geom_sjtsk.split(" ")[0],
+                    "detector_coordinates_x": gx,
+                    "detector_coordinates_y": gy,
                     "coordinate_wgs84_x": geom.split(" ")[1],
                     "coordinate_wgs84_y": geom.split(" ")[0],
                     "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
