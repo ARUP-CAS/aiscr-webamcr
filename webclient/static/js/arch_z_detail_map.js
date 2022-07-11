@@ -70,8 +70,8 @@ var osmGrey = L.tileLayer.grayscale('http://tile.openstreetmap.org/{z}/{x}/{y}.p
 var poi_sugest = L.layerGroup();
 var gm_correct = L.layerGroup();
 var poi_dj = L.layerGroup();
-var poi_other = L.markerClusterGroup({disableClusteringAtZoom:20});
-var poi_other_dp = L.layerGroup();
+var poi_other_dp = L.markerClusterGroup({disableClusteringAtZoom:22});
+var poi_other = L.layerGroup();
 var heatPoints = [];
 var heatmapOptions=
 		{
@@ -863,6 +863,7 @@ switchMap = function(overview=false){
             //gm_correct.clearLayers();
                 let resAl=JSON.parse(this.responseText).algorithm
                 if(resAl == "detail"){
+                    var detail_clusters=JSON.parse(this.responseText).clusters;
                     let resPoints=JSON.parse(this.responseText).points
                     //let dj_head=form_id.replace("detail_dj_form_", "")
                     var pocet=0;
@@ -875,10 +876,14 @@ switchMap = function(overview=false){
                         }
                     }
                     else {
-                        addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
+                        if(!detail_clusters){
+                            addPointToPoiLayerWithForceG(i.geom,poi_other,i.ident_cely,true)
+                        } else{
+                            addPointToPoiLayerWithForceG(i.geom,poi_other_dp,i.ident_cely,true)
+                        }
                     }
                     })
-                    if(pocet>50){
+                    if(pocet>50 && !detail_clusters){
                         map.removeLayer(poi_other_dp);
                     }
                 }else{
