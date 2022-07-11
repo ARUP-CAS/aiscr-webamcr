@@ -110,11 +110,12 @@ def odpojit(request, dj_ident_cely):
         dj.pian = None
         dj.save()
         logger.debug("Pian odpojen: " + pian.ident_cely)
-        messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
         if delete_pian:
             pian.delete()
             logger.debug("Pian smazán: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
+        else:
+            messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
         return JsonResponse(
             {
                 "redirect": reverse(

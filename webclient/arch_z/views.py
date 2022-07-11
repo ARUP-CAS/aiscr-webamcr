@@ -331,9 +331,9 @@ def edit(request, ident_cely):
         ostatni_vedouci_objekt_formset = inlineformset_factory(
             Akce,
             AkceVedouci,
-            form=create_akce_vedouci_objekt_form(),
+            form=create_akce_vedouci_objekt_form(readonly=False),
             extra=1,
-            can_delete=True,
+            can_delete=False,
         )
         ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
             request.POST,
@@ -368,7 +368,7 @@ def edit(request, ident_cely):
             Akce,
             AkceVedouci,
             form=create_akce_vedouci_objekt_form(readonly=False),
-            extra=1,
+            extra=3,
             can_delete=False,
         )
         ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
@@ -678,7 +678,7 @@ def zapsat(request, projekt_ident_cely):
             Akce,
             AkceVedouci,
             form=create_akce_vedouci_objekt_form(readonly=False),
-            extra=1,
+            extra=3,
             can_delete=False,
         )
         ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(

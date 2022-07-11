@@ -73,7 +73,7 @@ class OznameniPDFCreator(DocumentCreator):
         ohlásil záměr <strong>{self.projekt.podnet}</strong> (označení stavby: {self.projekt.oznaceni_stavby}; 
         plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ')} - 
         {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ')} na 
-        k. ú. <strong>{self.projekt.hlavni_katastr} (okr. {self.projekt.hlavni_katastr.okres})</strong>, parc. č. 
+        k. ú. <strong>{str(self.projekt.hlavni_katastr).replace("(", "(okr. ")} </strong>, parc. č. 
         {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU[dok_index]}. 
         Oznámení provedl <strong>{datum_zmeny.strftime('%d. %m. %Y').replace(' 0', ' ')}</strong> pod evidenčním číslem 
         <strong>{self.projekt.ident_cely}</strong>. <strong>Tímto byla naplněna povinnost oznámit 
@@ -94,7 +94,7 @@ class OznameniPDFCreator(DocumentCreator):
 
         self.texts["doc_sign_1"] = "S pozdravem"
         self.texts["doc_sign_2"] = DOC_REDITEL[dok_index]
-        self.texts["doc_sign_3"] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO}, v. v. i."
+        self.texts["doc_sign_3"] = f"ředitel<br/>Archeologický ústav AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
 
         self.texts["doc_attachment_heading_main_1"] = "PŘÍLOHA – INFORMACE O ZPRACOVÁNÍ OSOBNÍCH ÚDAJŮ"
 
@@ -380,7 +380,11 @@ class OznameniPDFCreator(DocumentCreator):
         pdf_buffer.close()
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-        path = f"{MEDIA_ROOT}/oznameni_{self.projekt.ident_cely}.pdf"
+        directory = f"{MEDIA_ROOT}/soubory/AG/{datetime.datetime.today().year}/{datetime.datetime.today().month}" \
+               f"/{datetime.datetime.today().day}/"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        path = f"{directory}oznameni_{self.projekt.ident_cely}.pdf"
         with open(path, "wb") as file:
             file.write(pdf_value)
             size = file.tell()

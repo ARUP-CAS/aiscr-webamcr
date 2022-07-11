@@ -682,10 +682,10 @@ def uzavrit(request, ident_cely):
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
                 logger.debug("Setting event to state A2")
                 a.archeologicky_zaznam.set_odeslany(request.user)
-                for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
-                    if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
-                        logger.debug("Setting dokument to state D2")
-                        dokument_cast.dokument.set_odeslany(request.user)
+            for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
+                if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
+                    logger.debug("Setting dokument to state D2")
+                    dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
         return JsonResponse(
@@ -1109,6 +1109,7 @@ def get_detail_template_shows(projekt, user):
     archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
     admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
     show_pridat_akci = False
+    show_pridat_sam_nalez = False
     if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
         if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
             show_pridat_akci = (
@@ -1116,6 +1117,15 @@ def get_detail_template_shows(projekt, user):
             )
         else:
             show_pridat_akci = (
+                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
+            )
+    else:
+        if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
+            show_pridat_sam_nalez = (
+                PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY
+            )
+        else:
+            show_pridat_sam_nalez = (
                 PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
             )
     show_edit = projekt.stav not in [
@@ -1148,6 +1158,7 @@ def get_detail_template_shows(projekt, user):
         "arch_links": show_arch_links,
         "akce": show_akce,
         "pripojit_dokumenty": show_pripojit_dokumenty,
+        "pridat_sam_nalez": show_pridat_sam_nalez,
     }
     return show
 

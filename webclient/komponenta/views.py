@@ -178,17 +178,20 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána komponenta: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse(
+            response = JsonResponse(
                 {
                     "redirect": reverse(
                         "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
                     )
                 }
             )
+            response.set_cookie("show-form", f"detail_dj_form_{k.komponenta_vazby.dokumentacni_jednotka.ident_cely}",
+                               max_age=1000)
+            return response
         else:
             logger.warning("Komponenta nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse(
+            response = JsonResponse(
                 {
                     "redirect": reverse(
                         "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
@@ -196,6 +199,8 @@ def smazat(request, ident_cely):
                 },
                 status=403,
             )
+            response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
+            return response
     else:
         context = {
             "object": k,

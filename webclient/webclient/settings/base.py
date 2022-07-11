@@ -171,6 +171,8 @@ USE_TZ = True
 LOCALE_PATHS = ["/vol/web/locale"]
 
 ROSETTA_SHOW_AT_ADMIN_PANEL = True
+ROSETTA_WSGI_AUTO_RELOAD = True
+ROSETTA_UWSGI_AUTO_RELOAD = True
 # DEFAULT_CHARSET = "utf-8"
 
 STATIC_URL = "/static/static/"

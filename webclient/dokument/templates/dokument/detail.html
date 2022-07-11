@@ -99,7 +99,7 @@
       </div>
     </div>
 
-    <div class="card app-card-form">
+    <div class="card app-card-form app-table-list-container">
       <div class="card-header">
         <div class="app-fx app-left">
           {% trans "Soubory" %}
@@ -181,7 +181,7 @@
       let zpet = getCookie("zpet")
       if (zpet){
         back.style.display = "inline";
-        back.querySelectorAll('a')[0].href=zpet;
+        back.querySelectorAll('a')[0].href=zpet.replace(/['"]+/g, '');
         if (zpet.includes('akce')){
           back.querySelectorAll('a')[0].textContent=akce_back;
         }

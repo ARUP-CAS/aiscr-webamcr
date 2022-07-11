@@ -29,17 +29,12 @@ urlpatterns = [
     ),
     path("akce-zjisti-katastr", views.post_akce2kat, name="post_akce2kat"),
     path(
-        "katastr-zjisti-piany",
-        views.post_ajax_get_pians,
-        name="post_ajax_get_pians",
-    ),
-    path(
         "akce-vedouci-smazat/<int:akce_vedouci_id>",
         views.smazat_akce_vedoucí,
         name="smazat_akce_vedouci",
     ),
     path(
-        "akce-get-piany",
+        "katastr-zjisti-piany",
         views.post_ajax_get_pians_limit,
         name="post_ajax_get_pians_limit",
     ),

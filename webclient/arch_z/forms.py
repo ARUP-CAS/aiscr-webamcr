@@ -22,6 +22,12 @@ class AkceVedouciFormSetHelper(FormHelper):
 
 def create_akce_vedouci_objekt_form(readonly=True):
     class CreateAkceVedouciObjektForm(forms.ModelForm):
+        def clean(self):
+            cleaned_data = super().clean()
+            if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or\
+                (cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None):
+                raise forms.ValidationError(_("create_akce_vedouci_objekt_form.clean.error"))
+
         class Meta:
             model = AkceVedouci
             fields = ["vedouci", "organizace"]
@@ -267,7 +273,7 @@ class CreateAkceForm(forms.ModelForm):
                         Div("hlavni_vedouci", css_class="col-sm-10"),
                         Div(
                             HTML(
-                                '<a href="{% url "uzivatel:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
+                                '<a href="{% url "heslar:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
                             ),
                             css_class="col-sm-2",
                             style="display: flex; align-items: center;",

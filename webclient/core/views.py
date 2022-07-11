@@ -87,7 +87,8 @@ def delete_file(request, pk):
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("Byl smazán soubor: " + str(items_deleted))
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+            if not request.POST.get("dropzone",False):
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")
         if next_url:
             if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -162,6 +163,7 @@ def update_file(request, file_id):
     ident_cely = ""
     back_url = request.GET.get('next')
     soubor = get_object_or_404(Soubor, id=file_id)
+    soubor.zaznamenej_nahrani_nove_verze(request.user)
     return render(
         request,
         "core/upload_file.html",
@@ -280,7 +282,9 @@ def post_upload(request):
                     {
                         "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
                         + parent_ident + ". "
-                        + _("Zkontrolujte prosím duplicitu.")
+                        + _("Zkontrolujte prosím duplicitu."),
+                        "filename": s.nazev_zkraceny, 
+                        "id": s.pk
                     },
                     status=200,
                 )

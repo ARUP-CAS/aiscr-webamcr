@@ -67,11 +67,13 @@ def smazat_nalez(request, typ, ident_cely):
         if resp:
             logger.debug("Objekt dokumentu byl smazan: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": response})
+            response = JsonResponse({"redirect": response})
         else:
             logger.warning("Dokument nebyl smazan: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            return JsonResponse({"redirect": response}, status=403)
+            response = JsonResponse({"redirect": response}, status=403)
+        response.set_cookie("show-form", f"detail_komponenta_form_{zaznam.komponenta.ident_cely}", max_age=1000)
+        return response
     else:
         return render(request, "core/transakce_modal.html", context)
 

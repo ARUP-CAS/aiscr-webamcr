@@ -6,10 +6,21 @@
 } */
 
 // colors
-.app-color-success {color: $success !important;}
-.app-color-info {color: $info !important;}
-.app-color-warning {color: $warning !important;}
-.app-color-danger {color: $danger !important;}
+.app-color-success {
+  color: $success  !important;
+}
+
+.app-color-info {
+  color: $info  !important;
+}
+
+.app-color-warning {
+  color: $warning  !important;
+}
+
+.app-color-danger {
+  color: $danger  !important;
+}
 
 // common
 .app-heading-thin {
@@ -91,16 +102,17 @@
   }
 
   &.app-btn-in-form {
-    @extend .btn-primary,  .btn-sm;
+    @extend .btn-primary, .btn-sm;
     margin-left: -0.25rem !important;
   }
 }
-.btn-prolong{
+
+.btn-prolong {
   background: transparent;
   padding: 0;
 }
 
-.input-osoba .form-group .input-group-append .input-group-text{
+.input-osoba .form-group .input-group-append .input-group-text {
   padding-left: 0rem !important;
   padding-right: 0rem !important;
 }
@@ -120,7 +132,7 @@ table {
         width: $app-ident-cely;
 
         .material-icons {
-          @include setIcon($size:18, $position: sub);
+          @include setIcon($size: 18, $position: sub);
         }
       }
 
@@ -129,9 +141,14 @@ table {
           width: 200px;
         }
       }
+
       button {
         border: none;
         background: none;
+      }
+
+      .btn-spoluprace-vyber {
+        padding: 0rem !important;
       }
     }
   }
@@ -141,27 +158,28 @@ table {
     color: initial;
   }
 }
-.formset-table form table tbody tr div small
- {
 
-    display:none
-}
-.formset-table form table tbody tr:last-child div small
- {
+.formset-table form table tbody tr div small {
 
-    display:inherit
+  display: none
 }
-.formset-table table tbody tr div small
- {
 
-    display:none
-}
-.formset-table table tbody tr:last-child div small
- {
+.formset-table form table tbody tr:last-child div small {
 
-    display:inherit
+  display: inherit
 }
-.formset-table .filter-option{
+
+.formset-table table tbody tr div small {
+
+  display: none
+}
+
+.formset-table table tbody tr:last-child div small {
+
+  display: inherit
+}
+
+.formset-table .filter-option {
   margin-right: -25px;
 }
 
@@ -169,10 +187,10 @@ table {
 .select2-container {
   //min-width: unset !important; commented because there was bug, which sent Juraj by skype 
   min-width: 100% !important;
-  min-height: $app-form-control-fix-height !important;
+  min-height: $app-form-control-fix-height  !important;
 
   .select2-selection {
-    height: $app-form-control-fix-height!important;
+    height: $app-form-control-fix-height !important;
     border: 1px solid #ced4da !important;
     border-radius: 0.2rem !important;
 
@@ -187,7 +205,7 @@ table {
         margin-top: 1px;
       }
     }
-  }  
+  }
 }
 
 // select bootstrap fix
@@ -196,18 +214,22 @@ table {
     height: $app-form-control-fix-height;
     padding: 0.1rem 0.5rem;
   }
+  
+  .dropdown-menu .dropdown-menu.inner {
+    float: inline-end;
+  }
 }
 
 // date range picker
 .app-daterangepicker {
   .form-group {
-    & > div {
+    &>div {
       @extend .d-flex;
       font-size: 0;
 
       .textinput {
         @extend .flex-fill, .form-control;
-       
+
         &:first-child {
           margin-right: 15px;
         }
@@ -228,7 +250,7 @@ form {
     border: 1px solid $gray-400;
     background-color: $gray-100;
     min-height: 180px;
-    display:block !important;
+    display: block !important;
 
     .dz-message {
       @extend .m-0;
@@ -267,7 +289,8 @@ form {
       }
     }
   }
-  &.inline-checkbox small{
+
+  &.inline-checkbox small {
     left: -1.5rem;
     position: inherit;
   }
@@ -299,9 +322,7 @@ form {
           flex: 1;
         }
 
-        &.app-right {
-
-        }
+        &.app-right {}
 
         .btn-group {
           height: $app-card-form-header-btn-height;
@@ -343,7 +364,7 @@ form {
 
     &:not(.app-card-inner) {
       box-shadow: $app-card-shadow;
-  
+
       &:hover {
         box-shadow: $app-card-shadow-hover;
       }
@@ -391,7 +412,7 @@ form {
 // alert
 .alert {
   &.app-alert-floating {
-    box-shadow: 0px 0px 40px 0px rgba(0,0,0,0.2);
+    box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.2);
     border-color: initial;
     position: fixed;
     //top: 50%;
@@ -399,6 +420,7 @@ form {
     //transform: translateY(-50%);
     left: 50%;
     //transform: translateX(-50%);
+    z-index: 1000;
   }
 
   ul {
@@ -416,19 +438,21 @@ form {
 
 // table list
 .app-table-list-container {
-  @extend .d-flex, .flex-column, .h-100; 
+  @extend .d-flex, .flex-column, .h-100;
 
   &.app-entity-historie {
     height: 95% !important;
   }
-  &.app-entity-soubor{
-    .app-toolbar{
-    margin: 0rem -1rem 1rem -1rem !important;
+
+  &.app-entity-soubor {
+    .app-toolbar {
+      margin: 0rem -1rem 1rem -1rem !important;
     }
   }
-  .app-card-form{
+
+  .app-card-form {
     .material-icons {
-      @include setIcon($size:18, $position: sub);
+      @include setIcon($size: 18, $position: sub);
       color: $gray-600;
     }
   }
@@ -445,38 +469,39 @@ form {
 
       .table-container {
         overflow: unset;
-    
+
         .table {
           @extend .table-hover; // .table-striped
-    
+
           thead {
             tr {
               th {
                 @extend .border-0;
                 padding: .5rem .5rem;
-                span{
+
+                span {
                   justify-content: center;
                 }
-    
+
                 &.asc {
                   .app-orderable-wrapper {
                     &:before {
                       content: 'arrow_upward';
                     }
-                  } 
+                  }
                 }
-    
+
                 &.desc {
                   .app-orderable-wrapper {
                     &:before {
                       content: 'arrow_downward';
                     }
-                  } 
+                  }
                 }
-    
+
                 .app-orderable-wrapper {
                   @extend .d-flex;
-    
+
                   &:before {
                     @extend .mr-1;
                     font-family: "Material Icons";
@@ -486,7 +511,7 @@ form {
               }
             }
           }
-    
+
           tr {
             td {
               @extend .border-top-0, .border-bottom;
@@ -496,15 +521,17 @@ form {
               text-overflow: ellipsis;
               min-width: 100%;
               max-width: 120px;
-        
+              vertical-align: middle;
+
               &.ident_cely {
                 min-width: 130px;
               }
-    
+
               &.podnet {
                 max-width: 130px;
               }
-              &.spoluprace{
+
+              &.spoluprace {
                 max-width: 20%;
               }
             }
@@ -513,70 +540,96 @@ form {
       }
     }
   }
-  .table-navigation{
+
+  .table {
+    td {
+      vertical-align: middle;
+    }
+  }
+
+  .table-navigation {
     display: flex;
     padding-top: 15px;
+
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
-    /* display: none; <- Crashes Chrome on hover */
+      /* display: none; <- Crashes Chrome on hover */
       -webkit-appearance: none;
-      margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+      margin: 0;
+      /* <-- Apparently some margin are still there even though it's hidden */
     }
+
     input[type=number] {
-      -moz-appearance:textfield; /* Firefox */
+      -moz-appearance: textfield;
+      /* Firefox */
     }
-    .pagination.settings{
+
+    .pagination.settings {
       padding-top: 1px;
-      form{
+
+      form {
         min-width: 100%;
-        label{
+
+        label {
           overflow: clip;
-          }
         }
-      .form-group{
+      }
+
+      .form-group {
         justify-content: flex-start;
-        .input{
+
+        .input {
           min-width: 150px;
         }
       }
-      .form-control{
+
+      .form-control {
         line-height: $pagination-line-height;
         height: calc(1.5em + 0.5rem + 5px) !important;
-        max-width: 100px;    
+        max-width: 100px;
       }
-      .btn{
+
+      .btn {
         line-height: $pagination-line-height;
         max-width: 50px;
       }
     }
-    .pagination.jump-page{
+
+    .pagination.jump-page {
       padding-left: 1rem;
-      .form-group{
+
+      .form-group {
         justify-content: flex-start;
       }
     }
-    .pagination.go-to-page{
+
+    .pagination.go-to-page {
       justify-content: center;
+
       span {
-        padding: 0px 5px 0px 5px ;
+        padding: 0px 5px 0px 5px;
       }
     }
-    .pagination.per-page{
+
+    .pagination.per-page {
       margin-left: auto;
-      .form-group{
+
+      .form-group {
         justify-content: flex-end;
       }
     }
   }
 }
-.form-control{
+
+.form-control {
   &.required-next {
-    &:not(:focus){
-      border: 1px solid ;
-    border-color: #ffc107;
+    &:not(:focus) {
+      border: 1px solid;
+      border-color: #ffc107;
     }
   }
 }
+
 // test
 /* .app-table-list-container {
   @extend .d-flex, .flex-column, .h-100;
@@ -594,10 +647,11 @@ form {
     }
   }
 } */
-.bi-geo-alt.btn-outline-dark:hover{
+.bi-geo-alt.btn-outline-dark:hover {
   background-color: $gray-400;
   color: $gray-800;
-  &.btn-readonly{
+
+  &.btn-readonly {
     background-color: $gray-200
   }
 }

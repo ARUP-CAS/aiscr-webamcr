@@ -85,10 +85,10 @@ var dropzoneOptions = {
         });
         this.on("removedfile", function (file) {
             if (file.id) {
-                xhttp.open("POST", "/delete_file/" + file.id);
+                xhttp.open("POST", "/smazat-soubor/" + file.id);
                 xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
-                xhttp.send();
+                xhttp.send("dropzone=true");
             }
         });
         this.on("sending", function (file) {
