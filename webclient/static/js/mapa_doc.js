@@ -12,12 +12,13 @@ map.on('click', function (e) {
                 point_global_WGS84 = [corX, corY];
                 document.getElementById('id_coordinate_x').value = point_global_WGS84[0]
                 document.getElementById('id_coordinate_y').value = point_global_WGS84[1]
-                document.getElementById('id_vyska').value = point_global_WGS84[0]
-                document.getElementById('id_sirka').value = point_global_WGS84[1]
+                document.getElementById('id_sirka').value = point_global_WGS84[0]
+                document.getElementById('id_vyska').value = point_global_WGS84[1]
 
                 $("#vyska").change();
                 $("#sirka").change();
                 addUniquePointToPoiLayer(corX, corY, '', false, true)
+                replace_coor();
             }
         }
     }
@@ -48,7 +49,7 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true,redIcon= false) => 
     }else{
         L.marker([corX, corY],{icon:pinIconYellow3D}).bindPopup("Vámi vyznačená poloha").addTo(poi);
     }
-    
+
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);
     }
@@ -73,10 +74,18 @@ function showPosition(position) {
     point_global_WGS84 = [latitude, longitude];
     document.getElementById('id_coordinate_x').value = point_global_WGS84[0]
     document.getElementById('id_coordinate_y').value = point_global_WGS84[1]
-    document.getElementById('id_vyska').value = point_global_WGS84[0]
-    document.getElementById('id_sirka').value = point_global_WGS84[1]
+    document.getElementById('id_sirka').value = point_global_WGS84[0]
+    document.getElementById('id_vyska').value = point_global_WGS84[1]
 
     L.marker(latlng).addTo(poi)
         .bindPopup("Vaše současná poloha")
         .openPopup();
 };
+
+
+var replace_coor = () => {
+    var dx='id_sirka';
+    var dy='id_vyska';
+    document.getElementById(dx).value=(document.getElementById(dx).value.replace(".",","));
+    document.getElementById(dy).value=(document.getElementById(dy).value.replace(".",","));
+}
