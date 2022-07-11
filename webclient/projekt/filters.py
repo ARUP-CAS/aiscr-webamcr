@@ -279,7 +279,7 @@ class ProjektFilter(HistorieFilter):
     akce_datum_ukonceni = DateFromToRangeFilter(
         field_name="akce__datum_ukonceni",
         label="Datum ukončení (od-do)",
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
     typ_akce = MultipleChoiceFilter(
@@ -361,13 +361,13 @@ class ProjektFilter(HistorieFilter):
         elif value.start and not value.stop:
             rng = DateRange(
                 lower=value.start.strftime("%m/%d/%Y"),
-                upper=datetime.date.max().strftime("%m/%d/%Y"),
+                upper="01/01/2100",
             )
         elif value.stop and not value.start:
             rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
         else:
             rng = DateRange(
-                lower="01/01/1900", upper=datetime.date.max().strftime("%m/%d/%Y")
+                lower="01/01/1900", upper="01/01/2100"
             )
         return queryset.filter(planovane_zahajeni__overlap=rng)
 
