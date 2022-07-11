@@ -122,7 +122,7 @@ class ProjektFilter(HistorieFilter):
     vedouci_projektu = ModelMultipleChoiceFilter(
         queryset=Osoba.objects.all(),
         label=_("Vedoucí"),
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         distinct=True,
     )
     organizace = ModelMultipleChoiceFilter(
@@ -256,7 +256,7 @@ class ProjektFilter(HistorieFilter):
     akce_vedouci = MultipleChoiceFilter(
         method="filtr_akce_vedouci",
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        widget=autocomplete.Select2Multiple(url="uzivatel:osoba-autocomplete-choices",),
+        widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices",),
         distinct=True,
     )
 

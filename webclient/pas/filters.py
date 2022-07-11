@@ -95,7 +95,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
 
     nalezce = ModelMultipleChoiceFilter(
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:osoba-autocomplete"),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
