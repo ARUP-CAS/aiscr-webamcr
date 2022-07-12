@@ -1,3 +1,6 @@
+import logging
+
+from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
@@ -5,8 +8,6 @@ from django import forms
 from django.db import utils
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
-
-from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from dokument.models import Dokument, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
@@ -19,21 +20,36 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from uzivatel.models import Osoba
-import logging
+
 logger = logging.getLogger(__name__)
+
 
 class CoordinatesDokumentForm(forms.Form):
     detector_system_coordinates = forms.ChoiceField(
-        label=_("Souř. systém"), choices=COORDINATE_SYSTEM,required=False, help_text= _("dokument.form.coordinates.detector.tooltip"),
+        label=_("Souř. systém"),
+        choices=COORDINATE_SYSTEM,
+        required=False,
+        help_text=_("dokument.form.coordinates.detector.tooltip"),
     )
-    detector_coordinates_x = forms.CharField(label=_("Šířka (N / Y)"), required=False, help_text= _("dokument.form.coordinates.cor_x.tooltip"),)
-    detector_coordinates_y = forms.CharField(label=_("Délka (E / X)"), required=False, help_text= _("dokument.form.coordinates.cor_y.tooltip"),)
+    detector_coordinates_x = forms.CharField(
+        label=_("Šířka (N / Y)"),
+        required=False,
+        help_text=_("dokument.form.coordinates.cor_x.tooltip"),
+    )
+    detector_coordinates_y = forms.CharField(
+        label=_("Délka (E / X)"),
+        required=False,
+        help_text=_("dokument.form.coordinates.cor_y.tooltip"),
+    )
 
     coordinate_wgs84_x = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_wgs84_y = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_sjtsk_x = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_sjtsk_y = forms.FloatField(required=False, widget=HiddenInput())
-    coordinate_system = forms.CharField(required=False, widget=HiddenInput())
+    coordinate_system = forms.CharField(
+        required=False, widget=HiddenInput(), initial="wgs84"
+    )
+
 
 class EditDokumentExtraDataForm(forms.ModelForm):
     rada = forms.CharField(label="Řada", required=False)
@@ -110,7 +126,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "datum_vzniku": _("dokument.form.dokumentExtraData.datum_vzniku.tooltip"),
             "zachovalost": _("dokument.form.dokumentExtraData.zachovalost.tooltip"),
             "nahrada": _("dokument.form.dokumentExtraData.nahrada.tooltip"),
-            "pocet_variant_originalu": _("dokument.form.dokumentExtraData.pocet_variant_originalu.tooltip"),
+            "pocet_variant_originalu": _(
+                "dokument.form.dokumentExtraData.pocet_variant_originalu.tooltip"
+            ),
             "odkaz": _("dokument.form.dokumentExtraData.odkaz.tooltip"),
             "format": _("dokument.form.dokumentExtraData.format.tooltip"),
             "meritko": _("dokument.form.dokumentExtraData.meritko.tooltip"),
@@ -126,42 +144,44 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "duveryhodnost": _("dokument.form.dokumentExtraData.duveryhodnost.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False,required=None,required_next=None, **kwargs):
+    def __init__(
+        self, *args, readonly=False, required=None, required_next=None, **kwargs
+    ):
         rada = kwargs.pop("rada", None)
         let = kwargs.pop("let", "")
         dok_osoby = kwargs.pop("dok_osoby", None)
         edit_prohibited = kwargs.pop("edit", True)
         super(EditDokumentExtraDataForm, self).__init__(*args, **kwargs)
         try:
-            self.fields["dokument_osoba"] = \
-                forms.MultipleChoiceField(
-                    choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-                    label="Dokumentované osoby",
-                    required=False,
-                    widget=forms.SelectMultiple(
-                        attrs={"class": "selectpicker", "data-live-search": "true"}
-                    ),
-                    help_text= _("dokument.form.dokumentExtraData.dokument_osoba.tooltip"),
-                )
+            self.fields["dokument_osoba"] = forms.MultipleChoiceField(
+                choices=Osoba.objects.all().values_list("id", "vypis_cely"),
+                label="Dokumentované osoby",
+                required=False,
+                widget=forms.SelectMultiple(
+                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                ),
+                help_text=_("dokument.form.dokumentExtraData.dokument_osoba.tooltip"),
+            )
             self.fields["let"] = forms.ChoiceField(
-                choices=tuple([("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))),
+                choices=tuple(
+                    [("", "")] + list(Let.objects.all().values_list("id", "ident_cely"))
+                ),
                 label="Let",
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-live-search": "true"}
                 ),
-                help_text= _("dokument.form.dokumentExtraData.let.tooltip"),
+                help_text=_("dokument.form.dokumentExtraData.let.tooltip"),
             )
         except utils.ProgrammingError:
-            self.fields["dokument_osoba"] = \
-                forms.MultipleChoiceField(
-                    choices=tuple(("", "")),
-                    label="Dokumentované osoby",
-                    required=False,
-                    widget=forms.SelectMultiple(
-                        attrs={"class": "selectpicker", "data-live-search": "true"}
-                    ),
-                )
+            self.fields["dokument_osoba"] = forms.MultipleChoiceField(
+                choices=tuple(("", "")),
+                label="Dokumentované osoby",
+                required=False,
+                widget=forms.SelectMultiple(
+                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                ),
+            )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
                 label="Let",
@@ -216,9 +236,13 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
         self.fields["rada"].disabled = edit_prohibited
 
 
@@ -290,21 +314,31 @@ class EditDokumentForm(forms.ModelForm):
         help_texts = {
             "organizace": _("dokument.form.createDokument.organizace.tooltip"),
             "rok_vzniku": _("dokument.form.createDokument.rok_vzniku.tooltip"),
-            "material_originalu": _("dokument.form.createDokument.material_originalu.tooltip"),
+            "material_originalu": _(
+                "dokument.form.createDokument.material_originalu.tooltip"
+            ),
             "typ_dokumentu": _("dokument.form.createDokument.typ_dokumentu.tooltip"),
             "popis": _("dokument.form.createDokument.popis.tooltip"),
             "poznamka": _("dokument.form.createDokument.poznamka.tooltip"),
-            "ulozeni_originalu": _("dokument.form.createDokument.ulozeni_originalu.tooltip"),
-            "oznaceni_originalu": _("dokument.form.createDokument.oznaceni_originalu.tooltip"),
+            "ulozeni_originalu": _(
+                "dokument.form.createDokument.ulozeni_originalu.tooltip"
+            ),
+            "oznaceni_originalu": _(
+                "dokument.form.createDokument.oznaceni_originalu.tooltip"
+            ),
             "pristupnost": _("dokument.form.createDokument.pristupnost.tooltip"),
-            "datum_zverejneni": _("dokument.form.createDokument.datum_zverejneni.tooltip"),
+            "datum_zverejneni": _(
+                "dokument.form.createDokument.datum_zverejneni.tooltip"
+            ),
             "licence": _("dokument.form.createDokument.licence.tooltip"),
             "autori": _("dokument.form.createDokument.autori.tooltip"),
             "jazyky": _("dokument.form.createDokument.jazyky.tooltip"),
             "posudky": _("dokument.form.createDokument.posudky.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False,required=None, required_next=None, **kwargs):
+    def __init__(
+        self, *args, readonly=False, required=None, required_next=None, **kwargs
+    ):
         create = kwargs.pop("create", None)
         super(EditDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
@@ -366,12 +400,14 @@ class EditDokumentForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
         self.fields["datum_zverejneni"].disabled = True
-
-        
 
 
 class CreateModelDokumentForm(forms.ModelForm):
@@ -396,7 +432,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             "autori": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "oznaceni_originalu":forms.TextInput(),
+            "oznaceni_originalu": forms.TextInput(),
         }
         labels = {
             "typ_dokumentu": _("Typ dokumentu"),
@@ -410,14 +446,18 @@ class CreateModelDokumentForm(forms.ModelForm):
         help_texts = {
             "typ_dokumentu": _("dokument.form.createModel.typ_dokumentu.tooltip"),
             "organizace": _("dokument.form.createModel.organizace.tooltip"),
-            "oznaceni_originalu": _("dokument.form.createModel.oznaceni_originalu.tooltip"),
+            "oznaceni_originalu": _(
+                "dokument.form.createModel.oznaceni_originalu.tooltip"
+            ),
             "popis": _("dokument.form.createModel.popis.tooltip"),
             "poznamka": _("dokument.form.createModel.poznamka.tooltip"),
             "autori": _("dokument.form.createModel.autori.tooltip"),
             "rok_vzniku": _("dokument.form.createModel.rok_vzniku.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False,required=None, required_next=None, **kwargs):
+    def __init__(
+        self, *args, readonly=False, required=None, required_next=None, **kwargs
+    ):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
         # self.fields["popis"].required = True
@@ -430,13 +470,13 @@ class CreateModelDokumentForm(forms.ModelForm):
         self.fields["rok_vzniku"].required = True
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
-                Div("typ_dokumentu", css_class="col-sm-4"),
-                Div("organizace", css_class="col-sm-4"),
-                Div("rok_vzniku", css_class="col-sm-4"),
-                Div("oznaceni_originalu", css_class="col-sm-6"),
-                Div("autori", css_class="col-sm-6"),
-                Div("popis", css_class="col-sm-12"),
-                Div("poznamka", css_class="col-sm-12"),
+            Div("typ_dokumentu", css_class="col-sm-4"),
+            Div("organizace", css_class="col-sm-4"),
+            Div("rok_vzniku", css_class="col-sm-4"),
+            Div("oznaceni_originalu", css_class="col-sm-6"),
+            Div("autori", css_class="col-sm-6"),
+            Div("popis", css_class="col-sm-12"),
+            Div("poznamka", css_class="col-sm-12"),
         )
         self.helper.form_tag = False
         for key in self.fields.keys():
@@ -451,9 +491,13 @@ class CreateModelDokumentForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
@@ -497,7 +541,9 @@ class CreateModelExtraDataForm(forms.ModelForm):
             "sirka": _("dokument.form.modelExtraData.sirka.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False,required=None, required_next=None, **kwargs):
+    def __init__(
+        self, *args, readonly=False, required=None, required_next=None, **kwargs
+    ):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
         self.fields["odkaz"].widget.attrs["rows"] = 1
         # self.fields["format"].required = True
@@ -535,9 +581,14 @@ class CreateModelExtraDataForm(forms.ModelForm):
             if required:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
+
 
 class PripojitDokumentForm(forms.Form):
     def __init__(self, projekt=None, *args, **kwargs):
