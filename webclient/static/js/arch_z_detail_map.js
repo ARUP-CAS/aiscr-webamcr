@@ -539,6 +539,8 @@ var mouseOverGeometry =(geom)=>{
             measureControl._stopMeasuring()
         }
         if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit){
+            map.spin(false);
+            map.spin(true);
             $.ajax({
                 type: "GET",
                 url:"/pian/seznam-pian/?q="+getContent(e),
@@ -547,6 +549,8 @@ var mouseOverGeometry =(geom)=>{
                   if(data.results.length>0){
                   $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
                   }
+                  map.spin(false);
+                  document.getElementById('id_'+global_map_can_grab_geom_from_map+'-pian' ).removeAttribute("disabled");
                   //global_map_can_grab_geom_from_map=false;
 
                 },
@@ -804,6 +808,8 @@ var boundsLock=0;
 
 
 map.on('moveend', function() {
+    addLogText("drzim def.geom :"+global_map_element)
+    //console.log(ident_cely)
     addLogText("arch_z_detail_map.moveend")
     switchMap(false)
 });
