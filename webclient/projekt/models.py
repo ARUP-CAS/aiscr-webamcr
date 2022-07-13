@@ -181,7 +181,7 @@ class Projekt(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
-        if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
+        if self.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             self.create_confirmation_document()
 
     def set_zapsany(self, user):
