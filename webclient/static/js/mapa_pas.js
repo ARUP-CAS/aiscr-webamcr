@@ -3,6 +3,8 @@ var point_global_WGS84 = [0, 0];
 var point_global_JTSK = [0, 0];
 var lock = false;
 
+var lock_sjtsk_low_precision=false;
+
 var mem={
     "detector_coordinates_x":0.0,
     "detector_coordinates_y":0.0
@@ -13,6 +15,7 @@ map.on('click', function (e) {
         if (global_map_can_edit) {
             if (!lock) {
                 if (map.getZoom() > 15) {
+                    lock_sjtsk_low_precision=false;
                     var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
                     jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY));
                     //point_global_WGS84 = [Math.round(corX * 1000000) / 1000000, Math.round(corY * 1000000) / 1000000]
@@ -88,19 +91,42 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
         console.log("neni X-CSRFToken token")
     }
     xhr.onload = function () {
-        rs = JSON.parse(this.responseText)
-        point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.cx,rs.cy])
-        addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
-        fill_katastr();
-        document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
-        document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-        document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
-        document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
-        if(push){
-            document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
-            document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
-            switch_coordinate_system();
+        try{
+            rs = JSON.parse(this.responseText)
+            point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.cx,rs.cy])
+            addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
+            fill_katastr();
+            document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
+            document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
+            document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
+            document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+            if(push){
+                console.log("TR3")
+                document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
+                document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+                lock_sjtsk_low_precision=false;
+                switch_coordinate_system();
+            }
         }
+        catch(err){
+            $.getJSON("https://epsg.io/trans?x=-" + Number(Math.abs(y_plus)).toFixed(2) + "&y=-" + Number(Math.abs(x_plus)).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
+                point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.y,data.x])
+                addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
+                fill_katastr();
+                document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
+                document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
+                document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
+                document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+                if(push){
+                    document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
+                    document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+                    lock_sjtsk_low_precision=true;
+                    switch_coordinate_system();
+                    alert("Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!")
+
+                }
+            }
+        )}
 
     };
     xhr.send(JSON.stringify({"cy" : y_plus, "cx" : x_plus}))
@@ -218,12 +244,16 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
         document.getElementById('id_coordinate_system').value="wgs84";
-    } else if (new_system == 2 && point_global_JTSK[0] != 0) {
+    } else if (new_system >1 && point_global_JTSK[0] != 0) {
         document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
         document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1]);
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
-        document.getElementById('id_coordinate_system').value="sjtsk";
+        if(!lock_sjtsk_low_precision){
+            document.getElementById('id_coordinate_system').value="sjtsk";
+        } else {
+            document.getElementById('id_coordinate_system').value="sjtsk*";
+        }
     }
 };
 
@@ -274,6 +304,7 @@ function showPosition(position) {
 };
 
 $(document).ready(function () {
+    console.log(document.getElementById('id_coordinate_system').value)
     my_wgs84_x = document.getElementById('id_coordinate_wgs84_x').value;
     my_wgs84_y = document.getElementById('id_coordinate_wgs84_y').value;
     my_sjtsk_x = document.getElementById('id_coordinate_sjtsk_x').value;
@@ -299,7 +330,12 @@ $(document).ready(function () {
     }
 
     if(my_sys=="S-JTSK"){
-        console.log("prepnu na sjtsk")
+        //console.log("prepnu na sjtsk")
+        document.getElementById('detector_system_coordinates').value = 2
+    }else if(my_sys=="S-JTSK*"){
+        //console.log("prepnu na sjtsk*")
+        lock_sjtsk_low_precision=true;
+        //document.getElementById('id_coordinate_system').value=""
         document.getElementById('detector_system_coordinates').value = 2
     }else {
         document.getElementById('detector_system_coordinates').value = 1
