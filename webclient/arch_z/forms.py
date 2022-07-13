@@ -69,7 +69,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
             self.readonly = readonly
             logger_s.debug("CreateAkceVedouciObjektForm.init", readonly=readonly)
             if self.readonly and hasattr(self, "instance"):
-                logger_s.debug("CreateAkceVedouciObjektForm.init.readonly", readonly=readonly, instance=self.instance.pk)
+                logger_s.debug("CreateAkceVedouciObjektForm.init.readonly", instance=self.instance.pk)
                 if hasattr(self.instance, "organizace") and self.instance.organizace is not None:
                     logger_s.debug("CreateAkceVedouciObjektForm.init.readonly.instance.organizace", organizace=self.instance.organizace.pk)
                     self.fields["organizace"].widget.attrs["value"] = self.instance.organizace.nazev_zkraceny

@@ -107,6 +107,7 @@ def detail(request, ident_cely):
     adb_ident_cely = request.session.pop("adb_ident_cely", None)
     zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
+        .select_related("akce")
         .select_related("akce__vedlejsi_typ")
         .select_related("akce__hlavni_typ")
         .select_related("pristupnost"),
