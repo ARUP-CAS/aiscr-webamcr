@@ -60,7 +60,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 "organizace": _("arch_z.form.organizace.tooltip"),
             }
 
-        def __init__(self, *args, required=None, required_next=None, **kwargs):
+        def __init__(self, *args, **kwargs):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             if self.readonly and hasattr(self, "instance"):
