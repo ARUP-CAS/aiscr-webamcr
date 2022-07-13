@@ -1,3 +1,5 @@
+import structlog
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, HTML
 from dal import autocomplete
@@ -11,6 +13,8 @@ from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
 from . import validators
+
+logger_s = structlog.get_logger(__name__)
 
 
 class AkceVedouciFormSetHelper(FormHelper):
@@ -63,10 +67,14 @@ def create_akce_vedouci_objekt_form(readonly=True):
         def __init__(self, *args, **kwargs):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
+            logger_s.debug("CreateAkceVedouciObjektForm.init", readonly=readonly)
             if self.readonly and hasattr(self, "instance"):
+                logger_s.debug("CreateAkceVedouciObjektForm.init.readonly", readonly=readonly, instance=self.instance)
                 if hasattr(self.instance, "organizace") and self.instance.organizace is not None:
+                    logger_s.debug("CreateAkceVedouciObjektForm.init.readonly.instance.organizace", organizace=self.instance.organizace)
                     self.fields["organizace"].widget.attrs["value"] = self.instance.organizace.nazev_zkraceny
                 if hasattr(self.instance, "vedouci") and self.instance.vedouci is not None:
+                    logger_s.debug("CreateAkceVedouciObjektForm.init.readonly.instance.vedouci", vedouci=self.instance.vedouci)
                     self.fields["vedouci"].widget.attrs["value"] = f"{self.instance.vedouci.jmeno} {self.instance.vedouci.prijmeni}"
             self.fields["vedouci"].required = False
 
