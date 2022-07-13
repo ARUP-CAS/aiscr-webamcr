@@ -82,7 +82,6 @@ var fill_katastr = () => {
 
 
 var transformSinglePoint = async(y_plus,x_plus,push) => {
-    console.log("TR1:" +x_plus+" "+y_plus)
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/transformace-single-wgs84');
     xhr.setRequestHeader('Content-type', 'application/json');
@@ -92,7 +91,6 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
         console.log("neni X-CSRFToken token")
     }
     xhr.onload = function () {
-        console.log("TR2")
         try{
             rs = JSON.parse(this.responseText)
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84([rs.cx,rs.cy])
@@ -111,10 +109,7 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
             }
         }
         catch(err){
-            console.log("++")
             $.getJSON("https://epsg.io/trans?x=-" + Number(Math.abs(y_plus)).toFixed(2) + "&y=-" + Number(Math.abs(x_plus)).toFixed(2) + "&s_srs=5514&t_srs=4326", async function (data) {
-                console.log("TR2+")
-                console.log(data)
                 point_global_WGS84 = amcr_static_coordinate_precision_wgs84([data.y,data.x])
                 addUniquePointToPoiLayer(point_global_WGS84[0], point_global_WGS84[1])
                 fill_katastr();
@@ -123,11 +118,11 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
                 document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
                 document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
                 if(push){
-                    console.log("TR3+")
                     document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
                     document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
+                    alert("Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!")
 
                 }
             }
