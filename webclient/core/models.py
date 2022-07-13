@@ -100,6 +100,8 @@ class Soubor(models.Model):
         ).save()
 
     def zaznamenej_nahrani_nove_verze(self, user):
+        if self.historie is None:
+            self.create_soubor_vazby()
         Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
