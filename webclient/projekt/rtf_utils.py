@@ -63,9 +63,12 @@ class ExpertniListCreator(DocumentCreator):
             """
         else:
             text = self.popup_parametry["poznamka_popis"]
+        text = " ".join(text.split())
         return self._convert_text(text.replace("\n", ""))
 
     def _generate_text(self):
+        from projekt.forms import TYP_VYZKUMU_CHOICES, VYSLEDEK_CHOICES
+
         result = StyleSheet()
         normal_text = TextStyle(TextPropertySet(result.Fonts.Arial, 22))
         normal_text_par_style = ParagraphStyle('NormalText', normal_text.Copy(),
@@ -131,12 +134,13 @@ class ExpertniListCreator(DocumentCreator):
                 ("Označení stavby:", self.projekt.oznaceni_stavby),
             ]
 
+        typ_vyzkumu = [x[1] for x in TYP_VYZKUMU_CHOICES if x[0] == self.popup_parametry["typ_vyzkumu"]][0]
         table_texts += [
             ("Oznamovatel:", self.projekt.oznamovatel.oznamovatel if self.projekt.has_oznamovatel() else ""),
             ("Zástupce oznamovatele / dodavatel:",
-             self.projekt.oznamovatel.odpovedna_osoba if self.projekt.has_oznamovatel() else ""),
+             f"{self.projekt.oznamovatel.odpovedna_osoba} ({self.projekt.oznamovatel.telefon}; {self.projekt.oznamovatel.email})" if self.projekt.has_oznamovatel() else ""),
             ("Datum výzkumu:", f"{self.projekt.datum_zahajeni} - {self.projekt.datum_ukonceni}"),
-            ("Typ výzkumu:", self.popup_parametry["typ_vyzkumu"]),
+            ("Typ výzkumu:", typ_vyzkumu),
         ]
 
         if self.projekt.akce_set.count() > 0:
@@ -146,7 +150,7 @@ class ExpertniListCreator(DocumentCreator):
             ]
 
         table_texts += [
-            ("Osoba odpovědná za výzkum:", self.projekt.vedouci_projektu),
+            ("Osoba odpovědná za výzkum:", f"{self.projekt.vedouci_projektu.jmeno} {self.projekt.vedouci_projektu.prijmeni}"),
         ]
 
         bold_text = ParagraphStyle('TableLeftColumnText', bold_text.Copy(),
@@ -174,6 +178,9 @@ class ExpertniListCreator(DocumentCreator):
         section.append(p)
 
         p = Paragraph(self.stylesheet.ParagraphStyles.NormalText, self._get_vysledek_text())
+        section.append(p)
+
+        p = Paragraph("", ParagraphPropertySet(alignment=ParagraphPropertySet.RIGHT))
         section.append(p)
 
         p = Paragraph(self._convert_text(f"Dne {datetime.datetime.now().strftime('%d. %m. %Y')}"),
