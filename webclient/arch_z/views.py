@@ -182,7 +182,6 @@ def detail(request, ident_cely):
         can_delete=False,
     )
     ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
-        None,
         instance=zaznam.akce,
         prefix="",
     )
