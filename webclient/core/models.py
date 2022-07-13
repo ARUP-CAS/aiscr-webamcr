@@ -25,7 +25,7 @@ def get_upload_to(instance, filename):
     vazba: SouborVazby = instance.vazba
     if vazba.typ_vazby == PROJEKT_RELATION_TYPE:
         regex_oznameni = re.compile(r"\w*oznameni_?(?:X-)?[A-Z][-_]\w*\.pdf")
-        regex_log_dokumentace = re.compile(r"\w*log_dokumentace.pdf")
+        regex_log_dokumentace = re.compile(r"\w*log_dokumentace\w*\.\w{2,4}")
         if regex_oznameni.fullmatch(instance.nazev) or regex_log_dokumentace.fullmatch(
             instance.nazev
         ):
@@ -65,7 +65,6 @@ class Soubor(models.Model):
     mimetype = models.TextField()
     size_bytes = models.IntegerField()
     vytvoreno = models.DateField(auto_now_add=True)
-    typ_souboru = models.TextField()
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )

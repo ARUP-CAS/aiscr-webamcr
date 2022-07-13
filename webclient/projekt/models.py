@@ -459,7 +459,6 @@ class Projekt(models.Model):
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(filename_without_path),
                 size_bytes=os.path.getsize(filename),
-                typ_souboru=OTHER_PROJECT_FILES,
             ).save()
 
     @property

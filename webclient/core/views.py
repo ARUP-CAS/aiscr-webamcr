@@ -194,15 +194,12 @@ def post_upload(request):
         finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
         if projects.exists():
             objekt = projects[0]
-            typ_souboru = OTHER_PROJECT_FILES
             new_name = get_projekt_soubor_name(request.FILES.get("file").name)
         elif documents.exists():
             objekt = documents[0]
-            typ_souboru = OTHER_DOCUMENT_FILES
             new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
         elif finds.exists():
             objekt = finds[0]
-            typ_souboru = PHOTO_DOCUMENTATION
             new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
         else:
             return JsonResponse(
@@ -243,7 +240,6 @@ def post_upload(request):
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(old_name),
                 size_bytes=soubor.size,
-                typ_souboru=typ_souboru,
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():
