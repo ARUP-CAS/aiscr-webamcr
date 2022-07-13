@@ -1115,7 +1115,6 @@ class Soubor(models.Model):
     mimetype = models.TextField()
     size_bytes = models.IntegerField()
     vytvoreno = models.DateField()
-    typ_souboru = models.TextField()
     vazba = models.ForeignKey("SouborVazby", models.DO_NOTHING, db_column="vazba")
     path = models.CharField(max_length=100)
 

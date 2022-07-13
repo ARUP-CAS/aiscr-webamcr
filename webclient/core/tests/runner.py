@@ -511,7 +511,7 @@ class AMCRTestRunner(BaseRunner):
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
         soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
-                        mimetype="x", size_bytes=1, typ_souboru="x", vazba=vazba_soubory, path="x",
+                        mimetype="x", size_bytes=1, vazba=vazba_soubory, path="x",
                         id=TESTOVACI_SOUBOR_ID)
         soubor.save()
         dokument_nalezova_zprava = Dokument(
