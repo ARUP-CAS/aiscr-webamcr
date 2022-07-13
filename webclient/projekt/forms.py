@@ -630,18 +630,18 @@ class GenerovatNovePotvrzeniForm(forms.Form):
         )
 
 
-class GenerovatExpertniListForm(forms.Form):
-    TYP_VYZKUMU_CHOICES = [
-        ("predstihovy", _("projekt.form.GenerovatExpertniListForm.predstihovy.typ_vyzkumu.text")),
-        ("zachranny", _("projekt.form.GenerovatExpertniListForm.zachranny.typ_vyzkumu.text")),
-        ("dohled", _("projekt.form.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
-    ]
-    VYSLEDEK_CHOICES = [
-        ("pozitivni", _("projekt.form.GenerovatExpertniListForm.vysledek.pozitivni.text")),
-        ("negativni", _("projekt.form.GenerovatExpertniListForm.vysledek..text")),
-        ("jine", _("projekt.form.GenerovatExpertniListForm.vysledek.jine.text")),
-    ]
+TYP_VYZKUMU_CHOICES = [
+    ("predstihovy", _("projekt.form.GenerovatExpertniListForm.predstihovy.typ_vyzkumu.text")),
+    ("zachranny", _("projekt.form.GenerovatExpertniListForm.zachranny.typ_vyzkumu.text")),
+    ("dohled", _("projekt.form.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
+]
+VYSLEDEK_CHOICES = [
+    ("pozitivni", _("projekt.form.GenerovatExpertniListForm.vysledek.pozitivni.text")),
+    ("negativni", _("projekt.form.GenerovatExpertniListForm.vysledek..text")),
+    ("jine", _("projekt.form.GenerovatExpertniListForm.vysledek.jine.text")),
+]
 
+class GenerovatExpertniListForm(forms.Form):
     cislo_jednaci = forms.CharField(label=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.label"),
                                     required=False,
                                     help_text=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
