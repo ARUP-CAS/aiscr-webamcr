@@ -12,6 +12,7 @@ from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
+from uzivatel.models import Organizace, Osoba
 from . import validators
 
 logger_s = structlog.get_logger(__name__)
@@ -68,14 +69,11 @@ def create_akce_vedouci_objekt_form(readonly=True):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             logger_s.debug("CreateAkceVedouciObjektForm.init", readonly=readonly)
-            if self.readonly and hasattr(self, "instance"):
-                logger_s.debug("CreateAkceVedouciObjektForm.init.readonly", instance=self.instance.pk)
-                if hasattr(self.instance, "organizace") and self.instance.organizace is not None:
-                    logger_s.debug("CreateAkceVedouciObjektForm.init.readonly.instance.organizace", organizace=self.instance.organizace.pk)
-                    self.fields["organizace"].widget.attrs["value"] = self.instance.organizace.nazev_zkraceny
-                if hasattr(self.instance, "vedouci") and self.instance.vedouci is not None:
-                    logger_s.debug("CreateAkceVedouciObjektForm.init.readonly.instance.vedouci", vedouci=self.instance.vedouci.pk)
-                    self.fields["vedouci"].widget.attrs["value"] = f"{self.instance.vedouci.jmeno} {self.instance.vedouci.prijmeni}"
+            if readonly:
+                if self.initial.get("vedouci", 0):
+                    self.fields["vedouci"].widget.attrs["value"] = str(Osoba.objects.get(pk=int(self.initial["vedouci"])))
+                if self.initial.get("organizace", 0):
+                    self.fields["organizace"].widget.attrs["value"] = str(Organizace.objects.get(pk=int(self.initial["organizace"])))
             self.fields["vedouci"].required = False
 
     return CreateAkceVedouciObjektForm
