@@ -37,10 +37,14 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    pian_db = dj.pian
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
         logger.debug("Dj.Form is valid:1")
         dj = form.save()
+        if dj.pian is None and pian_db is not None:
+            dj.pian = pian_db
+            dj.save()
         if form.changed_data:
             logger.debug("changed data")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
