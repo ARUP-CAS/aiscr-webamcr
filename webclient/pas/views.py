@@ -193,7 +193,14 @@ def detail(request, ident_cely):
             geom_sjtsk = (
                 str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
             )
-        system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
+        logger.debug("++++++++++++++++++")
+        logger.debug(sn.geom_system)
+        system = (
+            "WGS-84"
+            if sn.geom_system == "wgs84"
+            else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
+        )
+        logger.debug(system)
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
                 "detector_coordinates_x": geom.split(" ")[1]
@@ -283,7 +290,11 @@ def edit(request, ident_cely):
                 geom_sjtsk = (
                     str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
                 )
-            system = "WGS-84" if sn.geom_system == "wgs84" else "S-JTSK"
+            system = (
+                "WGS-84"
+                if sn.geom_system == "wgs84"
+                else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
+            )
             gx = geom.split(" ")[1] if system == "WGS-84" else geom_sjtsk.split(" ")[1]
             gy = geom.split(" ")[0] if system == "WGS-84" else geom_sjtsk.split(" ")[0]
             form_coor = CoordinatesDokumentForm(
