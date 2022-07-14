@@ -116,6 +116,10 @@
 
           setPageHeader();
 
+          $('[rel="tooltip"]').on('click', function () {
+              $(this).tooltip('hide')
+          });
+
           function setHeader(header) {
               document.getElementById('id-app-entity-item').innerHTML = header;
           }
