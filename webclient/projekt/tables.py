@@ -13,7 +13,7 @@ class ProjektTable(ColumnShiftTableBootstrap4):
     ident_cely = tables.Column(linkify=True)
     datum_zahajeni = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
     datum_ukonceni = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
-    organizace = tables.columns.Column(default="")
+    organizace = tables.columns.Column(default="", order_by="organizace__nazev_zkraceny")
     vedouci_projektu = tables.columns.Column(default="")
     kulturni_pamatka = tables.columns.Column(default="")
     uzivatelske_oznaceni = tables.columns.Column(default="")

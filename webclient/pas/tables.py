@@ -22,7 +22,7 @@ class SamostatnyNalezTable(ColumnShiftTableBootstrap4):
     nalezce = tables.columns.Column(default="")
     evidencni_cislo = tables.columns.Column(default="")
     predano = tables.columns.Column(default="")
-    predano_organizace = tables.columns.Column(default="")
+    predano_organizace = tables.columns.Column(default="", order_by="predano_organizace__nazev_zkraceny")
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
@@ -74,6 +74,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         verbose_name="Organizace (Vedoucí)",
         attrs={"td": {"class": "spoluprace"}},
         default="",
+        order_by = "vedouci__organizace__nazev_zkraceny"
     )
     spolupracovnik = tables.Column(
         accessor="spolupracovnik__name_and_id",
@@ -87,6 +88,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         verbose_name="Organizace (Spolupracovník)",
         attrs={"td": {"class": "spoluprace"}},
         default="",
+        order_by="spolupracovnik__organizace__nazev_zkraceny"
     )
 
     historie = tables.LinkColumn(
