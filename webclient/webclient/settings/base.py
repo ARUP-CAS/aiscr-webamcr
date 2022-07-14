@@ -345,3 +345,5 @@ AUTO_LOGOUT = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+COMPRESS_REBUILD_TIMEOUT = 3600
