@@ -69,11 +69,6 @@ def create_akce_vedouci_objekt_form(readonly=True):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
             logger_s.debug("CreateAkceVedouciObjektForm.init", readonly=readonly, initial=self.initial)
-            if readonly:
-                if self.initial.get("vedouci", 0):
-                    self.fields["vedouci"].widget.attrs["value"] = str(Osoba.objects.get(pk=int(self.initial["vedouci"])))
-                if self.initial.get("organizace", 0):
-                    self.fields["organizace"].widget.attrs["value"] = str(Organizace.objects.get(pk=int(self.initial["organizace"])))
             self.fields["vedouci"].required = False
 
     return CreateAkceVedouciObjektForm

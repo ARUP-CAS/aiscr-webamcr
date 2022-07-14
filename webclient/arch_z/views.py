@@ -185,6 +185,10 @@ def detail(request, ident_cely):
         instance=zaznam.akce,
         prefix="",
     )
+    akce_zaznam_ostatni_vedouci = []
+    for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce):
+        vedouci: AkceVedouci
+        akce_zaznam_ostatni_vedouci.append([str(vedouci.vedouci), str(vedouci.organizace)])
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
@@ -303,6 +307,7 @@ def detail(request, ident_cely):
     context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
     context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
     context["ostatni_vedouci_objekt_formset_readonly"] = True
+    context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
