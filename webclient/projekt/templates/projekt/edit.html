@@ -129,7 +129,9 @@
 
           const makeFieldDisabled = (field, disabled) => {
               $(field).prop('readonly', disabled);
-              $(field).val("");
+              if (disabled) {
+                  $(field).val("");
+              }
               console.log(disabled)
           }
           console.log(selectElement.selectedIndex )
