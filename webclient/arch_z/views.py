@@ -107,6 +107,7 @@ def detail(request, ident_cely):
     adb_ident_cely = request.session.pop("adb_ident_cely", None)
     zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
+        .select_related("akce")
         .select_related("akce__vedlejsi_typ")
         .select_related("akce__hlavni_typ")
         .select_related("pristupnost"),
@@ -181,16 +182,21 @@ def detail(request, ident_cely):
         can_delete=False,
     )
     ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
-        None,
         instance=zaznam.akce,
         prefix="",
     )
+    akce_zaznam_ostatni_vedouci = []
+    for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce):
+        vedouci: AkceVedouci
+        akce_zaznam_ostatni_vedouci.append([str(vedouci.vedouci), str(vedouci.organizace)])
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
             VyskovyBod,
-            form=create_vyskovy_bod_form(pian=jednotka.pian,not_readonly=show["editovat"]),
+            form=create_vyskovy_bod_form(
+                pian=jednotka.pian, not_readonly=show["editovat"]
+            ),
             extra=1,
             can_delete=False,
         )
@@ -233,11 +239,16 @@ def detail(request, ident_cely):
             logger.debug(jednotka.ident_cely)
             dj_form_detail["adb_form"] = (
                 CreateADBForm(
-                    old_adb_post, instance=jednotka.adb, prefix=jednotka.adb.ident_cely, readonly=not show["editovat"],
+                    old_adb_post,
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
                 )
                 if jednotka.adb.ident_cely == adb_ident_cely
                 else CreateADBForm(
-                    instance=jednotka.adb, prefix=jednotka.adb.ident_cely, readonly=not show["editovat"],
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
                 )
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
@@ -296,6 +307,7 @@ def detail(request, ident_cely):
     context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
     context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
     context["ostatni_vedouci_objekt_formset_readonly"] = True
+    context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
     context["dj_forms_detail"] = dj_forms_detail
     context["adb_form_create"] = adb_form_create
     context["komponenta_form_create"] = komponenta_form_create
@@ -803,6 +815,7 @@ def post_ajax_get_pians_limit(request):
         body["northWest"]["lng"],
         body["southEast"]["lat"],
     )
+    clusters = num >= 500
     logger.debug("pocet geometrii")
     logger.debug(num)
     if num < 5000:
@@ -820,15 +833,28 @@ def post_ajax_get_pians_limit(request):
                 {
                     "id": pian.id,
                     "ident_cely": pian.ident_cely,
-                    "geom": pian.geometry.replace(", ", ","),
+                    "geom": pian.geometry.replace(", ", ",")
+                    if not clusters
+                    else pian.centroid.replace(", ", ","),
                     "dj": pian.dj,
                     "presnost": pian.presnost.zkratka,
                 }
             )
         if len(pians) > 0:
-            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+            return JsonResponse(
+                {
+                    "points": back,
+                    "algorithm": "detail",
+                    "count": num,
+                    "clusters": clusters,
+                },
+                status=200,
+            )
         else:
-            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+            return JsonResponse(
+                {"points": [], "algorithm": "detail", "count": 0, "clusters": clusters},
+                status=200,
+            )
     else:
         density = get_heatmap_pian_density(
             body["southEast"]["lng"],

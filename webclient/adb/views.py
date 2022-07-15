@@ -49,7 +49,14 @@ def detail(request, ident_cely):
         request.session["adb_ident_cely"] = ident_cely
         logger.debug(ident_cely)
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie(
+        "set-active",
+        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        max_age=1000,
+    )
+    return response
 
 
 @login_required
@@ -76,7 +83,14 @@ def zapsat(request, dj_ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie(
+        "set-active",
+        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        max_age=1000,
+    )
+    return response
 
 
 @login_required

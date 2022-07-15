@@ -58,8 +58,9 @@
         let [corX, corY] = amcr_static_coordinate_precision_wgs84([{{ coordinate_x }}, {{ coordinate_y }}]);
         document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový model 3D"
 
-        document.getElementById('id_vyska').value = corX;
-        document.getElementById('id_sirka').value = corY;
+        document.getElementById('id_vyska').value = corY;
+        document.getElementById('id_sirka').value = corX;
+        replace_coor();
 
         $('[readonly]').prop("disabled", true);
         {% if global_map_can_edit %}

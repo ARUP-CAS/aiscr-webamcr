@@ -181,7 +181,7 @@ class Projekt(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
-        if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
+        if self.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             self.create_confirmation_document()
 
     def set_zapsany(self, user):
@@ -459,7 +459,6 @@ class Projekt(models.Model):
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(filename_without_path),
                 size_bytes=os.path.getsize(filename),
-                typ_souboru=OTHER_PROJECT_FILES,
             ).save()
 
     @property

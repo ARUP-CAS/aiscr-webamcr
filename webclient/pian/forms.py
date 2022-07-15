@@ -12,7 +12,7 @@ class PianCreateForm(forms.ModelForm):
 
     class Meta:
         model = Pian
-        fields = ("presnost", "geom", "geom_sjtsk")
+        fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
         labels = {"presnost": _("Přesnost")}
         help_texts = {
             "presnost": _("pian.form.presnost.tooltip"),
@@ -20,9 +20,11 @@ class PianCreateForm(forms.ModelForm):
         widgets = {
             "geom": HiddenInput(),
             "geom_sjtsk": HiddenInput(),
+            "geom_system": HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+        self.fields["geom_system"].initial = "wgs84"

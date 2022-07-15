@@ -1,3 +1,5 @@
+import structlog
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, HTML
 from dal import autocomplete
@@ -10,7 +12,10 @@ from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
+from uzivatel.models import Organizace, Osoba
 from . import validators
+
+logger_s = structlog.get_logger(__name__)
 
 
 class AkceVedouciFormSetHelper(FormHelper):
@@ -60,14 +65,11 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 "organizace": _("arch_z.form.organizace.tooltip"),
             }
 
-        def __init__(self, *args, required=None, required_next=None, **kwargs):
+        def __init__(self, *args, **kwargs):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
-            if self.readonly and hasattr(self, "instance"):
-                if hasattr(self.instance, "organizace"):
-                    self.fields["organizace"].widget.attrs["value"] = str(self.instance.organizace)
-                if hasattr(self.instance, "vedouci"):
-                    self.fields["vedouci"].widget.attrs["value"] = str(self.instance.vedouci)
+            logger_s.debug("CreateAkceVedouciObjektForm.init", readonly=readonly, initial=self.initial)
+            self.fields["vedouci"].required = False
 
     return CreateAkceVedouciObjektForm
 

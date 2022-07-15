@@ -73,7 +73,7 @@ class OznameniPDFCreator(DocumentCreator):
         ohlásil záměr <strong>{self.projekt.podnet}</strong> (označení stavby: {self.projekt.oznaceni_stavby}; 
         plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ')} - 
         {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ')} na 
-        k. ú. <strong>{str(self.projekt.hlavni_katastr).replace("(", "(okr. ")} </strong>, parc. č. 
+        k. ú. <strong>{str(self.projekt.hlavni_katastr).replace("(", "(okr. ")}</strong>, parc. č. 
         {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU[dok_index]}. 
         Oznámení provedl <strong>{datum_zmeny.strftime('%d. %m. %Y').replace(' 0', ' ')}</strong> pod evidenčním číslem 
         <strong>{self.projekt.ident_cely}</strong>. <strong>Tímto byla naplněna povinnost oznámit 

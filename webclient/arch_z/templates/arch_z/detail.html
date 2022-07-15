@@ -217,7 +217,7 @@
             <div class="form-group">
               <label>{% trans "Poznámka" %}</label>
               <textarea class="textarea form-control" cols="40" rows="4" placeholder="{{ zaznam.akce.souhrn_upresneni|check_if_none }}"
-                        readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
+                        readonly>{{ zaznam.akce.souhrn_upresneni|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
@@ -247,6 +247,7 @@
             </div>
           </div>
         </div>
+        <h5>{% trans "arch_z.create.dalsi_vedouci" %}</h5>
         <div class="row formset-table">
 <!--                  {% if ostatni_vedouci_objekt_formset.forms %}-->
                   {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
@@ -715,7 +716,7 @@
 
       function show_grap_geom_from_map(dj){
         global_map_can_grab_geom_from_map=dj;
-        map_show_edit(true)
+        map_show_edit(false)
       }
 
       document.addEventListener('DOMContentLoaded', function (event) {
@@ -756,6 +757,16 @@
                       'pian': '',
                   }))
           }
+          let i = 0;
+          let vedouci_filed = null;
+          let organizace_field = null;
+          {% for row in akce_zaznam_ostatni_vedouci %}
+              i = {{ forloop.counter0 }};
+              vedouci_filed = document.getElementById(`id_akcevedouci_set-${i}-vedouci`);
+              vedouci_filed.value = "{{ row.0 }}";
+              organizace_field = document.getElementById(`id_akcevedouci_set-${i}-organizace`);
+              organizace_field.value = "{{ row.1 }}";
+          {% endfor %}
       })
 
       const div_komponenta_click = (data) => {

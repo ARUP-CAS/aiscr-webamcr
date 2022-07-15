@@ -94,7 +94,7 @@ crossorigin=""/>
             {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float" id="detector_coordinates_x" %}
             <small class="form-text text-muted" id="hint_id_detector_coordinates_x">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_x.tooltip" %}</small>
             {% else %}
-            {% render_field formCoor.detector_coordinates_x|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_x"%}
+            {% render_field formCoor.detector_coordinates_x|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_x" lang="cs-CZ" %}
             {% endif %}
         </div>
       </div>
@@ -106,7 +106,7 @@ crossorigin=""/>
             {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float"  id="detector_coordinates_y" %}
             <small class="form-text text-muted" id="hint_id_detector_coordinates_z">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_y.tooltip" %}</small>
             {% else %}
-            {% render_field formCoor.detector_coordinates_y|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_y"%}
+            {% render_field formCoor.detector_coordinates_y|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_y" %}
             {% endif %}
         </div>
       </div>
@@ -163,6 +163,10 @@ crossorigin=""/>
                        //console.log("canConfirm"+canConfirm)
             //console.log("canEdit"+canEdit)
             $('[readonly]').prop("disabled", true);
+            switch_coordinate_system();
+
+           // set_numeric_coordinates(true)
+           // replace_coor();
             //$('form').submit(function () { $('[readonly]').removeAttr('disabled'); switch_coor_system(1) })
 
             /*if($("#detector_coordinates_x").val()){
@@ -177,16 +181,42 @@ crossorigin=""/>
                 addReadOnlyUniquePointToPoiLayer(corX,corY)
                 {% endif %}
             }*/
-            $('input.float').on('input', function () {
-                if(document.getElementById('detector_system_coordinates').value == 1){
-                    this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-                    set_numeric_coordinates()
-                } else if(document.getElementById('detector_system_coordinates').value == 2){
-                    this.value = this.value.replace(/-[^0-9.]/g, '').replace(/-(\..*)\./g, '$1');
-                    set_numeric_coordinates()
+            $('input').on('input', function () {
+              if(this.id=="detector_coordinates_x" || this.id=="detector_coordinates_y"){
+                var re  = new RegExp("^([1-9][0-9]{0,1})$|^([1-9][0-9]{0,1},[0-9]{0,7})$");
+                var re1 = new RegExp("^([1-9][0-9]{0,1}),?");
+                var re2 = new RegExp("^([1-9][0-9]{0,1},[0-9]{0,8})$");
+                var pos=this.selectionStart;
+                this.value = this.value.replace(".",",")
+                /*if(document.getElementById('detector_system_coordinates').value == 1){
+                  ;
+                } else*/
+                if(document.getElementById('detector_system_coordinates').value == 2){
+                  re  = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5})$|^(-[1]{0,1}[0-9][0-9]{0,5},[0-9]{0,2})$");
+                  re1 = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5}),?");
+                  re2 = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5},[0-9]{0,3})$");
+                    //set_numeric_coordinates()
                 }
-            });
+                if (re.test(this.value)) {
+                  mem[this.id]=this.value;
+                  //console.log("+1")
+                }else if (!re1.test(this.value)) {
 
-                })
+                  //console.log("+0: "+this.value+ " "+re1)
+                }else if (re2.test(this.value)) {
+                  this.value=this.value.slice(0,-1)
+                  mem[this.id]=this.value;
+                  this.setSelectionRange(pos,pos);
+                  //console.log("+2")
+                }
+                else {
+                  //console.log("+3: " +this.value)
+                  //console.log("mem: "+mem[this.id])
+                  this.value=mem[this.id];
+                }
+                set_numeric_coordinates()
+              }})
+            })
+            ;
     </script>
 {% endblock %}

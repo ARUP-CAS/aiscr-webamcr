@@ -108,14 +108,14 @@ class ProjektFilter(HistorieFilter):
     datum_zahajeni = DateFromToRangeFilter(
         field_name="datum_zahajeni",
         label=_("Datum zahájení (od-do)"),
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 
     datum_ukonceni = DateFromToRangeFilter(
         field_name="datum_ukonceni",
         label=_("Datum ukončení (od-do)"),
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 
@@ -143,14 +143,14 @@ class ProjektFilter(HistorieFilter):
     planovane_zahajeni = DateFromToRangeFilter(
         # field_name="planovane_zahajeni",
         method="filter_planovane_zahajeni",
-        widget=DateRangeWidget(attrs={"type": "date",}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
         field_name="termin_odevzdani_nz",
         label=_("Termín odevzdání NZ (od-do)"),
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 
@@ -195,7 +195,7 @@ class ProjektFilter(HistorieFilter):
     historie_datum_zmeny_od = DateFromToRangeFilter(
         label="Datum změny (od-do)",
         field_name="historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
 
@@ -273,7 +273,7 @@ class ProjektFilter(HistorieFilter):
     akce_datum_zahajeni = DateFromToRangeFilter(
         field_name="akce__datum_zahajeni",
         label="Datum zahájení (od-do)",
-        widget=DateRangeWidget(attrs={"type": "date"}),
+        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
         distinct=True,
     )
     akce_datum_ukonceni = DateFromToRangeFilter(

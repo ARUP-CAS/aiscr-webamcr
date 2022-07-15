@@ -94,7 +94,14 @@ def detail(request, ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie(
+        "set-active",
+        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        max_age=1000,
+    )
+    return response
 
 
 @login_required
@@ -116,7 +123,7 @@ def odpojit(request, dj_ident_cely):
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
         else:
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
-        return JsonResponse(
+        response = JsonResponse(
             {
                 "redirect": reverse(
                     "arch_z:detail",
@@ -124,6 +131,13 @@ def odpojit(request, dj_ident_cely):
                 )
             }
         )
+        response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+        response.set_cookie(
+            "set-active",
+            f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+            max_age=1000,
+        )
+        return response
     else:
         context = {
             "object": pian,
@@ -162,7 +176,7 @@ def potvrdit(request, dj_ident_cely):
             pian.set_potvrzeny(request.user)
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
-            return JsonResponse(
+            response = JsonResponse(
                 {
                     "redirect": reverse(
                         "arch_z:detail",
@@ -170,6 +184,13 @@ def potvrdit(request, dj_ident_cely):
                     )
                 }
             )
+            response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+            response.set_cookie(
+                "set-active",
+                f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+                max_age=1000,
+            )
+            return response
     context = {
         "object": pian,
         "title": _("pian.modalForm.potvrditPian.title.text"),
@@ -267,7 +288,14 @@ def create(request, dj_ident_cely):
         logger.warning(f"pian.views.create: Form errors: {form.errors}")
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    return redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(request.META.get("HTTP_REFERER"))
+    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie(
+        "set-active",
+        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        max_age=1000,
+    )
+    return response
 
 
 class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):

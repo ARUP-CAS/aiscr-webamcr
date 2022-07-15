@@ -194,15 +194,12 @@ def post_upload(request):
         finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
         if projects.exists():
             objekt = projects[0]
-            typ_souboru = OTHER_PROJECT_FILES
             new_name = get_projekt_soubor_name(request.FILES.get("file").name)
         elif documents.exists():
             objekt = documents[0]
-            typ_souboru = OTHER_DOCUMENT_FILES
             new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
         elif finds.exists():
             objekt = finds[0]
-            typ_souboru = PHOTO_DOCUMENTATION
             new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
         else:
             return JsonResponse(
@@ -243,7 +240,6 @@ def post_upload(request):
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(old_name),
                 size_bytes=soubor.size,
-                typ_souboru=typ_souboru,
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():
@@ -492,14 +488,16 @@ def redirect_ident_view(request, ident_cely):
         return response
     if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
         logger.debug("regex match for ADB with ident %s", ident_cely)
-        dj_ident = Adb.objects.get(ident_cely=ident_cely).dokumentacni_jednotka.ident_cely
+        adb = get_object_or_404(Adb,ident_cely=ident_cely)
+        dj_ident = adb.dokumentacni_jednotka.ident_cely
         response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
         response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
         response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}", max_age=1000)
         return response
     if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
         logger.debug("regex match for Vyskovy bod with ident %s", ident_cely)
-        dj_ident = VyskovyBod.objects.get(ident_cely=ident_cely).adb.dokumentacni_jednotka.ident_cely
+        vb = get_object_or_404(VyskovyBod,ident_cely=ident_cely)
+        dj_ident = vb.adb.dokumentacni_jednotka.ident_cely
         response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
         response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
         response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}", max_age=1000)
