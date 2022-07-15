@@ -152,7 +152,7 @@ def detail(request, ident_cely):
         if ident_cely == ident_referer:
             pass
         elif "arch-z/akce/detail/" in referer or "/projekt/detail/" in referer:
-            fount = False
+            found = False
             for cast in casti:
                 if cast.archeologicky_zaznam:
                     if cast.archeologicky_zaznam.ident_cely == ident_referer:
