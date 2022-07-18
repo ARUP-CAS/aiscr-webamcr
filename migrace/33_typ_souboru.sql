@@ -1,1 +1,1 @@
-alter table soubor drop column;
+alter table soubor drop column typ_souboru;
