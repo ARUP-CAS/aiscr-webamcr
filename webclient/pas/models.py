@@ -33,13 +33,16 @@ from uzivatel.models import Organizace, Osoba, User
 
 
 class SamostatnyNalez(models.Model):
-
     PAS_STATES = [
         (SN_ZAPSANY, _("SN1 - zapsaný")),
         (SN_ODESLANY, _("SN2 - odeslaný")),  # Odeslaný
         (SN_POTVRZENY, _("SN3 - potvrzený")),  # Potvrzeny
         (SN_ARCHIVOVANY, _("SN4 - archivovaný")),
     ]
+
+    PREDANO_BOOLEAN = (
+        (True, _('Ano')),
+        (False, _('Ne')))
 
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(
@@ -111,7 +114,7 @@ class SamostatnyNalez(models.Model):
     )
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
-    predano = models.BooleanField(blank=True, null=True, default=False)
+    predano = models.BooleanField(blank=True, null=True, default=False, choices=PREDANO_BOOLEAN)
     predano_organizace = models.ForeignKey(
         Organizace,
         models.DO_NOTHING,
@@ -222,7 +225,6 @@ class SamostatnyNalez(models.Model):
 
 
 class UzivatelSpoluprace(models.Model):
-
     SPOLUPRACE_STATES = [
         (SPOLUPRACE_NEAKTIVNI, _("neaktivní")),
         (SPOLUPRACE_AKTIVNI, _("aktivní")),
