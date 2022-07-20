@@ -133,6 +133,7 @@ def smazat(request, ident_cely):
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
         arch_z_ident_cely = adb.dokumentacni_jednotka.archeologicky_zaznam.ident_cely
+        dj_ident_cely = adb.dokumentacni_jednotka.ident_cely
         resp = adb.delete()
 
         if resp:
@@ -156,7 +157,7 @@ def smazat(request, ident_cely):
                 },
                 status=403,
             )
-        response.set_cookie("show-form", f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
+        response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
         return response
     else:
         context = {
