@@ -98,12 +98,12 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
             fill_katastr();
             document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
             document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-            document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
-            document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+            document.getElementById('id_coordinate_sjtsk_x').value = y_plus
+            document.getElementById('id_coordinate_sjtsk_y').value = x_plus
             if(push){
                 console.log("TR3")
-                document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
-                document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+                document.getElementById('detector_coordinates_x').value = y_plus
+                document.getElementById('detector_coordinates_y').value = x_plus
                 lock_sjtsk_low_precision=false;
                 switch_coordinate_system();
             }
@@ -115,11 +115,11 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
                 fill_katastr();
                 document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
                 document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
-                document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
-                document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
+                document.getElementById('id_coordinate_sjtsk_x').value = y_plus
+                document.getElementById('id_coordinate_sjtsk_y').value = x_plus
                 if(push){
-                    document.getElementById('detector_coordinates_x').value = point_global_JTSK[0]
-                    document.getElementById('detector_coordinates_y').value = point_global_JTSK[1]
+                    document.getElementById('detector_coordinates_x').value = y_plus
+                    document.getElementById('detector_coordinates_y').value = x_plus
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
                     alert("Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!")
