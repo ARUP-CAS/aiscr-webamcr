@@ -891,6 +891,8 @@ switchMap = function(overview=false){
                     })
                     if(pocet>50 && !detail_clusters){
                         map.removeLayer(poi_other_dp);
+                    } else if(!map.hasLayer(poi_other_dp)){
+                        map.addLayer(poi_other_dp);
                     }
                 }else{
                     let resHeat=JSON.parse(this.responseText).heat
