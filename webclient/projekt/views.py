@@ -493,6 +493,8 @@ def schvalit(request, ident_cely):
                     + projekt.ident_cely
                 )
         projekt.save()
+        if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
+            projekt.create_confirmation_document()
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         return JsonResponse(
             {
