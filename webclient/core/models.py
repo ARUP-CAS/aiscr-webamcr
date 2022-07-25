@@ -105,7 +105,7 @@ class Soubor(models.Model):
         Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.nazev_puvodni,
+            poznamka=self.nazev,
             vazba=self.historie,
         ).save()
 
