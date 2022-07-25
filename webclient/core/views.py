@@ -28,7 +28,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Soubor
+from core.models import Soubor, get_upload_to
 from core.utils import (
     calculate_crc_32,
     get_mime_type,
@@ -219,9 +219,9 @@ def post_upload(request):
     else:
         logger.debug("Updating file for soubor " + request.POST["fileID"])
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
-        fullname = os.path.join(settings.MEDIA_ROOT, s.path.path)
-        if os.path.exists(fullname):
-            os.remove(fullname)
+        if os.path.exists(s.path.path):
+            os.remove(s.path.path)
+        logger_s.debug("core.views.post_upload.update", s=s.pk, fullname=s.path.path)
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
@@ -285,7 +285,12 @@ def post_upload(request):
                     status=200,
                 )
         else:
-            logger.debug(f"Saving file to object: {s.pk}")
+            new_name = checksum + "_" + soubor.name
+            soubor.name = checksum + "_" + soubor.name
+            s.nazev = new_name
+            logger_s.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
+            s.nazev = checksum + "_" + new_name
+            s.nazev_zkraceny = new_name
             s.path = soubor
             s.size_bytes = soubor.size
             s.save()
