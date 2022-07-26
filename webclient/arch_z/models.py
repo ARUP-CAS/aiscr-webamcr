@@ -301,6 +301,7 @@ class AkceVedouci(models.Model):
     class Meta:
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
+        ordering = ['vedouci__id']
 
 
 class Lokalita(models.Model):
