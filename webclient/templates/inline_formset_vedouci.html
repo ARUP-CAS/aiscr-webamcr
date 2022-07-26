@@ -52,15 +52,16 @@
                     {% for field in form %}
                         {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
                     {% endfor %}
-                    {% if form.id.value and not form.readonly %}
-                        <td>
-                          <a href="{% url 'arch_z:smazat_akce_vedouci' form.id.value %}?next={{ request.get_full_path }}">
-                            <button id="objekt-smazat-{{form.id.value}}" class="objekt-smazat-btn" type="button" name="button">
-                                <span class="material-icons app-color-danger">delete_forever</span>
-                              </button>
-                            </a>
-                        </td>
-                    {% endif %}
+                    <td>
+                      {% if form.id.value and not form.readonly %}
+                        <a href="{% url 'arch_z:smazat_akce_vedouci' form.id.value %}?next={{ request.get_full_path }}">
+                          <button id="objekt-smazat-{{ form.id.value }}" class="objekt-smazat-btn" type="button"
+                                  name="button">
+                            <span class="material-icons app-color-danger">delete_forever</span>
+                          </button>
+                        </a>
+                      {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>

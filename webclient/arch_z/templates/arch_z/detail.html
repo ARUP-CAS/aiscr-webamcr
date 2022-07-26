@@ -247,17 +247,17 @@
             </div>
           </div>
         </div>
-        <h5>{% trans "arch_z.create.dalsi_vedouci" %}</h5>
-        <div class="row formset-table">
-<!--                  {% if ostatni_vedouci_objekt_formset.forms %}-->
-                  {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
-<!--                  {% else %}-->
-<!--                  <div class="app-note">-->
-<!--                    <span class="material-icons">info</span>-->
-<!--                    {% trans "Akce nemá ostatní vedoucí." %}-->
-<!--                  </div>-->
-<!--                  {% endif %}-->
-        </div>
+        {% if ostatni_vedouci_objekt_formset.forms %}
+          <div class="col-sm-12">
+            <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
+            <hr class="mt-0"/>
+          </div>
+          <div class="row formset-table">
+            {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
+          </div>
+        {% else %}
+
+        {% endif %}
       </div>
     </div>
 
