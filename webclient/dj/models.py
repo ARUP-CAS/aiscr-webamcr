@@ -20,11 +20,11 @@ class DokumentacniJednotka(models.Model):
     ident_cely = models.TextField(unique=True, blank=True, null=True)
     pian = models.ForeignKey(
         Pian,
-        models.DO_NOTHING,
         db_column="pian",
         blank=True,
         null=True,
         related_name="dokumentacni_jednotky_pianu",
+        on_delete=models.CASCADE
     )
     komponenty = models.OneToOneField(
         KomponentaVazby,
