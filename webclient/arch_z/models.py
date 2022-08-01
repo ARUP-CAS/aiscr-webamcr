@@ -49,7 +49,7 @@ class ArcheologickyZaznam(models.Model):
         related_name="zaznamy_pristupnosti",
         default=PRISTUPNOST_ANONYM_ID,
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-        blank=True, null=True
+        blank=False, null=True
     )
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
