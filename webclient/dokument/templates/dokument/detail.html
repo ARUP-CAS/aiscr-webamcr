@@ -118,7 +118,7 @@
       </div>
       <div class="card-body">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
