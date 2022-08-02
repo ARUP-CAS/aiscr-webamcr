@@ -399,7 +399,7 @@
                   {% endif %}
                   {% if j.show_uprav_pian %}
                     <a class="dropdown-item" href="#"
-                       onclick="show_form('detail_pian_form_{{ j.pian_ident_cely }}', 'detail_pian_form_{{ j.pian_ident_cely }}')">
+                       onclick="show_uprav_pian_click('{{ j.pian_ident_cely }}', '{{ j.ident_cely }}')">
                       {% trans 'Upravit pian' %}
                     </a>
                   {% endif %}
@@ -599,6 +599,7 @@
           <form class="mb-3" method="POST" action="{% url 'pian:detail' p.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">
             {% crispy p.form %}
             {% if show.editovat %}
+              <input type="hidden" id="detail_pian_dj_indent_{{ p.ident_cely }}" name="dj_ident_cely">
             <button type="submit" id="editPianButton"
                     class="btn btn-primary">{% trans "Upravit pian" %}</button>
             {% endif %}
@@ -962,6 +963,11 @@
     })
     create_autor_revize_modal = new Modal(options, "create-autor-revize");
   });
+    const show_uprav_pian_click = (pian_ident_cely, dj_ident_cely) => {
+        show_form(`detail_pian_form_${pian_ident_cely}`, `detail_pian_form_${pian_ident_cely}`);
+        const el_detail_pian_dj_indent = document.getElementById(`detail_pian_dj_indent_${ pian_ident_cely }`);
+        el_detail_pian_dj_indent.value = dj_ident_cely;
+    }
 
 </script>
 <script>
