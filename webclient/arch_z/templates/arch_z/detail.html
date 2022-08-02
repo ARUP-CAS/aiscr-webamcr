@@ -129,7 +129,7 @@
         </div>
         {% endif %}
       </div>
-      <div class="card-body">
+      <div class="card-body formset-table">
         {% if warnings %}
         <div class="alert alert-info" role="alert">
           <ul>
@@ -248,13 +248,13 @@
           </div>
         </div>
         {% if ostatni_vedouci_objekt_formset.forms %}
-          <div class="col-sm-12">
-            <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
-            <hr class="mt-0"/>
+          <div class="row">
+            <div class="col-sm-12">
+              <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
+              <hr class="mt-0"/>
+            </div>
           </div>
-          <div class="row formset-table">
-            {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
-          </div>
+          {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
         {% else %}
 
         {% endif %}
