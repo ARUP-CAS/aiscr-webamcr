@@ -95,7 +95,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         "historie:spoluprace",
         text="Historie",
         args=[A("pk")],
-        attrs={"a": {"class": "btn btn-sm btn-spoluprace-vyber"}},
+        attrs={"a": {"class": "btn btn-sm btn-spoluprace-vyber"}, "th": {"style": "color:white"}},
         orderable=False
     )
     aktivace = tables.TemplateColumn(
