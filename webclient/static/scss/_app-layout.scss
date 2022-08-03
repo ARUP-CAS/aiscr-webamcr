@@ -96,6 +96,7 @@ table th {
 .dropdown-toggle {
   height: 20px!important;
   line-height: 1!important;
+  margin: 0px!important;
 }
 
 .app-btn-in-form {
@@ -109,3 +110,20 @@ td .badge {
   flex: 0 0 auto;
 }
 
+.btn {
+  margin-top: 0.5em;
+}
+
+.btn .dropdown-toggle .btn-light {
+  margin: 2px;
+}
+
+.filter-option-inner-inner {
+  height: 18px!important;
+  font-size: 0.95rem
+}
+
+.app-btn-in-form {
+  margin-top: 0!important;
+  font-size: 0.5rem!important;
+}
