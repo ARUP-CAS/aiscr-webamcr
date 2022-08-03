@@ -94,7 +94,7 @@ class CreateDJForm(forms.ModelForm):
         self.fields["pian"].widget.attrs["disabled"]="disabled"
         for key in self.fields.keys():
             self.fields[key].disabled = not not_readonly
-            if isinstance(self.fields[key].widget, forms.widgets.Select):
+            if isinstance(self.fields[key].widget, forms.widgets.Select) and key != "pian":
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
