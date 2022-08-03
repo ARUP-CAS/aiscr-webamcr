@@ -43,6 +43,7 @@ logger_s = structlog.get_logger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
+    dj_ident_cely = request.POST["dj_ident_cely"]
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
     form = PianCreateForm(
         request.POST,
@@ -95,10 +96,10 @@ def detail(request, ident_cely):
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(request.META.get("HTTP_REFERER"))
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+    response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
+        f"el_div_dokumentacni_jednotka_{dj_ident_cely.replace('-', '_')}",
         max_age=1000,
     )
     return response
