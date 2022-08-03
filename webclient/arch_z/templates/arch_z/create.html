@@ -18,7 +18,7 @@
           {{ header }}
         </div>
       </div>
-      <div class="card-body">
+      <div class="card-body formset-table">
         {{ formAZ|as_crispy_errors }}
         {{ formAkce|as_crispy_errors }}
         <div class="row">
@@ -74,13 +74,13 @@
             {{ formAkce.je_nz|as_crispy_field }}
           </div>
         </div>
-        <div class="col-sm-12">
-          <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
-          <hr class="mt-0" />
+        <div class="row">
+          <div class="col-sm-12">
+            <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
+            <hr class="mt-0"/>
+          </div>
         </div>
-        <div class="row formset-table">
-          {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
-        </div>
+        {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
       </div>
     </div>
     <div class="mt-3">
