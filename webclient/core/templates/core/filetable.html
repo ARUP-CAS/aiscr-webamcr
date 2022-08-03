@@ -32,7 +32,7 @@
         </td>
         {% if allow_replace %}
           <td>
-            <a href="{% url 'core:update_file' soubor.id %}?next={{ next_url }}{{ ident }}">
+            <a href="{% url 'core:update_file' vazba_trida soubor.id %}?next={{ next_url }}{{ ident }}">
               <span class="material-icons app-color-danger">upgrade</span>
             </a>
           </td>

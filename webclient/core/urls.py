@@ -18,7 +18,7 @@ urlpatterns = [
         name="upload_file_dokument",
     ),
     path(
-        "nahrat-soubor/<int:file_id>",
+        "nahrat-soubor/<str:typ_vazby>/nahradit/<int:file_id>",
         views.update_file,
         name="update_file",
     ),

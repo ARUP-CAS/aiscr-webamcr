@@ -99,13 +99,15 @@ class Soubor(models.Model):
             vazba=self.historie,
         ).save()
 
-    def zaznamenej_nahrani_nove_verze(self, user):
+    def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         if self.historie is None:
             self.create_soubor_vazby()
+        if not nazev:
+            nazev = self.nazev
         Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.nazev,
+            poznamka=nazev,
             vazba=self.historie,
         ).save()
 
