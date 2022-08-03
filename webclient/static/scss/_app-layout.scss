@@ -82,7 +82,7 @@ table th {
   padding-bottom: 0.1rem!important;
 }
 
-.form-control-sm, .form-control, .app-daterangepicker .form-group > div .textinput  {
+.form-control-sm:not(.textarea), .form-control:not(.textarea), .app-daterangepicker .form-group > div .textinput  {
   height: 1.5rem!important;
   padding-top: 0!important;
   padding-bottom: 0!important;
@@ -96,10 +96,34 @@ table th {
 .dropdown-toggle {
   height: 20px!important;
   line-height: 1!important;
+  margin: 0px!important;
 }
 
 .app-btn-in-form {
   height: 18px!important;
   padding-top: 0!important;
   padding-bottom: 0!important;
+}
+
+td .badge {
+  vertical-align:middle;
+  flex: 0 0 auto;
+}
+
+.btn {
+  margin-top: 0.5em;
+}
+
+.btn .dropdown-toggle .btn-light {
+  margin: 2px;
+}
+
+.filter-option-inner-inner {
+  height: 18px!important;
+  font-size: 0.95rem
+}
+
+.app-btn-in-form {
+  margin-top: 0!important;
+  font-size: 0.5rem!important;
 }

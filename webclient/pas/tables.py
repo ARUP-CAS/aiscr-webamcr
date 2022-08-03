@@ -95,7 +95,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         "historie:spoluprace",
         text="Historie",
         args=[A("pk")],
-        attrs={"a": {"class": "btn btn-sm btn-spoluprace-vyber"}, "th": {"style": "color:white"}},
+        attrs={"th": {"style": "color:white"}},
         orderable=False
     )
     aktivace = tables.TemplateColumn(
@@ -111,7 +111,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
             "td": {"class": "spoluprace"},
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
-        template_code='{% load i18n %} <button id="spoluprace-smazat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-smazat-btn" type="button" name="button" href="{% url "pas:spoluprace_smazani" record.id %}">{% trans "Smazat" %}</button>',
+        template_code='{% load i18n %} <button id="spoluprace-smazat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-smazat-btn" type="button" style="line-height: 1" name="button" href="{% url "pas:spoluprace_smazani" record.id %}">{% trans "Smazat" %}</button>',
         exclude_from_export=True,
         orderable=False,
     )
