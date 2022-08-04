@@ -116,10 +116,22 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
         orderable=False,
     )
 
+    def get_column_default_show(self):
+        self.column_default_show = list(self.columns.columns.keys())
+        if "pas_spoluprace_vychozi_skryte_sloupce" in self.request.session:
+            columns_to_hide = set(
+                self.request.session["pas_spoluprace_vychozi_skryte_sloupce"]
+            )
+            for column in columns_to_hide:
+                if column is not None and column in self.column_default_show:
+                    self.column_default_show.remove(column)
+        return super(UzivatelSpolupraceTable, self).get_column_default_show()
+
     class Meta:
         model = UzivatelSpoluprace
         # template_name = "projekt/bootstrap4.html"
-        fields = ("stav",)
+        fields = ("stav", "vedouci", "organizace_vedouci", "spolupracovnik", "organizace_spolupracovnik", "historie",
+                  "aktivace", "smazani")
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
