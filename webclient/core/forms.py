@@ -96,7 +96,7 @@ class SouborMetadataForm(forms.ModelForm):
                 Div("nazev", css_class="col-sm-2"),
                 Div("mimetype", css_class="col-sm-2"),
                 Div("size_bytes", css_class="col-sm-2"),
-                css_class="row",
+                css_class="row mb-2",
             ),
         )
         self.fields["nazev_zkraceny"].widget.attrs["readonly"] = True
