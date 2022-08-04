@@ -38,9 +38,9 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
                   {% for column in table.columns %}
-                    {% if column.attrs.td.class in table.get_column_default_show %}
+                    {% if column.name in table.get_column_default_show %}
                       <a class="btn-shift-column dropdown-item"
-                          data-td-class="{{ column.attrs.td.class }}"
+                          data-td-class="{{ column.name }}"
                           data-state="on"
                           {% if not forloop.last %} style="border-bottom:1px solid #ccc;" {% endif %}
                           data-table-class-container="{{ table.uniq_table_class_name }}">
@@ -65,7 +65,7 @@
                           data-td-class="{{ column.attrs.td.class }}"
                           data-state="off"
                           {% if not forloop.last %} style="border-bottom:1px solid #ccc;" {% endif %}
-                          data-table-class-container="{{ table.uniq_table_class_name }}">
+                          data-table-class-container="{{ column.name }}">
                         <img
                             src="{% static "django_tables2_column_shifter/img/check.png" %}"
                             alt="loader"
