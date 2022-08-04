@@ -284,19 +284,23 @@ def post_upload(request):
                     status=200,
                 )
         else:
-            if s.vazba.typ_vazby == PROJEKT_RELATION_TYPE:
-                new_name = get_projekt_soubor_name(request.FILES.get("file").name)
-            elif s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
+            if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                 objekt = s.vazba.dokument_souboru
                 new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
             elif s.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                objekt = s.vazba.samostatny_nalez_souboru
+                objekt = s.vazba.samostatny_nalez_souboru.first()
                 new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
+            else:
+                return JsonResponse(
+                    {
+                        "error": f"Chybí vazba souboru"
+                    },
+                    status=500,
+                )
 
             name_without_checksum = soubor.name
-            new_name = checksum + "_" + new_name
             soubor.name = checksum + "_" + new_name
-            s.nazev = new_name
+            s.nazev = checksum + "_" + new_name
             logger_s.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
             s.nazev = checksum + "_" + new_name
             s.nazev_zkraceny = new_name
@@ -305,7 +309,7 @@ def post_upload(request):
             s.save()
             s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
 
-            duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
+            duplikat = Soubor.objects.filter(nazev__icontains=checksum).order_by("pk")
             if not duplikat.count() == 1:
                 return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
             else:
