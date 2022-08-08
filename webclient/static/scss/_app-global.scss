@@ -185,19 +185,20 @@ table {
 
 // select form control fix
 .select2-container {
-  //min-width: unset !important; commented because there was bug, which sent Juraj by skype 
+  //min-width: unset !important; commented because there was bug, which sent Juraj by skype
   min-width: 100% !important;
-  min-height: $app-form-control-fix-height  !important;
+
+  .select2-selection--multiple{
+      height: $app-form-control-fix-height !important;
+      min-height: $app-form-control-fix-height !important;
+    }
 
   .select2-selection {
-    height: $app-form-control-fix-height !important;
     border: 1px solid #ced4da !important;
     border-radius: 0.2rem !important;
 
     &.form-control {
       @extend .p-0;
-      min-height: $app-form-control-fix-height;
-      height: unset !important;
 
       ul {
         @extend .pr-0;
@@ -208,11 +209,14 @@ table {
   }
 }
 
+//select2-selection select2-selection--multiple modelselect2multiple form-control
+//.select2-container .select2-selection--multiple
+
 // select bootstrap fix
 .bootstrap-select {
   .dropdown-toggle {
-    height: $app-form-control-fix-height;
-    padding: 0.1rem 0.5rem;
+    height: 1.23rem;
+    padding: 0 0.5rem;
   }
   
   .dropdown-menu .dropdown-menu.inner {
@@ -293,6 +297,17 @@ form {
   &.inline-checkbox small {
     left: -1.5rem;
     position: inherit;
+  }
+  textarea[disabled]{
+    height: $app-form-control-fix-height;
+  }
+
+  textarea[disabled].textarea{
+    height: $app-form-control-fix-height;
+  }
+
+  textarea.textarea.form-control{
+    height: $app-form-control-fix-height;
   }
 }
 

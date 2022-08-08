@@ -57,3 +57,6 @@ SHELL_PLUS_PRINT_SQL = True
 # Send emails to FTP
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH = "/vol/web/media/emails/"
+
+# auto logout settings
+AUTO_LOGOUT = {}
