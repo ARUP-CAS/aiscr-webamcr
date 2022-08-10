@@ -634,7 +634,7 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
 
     if(st_text.includes("POLYGON")){
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
-            coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0]]))
+            coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1],i.split(" ")[0].replace("(", "")]))
         })
         mouseOverGeometry(L.polygon(coor,myColor).bindTooltip(text,{sticky: true }).addTo(layer));
     }else if(st_text.includes("LINESTRING")){
