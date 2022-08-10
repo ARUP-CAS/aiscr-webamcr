@@ -51,10 +51,12 @@ var replace_coor = () => {
     }
     var dx='detector_coordinates_x';
     var dy='detector_coordinates_y';
-    document.getElementById(dx).value=(dm+document.getElementById(dx).value.replace(".",",")).replace("--","-");
-    document.getElementById(dy).value=(dm+document.getElementById(dy).value.replace(".",",")).replace("--","-");
-    mem[dx]=document.getElementById(dx).value;
-    mem[dy]=document.getElementById(dy).value;
+    if(document.getElementById(dx).value.length>1){
+        document.getElementById(dx).value=(dm+document.getElementById(dx).value.replace(".",",")).replace("--","-");
+        document.getElementById(dy).value=(dm+document.getElementById(dy).value.replace(".",",")).replace("--","-");
+        mem[dx]=document.getElementById(dx).value;
+        mem[dy]=document.getElementById(dy).value;
+    }
 }
 
 var fill_katastr = () => {
@@ -245,8 +247,10 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_y').readOnly = false;
         document.getElementById('id_coordinate_system').value="wgs84";
     } else if (new_system >1 && point_global_JTSK[0] != 0) {
-        document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
-        document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1]);
+        if(point_global_JTSK[0]<-3000000){
+            document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
+            document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1]);
+        }
         document.getElementById('detector_coordinates_x').readOnly = false;
         document.getElementById('detector_coordinates_y').readOnly = false;
         if(!lock_sjtsk_low_precision){
