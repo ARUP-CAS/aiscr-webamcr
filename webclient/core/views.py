@@ -7,6 +7,8 @@ import unicodedata
 from string import ascii_uppercase as letters
 
 import structlog
+from django.db.models import Q
+
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     D_STAV_ARCHIVOVANY,
@@ -309,10 +311,8 @@ def post_upload(request):
             s.save()
             s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
 
-            duplikat = Soubor.objects.filter(nazev__icontains=checksum).order_by("pk")
-            if not duplikat.count() == 1:
-                return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
-            else:
+            duplikat = Soubor.objects.filter(nazev__icontains=checksum).filter(~Q(id=s.id)).order_by("pk")
+            if duplikat.count() > 0:
                 parent_ident = ""
                 if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
                     parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
@@ -334,6 +334,8 @@ def post_upload(request):
                     },
                     status=200,
                 )
+            else:
+                return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
     else:
         logger.warning("No file attached to the announcement form.")
 
