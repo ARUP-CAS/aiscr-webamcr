@@ -99,6 +99,7 @@ var global_clusters=false;
 var global_heat=false;
 
 var map = L.map('djMap', {
+    attributionControl: false,
     layers: [cuzkZM, poi_other],
     zoomControl: false,
     contextmenu: true,
