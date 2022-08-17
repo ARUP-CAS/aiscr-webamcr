@@ -494,7 +494,7 @@ def schvalit(request, ident_cely):
                 )
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
-            projekt.create_confirmation_document()
+            projekt.create_confirmation_document(user=request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
         return JsonResponse(
             {
@@ -1039,7 +1039,7 @@ def pripojit_dokument(request, proj_ident_cely):
 @require_http_methods(["POST"])
 def generovat_oznameni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    projekt.create_confirmation_document(additional=True)
+    projekt.create_confirmation_document(additional=True, user=request.user)
     return redirect("projekt:detail", ident_cely=ident_cely)
 
 
