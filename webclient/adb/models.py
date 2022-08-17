@@ -1,4 +1,5 @@
 import logging
+from math import fabs
 
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
@@ -118,9 +119,9 @@ class VyskovyBod(models.Model):
             self.ident_cely = get_vyskovy_bod(self.adb)
         if self.northing != 0.0:
             self.geom = Point(
-                x=self.northing,
-                y=self.easting,
-                z=self.niveleta,
+                x=fabs(self.northing),
+                y=fabs(self.easting),
+                z=fabs(self.niveleta),
             )
             self.niveleta = 0.0
             self.easting = 0.0
@@ -132,8 +133,8 @@ class VyskovyBod(models.Model):
         if self.geom is not None:
             geom_length = len(self.geom)
             if geom_length > 1:
-                self.northing = round(self.geom[0], 2)
-                self.easting = round(self.geom[1], 2)
+                self.northing = -1 * round(self.geom[0], 2)
+                self.easting = -1 * round(self.geom[1], 2)
             if geom_length == 3:
                 self.niveleta = round(self.geom[2], 2)
 

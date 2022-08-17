@@ -1,7 +1,7 @@
 from adb.models import Adb, VyskovyBod
+from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
-from crispy_forms.bootstrap import AppendedText
 from cron.convertToSJTSK import convertToJTSK
 from django import forms
 from django.utils.translation import gettext as _
@@ -88,23 +88,23 @@ class CreateADBForm(forms.ModelForm):
         self.helper = FormHelper(self)
         if readonly:
             self.helper.layout = Layout(
-            Div(
-                Div("typ_sondy", css_class="col-sm-2"),
-                Div("podnet", css_class="col-sm-2"),
-                Div("uzivatelske_oznaceni_sondy", css_class="col-sm-2"),
-                Div("trat", css_class="col-sm-2"),
-                Div("cislo_popisne", css_class="col-sm-2"),
-                Div("parcelni_cislo", css_class="col-sm-2"),
-                Div("stratigraficke_jednotky", css_class="col-sm-2"),
-                Div(css_class="col-sm-2"),
-                Div("autor_popisu", css_class="col-sm-2"),
-                Div("rok_popisu", css_class="col-sm-2"),
-                Div("autor_revize", css_class="col-sm-2"),
-                Div("rok_revize", css_class="col-sm-2"),
-                Div("poznamka", css_class="col-sm-12"),
-                css_class="row",
-            ),
-        )
+                Div(
+                    Div("typ_sondy", css_class="col-sm-2"),
+                    Div("podnet", css_class="col-sm-2"),
+                    Div("uzivatelske_oznaceni_sondy", css_class="col-sm-2"),
+                    Div("trat", css_class="col-sm-2"),
+                    Div("cislo_popisne", css_class="col-sm-2"),
+                    Div("parcelni_cislo", css_class="col-sm-2"),
+                    Div("stratigraficke_jednotky", css_class="col-sm-2"),
+                    Div(css_class="col-sm-2"),
+                    Div("autor_popisu", css_class="col-sm-2"),
+                    Div("rok_popisu", css_class="col-sm-2"),
+                    Div("autor_revize", css_class="col-sm-2"),
+                    Div("rok_revize", css_class="col-sm-2"),
+                    Div("poznamka", css_class="col-sm-12"),
+                    css_class="row",
+                ),
+            )
         else:
             self.helper.layout = Layout(
                 Div(
@@ -117,16 +117,22 @@ class CreateADBForm(forms.ModelForm):
                     Div("stratigraficke_jednotky", css_class="col-sm-2"),
                     Div(css_class="col-sm-2"),
                     Div(
-                                AppendedText("autor_popisu", '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
-                                css_class="col-sm-2 input-osoba",
-                            ),
+                        AppendedText(
+                            "autor_popisu",
+                            '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                        ),
+                        css_class="col-sm-2 input-osoba",
+                    ),
                     # Div("autor_popisu", css_class="col-sm-2"),
                     Div("rok_popisu", css_class="col-sm-2"),
                     Div(
-                                AppendedText("autor_revize", '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
-                                css_class="col-sm-2 input-osoba",
-                            ),
-                    #Div("autor_revize", css_class="col-sm-2"),
+                        AppendedText(
+                            "autor_revize",
+                            '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                        ),
+                        css_class="col-sm-2 input-osoba",
+                    ),
+                    # Div("autor_revize", css_class="col-sm-2"),
                     Div("rok_revize", css_class="col-sm-2"),
                     Div("poznamka", css_class="col-sm-12"),
                     css_class="row",
@@ -149,7 +155,7 @@ class VyskovyBodFormSetHelper(FormHelper):
         self.form_id = "vb"
 
 
-def create_vyskovy_bod_form(pian=None, niveleta=None,not_readonly=True):
+def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
     class CreateVyskovyBodForm(forms.ModelForm):
         northing = forms.FloatField(
             label=_("adb.form.vyskovyBod.northing.label"),
@@ -170,13 +176,13 @@ def create_vyskovy_bod_form(pian=None, niveleta=None,not_readonly=True):
             fields = ("ident_cely", "typ", "northing", "easting", "niveleta")
 
             labels = {
-                 "ident_cely": _("adb.form.vyskovyBod.ident_cely.label"),
+                "ident_cely": _("adb.form.vyskovyBod.ident_cely.label"),
                 "typ": _("adb.form.vyskovyBod.typ.label"),
                 "niveleta": _("adb.form.vyskovyBod.niveleta.label"),
                 "northing": _("adb.form.vyskovyBod.northing.label"),
                 "easting": _("adb.form.vyskovyBod.easting.label"),
             }
-            
+
             widgets = {
                 "ident_cely": forms.Textarea(attrs={"rows": 1, "cols": 20}),
             }
@@ -195,8 +201,8 @@ def create_vyskovy_bod_form(pian=None, niveleta=None,not_readonly=True):
             # self.fields["easting"].label = "Y"
             if pian:
                 [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
-                self.fields["northing"].initial = round(x, 2)
-                self.fields["easting"].initial = round(y, 2)
+                self.fields["northing"].initial = -1 * round(x, 2)
+                self.fields["easting"].initial = -1 * round(y, 2)
             if niveleta:
                 self.fields["niveleta"].initial = niveleta
 
