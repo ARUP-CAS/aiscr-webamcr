@@ -187,7 +187,7 @@ class Projekt(models.Model):
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
         if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document()
+            self.create_confirmation_document(user)
 
     def set_prihlaseny(self, user):
         self.stav = PROJEKT_STAV_PRIHLASENY
@@ -261,6 +261,7 @@ class Projekt(models.Model):
                 )
                 aktual_soubor.save()
                 aktual_soubor.path.save(name=new_filename, content=myfile)
+                aktual_soubor.zaznamenej_nahrani(user=user)
                 for file in soubory:
                     file.path.delete()
                 items_deleted = soubory.delete()
@@ -437,7 +438,7 @@ class Projekt(models.Model):
         sequence.save()
         self.save()
 
-    def create_confirmation_document(self, additional=False):
+    def create_confirmation_document(self, additional=False, user=None):
         from core.utils import get_mime_type
         creator = OznameniPDFCreator(self.oznamovatel, self)
         filename = creator.build_document()
@@ -448,7 +449,7 @@ class Projekt(models.Model):
             filename_without_path = f"oznameni_{self.ident_cely}_{postfix}.pdf"
         duplikat = Soubor.objects.filter(nazev=filename)
         if not duplikat.exists():
-            Soubor(
+            soubor = Soubor(
                 path=filename,
                 vazba=self.soubory,
                 nazev=filename_without_path,
@@ -457,7 +458,12 @@ class Projekt(models.Model):
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(filename_without_path),
                 size_bytes=os.path.getsize(filename),
-            ).save()
+            )
+            soubor.save()
+            if user:
+                soubor.zaznamenej_nahrani(user)
+            else:
+                soubor.create_soubor_vazby()
 
     @property
     def expert_list_can_be_created(self):
