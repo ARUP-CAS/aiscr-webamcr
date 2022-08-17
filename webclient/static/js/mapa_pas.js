@@ -83,7 +83,7 @@ var fill_katastr = () => {
 };
 
 
-var transformSinglePoint = async(y_plus,x_plus,push) => {
+var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/transformace-single-wgs84');
     xhr.setRequestHeader('Content-type', 'application/json');
@@ -104,8 +104,8 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
             document.getElementById('id_coordinate_sjtsk_y').value = x_plus
             if(push){
                 console.log("TR3")
-                document.getElementById('detector_coordinates_x').value = y_plus
-                document.getElementById('detector_coordinates_y').value = x_plus
+                document.getElementById('detector_coordinates_x').value = y_plus+ (addComa==true ? ',':'');
+                document.getElementById('detector_coordinates_y').value = x_plus+ (addComa==true ? ',':'');
                 lock_sjtsk_low_precision=false;
                 switch_coordinate_system();
             }
@@ -120,8 +120,8 @@ var transformSinglePoint = async(y_plus,x_plus,push) => {
                 document.getElementById('id_coordinate_sjtsk_x').value = y_plus
                 document.getElementById('id_coordinate_sjtsk_y').value = x_plus
                 if(push){
-                    document.getElementById('detector_coordinates_x').value = y_plus
-                    document.getElementById('detector_coordinates_y').value = x_plus
+                    document.getElementById('detector_coordinates_x').value = y_plus+ (addComa==true ? ',':'');
+                    document.getElementById('detector_coordinates_y').value = x_plus+ (addComa==true ? ',':'');
                     lock_sjtsk_low_precision=true;
                     switch_coordinate_system();
                     alert("Přesná transformace ze systemu S-JTSK není v současnosti dostupná, proto bude použita méně přesná transformace!")
@@ -196,7 +196,7 @@ let disableSaveButton=(dis)=>{
 
 }
 
-let set_numeric_coordinates = async (push=false) => {
+let set_numeric_coordinates = async (push=false,addComa=false) => {
     corX = document.getElementById('detector_coordinates_x').value.replace(",",".");
     corY = document.getElementById('detector_coordinates_y').value.replace(",",".");
     if(Math.sign(corX) == Math.sign(corY) && document.getElementById('detector_system_coordinates').value == 2){
@@ -219,13 +219,13 @@ let set_numeric_coordinates = async (push=false) => {
             document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
             document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
             if(push){
-                document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
-                document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
+                document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]+ (addComa==true ? ',':'');
+                document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]+ (addComa==true ? ',':'');
             }
             return true;
         } else if (document.getElementById('detector_system_coordinates').value == 2) {
             point_global_JTSK = amcr_static_coordinate_precision_jtsk([corX, corY], false)
-            transformSinglePoint(Math.abs(Number(corX).toFixed(2)),Math.abs(Number(corY).toFixed(2)),true);//+y+x
+            transformSinglePoint(Math.abs(Number(corX).toFixed(2)),Math.abs(Number(corY).toFixed(2)),true,addComa);//+y+x
 
         }
     }
@@ -247,7 +247,7 @@ var switch_coor_system = (new_system) => {
         document.getElementById('detector_coordinates_y').readOnly = false;
         document.getElementById('id_coordinate_system').value="wgs84";
     } else if (new_system >1 && point_global_JTSK[0] != 0) {
-        if(point_global_JTSK[0]<-3000000){
+        if(Math.abs(point_global_JTSK[0])<3000000){
             document.getElementById('detector_coordinates_x').value = -1*Math.abs(point_global_JTSK[0]);
             document.getElementById('detector_coordinates_y').value = -1*Math.abs(point_global_JTSK[1]);
         }
