@@ -186,7 +186,7 @@ def detail(request, ident_cely):
         prefix="",
     )
     akce_zaznam_ostatni_vedouci = []
-    for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce):
+    for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce).order_by("id"):
         vedouci: AkceVedouci
         akce_zaznam_ostatni_vedouci.append([str(vedouci.vedouci), str(vedouci.organizace)])
     for jednotka in jednotky:
@@ -714,6 +714,7 @@ def zapsat(request, projekt_ident_cely):
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
+            "ostatni_vedouci_objekt_formset_readonly": True,
             "title": _("Nová projektová akce"),
             "header": _("Nová projektová akce"),
             "button": _("Vytvoř akci"),

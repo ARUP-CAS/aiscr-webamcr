@@ -42,7 +42,6 @@
                     {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
                 {% endfor %}
             </tr>
-
             {% for form in formset %}
                 {% if form_show_errors and not form.is_extra %}
                     {% include "bootstrap4/errors.html" %}
@@ -52,16 +51,18 @@
                     {% for field in form %}
                         {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
                     {% endfor %}
-                    <td>
-                      {% if form.id.value and not form.readonly %}
-                        <a href="{% url 'arch_z:smazat_akce_vedouci' form.id.value %}?next={{ request.get_full_path }}">
-                          <button id="objekt-smazat-{{ form.id.value }}" class="objekt-smazat-btn" type="button"
-                                  name="button">
-                            <span class="material-icons app-color-danger">delete_forever</span>
-                          </button>
-                        </a>
-                      {% endif %}
-                    </td>
+                    {% if not form.readonly and not ostatni_vedouci_objekt_formset_readonly %}
+                        <td>
+                          {% if form.id.value %}
+                            <a href="{% url 'arch_z:smazat_akce_vedouci' form.id.value %}?next={{ request.get_full_path }}">
+                              <button id="objekt-smazat-{{ form.id.value }}" class="objekt-smazat-btn" type="button"
+                                      name="button">
+                                <span class="material-icons app-color-danger">delete_forever</span>
+                              </button>
+                            </a>
+                          {% endif %}
+                        </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>
