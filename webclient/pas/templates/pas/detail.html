@@ -96,7 +96,7 @@
       </div>
     </div>
 
-    
+
   </div>
 
 {% endblock %}
@@ -151,7 +151,14 @@
       modalFormID: "#smazat-pas-form",
     })
     smazat_akci_modal = new Modal(options, "pas-smazat");
-});
+  });
+
+  $(document).ready(function () {
+    global_map_can_edit=false;
+    document.getElementById('detector_coordinates_x').setAttribute("readonly", "readonly");
+    document.getElementById('detector_coordinates_y').setAttribute("readonly", "readonly");
+    document.getElementById('detector_system_coordinates').disabled = true;
+  });
 
 </script>
 {% endblock %}
