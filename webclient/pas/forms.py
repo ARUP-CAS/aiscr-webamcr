@@ -91,7 +91,7 @@ class PotvrditNalezForm(forms.ModelForm):
     def __init__(self, *args, readonly=False, predano_required=False, **kwargs):
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
-        self.fields["predano_organizace"].required = True
+        self.fields["predano_organizace"].required = False
         self.fields["predano"].required = predano_required
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)

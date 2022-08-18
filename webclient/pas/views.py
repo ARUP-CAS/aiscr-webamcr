@@ -62,7 +62,7 @@ from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
-from uzivatel.models import User
+from uzivatel.models import User, Organizace
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -337,7 +337,9 @@ def edit_ulozeni(request, ident_cely):
         )
         if form.is_valid():
             logger.debug("PAS Form is valid:2")
-            form.save()
+            formObj = form.save(commit=False)
+            formObj.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
+            formObj.save()
             if form.changed_data:
                 logger.debug(form.changed_data)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
