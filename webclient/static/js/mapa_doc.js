@@ -86,6 +86,11 @@ function showPosition(position) {
 var replace_coor = () => {
     var dx='id_sirka';
     var dy='id_vyska';
-    document.getElementById(dx).value=(document.getElementById(dx).value.replace(".",","));
-    document.getElementById(dy).value=(document.getElementById(dy).value.replace(".",","));
+    if(typeof InstallTrigger == 'undefined'){//!firefox
+        document.getElementById(dx).value=(document.getElementById(dx).value);
+        document.getElementById(dy).value=(document.getElementById(dy).value);
+    }else{
+        document.getElementById(dx).value=(document.getElementById(dx).value.replace(".",","));
+        document.getElementById(dy).value=(document.getElementById(dy).value.replace(".",","));
+    }
 }
