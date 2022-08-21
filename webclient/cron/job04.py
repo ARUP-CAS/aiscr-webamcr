@@ -10,7 +10,7 @@ from pas.models import SamostatnyNalez
 logger = logging.getLogger("django_cron")
 
 
-class MyCronJobPianToWGS84(CronJobBase):
+class MyCronJobSamNalezToWGS84(CronJobBase):
     RUN_EVERY_MINS = 2  # every 2 minutes
     NUM_TO_WGS84_CONVERT = 200
 

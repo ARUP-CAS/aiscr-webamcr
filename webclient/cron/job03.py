@@ -10,7 +10,7 @@ from pas.models import SamostatnyNalez
 logger = logging.getLogger("django_cron")
 
 
-class MyCronJobPianToJTSK(CronJobBase):
+class MyCronJobSamNalezToJTSK(CronJobBase):
     RUN_EVERY_MINS = 2  # every 2 minutes
     NUM_TO_SJTSK_CONVERT = 200
 
