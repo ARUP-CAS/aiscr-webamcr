@@ -95,16 +95,27 @@ class PotvrditNalezForm(forms.ModelForm):
         self.fields["predano"].required = predano_required
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div(
-                Div("predano_organizace", css_class="col-sm-3"),
-                Div("evidencni_cislo", css_class="col-sm-3"),
-                Div("predano", css_class="col-sm-3"),
-                Div("pristupnost", css_class="col-sm-3"),
-                Div("old_stav"),
-                css_class="row",
-            ),
-        )
+        if(self.instance.predano_organizace):
+            self.helper.layout = Layout(
+                Div(
+                    Div("predano_organizace", css_class="col-sm-3"),
+                    Div("evidencni_cislo", css_class="col-sm-3"),
+                    Div("predano", css_class="col-sm-3"),
+                    Div("pristupnost", css_class="col-sm-3"),
+                    Div("old_stav"),
+                    css_class="row",
+                ),
+            )
+        else:
+            self.helper.layout = Layout(
+                Div(
+                    Div("evidencni_cislo", css_class="col-sm-3"),
+                    Div("predano", css_class="col-sm-3"),
+                    Div("pristupnost", css_class="col-sm-3"),
+                    Div("old_stav"),
+                    css_class="row",
+                ),
+            )
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
         self.helper.form_tag = False
