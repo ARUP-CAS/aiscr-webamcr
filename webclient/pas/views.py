@@ -479,8 +479,10 @@ def potvrdit(request, ident_cely):
     if request.method == "POST":
         form = PotvrditNalezForm(request.POST, instance=sn, predano_required=True)
         if form.is_valid():
-            sn = form.save(commit=False)
-            sn.set_potvrzeny(request.user)
+            formObj = form.save(commit=False)
+            formObj.set_potvrzeny(request.user)
+            formObj.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
+            formObj.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
