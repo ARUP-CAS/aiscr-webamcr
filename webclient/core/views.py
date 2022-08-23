@@ -287,11 +287,9 @@ def post_upload(request):
                 )
         else:
             if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                objekt = s.vazba.dokument_souboru
-                new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
+                new_name = s.nazev_zkraceny
             elif s.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                objekt = s.vazba.samostatny_nalez_souboru.first()
-                new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
+                new_name = s.nazev_zkraceny
             else:
                 return JsonResponse(
                     {
@@ -299,7 +297,6 @@ def post_upload(request):
                     },
                     status=500,
                 )
-
             name_without_checksum = soubor.name
             soubor.name = checksum + "_" + new_name
             s.nazev = checksum + "_" + new_name
