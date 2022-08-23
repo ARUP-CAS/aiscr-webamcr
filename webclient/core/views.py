@@ -339,7 +339,7 @@ def post_upload(request):
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
 
 
-def get_dokument_soubor_name(dokument, filename):
+def get_dokument_soubor_name(dokument, filename, add_to_index=1):
     my_regex = (
         r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
     )
@@ -356,10 +356,10 @@ def get_dokument_soubor_name(dokument, filename):
                 list_last_char.append(split_file[0][-1])
             last_char = max(list_last_char)
             logger.debug(last_char)
-            if last_char != "Z":
+            if last_char != "Z" or add_to_index == 0:
                 return (
                     dokument.ident_cely.replace("-", "")
-                    + letters[(letters.index(last_char) + 1)]
+                    + letters[(letters.index(last_char) + add_to_index)]
                     + os.path.splitext(filename)[1]
                 )
             else:
@@ -372,7 +372,7 @@ def get_dokument_soubor_name(dokument, filename):
             return dokument.ident_cely.replace("-", "") + "A" + os.path.splitext(filename)[1]
 
 
-def get_finds_soubor_name(find, filename):
+def get_finds_soubor_name(find, filename, add_to_index=1):
     my_regex = r"^\d+_" + re.escape(find.ident_cely.replace("-", "")) + r"(F\d{2}\.\w+)$"
     files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)
     if not files.exists():
@@ -385,11 +385,11 @@ def get_finds_soubor_name(find, filename):
         logger.debug(list_last_char)
         logger.debug(files)
         last_char = max(list_last_char)
-        if last_char != "99":
+        if last_char != "99" or add_to_index == 0:
             return (
                 find.ident_cely.replace("-", "")
                 + "F"
-                + str(int(last_char) + 1).zfill(2)
+                + str(int(last_char) + add_to_index).zfill(2)
                 + os.path.splitext(filename)[1]
             )
         else:
