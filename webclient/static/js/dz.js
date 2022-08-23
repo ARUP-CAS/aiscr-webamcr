@@ -71,6 +71,7 @@ var dropzoneOptions = {
     dictRemoveFile: "Odstranit soubor",
     maxFilesize: 100, // MB
     maxFiles: maxFiles,
+    addRemoveLinks: addRemoveLinks,
     init: function () {
         this.on("success", function (file, response) {
             file.id = response.id
