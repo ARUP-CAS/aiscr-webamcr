@@ -34,9 +34,11 @@
     {% if file_id %}
         <script>var maxFiles = 1;</script>
         <script>var file_id = "{{ file_id }}";</script>
+        <script>var addRemoveLinks = false;</script>
     {% else %}
         <script>var maxFiles = 999;</script>
         <script>var object_id = "{{ ident_cely }}";</script>
+        <script>var addRemoveLinks = true;</script>
     {% endif %}
     <script>
     var reject_dict = {
