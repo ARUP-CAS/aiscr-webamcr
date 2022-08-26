@@ -188,6 +188,7 @@ def upload_file_samostatny_nalez(request, ident_cely):
 @require_http_methods(["POST"])
 def post_upload(request):
     update = "fileID" in request.POST
+    s = None
     if not update:
         logger.debug("Uploading file to object: " + request.POST["objectID"])
         projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
@@ -286,10 +287,20 @@ def post_upload(request):
                     status=200,
                 )
         else:
+            __, file_extension = os.path.splitext(soubor.name)
+            if s is None:
+                return JsonResponse(
+                    {
+                        "error": f"Chyba při zpracování souboru"
+                    },
+                    status=500,
+                )
             if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                new_name = s.nazev_zkraceny
+                file_name, __ = os.path.splitext(s.nazev_zkraceny)
+                new_name = file_name + file_extension
             elif s.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                new_name = s.nazev_zkraceny
+                file_name, __ = os.path.splitext(s.nazev_zkraceny)
+                new_name = file_name + file_extension
             else:
                 return JsonResponse(
                     {
@@ -298,6 +309,7 @@ def post_upload(request):
                     status=500,
                 )
             name_without_checksum = soubor.name
+            mimetype = get_mime_type(soubor.name)
             soubor.name = checksum + "_" + new_name
             s.nazev = checksum + "_" + new_name
             logger_s.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
@@ -305,6 +317,7 @@ def post_upload(request):
             s.nazev_zkraceny = new_name
             s.path = soubor
             s.size_bytes = soubor.size
+            s.mimetype = mimetype
             s.save()
             s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
 
@@ -322,8 +335,7 @@ def post_upload(request):
                     )
                 return JsonResponse(
                     {
-                        "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
+                        "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
                                      + parent_ident + ". "
                                      + _("Zkontrolujte prosím duplicitu."),
                         "filename": s.nazev_zkraceny,
