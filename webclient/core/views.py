@@ -283,7 +283,7 @@ def post_upload(request):
                     status=200,
                 )
         else:
-            _, file_extension = os.path.splitext(soubor.name)
+            __, file_extension = os.path.splitext(soubor.name)
             if s is None:
                 return JsonResponse(
                     {
@@ -292,10 +292,10 @@ def post_upload(request):
                     status=500,
                 )
             if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                file_name, _ = os.path.splitext(s.nazev_zkraceny)
+                file_name, __ = os.path.splitext(s.nazev_zkraceny)
                 new_name = file_name + file_extension
             elif s.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                file_name, _ = os.path.splitext(s.nazev_zkraceny)
+                file_name, __ = os.path.splitext(s.nazev_zkraceny)
                 new_name = file_name + file_extension
             else:
                 return JsonResponse(
@@ -331,8 +331,7 @@ def post_upload(request):
                     )
                 return JsonResponse(
                     {
-                        "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
+                        "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
                                      + parent_ident + ". "
                                      + _("Zkontrolujte prosím duplicitu."),
                         "filename": s.nazev_zkraceny,
