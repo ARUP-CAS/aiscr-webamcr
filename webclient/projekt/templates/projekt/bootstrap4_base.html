@@ -78,11 +78,10 @@
             <div class="form-group row">
                 <label for="jump-page" class="col-sm-3 col-form-label">{% trans "core.table.pagination.jumpToPage.label" %}</label>
                 <div class="col-sm-6 input">
-                    
                     <div class="input-group lg-3 ">
                         <input type="number" class="textinput textInput form-control" max="{{table.paginator.num_pages}}" min="1" id="jump-page"/>
                         <div class="input-group-append">
-                            <input type="submit" class="btn btn-primary " value="{% trans 'core.table.pagination.jumpToPage.button' %}"/>
+                            <input type="submit" class="btn btn-primary mt-0" value="{% trans 'core.table.pagination.jumpToPage.button' %}"/>
                         </div>
                       </div>
                 </div>
@@ -133,7 +132,7 @@
                     <div class="input-group lg-3 ">
                         <input type="number" class="textinput textInput form-control" value="{{table.paginator.per_page}}" max="500" min="10" id="per-page-num"/>
                         <div class="input-group-append">
-                            <input type="submit" class="btn btn-primary " value="{% trans 'core.table.pagination.perPage.button' %}"/>
+                            <input type="submit" class="btn btn-primary mt-0" value="{% trans 'core.table.pagination.perPage.button' %}"/>
                         </div>
                       </div>
                 </div>
