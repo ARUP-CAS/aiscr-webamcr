@@ -670,3 +670,11 @@ form {
     background-color: $gray-200
   }
 }
+
+.badge-span {
+  display: flex;
+}
+
+span.badge-span .badge {
+  flex: 0 0 auto;
+}
