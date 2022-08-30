@@ -1,6 +1,6 @@
-{% load i18n %}
+{% load i18n %0
 
-<div class="app-toolbar">
+<div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
       <a href="{% url 'pas:index' %}"><span class="material-icons">brush</span> Samostatný nález</a>
