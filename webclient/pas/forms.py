@@ -88,14 +88,14 @@ class PotvrditNalezForm(forms.ModelForm):
             "pristupnost": _("pas.form.potvrditNalez.pristupnost.tooltip"),
         }
 
-    def __init__(self, *args, readonly=False, predano_required=False, **kwargs):
+    def __init__(self, *args, readonly=False, predano_required=False, predano_hidden=False, **kwargs):
         super(PotvrditNalezForm, self).__init__(*args, **kwargs)
         self.fields["evidencni_cislo"].required = True
         self.fields["predano_organizace"].required = False
         self.fields["predano"].required = predano_required
         self.fields["pristupnost"].required = True
         self.helper = FormHelper(self)
-        if(self.instance.predano_organizace):
+        if(not predano_hidden):
             self.helper.layout = Layout(
                 Div(
                     Div("predano_organizace", css_class="col-sm-3"),

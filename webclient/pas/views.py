@@ -354,6 +354,7 @@ def edit_ulozeni(request, ident_cely):
             instance=sn,
             predano_required=predano_required,
             initial={"old_stav": sn.stav},
+            predano_hidden=True
         )
     context = {
         "object": sn,
@@ -491,7 +492,7 @@ def potvrdit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav})
+        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True)
     context = {
         "object": sn,
         "form": form,
