@@ -299,15 +299,18 @@ form {
     position: inherit;
   }
   textarea[disabled]{
-    height: $app-form-control-fix-height;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   textarea[disabled].textarea{
-    height: $app-form-control-fix-height;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   textarea.textarea.form-control{
-    height: $app-form-control-fix-height;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 
