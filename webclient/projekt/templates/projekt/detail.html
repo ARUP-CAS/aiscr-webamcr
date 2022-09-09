@@ -465,7 +465,13 @@
                 <td>{{ a.archeologicky_zaznam.pristupnost }}</td>
                 <!--td>{{ a.hlavni_typ|check_if_none }}, {{ a.vedlejsi_typ|check_if_none }}</td-->
                 <!--td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni|check_if_none }}</td-->
-                <td><div class="badge">{{ a.archeologicky_zaznam.get_stav_display }}</div></td>
+                <td>
+                  <div class="container">
+                      <span class="badge-span">
+                        <span class="badge">{{ a.archeologicky_zaznam.get_stav_display }}</span>
+                      </span>
+                  </div>
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -528,7 +534,13 @@
                 <td>{{ nalez.specifikace }}</td>
                 <td>{{ nalez.nalezce }}</td-->
                 <td>{{ nalez.datum_nalezu|date:'Y/m/d' }}</td>
-                <td><div class="badge">{{ nalez.get_stav_display }}</div></td>
+                <td>
+                  <div class="container">
+                      <span class="badge-span">
+                        <span class="badge">{{ nalez.get_stav_display }}</span>
+                      </span>
+                  </div>
+                </td>
               </tr>
             {% endfor %}
           </tbody>

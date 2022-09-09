@@ -103,7 +103,7 @@
 
   &.app-btn-in-form {
     @extend .btn-primary, .btn-sm;
-    margin-left: -0.25rem !important;
+    margin-left: 0rem !important;
   }
 }
 
@@ -299,15 +299,18 @@ form {
     position: inherit;
   }
   textarea[disabled]{
-    height: $app-form-control-fix-height;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   textarea[disabled].textarea{
-    height: $app-form-control-fix-height;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 
   textarea.textarea.form-control{
-    height: $app-form-control-fix-height;
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 
@@ -669,4 +672,12 @@ form {
   &.btn-readonly {
     background-color: $gray-200
   }
+}
+
+.badge-span {
+  display: flex;
+}
+
+span.badge-span .badge {
+  flex: 0 0 auto;
 }

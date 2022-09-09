@@ -111,7 +111,7 @@ class UzivatelSpolupraceTable(ColumnShiftTableBootstrap4):
             "td": {"class": "spoluprace"},
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
-        template_code='{% load i18n %} <button id="spoluprace-smazat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-smazat-btn" type="button" style="line-height: 1" name="button" href="{% url "pas:spoluprace_smazani" record.id %}">{% trans "Smazat" %}</button>',
+        template_name='pas/smazat_cell.html',
         exclude_from_export=True,
         orderable=False,
     )

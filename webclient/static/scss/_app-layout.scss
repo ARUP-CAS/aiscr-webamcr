@@ -95,12 +95,12 @@ table th {
 
 .dropdown-toggle {
   //height: 20px!important;
-  line-height: 1!important;
+  //line-height: 1!important;
   margin: 0px!important;
 }
 
 .app-btn-in-form {
-  height: 18px!important;
+  height: 22px!important;
   padding-top: 0!important;
   padding-bottom: 0!important;
 }
@@ -119,8 +119,7 @@ td .badge {
 }
 
 .filter-option-inner-inner {
-  height: 18px!important;
-  font-size: 0.95rem
+  font-size: 0.875rem;
 }
 
 .app-btn-in-form {
@@ -128,6 +127,9 @@ td .badge {
   font-size: 0.5rem!important;
 }
 
-#app-page-wrapper .app-toolbar {
-  margin-bottom: 0!important;
+.btn.dropdown-toggle.btn-light {
+  vertical-align: top;
+  height: 100%;
 }
+
+

@@ -1,6 +1,6 @@
 {% load i18n %}
 
-<div class="app-toolbar">
+<div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
       {% if is_3d %}
@@ -17,19 +17,19 @@
     <div class="app-right app-controls">
       <div class="btn-group app-entity-knihovna_3d" role="group">
         {% if show.vratit_link %}
-          <button id="dokument-vratit" class="btn" type="button" name="button">
+          <button id="dokument-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
             {% trans "Vrátit" %}
           </button>
         {% endif %}
         {% if show.odeslat_link %}
-        <button id="dokument-odeslat" class="btn" type="button" name="button">
+        <button id="dokument-odeslat" class="btn m-0" type="button" name="button">
             <span class="material-icons">send</span>
             {% trans "Odeslat" %}
         </button>
         {% endif %}
         {% if show.archivovat_link %}
-        <button id="dokument-archivovat" class="btn" type="button" name="button">
+        <button id="dokument-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
             {% trans "Archivovat" %}
         </button>
