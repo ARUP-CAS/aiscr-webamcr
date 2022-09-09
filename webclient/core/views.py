@@ -7,15 +7,24 @@ import unicodedata
 from string import ascii_uppercase as letters
 
 import structlog
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import is_safe_url
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
+from django_auto_logout.utils import now, seconds_until_idle_time_end
 
+from adb.models import Adb, VyskovyBod
 from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     D_STAV_ARCHIVOVANY,
     DOKUMENT_RELATION_TYPE,
-    OTHER_DOCUMENT_FILES,
-    OTHER_PROJECT_FILES,
-    PHOTO_DOCUMENTATION,
     PROJEKT_RELATION_TYPE,
     PROJEKT_STAV_ARCHIVOVANY,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
@@ -30,30 +39,17 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_SMAZAN,
 )
-from core.models import Soubor, get_upload_to
+from core.models import Soubor
 from core.utils import (
     calculate_crc_32,
     get_mime_type,
     get_multi_transform_towgs84,
     get_transform_towgs84,
 )
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from django.utils.http import is_safe_url
-from django.utils.translation import gettext as _
-from django.views.decorators.http import require_http_methods
-from django_auto_logout.utils import now, seconds_until_idle_time_end
 from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
-from komponenta.models import Komponenta
-from adb.models import Adb, VyskovyBod
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -188,6 +184,7 @@ def upload_file_samostatny_nalez(request, ident_cely):
 @require_http_methods(["POST"])
 def post_upload(request):
     update = "fileID" in request.POST
+    s = None
     if not update:
         logger.debug("Uploading file to object: " + request.POST["objectID"])
         projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
@@ -286,10 +283,20 @@ def post_upload(request):
                     status=200,
                 )
         else:
+            __, file_extension = os.path.splitext(soubor.name)
+            if s is None:
+                return JsonResponse(
+                    {
+                        "error": f"Chyba při zpracování souboru"
+                    },
+                    status=500,
+                )
             if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                new_name = s.nazev_zkraceny
+                file_name, __ = os.path.splitext(s.nazev_zkraceny)
+                new_name = file_name + file_extension
             elif s.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                new_name = s.nazev_zkraceny
+                file_name, __ = os.path.splitext(s.nazev_zkraceny)
+                new_name = file_name + file_extension
             else:
                 return JsonResponse(
                     {
@@ -298,6 +305,7 @@ def post_upload(request):
                     status=500,
                 )
             name_without_checksum = soubor.name
+            mimetype = get_mime_type(soubor.name)
             soubor.name = checksum + "_" + new_name
             s.nazev = checksum + "_" + new_name
             logger_s.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
@@ -305,6 +313,7 @@ def post_upload(request):
             s.nazev_zkraceny = new_name
             s.path = soubor
             s.size_bytes = soubor.size
+            s.mimetype = mimetype
             s.save()
             s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
 
@@ -322,8 +331,7 @@ def post_upload(request):
                     )
                 return JsonResponse(
                     {
-                        "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
+                        "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
                                      + parent_ident + ". "
                                      + _("Zkontrolujte prosím duplicitu."),
                         "filename": s.nazev_zkraceny,

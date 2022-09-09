@@ -12,9 +12,8 @@
   {% if metadata_form %}
     {% crispy metadata_form %}
   {% endif %}
-  
+
   <div class="app-entity-historie app-entity-{{entity}} app-table-list-container">
-    
     <div class="app-toolbar mb-0">
       <div class="app-left">
         <div class="app-entity-title">
@@ -120,8 +119,8 @@
       </div>
     </form>
     {% render_table table 'projekt/bootstrap4.html' %}
+  <button type="button" class="btn btn-secondary" style="width: 55px;" onclick="goBack();">{% trans "Zpět" %}</button>
   </div>
-    <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
 {% endblock %}
 
 {% block script %}
