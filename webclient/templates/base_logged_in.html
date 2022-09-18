@@ -5,6 +5,15 @@
 {% load l10n %}
 {% load template_tags%}
 
+{% block infobar%}
+{% get_maintenance as action %}
+{% if action %}
+<div class="maintenance">
+  <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
+</div>
+{% endif %}
+{% endblock%}
+
 {% block sidebar %}
   <!-- {% compress css %}
     <link type="text/x-scss" href="{% static '_app-sidebar.scss' %}" rel="stylesheet" media="screen">

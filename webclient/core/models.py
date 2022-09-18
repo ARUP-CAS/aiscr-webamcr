@@ -8,6 +8,7 @@ from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
 from PyPDF2 import PdfFileReader
 from PIL import Image
+from django.utils.translation import gettext as _
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
@@ -73,7 +74,7 @@ class Soubor(models.Model):
         on_delete=models.DO_NOTHING,
         db_column="historie",
         related_name="soubor_historie",
-        null=True
+        null=True,
     )
     path = models.FileField(upload_to=get_upload_to, default="empty")
 
@@ -135,3 +136,15 @@ class ProjektSekvence(models.Model):
 
     class Meta:
         db_table = "projekt_sekvence"
+
+
+class OdstavkaSystemu(models.Model):
+    info_od = models.DateField(_("model.odstavka.infoOd"))
+    datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
+    cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
+    text_en = models.TextField(_("model.odstavka.textEn"))
+    text_cs = models.TextField(_("model.odstavka.textcz"))
+
+    class Meta:
+        db_table = "odstavky_systemu"
+        verbose_name = _("model.odstavka.modelTitle")

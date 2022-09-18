@@ -74,6 +74,7 @@ vol/web/media/soubory
 
 #jnihnat - local changes
 backup_file_db_v4.tar
+backup_file_db_v5.tar
 docker-compose-db-yml
 Dockerfile-DB
 scripts/restore_database.sh
