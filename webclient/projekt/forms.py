@@ -41,7 +41,7 @@ class CreateProjektForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "lokalizace": forms.TextInput(),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
             "hlavni_katastr": forms.TextInput(
