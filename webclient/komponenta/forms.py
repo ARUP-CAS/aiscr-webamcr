@@ -25,7 +25,7 @@ class CreateKomponentaForm(forms.ModelForm):
         }
 
         widgets = {
-            "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "poznamka": forms.TextInput(),
             "presna_datace": forms.TextInput(),
             "jistota": forms.Select(choices=[(False, _("Ne")),(True, _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
             "aktivity": forms.SelectMultiple(

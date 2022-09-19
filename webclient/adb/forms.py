@@ -45,7 +45,7 @@ class CreateADBForm(forms.ModelForm):
             "cislo_popisne": forms.TextInput(),
             "parcelni_cislo": forms.TextInput(),
             "stratigraficke_jednotky": forms.TextInput(),
-            "poznamka": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "poznamka": forms.TextInput(),
             "autor_popisu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -184,7 +184,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             }
 
             widgets = {
-                "ident_cely": forms.Textarea(attrs={"rows": 1, "cols": 20}),
+                "ident_cely": forms.TextInput(),
             }
             help_texts = {
                 "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),

@@ -107,8 +107,8 @@ class OsobaForm(forms.ModelForm):
             # "rodne_prijmeni",
         )
         widgets = {
-            "jmeno": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "jmeno": forms.TextInput(),
+            "prijmeni": forms.TextInput(),
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
