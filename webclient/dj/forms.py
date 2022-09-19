@@ -60,7 +60,7 @@ class CreateDJForm(forms.ModelForm):
         }
 
         widgets = {
-            "nazev": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "nazev": forms.TextInput(),
             "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
             "negativni_jednotka": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
         }

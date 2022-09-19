@@ -97,7 +97,7 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
-            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "uzivatelske_oznaceni": forms.TextInput(),
             "pristupnost":forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"},)
         }
         help_texts = {
@@ -206,10 +206,10 @@ class CreateAkceForm(forms.ModelForm):
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "lokalizace_okolnosti": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "ulozeni_nalezu": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "lokalizace_okolnosti": forms.TextInput(),
+            "ulozeni_nalezu":  forms.TextInput(),
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
-            "ulozeni_dokumentace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "ulozeni_dokumentace":  forms.TextInput(),
             "je_nz": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
             "specifikace_data": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"},)
         }

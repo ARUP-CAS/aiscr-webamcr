@@ -41,9 +41,9 @@ class CreateProjektForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "lokalizace": forms.TextInput(),
+            "parcelni_cislo": forms.TextInput(),
+            "oznaceni_stavby": forms.TextInput(),
             "hlavni_katastr": forms.TextInput(
                 attrs={"readonly": "readonly"}
             ),
@@ -186,12 +186,12 @@ class EditProjektForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "parcelni_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "lokalizace": forms.TextInput(),
+            "parcelni_cislo": forms.TextInput(),
+            "oznaceni_stavby": forms.TextInput(),
+            "kulturni_pamatka_cislo": forms.TextInput(),
+            "kulturni_pamatka_popis": forms.TextInput(),
+            "uzivatelske_oznaceni": forms.TextInput(),
             "hlavni_katastr": forms.TextInput(
                 attrs=
                     {"readonly": "readonly"}
@@ -439,9 +439,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
             "uzivatelske_oznaceni",
         )
         widgets = {
-            "kulturni_pamatka_popis": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "kulturni_pamatka_cislo": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "uzivatelske_oznaceni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "kulturni_pamatka_popis": forms.TextInput(),
+            "kulturni_pamatka_cislo": forms.TextInput(),
+            "uzivatelske_oznaceni": forms.TextInput(),
             "vedouci_projektu": forms.Select(
                 attrs={"class": "selectpicker required-next", "data-live-search": "true"}
             ),

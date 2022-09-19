@@ -168,8 +168,7 @@
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Uživatelské označení" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="2" placeholder="{{ zaznam.uzivatelske_oznaceni|check_if_none }}"
-                        readonly>{{ zaznam.uzivatelske_oznaceni|check_if_none }}</textarea>
+              <input class="form-control" type="text" value="{{ zaznam.uzivatelske_oznaceni|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
@@ -209,8 +208,7 @@
           <div class="col-sm-12">
             <div class="form-group">
               <label>{% trans "Lokalizace/okolnosti" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="1"
-                        placeholder="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}</textarea>
+              <input class="form-control" type="text" value="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
@@ -223,15 +221,13 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení nálezu" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="1" placeholder="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}"
-                        readonly>{{ zaznam.akce.ulozeni_nalezu|check_if_none }}</textarea>
+              <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Uložení dokumentace" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="1" placeholder="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}"
-                        readonly>{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}</textarea>
+              <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
