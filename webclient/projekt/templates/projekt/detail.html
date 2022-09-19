@@ -217,7 +217,7 @@
               <div class="col-sm-12">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Lokalizace" %}</label>
-                  <textarea class="form-control" value="{{ projekt.lokalizace|check_if_none }}" rows="1" readonly>{{ projekt.lokalizace|check_if_none }}</textarea>
+                  <input class="form-control" type="text" value="{{ projekt.lokalizace|check_if_none }}" readonly>
                 </div>
               </div>
               <div class="col-sm-12">
