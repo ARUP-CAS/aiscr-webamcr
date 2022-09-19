@@ -60,9 +60,9 @@ class OznamovatelForm(forms.ModelForm):
         model = Oznamovatel
         fields = ("oznamovatel", "odpovedna_osoba", "telefon", "email", "adresa")
         widgets = {
-            "oznamovatel": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "odpovedna_osoba": forms.Textarea(attrs={"rows": 1, "cols": 40}),
-            "adresa": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "oznamovatel": forms.TextInput(),
+            "odpovedna_osoba": forms.TextInput(),
+            "adresa": forms.TextInput(),
         }
         labels = {
             "oznamovatel": _("Oznamovatel"),
@@ -157,9 +157,9 @@ class ProjektOznameniForm(forms.ModelForm):
         )
         widgets = {
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "lokalizace": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "lokalizace": forms.TextInput(),
             "parcelni_cislo": forms.Textarea(attrs={"rows": 2, "cols": 40}),
-            "oznaceni_stavby": forms.Textarea(attrs={"rows": 1, "cols": 40}),
+            "oznaceni_stavby": forms.TextInput(),
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),

@@ -132,4 +132,12 @@ td .badge {
   height: 100%;
 }
 
+.select2-selection__choice {
+  margin-top: 0.125rem!important;
+  margin-bottom: 0.25rem!important;
+}
 
+.select2-selection__rendered {
+  height: 1.5rem!important;
+  overflow: auto!important;
+}

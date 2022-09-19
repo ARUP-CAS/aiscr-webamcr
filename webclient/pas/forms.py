@@ -168,6 +168,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             ),
             "presna_datace": forms.TextInput(),
             "pocet": forms.TextInput(),
+            "poznamka": forms.TextInput(),
         }
         labels = {
             "nalezce": _("Nálezce"),

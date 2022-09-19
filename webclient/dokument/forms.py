@@ -102,6 +102,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "cislo_objektu": forms.TextInput(),
             "region": forms.TextInput(),
             "udalost": forms.TextInput(),
+            "odkaz": forms.TextInput(),
         }
         labels = {
             "datum_vzniku": _("Datum vzniku"),
@@ -190,7 +191,6 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                     attrs={"class": "selectpicker", "data-live-search": "true"}
                 ),
             )
-        self.fields["odkaz"].widget.attrs["rows"] = 1
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
         self.fields["region"].widget.attrs["rows"] = 1
@@ -296,6 +296,8 @@ class EditDokumentForm(forms.ModelForm):
             ),
             "oznaceni_originalu": forms.TextInput(),
             "licence": forms.TextInput(),
+            "popis": forms.TextInput(),
+            "poznamka": forms.TextInput(),
         }
         labels = {
             "organizace": _("Organizace"),
@@ -433,6 +435,8 @@ class CreateModelDokumentForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
             "oznaceni_originalu": forms.TextInput(),
+            "popis": forms.TextInput(),
+            "poznamka": forms.TextInput(),
         }
         labels = {
             "typ_dokumentu": _("Typ dokumentu"),
@@ -521,6 +525,7 @@ class CreateModelExtraDataForm(forms.ModelForm):
             ),
             "region": forms.TextInput(),
             "duveryhodnost": forms.NumberInput(attrs={"max": "100", "min": "0"}),
+            "odkaz": forms.TextInput()
         }
         labels = {
             "format": _("Formát"),
@@ -545,7 +550,6 @@ class CreateModelExtraDataForm(forms.ModelForm):
         self, *args, readonly=False, required=None, required_next=None, **kwargs
     ):
         super(CreateModelExtraDataForm, self).__init__(*args, **kwargs)
-        self.fields["odkaz"].widget.attrs["rows"] = 1
         # self.fields["format"].required = True
         # Disabled hodnoty se neposilaji na server
         self.fields["vyska"].widget.attrs["disabled"] = "disabled"
