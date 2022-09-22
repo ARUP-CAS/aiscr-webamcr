@@ -81,7 +81,11 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "rosetta",
     "django_cron",
+<<<<<<< HEAD
     "lokalita",
+=======
+    "bs4",
+>>>>>>> 536c6d1... Potrebne upravy podle pozadovanych zmen.
 ]
 
 MIDDLEWARE = [

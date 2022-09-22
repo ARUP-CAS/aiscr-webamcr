@@ -5,9 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-production
+    container_name: web
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
+      - nginx_data:/vol/web/nginx/data
     networks:
       - aiscr-webamcr_reverse-proxy
     ports:
@@ -17,13 +19,15 @@ services:
     container_name: memcached
     image: memcached:latest
     ports:
-        - "11211:11211"
+      - "11211:11211"
     networks:
       - aiscr-webamcr_reverse-proxy
 
 volumes:
   static_data:
   locale_data:
+  nginx_data:
+
 
 networks:
   aiscr-webamcr_reverse-proxy:

@@ -6,6 +6,7 @@ services:
       context: ./proxy
     volumes:
       - static_data:/vol/static
+      - nginx_data:/vol/nginx/data
     ports:
       - "8080:8080"
     networks:
@@ -14,6 +15,8 @@ services:
 volumes:
   static_data:
   locale_data:
+  nginx_data:
+
 
 networks:
   reverse-proxy:
