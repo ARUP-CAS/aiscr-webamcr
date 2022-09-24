@@ -25,7 +25,7 @@ register = template.Library()
 # to get message constant for auto logout
 @register.simple_tag
 def get_message(message):
-    return mark_safe("'%s'" % str(getattr(mc, message)))
+    return mark_safe("'%s'" % str(getattr(mc, message, "Message constant not found")))
 
 
 class QuerystringNodeMulti(Node):
