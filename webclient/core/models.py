@@ -144,6 +144,7 @@ class OdstavkaSystemu(models.Model):
     cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
     text_en = models.TextField(_("model.odstavka.textEn"))
     text_cs = models.TextField(_("model.odstavka.textcz"))
+    status = models.BooleanField(_("model.odstavka.status"), default=True)
 
     class Meta:
         db_table = "odstavky_systemu"

@@ -142,7 +142,14 @@ class OdstavkaSystemuForm(forms.ModelForm):
 
     class Meta:
         model = OdstavkaSystemu
-        fields = ("info_od", "datum_odstavky", "cas_odstavky", "text_cs", "text_en")
+        fields = (
+            "info_od",
+            "datum_odstavky",
+            "cas_odstavky",
+            "status",
+            "text_cs",
+            "text_en",
+        )
 
     def __init__(self, *args, **kwargs):
         super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)

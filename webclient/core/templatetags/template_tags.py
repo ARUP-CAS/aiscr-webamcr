@@ -1,4 +1,5 @@
-from datetime import datetime, date
+from asyncio.log import logger
+from datetime import datetime, date, timedelta
 from typing import Dict
 
 from pyparsing import empty
@@ -17,6 +18,7 @@ from django_tables2.templatetags.django_tables2 import (
 )
 
 from core.models import OdstavkaSystemu
+from django.core.cache import cache
 
 register = template.Library()
 
@@ -116,13 +118,41 @@ def querystring_multi(parser, token):
 # To get info about maintenance
 @register.simple_tag
 def get_maintenance():
-    odstavka = OdstavkaSystemu.objects.filter(
-        info_od__lte=datetime.today(), datum_odstavky__gte=datetime.today()
-    )
-    if odstavka:
-        odstavka = odstavka.order_by("-datum_odstavky", "-cas_odstavky")
-        if odstavka[0].datum_odstavky != date.today():
+    last_maintenance = cache.get("last_maintenance")
+    if last_maintenance is None:
+        odstavka = OdstavkaSystemu.objects.filter(
+            info_od__lte=datetime.today(),
+            datum_odstavky__gte=datetime.today(),
+            status=True,
+        ).order_by("-datum_odstavky", "-cas_odstavky")
+        if odstavka:
+            last_maintenance = odstavka[0]
+            cache.set("last_maintenance", last_maintenance, 600)
+    else:
+        if last_maintenance.datum_odstavky != date.today():
             return True
-        elif odstavka[0].cas_odstavky > datetime.now().time():
+        elif last_maintenance.cas_odstavky > datetime.now().time():
+            return True
+    return False
+
+
+@register.simple_tag
+def get_maintenance_login():
+    last_maintenance = cache.get("last_maintenance")
+    if last_maintenance is None:
+        odstavka = OdstavkaSystemu.objects.filter(
+            info_od__lte=datetime.today(),
+            datum_odstavky__gte=datetime.today(),
+            status=True,
+        ).order_by("-datum_odstavky", "-cas_odstavky")
+        if odstavka:
+            last_maintenance = odstavka[0]
+            cache.set("last_maintenance", last_maintenance, 600)
+    else:
+        if (
+            last_maintenance.datum_odstavky == date.today()
+            and last_maintenance.cas_odstavky
+            < (datetime.now() + timedelta(hours=1)).time()
+        ):
             return True
     return False

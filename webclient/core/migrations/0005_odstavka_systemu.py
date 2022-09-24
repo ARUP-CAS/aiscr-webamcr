@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
                 ("cas_odstavky", models.TimeField()),
                 ("text_en", models.TextField()),
                 ("text_cs", models.TextField()),
+                ("status", models.BooleanField()),
             ],
             options={
                 "db_table": "odstavky_systemu",

@@ -8,12 +8,20 @@ import logging
 import os
 from datetime import datetime, date
 from bs4 import BeautifulSoup
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
 
 class OdstavkaSystemuAdmin(admin.ModelAdmin):
-    list_display = ("info_od", "datum_odstavky", "cas_odstavky", "text_cs", "text_en")
+    list_display = (
+        "info_od",
+        "datum_odstavky",
+        "cas_odstavky",
+        "status",
+        "text_cs",
+        "text_en",
+    )
     form = OdstavkaSystemuForm
 
     def save_model(self, request, obj, form, change):
@@ -29,18 +37,14 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_filepath, ext = os.path.splitext(path)
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
+        cache.delete("last_maintenance")
 
         super().save_model(request, obj, form, change)
 
     def has_add_permission(*args, **kwargs):
-        odstavka = OdstavkaSystemu.objects.filter(
-            info_od__lte=datetime.today(), datum_odstavky__gte=datetime.today()
-        )
+        odstavka = OdstavkaSystemu.objects.filter(status=True)
         if odstavka:
-            if odstavka[0].datum_odstavky != date.today():
-                return False
-            elif odstavka[0].cas_odstavky > datetime.now().time():
-                return False
+            return False
         return True
 
     def has_delete_permission(request, obj=None, *args):
@@ -67,7 +71,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         ) as fp:
             soup = BeautifulSoup(fp)
             soup.find("h1").string.replace_with(
-                form.cleaned_data["error_text_oznam" + language]
+                form.cleaned_data["error_text_oznam_" + language]
             )
         with open(
             "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html", "w"

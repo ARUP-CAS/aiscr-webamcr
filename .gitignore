@@ -71,6 +71,7 @@ docs/_build/
 vol/web/media
 vol/web/media/emails
 vol/web/media/soubory
+vol/web
 
 #jnihnat - local changes
 backup_file_db_v4.tar

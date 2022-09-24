@@ -12,7 +12,7 @@
     flex-direction: column;
     min-height: calc(100vh - (#{$spacer-4} * 2));
     justify-content: center;
-  
+
     .app-logo {
       @extend .mb-4, .d-flex;
       width: 100%;
@@ -20,7 +20,12 @@
       margin-left: auto;
       margin-right: auto;
     }
-  
+
+    h1 {
+      color: white;
+      text-align: center;
+    }
+
     .card {
       @extend .border-0;
       text-align: center;
@@ -28,14 +33,17 @@
       h1 {
         @extend .app-heading-thin;
       }
-  
+
       form {
         ul {
           @extend .text-left;
         }
-  
+
         input {
-          &[type="text"], &[type="password"], &[type="email"] {
+
+          &[type="text"],
+          &[type="password"],
+          &[type="email"] {
             @extend .form-control;
           }
         }
@@ -57,17 +65,17 @@
             }
           }
         }
-  
+
         .app-flags {
           a {
             text-decoration: unset;
-  
-            .app-flag {          
+
+            .app-flag {
               &:not(:hover) {
                 @extend .app-flag-inactive;
               }
             }
-  
+
             &:first-child {
               margin-right: .5rem;
             }
@@ -75,49 +83,49 @@
         }
       }
     }
-  
+
     .app-col-desc {
       .app-inner {
         margin-top: 30px;
-  
+
         @media #{$gt-md} {
           height: 100%;
           border-left: 1px solid $app-login-border-color;
           padding: $spacer-3 $spacer-4;
           margin-top: 0;
         }
-  
+
         hr {
-          border-color: $app-login-border-color; 
+          border-color: $app-login-border-color;
         }
-  
+
         .card {
           @extend .bg-transparent, .w-100;
           color: $app-login-desc-color;
           text-align: left;
-  
+
           &.app-news {
             max-height: $app-login-news-max-height;
             overflow-y: auto;
           }
-  
+
           .card-body {
             @extend .p-0, .pr-3;
-  
+
             h3 {
               @extend .app-heading-thin;
               margin-top: 0;
             }
-  
+
             p {
               &:last-child {
                 margin-bottom: 5px;
               }
-  
+
               .app-pipe {
                 border-color: rgba($app-login-desc-color, .4);
               }
-    
+
               span {
                 &:not(.app-pipe) {
                   font-weight: normal;
