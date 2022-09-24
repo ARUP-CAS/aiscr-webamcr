@@ -5,15 +5,18 @@ from historie.models import Historie
 from historie.tables import HistorieTable
 from core.forms import SouborMetadataForm
 from core.models import Soubor
-from django_tables2.export import ExportMixin
-from projekt.models import Projekt
 
-class HistorieListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, ListView):
+from projekt.models import Projekt
+from core.views import ExportMixinDate
+
+
+class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
+    export_name = "export_historie_"
 
-    def get_context_data(self,typ=None, **kwargs):
+    def get_context_data(self, typ=None, **kwargs):
         context = super().get_context_data(**kwargs)
         context["export_formats"] = ["csv", "json", "xlsx"]
         return context
@@ -75,7 +78,9 @@ class SamostatnyNalezHistorieListView(HistorieListView):
         ).order_by("-datum_zmeny")
 
     def get_context_data(self, **kwargs):
-        context = super(SamostatnyNalezHistorieListView, self).get_context_data(**kwargs)
+        context = super(SamostatnyNalezHistorieListView, self).get_context_data(
+            **kwargs
+        )
         context["typ"] = "samostatny_nalez"
         context["entity"] = context["typ"]
         context["ident_cely"] = self.kwargs["ident_cely"]
@@ -95,6 +100,7 @@ class SpolupraceHistorieListView(HistorieListView):
         context["entity"] = "samostatny_nalez"
         return context
 
+
 class SouborHistorieListView(HistorieListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -111,6 +117,6 @@ class SouborHistorieListView(HistorieListView):
 
     def get_queryset(self):
         soubor_id = self.kwargs["soubor_id"]
-        return self.model.objects.filter(
-            vazba__soubor_historie=soubor_id
-        ).order_by("-datum_zmeny")
+        return self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by(
+            "-datum_zmeny"
+        )

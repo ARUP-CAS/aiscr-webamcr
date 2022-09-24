@@ -50,6 +50,8 @@ from dokument.models import Dokument
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
+from django_tables2.export import ExportMixin
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -85,7 +87,7 @@ def delete_file(request, pk):
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("Byl smazán soubor: " + str(items_deleted))
-            if not request.POST.get("dropzone",False):
+            if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")
         if next_url:
@@ -159,7 +161,7 @@ def upload_file_dokument(request, ident_cely):
 @require_http_methods(["GET"])
 def update_file(request, typ_vazby, file_id):
     ident_cely = ""
-    back_url = request.GET.get('next')
+    back_url = request.GET.get("next")
     soubor = get_object_or_404(Soubor, id=file_id)
     return render(
         request,
@@ -274,11 +276,14 @@ def post_upload(request):
                     )
                 return JsonResponse(
                     {
-                        "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
-                        + parent_ident + ". "
+                        "duplicate": _(
+                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                        )
+                        + parent_ident
+                        + ". "
                         + _("Zkontrolujte prosím duplicitu."),
-                        "filename": s.nazev_zkraceny, 
-                        "id": s.pk
+                        "filename": s.nazev_zkraceny,
+                        "id": s.pk,
                     },
                     status=200,
                 )
@@ -286,9 +291,7 @@ def post_upload(request):
             __, file_extension = os.path.splitext(soubor.name)
             if s is None:
                 return JsonResponse(
-                    {
-                        "error": f"Chyba při zpracování souboru"
-                    },
+                    {"error": f"Chyba při zpracování souboru"},
                     status=500,
                 )
             if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
@@ -299,9 +302,7 @@ def post_upload(request):
                 new_name = file_name + file_extension
             else:
                 return JsonResponse(
-                    {
-                        "error": f"Chybí vazba souboru"
-                    },
+                    {"error": f"Chybí vazba souboru"},
                     status=500,
                 )
             name_without_checksum = soubor.name
@@ -317,7 +318,11 @@ def post_upload(request):
             s.save()
             s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
 
-            duplikat = Soubor.objects.filter(nazev__icontains=checksum).filter(~Q(id=s.id)).order_by("pk")
+            duplikat = (
+                Soubor.objects.filter(nazev__icontains=checksum)
+                .filter(~Q(id=s.id))
+                .order_by("pk")
+            )
             if duplikat.count() > 0:
                 parent_ident = ""
                 if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
@@ -331,16 +336,21 @@ def post_upload(request):
                     )
                 return JsonResponse(
                     {
-                        "duplicate": _("Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu ")
-                                     + parent_ident + ". "
-                                     + _("Zkontrolujte prosím duplicitu."),
+                        "duplicate": _(
+                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                        )
+                        + parent_ident
+                        + ". "
+                        + _("Zkontrolujte prosím duplicitu."),
                         "filename": s.nazev_zkraceny,
-                        "id": s.pk
+                        "id": s.pk,
                     },
                     status=200,
                 )
             else:
-                return JsonResponse({"filename": s.nazev_zkraceny, "id": s.pk}, status=200)
+                return JsonResponse(
+                    {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
+                )
     else:
         logger.warning("No file attached to the announcement form.")
 
@@ -348,9 +358,7 @@ def post_upload(request):
 
 
 def get_dokument_soubor_name(dokument, filename, add_to_index=1):
-    my_regex = (
-        r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
-    )
+    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
     files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
     logger.debug(files)
     if not files.exists():
@@ -377,14 +385,22 @@ def get_dokument_soubor_name(dokument, filename, add_to_index=1):
                 return False
 
         else:
-            return dokument.ident_cely.replace("-", "") + "A" + os.path.splitext(filename)[1]
+            return (
+                dokument.ident_cely.replace("-", "")
+                + "A"
+                + os.path.splitext(filename)[1]
+            )
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
-    my_regex = r"^\d+_" + re.escape(find.ident_cely.replace("-", "")) + r"(F\d{2}\.\w+)$"
+    my_regex = (
+        r"^\d+_" + re.escape(find.ident_cely.replace("-", "")) + r"(F\d{2}\.\w+)$"
+    )
     files = find.soubory.soubory.all().filter(nazev__iregex=my_regex)
     if not files.exists():
-        return (find.ident_cely.replace("-", "") + "F01") + os.path.splitext(filename)[1]
+        return (find.ident_cely.replace("-", "") + "F01") + os.path.splitext(filename)[
+            1
+        ]
     else:
         list_last_char = []
         for file in files:
@@ -529,29 +545,48 @@ def redirect_ident_view(request, ident_cely):
         logger.debug("regex match for dokumentacni jednotka with ident %s", ident_cely)
         response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])
         response.set_cookie("show-form", f"detail_dj_form_{ident_cely}", max_age=1000)
-        response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{ident_cely.replace('-', '_')}", max_age=1000)
+        response.set_cookie(
+            "set-active",
+            f"el_div_dokumentacni_jednotka_{ident_cely.replace('-', '_')}",
+            max_age=1000,
+        )
         return response
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-K\d{3}", ident_cely)):
-        logger.debug("regex match for Komponenta on dokumentacni jednotka with ident %s", ident_cely)
+        logger.debug(
+            "regex match for Komponenta on dokumentacni jednotka with ident %s",
+            ident_cely,
+        )
         response = redirect("arch_z:detail", ident_cely=ident_cely[:-5])
-        response.set_cookie("show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000)
-        response.set_cookie("set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000)
+        response.set_cookie(
+            "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
+        )
+        response.set_cookie(
+            "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
+        )
         return response
     if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
         logger.debug("regex match for ADB with ident %s", ident_cely)
-        adb = get_object_or_404(Adb,ident_cely=ident_cely)
+        adb = get_object_or_404(Adb, ident_cely=ident_cely)
         dj_ident = adb.dokumentacni_jednotka.ident_cely
         response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
         response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}", max_age=1000)
+        response.set_cookie(
+            "set-active",
+            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
+            max_age=1000,
+        )
         return response
     if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
         logger.debug("regex match for Vyskovy bod with ident %s", ident_cely)
-        vb = get_object_or_404(VyskovyBod,ident_cely=ident_cely)
+        vb = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
         dj_ident = vb.adb.dokumentacni_jednotka.ident_cely
         response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
         response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie("set-active", f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}", max_age=1000)
+        response.set_cookie(
+            "set-active",
+            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
+            max_age=1000,
+        )
         return response
     if bool(re.fullmatch("(P|N)-\d{4}-\d{6}", ident_cely)):
         logger.debug("regex match for PIAN with ident %s", ident_cely)
@@ -559,13 +594,21 @@ def redirect_ident_view(request, ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
         logger.debug("regex match for dokument 3D with ident %s", ident_cely)
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)):
-        logger.debug("regex match for obsah/cast dokumentu 3D with ident %s", ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
+        re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)
+    ):
+        logger.debug(
+            "regex match for obsah/cast dokumentu 3D with ident %s", ident_cely
+        )
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(
+        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)
+    ):
         logger.debug("regex match for dokument with ident %s", ident_cely)
         return redirect("dokument:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
+        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)
+    ):
         logger.debug("regex match for obsah/cast dokumentu with ident %s", ident_cely)
         return redirect("dokument:detail", ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
@@ -633,3 +676,9 @@ def tr_mwgs84(request):
         )
     else:
         return JsonResponse({"points": None}, status=200)
+
+
+class ExportMixinDate(ExportMixin):
+    def get_export_filename(self, export_format):
+        now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        return "{}{}.{}".format(self.export_name, now, export_format)

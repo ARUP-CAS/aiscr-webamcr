@@ -60,7 +60,7 @@ from core.utils import (
     get_num_projects_from_envelope,
     get_projects_from_envelope,
 )
-from core.views import check_stav_changed
+from core.views import ExportMixinDate, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -75,7 +75,6 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from django_tables2.export import ExportMixin
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
@@ -425,12 +424,15 @@ def odebrat_sloupec_z_vychozich(request):
     return HttpResponse("Odebráno")
 
 
-class ProjektListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
+class ProjektListView(
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
+):
     table_class = ProjektTable
     model = Projekt
     template_name = "projekt/projekt_list.html"
     filterset_class = ProjektFilter
     paginate_by = 100
+    export_name = "export_projekty_"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -38,7 +38,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.views import check_stav_changed
+from core.views import ExportMixinDate, check_stav_changed
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -54,7 +54,6 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from django_tables2.export import ExportMixin
 from dokument.filters import DokumentFilter
 from dokument.forms import (
     CoordinatesDokumentForm,
@@ -288,12 +287,15 @@ def detail_model_3D(request, ident_cely):
     return render(request, "dokument/detail_model_3D.html", context)
 
 
-class DokumentListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
+class DokumentListView(
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
+):
     table_class = DokumentTable
     model = Dokument
     template_name = "dokument/dokument_list.html"
     filterset_class = DokumentFilter
     paginate_by = 100
+    export_name = "export_dokumenty_"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
