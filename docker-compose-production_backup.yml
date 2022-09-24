@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile-production
+    volumes:
+      - static_data:/vol/web
+      - locale_data:/vol/web/locale
+
+  proxy:
+    build:
+      context: ./proxy
+    volumes:
+      - static_data:/vol/static
+    ports:
+      - "8080:8080"
+    depends_on:
+      - web
+  memcached:
+    container_name: memcached
+    image: memcached:latest
+    ports:
+        - "11211:11211"
+
+volumes:
+  static_data:
+  locale_data:
