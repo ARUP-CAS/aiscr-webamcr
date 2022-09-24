@@ -40,7 +40,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import get_cadastre_from_point
-from core.views import check_stav_changed
+from core.views import ExportMixinDate, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -53,7 +53,6 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from django_tables2.export import ExportMixin
 from dokument.forms import CoordinatesDokumentForm
 from heslar.hesla import PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import Heslar
@@ -338,7 +337,9 @@ def edit_ulozeni(request, ident_cely):
         if form.is_valid():
             logger.debug("PAS Form is valid:2")
             formObj = form.save(commit=False)
-            formObj.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
+            formObj.predano_organizace = get_object_or_404(
+                Organizace, id=sn.projekt.organizace_id
+            )
             formObj.save()
             if form.changed_data:
                 logger.debug(form.changed_data)
@@ -354,7 +355,7 @@ def edit_ulozeni(request, ident_cely):
             instance=sn,
             predano_required=predano_required,
             initial={"old_stav": sn.stav},
-            predano_hidden=True
+            predano_hidden=True,
         )
     context = {
         "object": sn,
@@ -482,7 +483,9 @@ def potvrdit(request, ident_cely):
         if form.is_valid():
             formObj = form.save(commit=False)
             formObj.set_potvrzeny(request.user)
-            formObj.predano_organizace = get_object_or_404(Organizace, id=sn.projekt.organizace_id)
+            formObj.predano_organizace = get_object_or_404(
+                Organizace, id=sn.projekt.organizace_id
+            )
             formObj.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_POTVRZEN)
             return JsonResponse(
@@ -492,7 +495,9 @@ def potvrdit(request, ident_cely):
             logger.debug("The form is not valid")
             logger.debug(form.errors)
     else:
-        form = PotvrditNalezForm(instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True)
+        form = PotvrditNalezForm(
+            instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True
+        )
     context = {
         "object": sn,
         "form": form,
@@ -537,13 +542,14 @@ def archivovat(request, ident_cely):
 
 
 class SamostatnyNalezListView(
-    ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
 ):
     table_class = SamostatnyNalezTable
     model = SamostatnyNalez
     template_name = "pas/samostatny_nalez_list.html"
     filterset_class = SamostatnyNalezFilter
     paginate_by = 100
+    export_name = "export_samostatny-nalez_"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -680,13 +686,14 @@ def zadost(request):
 
 
 class UzivatelSpolupraceListView(
-    ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
 ):
     table_class = UzivatelSpolupraceTable
     model = UzivatelSpoluprace
     template_name = "pas/uzivatel_spoluprace_list.html"
     filterset_class = UzivatelSpolupraceFilter
     paginate_by = 100
+    export_name = "export_spoluprace_"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
