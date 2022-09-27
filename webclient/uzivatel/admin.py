@@ -28,7 +28,8 @@ class CustomUserAdmin(UserAdmin):
                     "hlavni_role",
                     "first_name",
                     "last_name",
-                    "telefon"
+                    "telefon",
+                    "groups"
                 )
             },
         ),
@@ -50,7 +51,8 @@ class CustomUserAdmin(UserAdmin):
                     "hlavni_role",
                     "first_name",
                     "last_name",
-                    "telefon"
+                    "telefon",
+                    "groups"
                 ),
             },
         ),
