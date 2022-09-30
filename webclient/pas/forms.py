@@ -209,7 +209,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     ):
         projekt_disabed = kwargs.pop("projekt_disabled", False)
         super(CreateSamostatnyNalezForm, self).__init__(*args, **kwargs)
-        self.fields["lokalizace"].widget.attrs["rows"] = 1
+        self.fields["lokalizace"].widget.attrs["rows"] = 2
         self.fields["pocet"].widget.attrs["rows"] = 1
         self.fields["presna_datace"].widget.attrs["rows"] = 1
         self.fields["poznamka"].widget.attrs["rows"] = 1
