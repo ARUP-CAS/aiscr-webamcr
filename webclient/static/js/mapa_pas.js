@@ -2,7 +2,7 @@ var global_map_can_edit = true;
 var point_global_WGS84 = [0, 0];
 var point_global_JTSK = [0, 0];
 var lock = false;
-var GLOBAL_DEBUG_TEXT=true;
+var GLOBAL_DEBUG_TEXT=false;
 
 var lock_sjtsk_low_precision=false;
 
