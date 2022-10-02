@@ -36,7 +36,11 @@ map.addControl(new L.control.zoom(
         zoomOutText:'-',
         zoomOutTitle:'Oddálit'
     }))
-let global_measuring_toolbox=new L.control.measure({title:"Měřit vzdálenost"});
+let global_measuring_toolbox=new L.control.measure(
+    {
+        title:"Měřit vzdálenost",
+        icon:'<img src="'+static_url+'/img/triangular-ruler.png" style="width:20px"/>'
+    });
 map.addControl(global_measuring_toolbox);
 
 map.addControl(new L.control.coordinates({
