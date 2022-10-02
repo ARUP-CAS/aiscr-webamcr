@@ -98,7 +98,7 @@ map.addControl(new L.control.zoom(
 let global_measuring_toolbox=new L.control.measure(
     {
         title:"Měřit vzdálenost",
-        icon:'<img src="'+static_url+'/img/triangular-ruler.png" style="width:20px"/>'
+        icon:'<img src="'+static_url+'/img/ruler-bold-32.png" style="width:20px"/>'
     });
 map.addControl(global_measuring_toolbox);
 
