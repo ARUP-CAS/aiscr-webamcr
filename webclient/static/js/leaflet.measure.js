@@ -30,7 +30,7 @@ L.Control.Measure = L.Control.extend({
   onAdd: function (map) {
     var className = 'leaflet-control-zoom leaflet-bar leaflet-control'
     var container = L.DomUtil.create('div', className)
-    this._createButton('&#8674;', this.options.title,
+    this._createButton(this.options.icon, this.options.title,
       'leaflet-control-measure leaflet-bar-part leaflet-bar-part-top-and-bottom',
       container, this._toggleMeasure, this)
 
@@ -61,17 +61,6 @@ L.Control.Measure = L.Control.extend({
     return link
   },
 
-  _toggleMeasure: function () {
-    this._measuring = !this._measuring
-    if (this._measuring) {
-      L.DomUtil.addClass(this._container, 'leaflet-control-measure-on')
-      this._startMeasuring()
-    } else {
-      L.DomUtil.removeClass(this._container, 'leaflet-control-measure-on')
-      this._stopMeasuring()
-    }
-  },
-
   _startMeasuring: function () {
     this._oldCursor = this._map._container.style.cursor
     this._map._container.style.cursor = 'crosshair'
@@ -92,6 +81,17 @@ L.Control.Measure = L.Control.extend({
       this._points = []
     }
   },
+  _toggleMeasure: function () {
+    this._measuring = !this._measuring
+    if (this._measuring) {
+      L.DomUtil.addClass(this._container, 'leaflet-control-measure-on')
+      this._startMeasuring()
+    } else {
+      L.DomUtil.removeClass(this._container, 'leaflet-control-measure-on')
+      this._stopMeasuring()
+    }
+  },
+
 
   _stopMeasuring: function () {
     this._map._container.style.cursor = this._oldCursor
@@ -109,38 +109,6 @@ L.Control.Measure = L.Control.extend({
     }
 
     this._restartPath()
-  },
-
-  _mouseMove: function (e) {
-    if (!e.latlng || !this._lastPoint) {
-      return
-    }
-    if (!this._layerPaintPathTemp) {
-      //  customize style
-      this._layerPaintPathTemp = L.polyline([this._lastPoint, e.latlng], {
-        color: this.options.lineColor,
-        weight: this.options.lineWeight,
-        opacity: this.options.lineOpacity,
-        clickable: false,
-        dashArray: this.options.lineDashArray,
-        interactive: false
-      }).addTo(this._layerPaint)
-    } else {
-      //  replace the current layer to the newest draw points
-      this._layerPaintPathTemp.getLatLngs().splice(0, 2, this._lastPoint, e.latlng)
-      //  force path layer update
-      this._layerPaintPathTemp.redraw()
-    }
-
-    //  tooltip
-    if (this._tooltip) {
-      if (!this._distance) {
-        this._distance = 0
-      }
-      this._updateTooltipPosition(e.latlng)
-      var distance = e.latlng.distanceTo(this._lastPoint)
-      this._updateTooltipDistance(this._distance + distance, distance)
-    }
   },
 
   _mouseClick: function (e) {
@@ -193,6 +161,39 @@ L.Control.Measure = L.Control.extend({
 
     this._lastPoint = e.latlng
   },
+  _mouseMove: function (e) {
+    if (!e.latlng || !this._lastPoint) {
+      return
+    }
+    if (!this._layerPaintPathTemp) {
+      //  customize style
+      this._layerPaintPathTemp = L.polyline([this._lastPoint, e.latlng], {
+        color: this.options.lineColor,
+        weight: this.options.lineWeight,
+        opacity: this.options.lineOpacity,
+        clickable: false,
+        dashArray: this.options.lineDashArray,
+        interactive: false
+      }).addTo(this._layerPaint)
+    } else {
+      //  replace the current layer to the newest draw points
+      this._layerPaintPathTemp.getLatLngs().splice(0, 2, this._lastPoint, e.latlng)
+      //  force path layer update
+      this._layerPaintPathTemp.redraw()
+    }
+
+    //  tooltip
+    if (this._tooltip) {
+      if (!this._distance) {
+        this._distance = 0
+      }
+      this._updateTooltipPosition(e.latlng)
+      var distance = e.latlng.distanceTo(this._lastPoint)
+      this._updateTooltipDistance(this._distance + distance, distance)
+    }
+  },
+
+
 
   _finishPath: function (e) {
     if (e) {
