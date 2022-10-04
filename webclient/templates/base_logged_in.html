@@ -235,7 +235,7 @@
 <script src="{% static '/js/create_message.js' %}"></script>
 <script>
   // for autologout functionality timer and messages
-    var time = {{ seconds_until_idle_end|unlocalize }}
+    var time = {% if seconds_until_idle_end %} {{ seconds_until_idle_end|unlocalize }} {% else %} 60 * 60 {% endif %};
     var timer = new Timer();
     var interval = null;
     let document_title = document.title;
@@ -317,5 +317,39 @@
         }
       })
     });
+
+    const test = () => {
+        console.log("test");
+    }
+
+    const increase_ul_height = (parent_element) => {
+        const count_of_li = parent_element.querySelectorAll("li.select2-selection__choice").length;
+        const select2_element = parent_element.querySelector(".select2-container");
+        const select2_element_selection_rendered = parent_element.querySelector(".select2-selection__rendered")
+        const select2_element_selection = parent_element.querySelector(".select2-selection");
+        const height = 1.5 * Math.min(Math.max(count_of_li, 1), 3);
+        if (select2_element) {
+            select2_element.style = `height: ${height}rem!important;`;
+        }
+        if (select2_element_selection) {
+            select2_element_selection.style = `height: ${height}rem!important;`;
+        }
+        if (select2_element_selection_rendered) {
+            select2_element_selection_rendered.style = `height: ${height}rem!important;`;
+        }
+    }
+
+    span_selection_rendered_query = document.body.querySelectorAll("#div_id_autor");
+    const config = { attributes: false, childList: true, subtree: true };
+    span_selection_rendered_query.forEach(item => {
+        item.addEventListener("mouseover", () => {
+            increase_ul_height(item);
+        });
+        const observer = new MutationObserver((callback) => {increase_ul_height(item)});
+        const select = item.querySelector("select");
+        observer.observe(select, config);
+    });
+
+
 </script>
 {% endblock %}
