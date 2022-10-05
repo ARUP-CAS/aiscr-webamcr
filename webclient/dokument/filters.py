@@ -83,7 +83,8 @@ class DokumentFilter(HistorieFilter):
             id__in=MODEL_3D_DOKUMENT_TYPES
         ),
         label=_("Typ"),
-        widget=SelectMultiple(attrs={"class": "selectpicker"}),
+        field_name="typ_dokumentu",
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:dokument-typ-autocomplete"),
     )
 
     format = ModelMultipleChoiceFilter(
@@ -92,7 +93,7 @@ class DokumentFilter(HistorieFilter):
         ),
         label=_("Formát"),
         field_name="extra_data__format",
-        widget=SelectMultiple(attrs={"class": "selectpicker"}),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:dokument-format-autocomplete"),
     )
 
     stav = MultipleChoiceFilter(
