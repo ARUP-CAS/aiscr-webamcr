@@ -209,6 +209,9 @@ class EditProjektForm(forms.ModelForm):
             "termin_odevzdani_nz": forms.DateInput(
                 attrs={"data-provide": "datepicker", "autocomplete": "off"}
             ),
+            "kulturni_pamatka": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
         labels = {
             "typ_projektu": _("Typ projektu"),
