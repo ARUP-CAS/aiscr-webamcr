@@ -82,7 +82,7 @@ table th {
   padding-bottom: 0.1rem!important;
 }
 
-.form-control-sm:not(.textarea), .form-control:not(.textarea), .app-daterangepicker .form-group > div .textinput  {
+.form-control-sm:not(textarea), .form-control:not(textarea), .app-daterangepicker .form-group > div .textinput  {
   height: 1.5rem!important;
   padding-top: 0!important;
   padding-bottom: 0!important;
@@ -114,6 +114,14 @@ td .badge {
   margin-top: 0.5em;
 }
 
+div .app-right .btn-group .btn {
+  margin-top: 0!important;
+}
+
+.form-group.map .btn {
+  margin-top: 0;
+}
+
 .btn .dropdown-toggle .btn-light {
   margin: 2px;
 }
@@ -140,4 +148,8 @@ td .badge {
 .select2-selection__rendered {
   height: 1.5rem!important;
   overflow: auto!important;
+}
+
+.select2-search__field {
+  margin-top: 1px!important;
 }
