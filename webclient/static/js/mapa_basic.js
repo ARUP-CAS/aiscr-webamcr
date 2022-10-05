@@ -36,6 +36,22 @@ map.addControl(new L.control.zoom(
         zoomOutText:'-',
         zoomOutTitle:'Oddálit'
     }))
+
+var searchControl=new L.Control.Search({
+    position:'topleft',
+    sourceData: searchByAjax,
+    initial: false,
+    zoom: 12,
+    marker: false,
+    textPlaceholder:'Vyhledej',
+    textCancel: 'Zruš',
+    propertyName: 'text',
+    propertyMagicKey:'magicKey',
+    propertyMagicKeyUrl:'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/{*}/findAddressCandidates?outSR={"wkid":4258}&f=json',
+    textErr: 'Nenalezeno',
+    minLength:3
+}).addTo(map);
+
 let global_measuring_toolbox=new L.control.measure(
     {
         title:"Měřit vzdálenost",
@@ -54,3 +70,29 @@ map.addControl(new L.control.coordinates({
     centerUserCoordinates: true,
     markerType: null
 }).addTo(map));
+
+function searchByAjax(text, callResponse){
+	let items1=[];
+	let items2=[];
+
+	let ajaxCall=[
+	 $.ajax({//obec
+		url:
+		'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+		type: 'GET',
+		data: {text: text},
+		dataType: 'json',
+		success: function(json) {items1=json.suggestions;/*console.log("Vyhledany Obce");*/}
+		}),
+	$.ajax({//okres
+		url:
+		'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
+		type: 'GET',
+		data: {text: text},
+		dataType: 'json',
+    success: function(json) {items2=json.suggestions;/*console.log("Vyhledany Okresy");*/}
+		}),
+
+	];
+	Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse( [...items2, ...items1]);})
+}

@@ -42,6 +42,9 @@
 <script src="{% static 'leaflet.measure.js' %}"></script>
 <script type="text/javascript" src="{% static 'leaflet.coor.js' %}"></script>
 <link rel="stylesheet" href="{% static 'leaflet.coor.css' %}" />
+
+<link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
+<script src="{% static 'leaflet-search.js' %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -61,6 +64,25 @@
     .leaflet-bottom .leaflet-control {
       margin-bottom: 5px;
     }
+
+    #findbox {
+		background: #eee;
+		border-radius:.125em;
+		border:2px solid #1978cf;
+		box-shadow: 0 0 8px #999;
+		margin-bottom: 10px;
+		padding: 2px 0;
+		width: 600px;
+		height: 26px;
+	}
+	.search-tooltip {
+		width: 200px;
+	}
+	.leaflet-control-search .search-cancel {
+		position: static;
+		float: left;
+		margin-left: -22px;
+	}
   </style>
   <div id="projectMap"></div>
 </div>
