@@ -120,7 +120,7 @@ class DokumentFilter(HistorieFilter):
         field_name="rok_vzniku", label=_("Rok vzniku (od-do)"), lookup_expr="gte"
     )
 
-    rok_vzniku_do = NumberFilter(field_name="rok_vzniku", label=" ", lookup_expr="lte")
+    rok_vzniku_do = NumberFilter(field_name="rok_vzniku", label="&nbsp;", lookup_expr="lte")
 
     duveryhodnost = NumberFilter(
         field_name="extra_data__duveryhodnost",
