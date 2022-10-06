@@ -616,6 +616,11 @@
   <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
   </button>
   {% endif %}
+  <style>
+    .pian_disabled .select2-selection__rendered {
+        overflow: hidden!important;
+    }
+  </style>
 {% endblock %}
 
 {% block script %}

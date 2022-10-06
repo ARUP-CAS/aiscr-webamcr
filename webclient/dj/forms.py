@@ -91,7 +91,8 @@ class CreateDJForm(forms.ModelForm):
                 css_class="row",
             ),
         )
-        self.fields["pian"].widget.attrs["disabled"]="disabled"
+        self.fields["pian"].widget.attrs["disabled"] = "disabled"
+        self.fields["pian"].widget.attrs["class"] = self.fields["pian"].widget.attrs.get("class", "") + " pian_disabled"
         for key in self.fields.keys():
             self.fields[key].disabled = not not_readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select) and key != "pian":
