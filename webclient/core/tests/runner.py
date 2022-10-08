@@ -36,6 +36,8 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
+    HESLAR_LOKALITA_DRUH,
+    HESLAR_LOKALITA_TYP,
     HESLAR_OBDOBI,
     HESLAR_ORGANIZACE_TYP,
     HESLAR_PIAN_PRESNOST,
@@ -44,6 +46,7 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     PRISTUPNOST_ANONYM_ID,
+    PRISTUPNOST_ARCHEOLOG_ID,
     SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_ZACHRANNY_ID,
     HESLAR_DOKUMENT_ULOZENI,
@@ -68,6 +71,8 @@ from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
 
 import logging
+
+from lokalita.models import Lokalita
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +105,7 @@ TYP_ORGANIZACE_OSTATNI_ID = 110
 
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
+KATASTR_PRAHA_ID = 149
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
 TESTOVACI_SOUBOR_ID = 123
 DOCUMENT_NALEZOVA_ZPRAVA_IDENT = "C-TX-201501986"
@@ -119,6 +125,10 @@ PIAN_POTVRZEN = 2
 
 PREDMET_ID = 200
 PREDMET_SPECIFIKACE_ID = 999
+
+LOKALITA_TYP = 1021
+LOKALITA_TYP_NEW = 1020
+LOKALITA_DRUH = 1031
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -178,7 +188,7 @@ class AMCRTestRunner(BaseRunner):
             pian=1,
         )
         praha = RuianKatastr(
-            id=149,
+            id=KATASTR_PRAHA_ID,
             nazev="JOSEFOV",
             okres=okres_praha,
             kod=3,
@@ -199,6 +209,7 @@ class AMCRTestRunner(BaseRunner):
             ),
             pian=1,
         )
+        logger.debug(praha.id)
         kraj_praha.save()
         kraj_brno.save()
         okres_praha.save()
@@ -230,6 +241,8 @@ class AMCRTestRunner(BaseRunner):
             id=HESLAR_PREDMET_SPECIFIKACE, nazev="heslar_predmet_specifikace"
         )
         hpdr = HeslarNazev(id=HESLAR_PREDMET_DRUH, nazev="heslar_predmet_druh")
+        hld = HeslarNazev(id=HESLAR_LOKALITA_DRUH, nazev="heslar_lokalita_druh")
+        hlt = HeslarNazev(id=HESLAR_LOKALITA_TYP, nazev="heslar_lokalita_typ")
         nazvy_heslaru = [
             hn,
             hp,
@@ -251,6 +264,8 @@ class AMCRTestRunner(BaseRunner):
             hdu,
             hps,
             hpdr,
+            hld,
+            hlt,
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -298,7 +313,14 @@ class AMCRTestRunner(BaseRunner):
         typ_muzeum = Heslar(
             id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
         )
-        zp = Heslar(id=PRISTUPNOST_ANONYM_ID, nazev_heslare=hpr)
+        zp = Heslar(
+            id=PRISTUPNOST_ANONYM_ID, heslo="anonym pristupnost", nazev_heslare=hpr
+        )
+        Heslar(
+            id=PRISTUPNOST_ARCHEOLOG_ID,
+            heslo="archeolog pristupnost",
+            nazev_heslare=hpr,
+        ).save()
         zp.save()
         typ_muzeum.save()
         hok_podrizene = Heslar(
@@ -324,6 +346,9 @@ class AMCRTestRunner(BaseRunner):
         HeslarHierarchie(
             heslo_podrazene=specifikace, heslo_nadrazene=predmet, typ="výchozí hodnota"
         ).save()
+        Heslar(id=LOKALITA_DRUH, nazev_heslare=hld, zkratka=1).save()
+        Heslar(id=LOKALITA_TYP, nazev_heslare=hlt, zkratka="L").save()
+        Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka="M").save()
 
         kl10 = Kladyzm(
             gid=2,
@@ -435,7 +460,7 @@ class AMCRTestRunner(BaseRunner):
         )
         osoba.save()
 
-        # PROJEKT EVENT
+        # INCOMPLETE EVENT
         az_incoplete = ArcheologickyZaznam(
             typ_zaznamu="A",
             hlavni_katastr=praha,
@@ -450,7 +475,7 @@ class AMCRTestRunner(BaseRunner):
         a_incomplete.projekt = p
         a_incomplete.save()
 
-        # LOKALITA
+        # PROJEKT EVENT
         az = ArcheologickyZaznam(
             typ_zaznamu="A",
             hlavni_katastr=praha,
@@ -473,20 +498,21 @@ class AMCRTestRunner(BaseRunner):
         a.save()
 
         # LOKALITA
-        lokalita = ArcheologickyZaznam(
+        az_lokalita = ArcheologickyZaznam(
             typ_zaznamu="L",
             hlavni_katastr=praha,
             ident_cely=EXISTING_LOKALITA_IDENT,
             stav=AZ_STAV_ZAPSANY,
             pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
         )
-        logger.debug("Creating lokalita")
-        lokalita.save()
-        logger.debug(
-            ArcheologickyZaznam.objects.get(
-                ident_cely=EXISTING_LOKALITA_IDENT
-            ).ident_cely
+        az_lokalita.save()
+        lokalita = Lokalita(
+            archeologicky_zaznam=az_lokalita,
+            typ_lokality=Heslar.objects.get(id=LOKALITA_TYP),
+            druh=Heslar.objects.get(id=LOKALITA_DRUH),
+            nazev="nazev lokality",
         )
+        lokalita.save()
 
         vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
         vazba_pian.save()

@@ -73,6 +73,8 @@ class LokalitaDetailView(DetailView, LoginRequiredMixin):
     slug_field = "archeologicky_zaznam__ident_cely"
 
     def get_context_data(self, **kwargs):
+        logger_s.debug(self.slug_field)
+        logger_s.debug(self.get_object())
         lokalita_obj = self.get_object()
         context = get_arch_z_context(
             self.request,
@@ -121,6 +123,7 @@ class LokalitaCreateView(CreateView, LoginRequiredMixin):
         logger_s.debug(CreateArchZForm(self.request.POST))
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
+            logger_s.debug("Form to save new Lokalita and AZ OK")
             az = form_az.save(commit=False)
             logger_s.debug(az)
             az.stav = AZ_STAV_ZAPSANY
@@ -155,6 +158,7 @@ class LokalitaCreateView(CreateView, LoginRequiredMixin):
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         logger_s.debug("main form is invalid")
+        logger_s.debug(form.errors)
         return super().form_invalid(form)
 
 
@@ -197,13 +201,15 @@ class LokalitaEditView(UpdateView, LoginRequiredMixin):
                 self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
             )
         else:
+            logger_s.debug("az form is invalid")
             logger_s.debug(form_az.errors)
             self.form_invalid(form)
         return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("form is invalid")
+        logger_s.debug("main form is invalid")
+        logger_s.debug(form.errors)
         return super().form_invalid(form)
 
 
