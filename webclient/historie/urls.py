@@ -7,6 +7,7 @@ from .views import (
     SamostatnyNalezHistorieListView,
     SpolupraceHistorieListView,
     SouborHistorieListView,
+    LokalitaHistorieListView,
 )
 
 app_name = "historie"
@@ -23,5 +24,8 @@ urlpatterns = [
         "spoluprace/<str:pk>",
         SpolupraceHistorieListView.as_view(),
         name="spoluprace",
+    ),
+    path(
+        "lokalita/<str:ident_cely>", LokalitaHistorieListView.as_view(), name="lokalita"
     ),
 ]

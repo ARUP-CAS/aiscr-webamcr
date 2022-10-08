@@ -120,3 +120,18 @@ class SouborHistorieListView(HistorieListView):
         return self.model.objects.filter(vazba__soubor_historie=soubor_id).order_by(
             "-datum_zmeny"
         )
+
+
+class LokalitaHistorieListView(HistorieListView):
+    def get_queryset(self):
+        lokalita_ident = self.kwargs["ident_cely"]
+        return self.model.objects.filter(
+            vazba__archeologickyzaznam__ident_cely=lokalita_ident
+        ).order_by("-datum_zmeny")
+
+    def get_context_data(self, **kwargs):
+        context = super(LokalitaHistorieListView, self).get_context_data(**kwargs)
+        context["typ"] = "lokalita"
+        context["entity"] = context["typ"]
+        context["ident_cely"] = self.kwargs["ident_cely"]
+        return context

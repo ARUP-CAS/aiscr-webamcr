@@ -97,14 +97,6 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
-    context = {
-        "warnings": request.session.pop("temp_data", None),
-        "arch_projekt_link": request.session.pop("arch_projekt_link", None),
-    }
-    old_nalez_post = request.session.pop("_old_nalez_post", None)
-    komp_ident_cely = request.session.pop("komp_ident_cely", None)
-    old_adb_post = request.session.pop("_old_adb_post", None)
-    adb_ident_cely = request.session.pop("adb_ident_cely", None)
     zaznam = get_object_or_404(
         ArcheologickyZaznam.objects.select_related("hlavni_katastr")
         .select_related("akce")
@@ -113,67 +105,7 @@ def detail(request, ident_cely):
         .select_related("pristupnost"),
         ident_cely=ident_cely,
     )
-    show = get_detail_template_shows(zaznam)
-    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
-    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
-    druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
-    druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
-    specifikace_objekt_choices = heslar_12(
-        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
-    )
-    specifikce_predmetu_choices = list(
-        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
-            "id", "heslo"
-        )
-    )
-    dokumenty = (
-        Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("soubory")
-        .prefetch_related("soubory__soubory")
-    ).order_by("ident_cely")
-    jednotky = (
-        DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
-        .select_related("komponenty", "typ", "pian")
-        .prefetch_related(
-            "komponenty__komponenty",
-            "komponenty__komponenty__aktivity",
-            "komponenty__komponenty__obdobi",
-            "komponenty__komponenty__areal",
-            "komponenty__komponenty__objekty",
-            "komponenty__komponenty__predmety",
-            "adb",
-        )
-    )
-
-    dj_form_create = CreateDJForm(jednotky=jednotky)
-    pian_form_create = PianCreateForm()
-    komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
-    adb_form_create = CreateADBForm()
-    dj_forms_detail = []
-    komponenta_forms_detail = []
-    pian_forms_detail = []
-    NalezObjektFormset = inlineformset_factory(
-        Komponenta,
-        NalezObjekt,
-        form=create_nalez_objekt_form(
-            druh_objekt_choices,
-            specifikace_objekt_choices,
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-    NalezPredmetFormset = inlineformset_factory(
-        Komponenta,
-        NalezPredmet,
-        form=create_nalez_predmet_form(
-            druh_predmet_choices,
-            specifikce_predmetu_choices,
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
+    context = get_arch_z_context(request, ident_cely, zaznam)
     ostatni_vedouci_objekt_formset = inlineformset_factory(
         Akce,
         AkceVedouci,
@@ -188,139 +120,15 @@ def detail(request, ident_cely):
     akce_zaznam_ostatni_vedouci = []
     for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce).order_by("id"):
         vedouci: AkceVedouci
-        akce_zaznam_ostatni_vedouci.append([str(vedouci.vedouci), str(vedouci.organizace)])
-    for jednotka in jednotky:
-        jednotka: DokumentacniJednotka
-        vyskovy_bod_formset = inlineformset_factory(
-            Adb,
-            VyskovyBod,
-            form=create_vyskovy_bod_form(
-                pian=jednotka.pian, not_readonly=show["editovat"]
-            ),
-            extra=1,
-            can_delete=False,
+        akce_zaznam_ostatni_vedouci.append(
+            [str(vedouci.vedouci), str(vedouci.organizace)]
         )
-        has_adb = jednotka.has_adb()
-        show_adb_add = (
-            jednotka.pian
-            and jednotka.typ.id == TYP_DJ_SONDA_ID
-            and not has_adb
-            and show["editovat"]
-        )
-        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
-        show_add_pian = False if jednotka.pian else True
-        show_approve_pian = (
-            True
-            if jednotka.pian
-            and jednotka.pian.stav == PIAN_NEPOTVRZEN
-            and show["editovat"]
-            else False
-        )
-        dj_form_detail = {
-            "ident_cely": jednotka.ident_cely,
-            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(
-                instance=jednotka,
-                jednotky=jednotky,
-                prefix=jednotka.ident_cely,
-                not_readonly=show["editovat"],
-            ),
-            "show_add_adb": show_adb_add,
-            "show_add_komponenta": show_add_komponenta,
-            "show_add_pian": (show_add_pian and show["editovat"]),
-            "show_remove_pian": (not show_add_pian and show["editovat"]),
-            "show_uprav_pian": jednotka.pian
-            and jednotka.pian.stav == PIAN_NEPOTVRZEN
-            and show["editovat"],
-            "show_approve_pian": show_approve_pian,
-            "show_pripojit_pian": True,
-        }
-        if has_adb:
-            logger.debug(jednotka.ident_cely)
-            dj_form_detail["adb_form"] = (
-                CreateADBForm(
-                    old_adb_post,
-                    instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
-                    readonly=not show["editovat"],
-                )
-                if jednotka.adb.ident_cely == adb_ident_cely
-                else CreateADBForm(
-                    instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
-                    readonly=not show["editovat"],
-                )
-            )
-            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
-                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
-            )
-            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
-            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
-        dj_forms_detail.append(dj_form_detail)
-        if jednotka.pian:
-            pian_forms_detail.append(
-                {
-                    "ident_cely": jednotka.pian.ident_cely,
-                    "center_point": "",
-                    "form": PianCreateForm(
-                        instance=jednotka.pian, prefix=jednotka.pian.ident_cely
-                    ),
-                }
-            )
-        for komponenta in jednotka.komponenty.komponenty.all():
-            komponenta_forms_detail.append(
-                {
-                    "ident_cely": komponenta.ident_cely,
-                    "form": CreateKomponentaForm(
-                        obdobi_choices,
-                        areal_choices,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely,
-                        readonly=not show["editovat"],
-                    ),
-                    "form_nalezy_objekty": NalezObjektFormset(
-                        old_nalez_post,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely + "_o",
-                    )
-                    if komponenta.ident_cely == komp_ident_cely
-                    else NalezObjektFormset(
-                        instance=komponenta, prefix=komponenta.ident_cely + "_o"
-                    ),
-                    "form_nalezy_predmety": NalezPredmetFormset(
-                        old_nalez_post,
-                        instance=komponenta,
-                        prefix=komponenta.ident_cely + "_p",
-                    )
-                    if komponenta.ident_cely == komp_ident_cely
-                    else NalezPredmetFormset(
-                        instance=komponenta, prefix=komponenta.ident_cely + "_p"
-                    ),
-                    "helper_predmet": NalezFormSetHelper(typ="predmet"),
-                    "helper_objekt": NalezFormSetHelper(typ="objekt"),
-                }
-            )
-
-    context["dj_form_create"] = dj_form_create
-    context["pian_form_create"] = pian_form_create
     context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
     context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
     context["ostatni_vedouci_objekt_formset_readonly"] = True
     context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
-    context["dj_forms_detail"] = dj_forms_detail
-    context["adb_form_create"] = adb_form_create
-    context["komponenta_form_create"] = komponenta_form_create
-    context["komponenta_forms_detail"] = komponenta_forms_detail
-    context["pian_forms_detail"] = pian_forms_detail
 
-    context["history_dates"] = get_history_dates(zaznam.historie)
-    context["zaznam"] = zaznam
-    context["dokumenty"] = dokumenty
-    context["dokumentacni_jednotky"] = jednotky
-    context["show"] = show
-
-    return render(request, "arch_z/detail.html", context)
+    return render(request, "arch_z/arch_z_detail.html", context)
 
 
 @login_required
@@ -414,14 +222,14 @@ def odeslat(request, ident_cely):
         logger.debug("arch_z.views.odeslat permission denied")
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
-            {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.get_reverse()},
             status=403,
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
         logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
         return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.get_reverse()},
             status=403,
         )
     if request.method == "POST":
@@ -431,11 +239,9 @@ def odeslat(request, ident_cely):
         logger.debug(
             "arch_z.views.odeslat akce uspesne odeslana " + AKCE_USPESNE_ODESLANA
         )
-        return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})}
-        )
+        return JsonResponse({"redirect": az.get_reverse()})
     else:
-        warnings = az.akce.check_pred_odeslanim()
+        warnings = az.check_pred_odeslanim()
         logger.debug(
             "arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings)
         )
@@ -447,11 +253,7 @@ def odeslat(request, ident_cely):
                 "arch_z.views.odeslat akci nelze odeslat " + AKCI_NELZE_ODESLAT
             )
             return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": ident_cely}
-                    )
-                },
+                {"redirect": az.get_reverse()},
                 status=403,
             )
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -472,40 +274,37 @@ def archivovat(request, ident_cely):
     if az.stav != AZ_STAV_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.get_reverse()},
             status=403,
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.get_reverse()},
             status=403,
         )
     if request.method == "POST":
         # TODO BR-A-5
         az.set_archivovany(request.user)
+        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+            az.set_lokalita_permanent_ident_cely()
         az.save()
-        all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
-            archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
-        )
-        if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
-            request.session["arch_projekt_link"] = True
+        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
+                archeologicky_zaznam__stav=AZ_STAV_ARCHIVOVANY
+            )
+            if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
+                request.session["arch_projekt_link"] = True
         messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
-        return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})}
-        )
+        return JsonResponse({"redirect": az.get_reverse()})
     else:
-        warnings = az.akce.check_pred_archivaci()
+        warnings = az.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
             return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": ident_cely}
-                    )
-                },
+                {"redirect": az.get_reverse()},
                 status=403,
             )
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -526,19 +325,21 @@ def vratit(request, ident_cely):
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.get_reverse()},
             status=403,
         )
     if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.get_reverse()},
             status=403,
         )
     if request.method == "POST":
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt = az.akce.projekt
+            projekt = None
+            if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+                projekt = az.akce.projekt
             # BR-A-3
             if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                 #  Return also project from the states P6 or P5 to P4
@@ -566,13 +367,7 @@ def vratit(request, ident_cely):
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
             messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)
-            return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": ident_cely}
-                    )
-                }
-            )
+            return JsonResponse({"redirect": az.get_reverse()})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -725,15 +520,17 @@ def zapsat(request, projekt_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
-    akce = get_object_or_404(Akce, archeologicky_zaznam__ident_cely=ident_cely)
-    if check_stav_changed(request, akce.archeologicky_zaznam):
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
+    if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": reverse("arch_z:detail", kwargs={"ident_cely": ident_cely})},
+            {"redirect": az.archeologicky_zaznam.get_reverse()},
             status=403,
         )
-    projekt = akce.projekt
+    if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+        projekt = az.akce.projekt
+    else:
+        projekt = None
     if request.method == "POST":
-        az = akce.archeologicky_zaznam
         # Parent records
         historie_vazby = az.historie
         komponenty_jednotek_vazby = []
@@ -745,7 +542,7 @@ def smazat(request, ident_cely):
         for komponenta_vazba in komponenty_jednotek_vazby:
             komponenta_vazba.delete()
 
-        logger.debug("Byla smazána akce: " + str(ident_cely))
+        logger.debug("Byl smazán archeologicky zaznam: " + str(ident_cely))
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         if projekt:
@@ -757,13 +554,11 @@ def smazat(request, ident_cely):
                 }
             )
         else:
-            return JsonResponse({"redirect": reverse("index")})
+            return JsonResponse({"redirect": reverse("lokalita:index")})
     else:
-        form_check = CheckStavNotChangedForm(
-            initial={"old_stav": akce.archeologicky_zaznam.stav}
-        )
+        form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
-            "object": akce,
+            "object": az,
             "title": _("arch_z.modalForm.smazani.title.text"),
             "id_tag": "smazat-akci-form",
             "button": _("arch_z.modalForm.smazani.submit.button"),
@@ -781,7 +576,11 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
-    return odpojit(request, ident_cely, arch_z_ident_cely, "arch_z")
+    az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
+    if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+        return odpojit(request, ident_cely, arch_z_ident_cely, "arch_z")
+    else:
+        return odpojit(request, ident_cely, arch_z_ident_cely, "lokalita")
 
 
 @login_required
@@ -925,7 +724,7 @@ def get_history_dates(historie_vazby):
     return historie
 
 
-def get_detail_template_shows(archeologicky_zaznam):
+def get_detail_template_shows(archeologicky_zaznam, dok_jednotky):
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
     show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
@@ -933,6 +732,12 @@ def get_detail_template_shows(archeologicky_zaznam):
         AZ_STAV_ARCHIVOVANY,
     ]
     show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+    if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+        add_dj = True
+    elif dok_jednotky.count() == 0:
+        add_dj = True
+    else:
+        add_dj = False
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
@@ -940,6 +745,7 @@ def get_detail_template_shows(archeologicky_zaznam):
         "editovat": show_edit,
         "arch_links": show_arch_links,
         "pripojit_dokumenty": True,
+        "add_dj": add_dj,
     }
     return show
 
@@ -979,3 +785,202 @@ def smazat_akce_vedoucí(request, akce_vedouci_id):
     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
     response = redirect(next_url)
     return response
+
+
+def get_arch_z_context(request, ident_cely, zaznam):
+    context = {
+        "warnings": request.session.pop("temp_data", None),
+        "arch_projekt_link": request.session.pop("arch_projekt_link", None),
+    }
+    old_nalez_post = request.session.pop("_old_nalez_post", None)
+    komp_ident_cely = request.session.pop("komp_ident_cely", None)
+    old_adb_post = request.session.pop("_old_adb_post", None)
+    adb_ident_cely = request.session.pop("adb_ident_cely", None)
+    obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+    areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
+    druh_predmet_choices = heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)
+    specifikace_objekt_choices = heslar_12(
+        HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT
+    )
+    specifikce_predmetu_choices = list(
+        Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list(
+            "id", "heslo"
+        )
+    )
+    dokumenty = (
+        Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
+        .select_related("soubory")
+        .prefetch_related("soubory__soubory")
+    ).order_by("ident_cely")
+    jednotky = (
+        DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+        .select_related("komponenty", "typ", "pian")
+        .prefetch_related(
+            "komponenty__komponenty",
+            "komponenty__komponenty__aktivity",
+            "komponenty__komponenty__obdobi",
+            "komponenty__komponenty__areal",
+            "komponenty__komponenty__objekty",
+            "komponenty__komponenty__predmety",
+            "adb",
+        )
+    )
+    show = get_detail_template_shows(zaznam, jednotky)
+
+    dj_form_create = CreateDJForm(jednotky=jednotky, typ_arch_z=zaznam.typ_zaznamu)
+    pian_form_create = PianCreateForm()
+    komponenta_form_create = CreateKomponentaForm(obdobi_choices, areal_choices)
+    adb_form_create = CreateADBForm()
+    dj_forms_detail = []
+    komponenta_forms_detail = []
+    pian_forms_detail = []
+    NalezObjektFormset = inlineformset_factory(
+        Komponenta,
+        NalezObjekt,
+        form=create_nalez_objekt_form(
+            druh_objekt_choices,
+            specifikace_objekt_choices,
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+    NalezPredmetFormset = inlineformset_factory(
+        Komponenta,
+        NalezPredmet,
+        form=create_nalez_predmet_form(
+            druh_predmet_choices,
+            specifikce_predmetu_choices,
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+    for jednotka in jednotky:
+        jednotka: DokumentacniJednotka
+        vyskovy_bod_formset = inlineformset_factory(
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(
+                pian=jednotka.pian, not_readonly=show["editovat"]
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        has_adb = jednotka.has_adb()
+        show_adb_add = (
+            jednotka.pian
+            and jednotka.typ.id == TYP_DJ_SONDA_ID
+            and not has_adb
+            and show["editovat"]
+        )
+        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
+        show_add_pian = False if jednotka.pian else True
+        show_approve_pian = (
+            True
+            if jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"]
+            else False
+        )
+        dj_form_detail = {
+            "ident_cely": jednotka.ident_cely,
+            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
+            "form": CreateDJForm(
+                instance=jednotka,
+                jednotky=jednotky,
+                prefix=jednotka.ident_cely,
+                not_readonly=show["editovat"],
+                typ_arch_z=zaznam.typ_zaznamu,
+            ),
+            "show_add_adb": show_adb_add,
+            "show_add_komponenta": show_add_komponenta,
+            "show_add_pian": (show_add_pian and show["editovat"]),
+            "show_remove_pian": (not show_add_pian and show["editovat"]),
+            "show_uprav_pian": jednotka.pian
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"],
+            "show_approve_pian": show_approve_pian,
+            "show_pripojit_pian": True,
+        }
+        if has_adb:
+            logger.debug(jednotka.ident_cely)
+            dj_form_detail["adb_form"] = (
+                CreateADBForm(
+                    old_adb_post,
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
+                )
+                if jednotka.adb.ident_cely == adb_ident_cely
+                else CreateADBForm(
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
+                )
+            )
+            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
+                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
+            )
+            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
+            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
+        dj_forms_detail.append(dj_form_detail)
+        if jednotka.pian:
+            pian_forms_detail.append(
+                {
+                    "ident_cely": jednotka.pian.ident_cely,
+                    "center_point": "",
+                    "form": PianCreateForm(
+                        instance=jednotka.pian, prefix=jednotka.pian.ident_cely
+                    ),
+                }
+            )
+        for komponenta in jednotka.komponenty.komponenty.all():
+            komponenta_forms_detail.append(
+                {
+                    "ident_cely": komponenta.ident_cely,
+                    "form": CreateKomponentaForm(
+                        obdobi_choices,
+                        areal_choices,
+                        instance=komponenta,
+                        prefix=komponenta.ident_cely,
+                        readonly=not show["editovat"],
+                    ),
+                    "form_nalezy_objekty": NalezObjektFormset(
+                        old_nalez_post,
+                        instance=komponenta,
+                        prefix=komponenta.ident_cely + "_o",
+                    )
+                    if komponenta.ident_cely == komp_ident_cely
+                    else NalezObjektFormset(
+                        instance=komponenta, prefix=komponenta.ident_cely + "_o"
+                    ),
+                    "form_nalezy_predmety": NalezPredmetFormset(
+                        old_nalez_post,
+                        instance=komponenta,
+                        prefix=komponenta.ident_cely + "_p",
+                    )
+                    if komponenta.ident_cely == komp_ident_cely
+                    else NalezPredmetFormset(
+                        instance=komponenta, prefix=komponenta.ident_cely + "_p"
+                    ),
+                    "helper_predmet": NalezFormSetHelper(typ="predmet"),
+                    "helper_objekt": NalezFormSetHelper(typ="objekt"),
+                }
+            )
+
+    context["dj_form_create"] = dj_form_create
+    context["pian_form_create"] = pian_form_create
+    context["dj_forms_detail"] = dj_forms_detail
+    context["adb_form_create"] = adb_form_create
+    context["komponenta_form_create"] = komponenta_form_create
+    context["komponenta_forms_detail"] = komponenta_forms_detail
+    context["pian_forms_detail"] = pian_forms_detail
+    context["history_dates"] = get_history_dates(zaznam.historie)
+    context["zaznam"] = zaznam
+    context["dokumenty"] = dokumenty
+    context["dokumentacni_jednotky"] = jednotky
+    context["show"] = show
+    return context

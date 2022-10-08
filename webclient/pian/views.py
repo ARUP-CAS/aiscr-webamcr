@@ -115,6 +115,7 @@ def odpojit(request, dj_ident_cely):
     )
     pian = dj.pian
     if request.method == "POST":
+        redirect_view = dj.archeologicky_zaznam.get_reverse()
         dj.pian = None
         dj.save()
         logger.debug("Pian odpojen: " + pian.ident_cely)
@@ -124,15 +125,10 @@ def odpojit(request, dj_ident_cely):
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
         else:
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
-        response = JsonResponse(
-            {
-                "redirect": reverse(
-                    "arch_z:detail",
-                    kwargs={"ident_cely": dj.archeologicky_zaznam.ident_cely},
-                )
-            }
+        response = JsonResponse({"redirect": redirect_view})
+        response.set_cookie(
+            "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
         )
-        response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
         response.set_cookie(
             "set-active",
             f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
@@ -160,32 +156,23 @@ def potvrdit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if request.method == "POST":
+        redirect_view = dj.archeologicky_zaznam.get_reverse()
         try:
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail",
-                        kwargs={"ident_cely": dj.archeologicky_zaznam.ident_cely},
-                    )
-                },
+                {"redirect": redirect_view},
                 status=403,
             )
         else:
             pian.set_potvrzeny(request.user)
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
-            response = JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail",
-                        kwargs={"ident_cely": dj.archeologicky_zaznam.ident_cely},
-                    )
-                }
+            response = JsonResponse({"redirect": redirect_view})
+            response.set_cookie(
+                "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
             )
-            response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
             response.set_cookie(
                 "set-active",
                 f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",

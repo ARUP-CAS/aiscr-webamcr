@@ -1,5 +1,7 @@
 import logging
 
+from django.shortcuts import redirect
+
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -13,6 +15,7 @@ from core.constants import (
 )
 from django.db import models
 from django.utils.translation import gettext as _
+from django.urls import reverse
 from ez.models import ExterniZdroj
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
@@ -25,6 +28,7 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
+from core.exceptions import MaximalIdentNumberError
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +53,8 @@ class ArcheologickyZaznam(models.Model):
         related_name="zaznamy_pristupnosti",
         default=PRISTUPNOST_ANONYM_ID,
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-        blank=False, null=True
+        blank=False,
+        null=True,
     )
     ident_cely = models.TextField(unique=True)
     stav_stary = models.SmallIntegerField(null=True)
@@ -59,15 +64,15 @@ class ArcheologickyZaznam(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     katastry = models.ManyToManyField(
-        RuianKatastr, through="ArcheologickyZaznamKatastr",blank=True, null=True
+        RuianKatastr, through="ArcheologickyZaznamKatastr", blank=True, null=True
     )
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
         on_delete=models.DO_NOTHING,
         db_column="hlavni_katastr",
         related_name="zaznamy_hlavnich_katastru",
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
     )
 
     class Meta:
@@ -110,6 +115,152 @@ class ArcheologickyZaznam(models.Model):
         ).save()
         self.save()
 
+    def check_pred_odeslanim(self):
+        # All of the events must have akce.datum_zahajeni,
+        # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
+        # Related events must have a “vedouci” and “hlavni_katastr” column filled in
+        result = []
+        # There must be a document of type “nálezová zpráva” attached to each related event,
+        # or akce.je_nz must be true.
+        if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            required_fields = [
+                (self.akce.datum_zahajeni, _("Datum zahájení není vyplněn.")),
+                (self.akce.datum_ukonceni, _("Datum ukončení není vyplněn.")),
+                (
+                    self.akce.lokalizace_okolnosti,
+                    _("Lokalizace okolností není vyplněna."),
+                ),
+                (self.akce.specifikace_data, _("Specifikace data není vyplněna.")),
+                (self.akce.organizace, _("Organizace není vyplněna.")),
+                (self.akce.hlavni_typ, _("Hlavní typ není vyplněn.")),
+                (self.akce.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
+                (
+                    self.akce.archeologicky_zaznam.hlavni_katastr,
+                    _("Hlavní katastr není vyplněn."),
+                ),
+            ]
+            for req_field in required_fields:
+                if not req_field[0]:
+                    result.append(req_field[1])
+            if (
+                len(
+                    self.casti_dokumentu.filter(
+                        dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
+                    )
+                )
+                == 0
+                and not self.akce.je_nz
+            ):
+                result.append(_("Nemá nálezovou zprávu."))
+                logger.warning("Akce " + self.ident_cely + " nema nalezovou zpravu.")
+        # Related events must have at least one valid documentation unit (dokumentační jednotka)
+        # record associated with it.
+        if len(self.dokumentacni_jednotky_akce.all()) == 0:
+            result.append(_("Nemá žádnou dokumentační jednotku."))
+            logger.warning("Akce " + self.ident_cely + " nema dokumentacni jednotku.")
+        for dj in self.dokumentacni_jednotky_akce.all():
+            # Each documentation unit must have either associated at least one component or the
+            # documentation unit must be negative.
+            if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
+                result.append(
+                    _("Pozitivní dokumentační jednotka ")
+                    + str(dj.ident_cely)
+                    + _(" nemá zadanou žádnou komponentu.")
+                )
+                logger.debug(
+                    "DJ " + dj.ident_cely + " nema komponentu ani neni negativni."
+                )
+            # Each documentation unit associated with the project event must have a valid PIAN relation.
+            if dj.pian is None:
+                result.append(
+                    _("Dokumentační jednotka ")
+                    + str(dj.ident_cely)
+                    + _(" nemá zadaný pian.")
+                )
+                logger.debug("DJ " + dj.ident_cely + " nema pian.")
+        for dokument_cast in self.casti_dokumentu.all():
+            dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
+            if dokument_warning:
+                dokument_warning.insert(
+                    0, ("Dokument " + dokument_cast.dokument.ident_cely + ": ")
+                )
+                result.append(dokument_warning)
+                logger.debug(
+                    "Dokument "
+                    + dokument_cast.dokument.ident_cely
+                    + " warnings: "
+                    + str(dokument_warning)
+                )
+        return result
+
+    def check_pred_archivaci(self):
+        # All documents associated with it must be archived
+        result = []
+        for dc in self.casti_dokumentu.all():
+            if dc.dokument.stav != D_STAV_ARCHIVOVANY:
+                result.append(
+                    _(
+                        "Dokument "
+                        + dc.dokument.ident_cely
+                        + " musí být nejdřív archivován."
+                    )
+                )
+        for dj in self.dokumentacni_jednotky_akce.all():
+            if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
+                result.append(
+                    _(
+                        "Dokumentační jednotka "
+                        + str(dj.ident_cely)
+                        + " má nepotvrzený pian."
+                    )
+                )
+        return result
+
+    def set_lokalita_permanent_ident_cely(self):
+        MAXIMAL: int = 9999999
+        # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
+        prefix = str(
+            self.hlavni_katastr.okres.kraj.rada_id
+            + "-"
+            + self.lokalita.typ_lokality.zkratka
+        )
+        l = ArcheologickyZaznam.objects.filter(
+            ident_cely__regex="^" + prefix + "\\d{7}$",
+            typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
+        ).order_by("-ident_cely")
+        if l.filter(ident_cely=str(prefix + "0000001")).count() == 0:
+            self.ident_cely = prefix + "0000001"
+        else:
+            # number from empty spaces
+            sequence = l[l.count() - 1].ident_cely[-7:]
+            logger.warning(sequence)
+            while True:
+                if l.filter(ident_cely=prefix + sequence).exists():
+                    sequence = str(int(sequence) + 1).zfill(7)
+                else:
+                    break
+            if int(sequence) >= MAXIMAL:
+                logger.error(
+                    "Maximal number of lokalita ident is "
+                    + str(MAXIMAL)
+                    + "for given region and typ"
+                )
+                raise MaximalIdentNumberError(MAXIMAL)
+            self.ident_cely = prefix + sequence
+        self.save()
+
+    def get_reverse(self):
+        if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            return reverse("arch_z:detail", kwargs={"ident_cely": self.ident_cely})
+        else:
+            return reverse("lokalita:detail", kwargs={"slug": self.ident_cely})
+
+    def get_redirect(self):
+        if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            return redirect("arch_z:detail", self.ident_cely)
+        else:
+            return redirect("lokalita:detail", self.ident_cely)
+
 
 class ArcheologickyZaznamKatastr(models.Model):
     archeologicky_zaznam = models.ForeignKey(
@@ -137,7 +288,7 @@ class Akce(models.Model):
         related_name="akce_specifikace_data",
         limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
         blank=True,
-        null=True
+        null=True,
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
@@ -188,108 +339,6 @@ class Akce(models.Model):
     class Meta:
         db_table = "akce"
 
-    def check_pred_archivaci(self):
-        # All documents associated with it must be archived
-        result = []
-        for dc in self.archeologicky_zaznam.casti_dokumentu.all():
-            if dc.dokument.stav != D_STAV_ARCHIVOVANY:
-                result.append(
-                    _(
-                        "Dokument "
-                        + dc.dokument.ident_cely
-                        + " musí být nejdřív archivován."
-                    )
-                )
-        for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
-            if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
-                result.append(
-                    _(
-                        "Dokumentační jednotka "
-                        + str(dj.ident_cely)
-                        + " má nepotvrzený pian."
-                    )
-                )
-        return result
-
-    def check_pred_odeslanim(self):
-        # All of the events must have akce.datum_zahajeni,
-        # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
-        # Related events must have a “vedouci” and “hlavni_katastr” column filled in
-        result = []
-        required_fields = [
-            (self.datum_zahajeni, _("Datum zahájení není vyplněn.")),
-            (self.datum_ukonceni, _("Datum ukončení není vyplněn.")),
-            (self.lokalizace_okolnosti, _("Lokalizace okolností není vyplněna.")),
-            (self.specifikace_data, _("Specifikace data není vyplněna.")),
-            (self.organizace, _("Organizace není vyplněna.")),
-            (self.hlavni_typ, _("Hlavní typ není vyplněn.")),
-            (self.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
-            (self.archeologicky_zaznam, _("Hlavní katastr není vyplněn.")),
-        ]
-        for req_field in required_fields:
-            if not req_field[0]:
-                result.append(req_field[1])
-        # There must be a document of type “nálezová zpráva” attached to each related event,
-        # or akce.je_nz must be true.
-        if (
-            len(
-                self.archeologicky_zaznam.casti_dokumentu.filter(
-                    dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
-                )
-            )
-            == 0
-            and not self.je_nz
-        ):
-            result.append(_("Nemá nálezovou zprávu."))
-            logger.warning(
-                "Akce "
-                + self.archeologicky_zaznam.ident_cely
-                + " nema nalezovou zpravu."
-            )
-        # Related events must have at least one valid documentation unit (dokumentační jednotka)
-        # record associated with it.
-        if len(self.archeologicky_zaznam.dokumentacni_jednotky_akce.all()) == 0:
-            result.append(_("Nemá žádnou dokumentační jednotku."))
-            logger.warning(
-                "Akce "
-                + self.archeologicky_zaznam.ident_cely
-                + " nema dokumentacni jednotku."
-            )
-        for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
-            # Each documentation unit must have either associated at least one component or the
-            # documentation unit must be negative.
-            if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
-                result.append(
-                    _("Pozitivní dokumentační jednotka ")
-                    + str(dj.ident_cely)
-                    + _(" nemá zadanou žádnou komponentu.")
-                )
-                logger.debug(
-                    "DJ " + dj.ident_cely + " nema komponentu ani neni negativni."
-                )
-            # Each documentation unit associated with the project event must have a valid PIAN relation.
-            if dj.pian is None:
-                result.append(
-                    _("Dokumentační jednotka ")
-                    + str(dj.ident_cely)
-                    + _(" nemá zadaný pian.")
-                )
-                logger.debug("DJ " + dj.ident_cely + " nema pian.")
-        for dokument_cast in self.archeologicky_zaznam.casti_dokumentu.all():
-            dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
-            if dokument_warning:
-                dokument_warning.insert(0, ("Dokument "+ dokument_cast.dokument.ident_cely + ": "))
-                result.append(
-                    dokument_warning
-                )
-                logger.debug(
-                    "Dokument "
-                    + dokument_cast.dokument.ident_cely
-                    + " warnings: "
-                    + str(dokument_warning)
-                )
-        return result
-
 
 class AkceVedouci(models.Model):
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
@@ -301,43 +350,7 @@ class AkceVedouci(models.Model):
     class Meta:
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
-        ordering = ['id']
-
-
-class Lokalita(models.Model):
-
-    druh = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="druh", related_name="lokality_druhy"
-    )
-    popis = models.TextField(blank=True, null=True)
-    nazev = models.TextField()
-    typ_lokality = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="typ_lokality",
-        related_name="lokality_typu",
-    )
-    poznamka = models.TextField(blank=True, null=True)
-    zachovalost = models.ForeignKey(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="zachovalost",
-        blank=True,
-        null=True,
-        related_name="lokality_zachovalosti",
-    )
-    jistota = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="jistota", blank=True, null=True
-    )
-    archeologicky_zaznam = models.OneToOneField(
-        ArcheologickyZaznam,
-        models.DO_NOTHING,
-        db_column="archeologicky_zaznam",
-        primary_key=True,
-    )
-
-    class Meta:
-        db_table = "lokalita"
+        ordering = ["id"]
 
 
 class ExterniOdkaz(models.Model):

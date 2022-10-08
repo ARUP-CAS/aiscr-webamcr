@@ -1,0 +1,54 @@
+{% extends "base_logged_in.html" %}
+{% load widget_tweaks %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block head %}
+<script>
+    var global_csrftoken = '{{ csrf_token }}';
+</script>
+ <!-- Autocomplete media files -->
+ <link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+ <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+ <script src="/static/static/autocomplete_light/select2.js"></script>
+ <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+ {% endblock %}
+
+{% block content %}
+  <div class="app-entity-lokalita">
+    {% include "toolbar_akce.html" with showbackdetail=False showcontrols=False type="lokalita" name=toolbar_name %}
+    <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
+      {% csrf_token %}
+        {% trans "Nova Lokalita" as header %}
+        {% include "lokalita/lokalita_detail_part.html" %} 
+        <div class="mt-3">
+          <div class="form-group">
+            <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{% trans "Uložit" %}</button>
+            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+          </div>
+        </div>
+    </form>
+  </div>
+{% endblock %}
+
+{% block script %}
+  <script >
+    var static_url = "{% get_static_prefix %}";
+  </script>
+  <script>
+    $(document).ready(function () {
+        var sel = document.getElementById('id_katastry');
+        for(var i = 0; i < sel.options.length; i++){
+          if(sel.options[i].value === ""){
+          sel.remove(i--);//decrease i to preserve future index references after removal
+          }
+        }
+    })
+  </script>
+{% endblock %}

@@ -4,7 +4,7 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
-{% block title %}{% trans "Detail archeologického záznamu - akce" %}{% endblock %}
+{% block title %}{% trans "Detail archeologického záznamu" %}{% endblock %}
 {% block head %}
   <!--  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">-->
 
@@ -68,197 +68,11 @@
 {% endblock %}
 
 {% block content %}
-  <div class="app-entity-akce">
-    {% include "toolbar_akce.html" with zaznam=zaznam  showbackdetail=True showcontrols=True %}
 
-    <!-- stepper -->
-    <div class="bs-stepper">
-      <div class="bs-stepper-header">
-        <div class="step {% if zaznam.stav == 1 %}active{% endif %}">
-          <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:akce' zaznam.ident_cely %}';">
-            <span class="bs-stepper-circle">1</span>
-            <span class="bs-stepper-label">
-            {% trans "Rozepsaná" %}
-            <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                  title="{{ history_dates.datum_zapsani.uzivatel }}">
-              {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
-            </span>
-          </span>
-          </button>
-        </div>
-        <div class="line"></div>
-        <div class="step {% if zaznam.stav == 2 %}active{% endif %}">
-          <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:akce' zaznam.ident_cely %}';">
-            <span class="bs-stepper-circle">2</span>
-            <span class="bs-stepper-label">
-            {% trans "Odeslaná" %}
-            <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                  title="{{ history_dates.datum_odeslani.uzivatel }}">
-              {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
-            </span>
-          </span>
-          </button>
-        </div>
-        <div class="line"></div>
-        <div class="step {% if zaznam.stav == 3 %}active{% endif %}">
-          <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:akce' zaznam.ident_cely %}';">
-            <span class="bs-stepper-circle">3</span>
-            <span class="bs-stepper-label">
-            {% trans "Archivovaná" %}
-            <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
-                    title="{{ history_dates.datum_archivace.uzivatel }}">
-                  {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}
-            </span>
-          </span>
-          </button>
-        </div>
-      </div>
-    </div>
+    
 
-    <!-- detail -->
-    <div class="card app-card-form">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Detail" %}
-        </div>
-        {% if show.editovat %}
-        <div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <a class="btn" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
-              <span class="material-icons">edit</span>
-            </a>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-      <div class="card-body formset-table">
-        {% if warnings %}
-        <div class="alert alert-info" role="alert">
-          <ul>
-            {% for warning in warnings %}
-              <li>{{ warning }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-      {% endif %}
-        <div class="row">
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Hlavní katastr" %}</label>
-              <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr|check_if_none }}"
-                     readonly>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Další katastry" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Hlavní vedoucí" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Uživatelské označení" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.uzivatelske_oznaceni|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Hlavní typ" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Vedlejší typ" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="form-group col-sm-2">
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Specifikace data" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Datum zahájení" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
-                     readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Datum ukončení" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
-                     readonly>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="form-group">
-              <label>{% trans "Lokalizace/okolnosti" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="form-group">
-              <label>{% trans "Poznámka" %}</label>
-              <textarea class="textarea form-control" cols="40" rows="4" placeholder="{{ zaznam.akce.souhrn_upresneni|check_if_none }}"
-                        readonly>{{ zaznam.akce.souhrn_upresneni|check_if_none }}</textarea>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Uložení nálezu" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label>{% trans "Uložení dokumentace" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2">
-            <div class="form-group">
-              <label>{% trans "Přístupnost" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.pristupnost|check_if_none }}" readonly>
-            </div>
-          </div>
-          <div class="col-sm-2 je_nz">
-            <div class="form-group">
-              <label>{% trans "Odeslat ZAA jako NZ" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.akce.je_nz|true_false }}" readonly>
-            </div>
-          </div>
-        </div>
-        {% if ostatni_vedouci_objekt_formset.forms %}
-          <div class="row">
-            <div class="col-sm-12">
-              <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
-              <hr class="mt-0"/>
-            </div>
-          </div>
-          {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
-        {% else %}
-
-        {% endif %}
-      </div>
-    </div>
+      {% block zaznam_detail %}
+      {% endblock %}
 
     <!-- dokumentacni jednotka / mapa -->
     <div class="row mb-3">
@@ -268,7 +82,7 @@
             <div class="app-fx app-left">
               {% trans "Dokumentační jednotky" %}
             </div>
-            {% if show.editovat %}
+            {% if show.editovat and show.add_dj %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <button id="button-add-dj" class="btn" onclick="$('#button-add-dj').tooltip('hide');show_form('create_dj_form');document.getElementById('karta-dokumentacni-jednotky').scrollIntoView();"
@@ -422,7 +236,7 @@
                     {% trans 'Smazat DJ' %}
                   </button>
                   {% if j.show_pripojit_pian %}
-                    <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button" onclick=update_pian("{{j.ident_cely}}")>
+                    <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item" type="button" name="button" onclick=update_pian("{{j.ident_cely}}")>
                       {% trans 'Připojit PIAN podle ID' %}
                     </button>
                   {% endif %}
@@ -612,10 +426,8 @@
       {% include "dokument/dokument_table.html" with type="arch_z"%}
 
   </div>
-  {% if arch_projekt_link %}
-  <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
-  </button>
-  {% endif %}
+  {% block arch_projekt %}
+  {% endblock %}
   <style>
     .pian_disabled .select2-selection__rendered {
         overflow: hidden!important;
@@ -734,6 +546,10 @@
         map_show_edit(false)
       }
 
+    </script>
+      {% block script_detail %}
+      {% endblock %}
+    <script>
       document.addEventListener('DOMContentLoaded', function (event) {
           // Focus on detail set by the cookie and display it
           get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
@@ -849,20 +665,8 @@
       {% endfor %}
   </script>
   <script>
-    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
-    //console.log("zaznam "+global_map_projekt_ident)
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
-      if ("{{arch_projekt_link}}" !== "None"){
-        var options = Object.assign(defaults, {modalID: "modal-form",
-        formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
-        formID: "archivovat-form",
-        modalFormID: "#archivovat-form",
-        })
-        arch_projekt = new Modal(options, "archive_projekt");
-        document.getElementById("archive_projekt").click()
-      };
-
       if (document.getElementsByClassName("adb-smazat-btn")){
         elements = document.getElementsByClassName("adb-smazat-btn")
         for (let i = 0; i < elements.length; i++){
@@ -913,36 +717,6 @@
           new Modal(options, elements.item(i).id);
         }
       }
-      if ("{{show.odeslat_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
-        formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
-        formID: "odeslat-akci-form",
-        modalFormID: "#odeslat-akci-form",
-      })
-      odeslat_akci_modal = new Modal(options, "akce-odeslat");
-      };
-      if ("{{show.vratit_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
-        formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
-        formID: "vratit-akci-form",
-        modalFormID: "#vratit-akci-form",
-      })
-      vratit_akci_modal = new Modal(options, "akce-vratit");
-      }
-      if ("{{show.archivovat_link}}" != "False"){
-        var options = Object.assign(defaults, {modalID: "modal-form",
-          formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
-          formID: "archivovat-akci-form",
-          modalFormID: "#archivovat-akci-form",
-        })
-      archivovat_akci_modal = new Modal(options, "akce-archivovat");
-      }
-      var options = Object.assign(defaults, {modalID: "modal-form",
-        formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
-        formID: "smazat-akci-form",
-        modalFormID: "#smazat-akci-form",
-      })
-      smazat_akci_modal = new Modal(options, "akce-smazat");
       if (document.getElementsByClassName("objekt-smazat-btn")){
         elements = document.getElementsByClassName("objekt-smazat-btn")
         for (let i = 0; i < elements.length; i++){

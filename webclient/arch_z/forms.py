@@ -8,11 +8,10 @@ from django.utils.translation import gettext as _
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
-from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT, HESLAR_DATUM_SPECIFIKACE
 from heslar.models import Heslar
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
 from heslar.views import heslar_12
 from projekt.models import Projekt
-from uzivatel.models import Organizace, Osoba
 from . import validators
 
 logger_s = structlog.get_logger(__name__)
@@ -29,9 +28,16 @@ def create_akce_vedouci_objekt_form(readonly=True):
     class CreateAkceVedouciObjektForm(forms.ModelForm):
         def clean(self):
             cleaned_data = super().clean()
-            if (cleaned_data.get("vedouci", None) is None and cleaned_data.get("organizace", None) is not None) or\
-                (cleaned_data.get("vedouci", None) is not None and cleaned_data.get("organizace", None) is None):
-                raise forms.ValidationError(_("create_akce_vedouci_objekt_form.clean.error"))
+            if (
+                cleaned_data.get("vedouci", None) is None
+                and cleaned_data.get("organizace", None) is not None
+            ) or (
+                cleaned_data.get("vedouci", None) is not None
+                and cleaned_data.get("organizace", None) is None
+            ):
+                raise forms.ValidationError(
+                    _("create_akce_vedouci_objekt_form.clean.error")
+                )
 
         class Meta:
             model = AkceVedouci
@@ -43,12 +49,8 @@ def create_akce_vedouci_objekt_form(readonly=True):
             }
             if readonly:
                 widgets = {
-                    "vedouci": forms.TextInput(
-                        attrs={"readonly": "readonly"}
-                    ),
-                    "organizace": forms.TextInput(
-                        attrs={"readonly": "readonly"}
-                    ),
+                    "vedouci": forms.TextInput(attrs={"readonly": "readonly"}),
+                    "organizace": forms.TextInput(attrs={"readonly": "readonly"}),
                 }
             else:
                 widgets = {
@@ -68,7 +70,11 @@ def create_akce_vedouci_objekt_form(readonly=True):
         def __init__(self, *args, **kwargs):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
-            logger_s.debug("CreateAkceVedouciObjektForm.init", readonly=readonly, initial=self.initial)
+            logger_s.debug(
+                "CreateAkceVedouciObjektForm.init",
+                readonly=readonly,
+                initial=self.initial,
+            )
             self.fields["vedouci"].required = False
 
     return CreateAkceVedouciObjektForm
@@ -107,18 +113,55 @@ class CreateArchZForm(forms.ModelForm):
             "katastry": _("arch_z.form.katastry.tooltip"),
         }
 
-    def __init__(self, *args,required=None,required_next=None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        required=None,
+        required_next=None,
+        readonly=False,
+        **kwargs,
+    ):
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
-        self.fields["katastry"].widget.attrs["readonly"] = True
-        self.fields["katastry"].widget.attrs["style"] = "pointer-events: none; height: calc(1.5em + 0.5rem + 2px);"
-        self.fields["hlavni_katastr"].widget.attrs["readonly"] = True
-        self.fields["hlavni_katastr"].widget.attrs["style"] = "pointer-events: none;"
         if projekt:
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
             self.fields["katastry"].initial = projekt.katastry.all()
+        try:
+            self.fields["hlavni_katastr"].initial = self.instance.hlavni_katastr
+            self.fields["katastry"].initial = self.instance.katastry.all()
+        except Exception as e:
+            logger_s.debug(e)
+            pass
+        try:
+            self.fields["hlavni_katastr_show"] = forms.CharField(
+                label=_("Hlavní katastr"),
+                help_text=_("arch_z.form.hlavni_katastr.tooltip"),
+                required=False,
+            )
+            self.fields["katastry_show"] = forms.CharField(
+                label=_("Další katastry"),
+                help_text=_("arch_z.form.katastry.tooltip"),
+                required=False,
+            )
+            self.fields["hlavni_katastr_show"].initial = self.fields[
+                "hlavni_katastr"
+            ].initial
+            if self.fields["katastry"].initial is not None:
+                value = [str(i) for i in self.fields["katastry"].initial.all()]
+                display = ", ".join(value)
+                self.fields["katastry_show"].initial = display
+                self.fields["hlavni_katastr_show"].widget.attrs[
+                    "id"
+                ] = "main_cadastre_id"
+                self.fields["katastry_show"].disabled = True
+                self.fields["hlavni_katastr_show"].disabled = True
+            else:
+                pass
+        except Exception as e:
+            logger_s.debug(e)
+            pass
 
         self.helper = FormHelper(self)
 
@@ -127,10 +170,9 @@ class CreateArchZForm(forms.ModelForm):
                 Div(
                     "hlavni_katastr",
                     css_class="col-sm-4",
-                    style="pointer-events: none;",
                 ),
                 Div("pristupnost", css_class="col-sm-4"),
-                Div("katastry", css_class="col-sm-4", style="pointer-events: none;"),
+                Div("katastry", css_class="col-sm-4"),
                 Div("uzivatelske_oznaceni", css_class="col-sm-12"),
                 css_class="row",
             ),
@@ -138,6 +180,8 @@ class CreateArchZForm(forms.ModelForm):
 
         self.helper.form_tag = False
         for key in self.fields.keys():
+            if readonly:
+                self.fields[key].disabled = readonly
             if self.fields[key].disabled == True:
                 if isinstance(self.fields[key].widget, forms.widgets.Select):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
@@ -145,9 +189,13 @@ class CreateArchZForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
 
 
 class CreateAkceForm(forms.ModelForm):
@@ -163,11 +211,21 @@ class CreateAkceForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is None:
-            raise forms.ValidationError(_("Je-li vyplněno datum ukončení, musí být vyplněno i datum zahájení"))
-        elif cleaned_data.get("datum_ukonceni") is not None and cleaned_data.get("datum_zahajeni") is not None:
+        if (
+            cleaned_data.get("datum_ukonceni") is not None
+            and cleaned_data.get("datum_zahajeni") is None
+        ):
+            raise forms.ValidationError(
+                _("Je-li vyplněno datum ukončení, musí být vyplněno i datum zahájení")
+            )
+        elif (
+            cleaned_data.get("datum_ukonceni") is not None
+            and cleaned_data.get("datum_zahajeni") is not None
+        ):
             if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
-                raise forms.ValidationError(_("Datum zahájení nemůže být po datu ukončení"))
+                raise forms.ValidationError(
+                    _("Datum zahájení nemůže být po datu ukončení")
+                )
         return self.cleaned_data
 
     class Meta:
@@ -207,7 +265,7 @@ class CreateAkceForm(forms.ModelForm):
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "lokalizace_okolnosti": forms.TextInput(),
-            "ulozeni_nalezu":  forms.TextInput(),
+            "ulozeni_nalezu": forms.TextInput(),
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
             "ulozeni_dokumentace":  forms.TextInput(),
             "je_nz": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
@@ -305,9 +363,13 @@ class CreateAkceForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:

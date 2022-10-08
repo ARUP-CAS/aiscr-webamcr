@@ -43,6 +43,7 @@ from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
+
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
     def media(self):
         return ()
@@ -53,31 +54,17 @@ class Users(QuerySet):
         return self.select_related("first_name", "last_name")
 
 
-class ProjektFilter(HistorieFilter):
-
-    ident_cely = CharFilter(lookup_expr="icontains",distinct=True,)
-
-    oblast = MultipleChoiceFilter(
-        choices=OBLAST_CHOICES,
-        label=_("Územní příslušnost"),
-        method="filter_by_oblast",
-        widget=SelectMultiple(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
-        distinct=True,
-    )
-
-    typ_projektu = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
-        label=_("Typ"),
-        widget=SelectMultiple(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
-        distinct=True,
-    )
-
+class KatastrFilter(filters.FilterSet):
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
         label=_("Kraj"),
         method="filtr_katastr_kraj",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -87,20 +74,104 @@ class ProjektFilter(HistorieFilter):
         label=_("Okres"),
         method="filtr_katastr_okres",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
 
-    katastr = CharFilter(method="filtr_katastr", label=_("Katastr"),distinct=True,)
+    katastr = CharFilter(
+        method="filtr_katastr",
+        label=_("Katastr"),
+        distinct=True,
+    )
 
-    popisne_udaje = CharFilter(method="filter_popisne_udaje", label="Popisné údaje",distinct=True,)
+    popisne_udaje = CharFilter(
+        method="filter_popisne_udaje",
+        label="Popisné údaje",
+        distinct=True,
+    )
+
+    def filtr_katastr(self, queryset, name, value):
+        return queryset.filter(
+            Q(hlavni_katastr__nazev__icontains=value)
+            | Q(katastry__nazev__icontains=value)
+        ).distinct()
+
+    def filtr_katastr_kraj(self, queryset, name, value):
+        return queryset.filter(
+            Q(hlavni_katastr__okres__kraj__in=value)
+            | Q(katastry__okres__kraj__in=value)
+        ).distinct()
+
+    def filtr_katastr_okres(self, queryset, name, value):
+        return queryset.filter(
+            Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)
+        ).distinct()
+
+    def filter_popisne_udaje(self, queryset, name, value):
+        return queryset.filter(
+            Q(lokalizace__icontains=value)
+            | Q(kulturni_pamatka_cislo__icontains=value)
+            | Q(kulturni_pamatka_popis__icontains=value)
+            | Q(parcelni_cislo__icontains=value)
+            | Q(oznaceni_stavby__icontains=value)
+            | Q(podnet__icontains=value)
+            | Q(uzivatelske_oznaceni__icontains=value)
+            | Q(oznamovatel__oznamovatel__icontains=value)
+            | Q(oznamovatel__odpovedna_osoba__icontains=value)
+            | Q(oznamovatel__adresa__icontains=value)
+            | Q(oznamovatel__telefon__icontains=value)
+            | Q(oznamovatel__email__icontains=value)
+        ).distinct()
+
+
+class ProjektFilter(HistorieFilter, KatastrFilter):
+
+    ident_cely = CharFilter(
+        lookup_expr="icontains",
+        distinct=True,
+    )
+
+    oblast = MultipleChoiceFilter(
+        choices=OBLAST_CHOICES,
+        label=_("Územní příslušnost"),
+        method="filter_by_oblast",
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
+
+    typ_projektu = ModelMultipleChoiceFilter(
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
+        label=_("Typ"),
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
 
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
         label=_("Stav"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -108,14 +179,14 @@ class ProjektFilter(HistorieFilter):
     datum_zahajeni = DateFromToRangeFilter(
         field_name="datum_zahajeni",
         label=_("Datum zahájení (od-do)"),
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
     datum_ukonceni = DateFromToRangeFilter(
         field_name="datum_ukonceni",
         label=_("Datum ukončení (od-do)"),
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -128,14 +199,22 @@ class ProjektFilter(HistorieFilter):
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
     kulturni_pamatka = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PAMATKOVA_OCHRANA),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -143,14 +222,14 @@ class ProjektFilter(HistorieFilter):
     planovane_zahajeni = DateFromToRangeFilter(
         # field_name="planovane_zahajeni",
         method="filter_planovane_zahajeni",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
     termin_odevzdani_nz = DateFromToRangeFilter(
         field_name="termin_odevzdani_nz",
         label=_("Termín odevzdání NZ (od-do)"),
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -187,23 +266,12 @@ class ProjektFilter(HistorieFilter):
         label="Změna stavu",
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
-        distinct=True,
-    )
-
-    historie_datum_zmeny_od = DateFromToRangeFilter(
-        label="Datum změny (od-do)",
-        field_name="historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
-        distinct=True,
-    )
-
-    historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
-        label="Uživatel",
-        field_name="historie__historie__uzivatel",
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
 
@@ -220,17 +288,25 @@ class ProjektFilter(HistorieFilter):
         label=_("Terénní zjištění"),
         choices=[("True", "pozitivní"), ("False", "negativní")],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
 
     akce_popisne_udaje = CharFilter(
-        method="filter_popisne_udaje_akce", label="Popisné údaje", distinct=True,
+        method="filter_popisne_udaje_akce",
+        label="Popisné údaje",
+        distinct=True,
     )
 
     akce_katastr = CharFilter(
-        method="filtr_akce_katastr", label=_("Katastr"), distinct=True,
+        method="filtr_akce_katastr",
+        label=_("Katastr"),
+        distinct=True,
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -238,7 +314,11 @@ class ProjektFilter(HistorieFilter):
         label=_("Kraj"),
         method="filtr_akce_katastr_kraj",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -248,7 +328,11 @@ class ProjektFilter(HistorieFilter):
         label=_("Okres"),
         method="filtr_akce_katastr_okres",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -256,7 +340,9 @@ class ProjektFilter(HistorieFilter):
     akce_vedouci = MultipleChoiceFilter(
         method="filtr_akce_vedouci",
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
-        widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices",),
+        widget=autocomplete.Select2Multiple(
+            url="heslar:osoba-autocomplete-choices",
+        ),
         distinct=True,
     )
 
@@ -265,7 +351,11 @@ class ProjektFilter(HistorieFilter):
         label="Organizace",
         method="filtr_akce_organizace",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -273,24 +363,28 @@ class ProjektFilter(HistorieFilter):
     akce_datum_zahajeni = DateFromToRangeFilter(
         field_name="akce__datum_zahajeni",
         label="Datum zahájení (od-do)",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
     akce_datum_ukonceni = DateFromToRangeFilter(
         field_name="akce__datum_ukonceni",
         label="Datum ukončení (od-do)",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
     typ_akce = MultipleChoiceFilter(
-        #choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
+        # choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
         #    "id", "heslo"
-        #),
+        # ),
         choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
         method="filter_akce_typ",
         label="Typ",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -299,7 +393,11 @@ class ProjektFilter(HistorieFilter):
         field_name="akce__archeologicky_zaznam__pristupnost",
         label="Přístupnost",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -308,7 +406,11 @@ class ProjektFilter(HistorieFilter):
         field_name="akce__archeologicky_zaznam__stav",
         label="Stav",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -318,7 +420,11 @@ class ProjektFilter(HistorieFilter):
         lookup_expr="iexact",
         label="ZAA jako NZ",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -331,9 +437,9 @@ class ProjektFilter(HistorieFilter):
     )
 
     dokument_ident_obsahuje = CharFilter(
-        #field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
-        #lookup_expr="icontains",
-        method = "filtr_dokumenty_ident",
+        # field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
+        # lookup_expr="icontains",
+        method="filtr_dokumenty_ident",
         label="ID dokumentu",
         distinct=True,
     )
@@ -366,9 +472,7 @@ class ProjektFilter(HistorieFilter):
         elif value.stop and not value.start:
             rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
         else:
-            rng = DateRange(
-                lower="01/01/1900", upper="01/01/2100"
-            )
+            rng = DateRange(lower="01/01/1900", upper="01/01/2100")
         return queryset.filter(planovane_zahajeni__overlap=rng)
 
     def filter_popisne_udaje_akce(self, queryset, name, value):
@@ -378,22 +482,6 @@ class ProjektFilter(HistorieFilter):
             | Q(akce__ulozeni_nalezu__icontains=value)
             | Q(akce__ulozeni_dokumentace__icontains=value)
             | Q(akce__archeologicky_zaznam__uzivatelske_oznaceni__icontains=value)
-        ).distinct()
-
-    def filter_popisne_udaje(self, queryset, name, value):
-        return queryset.filter(
-            Q(lokalizace__icontains=value)
-            | Q(kulturni_pamatka_cislo__icontains=value)
-            | Q(kulturni_pamatka_popis__icontains=value)
-            | Q(parcelni_cislo__icontains=value)
-            | Q(oznaceni_stavby__icontains=value)
-            | Q(podnet__icontains=value)
-            | Q(uzivatelske_oznaceni__icontains=value)
-            | Q(oznamovatel__oznamovatel__icontains=value)
-            | Q(oznamovatel__odpovedna_osoba__icontains=value)
-            | Q(oznamovatel__adresa__icontains=value)
-            | Q(oznamovatel__telefon__icontains=value)
-            | Q(oznamovatel__email__icontains=value)
         ).distinct()
 
     def filter_has_positive_find(self, queryset, name, value):
@@ -437,23 +525,6 @@ class ProjektFilter(HistorieFilter):
             historie__historie__typ_zmeny=SCHVALENI_OZNAMENI_PROJ
         ).filter(historie__historie__datum_zmeny__lte=value)
 
-    def filtr_katastr(self, queryset, name, value):
-        return queryset.filter(
-            Q(hlavni_katastr__nazev__icontains=value)
-            | Q(katastry__nazev__icontains=value)
-        ).distinct()
-
-    def filtr_katastr_kraj(self, queryset, name, value):
-        return queryset.filter(
-            Q(hlavni_katastr__okres__kraj__in=value)
-            | Q(katastry__okres__kraj__in=value)
-        ).distinct()
-
-    def filtr_katastr_okres(self, queryset, name, value):
-        return queryset.filter(
-            Q(hlavni_katastr__okres__in=value) | Q(katastry__okres__in=value)
-        ).distinct()
-
     def filter_akce_typ(self, queryset, name, value):
         return queryset.filter(
             Q(akce__hlavni_typ__in=value) | Q(akce__vedlejsi_typ__in=value)
@@ -479,7 +550,8 @@ class ProjektFilter(HistorieFilter):
 
     def filtr_akce_vedouci(self, queryset, name, value):
         return queryset.filter(
-            Q(akce__hlavni_vedouci__id__in=value) | Q(akce__akcevedouci__vedouci__id__in=value)
+            Q(akce__hlavni_vedouci__id__in=value)
+            | Q(akce__akcevedouci__vedouci__id__in=value)
         ).distinct()
 
     def filtr_akce_organizace(self, queryset, name, value):
@@ -489,7 +561,10 @@ class ProjektFilter(HistorieFilter):
 
     def filtr_dokumenty_ident(self, queryset, name, value):
         return queryset.filter(
-            Q(akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value) | Q(casti_dokumentu__dokument__ident_cely__icontains=value)
+            Q(
+                akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely__icontains=value
+            )
+            | Q(casti_dokumentu__dokument__ident_cely__icontains=value)
         ).distinct()
 
     class Meta:
@@ -501,14 +576,14 @@ class ProjektFilter(HistorieFilter):
 
     def __init__(self, *args, **kwargs):
         super(ProjektFilter, self).__init__(*args, **kwargs)
-        #try:
-            #self.filters["historie_uzivatel"].extra.update({"queryset": User.objects.all()})
-            #self.filters["akce_vedouci"].extra.update({"queryset": Osoba.objects.all()})
-            #self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
-        #except utils.ProgrammingError as err:
-            #self.filters["historie_uzivatel"].choices = []
-            #self.filters["akce_vedouci"].choices = []
-            #self.filters["vedouci_projektu"].extra.update({"queryset": None})
+        # try:
+        # self.filters["historie_uzivatel"].extra.update({"queryset": User.objects.all()})
+        # self.filters["akce_vedouci"].extra.update({"queryset": Osoba.objects.all()})
+        # self.filters["vedouci_projektu"].extra.update({"queryset": Osoba.objects.all()})
+        # except utils.ProgrammingError as err:
+        # self.filters["historie_uzivatel"].choices = []
+        # self.filters["akce_vedouci"].choices = []
+        # self.filters["vedouci_projektu"].extra.update({"queryset": None})
         self.helper = ProjektFilterFormHelper()
 
 

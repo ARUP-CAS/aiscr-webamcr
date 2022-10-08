@@ -22,8 +22,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import HESLAR_DJ_TYP
@@ -128,7 +127,7 @@ def detail(request, ident_cely):
             logger.debug(formset.errors)
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole")
 
-    response = redirect("arch_z:detail", dj.archeologicky_zaznam.ident_cely)
+    response = dj.archeologicky_zaznam.get_redirect()
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -164,8 +163,7 @@ def zapsat(request, arch_z_ident_cely):
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-
-    response = redirect("arch_z:detail", az.ident_cely)
+    response = az.get_redirect()
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -179,28 +177,17 @@ def zapsat(request, arch_z_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
-    arch_z_ident_cely = dj.archeologicky_zaznam.ident_cely
     if request.method == "POST":
         resp = dj.delete()
         if resp:
             logger.debug("Byla smazána dokumentacni jednotka: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
-                    )
-                }
-            )
+            return JsonResponse({"redirect": dj.archeologicky_zaznam.get_reverse()})
         else:
             logger.warning("DJ nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
-                    )
-                },
+                {"redirect": dj.archeologicky_zaznam.get_reverse()},
                 status=403,
             )
     else:

@@ -1,0 +1,81 @@
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+<div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {{header}}
+      </div>
+      {% if show.editovat %}
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <a class="btn" href="{% url 'lokalita:edit' zaznam.ident_cely %}" rel="tooltip"
+             data-placement="top" title="{% trans 'Upravit' %}">
+            <span class="material-icons">edit</span>
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="card-body formset-table">
+      {% if warnings %}
+      <div class="alert alert-info" role="alert">
+        <ul>
+          {% for warning in warnings %}
+            <li>{{ warning }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+      <div class="row">
+        {% if detail_view or edit_view %}
+        <div class="col-sm-2">
+          {{ arch_z_form.hlavni_katastr_show|as_crispy_field }}
+        </div>
+        <div class="col-sm-2" style="display:none">
+          {{ arch_z_form.hlavni_katastr|as_crispy_field }}
+        </div>
+        {% else %}
+        <div class="col-sm-2">
+          {{ arch_z_form.hlavni_katastr|as_crispy_field }}
+        </div>
+        {% endif %}
+        {% if detail_view %}
+        <div class="col-sm-4">
+          {{ arch_z_form.katastry_show|as_crispy_field }}
+        </div>
+        {% else %}
+        <div class="col-sm-4">
+          {{ arch_z_form.katastry|as_crispy_field }}
+        </div>
+        {% endif %}
+        <div class="col-sm-2">
+          {{ form.typ_lokality|as_crispy_field }}
+        </div>
+        <div class="col-sm-2">
+          {{ form.druh|as_crispy_field }}
+        </div>
+        <div class="col-sm-2">
+          {{ arch_z_form.uzivatelske_oznaceni|as_crispy_field }}
+        </div>
+        <div class="col-sm-6">
+          {{ form.nazev|as_crispy_field }}
+        </div>
+        <div class="col-sm-2">
+          {{ form.zachovalost|as_crispy_field }}
+        </div>
+        <div class="col-sm-2">
+          {{ form.jistota|as_crispy_field }}
+        </div>
+        <div class="col-sm-2">
+          {{ arch_z_form.pristupnost|as_crispy_field }}
+        </div>
+        <div class="col-sm-12">
+          {{ form.popis|as_crispy_field }}
+        </div>
+        <div class="col-sm-12">
+          {{ form.poznamka|as_crispy_field }}
+        </div>
+      </div>
+    </div>
+  </div>

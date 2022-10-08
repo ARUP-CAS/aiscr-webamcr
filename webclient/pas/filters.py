@@ -31,7 +31,8 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
-    HESLAR_OBDOBI_KAT, HESLAR_PRISTUPNOST,
+    HESLAR_OBDOBI_KAT,
+    HESLAR_PRISTUPNOST,
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
 from historie.models import Historie
@@ -48,7 +49,11 @@ class SamostatnyNalezFilter(HistorieFilter):
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
@@ -62,14 +67,24 @@ class SamostatnyNalezFilter(HistorieFilter):
         choices=OBLAST_CHOICES,
         label=_("Územní příslušnost"),
         method="filter_by_oblast",
-        widget=Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
+        widget=Select(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
     )
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
         label=_("Kraj"),
         field_name="katastr__okres__kraj",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
@@ -78,7 +93,11 @@ class SamostatnyNalezFilter(HistorieFilter):
         label=_("Okres"),
         field_name="katastr__okres",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
@@ -92,7 +111,11 @@ class SamostatnyNalezFilter(HistorieFilter):
         field_name="historie__historie__uzivatel",
         label="Vlastník",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
     popisne_udaje = CharFilter(
@@ -108,7 +131,11 @@ class SamostatnyNalezFilter(HistorieFilter):
     predano_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
@@ -117,14 +144,22 @@ class SamostatnyNalezFilter(HistorieFilter):
         label=_("Období"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
     okolnosti = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_NALEZOVE_OKOLNOSTI),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
@@ -133,21 +168,29 @@ class SamostatnyNalezFilter(HistorieFilter):
         label=_("Druh nálezu"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
     specifikace = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
     datum_nalezu = DateFromToRangeFilter(
         label=_("pas.filters.datumNalezu.label"),
         field_name="datum_nalezu",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
@@ -163,23 +206,12 @@ class SamostatnyNalezFilter(HistorieFilter):
         label="Změna stavu",
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
-        distinct=True,
-    )
-
-    historie_datum_zmeny_od = DateFromToRangeFilter(
-        label="Datum změny (od-do)",
-        field_name="historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
-        distinct=True,
-    )
-
-    historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
-        field_name="historie__historie__uzivatel",
-        label="Uživatel",
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
 
@@ -195,7 +227,6 @@ class SamostatnyNalezFilter(HistorieFilter):
         fields = {
             "ident_cely": ["icontains"],
             "predano": ["exact"],
-            "pristupnost": ["exact"],
         }
 
     def __init__(self, *args, **kwargs):

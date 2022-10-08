@@ -18,9 +18,11 @@
             <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">
               {% trans "Připojit existující dokument" %}
             </button>
+            {% if app != "lokalita" %}
             <button id="dokument-pripojit-z-projektu" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">
               {% trans "Připojit existující dokument z projektu" %}
             </button>
+            {% endif %}
                {% elif type == "projekt" %}
             <a class="dropdown-item"
                href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
@@ -69,7 +71,7 @@
       })
       dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
-    if ("{{show.editovat}}" != "False"){
+    if ("{{show.editovat}}" != "False" && "{{app}}" != "lokalita"){
       var options = Object.assign(defaults, {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
