@@ -84,6 +84,6 @@ class CreateKomponentaForm(forms.ModelForm):
             if required or required_next:
                 self.fields[key].required = True if key in required else False
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                    self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+                    self.fields[key].widget.attrs["class"] = 'required-next' if key in required_next else ""

@@ -73,7 +73,7 @@ def ifinlist(widget_optgroups, list):
                 if string == "":
                     string = str(option["label"])
                 else:
-                    string += " ," + str(option["label"])
+                    string += "; " + str(option["label"])
     return string
 
 
