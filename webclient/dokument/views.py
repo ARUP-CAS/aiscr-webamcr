@@ -1,4 +1,5 @@
 import logging
+import os
 
 import structlog
 from arch_z.models import ArcheologickyZaznam
@@ -38,7 +39,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import ExportMixinDate, check_stav_changed, get_dokument_soubor_name
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -94,6 +95,7 @@ from nalez.forms import (
 from nalez.models import NalezObjekt, NalezPredmet
 from urllib.parse import urlparse
 from projekt.models import Projekt
+from core.utils import calculate_crc_32
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -706,6 +708,29 @@ def archivovat(request, ident_cely):
                     + " a jeho castem byl prirazen permanentni identifikator "
                     + d.ident_cely
                 )
+                for file in (
+                    d.soubory.soubory.all()
+                    .filter(nazev_zkraceny__startswith="X")
+                    .order_by("id")
+                ):
+                    new_name = get_dokument_soubor_name(
+                        d, file.path.name, add_to_index=1
+                    )
+                    checksum = calculate_crc_32(file.path)
+                    # After calculating checksum, must move pointer to the beginning
+                    file.path.seek(0)
+                    old_nazev = file.nazev
+                    file.nazev = checksum + "_" + new_name
+                    file.nazev_zkraceny = new_name
+                    old_path = file.path.storage.path(file.path.name)
+                    new_path = old_path.replace(old_nazev, file.nazev)
+                    file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
+                    try:
+                        os.rename(old_path, str(new_path))
+                        file.save()
+                    except Exception as e:
+                        logger.debug(e)
+
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})
