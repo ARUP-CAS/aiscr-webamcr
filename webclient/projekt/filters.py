@@ -286,7 +286,7 @@ class ProjektFilter(HistorieFilter):
         #choices=Heslar.objects.filter(nazev_heslare=HESLAR_AKCE_TYP).values_list(
         #    "id", "heslo"
         #),
-        choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT),
+        choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
         method="filter_akce_typ",
         label="Typ",
         widget=SelectMultiple(
