@@ -1,8 +1,10 @@
 from dal import autocomplete
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.http import JsonResponse
 from django.db.models import Value, IntegerField
 
+from heslar.hesla import HESLAR_DOKUMENT_TYP, MODEL_3D_DOKUMENT_TYPES, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
 import logging
 logger = logging.getLogger(__name__)
@@ -74,3 +76,25 @@ def zjisti_vychozi_hodnotu(request):
         )
     else:
         return JsonResponse(data = {},status=400)
+
+
+class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
+            id__in=MODEL_3D_DOKUMENT_TYPES
+        )
+        return qs
+
+
+class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
+            heslo__startswith="3D"
+        )
+        return qs
+
+
+class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
+        return qs

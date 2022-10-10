@@ -31,7 +31,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
-    HESLAR_OBDOBI_KAT,
+    HESLAR_OBDOBI_KAT, HESLAR_PRISTUPNOST,
 )
 from heslar.models import Heslar, RuianKraj, RuianOkres
 from historie.models import Historie
@@ -175,6 +175,13 @@ class SamostatnyNalezFilter(HistorieFilter):
         label="Uživatel",
         widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
+    )
+
+    pristupnost = ModelMultipleChoiceFilter(
+        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
+        label=_("Přístupnost"),
+        field_name="pristupnost",
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:pristupnost-autocomplete"),
     )
 
     class Meta:

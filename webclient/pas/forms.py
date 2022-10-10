@@ -52,7 +52,7 @@ class PotvrditNalezForm(forms.ModelForm):
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
-            attrs={"class": "select"},
+            attrs={"class": "selectpicker", "data-live-search": "true"},
             choices=(
                 (True, "Ano"),
                 (False, "Ne"),
@@ -72,6 +72,9 @@ class PotvrditNalezForm(forms.ModelForm):
         widgets = {
             "evidencni_cislo": forms.TextInput(),
             "predano_organizace": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "pristupnost": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
         }

@@ -40,6 +40,8 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": _("Poznámka"),
         }
         widgets = {
+            "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+            "podnet": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
             "uzivatelske_oznaceni_sondy": forms.TextInput(),
             "trat": forms.TextInput(),
             "cislo_popisne": forms.TextInput(),
@@ -185,6 +187,7 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
 
             widgets = {
                 "ident_cely": forms.TextInput(),
+                "typ": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
             }
             help_texts = {
                 "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),

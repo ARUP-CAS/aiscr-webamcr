@@ -525,7 +525,10 @@ class CreateModelExtraDataForm(forms.ModelForm):
             ),
             "region": forms.TextInput(),
             "duveryhodnost": forms.NumberInput(attrs={"max": "100", "min": "0"}),
-            "odkaz": forms.TextInput()
+            "odkaz": forms.TextInput(),
+            "zeme": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
         }
         labels = {
             "format": _("Formát"),
