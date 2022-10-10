@@ -21,7 +21,7 @@ class PianCreateForm(forms.ModelForm):
             "geom": HiddenInput(),
             "geom_sjtsk": HiddenInput(),
             "geom_system": HiddenInput(),
-            "presnost": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"})
+            "presnost": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"})
         }
 
     def __init__(self, *args, **kwargs):

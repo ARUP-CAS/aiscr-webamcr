@@ -34,7 +34,7 @@ class AuthUserCreationForm(RegistrationForm):
 
         widgets = {
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "telefon": forms.TextInput,
         }
