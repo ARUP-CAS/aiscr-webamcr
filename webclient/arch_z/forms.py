@@ -8,7 +8,7 @@ from django.utils.translation import gettext as _
 
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
-from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT, HESLAR_DATUM_SPECIFIKACE
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
@@ -233,6 +233,7 @@ class CreateAkceForm(forms.ModelForm):
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateAkceForm, self).__init__(*args, **kwargs)
+        self.fields["specifikace_data"].choices = list(self.fields["specifikace_data"].choices)[1:]
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
             label=_("Hlavní typ"),

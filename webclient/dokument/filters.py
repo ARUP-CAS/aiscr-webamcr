@@ -145,7 +145,7 @@ class DokumentFilter(HistorieFilter):
     obdobi = MultipleChoiceFilter(
         method = "filter_obdobi",
         label=_("Období"),
-        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
+        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -154,7 +154,7 @@ class DokumentFilter(HistorieFilter):
     areal = MultipleChoiceFilter(
         method = "filter_areal",
         label=_("Areál"),
-        choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
+        choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -176,7 +176,7 @@ class DokumentFilter(HistorieFilter):
     predmet_druh = MultipleChoiceFilter(
         method = "filter_predmety_druh",
         label=_("Druh předmětu"),
-        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -197,7 +197,7 @@ class DokumentFilter(HistorieFilter):
     objekt_druh = MultipleChoiceFilter(
         method = "filter_objekty_druh",
         label=_("Druh objektu"),
-        choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+        choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -207,7 +207,7 @@ class DokumentFilter(HistorieFilter):
     objekt_specifikace = MultipleChoiceFilter(
         method = "filter_objekty_specifikace",
         label=_("Specifikace objektu"),
-        choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+        choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),

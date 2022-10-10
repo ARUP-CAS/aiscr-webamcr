@@ -109,7 +109,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     obdobi = MultipleChoiceFilter(
         method="filter_obdobi",
         label=_("Období"),
-        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
+        choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -125,7 +125,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     druh_nalezu = MultipleChoiceFilter(
         method="filter_druh_nalezu)",
         label=_("Druh nálezu"),
-        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+        choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
