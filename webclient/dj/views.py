@@ -104,7 +104,7 @@ def detail(request, ident_cely):
         vyskovy_bod_formset = inlineformset_factory(
             Adb,
             VyskovyBod,
-            form=create_vyskovy_bod_form(),
+            form=create_vyskovy_bod_form(pian=pian_db),
             extra=3,
         )
         formset = vyskovy_bod_formset(
@@ -114,9 +114,9 @@ def detail(request, ident_cely):
             logger.debug("Formset is valid")
             instances = formset.save()
             for vyskovy_bod in instances:
-                vyskovy_bod: VyskovyBod
-                vyskovy_bod.save()
-                # vyskovy_bod.set_ident()
+                if isinstance(vyskovy_bod, VyskovyBod):
+                    vyskovy_bod.save()
+                    # vyskovy_bod.set_ident()
         if formset.is_valid():
             logger.debug("Dj.Form is valid:3")
             if (

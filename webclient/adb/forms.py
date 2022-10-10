@@ -1,3 +1,5 @@
+import structlog
+
 from adb.models import Adb, VyskovyBod
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
@@ -5,6 +7,9 @@ from crispy_forms.layout import Div, Layout
 from cron.convertToSJTSK import convertToJTSK
 from django import forms
 from django.utils.translation import gettext as _
+
+
+logger_s = structlog.get_logger(__name__)
 
 
 class CreateADBForm(forms.ModelForm):
@@ -196,6 +201,29 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 "northing": _("adb.form.vyskovyBod.northing.tooltip"),
                 "easting": _("adb.form.vyskovyBod.easting.tooltip"),
             }
+
+        def _has_initial_values(self):
+            cleaned_data = self.cleaned_data
+            has_initial_values = False
+            if pian:
+                [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
+                has_initial_values = cleaned_data.get("northing", None) == -1 * round(x, 2) and cleaned_data.get("easting", None) == -1 * round(y, 2)
+                logger_s.debug(cleaned_data=cleaned_data, x=x, y=y, has_initial_values=has_initial_values)
+            if has_initial_values and niveleta:
+                has_initial_values = cleaned_data.get("niveleta", None) == niveleta
+                logger_s.debug(cleaned_data=cleaned_data, niveleta=niveleta, has_initial_values=has_initial_values)
+            return has_initial_values
+
+        def is_valid(self):
+            parent_is_valid = super().is_valid()
+            if self._has_initial_values():
+                return True
+            return parent_is_valid
+
+        def save(self, commit=True):
+            if self._has_initial_values():
+                return None
+            return super().save(commit)
 
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
