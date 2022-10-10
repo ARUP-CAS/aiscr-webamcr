@@ -52,7 +52,7 @@ class PotvrditNalezForm(forms.ModelForm):
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
-            attrs={"class": "selectpicker", "data-live-search": "true"},
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             choices=(
                 (True, "Ano"),
                 (False, "Ne"),
@@ -72,10 +72,10 @@ class PotvrditNalezForm(forms.ModelForm):
         widgets = {
             "evidencni_cislo": forms.TextInput(),
             "predano_organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "pristupnost": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
         }
         labels = {
@@ -161,13 +161,13 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         )
         widgets = {
             "nalezce": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "okolnosti": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "specifikace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "presna_datace": forms.TextInput(),
             "pocet": forms.TextInput(),
@@ -221,7 +221,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             .filter(organizace__in=user.moje_spolupracujici_organizace())
             .filter(stav__in=user.moje_stavy_pruzkumnych_projektu()),
             widget=forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             help_text=_("pas.form.createSamostatnyNalez.projekt.tooltip"),
             initial=Projekt.objects.filter(ident_cely=project_ident)[0]
@@ -233,7 +233,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             label=_("Druh nálezu"),
             widget=forms.Select(
                 choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-                attrs={"class": "selectpicker", "data-live-search": "true"},
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
             help_text=_("pas.form.createSamostatnyNalez.drih_nalezu.tooltip"),
         )
@@ -241,7 +241,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             label=_("Období"),
             widget=forms.Select(
                 choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
-                attrs={"class": "selectpicker", "data-live-search": "true"},
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
             help_text=_("pas.form.createSamostatnyNalez.obdobi.tooltip"),
         )

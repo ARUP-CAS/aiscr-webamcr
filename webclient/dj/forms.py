@@ -60,11 +60,11 @@ class CreateDJForm(forms.ModelForm):
 
         widgets = {
             "typ": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "nazev": forms.TextInput(),
             "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
-            "negativni_jednotka": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
+            "negativni_jednotka": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
         }
         help_texts = {
             "typ": _("dj.form.typ.tooltip"),
@@ -84,7 +84,7 @@ class CreateDJForm(forms.ModelForm):
         self.fields["typ"] = forms.ModelChoiceField(queryset=self.get_typ_queryset(jednotky, self.instance),
                                                     help_text=_("dj.form.typ.tooltip"),
                                                     widget=forms.Select(
-                                                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                                                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                                                     ))
         self.helper = FormHelper(self)
         self.helper.form_tag = False

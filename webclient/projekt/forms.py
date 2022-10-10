@@ -38,7 +38,7 @@ class CreateProjektForm(forms.ModelForm):
         )
         widgets = {
             "typ_projektu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.TextInput(),
@@ -183,7 +183,7 @@ class EditProjektForm(forms.ModelForm):
         )
         widgets = {
             "typ_projektu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "podnet": forms.Textarea(attrs={"rows": 2, "cols": 40}),
             "lokalizace": forms.TextInput(),
@@ -201,16 +201,16 @@ class EditProjektForm(forms.ModelForm):
                 url="heslar:katastr-autocomplete"
             ),
             "vedouci_projektu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "termin_odevzdani_nz": forms.DateInput(
                 attrs={"data-provide": "datepicker", "autocomplete": "off"}
             ),
             "kulturni_pamatka": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
         }
         labels = {

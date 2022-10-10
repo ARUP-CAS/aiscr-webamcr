@@ -84,19 +84,19 @@ class EditDokumentExtraDataForm(forms.ModelForm):
         )
         widgets = {
             "zachovalost": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "nahrada": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "format": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "zeme": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "udalost_typ": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "meritko": forms.TextInput(),
             "cislo_objektu": forms.TextInput(),
@@ -159,7 +159,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 label="Dokumentované osoby",
                 required=False,
                 widget=forms.SelectMultiple(
-                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
                 help_text=_("dokument.form.dokumentExtraData.dokument_osoba.tooltip"),
             )
@@ -170,7 +170,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 label="Let",
                 required=False,
                 widget=forms.Select(
-                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
                 help_text=_("dokument.form.dokumentExtraData.let.tooltip"),
             )
@@ -180,7 +180,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 label="Dokumentované osoby",
                 required=False,
                 widget=forms.SelectMultiple(
-                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
             )
             self.fields["let"] = forms.ChoiceField(
@@ -188,7 +188,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 label="Let",
                 required=False,
                 widget=forms.Select(
-                    attrs={"class": "selectpicker", "data-live-search": "true"}
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
             )
         self.fields["meritko"].widget.attrs["rows"] = 1
@@ -268,31 +268,31 @@ class EditDokumentForm(forms.ModelForm):
         widgets = {
             "typ_dokumentu": forms.Select(
                 attrs={
-                    "class": "selectpicker",
+                    "class": "selectpicker", "data-multiple-separator": "; ",
                     "data-live-search": "true",
                     "required": "",
                 }
             ),
             "material_originalu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "pristupnost": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "ulozeni_originalu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "jazyky": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "posudky": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "autori": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "oznaceni_originalu": forms.TextInput(),
             "licence": forms.TextInput(),
@@ -426,13 +426,13 @@ class CreateModelDokumentForm(forms.ModelForm):
         )
         widgets = {
             "typ_dokumentu": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "autori": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "oznaceni_originalu": forms.TextInput(),
             "popis": forms.TextInput(),
@@ -521,13 +521,13 @@ class CreateModelExtraDataForm(forms.ModelForm):
         )
         widgets = {
             "format": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "region": forms.TextInput(),
             "duveryhodnost": forms.NumberInput(attrs={"max": "100", "min": "0"}),
             "odkaz": forms.TextInput(),
             "zeme": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
         }
         labels = {

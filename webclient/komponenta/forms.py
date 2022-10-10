@@ -27,9 +27,9 @@ class CreateKomponentaForm(forms.ModelForm):
         widgets = {
             "poznamka": forms.TextInput(),
             "presna_datace": forms.TextInput(),
-            "jistota": forms.Select(choices=[(False, _("Ne")),(True, _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
+            "jistota": forms.Select(choices=[(False, _("Ne")),(True, _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
             "aktivity": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
         }
         help_texts = {
@@ -45,7 +45,7 @@ class CreateKomponentaForm(forms.ModelForm):
             label=_("Období"),
             widget=forms.Select(
                 choices=obdobi_choices,
-                attrs={"class": "selectpicker", "data-live-search": "true"},
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
             help_text=_("komponenta.form.obdobi.tooltip"),
         )
@@ -53,7 +53,7 @@ class CreateKomponentaForm(forms.ModelForm):
             label=_("Areál"),
             widget=forms.Select(
                 choices=areal_choices,
-                attrs={"class": "selectpicker", "data-live-search": "true"},
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
             help_text=_("komponenta.form.areal.tooltip"),
         )

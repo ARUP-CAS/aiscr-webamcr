@@ -99,14 +99,14 @@ class DokumentFilter(HistorieFilter):
     stav = MultipleChoiceFilter(
         choices=Dokument.STATES,
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
     )
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
     )
 
@@ -137,7 +137,7 @@ class DokumentFilter(HistorieFilter):
         field_name="extra_data__zeme",
         label=_("Země"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -147,7 +147,7 @@ class DokumentFilter(HistorieFilter):
         label=_("Období"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
     )
 
@@ -156,7 +156,7 @@ class DokumentFilter(HistorieFilter):
         label=_("Areál"),
         choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -168,7 +168,7 @@ class DokumentFilter(HistorieFilter):
         field_name="casti__komponenty__komponenty__komponentaaktivita__aktivita",
         label=_("Aktivity"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -178,7 +178,7 @@ class DokumentFilter(HistorieFilter):
         label=_("Druh předmětu"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -190,7 +190,7 @@ class DokumentFilter(HistorieFilter):
         field_name="casti__komponenty__komponenty__predmety__specifikace",
         label=_("Specifikace předmětu"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -199,7 +199,7 @@ class DokumentFilter(HistorieFilter):
         label=_("Druh objektu"),
         choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -209,7 +209,7 @@ class DokumentFilter(HistorieFilter):
         label=_("Specifikace objektu"),
         choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -222,7 +222,7 @@ class DokumentFilter(HistorieFilter):
         label="Změna stavu",
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )

@@ -61,14 +61,14 @@ class ProjektFilter(HistorieFilter):
         choices=OBLAST_CHOICES,
         label=_("Územní příslušnost"),
         method="filter_by_oblast",
-        widget=SelectMultiple(attrs={"class": "selectpicker", "data-live-search": "true"}),
+        widget=SelectMultiple(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
         distinct=True,
     )
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
         label=_("Typ"),
-        widget=SelectMultiple(attrs={"class": "selectpicker", "data-live-search": "true"}),
+        widget=SelectMultiple(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
         distinct=True,
     )
 
@@ -77,7 +77,7 @@ class ProjektFilter(HistorieFilter):
         label=_("Kraj"),
         method="filtr_katastr_kraj",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -87,7 +87,7 @@ class ProjektFilter(HistorieFilter):
         label=_("Okres"),
         method="filtr_katastr_okres",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -100,7 +100,7 @@ class ProjektFilter(HistorieFilter):
         choices=Projekt.CHOICES,
         label=_("Stav"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -128,14 +128,14 @@ class ProjektFilter(HistorieFilter):
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
     kulturni_pamatka = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PAMATKOVA_OCHRANA),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -187,7 +187,7 @@ class ProjektFilter(HistorieFilter):
         label="Změna stavu",
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -220,7 +220,7 @@ class ProjektFilter(HistorieFilter):
         label=_("Terénní zjištění"),
         choices=[("True", "pozitivní"), ("False", "negativní")],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -238,7 +238,7 @@ class ProjektFilter(HistorieFilter):
         label=_("Kraj"),
         method="filtr_akce_katastr_kraj",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -248,7 +248,7 @@ class ProjektFilter(HistorieFilter):
         label=_("Okres"),
         method="filtr_akce_katastr_okres",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -265,7 +265,7 @@ class ProjektFilter(HistorieFilter):
         label="Organizace",
         method="filtr_akce_organizace",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -290,7 +290,7 @@ class ProjektFilter(HistorieFilter):
         method="filter_akce_typ",
         label="Typ",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -299,7 +299,7 @@ class ProjektFilter(HistorieFilter):
         field_name="akce__archeologicky_zaznam__pristupnost",
         label="Přístupnost",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -308,7 +308,7 @@ class ProjektFilter(HistorieFilter):
         field_name="akce__archeologicky_zaznam__stav",
         label="Stav",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )
@@ -318,7 +318,7 @@ class ProjektFilter(HistorieFilter):
         lookup_expr="iexact",
         label="ZAA jako NZ",
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
+            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
         ),
         distinct=True,
     )

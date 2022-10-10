@@ -43,7 +43,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("Druh"),
                 widget=forms.Select(
                     choices=druh_objekt_choices,
-                    attrs={"class": "selectpicker", "data-live-search": "true"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.form.nalezObjekt.druh.tooltip"),
             )
@@ -51,7 +51,7 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
                 label=_("Specifikace"),
                 widget=forms.Select(
                     choices=specifikace_objekt_choices,
-                    attrs={"class": "selectpicker", "data-live-search": "true"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.form.nalezObjekt.specifikace.tooltip"),
             )
@@ -101,7 +101,7 @@ def create_nalez_predmet_form(
                 label=_("Druh"),
                 widget=forms.Select(
                     choices=druh_projekt_choices,
-                    attrs={"class": "selectpicker", "data-live-search": "true"},
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
                 help_text=_("nalez.form.nalezPredmet.druh.tooltip"),
             )
@@ -111,7 +111,7 @@ def create_nalez_predmet_form(
                 help_text=_("nalez.form.nalezPredmet.specifikace.tooltip"),
             )
             self.fields["specifikace"].widget.attrs = {
-                "class": "selectpicker",
+                "class": "selectpicker", "data-multiple-separator": "; ",
                 "data-live-search": "true",
             }
             self.fields["specifikace"].required = True

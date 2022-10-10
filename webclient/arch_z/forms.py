@@ -53,10 +53,10 @@ def create_akce_vedouci_objekt_form(readonly=True):
             else:
                 widgets = {
                     "vedouci": forms.Select(
-                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                     ),
                     "organizace": forms.Select(
-                        attrs={"class": "selectpicker", "data-live-search": "true"}
+                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                     ),
                 }
 
@@ -98,7 +98,7 @@ class CreateArchZForm(forms.ModelForm):
                 url="heslar:katastr-autocomplete"
             ),
             "uzivatelske_oznaceni": forms.TextInput(),
-            "pristupnost":forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"},)
+            "pristupnost":forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},)
         }
         help_texts = {
             "hlavni_katastr": _("arch_z.form.hlavni_katastr.tooltip"),
@@ -201,17 +201,17 @@ class CreateAkceForm(forms.ModelForm):
 
         widgets = {
             "hlavni_vedouci": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
             "lokalizace_okolnosti": forms.TextInput(),
             "ulozeni_nalezu":  forms.TextInput(),
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
             "ulozeni_dokumentace":  forms.TextInput(),
-            "je_nz": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-live-search": "true"},),
-            "specifikace_data": forms.Select(attrs={"class": "selectpicker", "data-live-search": "true"},)
+            "je_nz": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
+            "specifikace_data": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},)
         }
 
         help_texts = {
@@ -239,7 +239,7 @@ class CreateAkceForm(forms.ModelForm):
             label=_("Hlavní typ"),
             widget=forms.Select(
                 choices=choices,
-                attrs={"class": "selectpicker", "data-live-search": "true"},
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
             help_text=_("arch_z.form.hlavni_typ.tooltip"),
         )
@@ -247,7 +247,7 @@ class CreateAkceForm(forms.ModelForm):
             label=_("Vedlejší typ"),
             widget=forms.Select(
                 choices=choices,
-                attrs={"class": "selectpicker", "data-live-search": "true"},
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
             help_text=_("arch_z.form.vedlejsi_typ.tooltip"),
         )
