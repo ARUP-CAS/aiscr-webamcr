@@ -52,6 +52,12 @@ class SamostatnyNalezFilter(HistorieFilter):
         ),
     )
 
+    predano = django_filters.ChoiceFilter(
+        choices=SamostatnyNalez.PREDANO_BOOLEAN,
+        label=_("SamostatnyNalezFilter.predano.label"),
+        widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
+    )
+
     oblast = django_filters.ChoiceFilter(
         choices=OBLAST_CHOICES,
         label=_("Územní příslušnost"),
