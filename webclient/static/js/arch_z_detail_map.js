@@ -448,8 +448,8 @@ map.on('draw:deleted', function(e) {
 
 map.on('draw:drawstart',function(e){
     addLogText("arch_z_detail_map.draw:drawstart")
-    if(measureControl._measuring){
-        measureControl._stopMeasuring()
+    if(global_measuring_toolbox._measuring){
+        global_measuring_toolbox._stopMeasuring()
     }
    })
 
@@ -556,8 +556,8 @@ var mouseOverGeometry =(geom)=>{
     }
 
     geom.on('click', function (e) {
-        if(measureControl._measuring){
-            measureControl._stopMeasuring()
+        if(global_measuring_toolbox._measuring){
+            global_measuring_toolbox._stopMeasuring()
         }
         if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit){
             map.spin(false);
