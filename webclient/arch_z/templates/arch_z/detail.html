@@ -696,7 +696,9 @@
               }
               xhr.onload = function () {
                   rs = JSON.parse(this.responseText)
-                  map.setView([rs.lat, rs.lng], rs.zoom)
+                  if(rs.lat>0){
+                    map.setView([rs.lat, rs.lng], rs.zoom)
+                  }
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
                       addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom)
@@ -762,7 +764,9 @@
               }
               xhr3.onload = function () {
                   rs = JSON.parse(this.responseText)
-                  map.setView([rs.lat, rs.lng], rs.zoom)
+                  if(rs.lat>0){
+                    map.setView([rs.lat, rs.lng], rs.zoom)
+                  }
               };
               xhr3.send(JSON.stringify(
                   {
