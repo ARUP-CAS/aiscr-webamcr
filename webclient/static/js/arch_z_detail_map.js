@@ -358,7 +358,7 @@ let global_measuring_toolbox=new L.control.measure(
         title:"Měřit vzdálenost",
         icon:'<img src="'+static_url+'/img/ruler-bold-32.png" style="width:20px"/>'
     });
-map.addControl(measureControl);
+map.addControl(global_measuring_toolbox);
 
 map.addControl(new L.control.coordinates({
     position:"bottomright",
