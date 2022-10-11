@@ -15,6 +15,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.utils import update_all_katastr_within_akce
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -59,6 +60,7 @@ def detail(request, ident_cely):
                     Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="část akce")
                 ).first()
                 dokumentacni_jednotka.save()
+            update_all_katastr_within_akce(dj.ident_cely)
         elif dj.typ.heslo == "Sonda":
             logger.debug("sonda")
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
@@ -70,6 +72,7 @@ def detail(request, ident_cely):
                     Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="sonda")
                 ).first()
                 dokumentacni_jednotka.save()
+            update_all_katastr_within_akce(dj.ident_cely)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
@@ -183,6 +186,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         resp = dj.delete()
         if resp:
+            update_all_katastr_within_akce(ident_cely)
             logger.debug("Byla smazána dokumentacni jednotka: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse(

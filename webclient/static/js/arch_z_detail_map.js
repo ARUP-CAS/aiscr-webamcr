@@ -4,6 +4,7 @@ var global_map_can_grab_geom_from_map=false;
 var global_map_element="id_geom";
 var global_map_element_sjtsk="id_geom_sjtsk";
 var global_map_can_load_pians=true;
+var global_map_katastry_all=null;
 addLogText("zmena def.geom :"+global_map_element)
 
 L.TileLayer.Grayscale = L.TileLayer.extend({
@@ -106,7 +107,7 @@ var map = L.map('djMap', {
     contextmenuWidth: 140,
     contextmenuItems: []
 
-}).setView([49.84, 15.17], 7);
+}).setView([49.84, 15.17], 8);
 
 map.addLayer(poi_sugest);
 map.addLayer(poi_other);
@@ -358,7 +359,7 @@ let global_measuring_toolbox=new L.control.measure(
         title:"Měřit vzdálenost",
         icon:'<img src="'+static_url+'/img/ruler-bold-32.png" style="width:20px"/>'
     });
-map.addControl(measureControl);
+map.addControl(global_measuring_toolbox);
 
 map.addControl(new L.control.coordinates({
     position:"bottomright",
@@ -934,6 +935,43 @@ switchMap = function(overview=false){
         }
     }
 }
+
+function loadKatastry(){
+    akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/arch-z/akce-ostatni-katastry');
+    xhr.setRequestHeader('Content-type', 'application/json');
+    if (typeof global_csrftoken !== 'undefined') {
+        xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+    } else {
+        console.log("neni X-CSRFToken token")
+    }
+    xhr.onload = function () {
+        rs = JSON.parse(this.responseText)
+        let hlavni_katastr=""
+        let ostatni_katastry=[];
+        global_map_katastry_all=rs;
+        for(var i=0;i<rs.points.length;i++ ){
+            if(i==0){
+            hlavni_katastr =rs.points[i].dj_katastr;
+            } else if(hlavni_katastr !=rs.points[i].dj_katastr){
+                ostatni_katastry.push(rs.points[i].dj_katastr)
+            }
+        }
+        ostatni_katastry = [...new Set(ostatni_katastry)].sort();
+        //addLogText("HL:"+hlavni_katastr);
+        //addLogText("OST:"+ostatni_katastry);
+        document.getElementById("main_cadastre_id").value=hlavni_katastr;
+        document.getElementById("other_cadastre_id").value=ostatni_katastry.join(", ");
+    };
+    xhr.send(JSON.stringify(
+        {
+            'akce_ident_cely': akce_ident_cely,
+        }));
+
+}
+
+//loadKatastry();
 
 function searchByAjax(text, callResponse){
 	let items1=[];

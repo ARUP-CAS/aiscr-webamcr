@@ -136,6 +136,91 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
         return None
 
 
+def get_all_pians_with_akce(ident_cely):
+    query = (
+        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " from public.pian pian"
+        " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
+        " left join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
+        " where dj.ident_cely IS NOT NULL"
+        " and katastr.aktualni=true"
+        " order by dj.ident_cely, katastr_nazev"
+        " limit 990"
+    )
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, [ident_cely + "-%"])
+        back = []
+        for line in cursor.fetchall():
+            back.append(
+                {
+                    "id": line[0],
+                    "pian_ident_cely": line[1],
+                    "pian_geom": line[2],
+                    "dj": line[3],
+                    "dj_katastr": line[4],
+                    "dj_katastr_id": line[5],
+                }
+            )
+        return back
+
+    except Exception as e:
+        logger.debug(e)
+        return None
+
+
+def update_all_katastr_within_akce(ident_cely):
+    akce_ident_cely = ident_cely.split("-D")[0]
+    # logger.debug("dj.ident_cely %s", [ident_cely])
+    # logger.debug("akce.ident_cely %s", [akce_ident_cely])
+    hlavni_name = ""
+    hlavni_id = 0
+    ostatni_name = []
+    ostatni_id = []
+    for line in get_all_pians_with_akce(akce_ident_cely):
+        if hlavni_id == 0:
+            hlavni_id = line["dj_katastr_id"]
+            hlavni_name = line["dj_katastr"]
+        elif (
+            hlavni_name != line["dj_katastr"] and line["dj_katastr"] not in ostatni_name
+        ):
+            ostatni_name.append(line["dj_katastr"])
+            ostatni_id.append(line["dj_katastr_id"])
+    ostatni_name = sorted(ostatni_name)
+    # ostatni_id = sorted(ostatni_id)
+
+    query_select_archz = (
+        "select  id from PUBLIC.archeologicky_zaznam "
+        " where typ_zaznamu='A' and ident_cely = %s limit 1"
+    )
+    query_update_archz = (
+        "update PUBLIC.archeologicky_zaznam set hlavni_katastr=%s where id = %s"
+    )
+    query_select_other = (
+        "select katastr_id from PUBLIC.archeologicky_zaznam_katastr "
+        " where archeologicky_zaznam_id=%s and katastr_id in %s"
+    )
+    query_insert_other = "insert into PUBLIC.archeologicky_zaznam_katastr(archeologicky_zaznam_id,katastr_id)  values(%s,%s)"
+    query_delete_other = "delete from PUBLIC.archeologicky_zaznam_katastr where archeologicky_zaznam_id=%s and katastr_id not in %s"
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query_select_archz, [akce_ident_cely])
+        zaznam_id = cursor.fetchone()[0]
+        if len(str(zaznam_id)) > 0:
+            cursor.execute(query_update_archz, [hlavni_id, zaznam_id])
+            cursor.execute(query_select_other, [zaznam_id, tuple(ostatni_id)])
+            back = []
+            for ostatni_already_inserted in cursor.fetchall():
+                back.append(ostatni_already_inserted[0])
+            for ostatni_one in ostatni_id:
+                if int(ostatni_one) not in ostatni_id:
+                    cursor.execute(query_insert_other, [zaznam_id, ostatni_one])
+            cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
+
+    except IndexError:
+        return None
+
+
 def get_num_pians_from_envelope(left, bottom, right, top):
     query = (
         "select count(*) from public.pian pian where "

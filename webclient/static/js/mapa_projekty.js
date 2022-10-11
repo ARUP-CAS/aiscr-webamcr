@@ -1,6 +1,7 @@
 var global_map_can_edit = true;
 var global_map_can_load_projects=true;
 var boundsLock=0;
+var ORIGIN_KATASTR="";
 
 var poi_other = L.markerClusterGroup({ disableClusteringAtZoom: 20 })
 var poi_sugest = L.layerGroup();
@@ -55,6 +56,12 @@ L.easyButton('bi bi-skip-backward-fill', function () {
             document.getElementById('id_longitude').value = ll.lng;
         } catch (e) {
             console.log("Error: Element id_latitude/latitude doesn exists")
+        }
+        //Vratit puvodni katastr
+        const select = $("input[name='hlavni_katastr']");
+        if (global_map_can_edit && select && ORIGIN_KATASTR.length>1) {
+            select.val(ORIGIN_KATASTR);
+
         }
     }
 }, 'Výchozí stav ').addTo(map)
@@ -124,6 +131,9 @@ map.on('click', function (e) {
                 fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
                     .then(response => response.json())
                     .then(response => {
+                        if(ORIGIN_KATASTR.length==0){
+                            ORIGIN_KATASTR=select.val();
+                        }
                         select.val(response['value']);
                     })
             }

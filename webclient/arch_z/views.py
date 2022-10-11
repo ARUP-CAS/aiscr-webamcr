@@ -39,6 +39,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
 )
 from core.utils import (
+    get_all_pians_with_akce,
     get_all_pians_with_dj,
     get_centre_from_akce,
     get_heatmap_pian,
@@ -188,7 +189,9 @@ def detail(request, ident_cely):
     akce_zaznam_ostatni_vedouci = []
     for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce).order_by("id"):
         vedouci: AkceVedouci
-        akce_zaznam_ostatni_vedouci.append([str(vedouci.vedouci), str(vedouci.organizace)])
+        akce_zaznam_ostatni_vedouci.append(
+            [str(vedouci.vedouci), str(vedouci.organizace)]
+        )
     for jednotka in jednotky:
         jednotka: DokumentacniJednotka
         vyskovy_bod_formset = inlineformset_factory(
@@ -801,6 +804,28 @@ def post_ajax_get_pians(request):
             }
         )
     if len(pians) > 0:
+        return JsonResponse({"points": back}, status=200)
+    else:
+        return JsonResponse({"points": []}, status=200)
+
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_akce_other_katastr(request):
+    body = json.loads(request.body.decode("utf-8"))
+    dis = get_all_pians_with_akce(body["akce_ident_cely"])
+    back = []
+    for di in dis:
+        back.append(
+            {
+                # "id": pian.id,
+                "pian_ident_cely": di["pian_ident_cely"],
+                "pian_geom": di["pian_geom"].replace(", ", ","),
+                "dj": di["dj"],
+                "dj_katastr": di["dj_katastr"],
+            }
+        )
+    if len(dis) > 0:
         return JsonResponse({"points": back}, status=200)
     else:
         return JsonResponse({"points": []}, status=200)

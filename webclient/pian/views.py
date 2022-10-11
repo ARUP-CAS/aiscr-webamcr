@@ -17,7 +17,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import get_validation_messages
+from core.utils import get_validation_messages, update_all_katastr_within_akce
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -87,6 +87,7 @@ def detail(request, ident_cely):
         )
     elif form.is_valid():
         logger.debug("Pian.Form is valid:1")
+        update_all_katastr_within_akce(dj_ident_cely)
         form.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
@@ -132,7 +133,9 @@ def odpojit(request, dj_ident_cely):
                 )
             }
         )
-        response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+        response.set_cookie(
+            "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
+        )
         response.set_cookie(
             "set-active",
             f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
@@ -185,7 +188,9 @@ def potvrdit(request, dj_ident_cely):
                     )
                 }
             )
-            response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
+            response.set_cookie(
+                "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
+            )
             response.set_cookie(
                 "set-active",
                 f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
@@ -272,6 +277,7 @@ def create(request, dj_ident_cely):
                 pian.set_vymezeny(request.user)
                 dj.pian = pian
                 dj.save()
+                update_all_katastr_within_akce(dj.ident_cely)
                 logger.debug(
                     f"pian.views.create: {messages.SUCCESS}, {ZAZNAM_USPESNE_VYTVOREN} {dj.pk}."
                 )
