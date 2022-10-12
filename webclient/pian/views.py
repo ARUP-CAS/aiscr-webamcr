@@ -118,6 +118,7 @@ def odpojit(request, dj_ident_cely):
     if request.method == "POST":
         dj.pian = None
         dj.save()
+        update_all_katastr_within_akce(dj_ident_cely)
         logger.debug("Pian odpojen: " + pian.ident_cely)
         if delete_pian:
             pian.delete()

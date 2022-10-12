@@ -138,18 +138,30 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
 
 def get_all_pians_with_akce(ident_cely):
     query = (
-        "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " (SELECT pian.id,pian.ident_cely,"
+        " ST_AsText(CASE WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN pian.geom  "
+        "  WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom,0.5)"
+        "  ELSE st_centroid(pian.geom) END) AS geometry,"
+        " dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " from public.pian pian "
+        " join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
+        " join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
+        " WHERE dj.ident_cely IS NOT NULL "
+        " ORDER BY dj.ident_cely "
+        " LIMIT 1 )"
+        " union all "
+        "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
         " from public.pian pian"
         " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
         " left join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
         " where dj.ident_cely IS NOT NULL"
         " and katastr.aktualni=true"
         " order by dj.ident_cely, katastr_nazev"
-        " limit 990"
+        " limit 990)"
     )
     try:
         cursor = connection.cursor()
-        cursor.execute(query, [ident_cely + "-%"])
+        cursor.execute(query, [ident_cely + "-%", ident_cely + "-%"])
         back = []
         for line in cursor.fetchall():
             back.append(
