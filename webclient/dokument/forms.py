@@ -395,7 +395,10 @@ class EditDokumentForm(forms.ModelForm):
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
-                self.fields[key].empty_label = ""
+                if key == "autori":
+                    self.fields[key].empty_label = ""
+                else:
+                    self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
