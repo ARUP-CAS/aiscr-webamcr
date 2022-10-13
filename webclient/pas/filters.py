@@ -219,7 +219,9 @@ class SamostatnyNalezFilter(HistorieFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("Přístupnost"),
         field_name="pristupnost",
-        widget=autocomplete.ModelSelect2Multiple(url="heslar:pristupnost-autocomplete"),
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
     )
 
     class Meta:

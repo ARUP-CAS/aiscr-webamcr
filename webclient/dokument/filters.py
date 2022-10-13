@@ -124,8 +124,8 @@ class DokumentFilter(HistorieFilter):
         ),
         label=_("Typ"),
         field_name="typ_dokumentu",
-        widget=autocomplete.ModelSelect2Multiple(
-            url="heslar:dokument-typ-autocomplete"
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
@@ -135,8 +135,8 @@ class DokumentFilter(HistorieFilter):
         ),
         label=_("Formát"),
         field_name="extra_data__format",
-        widget=autocomplete.ModelSelect2Multiple(
-            url="heslar:dokument-format-autocomplete"
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
     )
 
