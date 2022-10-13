@@ -126,7 +126,7 @@ def detail(request, ident_cely):
         else:
             logger.warning("Form is not valid")
             logger.debug(formset.errors)
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole")
 
     response = redirect("arch_z:detail", dj.archeologicky_zaznam.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)

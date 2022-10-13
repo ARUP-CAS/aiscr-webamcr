@@ -212,6 +212,10 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             if has_initial_values and niveleta:
                 has_initial_values = cleaned_data.get("niveleta", None) == niveleta
                 logger_s.debug(cleaned_data=cleaned_data, niveleta=niveleta, has_initial_values=has_initial_values)
+            elif "niveleta" in cleaned_data:
+                has_initial_values = False
+            if "typ" in cleaned_data and cleaned_data["typ"] is not None:
+                has_initial_values = False
             return has_initial_values
 
         def is_valid(self):
