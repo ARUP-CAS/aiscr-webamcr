@@ -396,7 +396,7 @@ class EditDokumentForm(forms.ModelForm):
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 if key == "autori":
-                    self.fields[key].empty_label = ""
+                    self.fields[key].empty_label = None
                 else:
                     self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
