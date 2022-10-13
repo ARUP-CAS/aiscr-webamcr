@@ -41,6 +41,7 @@ from core.message_constants import (
 )
 from core.views import ExportMixinDate, check_stav_changed, get_dokument_soubor_name
 from dal import autocomplete
+from django.db.models.functions import Length
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -843,7 +844,8 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
 class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
     def get_queryset(self):
         qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
-        qs = qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
+        qs = qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)).annotate(ident_len=Length('ident_cely'))\
+            .filter(ident_len__gt=0)
         return qs
 
 

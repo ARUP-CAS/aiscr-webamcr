@@ -1,13 +1,15 @@
 import logging
 
-from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
 from django.db import utils
+from django.db.models.functions import Length
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+
+from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from dokument.models import Dokument, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
@@ -486,7 +488,10 @@ class CreateModelDokumentForm(forms.ModelForm):
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
-                self.fields[key].empty_label = ""
+                if key == "autori":
+                    self.fields[key].empty_label = None
+                else:
+                    self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
