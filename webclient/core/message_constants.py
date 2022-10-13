@@ -46,9 +46,9 @@ AKCE_USPESNE_ZAPSANA: Final = "Akce úspěšně zapsána."
 AKCE_USPESNE_ODESLANA: Final = "Akce úspěšně odeslána."
 AKCE_USPESNE_ARCHIVOVANA: Final = "Akce úspěšně archivovaná."
 AKCE_USPESNE_VRACENA: Final = "Akce úspěšně vrácena."
-AKCI_NELZE_ODESLAT: Final = "Akci nelze odeslat."
-AKCI_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
-AKCI_NEKDO_ZMENIL_STAV: Final = _("akce.message.zmenaStavuNekymJinym.text")
+AKCE_NELZE_ODESLAT: Final = "Akci nelze odeslat."
+AKCE_NELZE_ARCHIVOVAT: Final = "Akci nelze archivovat."
+AKCE_NEKDO_ZMENIL_STAV: Final = _("akce.message.zmenaStavuNekymJinym.text")
 
 DOKUMENT_USPESNE_ODESLAN: Final = "Dokument úspěšně odeslán."
 DOKUMENT_USPESNE_ARCHIVOVAN: Final = "Dokument úspěšně archivován."
@@ -111,4 +111,10 @@ VALIDATION_NOT_MULTIPART: Final = "Geometrie je multigeometrií."
 VALIDATION_LINE_LENGTH: Final = "Vzdálenost bodů je nižší než povolená mez."
 
 # Lokalita
-LOKALITA_USPESNE_ZAPSANA: Final = "Lokalita úspěšně zapsána."
+LOKALITA_USPESNE_ZAPSANA: Final = _("lokalita.message.uspesneZapsana.text")
+LOKALITA_USPESNE_ODESLANA: Final = _("lokalita.message.uspesneOdeslana.text")
+LOKALITA_USPESNE_ARCHIVOVANA: Final = _("lokalita.message.sspesneArchivovana.text")
+LOKALITA_USPESNE_VRACENA: Final = _("lokalita.message.uspesneVracena.text")
+LOKALITA_NELZE_ODESLAT: Final = _("lokalita.message.nelzeOdeslat.text")
+LOKALITA_NELZE_ARCHIVOVAT: Final = _("lokalita.message.nelzeArchivovat.text")
+LOKALITA_NEKDO_ZMENIL_STAV: Final = _("lokalita.message.zmenaStavuNekymJinym.text")

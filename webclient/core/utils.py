@@ -16,6 +16,8 @@ from django.db import connection
 from heslar.models import RuianKatastr
 from pian.models import Pian
 from projekt.models import Projekt
+from arch_z.models import ArcheologickyZaznam
+import core.message_constants as mc
 
 logger = logging.getLogger(__name__)
 
@@ -522,3 +524,16 @@ def get_multi_transform_towgs84(jtsk_points):
     except IndexError:
         logger.error("Error during transformation")
         return None
+
+
+def get_message(az, message):
+    return str(
+        getattr(
+            mc,
+            str(
+                dict(ArcheologickyZaznam.CHOICES)[az.typ_zaznamu].upper()
+                + "_"
+                + message
+            ),
+        )
+    )

@@ -141,21 +141,25 @@ class CreateArchZForm(forms.ModelForm):
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
             self.fields["katastry"].initial = projekt.katastry.all()
-        try:
-            self.fields["hlavni_katastr"].initial = self.instance.hlavni_katastr
-            self.fields["katastry"].initial = self.instance.katastry.all()
-        except Exception as e:
-            logger_s.debug(e)
+        else:
+            try:
+                self.fields["hlavni_katastr"].initial = self.instance.hlavni_katastr
+                self.fields["katastry"].initial = self.instance.katastry.all()
+            except Exception as e:
+                logger_s.debug(e)
+                pass
         try:
             self.fields["hlavni_katastr_show"] = forms.CharField(
                 label=_("Hlavní katastr"),
                 help_text=_("arch_z.form.hlavni_katastr.tooltip"),
                 required=False,
+                disabled=True,
             )
             self.fields["katastry_show"] = forms.CharField(
                 label=_("Další katastry"),
                 help_text=_("arch_z.form.katastry.tooltip"),
                 required=False,
+                disabled=True,
             )
             self.fields["hlavni_katastr_show"].initial = self.fields[
                 "hlavni_katastr"

@@ -28,27 +28,22 @@
       </div>
     {% endif %}
       <div class="row">
-        {% if detail_view or edit_view %}
+        {% if create and not edit_view%}
+        <div class="col-sm-2">
+          {{ arch_z_form.hlavni_katastr|as_crispy_field }}
+        </div>
+        {% else %}
         <div class="col-sm-2">
           {{ arch_z_form.hlavni_katastr_show|as_crispy_field }}
         </div>
         <div class="col-sm-2" style="display:none">
           {{ arch_z_form.hlavni_katastr|as_crispy_field }}
         </div>
-        {% else %}
-        <div class="col-sm-2">
-          {{ arch_z_form.hlavni_katastr|as_crispy_field }}
-        </div>
         {% endif %}
-        {% if detail_view %}
         <div class="col-sm-4">
           {{ arch_z_form.katastry_show|as_crispy_field }}
         </div>
-        {% else %}
-        <div class="col-sm-4">
-          {{ arch_z_form.katastry|as_crispy_field }}
-        </div>
-        {% endif %}
+        
         <div class="col-sm-2">
           {{ form.typ_lokality|as_crispy_field }}
         </div>

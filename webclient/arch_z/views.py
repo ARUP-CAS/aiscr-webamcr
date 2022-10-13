@@ -40,12 +40,6 @@ from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
 from core.ident_cely import get_project_event_ident
 from core.message_constants import (
-    AKCE_USPESNE_ARCHIVOVANA,
-    AKCE_USPESNE_ODESLANA,
-    AKCE_USPESNE_VRACENA,
-    AKCE_USPESNE_ZAPSANA,
-    AKCI_NELZE_ARCHIVOVAT,
-    AKCI_NELZE_ODESLAT,
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
     ZAZNAM_USPESNE_EDITOVAN,
@@ -59,6 +53,7 @@ from core.utils import (
     get_heatmap_pian_density,
     get_num_pians_from_envelope,
     get_pians_from_envelope,
+    get_message,
 )
 from core.views import check_stav_changed
 from dj.forms import CreateDJForm
@@ -520,9 +515,12 @@ def odeslat(request, ident_cely):
     if request.method == "POST":
         az.set_odeslany(request.user)
         az.save()
-        messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ODESLANA)
+        messages.add_message(
+            request, messages.SUCCESS, get_message(az, "USPESNE_ODESLANA")
+        )
         logger.debug(
-            "arch_z.views.odeslat akce uspesne odeslana " + AKCE_USPESNE_ODESLANA
+            "arch_z.views.odeslat akce uspesne odeslana "
+            + get_message(az, "USPESNE_ODESLANA")
         )
         return JsonResponse({"redirect": az.get_reverse()})
     else:
@@ -533,10 +531,10 @@ def odeslat(request, ident_cely):
 
         if warnings:
             request.session["temp_data"] = warnings
-            messages.add_message(request, messages.ERROR, AKCI_NELZE_ODESLAT)
-            logger.debug(
-                "arch_z.views.odeslat akci nelze odeslat " + AKCI_NELZE_ODESLAT
+            messages.add_message(
+                request, messages.ERROR, get_message(az, "NELZE_ODESLAT")
             )
+            logger.debug("arch_z.views.odeslat akci nelze odeslat AKCE_NELZE_ODESLAT")
             return JsonResponse(
                 {"redirect": az.get_reverse()},
                 status=403,
@@ -580,14 +578,18 @@ def archivovat(request, ident_cely):
             )
             if not all_akce and az.akce.projekt.stav == PROJEKT_STAV_UZAVRENY:
                 request.session["arch_projekt_link"] = True
-        messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ARCHIVOVANA)
+        messages.add_message(
+            request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
+        )
         return JsonResponse({"redirect": az.get_reverse()})
     else:
         warnings = az.check_pred_archivaci()
         logger.debug(warnings)
         if warnings:
             request.session["temp_data"] = warnings
-            messages.add_message(request, messages.ERROR, AKCI_NELZE_ARCHIVOVAT)
+            messages.add_message(
+                request, messages.ERROR, get_message(az, "NELZE_ARCHIVOVAT")
+            )
             return JsonResponse(
                 {"redirect": az.get_reverse()},
                 status=403,
@@ -651,7 +653,9 @@ def vratit(request, ident_cely):
                     projekt.save()
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
-            messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_VRACENA)
+            messages.add_message(
+                request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
+            )
             return JsonResponse({"redirect": az.get_reverse()})
         else:
             logger.debug("The form is not valid")
@@ -753,9 +757,11 @@ def zapsat(request, projekt_ident_cely):
                     logger.warning("arch_z.views.zapsat: " "Form is not valid")
                     logger.debug(ostatni_vedouci_objekt_formset.errors)
 
-                messages.add_message(request, messages.SUCCESS, AKCE_USPESNE_ZAPSANA)
+                messages.add_message(
+                    request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
+                )
                 logger.debug(
-                    f"arch_z.views.zapsat: {AKCE_USPESNE_ZAPSANA}, ID akce: {akce.pk}, "
+                    f"arch_z.views.zapsat: AKCE_USPESNE_ZAPSANA, ID akce: {akce.pk}, "
                     f"projekt: {projekt_ident_cely}"
                 )
                 return redirect("arch_z:detail", az.ident_cely)

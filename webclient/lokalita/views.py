@@ -201,7 +201,7 @@ class LokalitaEditView(UpdateView, LoginRequiredMixin):
                 self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
             )
         else:
-            logger_s.debug("az form is invalid")
+            logger_s.debug("AZ form is invalid")
             logger_s.debug(form_az.errors)
             self.form_invalid(form)
         return super().form_valid(form)
