@@ -353,7 +353,7 @@
     }
 
     const field_click = (item) => {
-        const element = document.querySelector("#select2-id_katastry-results");
+        const element = document.querySelector("[id^='select2-id_'][id$='results']");
         element.addEventListener("mouseup", () => {
             increase_ul_height(item);
         });
