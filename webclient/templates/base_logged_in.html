@@ -327,15 +327,20 @@
         const line_limits = [parent_element.offsetWidth - 5 - 16, parent_element.offsetWidth - 5, parent_element.offsetWidth - 5];
         let current_line = 1;
         for (const li_element of li_elements) {
+            const element_width = li_element.getBoundingClientRect().width + 16;
             // Added borders, padding and margins
-            element_line_width_sum += li_element.offsetWidth + 5 + 5 + 1 + 1 + 5;
+            element_line_width_sum += element_width;
             if (element_line_width_sum > line_limits[current_line-1]) {
                 current_line++;
-                element_line_width_sum = 0;
+                element_line_width_sum = element_width;
+                li_element.style.clear = "left";
             }
         }
         const rows_needed = Math.min(current_line, 3);
-        const height = 1.5 * Math.min(Math.max(rows_needed, 1), 3);
+        let height = 1.5 * Math.min(Math.max(rows_needed, 1), 3);
+        if (height > 1.5) {
+            height -= 0.125
+        }
         if (select2_element) {
             select2_element.style = `height: ${height}rem!important;`;
         }
@@ -347,6 +352,13 @@
         }
     }
 
+    const field_click = (item) => {
+        const element = document.querySelector("#select2-id_katastry-results");
+        element.addEventListener("mouseup", () => {
+            increase_ul_height(item);
+        });
+    }
+
     setTimeout(() => {
         const span_selection_rendered_query = document.body.querySelectorAll("span.select2.select2-container");
         span_selection_rendered_query.forEach(item => {
@@ -355,6 +367,9 @@
             });
             item.addEventListener("keydown", () => {
                 increase_ul_height(item);
+            });
+            item.addEventListener("click", () => {
+                field_click(item);
             });
         })
     }, 5000);
