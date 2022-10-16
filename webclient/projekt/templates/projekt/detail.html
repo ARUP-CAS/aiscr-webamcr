@@ -193,14 +193,14 @@
               <div class="col-sm-3">
                 <div class="form-group">
                   <label for="formGroupExampleInput">{% trans "Hlavní katastr" %}</label>
-                  <input class="form-control" type="text" value="{{ projekt.hlavni_katastr|check_if_none }}" readonly>
+                  <input id="main_cadastre_id" class="form-control" type="text" value="{{ projekt.hlavni_katastr|check_if_none }}" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
                 <div class="form-group">
                   <label>{% trans "Další katastry" %}</label>
                   <div class="input-group">
-                    <input class="form-control app-ellipsis" stype="text" value="{{ dalsi_katastry|katastry_to_list|check_if_none }}" readonly>
+                    <input id="other_cadastre_id" class="form-control app-ellipsis" stype="text" value="{{ dalsi_katastry|katastry_to_list|check_if_none }}" readonly>
                     <div class="input-group-append" data-toggle="popover" data-placement="top"
                     data-content="<strong>{% trans 'Seznam katastrů' %}:</strong> {{ dalsi_katastry|katastry_to_list|check_if_none }}">
                       <span class="input-group-text">

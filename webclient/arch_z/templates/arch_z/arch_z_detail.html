@@ -55,7 +55,7 @@
           <div class="col-sm-4">
             <div class="form-group">
               <label>{% trans "Další katastry" %}</label>
-              <input class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
+              <input id="other_cadastre_id" class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
@@ -161,7 +161,7 @@
         {% endif %}
       </div>
     </div>
-    
+
 {% endblock %}
 
 {% block arch_projekt %}
@@ -226,7 +226,7 @@
         formID: "smazat-akci-form",
         modalFormID: "#smazat-akci-form",
       })
-      smazat_akci_modal = new Modal(options, "akce-smazat"); 
+      smazat_akci_modal = new Modal(options, "akce-smazat");
     });
   </script>
 {% endblock %}

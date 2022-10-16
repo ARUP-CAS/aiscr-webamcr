@@ -160,14 +160,12 @@ class CreateArchZForm(forms.ModelForm):
             self.fields["hlavni_katastr_show"].initial = self.fields[
                 "hlavni_katastr"
             ].initial
+            self.fields["hlavni_katastr_show"].widget.attrs["id"] = "main_cadastre_id"
+            self.fields["katastry_show"].widget.attrs["id"] = "other_cadastre_id"
             if self.fields["katastry"].initial is not None:
                 value = [str(i) for i in self.fields["katastry"].initial.all()]
                 display = ", ".join(value)
                 self.fields["katastry_show"].initial = display
-                self.fields["hlavni_katastr_show"].widget.attrs[
-                    "id"
-                ] = "main_cadastre_id"
-                self.fields["katastry_show"].widget.attrs["id"] = "other_cadastre_id"
                 self.fields["katastry_show"].disabled = True
                 self.fields["hlavni_katastr_show"].disabled = True
             else:
