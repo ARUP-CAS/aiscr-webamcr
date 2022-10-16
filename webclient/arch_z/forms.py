@@ -1,17 +1,16 @@
 import structlog
-
+from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
+from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Div, Layout, HTML
+from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-
-from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
-from core.forms import TwoLevelSelectField
-from heslar.models import Heslar
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
+
 from . import validators
 
 logger_s = structlog.get_logger(__name__)
@@ -55,10 +54,18 @@ def create_akce_vedouci_objekt_form(readonly=True):
             else:
                 widgets = {
                     "vedouci": forms.Select(
-                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                        attrs={
+                            "class": "selectpicker",
+                            "data-multiple-separator": "; ",
+                            "data-live-search": "true",
+                        }
                     ),
                     "organizace": forms.Select(
-                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                        attrs={
+                            "class": "selectpicker",
+                            "data-multiple-separator": "; ",
+                            "data-live-search": "true",
+                        }
                     ),
                 }
 
@@ -104,7 +111,13 @@ class CreateArchZForm(forms.ModelForm):
                 url="heslar:katastr-autocomplete"
             ),
             "uzivatelske_oznaceni": forms.TextInput(),
-            "pristupnost":forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},)
+            "pristupnost": forms.Select(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
         }
         help_texts = {
             "hlavni_katastr": _("arch_z.form.hlavni_katastr.tooltip"),
@@ -133,7 +146,6 @@ class CreateArchZForm(forms.ModelForm):
             self.fields["katastry"].initial = self.instance.katastry.all()
         except Exception as e:
             logger_s.debug(e)
-            pass
         try:
             self.fields["hlavni_katastr_show"] = forms.CharField(
                 label=_("Hlavní katastr"),
@@ -155,13 +167,13 @@ class CreateArchZForm(forms.ModelForm):
                 self.fields["hlavni_katastr_show"].widget.attrs[
                     "id"
                 ] = "main_cadastre_id"
+                self.fields["katastry_show"].widget.attrs["id"] = "other_cadastre_id"
                 self.fields["katastry_show"].disabled = True
                 self.fields["hlavni_katastr_show"].disabled = True
             else:
                 pass
         except Exception as e:
             logger_s.debug(e)
-            pass
 
         self.helper = FormHelper(self)
 
@@ -259,17 +271,38 @@ class CreateAkceForm(forms.ModelForm):
 
         widgets = {
             "hlavni_vedouci": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
             ),
             "organizace": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
             ),
             "lokalizace_okolnosti": forms.TextInput(),
             "ulozeni_nalezu": forms.TextInput(),
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
-            "ulozeni_dokumentace":  forms.TextInput(),
-            "je_nz": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
-            "specifikace_data": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},)
+            "ulozeni_dokumentace": forms.TextInput(),
+            "je_nz": forms.Select(
+                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
+            "specifikace_data": forms.Select(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
         }
 
         help_texts = {
@@ -291,13 +324,19 @@ class CreateAkceForm(forms.ModelForm):
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateAkceForm, self).__init__(*args, **kwargs)
-        self.fields["specifikace_data"].choices = list(self.fields["specifikace_data"].choices)[1:]
+        self.fields["specifikace_data"].choices = list(
+            self.fields["specifikace_data"].choices
+        )[1:]
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
             label=_("Hlavní typ"),
             widget=forms.Select(
                 choices=choices,
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
             ),
             help_text=_("arch_z.form.hlavni_typ.tooltip"),
         )
@@ -305,7 +344,11 @@ class CreateAkceForm(forms.ModelForm):
             label=_("Vedlejší typ"),
             widget=forms.Select(
                 choices=choices,
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
             ),
             help_text=_("arch_z.form.vedlejsi_typ.tooltip"),
         )

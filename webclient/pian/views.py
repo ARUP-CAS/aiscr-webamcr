@@ -17,7 +17,10 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import get_validation_messages
+from core.utils import (
+    get_validation_messages,
+    update_all_katastr_within_akce_or_lokalita,
+)
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -28,7 +31,6 @@ from django.contrib.gis.geos import LineString, Point, Polygon
 from django.db import connection
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
@@ -88,6 +90,7 @@ def detail(request, ident_cely):
     elif form.is_valid():
         logger.debug("Pian.Form is valid:1")
         form.save()
+        update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
@@ -118,6 +121,7 @@ def odpojit(request, dj_ident_cely):
         redirect_view = dj.archeologicky_zaznam.get_reverse()
         dj.pian = None
         dj.save()
+        update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         logger.debug("Pian odpojen: " + pian.ident_cely)
         if delete_pian:
             pian.delete()
@@ -259,6 +263,7 @@ def create(request, dj_ident_cely):
                 pian.set_vymezeny(request.user)
                 dj.pian = pian
                 dj.save()
+                update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
                 logger.debug(
                     f"pian.views.create: {messages.SUCCESS}, {ZAZNAM_USPESNE_VYTVOREN} {dj.pk}."
                 )

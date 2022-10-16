@@ -15,6 +15,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
+from core.utils import update_all_katastr_within_akce_or_lokalita
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -58,6 +59,7 @@ def detail(request, ident_cely):
                     Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="část akce")
                 ).first()
                 dokumentacni_jednotka.save()
+                update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Sonda":
             logger.debug("sonda")
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
@@ -69,6 +71,22 @@ def detail(request, ident_cely):
                     Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="sonda")
                 ).first()
                 dokumentacni_jednotka.save()
+                update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+        elif dj.typ.heslo == "Lokalita":
+            logger.debug("lokalita")
+            dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
+                & Q(ident_cely=dj.ident_cely)
+            )
+            # logger.debug(dokumentacni_jednotka_query)
+            # logger.debug(dj.archeologicky_zaznam)
+            # logger.debug(dj.ident_cely)
+            for dokumentacni_jednotka in dokumentacni_jednotka_query:
+                dokumentacni_jednotka.typ = Heslar.objects.filter(
+                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="lokalita")
+                ).first()
+                dokumentacni_jednotka.save()
+                update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
@@ -125,7 +143,11 @@ def detail(request, ident_cely):
         else:
             logger.warning("Form is not valid")
             logger.debug(formset.errors)
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole")
+            messages.add_message(
+                request,
+                messages.ERROR,
+                ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole",
+            )
 
     response = dj.archeologicky_zaznam.get_redirect()
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
@@ -179,6 +201,7 @@ def smazat(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
         resp = dj.delete()
+        update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         if resp:
             logger.debug("Byla smazána dokumentacni jednotka: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)

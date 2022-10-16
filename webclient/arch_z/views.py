@@ -39,6 +39,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
 )
 from core.utils import (
+    get_all_pians_with_akce,
     get_all_pians_with_dj,
     get_centre_from_akce,
     get_heatmap_pian,
@@ -785,6 +786,28 @@ def smazat_akce_vedoucí(request, akce_vedouci_id):
     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
     response = redirect(next_url)
     return response
+
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_akce_other_katastr(request):
+    body = json.loads(request.body.decode("utf-8"))
+    dis = get_all_pians_with_akce(body["akce_ident_cely"])
+    back = []
+    for di in dis:
+        back.append(
+            {
+                # "id": pian.id,
+                "pian_ident_cely": di["pian_ident_cely"],
+                "pian_geom": di["pian_geom"].replace(", ", ","),
+                "dj": di["dj"],
+                "dj_katastr": di["dj_katastr"],
+            }
+        )
+    if len(dis) > 0:
+        return JsonResponse({"points": back}, status=200)
+    else:
+        return JsonResponse({"points": []}, status=200)
 
 
 def get_arch_z_context(request, ident_cely, zaznam):

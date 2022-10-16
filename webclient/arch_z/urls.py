@@ -38,4 +38,9 @@ urlpatterns = [
         views.post_ajax_get_pians_limit,
         name="post_ajax_get_pians_limit",
     ),
+    path(
+        "akce-ostatni-katastry",
+        views.post_ajax_get_akce_other_katastr,
+        name="post_ajax_get_akce_other_katastr",
+    ),
 ]

@@ -84,6 +84,106 @@ def get_centre_point(bod, geom):
         logger.error("Pian error: " + e)
 
 
+def get_all_pians_with_akce(ident_cely):
+    query = (
+        " (SELECT pian.id,pian.ident_cely,"
+        " ST_AsText(CASE WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN pian.geom  "
+        "  WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom,0.5)"
+        "  ELSE st_centroid(pian.geom) END) AS geometry,"
+        " dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " from public.pian pian "
+        " join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
+        " join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
+        " WHERE dj.ident_cely IS NOT NULL "
+        " ORDER BY dj.ident_cely "
+        " LIMIT 1 )"
+        " union all "
+        "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " from public.pian pian"
+        " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
+        " left join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
+        " where dj.ident_cely IS NOT NULL"
+        " and katastr.aktualni=true"
+        " order by dj.ident_cely, katastr_nazev"
+        " limit 990)"
+    )
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query, [ident_cely + "-%", ident_cely + "-%"])
+        back = []
+        for line in cursor.fetchall():
+            back.append(
+                {
+                    "id": line[0],
+                    "pian_ident_cely": line[1],
+                    "pian_geom": line[2],
+                    "dj": line[3],
+                    "dj_katastr": line[4],
+                    "dj_katastr_id": line[5],
+                }
+            )
+        return back
+
+    except Exception as e:
+        logger.debug(e)
+        return None
+
+
+def update_all_katastr_within_akce_or_lokalita(ident_cely):
+
+    akce_ident_cely = ident_cely.split("-D")[0]
+    # logger.debug("dj.ident_cely %s", [ident_cely])
+    # logger.debug("akce.ident_cely %s", [akce_ident_cely])
+    hlavni_name = ""
+    hlavni_id = None
+    ostatni_name = []
+    ostatni_id = []
+    for line in get_all_pians_with_akce(akce_ident_cely):
+        if hlavni_id == None:
+            hlavni_id = line["dj_katastr_id"]
+            hlavni_name = line["dj_katastr"]
+        elif (
+            hlavni_name != line["dj_katastr"] and line["dj_katastr"] not in ostatni_name
+        ):
+            ostatni_name.append(line["dj_katastr"])
+            ostatni_id.append(line["dj_katastr_id"])
+    ostatni_name = sorted(ostatni_name)
+    # ostatni_id = sorted(ostatni_id)
+
+    query_select_archz = (
+        "select  id from PUBLIC.archeologicky_zaznam "
+        " where typ_zaznamu IN('A','L') and ident_cely = %s limit 1"
+    )
+    query_update_archz = (
+        "update PUBLIC.archeologicky_zaznam set hlavni_katastr=%s where id = %s"
+    )
+    query_select_other = (
+        "select katastr_id from PUBLIC.archeologicky_zaznam_katastr "
+        " where archeologicky_zaznam_id=%s and katastr_id in %s"
+    )
+    query_insert_other = "insert into PUBLIC.archeologicky_zaznam_katastr(archeologicky_zaznam_id,katastr_id)  values(%s,%s)"
+    query_delete_other = "delete from PUBLIC.archeologicky_zaznam_katastr where archeologicky_zaznam_id=%s and katastr_id not in %s"
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query_select_archz, [akce_ident_cely])
+        zaznam_id = cursor.fetchone()[0]
+        if len(str(zaznam_id)) > 0:
+            cursor.execute(query_update_archz, [hlavni_id, zaznam_id])
+            if len(ostatni_id):
+                cursor.execute(query_select_other, [zaznam_id, tuple(ostatni_id)])
+                ostatni_already_inserted = []
+                for ostatni_inserted in cursor.fetchall():
+                    ostatni_already_inserted.append(ostatni_inserted[0])
+                for ostatni_one in ostatni_id:
+                    if int(ostatni_one) not in ostatni_already_inserted:
+                        cursor.execute(query_insert_other, [zaznam_id, ostatni_one])
+            if len(ostatni_id) == 0:  # HotFix for delete DML
+                ostatni_id.append(0)
+            cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
+    except IndexError:
+        return None
+
+
 def get_centre_from_akce(katastr, pian):
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
