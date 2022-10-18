@@ -153,7 +153,11 @@ def detail(request, ident_cely):
         ident_referer = referer.split("/")[-1]
         if ident_cely == ident_referer:
             pass
-        elif "arch-z/akce/detail/" in referer or "/projekt/detail/" in referer:
+        elif (
+            "arch-z/akce/detail/" in referer
+            or "/projekt/detail/"
+            or "arch-z/lokalita/detail/" in referer
+        ):
             found = False
             for cast in casti:
                 if cast.archeologicky_zaznam:
@@ -161,7 +165,7 @@ def detail(request, ident_cely):
                         logger.debug("back option for akce found")
                         response.set_cookie(
                             "zpet",
-                            reverse("arch_z:detail", args=(ident_referer,)),
+                            cast.archeologicky_zaznam.get_reverse(),
                             max_age=1000,
                         )
                         found = True
@@ -905,8 +909,13 @@ def zapsat(request, zaznam):
                 dokument.typ_dokumentu, dokument.material_originalu
             )
             try:
+                prefix = zaznam.ident_cely[0]
+                if isinstance(zaznam, ArcheologickyZaznam):
+                    if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+                        if zaznam.ident_cely.startswith("X"):
+                            prefix = zaznam.ident_cely[2]
                 dokument.ident_cely = get_temp_dokument_ident(
-                    rada=dokument.rada.zkratka, region=zaznam.ident_cely[0]
+                    rada=dokument.rada.zkratka, region=prefix
                 )
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
@@ -967,7 +976,7 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
         if orphan_dokument.ident_cely.startswith("X-"):
             remove_orphan = True
     if request.method == "POST":
-        if view == "arch_z":
+        if view == "arch_z" or view == "lokalita":
             dokument_cast = relace_dokumentu.filter(
                 archeologicky_zaznam__ident_cely=ident_zaznamu
             )
@@ -1021,7 +1030,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
             archeologicky_zaznam__ident_cely=ident_zaznam
         )
         debug_name = "akci "
-        redirect_name = "arch_z"
+        redirect_name = zaznam.get_reverse()
         context = {
             "object": zaznam,
             "title": _("dokument.modalForm.pripojitDoAkce.title.text"),
@@ -1031,7 +1040,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
     else:
         casti_zaznamu = DokumentCast.objects.filter(projekt__ident_cely=ident_zaznam)
         debug_name = "projektu "
-        redirect_name = "projekt"
+        redirect_name = reverse("projekt:detail", kwargs={"ident_cely": ident_zaznam})
         context = {
             "object": zaznam,
             "title": _("dokument.modalForm.pripojitDoProjektu.title.text"),
@@ -1072,13 +1081,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
                 messages.add_message(
                     request, messages.WARNING, DOKUMENT_JIZ_BYL_PRIPOJEN
                 )
-        return JsonResponse(
-            {
-                "redirect": reverse(
-                    f"{redirect_name}:detail", kwargs={"ident_cely": ident_zaznam}
-                )
-            }
-        )
+        return JsonResponse({"redirect": redirect_name})
     else:
         if proj_ident_cely:
             # Pridavam projektove dokumenty

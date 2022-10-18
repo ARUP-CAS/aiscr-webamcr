@@ -3,7 +3,6 @@ import logging
 import crispy_forms
 import django_filters as filters
 from dal import autocomplete
-from django.db import utils
 from django.db import models
 from django_filters.widgets import DateRangeWidget
 from crispy_forms.layout import Div, Layout, HTML
@@ -46,6 +45,38 @@ logger = logging.getLogger(__name__)
 
 
 class HistorieFilter(filters.FilterSet):
+
+    filter_typ = None
+    # Filters by historie
+    historie_typ_zmeny = MultipleChoiceFilter(
+        choices=filter(lambda x: x[0].startswith("D"), Historie.CHOICES),
+        label=_("historie.filter.typZmeny.label"),
+        field_name="archeologicky_zaznam__historie__historie__typ_zmeny",
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
+
+    historie_datum_zmeny_od = DateFromToRangeFilter(
+        label=_("historie.filter.datumZmeny.label"),
+        field_name="historie__historie__datum_zmeny",
+        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        distinct=True,
+    )
+
+    historie_uzivatel = ModelMultipleChoiceFilter(
+        queryset=User.objects.all(),
+        field_name="historie__historie__uzivatel",
+        label=_("historie.filter.uzivatel.label"),
+        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+        distinct=True,
+    )
+
     def filter_queryset(self, queryset):
         """
         Filter the queryset with the underlying form's `cleaned_data`. You must
@@ -65,12 +96,21 @@ class HistorieFilter(filters.FilterSet):
             filtered = filtered.filter(datum_zmeny__gte=datum.start)
         if datum and datum.stop:
             filtered = filtered.filter(datum_zmeny__lte=datum.stop)
-        queryset = queryset.filter(historie__historie__in=filtered)
+        if self.filter_typ and self.filter_typ == "lokalita":
+            queryset = queryset.filter(
+                archeologicky_zaznam__historie__historie__in=filtered
+            ).distinct()
+        else:
+            queryset = queryset.filter(historie__historie__in=filtered).distinct()
         for name, value in self.form.cleaned_data.items():
             queryset = self.filters[name].filter(queryset, value)
-            assert isinstance(queryset, models.QuerySet), \
-                "Expected '%s.%s' to return a QuerySet, but got a %s instead." \
-                % (type(self).__name__, name, type(queryset).__name__)
+            assert isinstance(
+                queryset, models.QuerySet
+            ), "Expected '%s.%s' to return a QuerySet, but got a %s instead." % (
+                type(self).__name__,
+                name,
+                type(queryset).__name__,
+            )
         return queryset
 
 
@@ -103,14 +143,22 @@ class DokumentFilter(HistorieFilter):
     stav = MultipleChoiceFilter(
         choices=Dokument.STATES,
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
     organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
@@ -125,7 +173,9 @@ class DokumentFilter(HistorieFilter):
         field_name="rok_vzniku", label=_("Rok vzniku (od-do)"), lookup_expr="gte"
     )
 
-    rok_vzniku_do = NumberFilter(field_name="rok_vzniku", label="&nbsp;", lookup_expr="lte")
+    rok_vzniku_do = NumberFilter(
+        field_name="rok_vzniku", label="&nbsp;", lookup_expr="lte"
+    )
 
     duveryhodnost = NumberFilter(
         field_name="extra_data__duveryhodnost",
@@ -134,33 +184,48 @@ class DokumentFilter(HistorieFilter):
         widget=NumberInput(attrs={"min": "1", "max": "100"}),
         distinct=True,
     )
-    popisne_udaje = CharFilter(label=_("Popisné údaje"), method="filter_popisne_udaje",)
+    popisne_udaje = CharFilter(
+        label=_("Popisné údaje"),
+        method="filter_popisne_udaje",
+    )
 
     zeme = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_ZEME),
         field_name="extra_data__zeme",
         label=_("Země"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
 
     obdobi = MultipleChoiceFilter(
-        method = "filter_obdobi",
+        method="filter_obdobi",
         label=_("Období"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
     )
 
     areal = MultipleChoiceFilter(
-        method = "filter_areal",
+        method="filter_areal",
         label=_("Areál"),
         choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -172,17 +237,25 @@ class DokumentFilter(HistorieFilter):
         field_name="casti__komponenty__komponenty__komponentaaktivita__aktivita",
         label=_("Aktivity"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
 
     predmet_druh = MultipleChoiceFilter(
-        method = "filter_predmety_druh",
+        method="filter_predmety_druh",
         label=_("Druh předmětu"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
@@ -194,55 +267,39 @@ class DokumentFilter(HistorieFilter):
         field_name="casti__komponenty__komponenty__predmety__specifikace",
         label=_("Specifikace předmětu"),
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
     objekt_druh = MultipleChoiceFilter(
-        method = "filter_objekty_druh",
+        method="filter_objekty_druh",
         label=_("Druh objektu"),
         choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
         distinct=True,
     )
 
     objekt_specifikace = MultipleChoiceFilter(
-        method = "filter_objekty_specifikace",
+        method="filter_objekty_specifikace",
         label=_("Specifikace objektu"),
         choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
         widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
         ),
-        distinct=True,
-    )
-
-    # Filters by historie
-    historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(
-            lambda x: x[0].startswith("D"), Historie.CHOICES
-        ),  # Historie.CHOICES.,
-        label="Změna stavu",
-        field_name="historie__historie__typ_zmeny",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-        ),
-        distinct=True,
-    )
-
-    historie_datum_zmeny_od = DateFromToRangeFilter(
-        label="Datum změny (od-do)",
-        field_name="historie__historie__datum_zmeny",
-        widget=DateRangeWidget(attrs={"type": "date","max":"2100-12-31"}),
-        distinct=True,
-    )
-
-    historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
-        field_name="historie__historie__uzivatel",
-        label="Uživatel",
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
 
@@ -261,7 +318,7 @@ class DokumentFilter(HistorieFilter):
 
     def filter_areal(self, queryset, name, value):
         return queryset.filter(casti__komponenty__komponenty__areal__in=value)
-    
+
     def filter_predmety_druh(self, queryset, name, value):
         return queryset.filter(casti__komponenty__komponenty__predmety__druh__in=value)
 
@@ -269,7 +326,10 @@ class DokumentFilter(HistorieFilter):
         return queryset.filter(casti__komponenty__komponenty__objekty__druh__in=value)
 
     def filter_objekty_specifikace(self, queryset, name, value):
-        return queryset.filter(casti__komponenty__komponenty__objekty__specifikace__in=value)
+        return queryset.filter(
+            casti__komponenty__komponenty__objekty__specifikace__in=value
+        )
+
     class Meta:
         model = Dokument
         exclude = []
@@ -278,7 +338,6 @@ class DokumentFilter(HistorieFilter):
         super(DokumentFilter, self).__init__(*args, **kwargs)
         self.helper = DokumentFilterFormHelper()
 
-    
 
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
@@ -312,7 +371,11 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
                 HTML(_('<hr class="mt-0" />')),
-                data_toggle="collapse", href="#historieCollapse", role="button", aria_expanded="false", aria_controls="historieCollapse",
+                data_toggle="collapse",
+                href="#historieCollapse",
+                role="button",
+                aria_expanded="false",
+                aria_controls="historieCollapse",
                 css_class="col-sm-12 app-btn-show-more collapsed",
             ),
             Div(
@@ -321,7 +384,8 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                     "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
                 Div("historie_uzivatel", css_class="col-sm-4"),
-                id="historieCollapse", css_class="collapse row",
+                id="historieCollapse",
+                css_class="collapse row",
             ),
         ),
     )

@@ -540,7 +540,7 @@ def redirect_ident_view(request, ident_cely):
         # return redirect("arch_z:detail", ident_cely=ident_cely) # TO DO redirect samostatna akce
     if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7}", ident_cely)):
         logger.debug("regex match for lokality with ident %s", ident_cely)
-        # return redirect("arch_z:detail", ident_cely=ident_cely) # TO DO redirect Lokality
+        return redirect("lokalita:detail", slug=ident_cely)  # TO DO redirect Lokality
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
         logger.debug("regex match for dokumentacni jednotka with ident %s", ident_cely)
         response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])

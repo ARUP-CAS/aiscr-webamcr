@@ -5,6 +5,7 @@ from core.tests.runner import (
     EXISTING_PROJECT_IDENT,
     TESTOVACI_DOKUMENT_IDENT,
     TESTOVACI_SOUBOR_ID,
+    EXISTING_LOKALITA_IDENT,
     add_middleware_to_request,
 )
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -12,8 +13,8 @@ from django.test import RequestFactory, TestCase
 from historie.views import (
     AkceHistorieListView,
     DokumentHistorieListView,
+    LokalitaHistorieListView,
     ProjektHistorieListView,
-    SouborHistorieListView,
 )
 from uzivatel.models import User
 
@@ -64,3 +65,14 @@ class HistorieTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertTrue("nazev_zkraceny" in response.content.decode("utf-8"))
         self.assertTrue("metadata_form" in response.context)
+
+    def test_get_lokalita_historie(self):
+        request = self.factory.get("/historie/lokalita")
+        request.user = self.existing_user
+        request = add_middleware_to_request(request, SessionMiddleware)
+        request.session.save()
+
+        response = LokalitaHistorieListView.as_view()(
+            request, ident_cely=EXISTING_LOKALITA_IDENT
+        )
+        self.assertEqual(200, response.status_code)

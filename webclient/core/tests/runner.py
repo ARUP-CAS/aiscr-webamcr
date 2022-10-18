@@ -15,7 +15,7 @@ from core.constants import (
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
     ROLE_NEAKTIVNI_UZIVATEL_ID,
-    PIAN_RELATION_TYPE
+    PIAN_RELATION_TYPE,
 )
 from core.models import ProjektSekvence, Soubor, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -36,6 +36,8 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ZACHOVALOST,
     HESLAR_JAZYK,
+    HESLAR_LOKALITA_DRUH,
+    HESLAR_LOKALITA_TYP,
     HESLAR_OBDOBI,
     HESLAR_ORGANIZACE_TYP,
     HESLAR_PIAN_PRESNOST,
@@ -44,16 +46,13 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     PRISTUPNOST_ANONYM_ID,
+    PRISTUPNOST_ARCHEOLOG_ID,
     SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_ZACHRANNY_ID,
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PREDMET_DRUH,
-    HESLAR_PREDMET_DRUH_KAT,
     HESLAR_OBDOBI_KAT,
-    HESLAR_OBJEKT_DRUH,
-    HESLAR_OBJEKT_SPECIFIKACE_KAT,
-    HESLAR_OBJEKT_SPECIFIKACE,
 )
 from heslar.models import (
     Heslar,
@@ -72,6 +71,9 @@ from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
 
 import logging
+
+from lokalita.models import Lokalita
+
 logger = logging.getLogger(__name__)
 
 # Konstanty pouzite v testech
@@ -103,6 +105,7 @@ TYP_ORGANIZACE_OSTATNI_ID = 110
 
 EL_CHEFE_ID = 666
 KATASTR_ODROVICE_ID = 150
+KATASTR_PRAHA_ID = 149
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
 TESTOVACI_SOUBOR_ID = 123
 DOCUMENT_NALEZOVA_ZPRAVA_IDENT = "C-TX-201501986"
@@ -110,6 +113,7 @@ AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 EXISTING_PROJECT_IDENT = "C-202000001"
 EXISTING_EVENT_IDENT = "C-202000001A"
+EXISTING_LOKALITA_IDENT = "X-C-L0000004"
 EXISTING_EVENT_IDENT_INCOMPLETE = "C-202000001B"
 EXISTING_DOCUMENT_ID = 123654
 DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
@@ -121,6 +125,10 @@ PIAN_POTVRZEN = 2
 
 PREDMET_ID = 200
 PREDMET_SPECIFIKACE_ID = 999
+
+LOKALITA_TYP = 1021
+LOKALITA_TYP_NEW = 1020
+LOKALITA_DRUH = 1031
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -180,7 +188,7 @@ class AMCRTestRunner(BaseRunner):
             pian=1,
         )
         praha = RuianKatastr(
-            id=149,
+            id=KATASTR_PRAHA_ID,
             nazev="JOSEFOV",
             okres=okres_praha,
             kod=3,
@@ -201,6 +209,7 @@ class AMCRTestRunner(BaseRunner):
             ),
             pian=1,
         )
+        logger.debug(praha.id)
         kraj_praha.save()
         kraj_brno.save()
         okres_praha.save()
@@ -228,8 +237,12 @@ class AMCRTestRunner(BaseRunner):
         hak = HeslarNazev(id=HESLAR_AREAL, nazev="heslar_areal")
         hza = HeslarNazev(id=HESLAR_DOKUMENT_ZACHOVALOST, nazev="heslar_zachovalost")
         hdu = HeslarNazev(id=HESLAR_DOKUMENT_ULOZENI, nazev="heslar_dokument_ulozeni")
-        hps = HeslarNazev(id=HESLAR_PREDMET_SPECIFIKACE, nazev="heslar_predmet_specifikace")
+        hps = HeslarNazev(
+            id=HESLAR_PREDMET_SPECIFIKACE, nazev="heslar_predmet_specifikace"
+        )
         hpdr = HeslarNazev(id=HESLAR_PREDMET_DRUH, nazev="heslar_predmet_druh")
+        hld = HeslarNazev(id=HESLAR_LOKALITA_DRUH, nazev="heslar_lokalita_druh")
+        hlt = HeslarNazev(id=HESLAR_LOKALITA_TYP, nazev="heslar_lokalita_typ")
         nazvy_heslaru = [
             hn,
             hp,
@@ -250,7 +263,9 @@ class AMCRTestRunner(BaseRunner):
             hza,
             hdu,
             hps,
-            hpdr
+            hpdr,
+            hld,
+            hlt,
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -284,7 +299,12 @@ class AMCRTestRunner(BaseRunner):
         typ_dokumentu_plan.save()
         material_dokumentu_digi.save()
         rada_dokumentu_text.save()
-        Heslar(id=JAZYK_DOKUMENTU_CESTINA_ID, heslo="cesky", nazev_heslare=hjd, heslo_en="cesky").save()
+        Heslar(
+            id=JAZYK_DOKUMENTU_CESTINA_ID,
+            heslo="cesky",
+            nazev_heslare=hjd,
+            heslo_en="cesky",
+        ).save()
         Heslar(id=ULOZENI_ORIGINALU_ID, heslo="uloz+orig", nazev_heslare=hjd).save()
         Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj).save()
         Heslar(
@@ -293,7 +313,14 @@ class AMCRTestRunner(BaseRunner):
         typ_muzeum = Heslar(
             id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
         )
-        zp = Heslar(id=PRISTUPNOST_ANONYM_ID, nazev_heslare=hpr)
+        zp = Heslar(
+            id=PRISTUPNOST_ANONYM_ID, heslo="anonym pristupnost", nazev_heslare=hpr
+        )
+        Heslar(
+            id=PRISTUPNOST_ARCHEOLOG_ID,
+            heslo="archeolog pristupnost",
+            nazev_heslare=hpr,
+        ).save()
         zp.save()
         typ_muzeum.save()
         hok_podrizene = Heslar(
@@ -304,13 +331,24 @@ class AMCRTestRunner(BaseRunner):
             id=OBDOBI_NADRIZENE_ID, heslo="Stredni paleolit", nazev_heslare=hokkat
         )
         hok_nadrizene.save()
-        HeslarHierarchie(heslo_podrazene=hok_podrizene,heslo_nadrazene=hok_nadrizene,typ="podřízenost").save()
+        HeslarHierarchie(
+            heslo_podrazene=hok_podrizene,
+            heslo_nadrazene=hok_nadrizene,
+            typ="podřízenost",
+        ).save()
         Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
-        predmet = Heslar(id=PREDMET_ID,heslo="luk",nazev_heslare=hpdr)
+        predmet = Heslar(id=PREDMET_ID, heslo="luk", nazev_heslare=hpdr)
         predmet.save()
-        specifikace = Heslar(id=PREDMET_SPECIFIKACE_ID,heslo="drevo",nazev_heslare=hps)
+        specifikace = Heslar(
+            id=PREDMET_SPECIFIKACE_ID, heslo="drevo", nazev_heslare=hps
+        )
         specifikace.save()
-        HeslarHierarchie(heslo_podrazene=specifikace,heslo_nadrazene=predmet,typ="výchozí hodnota").save()
+        HeslarHierarchie(
+            heslo_podrazene=specifikace, heslo_nadrazene=predmet, typ="výchozí hodnota"
+        ).save()
+        Heslar(id=LOKALITA_DRUH, nazev_heslare=hld, zkratka=1).save()
+        Heslar(id=LOKALITA_TYP, nazev_heslare=hlt, zkratka="L").save()
+        Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka="M").save()
 
         kl10 = Kladyzm(
             gid=2,
@@ -380,7 +418,7 @@ class AMCRTestRunner(BaseRunner):
             password="foo1234!!!",
             organizace=o,
             hlavni_role=admin_group,
-            is_active=True
+            is_active=True,
         )
         user.save()
 
@@ -390,7 +428,7 @@ class AMCRTestRunner(BaseRunner):
             organizace=o,
             hlavni_role=archeolog_group,
             is_active=True,
-            id=USER_ARCHEOLOG_ID
+            id=USER_ARCHEOLOG_ID,
         )
         user_archeolog.save()
 
@@ -422,9 +460,10 @@ class AMCRTestRunner(BaseRunner):
         )
         osoba.save()
 
-        # PROJEKT EVENT
+        # INCOMPLETE EVENT
         az_incoplete = ArcheologickyZaznam(
             typ_zaznamu="A",
+            hlavni_katastr=praha,
             ident_cely=EXISTING_EVENT_IDENT_INCOMPLETE,
             stav=AZ_STAV_ZAPSANY,
         )
@@ -439,8 +478,10 @@ class AMCRTestRunner(BaseRunner):
         # PROJEKT EVENT
         az = ArcheologickyZaznam(
             typ_zaznamu="A",
+            hlavni_katastr=praha,
             ident_cely=EXISTING_EVENT_IDENT,
             stav=AZ_STAV_ZAPSANY,
+            pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
         )
         az.save()
         a = Akce(
@@ -456,11 +497,36 @@ class AMCRTestRunner(BaseRunner):
         a.projekt = p
         a.save()
 
+        # LOKALITA
+        az_lokalita = ArcheologickyZaznam(
+            typ_zaznamu="L",
+            hlavni_katastr=praha,
+            ident_cely=EXISTING_LOKALITA_IDENT,
+            stav=AZ_STAV_ZAPSANY,
+            pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
+        )
+        az_lokalita.save()
+        lokalita = Lokalita(
+            archeologicky_zaznam=az_lokalita,
+            typ_lokality=Heslar.objects.get(id=LOKALITA_TYP),
+            druh=Heslar.objects.get(id=LOKALITA_DRUH),
+            nazev="nazev lokality",
+        )
+        lokalita.save()
+
         vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
         vazba_pian.save()
 
-        pian = Pian(presnost=Heslar.objects.first(), typ=Heslar.objects.first(), geom=GEOSGeometry('POINT(5 23)'),
-                    zm10=kl10, zm50=kl50, ident_cely="x", historie=vazba_pian, stav=PIAN_POTVRZEN)
+        pian = Pian(
+            presnost=Heslar.objects.first(),
+            typ=Heslar.objects.first(),
+            geom=GEOSGeometry("POINT(5 23)"),
+            zm10=kl10,
+            zm50=kl50,
+            ident_cely="x",
+            historie=vazba_pian,
+            stav=PIAN_POTVRZEN,
+        )
         pian.save()
 
         # Dokumentacni jednotka akce
@@ -470,7 +536,7 @@ class AMCRTestRunner(BaseRunner):
             typ=Heslar.objects.get(id=TYP_DJ_CELEK_AKCE_ID),
             negativni_jednotka=True,
             ident_cely="C-202000001A-D01",
-            pian=pian
+            pian=pian,
         )
         dj.archeologicky_zaznam = az
         dj.komponenty = kv
@@ -482,7 +548,7 @@ class AMCRTestRunner(BaseRunner):
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
-        #Dokument d bez souboru
+        # Dokument d bez souboru
         d = Dokument(
             id=EXISTING_DOCUMENT_ID,
             rada=Heslar.objects.get(id=RADA_DOKUMENTU_TEXT_ID),
@@ -498,11 +564,18 @@ class AMCRTestRunner(BaseRunner):
             ulozeni_originalu=Heslar.objects.get(id=ULOZENI_ORIGINALU_ID),
         )
         d.save()
-        DokumentJazyk(id=1,dokument=d,jazyk=Heslar.objects.get(id=JAZYK_DOKUMENTU_CESTINA_ID),).save()
+        DokumentJazyk(
+            id=1,
+            dokument=d,
+            jazyk=Heslar.objects.get(id=JAZYK_DOKUMENTU_CESTINA_ID),
+        ).save()
         DokumentExtraData(dokument=d).save()
-        dc = DokumentCast(dokument=d, archeologicky_zaznam=az_incoplete, ident_cely=DOKUMENT_CAST_IDENT)
+        dc = DokumentCast(
+            dokument=d,
+            archeologicky_zaznam=az_incoplete,
+            ident_cely=DOKUMENT_CAST_IDENT,
+        )
         dc.save()
-
 
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()
@@ -510,9 +583,17 @@ class AMCRTestRunner(BaseRunner):
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
-        soubor = Soubor(nazev_zkraceny="x", nazev_puvodni="x", vlastnik=User.objects.first(), nazev="x",
-                        mimetype="x", size_bytes=1, vazba=vazba_soubory, path="x",
-                        id=TESTOVACI_SOUBOR_ID)
+        soubor = Soubor(
+            nazev_zkraceny="x",
+            nazev_puvodni="x",
+            vlastnik=User.objects.first(),
+            nazev="x",
+            mimetype="x",
+            size_bytes=1,
+            vazba=vazba_soubory,
+            path="x",
+            id=TESTOVACI_SOUBOR_ID,
+        )
         soubor.save()
         dokument_nalezova_zprava = Dokument(
             id=DOCUMENT_NALEZOVA_ZPRAVA_ID,
@@ -529,7 +610,11 @@ class AMCRTestRunner(BaseRunner):
             ulozeni_originalu=Heslar.objects.get(id=ULOZENI_ORIGINALU_ID),
         )
         dokument_nalezova_zprava.save()
-        DokumentJazyk(id=2,dokument=dokument_nalezova_zprava,jazyk=Heslar.objects.get(id=JAZYK_DOKUMENTU_CESTINA_ID),).save()
+        DokumentJazyk(
+            id=2,
+            dokument=dokument_nalezova_zprava,
+            jazyk=Heslar.objects.get(id=JAZYK_DOKUMENTU_CESTINA_ID),
+        ).save()
         DokumentExtraData(dokument=dokument_nalezova_zprava).save()
         dc = DokumentCast(dokument=dokument_nalezova_zprava, archeologicky_zaznam=az)
         dc.save()

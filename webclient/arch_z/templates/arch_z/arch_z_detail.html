@@ -1,0 +1,232 @@
+{% extends "arch_z/detail_common.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{% trans "Detail archeologického záznamu - akce" %}{% endblock %}
+
+
+    {% block zaznam_detail %}
+    <div class="app-entity-akce">
+    {% translate "akce.template.toolbar.title.href" as toolbar_name%}
+    {% trans "akce.detail.toolbar.DalsiVolby.DigiArchivLink" as digi_archiv_label %}
+    {% trans "akce.detail.toolbar.DalsiVolby.OAIAPI" as oaiapi_label %}
+    {% include "toolbar_akce.html" with showbackdetail=True showcontrols=True type="akce" name=toolbar_name %}
+
+    <!-- stepper -->
+    {% include "arch_z/arch_z_stepper.html" with type="akce" %}
+
+    <!-- detail -->
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body formset-table">
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+        <div class="row">
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Hlavní katastr" %}</label>
+              <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr|check_if_none }}"
+                     readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Další katastry" %}</label>
+              <input id="other_cadastre_id" class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Hlavní vedoucí" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Organizace" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Uživatelské označení" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.uzivatelske_oznaceni|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Hlavní typ" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Vedlejší typ" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="form-group col-sm-2">
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Specifikace data" %}</label>
+              <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Datum zahájení" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
+                     readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Datum ukončení" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
+                     readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Lokalizace/okolnosti" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-12">
+            <div class="form-group">
+              <label>{% trans "Poznámka" %}</label>
+              <textarea class="textarea form-control" cols="40" rows="4" placeholder="{{ zaznam.akce.souhrn_upresneni|check_if_none }}"
+                        readonly>{{ zaznam.akce.souhrn_upresneni|check_if_none }}</textarea>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Uložení nálezu" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label>{% trans "Uložení dokumentace" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Přístupnost" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.pristupnost|check_if_none }}" readonly>
+            </div>
+          </div>
+          <div class="col-sm-2 je_nz">
+            <div class="form-group">
+              <label>{% trans "Odeslat ZAA jako NZ" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.je_nz|true_false }}" readonly>
+            </div>
+          </div>
+        </div>
+        {% if ostatni_vedouci_objekt_formset.forms %}
+          <div class="row">
+            <div class="col-sm-12">
+              <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
+              <hr class="mt-0"/>
+            </div>
+          </div>
+          {% crispy ostatni_vedouci_objekt_formset ostatni_vedouci_objekt_formset_helper %}
+        {% else %}
+
+        {% endif %}
+      </div>
+    </div>
+
+{% endblock %}
+
+{% block arch_projekt %}
+  {% if arch_projekt_link %}
+    <button id="archive_projekt" hidden class="dropdown-item archive_projekt" type="button" name="button">
+    </button>
+  {% endif %}
+{% endblock %}
+
+{% block script_detail %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function (event) {
+        {% for row in akce_zaznam_ostatni_vedouci %}
+            i = {{ forloop.counter0 }};
+            vedouci_filed = document.getElementById(`id_akcevedouci_set-${i}-vedouci`);
+            vedouci_filed.value = "{{ row.0 }}";
+            organizace_field = document.getElementById(`id_akcevedouci_set-${i}-organizace`);
+            organizace_field.value = "{{ row.1 }}";
+        {% endfor %}
+      })
+  </script>
+  <script>
+    var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    //console.log("zaznam "+global_map_projekt_ident)
+    //modal scripts
+    document.addEventListener('DOMContentLoaded', function (event) {
+      if ("{{arch_projekt_link}}" !== "None"){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
+        formID: "archivovat-form",
+        modalFormID: "#archivovat-form",
+        })
+        arch_projekt = new Modal(options, "archive_projekt");
+        document.getElementById("archive_projekt").click()
+      };
+      if ("{{show.odeslat_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "odeslat-akci-form",
+        modalFormID: "#odeslat-akci-form",
+      })
+      odeslat_akci_modal = new Modal(options, "akce-odeslat");
+      };
+      if ("{{show.vratit_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "vratit-akci-form",
+        modalFormID: "#vratit-akci-form",
+      })
+      vratit_akci_modal = new Modal(options, "akce-vratit");
+      }
+      if ("{{show.archivovat_link}}" != "False"){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+          formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+          formID: "archivovat-akci-form",
+          modalFormID: "#archivovat-akci-form",
+        })
+      archivovat_akci_modal = new Modal(options, "akce-archivovat");
+      }
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "smazat-akci-form",
+        modalFormID: "#smazat-akci-form",
+      })
+      smazat_akci_modal = new Modal(options, "akce-smazat");
+    });
+  </script>
+{% endblock %}

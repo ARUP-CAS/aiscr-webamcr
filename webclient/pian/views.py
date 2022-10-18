@@ -17,7 +17,10 @@ from core.message_constants import (
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import get_validation_messages
+from core.utils import (
+    get_validation_messages,
+    update_all_katastr_within_akce_or_lokalita,
+)
 from dal import autocomplete
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -28,7 +31,6 @@ from django.contrib.gis.geos import LineString, Point, Polygon
 from django.db import connection
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import GEOMETRY_BOD, GEOMETRY_LINIE, GEOMETRY_PLOCHA
@@ -88,6 +90,7 @@ def detail(request, ident_cely):
     elif form.is_valid():
         logger.debug("Pian.Form is valid:1")
         form.save()
+        update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
@@ -115,8 +118,10 @@ def odpojit(request, dj_ident_cely):
     )
     pian = dj.pian
     if request.method == "POST":
+        redirect_view = dj.archeologicky_zaznam.get_reverse()
         dj.pian = None
         dj.save()
+        update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         logger.debug("Pian odpojen: " + pian.ident_cely)
         if delete_pian:
             pian.delete()
@@ -124,15 +129,10 @@ def odpojit(request, dj_ident_cely):
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
         else:
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
-        response = JsonResponse(
-            {
-                "redirect": reverse(
-                    "arch_z:detail",
-                    kwargs={"ident_cely": dj.archeologicky_zaznam.ident_cely},
-                )
-            }
+        response = JsonResponse({"redirect": redirect_view})
+        response.set_cookie(
+            "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
         )
-        response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
         response.set_cookie(
             "set-active",
             f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
@@ -160,32 +160,23 @@ def potvrdit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if request.method == "POST":
+        redirect_view = dj.archeologicky_zaznam.get_reverse()
         try:
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             return JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail",
-                        kwargs={"ident_cely": dj.archeologicky_zaznam.ident_cely},
-                    )
-                },
+                {"redirect": redirect_view},
                 status=403,
             )
         else:
             pian.set_potvrzeny(request.user)
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
-            response = JsonResponse(
-                {
-                    "redirect": reverse(
-                        "arch_z:detail",
-                        kwargs={"ident_cely": dj.archeologicky_zaznam.ident_cely},
-                    )
-                }
+            response = JsonResponse({"redirect": redirect_view})
+            response.set_cookie(
+                "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
             )
-            response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
             response.set_cookie(
                 "set-active",
                 f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
@@ -272,6 +263,7 @@ def create(request, dj_ident_cely):
                 pian.set_vymezeny(request.user)
                 dj.pian = pian
                 dj.save()
+                update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
                 logger.debug(
                     f"pian.views.create: {messages.SUCCESS}, {ZAZNAM_USPESNE_VYTVOREN} {dj.pk}."
                 )

@@ -296,3 +296,40 @@ def get_adb_ident(pian: Pian) -> str:
     else:
         logger.error("Maximal number of ADBs is " + str(MAXIMAL_ADBS))
         raise MaximalIdentNumberError(sequence.sekvence)
+
+
+def get_temp_lokalita_ident(typ, region):
+    MAXIMAL: int = 9999999
+    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
+    prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-" + typ)
+    l = ArcheologickyZaznam.objects.filter(
+        ident_cely__regex="^" + prefix + "\\d{7}$",
+        typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
+    ).order_by("-ident_cely")
+    if l.filter(ident_cely=str(prefix + "0000001")).count() == 0:
+        return prefix + "0000001"
+    else:
+        # temp number from empty spaces
+        sequence = l[l.count() - 1].ident_cely[-7:]
+        logger.warning(sequence)
+        while True:
+            if l.filter(ident_cely=prefix + sequence).exists():
+                old_sequence = sequence
+                sequence = str(int(sequence) + 1).zfill(7)
+                logger.warning(
+                    "Ident "
+                    + prefix
+                    + old_sequence
+                    + " already exists, trying next number "
+                    + str(sequence)
+                )
+            else:
+                break
+        if int(sequence) >= MAXIMAL:
+            logger.error(
+                "Maximal number of temporary document ident is "
+                + str(MAXIMAL)
+                + "for given region and rada"
+            )
+            raise MaximalIdentNumberError(MAXIMAL)
+        return prefix + sequence

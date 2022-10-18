@@ -10,8 +10,10 @@ from django.utils.translation import gettext as _
 from dj.models import DokumentacniJednotka
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
+from arch_z.models import ArcheologickyZaznam
 
 logger = logging.getLogger(__name__)
+
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
     def media(self):
@@ -19,31 +21,56 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 
 class CreateDJForm(forms.ModelForm):
-    def get_typ_queryset(self, jednotky, instance: DokumentacniJednotka=None):
+    def get_typ_queryset(
+        self, jednotky, instance: DokumentacniJednotka = None, typ_arch_z=None
+    ):
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
-        #logger.debug(jednotky)
-        if instance is not None and jednotky is not None and hasattr(instance, "typ") \
-                and instance.typ is not None and instance.typ.heslo.lower() == "část akce":
+        # logger.debug(jednotky)
+        if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+            return queryset.filter(
+                Q(heslo__iexact="lokalita") | Q(heslo__iexact="Katastrální území")
+            )
+        if (
+            instance is not None
+            and jednotky is not None
+            and hasattr(instance, "typ")
+            and instance.typ is not None
+            and instance.typ.heslo.lower() == "část akce"
+        ):
             queryset = queryset.filter(Q(heslo__iexact="část akce"))
         elif jednotky is not None:
             if jednotky.filter(typ__heslo__iexact="sonda").count() > 0:
                 if instance.ident_cely is None:
                     queryset = queryset.filter(heslo__iexact="sonda")
-                elif jednotky.filter(Q(typ__heslo__iexact="sonda") & Q(ident_cely__lt=instance.ident_cely)).count() > 0:
+                elif (
+                    jednotky.filter(
+                        Q(typ__heslo__iexact="sonda")
+                        & Q(ident_cely__lt=instance.ident_cely)
+                    ).count()
+                    > 0
+                ):
                     queryset = queryset.filter(heslo__iexact="sonda")
                 else:
-                    queryset = queryset.filter(Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce"))
+                    queryset = queryset.filter(
+                        Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
+                    )
             elif hasattr(instance, "typ") and instance.typ.heslo == "Celek akce":
-                queryset = queryset.filter(Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce"))
+                queryset = queryset.filter(
+                    Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
+                )
             elif jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
                 if jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
                     queryset = queryset.filter(heslo__iexact="část akce")
                 else:
-                    queryset = queryset.filter(Q(heslo__iexact="část akce") | Q(heslo__iexact="celek akce"))
+                    queryset = queryset.filter(
+                        Q(heslo__iexact="část akce") | Q(heslo__iexact="celek akce")
+                    )
             elif jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
                 queryset = queryset.filter(heslo__iexact="část akce")
             else:
-                queryset = queryset.filter(Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce"))
+                queryset = queryset.filter(
+                    Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
+                )
 
         return queryset
 
@@ -60,11 +87,22 @@ class CreateDJForm(forms.ModelForm):
 
         widgets = {
             "typ": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
             ),
             "nazev": forms.TextInput(),
             "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
-            "negativni_jednotka": forms.Select(choices=[("False", _("Ne")),("True", _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
+            "negativni_jednotka": forms.Select(
+                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
         }
         help_texts = {
             "typ": _("dj.form.typ.tooltip"),
@@ -77,15 +115,22 @@ class CreateDJForm(forms.ModelForm):
         self,
         *args,
         not_readonly=True,
+        typ_arch_z=None,
         **kwargs,
     ):
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
-        self.fields["typ"] = forms.ModelChoiceField(queryset=self.get_typ_queryset(jednotky, self.instance),
-                                                    help_text=_("dj.form.typ.tooltip"),
-                                                    widget=forms.Select(
-                                                        attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-                                                    ))
+        self.fields["typ"] = forms.ModelChoiceField(
+            queryset=self.get_typ_queryset(jednotky, self.instance, typ_arch_z),
+            help_text=_("dj.form.typ.tooltip"),
+            widget=forms.Select(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+        )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -98,10 +143,15 @@ class CreateDJForm(forms.ModelForm):
             ),
         )
         self.fields["pian"].widget.attrs["disabled"] = "disabled"
-        self.fields["pian"].widget.attrs["class"] = self.fields["pian"].widget.attrs.get("class", "") + " pian_disabled"
+        self.fields["pian"].widget.attrs["class"] = (
+            self.fields["pian"].widget.attrs.get("class", "") + " pian_disabled"
+        )
         for key in self.fields.keys():
             self.fields[key].disabled = not not_readonly
-            if isinstance(self.fields[key].widget, forms.widgets.Select) and key != "pian":
+            if (
+                isinstance(self.fields[key].widget, forms.widgets.Select)
+                and key != "pian"
+            ):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled == True:
                     self.fields[key].widget.template_name = "core/select_to_text.html"

@@ -26,7 +26,9 @@ urlpatterns = [
     path("oznameni/", include("oznameni.urls")),
     path("pian/", include("pian.urls")),
     path("projekt/", include("projekt.urls")),
-    path("projekt/oznamovatel/edit/<int:pk>", oznameni_views.edit, name="oznameni_edit"),
+    path(
+        "projekt/oznamovatel/edit/<int:pk>", oznameni_views.edit, name="oznameni_edit"
+    ),
     path("pas/", include("pas.urls")),
     path("arch-z/", include("arch_z.urls")),
     path("", include("uzivatel.urls")),
@@ -53,11 +55,10 @@ urlpatterns = [
         name="logout",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("arch-z/lokalita/", include("lokalita.urls")),
 ]
-if 'rosetta' in settings.INSTALLED_APPS:
-    urlpatterns += [
-        re_path(r'^rosetta/', include('rosetta.urls'))
-    ]
+if "rosetta" in settings.INSTALLED_APPS:
+    urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]
 
 if settings.DEBUG:
     import debug_toolbar

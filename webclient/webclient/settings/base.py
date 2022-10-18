@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "rosetta",
     "django_cron",
+    "lokalita",
 ]
 
 MIDDLEWARE = [
@@ -270,6 +271,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "pas": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+        "lokalita": {
             "handlers": ["console"],
             "level": "DEBUG",
         },
