@@ -69,7 +69,7 @@
 
 {% block content %}
 
-    
+
 
       {% block zaznam_detail %}
       {% endblock %}
@@ -194,13 +194,13 @@
                     </a>
                   {% endif %}
                   {% if j.show_add_pian %}
-                    <a class="dropdown-item" href="#"
+                    <a id="show_menu_pian_new_id"  class="dropdown-item" href="#"
                        onclick="show_create_child_form('{% url 'pian:create' j.ident_cely %}', 'create_pian_form')">
                       {% trans 'Přidat nový pian' %}
                     </a>
                   {% endif %}
                   {% if j.show_add_pian %}
-                    <a class="dropdown-item" href="#"
+                    <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
                        onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
                       {% trans 'Připojit pian z mapy' %}
                     </a>
@@ -242,7 +242,8 @@
                   {% endif %}
                 </div>
                 <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+                        aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}"
+                        onclick="filtrAkci()">
                   <span class="material-icons">more_vert</span>
                 </button>
               </div>
@@ -251,7 +252,7 @@
           </div>
           <div class="card-body">
             {% if not j.adb_form %}
-              <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
+              <form id="create_dj_form_id" class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
                 {% crispy j.form %}
                 {% if show.editovat %}
                 <button type="submit" id="editDjSubmitButton"
@@ -765,5 +766,18 @@
         console.log("najdene")
         $(id).prop('disabled', false);
     };
+</script>
+<script>
+  var filtrAkci =  function(){
+    var typ_dj=document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title;
+    if(typ_dj.includes("Katastrální území")){
+      document.getElementById("show_menu_pian_from_map_id").style.display = 'none';
+      document.getElementById("show_menu_pian_new_id").style.display = 'none';
+      document.getElementById("pian-pripoj-").style.display = 'none';
+    } else{
+      document.getElementById("show_menu_pian_from_map_id").style.display = '';
+      document.getElementById("pian-pripoj-").style.display = '';
+    }
+  }
 </script>
 {% endblock %}
