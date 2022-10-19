@@ -285,7 +285,12 @@ class ArcheologickyZaznamKatastr(models.Model):
 
 class Akce(models.Model):
 
-    typ = models.CharField(max_length=1, blank=True, null=True)
+    TYP_AKCE_PROJEKTOVA = "R"
+    TYP_AKCE_SAMOSTATNA = "N"
+
+    CHOICES = ((TYP_AKCE_PROJEKTOVA, "Projektova"), (TYP_AKCE_SAMOSTATNA, "Samostatna"))
+
+    typ = models.CharField(max_length=1, blank=True, null=True, choices=CHOICES)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,
@@ -344,6 +349,11 @@ class Akce(models.Model):
 
     class Meta:
         db_table = "akce"
+
+    def get_absolute_url(self):
+        return reverse(
+            "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
+        )
 
 
 class AkceVedouci(models.Model):

@@ -91,7 +91,7 @@ class KatastrFilter(filters.FilterSet):
 
     popisne_udaje = CharFilter(
         method="filter_popisne_udaje",
-        label="Popisné údaje",
+        label=_("Popisné údaje"),
         distinct=True,
     )
 

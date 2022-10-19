@@ -70,7 +70,8 @@ class Lokalita(models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            "pas:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
+            "lokalita:detail",
+            kwargs={"slug": self.archeologicky_zaznam.ident_cely},
         )
 
     def check_pred_archivaci(self):

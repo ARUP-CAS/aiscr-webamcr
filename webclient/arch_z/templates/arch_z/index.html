@@ -2,35 +2,35 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{%trans lokalita.template.index.Title%}{% endblock %}
+{% block title %}{%trans akce.template.index.Title%}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-lokalita">
+  <div class="app-entity-akce">
     {% include "toolbar_akce.html" %}
 
     <div class="row app-entity-cards mb-3">
       <div class="col">
-        <a href="{% url 'lokalita:create' %}" class="card app-card-entity app-card-zapsat-lokalita">
+        <a href="{% url 'arch_z:zapsat' %}" class="card app-card-entity app-card-zapsat-akce">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zapsat lokalitu" %}
+            {% trans "Zapsat Samostatnou Akci" %}
           </div>
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'lokalita:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-lokality">
+        <a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-akce">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Moje lokality" %}
+            {% trans "Moje Akce" %}
           </div>
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'lokalita:list' %}" class="card app-card-entity app-card-vybrat">
+        <a href="{% url 'arch_z:list' %}" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -41,7 +41,7 @@
       </div>
       
       <div class="col">
-        <a href="{% url 'lokalita:list' %}?stav=3" class="card app-card-entity app-card-archivovat">
+        <a href="{% url 'arch_z:list' %}?stav=3" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -54,17 +54,17 @@
   </div>
 
   <div class="app-card-desc-wrapper">
-    <div class="app-collapse-zapsat-lokalita collapse">
+    <div class="app-collapse-zapsat-akce collapse">
       <div class="p-3">
-        <h4>{% trans "Zapsat lokalitu" %}</h4>
+        <h4>{% trans "Zapsat Samostatnou Akci" %}</h4>
         <hr />
         Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
         Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
       </div>
     </div>
-    <div class="app-collapse-moje-lokality collapse">
+    <div class="app-collapse-moje-akce collapse">
       <div class="p-3">
-        <h4>{% trans "Moje lokality" %}</h4>
+        <h4>{% trans "Moje Akce" %}</h4>
         <hr />
         Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
         Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
@@ -90,17 +90,17 @@
 
   <script>
     // show / hide card description
-    $(".app-card-zapsat-lokalita").mouseleave(function(){
-      $(".app-collapse-zapsat-lokalita").hide(100);
+    $(".app-card-zapsat-akce").mouseleave(function(){
+      $(".app-collapse-zapsat-akce").hide(100);
     });
-    $(".app-card-zapsat-lokalita").mouseover(function(){
-      $(".app-collapse-zapsat-lokalita").show(100);
+    $(".app-card-zapsat-akce").mouseover(function(){
+      $(".app-collapse-zapsat-akce").show(100);
     });
-    $(".app-card-moje-lokality").mouseleave(function(){
-      $(".app-collapse-moje-lokality").hide(100);
+    $(".app-card-moje-akce").mouseleave(function(){
+      $(".app-collapse-moje-akce").hide(100);
     });
-    $(".app-card-moje-lokality").mouseover(function(){
-      $(".app-collapse-moje-lokality").show(100);
+    $(".app-card-moje-akce").mouseover(function(){
+      $(".app-collapse-moje-akce").show(100);
     });
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);

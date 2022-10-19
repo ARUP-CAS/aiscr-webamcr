@@ -1,7 +1,7 @@
 import structlog
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import ExportMixinDate
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 from django.utils.translation import gettext as _

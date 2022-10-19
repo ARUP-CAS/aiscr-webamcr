@@ -58,6 +58,22 @@ from core.utils import (
 from core.views import check_stav_changed
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.forms import inlineformset_factory
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import is_safe_url
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.mixins import LoginRequiredMixin
+from core.views import ExportMixinDate
+from django_filters.views import FilterView
+from django_tables2 import SingleTableMixin
+from django.views.generic import TemplateView
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
 from heslar.hesla import (
@@ -89,9 +105,12 @@ from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
 from pian.models import Pian
 from projekt.models import Projekt
+from arch_z.tables import AkceTable
+from arch_z.filters import AkceFilter
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
+
 
 @login_required
 @require_http_methods(["GET"])
@@ -132,7 +151,9 @@ def detail(request, ident_cely):
 
 class AkceRelatedRecordUpdateView(TemplateView):
     def get_shows(self):
-        return get_detail_template_shows(self.get_archeologicky_zaznam(), self.get_jednotky())
+        return get_detail_template_shows(
+            self.get_archeologicky_zaznam(), self.get_jednotky()
+        )
 
     def get_obdobi_choices(self):
         return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
@@ -144,17 +165,20 @@ class AkceRelatedRecordUpdateView(TemplateView):
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             ArcheologickyZaznam.objects.select_related("hlavni_katastr")
-                .select_related("akce")
-                .select_related("akce__vedlejsi_typ")
-                .select_related("akce__hlavni_typ")
-                .select_related("pristupnost"),
+            .select_related("akce")
+            .select_related("akce__vedlejsi_typ")
+            .select_related("akce__hlavni_typ")
+            .select_related("pristupnost"),
             ident_cely=ident_cely,
         )
 
     def get_jednotky(self):
         ident_cely = self.kwargs.get("ident_cely")
-        return DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)\
-            .select_related("komponenty", "typ", "pian")\
+        return (
+            DokumentacniJednotka.objects.filter(
+                archeologicky_zaznam__ident_cely=ident_cely
+            )
+            .select_related("komponenty", "typ", "pian")
             .prefetch_related(
                 "komponenty__komponenty",
                 "komponenty__komponenty__aktivity",
@@ -164,13 +188,16 @@ class AkceRelatedRecordUpdateView(TemplateView):
                 "komponenty__komponenty__predmety",
                 "adb",
             )
+        )
 
     def get_dokumenty(self):
         ident_cely = self.kwargs.get("ident_cely")
-        return Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)\
-            .select_related("soubory")\
-            .prefetch_related("soubory__soubory")\
+        return (
+            Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
+            .select_related("soubory")
+            .prefetch_related("soubory__soubory")
             .order_by("ident_cely")
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -188,9 +215,7 @@ class ArcheologickyZaznamDetailView(AkceRelatedRecordUpdateView):
 
     def get_archeologicky_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
-        return get_object_or_404(
-            ArcheologickyZaznam, ident_cely=ident_cely
-        )
+        return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
 
 
 class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
@@ -198,7 +223,10 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
+        logger_s.debug(
+            "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
+            dj_ident_cely=dj_ident_cely,
+        )
         objects = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return objects
 
@@ -213,7 +241,10 @@ class DokumentacniJednotkaCreateView(AkceRelatedRecordUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["dj_form_create"] = CreateDJForm(jednotky=self.get_jednotky(), typ_arch_z=self.get_archeologicky_zaznam().typ_zaznamu)
+        context["dj_form_create"] = CreateDJForm(
+            jednotky=self.get_jednotky(),
+            typ_arch_z=self.get_archeologicky_zaznam().typ_zaznamu,
+        )
         return context
 
 
@@ -238,18 +269,18 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         )
         has_adb = jednotka.has_adb()
         show_adb_add = (
-                jednotka.pian
-                and jednotka.typ.id == TYP_DJ_SONDA_ID
-                and not has_adb
-                and show["editovat"]
+            jednotka.pian
+            and jednotka.typ.id == TYP_DJ_SONDA_ID
+            and not has_adb
+            and show["editovat"]
         )
         show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
         show_add_pian = False if jednotka.pian else True
         show_approve_pian = (
             True
             if jednotka.pian
-               and jednotka.pian.stav == PIAN_NEPOTVRZEN
-               and show["editovat"]
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"]
             else False
         )
         dj_form_detail = {
@@ -266,20 +297,18 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
             "show_add_pian": (show_add_pian and show["editovat"]),
             "show_remove_pian": (not show_add_pian and show["editovat"]),
             "show_uprav_pian": jednotka.pian
-                               and jednotka.pian.stav == PIAN_NEPOTVRZEN
-                               and show["editovat"],
+            and jednotka.pian.stav == PIAN_NEPOTVRZEN
+            and show["editovat"],
             "show_approve_pian": show_approve_pian,
             "show_pripojit_pian": True,
         }
         if has_adb:
             logger.debug(jednotka.ident_cely)
-            dj_form_detail["adb_form"] = (
-                CreateADBForm(
-                    old_adb_post,
-                    instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
-                    readonly=not show["editovat"],
-                )
+            dj_form_detail["adb_form"] = CreateADBForm(
+                old_adb_post,
+                instance=jednotka.adb,
+                prefix=jednotka.adb.ident_cely,
+                readonly=not show["editovat"],
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
             dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
@@ -297,7 +326,9 @@ class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
-        context["komponenta_form_create"] = CreateKomponentaForm(self.get_obdobi_choices(), self.get_areal_choices())
+        context["komponenta_form_create"] = CreateKomponentaForm(
+            self.get_obdobi_choices(), self.get_areal_choices()
+        )
         context["j"] = self.get_dokumentacni_jednotka()
         return context
 
@@ -312,7 +343,10 @@ class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
 
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
+        logger_s.debug(
+            "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
+            dj_ident_cely=dj_ident_cely,
+        )
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
 
@@ -339,7 +373,11 @@ class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
             NalezPredmet,
             form=create_nalez_predmet_form(
                 heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-                list(Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list("id", "heslo")),
+                list(
+                    Heslar.objects.filter(
+                        nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
+                    ).values_list("id", "heslo")
+                ),
                 not_readonly=show["editovat"],
             ),
             extra=1 if show["editovat"] else 0,
@@ -674,27 +712,30 @@ def vratit(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def zapsat(request, projekt_ident_cely):
-    projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
+def zapsat(request, projekt_ident_cely=None):
+    if projekt_ident_cely:
+        projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
+        # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
+        if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
+            logger.debug(
+                "arch_z.views.zapsat: "
+                f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added."
+            )
+            raise PermissionDenied(
+                "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
+            )
+        # Projektove akce nelze vytvorit pro projekt typu pruzkum
+        if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
+            logger.debug(
+                "arch_z.views.zapsat: "
+                f"Type of project {projekt_ident_cely} is {projekt.typ_projektu} and action cannot be added."
+            )
+            raise PermissionDenied(
+                f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
+            )
+    else:
+        projekt = None
 
-    # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
-    if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
-        logger.debug(
-            "arch_z.views.zapsat: "
-            f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added."
-        )
-        raise PermissionDenied(
-            "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
-        )
-    # Projektove akce nelze vytvorit pro projekt typu pruzkum
-    if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
-        logger.debug(
-            "arch_z.views.zapsat: "
-            f"Type of project {projekt_ident_cely} is {projekt.typ_projektu} and action cannot be added."
-        )
-        raise PermissionDenied(
-            f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
-        )
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -1297,3 +1338,37 @@ def get_arch_z_context(request, ident_cely, zaznam):
     context["dokumentacni_jednotky"] = jednotky
     context["show"] = show
     return context
+
+
+class AkceIndexView(LoginRequiredMixin, TemplateView):
+    template_name = "arch_z/index.html"
+
+
+class AkceListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView):
+    table_class = AkceTable
+    model = Akce
+    template_name = "search_list.html"
+    filterset_class = AkceFilter
+    paginate_by = 100
+    export_name = "export_akce_"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = ["csv", "json", "xlsx"]
+        context["page_title"] = _("akce.vyber.pageTitle")
+        context["app"] = "akce"
+        context["toolbar"] = "toolbar_akce.html"
+        context["search_sum"] = _("akce.vyber.pocetVyhledanych")
+        context["pick_text"] = _("akce.vyber.pickText")
+        context["hasOnlyVybrat_header"] = _("akce.vyber.header.hasOnlyVybrat")
+        context["hasOnlyVlastnik_header"] = _("akce.vyber.header.hasOnlyVlastnik")
+        context["hasOnlyArchive_header"] = _("akce.vyber.header.hasOnlyArchive")
+        context["hasOnlyPotvrdit_header"] = _("akce.vyber.header.hasOnlyPotvrdit")
+        context["default_header"] = _("akce.vyber.header.default")
+        return context
+
+    def get_queryset(self):
+        # Only allow to view 3D models
+        qs = super().get_queryset()
+        # qs = qs.select_related("druh", "typ_lokality", "zachovalost", "jistota")
+        return qs

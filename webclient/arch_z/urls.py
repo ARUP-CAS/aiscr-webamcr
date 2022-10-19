@@ -15,6 +15,7 @@ urlpatterns = [
     path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/adb/zapsat", views.AdbCreateView.as_view(), name="create-adb"),
     path("akce/edit/<str:ident_cely>", views.edit, name="edit"),
     path("akce/zapsat/<str:projekt_ident_cely>", views.zapsat, name="zapsat"),
+    path("akce/zapsat", views.zapsat, name="zapsat"),
     path("akce/odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
     path("akce/archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("akce/vratit/<str:ident_cely>", views.vratit, name="vratit"),
@@ -50,4 +51,6 @@ urlpatterns = [
         views.post_ajax_get_akce_other_katastr,
         name="post_ajax_get_akce_other_katastr",
     ),
+    path("akce/vyber", views.AkceListView.as_view(), name="list"),
+    path("akce", views.AkceIndexView.as_view(), name="index"),
 ]

@@ -3,7 +3,7 @@
  * Matěj Koubík <matej@koubik.name>
  * Fixes by Michal Remiš <michal.remis@gmail.com>
  */
-;(function($){
+; (function ($) {
 	$.fn.datepicker.dates['cs'] = {
 		days: ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"],
 		daysShort: ["Ned", "Pon", "Úte", "Stř", "Čtv", "Pát", "Sob"],
