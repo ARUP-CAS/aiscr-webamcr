@@ -128,54 +128,54 @@ insert into heslar_nazev(heslar) values
 
 -- vlozeni hodnot COMMENT: v heslari_pristupnost se mapuje jinak vyznam -> heslo
 alter table heslar alter column heslo_en drop not null;
-insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka)
-( select id, 1 as nazev_heslare, nazev, en, poradi, zkratka from heslar_aktivity order by id )    union
-( select id, 2 as nazev_heslare, nazev, en, poradi, null from heslar_areal_druha order by id )               union
-( select id, 3 as nazev_heslare, nazev, en, poradi, null from heslar_areal_prvni order by id )              union
-( select id, 4 as nazev_heslare, nazev, en, null, zkratka from heslar_autorska_role order by id )              union
-( select id, 5 as nazev_heslare, nazev, en, poradi, null from heslar_dohlednost order by id)               union
-( select id, 6 as nazev_heslare, nazev, en, poradi, null from heslar_druh_lokality_druha order by id)        union
-( select id, 7 as nazev_heslare, nazev, en, poradi, null from heslar_druh_lokality_prvni order by id)        union
-( select id, 8 as nazev_heslare, nazev, en, poradi, null from heslar_format_dokumentu order by id)           union
-( select id, 9 as nazev_heslare, null, en, poradi, nazev from heslar_jazyk_dokumentu order by id)            union
-( select id, 10 as nazev_heslare, nazev, en, poradi, null from heslar_kulturni_pamatka order by id)          union
-( select id, 11 as nazev_heslare, nazev, en, poradi, null from heslar_letiste  order by id)                   union
-( select id, 12 as nazev_heslare, nazev, en, poradi, null from heslar_material_dokumentu  order by id)        union
-( select id, 13 as nazev_heslare, null, en, poradi, nazev from heslar_nahrada  order by id)                   union
-( select id, 14 as nazev_heslare, nazev, en, poradi, null from heslar_nalezove_okolnosti  order by id)      union
-( select id, 15 as nazev_heslare, nazev, en, poradi, zkratka from heslar_obdobi_druha  order by id)           union
-( select id, 16 as nazev_heslare, nazev, en, poradi, null from heslar_obdobi_prvni  order by id)         union
-( select id, 17 as nazev_heslare, nazev, en, poradi, null from heslar_objekt_druh  order by id)          union
-( select id, 18 as nazev_heslare, nazev, en, poradi, null from heslar_objekt_kategorie order by id)       union
-( select id, 19 as nazev_heslare, nazev, en, poradi, null from heslar_pocasi order by id)               union
-( select id, 20 as nazev_heslare, nazev, en, poradi, null from heslar_podnet order by id)                union
-( select id, 21 as nazev_heslare, nazev, en, poradi, null from heslar_posudek order by id)               union
-( select id, 22 as nazev_heslare, nazev, en, poradi, null from heslar_predmet_druh  order by id)            union
-( select id, 23 as nazev_heslare, nazev, en, poradi, null from heslar_predmet_kategorie order by id)        union
-( select id, 24 as nazev_heslare, null, en, null, nazev from heslar_presnost order by id )                   union
-( select id, 25 as nazev_heslare, vyznam, en, null, nazev from heslar_pristupnost order by id )               union
-( select id, 26 as nazev_heslare, vysvetlivka, en, null, nazev from heslar_rada order by id )                      union
-( select id, 27 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_data order by id )          union
-( select id, 28 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_objektu_druha order by id ) union
-( select id, 29 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_objektu_prvni order by id)  union
-( select id, 30 as nazev_heslare, nazev, en, poradi, null from heslar_specifikace_predmetu order by id )      union
-( select id, 31 as nazev_heslare, nazev, en, poradi, null from heslar_tvar  order by id)                      union
-( select id, 32 as nazev_heslare, nazev, en, poradi, null from heslar_typ_akce_druha order by id  )           union
-( select id, 33 as nazev_heslare, nazev, en, poradi, null from heslar_typ_akce_prvni  order by id )           union
-( select id, 34 as nazev_heslare, nazev, en, poradi, null from heslar_typ_dj order by id )                     union
-( select id, 35 as nazev_heslare, nazev, en, poradi, null from heslar_typ_dokumentu order by id )             union
-( select id, 36 as nazev_heslare, nazev, en, null, vysvetlivka from heslar_typ_externiho_zdroje order by id )      union
-( select id, 37 as nazev_heslare, nazev, en, poradi, nazev_id from heslar_typ_lokality order by id )              union
-( select id, 38 as nazev_heslare, null, en, null, nazev from heslar_typ_nalezu order by id )                union
-( select id, 39 as nazev_heslare, nazev, en, poradi, null from heslar_typ_organizace order by id )            union
-( select id, 40 as nazev_heslare, nazev, en, null, null from heslar_typ_pian order by id )                  union
-( select id, 41 as nazev_heslare, nazev, en, poradi, null from heslar_typ_projektu order by id )              union
-( select id, 42 as nazev_heslare, nazev, en, poradi, null from heslar_typ_sondy  order by id  )               union
-( select id, 43 as nazev_heslare, nazev, en, poradi, null from heslar_typ_udalosti order by id   )            union
-( select id, 44 as nazev_heslare, nazev, en, poradi, null from heslar_typ_vyskovy_bod order by id )           union
-( select id, 45 as nazev_heslare, nazev, en, poradi, null from heslar_ulozeni_originalu  order by id )        union
-( select id, 46 as nazev_heslare, null, en, poradi, nazev from heslar_zachovalost order by id )               union
-( select id, 47 as nazev_heslare, nazev, nazev_en, poradi, kod from heslar_zeme order by id ) order by nazev_heslare, id;
+insert into heslar(puvodni_id, nazev_heslare, heslo, heslo_en, razeni, zkratka, ident_cely)
+( select id, 1 as nazev_heslare, nazev, en, poradi, zkratka, ident_cely from heslar_aktivity order by id )    union
+( select id, 2 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_areal_druha order by id )               union
+( select id, 3 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_areal_prvni order by id )              union
+( select id, 4 as nazev_heslare, nazev, en, null, zkratka, ident_cely from heslar_autorska_role order by id )              union
+( select id, 5 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_dohlednost order by id)               union
+( select id, 6 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_druh_lokality_druha order by id)        union
+( select id, 7 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_druh_lokality_prvni order by id)        union
+( select id, 8 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_format_dokumentu order by id)           union
+( select id, 9 as nazev_heslare, null, en, poradi, nazev, ident_cely from heslar_jazyk_dokumentu order by id)            union
+( select id, 10 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_kulturni_pamatka order by id)          union
+( select id, 11 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_letiste  order by id)                   union
+( select id, 12 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_material_dokumentu  order by id)        union
+( select id, 13 as nazev_heslare, null, en, poradi, nazev, ident_cely from heslar_nahrada  order by id)                   union
+( select id, 14 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_nalezove_okolnosti  order by id)      union
+( select id, 15 as nazev_heslare, nazev, en, poradi, zkratka, ident_cely from heslar_obdobi_druha  order by id)           union
+( select id, 16 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_obdobi_prvni  order by id)         union
+( select id, 17 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_objekt_druh  order by id)          union
+( select id, 18 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_objekt_kategorie order by id)       union
+( select id, 19 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_pocasi order by id)               union
+( select id, 20 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_podnet order by id)                union
+( select id, 21 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_posudek order by id)               union
+( select id, 22 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_predmet_druh  order by id)            union
+( select id, 23 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_predmet_kategorie order by id)        union
+( select id, 24 as nazev_heslare, null, en, null, nazev, ident_cely from heslar_presnost order by id )                   union
+( select id, 25 as nazev_heslare, vyznam, en, null, nazev, ident_cely from heslar_pristupnost order by id )               union
+( select id, 26 as nazev_heslare, vysvetlivka, en, null, nazev, ident_cely from heslar_rada order by id )                      union
+( select id, 27 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_specifikace_data order by id )          union
+( select id, 28 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_specifikace_objektu_druha order by id ) union
+( select id, 29 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_specifikace_objektu_prvni order by id)  union
+( select id, 30 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_specifikace_predmetu order by id )      union
+( select id, 31 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_tvar  order by id)                      union
+( select id, 32 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_akce_druha order by id  )           union
+( select id, 33 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_akce_prvni  order by id )           union
+( select id, 34 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_dj order by id )                     union
+( select id, 35 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_dokumentu order by id )             union
+( select id, 36 as nazev_heslare, nazev, en, null, vysvetlivka, ident_cely from heslar_typ_externiho_zdroje order by id )      union
+( select id, 37 as nazev_heslare, nazev, en, poradi, nazev_id, ident_cely from heslar_typ_lokality order by id )              union
+( select id, 38 as nazev_heslare, null, en, null, nazev, ident_cely from heslar_typ_nalezu order by id )                union
+( select id, 39 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_organizace order by id )            union
+( select id, 40 as nazev_heslare, nazev, en, null, null, ident_cely from heslar_typ_pian order by id )                  union
+( select id, 41 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_projektu order by id )              union
+( select id, 42 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_sondy  order by id  )               union
+( select id, 43 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_udalosti order by id   )            union
+( select id, 44 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_typ_vyskovy_bod order by id )           union
+( select id, 45 as nazev_heslare, nazev, en, poradi, null, ident_cely from heslar_ulozeni_originalu  order by id )        union
+( select id, 46 as nazev_heslare, null, en, poradi, nazev, ident_cely from heslar_zachovalost order by id )               union
+( select id, 47 as nazev_heslare, nazev, nazev_en, poradi, kod, ident_cely from heslar_zeme order by id ) order by nazev_heslare, id;
 
 -- Pridani popisu u nasledujicich heslaru
 -- heslar_areal_druha
