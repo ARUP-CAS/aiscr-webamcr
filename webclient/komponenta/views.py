@@ -49,6 +49,7 @@ def detail(request, ident_cely):
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+    komponenta: Komponenta
     form = CreateKomponentaForm(
         obdobi_choices,
         areal_choices,
@@ -115,7 +116,9 @@ def detail(request, ident_cely):
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
-    response = redirect(request.META.get("HTTP_REFERER"))
+    url = reverse("arch_z:update-komponenta", args=[komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                                                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely, komponenta.ident_cely])
+    response = redirect(url)
     response.set_cookie(
         "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
     )
@@ -147,12 +150,14 @@ def zapsat(request, dj_ident_cely):
             form.save_m2m()  # this must be called to store komponenta_aktivity
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+        url = reverse("arch_z:update-komponenta", args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely])
     else:
         logger.warning("Form CreateKomponentaForm is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+        url = reverse("arch_z:create-komponenta", args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely])
 
-    response = redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(url)
     if komp_ident_cely:
         response.set_cookie(
             "show-form", f"detail_komponenta_form_{komp_ident_cely}", max_age=1000

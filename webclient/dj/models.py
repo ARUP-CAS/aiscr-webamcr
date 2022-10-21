@@ -45,6 +45,9 @@ class DokumentacniJednotka(models.Model):
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
 
+    def get_reverse(self):
+        return reverse("arch_z:detail-dj", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely, "dj_ident_cely": self.ident_cely})
+
     @property
     def ident_cely_safe(self):
         return self.ident_cely.replace("-", "_")

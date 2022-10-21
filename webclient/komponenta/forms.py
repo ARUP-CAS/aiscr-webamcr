@@ -27,7 +27,7 @@ class CreateKomponentaForm(forms.ModelForm):
         widgets = {
             "poznamka": forms.TextInput(),
             "presna_datace": forms.TextInput(),
-            "jistota": forms.Select(choices=[(False, _("Ne")),(True, _("Ano"))],attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
+            "jistota": forms.Select(choices=[(0, _("Ne")), (1, _("Ano"))], attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
             "aktivity": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),

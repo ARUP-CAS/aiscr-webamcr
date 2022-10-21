@@ -6,6 +6,10 @@ app_name = "arch_z"
 
 urlpatterns = [
     path("akce/detail/<str:ident_cely>", views.detail, name="detail"),
+    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>", views.DokumentacniJednotkaUpdateView.as_view(), name="detail-dj"),
+    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/komponenta/zapsat", views.KomponentaCreateView.as_view(), name="create-komponenta"),
+    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/komponenta/detail/<str:komponenta_ident_cely>", views.KomponentaUpdateView.as_view(), name="update-komponenta"),
+    path("akce/detail/<str:ident_cely>/dj/<str:dj_ident_cely>/pian/create", views.PianCreateView.as_view(), name="create-pian"),
     path("akce/edit/<str:ident_cely>", views.edit, name="edit"),
     path("akce/zapsat/<str:projekt_ident_cely>", views.zapsat, name="zapsat"),
     path("akce/odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),

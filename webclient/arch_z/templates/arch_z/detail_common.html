@@ -98,14 +98,14 @@
             <ul class="list-group list-group-flush">
               {% for j in dokumentacni_jednotky %}
                 <li class="list-group-item">
-                  <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
+                  <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}" {% if j.ident_cely == active_dj_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
                     {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
-                      <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
+                      <a href="{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'DJ má potvrzený pian' %}">
                         <span class="material-icons">my_location</span>
                       </a>
                     {% elif j.pian.stav == 1 %} <!-- NEPOTVRZENY JE 1 -->
-                      <a href="#" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip"
+                      <a href="{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}" class="d-flex mr-2 text-decoration-none app-pian app-notconfirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'DJ má nepotvrzený pian' %}">
                         <span class="material-icons">my_location</span>
                       </a>
@@ -113,7 +113,7 @@
                       <span class="material-icons mr-2 text-decoration-none app-pian app-disabled" rel="tooltip"
                             data-placement="top" title="{% trans 'DJ nemá pian' %}">location_disabled</span>
                     {% endif %}
-                    <a href="#" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
+                    <a href="{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}" class="flex-fill app-entity-color" id="el_dokumentacni_jednotka_{{ j.ident_cely_safe }}">
                       <strong>{{ j.ident_cely|last_x_letters:3 }} ({{ j.typ }})</strong>
                       {% if j.adb %}- {{ j.adb.ident_cely }}{% endif %}
                     </a>
@@ -122,8 +122,8 @@
                     <ul class="app-list-group-in">
                       {% for k in j.komponenty.komponenty.all %}
                         <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
-                          <div class="d-flex align-items-baseline">
-                            <a href="#" class="flex-fill mr-2 app-entity-color"
+                          <div class="d-flex align-items-baseline" {% if k.ident_cely == active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                            <a href="{% url 'arch_z:update-komponenta' zaznam.ident_cely j.ident_cely k.ident_cely %}" class="flex-fill mr-2 app-entity-color"
                                id="el_komponenta_{{ k.ident_cely_safe }}">
                               {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
                             </a>
@@ -161,265 +161,8 @@
 
     <!-- forms -->
     <div id="dj_forms" class="mb-3">
-      <!-- dok jednotka -->
-      <div class="card app-card-form" id="create_dj_form" style="display: none;">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "Nová dokumentační jednotka" %}
-          </div>
-        </div>
-        <div class="card-body">
-          <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}"
-                onsubmit="newDjSubmitButton.disabled = true; return true;">
-            {% crispy dj_form_create %}
-            <button type="submit" id="newDjSubmitButton"
-                    class="btn btn-primary">{% trans "Vytvořit jednotku" %}</button>
-          </form>
-        </div>
-      </div>
-      {% for j in dj_forms_detail %}
-        <div class="card app-card-form" id="detail_dj_form_{{ j.ident_cely }}" style="display: none;">
-          <div class="card-header">
-            <div class="app-fx app-left">
-              {% trans "Dokumentační jednotka" %} {{ j.ident_cely }}
-            </div>
-            <div class="app-fx app-right">
-              {% if show.editovat %}
-              <div class="btn-group" role="group">
-                <div class="dropdown-menu" aria-labelledby="others">
-                  {% if j.show_add_komponenta %}
-                    <a class="dropdown-item" href="#"
-                       onclick="show_create_child_form('{% url 'komponenta:zapsat' j.ident_cely %}', 'create_komponenta_form')">
-                      {% trans 'Přidat komponentu' %}
-                    </a>
-                  {% endif %}
-                  {% if j.show_add_pian %}
-                    <a class="dropdown-item" href="#"
-                       onclick="show_create_child_form('{% url 'pian:create' j.ident_cely %}', 'create_pian_form')">
-                      {% trans 'Přidat nový pian' %}
-                    </a>
-                  {% endif %}
-                  {% if j.show_add_pian %}
-                    <a class="dropdown-item" href="#"
-                       onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
-                      {% trans 'Připojit pian z mapy' %}
-                    </a>
-                  {% endif %}
-                  {% if j.show_approve_pian %}
-                    <button id="pian-potvrdit-{{j.adb_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button" name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
-                      {% trans 'Potvrdit pian' %}
-                    </button>
-                  {% endif %}
-                  {% if j.show_uprav_pian %}
-                    <a class="dropdown-item" href="#"
-                       onclick="show_uprav_pian_click('{{ j.pian_ident_cely }}', '{{ j.ident_cely }}')">
-                      {% trans 'Upravit pian' %}
-                    </a>
-                  {% endif %}
-                  {% if j.show_remove_pian %}
-                    <button id="pian-odpojit-{{j.adb_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button" name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
-                      {% trans 'Odpojit pian' %}
-                    </button>
-                  {% endif %}
-                  {% if j.show_add_adb %}
-                    <a class="dropdown-item" href="#"
-                       onclick="show_create_child_form('{% url 'adb:zapsat' j.ident_cely %}', 'create_adb_form', 'detail_dj_form_{{ j.ident_cely }}')">
-                      {% trans 'Přidat ADB' %}
-                    </a>
-                  {% endif %}
-                  {% if j.show_remove_adb %}
-                    <button id="adb-smazat-{{j.adb_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button" href="{% url 'adb:smazat' j.adb_ident_cely %}">
-                      {% trans 'Smazat ADB' %}
-                    </button>
-                  {% endif %}
-                  <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button" href="{% url 'dj:smazat' j.ident_cely %}">
-                    {% trans 'Smazat DJ' %}
-                  </button>
-                  {% if j.show_pripojit_pian %}
-                    <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item" type="button" name="button" onclick=update_pian("{{j.ident_cely}}")>
-                      {% trans 'Připojit PIAN podle ID' %}
-                    </button>
-                  {% endif %}
-                </div>
-                <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-                  <span class="material-icons">more_vert</span>
-                </button>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-          <div class="card-body">
-            {% if not j.adb_form %}
-              <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
-                {% crispy j.form %}
-                {% if show.editovat %}
-                <button type="submit" id="editDjSubmitButton"
-                        class="btn btn-primary">{% trans "Uložit změny" %}</button>
-                {% endif %}
-              </form>
-            {% endif %}
-
-            {% if j.adb_form %}
-            <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}" onsubmit="editDjSubmitButton.disabled = true; return true;">
-              {% crispy j.form %}
-              <div class="card app-card-form app-card-inner">
-                <div class="card-header">
-                  <div class="app-fx app-left">
-                    {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
-                  </div>
-                </div>
-                <div class="card-body formset-table">
-                    <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}" />
-                    {% crispy j.adb_form %}
-                    <h5>{% trans "Výškové body" %}</h5>
-                    <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}" />
-                    {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
-                </div>
-              </div>
-              {% if show.editovat %}
-              <button type="submit" id="editDjSubmitButton"
-                      class="btn btn-primary">{% trans "Uložit změny" %}</button>
-              {% endif %}
-            {% endif %}
-          </div>
-            </form>
-        </div>
-      {% endfor %}
-
-      <!-- kopmonenta -->
-      <div class="card app-card-form" id="create_komponenta_form" style="display: none;">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "Nová komponenta" %}
-          </div>
-        </div>
-        <div class="card-body">
-          <form method="POST" action="#" id="create_komponenta_form_id" onsubmit="createCompotSubmitButton.disabled = true; return true;">
-            <!-- Action is filled using javascript -->
-            {% crispy komponenta_form_create %}
-            <button type="submit" id="createCompotSubmitButton"
-                    class="btn btn-primary">{% trans "Vytvořit komponentu" %}</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="card app-card-form" id="create_adb_form" style="display: none;">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "Nový archeologický dokumentační bod" %}
-          </div>
-        </div>
-        <div class="card-body">
-          <form method="POST" action="#" id="create_adb_form_id" onsubmit="createAdbSubmitButton.disabled = true; return true;">
-            <!-- Action is filled using javascript -->
-            {% crispy adb_form_create %}
-            <button type="submit" id="createAdbSubmitButton"
-                    class="btn btn-primary">{% trans "Vytvořit ADB" %}</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="card app-card-form" id="create_pian_form" style="display: none;">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "Nový pian" %}
-          </div>
-        </div>
-        <div class="card-body">
-          <form method="POST" action="#" id="create_pian_form_id" onsubmit="createPianSubmitButton.disabled = true; return true;">
-            <!-- Action is filled using javascript -->
-            {% crispy pian_form_create %}
-            <button type="submit" id="createPianSubmitButton"
-                    class="btn btn-primary">{% trans "Vytvořit pian" %}</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- dev -->
-      {% for k in komponenta_forms_detail %}
-        <div class="card app-card-form" id="detail_komponenta_form_{{ k.ident_cely }}" style="display: none;">
-          <div class="card-header">
-            <div class="app-fx app-left">
-              {% trans "Komponenta" %} {{ k.ident_cely }}
-            </div>
-            {% if show.editovat %}
-            <div class="app-fx app-right">
-              <div class="btn-group" role="group">
-                <div class="dropdown-menu" aria-labelledby="others">
-                  <button id="komponenta-smazat-{{k.ident_cely}}" class="dropdown-item komponenta-smazat-btn" type="button" name="button" href="{% url 'komponenta:smazat' k.ident_cely %}">
-                    {% trans 'Smazat komponentu' %}
-                  </button>
-                </div>
-                <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
-                  <span class="material-icons">more_vert</span>
-                </button>
-              </div>
-            </div>
-            {% endif %}
-          </div>
-          <div class="card-body">
-            <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
-              {% crispy k.form %}
-
-            <div class="card app-card-form app-card-inner">
-              <div class="card-header">
-                <div class="app-fx app-left">
-                  {% trans "Nálezy" %}
-                </div>
-              </div>
-              <div class="card-body formset-table">
-                <h5>{% trans "Objekty" %}</h5>
-                  {% if k.form_nalezy_objekty.forms %}
-                    <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
-                    {% crispy k.form_nalezy_objekty k.helper_objekt %}
-                  {% else %}
-                  <div class="app-note">
-                    <span class="material-icons">info</span>
-                    {% trans "Komponenta neobsahuje žádné objekty." %}
-                  </div>
-                  {% endif %}
-                <h5>{% trans "Předměty" %}</h5>
-                  {% if k.form_nalezy_predmety.forms %}
-                  {% crispy k.form_nalezy_predmety k.helper_predmet %}
-                  {% else %}
-                  <div class="app-note">
-                    <span class="material-icons">info</span>
-                    {% trans "Komponenta neobsahuje žádné předměty." %}
-                  </div>
-                  {% endif %}
-              </div>
-            </div>
-            {% if show.editovat %}
-              <button type="submit" id="editKompSubmitButton"
-                      class="btn btn-primary">{% trans "Uložit změnu" %}</button>
-            {% endif %}
-            </form>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-
-    {% for p in pian_forms_detail %}
-      <div class="card app-card-form" id="detail_pian_form_{{ p.ident_cely }}" style="display: none;">
-        <div class="card-header">
-          <div class="app-fx app-left">
-            {% trans "Pian" %} {{ p.ident_cely }}
-          </div>
-        </div>
-        <div class="card-body">
-          <form class="mb-3" method="POST" action="{% url 'pian:detail' p.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">
-            {% crispy p.form %}
-            {% if show.editovat %}
-              <input type="hidden" id="detail_pian_dj_indent_{{ p.ident_cely }}" name="dj_ident_cely">
-            <button type="submit" id="editPianButton"
-                    class="btn btn-primary">{% trans "Upravit pian" %}</button>
-            {% endif %}
-          </form>
-        </div>
-      </div>
-    {% endfor %}
+      {% block dj_form %}
+      {% endblock %}
 
     <!-- dokumenty -->
 
@@ -639,30 +382,7 @@
           new_el.style.backgroundColor = "rgba(36, 126, 75, 0.1)";
       }
       let el_div_currently_selected = null;
-      const set_dokumentacni_jednotka_events = (ident_cely, ident_cely_safe) => {
-          const el_dokumentacni_jednotka
-              = document.getElementById(`el_dokumentacni_jednotka_${ident_cely_safe}`);
-          el_dokumentacni_jednotka.addEventListener("click", () => {
-              div_dokumentacni_jednotka_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
-          }, false);
-      };
       const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
-      const set_komponenta_events = (ident_cely, ident_cely_safe) => {
-          const el_komponenta
-              = document.getElementById(`el_komponenta_${ident_cely_safe}`);
-          el_komponenta.addEventListener("click", () => {
-              div_komponenta_click({ident_cely: ident_cely, ident_cely_safe: ident_cely_safe})
-          }, false);
-
-      };
-      {% for j in dokumentacni_jednotky %}
-          set_dokumentacni_jednotka_events("{{ j.ident_cely }}", "{{ j.ident_cely_safe }}")
-          {% if j.komponenty.komponenty.all %}
-            {% for k in j.komponenty.komponenty.all %}
-                set_komponenta_events("{{ k.ident_cely }}", "{{ k.ident_cely_safe }}")
-            {% endfor %}
-          {% endif %}
-      {% endfor %}
   </script>
   <script>
     //modal scripts

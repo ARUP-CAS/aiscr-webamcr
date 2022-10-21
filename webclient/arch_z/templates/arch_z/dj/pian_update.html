@@ -1,0 +1,17 @@
+<div class="card app-card-form" id="detail_pian_form_{{ p.ident_cely }}" style="display: none;">
+<div class="card-header">
+  <div class="app-fx app-left">
+    {% trans "Pian" %} {{ p.ident_cely }}
+  </div>
+</div>
+<div class="card-body">
+  <form class="mb-3" method="POST" action="{% url 'pian:detail' p.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">
+    {% crispy p.form %}
+    {% if show.editovat %}
+      <input type="hidden" id="detail_pian_dj_indent_{{ p.ident_cely }}" name="dj_ident_cely">
+    <button type="submit" id="editPianButton"
+            class="btn btn-primary">{% trans "Upravit pian" %}</button>
+    {% endif %}
+  </form>
+</div>
+</div>

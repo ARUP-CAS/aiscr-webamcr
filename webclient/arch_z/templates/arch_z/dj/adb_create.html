@@ -1,0 +1,17 @@
+<div class="card app-card-form" id="create_adb_form" style="display: none;">
+  <div class="card-header">
+    <div class="app-fx app-left">
+      {% trans "Nový archeologický dokumentační bod" %}
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="#" id="create_adb_form_id"
+          onsubmit="createAdbSubmitButton.disabled = true; return true;">
+      <!-- Action is filled using javascript -->
+      {% crispy adb_form_create %}
+      <button type="submit" id="createAdbSubmitButton"
+              class="btn btn-primary">{% trans "Vytvořit ADB" %}
+      </button>
+    </form>
+  </div>
+</div>
