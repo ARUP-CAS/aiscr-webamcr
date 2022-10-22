@@ -1,16 +1,15 @@
 import logging
 
+from arch_z.models import ArcheologickyZaznam
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
+from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
-
-from dj.models import DokumentacniJednotka
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
-from arch_z.models import ArcheologickyZaznam
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +145,7 @@ class CreateDJForm(forms.ModelForm):
         self.fields["pian"].widget.attrs["class"] = (
             self.fields["pian"].widget.attrs.get("class", "") + " pian_disabled"
         )
+        self.fields["typ"].widget.attrs["id"] = "dj_typ_id"
         for key in self.fields.keys():
             self.fields[key].disabled = not not_readonly
             if (
