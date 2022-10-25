@@ -227,18 +227,20 @@
       function show_form(form_id, form_to_show_next) {
         clearUnfinishedEditGeometry()
           let form = document.getElementById(form_id);
-          if (form.style.display === "none") {
-              // hide the form what was shown
-              if (shown_form_id !== "") {
-                  document.getElementById(shown_form_id).style.display = "none"
-              }
-              // Show desired form
-              form.style.display = "block";
-              shown_form_id = form_id
-              if (form_to_show_next == null) {
-                  form_to_show_next = form_id;
-              }
-              setCookie("detail-id-shown", form_to_show_next, "/arch-z/detail/")
+          if (form) {
+            if (form.style.display === "none") {
+                // hide the form what was shown
+                if (shown_form_id !== "") {
+                    document.getElementById(shown_form_id).style.display = "none"
+                }
+                // Show desired form
+                form.style.display = "block";
+                shown_form_id = form_id
+                if (form_to_show_next == null) {
+                    form_to_show_next = form_id;
+                }
+                setCookie("detail-id-shown", form_to_show_next, "/arch-z/detail/")
+            }
           }
           if (form_id.includes("detail_dj_form_")) {
               pian_id = form_id.replace("detail_dj_form_", "")
@@ -309,7 +311,6 @@
           if (show_form_cookie) {
               show_form(show_form_cookie);
               setCookie("show-form", "", "/");
-              get_create_pain_form_action(show_form);
           } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
               document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
@@ -464,14 +465,22 @@
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
     })
-    create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
+    try {
+     create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
+    } catch (e) {
+      console.log(e);
+    }
     var options = Object.assign(defaults, {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
     })
-    create_autor_revize_modal = new Modal(options, "create-autor-revize");
+    try {
+     create_autor_revize_modal = new Modal(options, "create-autor-revize");
+    } catch (e) {
+      console.log(e);
+    }
   });
     const show_uprav_pian_click = (pian_ident_cely, dj_ident_cely) => {
         show_form(`detail_pian_form_${pian_ident_cely}`, `detail_pian_form_${pian_ident_cely}`);

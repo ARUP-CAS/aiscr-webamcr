@@ -194,8 +194,13 @@
         formID: "archivovat-form",
         modalFormID: "#archivovat-form",
         })
-        arch_projekt = new Modal(options, "archive_projekt");
-        document.getElementById("archive_projekt").click()
+        try {
+          arch_projekt = new Modal(options, "archive_projekt");
+          document.getElementById("archive_projekt").click();
+        } catch (e) {
+          console.log(e);
+        }
+
       };
       if ("{{show.odeslat_link}}" != "False"){
       var options = Object.assign(defaults, {modalID: "modal-form",

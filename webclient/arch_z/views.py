@@ -188,6 +188,16 @@ class AkceRelatedRecordUpdateView(TemplateView):
         return context
 
 
+class ArcheologickyZaznamDetailView(AkceRelatedRecordUpdateView):
+    template_name = "arch_z/dj/arch_z_detail.html"
+
+    def get_archeologicky_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return get_object_or_404(
+            ArcheologickyZaznam, ident_cely=ident_cely
+        )
+
+
 class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
     template_name = "arch_z/dj/dj_update.html"
 
