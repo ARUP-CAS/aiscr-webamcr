@@ -149,7 +149,7 @@ def detail(request, ident_cely):
                 ZAZNAM_SE_NEPOVEDLO_EDITOVAT + "detail.vyskovy_bod.povinna_pole",
             )
 
-    response = dj.archeologicky_zaznam.get_redirect()
+    response = dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -185,7 +185,7 @@ def zapsat(request, arch_z_ident_cely):
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-    response = az.get_redirect()
+    response = az.get_redirect(dj.ident_cely)
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",

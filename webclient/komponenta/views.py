@@ -175,9 +175,6 @@ def zapsat(request, dj_ident_cely):
 def smazat(request, ident_cely):
     k = get_object_or_404(Komponenta, ident_cely=ident_cely)
     if request.method == "POST":
-        arch_z_ident_cely = (
-            k.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely
-        )
         resp = k.delete()
 
         if resp:
@@ -185,7 +182,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse(
                 {
-                    "redirect": k.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.get_reverse()
+                    "redirect": k.komponenta_vazby.dokumentacni_jednotka.get_reverse()
                 }
             )
             response.set_cookie(
@@ -199,7 +196,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse(
                 {
-                    "redirect": k.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.get_reverse()
+                    "redirect": k.komponenta_vazby.dokumentacni_jednotka.get_reverse()
                 },
                 status=403,
             )

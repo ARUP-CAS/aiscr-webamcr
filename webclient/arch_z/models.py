@@ -249,15 +249,21 @@ class ArcheologickyZaznam(models.Model):
             self.ident_cely = prefix + sequence
         self.save()
 
-    def get_reverse(self):
+    def get_reverse(self, dj_ident_cely=None):
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            return reverse("arch_z:detail", kwargs={"ident_cely": self.ident_cely})
+            if dj_ident_cely is None:
+                return reverse("arch_z:detail", kwargs={"ident_cely": self.ident_cely})
+            else:
+                return reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely])
         else:
             return reverse("lokalita:detail", kwargs={"slug": self.ident_cely})
 
-    def get_redirect(self):
+    def get_redirect(self, dj_ident_cely=None):
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            return redirect("arch_z:detail", self.ident_cely)
+            if dj_ident_cely is None:
+                return redirect("arch_z:detail", self.ident_cely)
+            else:
+                return redirect(reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely]))
         else:
             return redirect("lokalita:detail", self.ident_cely)
 

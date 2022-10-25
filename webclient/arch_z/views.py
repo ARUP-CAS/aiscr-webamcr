@@ -92,6 +92,7 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
+from pian.models import Pian
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
@@ -182,7 +183,6 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["zaznam"] = zaznam
         context["dokumentacni_jednotky"] = self.get_jednotky()
         context["dokumenty"] = self.get_dokumenty()
-        context["adb_form_create"] = CreateADBForm()
         context["history_dates"] = get_history_dates(zaznam.historie)
         context["show"] = get_detail_template_shows(zaznam, self.get_jednotky())
         return context
@@ -196,6 +196,20 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
         objects = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return objects
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
+        return context
+
+
+class DokumentacniJednotkaCreateView(AkceRelatedRecordUpdateView):
+    template_name = "arch_z/dj/dj_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dj_form_create"] = CreateDJForm(jednotky=self.get_jednotky(), typ_arch_z=self.get_archeologicky_zaznam().typ_zaznamu)
+        return context
 
 
 class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
@@ -268,8 +282,6 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
             )
             dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
             dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
-
-        context["active_dj_ident"] = jednotka.ident_cely
         context["j"] = dj_form_detail
         return context
 
@@ -279,6 +291,7 @@ class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         context["komponenta_form_create"] = CreateKomponentaForm(self.get_obdobi_choices(), self.get_areal_choices())
         context["j"] = self.get_dokumentacni_jednotka()
         return context
@@ -369,6 +382,27 @@ class PianCreateView(DokumentacniJednotkaRelatedUpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
+        context["pian_form_create"] = PianCreateForm()
+        return context
+
+
+class PianUpdateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/pian_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["pian_form_create"] = PianCreateForm()
+        return context
+
+
+class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/adb_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["adb_form_create"] = CreateADBForm()
         return context
 
 
