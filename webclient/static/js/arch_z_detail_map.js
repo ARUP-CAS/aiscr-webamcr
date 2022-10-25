@@ -1,20 +1,11 @@
 var global_map_can_edit = false;
 
-<<<<<<< HEAD
 var global_map_can_grab_geom_from_map = false;
 var global_map_element = "id_geom";
 var global_map_element_sjtsk = "id_geom_sjtsk";
 var global_map_can_load_pians = true;
 var global_map_katastry_all = null;
 addLogText("zmena def.geom :" + global_map_element)
-=======
-var global_map_can_grab_geom_from_map = false;
-var global_map_element = "id_geom";
-var global_map_element_sjtsk = "id_geom_sjtsk";
-var global_map_can_load_pians = true;
-var global_map_katastry_all = null;
-addLogText("zmena def.geom :" + global_map_element)
->>>>>>> 79a3c60... Opravy po rebase. Opravy message constants. Opravy hlavniho katastru
 
 L.TileLayer.Grayscale = L.TileLayer.extend({
     options: {
@@ -457,11 +448,7 @@ map.on('draw:deleted', function (e) {
 
 map.on('draw:drawstart', function (e) {
     addLogText("arch_z_detail_map.draw:drawstart")
-<<<<<<< HEAD
     if (global_measuring_toolbox._measuring) {
-=======
-    if (global_measuring_toolbox._measuring) {
->>>>>>> 79a3c60... Opravy po rebase. Opravy message constants. Opravy hlavniho katastru
         global_measuring_toolbox._stopMeasuring()
     }
 })
@@ -949,11 +936,7 @@ switchMap = function (overview = false) {
     }
 }
 
-<<<<<<< HEAD
 function loadKatastry() {
-=======
-function loadKatastry() {
->>>>>>> 79a3c60... Opravy po rebase. Opravy message constants. Opravy hlavniho katastru
     akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/arch-z/akce-ostatni-katastry');
@@ -965,7 +948,6 @@ function loadKatastry() {
     }
     xhr.onload = function () {
         rs = JSON.parse(this.responseText)
-<<<<<<< HEAD
         let hlavni_katastr = ""
         let ostatni_katastry = [];
         global_map_katastry_all = rs;
@@ -973,28 +955,14 @@ function loadKatastry() {
             if (i == 0) {
                 hlavni_katastr = rs.points[i].dj_katastr;
             } else if (hlavni_katastr != rs.points[i].dj_katastr) {
-=======
-        let hlavni_katastr = ""
-        let ostatni_katastry = [];
-        global_map_katastry_all = rs;
-        for (var i = 0; i < rs.points.length; i++) {
-            if (i == 0) {
-                hlavni_katastr = rs.points[i].dj_katastr;
-            } else if (hlavni_katastr != rs.points[i].dj_katastr) {
->>>>>>> 79a3c60... Opravy po rebase. Opravy message constants. Opravy hlavniho katastru
                 ostatni_katastry.push(rs.points[i].dj_katastr)
             }
         }
         ostatni_katastry = [...new Set(ostatni_katastry)].sort();
         //addLogText("HL:"+hlavni_katastr);
         //addLogText("OST:"+ostatni_katastry);
-<<<<<<< HEAD
         document.getElementById("main_cadastre_id").value = hlavni_katastr;
         document.getElementById("other_cadastre_id").value = ostatni_katastry.join(", ");
-=======
-        document.getElementById("main_cadastre_id").value = hlavni_katastr;
-        document.getElementById("other_cadastre_id").value = ostatni_katastry.join(", ");
->>>>>>> 79a3c60... Opravy po rebase. Opravy message constants. Opravy hlavniho katastru
     };
     xhr.send(JSON.stringify(
         {
@@ -1005,7 +973,6 @@ function loadKatastry() {
 
 //loadKatastry();
 
-<<<<<<< HEAD
 function searchByAjax(text, callResponse) {
     let items1 = [];
     let items2 = [];
@@ -1030,30 +997,4 @@ function searchByAjax(text, callResponse) {
 
     ];
     Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse([...items2, ...items1]); })
-=======
-function searchByAjax(text, callResponse) {
-    let items1 = [];
-    let items2 = [];
-
-    let ajaxCall = [
-        $.ajax({//obec
-            url:
-                'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/12/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
-            type: 'GET',
-            data: { text: text },
-            dataType: 'json',
-            success: function (json) { items1 = json.suggestions;/*console.log("Vyhledany Obce");*/ }
-        }),
-        $.ajax({//okres
-            url:
-                'https://ags.cuzk.cz/arcgis/rest/services/RUIAN/Vyhledavaci_sluzba_nad_daty_RUIAN/MapServer/exts/GeocodeSOE/tables/15/suggest?maxSuggestions=10&outSR={"latestWkid":5514,"wkid":102067}&f=json',
-            type: 'GET',
-            data: { text: text },
-            dataType: 'json',
-            success: function (json) { items2 = json.suggestions;/*console.log("Vyhledany Okresy");*/ }
-        }),
-
-    ];
-    Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse([...items2, ...items1]); })
->>>>>>> 79a3c60... Opravy po rebase. Opravy message constants. Opravy hlavniho katastru
 }

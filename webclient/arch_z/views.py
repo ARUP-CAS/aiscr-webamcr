@@ -38,7 +38,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
-from core.ident_cely import get_project_event_ident
+from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
@@ -527,6 +527,7 @@ def edit(request, ident_cely):
             "title": _("Editace archeologického záznamu"),
             "header": _("Archeologický záznam"),
             "button": _("Uložit změny"),
+            "sam_akce": False if zaznam.akce.projekt else True,
         },
     )
 
@@ -733,8 +734,19 @@ def zapsat(request, projekt_ident_cely=None):
             raise PermissionDenied(
                 f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
             )
+        context = {
+            "title": _("Nová projektová akce"),
+            "header": _("Nová projektová akce"),
+            "create_akce": False,
+        }
     else:
         projekt = None
+        context = {
+            "title": _("Nová samostatna akce"),
+            "header": _("Nová samostatna akce"),
+            "create_akce": True,
+            "sam_akce": True,
+        }
 
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
@@ -765,7 +777,14 @@ def zapsat(request, projekt_ident_cely=None):
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
             try:
-                az.ident_cely = get_project_event_ident(projekt)
+                if projekt:
+                    az.ident_cely = get_project_event_ident(projekt)
+                    typ_akce = Akce.TYP_AKCE_PROJEKTOVA
+                else:
+                    az.ident_cely = get_temp_akce_ident(
+                        az.hlavni_katastr.okres.kraj.rada_id
+                    )
+                    typ_akce = Akce.TYP_AKCE_SAMOSTATNA
             except MaximalEventCount:
                 messages.add_message(request, messages.ERROR, MAXIMUM_AKCII_DOSAZENO)
             else:
@@ -778,6 +797,7 @@ def zapsat(request, projekt_ident_cely=None):
                 akce.specifikace_data = Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
                 akce.archeologicky_zaznam = az
                 akce.projekt = projekt
+                akce.typ = typ_akce
                 akce.save()
 
                 ostatni_vedouci_objekt_formset = inlineformset_factory(
@@ -832,20 +852,20 @@ def zapsat(request, projekt_ident_cely=None):
             required=required_fields,
             required_next=required_fields_next,
         )
-
-    return render(
-        request,
-        "arch_z/create.html",
+    context.update(
         {
             "formAZ": form_az,
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "ostatni_vedouci_objekt_formset_readonly": True,
-            "title": _("Nová projektová akce"),
-            "header": _("Nová projektová akce"),
             "button": _("Vytvoř akci"),
-        },
+        }
+    )
+    return render(
+        request,
+        "arch_z/create.html",
+        context,
     )
 
 
@@ -1337,6 +1357,17 @@ def get_arch_z_context(request, ident_cely, zaznam):
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
     context["show"] = show
+    if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+        context["showbackdetail"] = True
+        context["app"] = "pr"
+        context[
+            "arch_pr_link"
+        ] = '{% url "projekt:projekt_archivovat" zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true'
+    else:
+        context["showbackdetail"] = False
+        context["app"] = "sam"
+        context["arch_pr_link"] = None
+
     return context
 
 

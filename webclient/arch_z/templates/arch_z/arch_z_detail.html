@@ -12,7 +12,7 @@
     {% translate "akce.template.toolbar.title.href" as toolbar_name%}
     {% trans "akce.detail.toolbar.DalsiVolby.DigiArchivLink" as digi_archiv_label %}
     {% trans "akce.detail.toolbar.DalsiVolby.OAIAPI" as oaiapi_label %}
-    {% include "toolbar_akce.html" with showbackdetail=True showcontrols=True type="akce" name=toolbar_name %}
+    {% include "toolbar_akce.html" with showcontrols=True type="akce" name=toolbar_name %}
 
     <!-- stepper -->
     {% include "arch_z/arch_z_stepper.html" with type="akce" %}
@@ -190,7 +190,7 @@
     document.addEventListener('DOMContentLoaded', function (event) {
       if ("{{arch_projekt_link}}" !== "None"){
         var options = Object.assign(defaults, {modalID: "modal-form",
-        formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
+        formURL: "{{arch_pr_link}}",
         formID: "archivovat-form",
         modalFormID: "#archivovat-form",
         })

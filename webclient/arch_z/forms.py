@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 import structlog
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
@@ -257,6 +258,7 @@ class CreateAkceForm(forms.ModelForm):
             "vedlejsi_typ",
             "specifikace_data",
             "ulozeni_dokumentace",
+            "odlozena_nz",
         )
 
         labels = {
@@ -269,6 +271,7 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz": _("Odeslat ZAA jako NZ"),
             "specifikace_data": _("Specifikace data"),
             "ulozeni_dokumentace": _("Uložení dokumentace"),
+            "odlozena_nz": _("arch_z.form.odlozenaNZ.label"),
         }
 
         widgets = {
@@ -305,6 +308,14 @@ class CreateAkceForm(forms.ModelForm):
                     "data-live-search": "true",
                 },
             ),
+            "odlozena_nz": forms.Select(
+                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
         }
 
         help_texts = {
@@ -316,6 +327,7 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz": _("arch_z.form.je_nz.tooltip"),
             "specifikace_data": _("arch_z.form.specifikace_data.tooltip"),
             "ulozeni_dokumentace": _("arch_z.form.ulozeni_dokumentace.tooltip"),
+            "odlozena_nz": _("arch_z.form.odlozenaNZ.tooltip"),
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
@@ -421,3 +433,10 @@ class CreateAkceForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+
+    def clean_odlozena_nz(self):
+        je_nz = self.cleaned_data["je_nz"]
+        odlozena_nz = self.cleaned_data["odlozena_nz"]
+        if odlozena_nz and je_nz:
+            raise ValidationError(_("arch_z.form.odlozenaNz.error"))
+        return odlozena_nz

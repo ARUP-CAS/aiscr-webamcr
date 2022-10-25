@@ -333,3 +333,39 @@ def get_temp_lokalita_ident(typ, region):
             )
             raise MaximalIdentNumberError(MAXIMAL)
         return prefix + sequence
+
+
+def get_temp_akce_ident(region):
+    MAXIMAL: int = 999999
+    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
+    prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9")
+    l = ArcheologickyZaznam.objects.filter(
+        ident_cely__regex="^" + prefix + "\\d{6}A$"
+    ).order_by("-ident_cely")
+    if l.filter(ident_cely=str(prefix + "000001A")).count() == 0:
+        return prefix + "000001A"
+    else:
+        # temp number from empty spaces
+        sequence = l[l.count() - 1].ident_cely[-7:-2]
+        logger.warning(sequence)
+        while True:
+            if l.filter(ident_cely=prefix + sequence + "A").exists():
+                old_sequence = sequence
+                sequence = str(int(sequence) + 1).zfill(7)
+                logger.warning(
+                    "Ident "
+                    + prefix
+                    + old_sequence
+                    + " already exists, trying next number "
+                    + str(sequence)
+                )
+            else:
+                break
+        if int(sequence) >= MAXIMAL:
+            logger.error(
+                "Maximal number of temporary document ident is "
+                + str(MAXIMAL)
+                + "for given region and rada"
+            )
+            raise MaximalIdentNumberError(MAXIMAL)
+        return prefix + sequence + "A"
