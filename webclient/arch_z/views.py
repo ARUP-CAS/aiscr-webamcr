@@ -1,6 +1,20 @@
 import logging
 
 import simplejson as json
+import structlog
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.forms import inlineformset_factory
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import is_safe_url
+from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods
+from django.views.generic import TemplateView
+
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.forms import (
@@ -17,7 +31,6 @@ from core.constants import (
     AZ_STAV_ZAPSANY,
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
-    PIAN_POTVRZEN,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
@@ -50,17 +63,6 @@ from core.utils import (
 from core.views import check_stav_changed
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.forms import inlineformset_factory
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from django.utils.http import is_safe_url
-from django.utils.translation import gettext as _
-from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
 from heslar.hesla import (
@@ -90,10 +92,11 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
+from pian.models import Pian
 from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
-
+logger_s = structlog.get_logger(__name__)
 
 @login_required
 @require_http_methods(["GET"])
@@ -130,6 +133,287 @@ def detail(request, ident_cely):
     context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
 
     return render(request, "arch_z/arch_z_detail.html", context)
+
+
+class AkceRelatedRecordUpdateView(TemplateView):
+    def get_shows(self):
+        return get_detail_template_shows(self.get_archeologicky_zaznam(), self.get_jednotky())
+
+    def get_obdobi_choices(self):
+        return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+
+    def get_areal_choices(self):
+        return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+
+    def get_archeologicky_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return get_object_or_404(
+            ArcheologickyZaznam.objects.select_related("hlavni_katastr")
+                .select_related("akce")
+                .select_related("akce__vedlejsi_typ")
+                .select_related("akce__hlavni_typ")
+                .select_related("pristupnost"),
+            ident_cely=ident_cely,
+        )
+
+    def get_jednotky(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)\
+            .select_related("komponenty", "typ", "pian")\
+            .prefetch_related(
+                "komponenty__komponenty",
+                "komponenty__komponenty__aktivity",
+                "komponenty__komponenty__obdobi",
+                "komponenty__komponenty__areal",
+                "komponenty__komponenty__objekty",
+                "komponenty__komponenty__predmety",
+                "adb",
+            )
+
+    def get_dokumenty(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)\
+            .select_related("soubory")\
+            .prefetch_related("soubory__soubory")\
+            .order_by("ident_cely")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        zaznam = self.get_archeologicky_zaznam()
+        context["zaznam"] = zaznam
+        context["dokumentacni_jednotky"] = self.get_jednotky()
+        context["dokumenty"] = self.get_dokumenty()
+        context["history_dates"] = get_history_dates(zaznam.historie)
+        context["show"] = get_detail_template_shows(zaznam, self.get_jednotky())
+        return context
+
+
+class ArcheologickyZaznamDetailView(AkceRelatedRecordUpdateView):
+    template_name = "arch_z/dj/arch_z_detail.html"
+
+    def get_archeologicky_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return get_object_or_404(
+            ArcheologickyZaznam, ident_cely=ident_cely
+        )
+
+
+class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
+    template_name = "arch_z/dj/dj_update.html"
+
+    def get_dokumentacni_jednotka(self):
+        dj_ident_cely = self.kwargs["dj_ident_cely"]
+        logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
+        objects = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+        return objects
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
+        return context
+
+
+class DokumentacniJednotkaCreateView(AkceRelatedRecordUpdateView):
+    template_name = "arch_z/dj/dj_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dj_form_create"] = CreateDJForm(jednotky=self.get_jednotky(), typ_arch_z=self.get_archeologicky_zaznam().typ_zaznamu)
+        return context
+
+
+class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/dj_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        old_adb_post = self.request.session.pop("_old_adb_post", None)
+
+        show = self.get_shows()
+        jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
+        jednotky = self.get_jednotky()
+        vyskovy_bod_formset = inlineformset_factory(
+            Adb,
+            VyskovyBod,
+            form=create_vyskovy_bod_form(
+                pian=jednotka.pian, not_readonly=show["editovat"]
+            ),
+            extra=1,
+            can_delete=False,
+        )
+        has_adb = jednotka.has_adb()
+        show_adb_add = (
+                jednotka.pian
+                and jednotka.typ.id == TYP_DJ_SONDA_ID
+                and not has_adb
+                and show["editovat"]
+        )
+        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
+        show_add_pian = False if jednotka.pian else True
+        show_approve_pian = (
+            True
+            if jednotka.pian
+               and jednotka.pian.stav == PIAN_NEPOTVRZEN
+               and show["editovat"]
+            else False
+        )
+        dj_form_detail = {
+            "ident_cely": jednotka.ident_cely,
+            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
+            "form": CreateDJForm(
+                instance=jednotka,
+                jednotky=jednotky,
+                prefix=jednotka.ident_cely,
+                not_readonly=show["editovat"],
+            ),
+            "show_add_adb": show_adb_add,
+            "show_add_komponenta": show_add_komponenta,
+            "show_add_pian": (show_add_pian and show["editovat"]),
+            "show_remove_pian": (not show_add_pian and show["editovat"]),
+            "show_uprav_pian": jednotka.pian
+                               and jednotka.pian.stav == PIAN_NEPOTVRZEN
+                               and show["editovat"],
+            "show_approve_pian": show_approve_pian,
+            "show_pripojit_pian": True,
+        }
+        if has_adb:
+            logger.debug(jednotka.ident_cely)
+            dj_form_detail["adb_form"] = (
+                CreateADBForm(
+                    old_adb_post,
+                    instance=jednotka.adb,
+                    prefix=jednotka.adb.ident_cely,
+                    readonly=not show["editovat"],
+                )
+            )
+            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
+                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
+            )
+            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
+            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
+        context["j"] = dj_form_detail
+        return context
+
+
+class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/komponenta_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
+        context["komponenta_form_create"] = CreateKomponentaForm(self.get_obdobi_choices(), self.get_areal_choices())
+        context["j"] = self.get_dokumentacni_jednotka()
+        return context
+
+
+class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/komponenta_detail.html"
+
+    def get_komponenta(self):
+        dj_ident_cely = self.kwargs["komponenta_ident_cely"]
+        object = get_object_or_404(Komponenta, ident_cely=dj_ident_cely)
+        return object
+
+    def get_dokumentacni_jednotka(self):
+        dj_ident_cely = self.kwargs["dj_ident_cely"]
+        logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
+        object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+        return object
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        komponenta = self.get_komponenta()
+        old_nalez_post = self.request.session.pop("_old_nalez_post", None)
+        komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
+        show = self.get_shows()
+
+        NalezObjektFormset = inlineformset_factory(
+            Komponenta,
+            NalezObjekt,
+            form=create_nalez_objekt_form(
+                heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+                heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+                not_readonly=show["editovat"],
+            ),
+            extra=1 if show["editovat"] else 0,
+            can_delete=False,
+        )
+        NalezPredmetFormset = inlineformset_factory(
+            Komponenta,
+            NalezPredmet,
+            form=create_nalez_predmet_form(
+                heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+                list(Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list("id", "heslo")),
+                not_readonly=show["editovat"],
+            ),
+            extra=1 if show["editovat"] else 0,
+            can_delete=False,
+        )
+
+        context["k"] = {
+            "ident_cely": komponenta.ident_cely,
+            "form": CreateKomponentaForm(
+                self.get_obdobi_choices(),
+                self.get_areal_choices(),
+                instance=komponenta,
+                prefix=komponenta.ident_cely,
+                readonly=not show["editovat"],
+            ),
+            "form_nalezy_objekty": NalezObjektFormset(
+                old_nalez_post,
+                instance=komponenta,
+                prefix=komponenta.ident_cely + "_o",
+            )
+            if komponenta.ident_cely == komp_ident_cely
+            else NalezObjektFormset(
+                instance=komponenta, prefix=komponenta.ident_cely + "_o"
+            ),
+            "form_nalezy_predmety": NalezPredmetFormset(
+                old_nalez_post,
+                instance=komponenta,
+                prefix=komponenta.ident_cely + "_p",
+            )
+            if komponenta.ident_cely == komp_ident_cely
+            else NalezPredmetFormset(
+                instance=komponenta, prefix=komponenta.ident_cely + "_p"
+            ),
+            "helper_predmet": NalezFormSetHelper(typ="predmet"),
+            "helper_objekt": NalezFormSetHelper(typ="objekt"),
+        }
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["active_komp_ident"] = komponenta.ident_cely
+        return context
+
+
+class PianCreateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/pian_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["pian_form_create"] = PianCreateForm()
+        return context
+
+
+class PianUpdateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/pian_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["pian_form_create"] = PianCreateForm()
+        return context
+
+
+class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
+    template_name = "arch_z/dj/adb_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["j"] = self.get_dokumentacni_jednotka()
+        context["adb_form_create"] = CreateADBForm()
+        return context
 
 
 @login_required

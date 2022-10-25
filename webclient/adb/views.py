@@ -29,40 +29,9 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["POST"])
-def detail(request, ident_cely):
-    adb = get_object_or_404(Adb, ident_cely=ident_cely)
-    form = CreateADBForm(
-        request.POST,
-        instance=adb,
-        prefix=ident_cely,
-    )
-    if form.is_valid():
-        logger.debug("Adb. Form is valid:1")
-        form.save()
-        if form.changed_data:
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-    else:
-        logger.warning("Form is not valid")
-        logger.debug(form.errors)
-        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        request.session["_old_adb_post"] = request.POST
-        request.session["adb_ident_cely"] = ident_cely
-        logger.debug(ident_cely)
-
-    response = redirect(request.META.get("HTTP_REFERER"))
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-        max_age=1000,
-    )
-    return response
-
-
-@login_required
-@require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+    dj: DokumentacniJednotka
     form = CreateADBForm(request.POST)
     if form.is_valid():
         logger.debug("Adb. Form is valid:2")
@@ -83,7 +52,7 @@ def zapsat(request, dj_ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    response = redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(dj.get_reverse())
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -133,7 +102,8 @@ def smazat(request, ident_cely):
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
         arch_z_ident_cely = adb.dokumentacni_jednotka.archeologicky_zaznam.ident_cely
-        dj_ident_cely = adb.dokumentacni_jednotka.ident_cely
+        dj: DokumentacniJednotka = adb.dokumentacni_jednotka
+        dj_ident_cely = dj.ident_cely
         resp = adb.delete()
 
         if resp:
@@ -141,9 +111,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse(
                 {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
-                    )
+                    "redirect": dj.get_reverse()
                 }
             )
         else:
@@ -151,9 +119,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse(
                 {
-                    "redirect": reverse(
-                        "arch_z:detail", kwargs={"ident_cely": arch_z_ident_cely}
-                    )
+                    "redirect": dj.get_reverse()
                 },
                 status=403,
             )

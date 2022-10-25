@@ -1,5 +1,8 @@
+from audioop import reverse
+
 from arch_z.models import ArcheologickyZaznam
 from django.db import models
+from django.urls import reverse
 from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
@@ -44,6 +47,9 @@ class DokumentacniJednotka(models.Model):
     class Meta:
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
+
+    def get_reverse(self):
+        return reverse("arch_z:detail-dj", args=[self.archeologicky_zaznam.ident_cely, self.ident_cely])
 
     @property
     def ident_cely_safe(self):

@@ -160,11 +160,12 @@ def potvrdit(request, dj_ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if request.method == "POST":
-        redirect_view = dj.archeologicky_zaznam.get_reverse()
+        redirect_view = dj.archeologicky_zaznam.get_reverse(dj_ident_cely)
         try:
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
+            logger_s.debug("pian.views.potvrdit", message=MAXIMUM_IDENT_DOSAZEN)
             return JsonResponse(
                 {"redirect": redirect_view},
                 status=403,
@@ -224,6 +225,7 @@ def create(request, dj_ident_cely):
             + " "
             + get_validation_messages(validation_results),
         )
+        logger_s.debug("pian.views.potvrdit", message=PIAN_NEVALIDNI_GEOMETRIE)
     elif form.is_valid():
         logger.debug("pian.views.create: Form is valid")
         pian = form.save(commit=False)

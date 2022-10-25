@@ -1,0 +1,28 @@
+{% extends "arch_z/arch_z_detail.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block dj_form %}
+<div class="card app-card-form" id="create_pian_form">
+  <div class="card-header">
+    <div class="app-fx app-left">
+      {% trans "Nový pian" %}
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{% url 'pian:create' j.ident_cely %}" id="create_pian_form_id">
+      <!-- Action is filled using javascript -->
+      {% crispy pian_form_create %}
+      <button type="submit" id="createPianSubmitButton"
+              class="btn btn-primary">{% trans "Vytvořit pian" %}</button>
+    </form>
+  </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        show_form(`create_pian_form`);
+    });
+</script>
+{% endblock %}
