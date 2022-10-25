@@ -69,7 +69,7 @@
 
 {% block content %}
 
-    
+
 
       {% block zaznam_detail %}
       {% endblock %}
@@ -163,6 +163,7 @@
     <div id="dj_forms" class="mb-3">
       {% block dj_form %}
       {% endblock %}
+    </div>
 
     <!-- dokumenty -->
 
@@ -485,5 +486,19 @@
         console.log("najdene")
         $(id).prop('disabled', false);
     };
+</script>
+<script>
+  var filtrAkci =  function(){
+    var typ_dj=document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title;
+    if(typ_dj.includes("Katastrální území")){
+      document.getElementById("show_menu_pian_from_map_id").style.display = 'none';
+      document.getElementById("show_menu_pian_new_id").style.display = 'none';
+      document.getElementById("pian-pripoj-").style.display = 'none';
+    } else{
+      document.getElementById("show_menu_pian_from_map_id").style.display = '';
+      document.getElementById("show_menu_pian_new_id").style.display = '';
+      document.getElementById("pian-pripoj-").style.display = '';
+    }
+  }
 </script>
 {% endblock %}
