@@ -1,6 +1,6 @@
 import logging
 
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import Akce, ArcheologickyZaznam
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from dal import autocomplete
@@ -8,7 +8,7 @@ from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_DJ_TYP
+from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
 from heslar.models import Heslar
 
 logger = logging.getLogger(__name__)
@@ -21,10 +21,14 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 class CreateDJForm(forms.ModelForm):
     def get_typ_queryset(
-        self, jednotky, instance: DokumentacniJednotka = None, typ_arch_z=None
+        self,
+        jednotky,
+        instance: DokumentacniJednotka = None,
+        typ_arch_z=None,
+        typ_akce=None,
     ):
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
-        # logger.debug(jednotky)
+        logger.debug(jednotky)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
             return queryset.filter(
                 Q(heslo__iexact="lokalita") | Q(heslo__iexact="Katastrální území")
@@ -49,13 +53,34 @@ class CreateDJForm(forms.ModelForm):
                     > 0
                 ):
                     queryset = queryset.filter(heslo__iexact="sonda")
-                else:
+                elif jednotky.filter(typ__heslo__iexact="sonda").count() > 1:
                     queryset = queryset.filter(
                         Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
                     )
+                else:
+                    queryset = queryset.filter(
+                        Q(heslo__iexact="sonda")
+                        | Q(heslo__iexact="celek akce")
+                        | Q(heslo__iexact="Katastrální území")
+                    )
             elif hasattr(instance, "typ") and instance.typ.heslo == "Celek akce":
+                if jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
+                    queryset = queryset.filter(
+                        Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
+                    )
+                else:
+                    queryset = queryset.filter(
+                        Q(heslo__iexact="sonda")
+                        | Q(heslo__iexact="celek akce")
+                        | Q(heslo__iexact="Katastrální území")
+                    )
+            elif hasattr(instance, "typ") and instance.typ == Heslar.objects.get(
+                id=TYP_DJ_KATASTR
+            ):
                 queryset = queryset.filter(
-                    Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
+                    Q(heslo__iexact="sonda")
+                    | Q(heslo__iexact="celek akce")
+                    | Q(heslo__iexact="Katastrální území")
                 )
             elif jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
                 if jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
@@ -66,6 +91,12 @@ class CreateDJForm(forms.ModelForm):
                     )
             elif jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
                 queryset = queryset.filter(heslo__iexact="část akce")
+            elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
+                queryset = queryset.filter(
+                    Q(heslo__iexact="sonda")
+                    | Q(heslo__iexact="celek akce")
+                    | Q(heslo__iexact="Katastrální území")
+                )
             else:
                 queryset = queryset.filter(
                     Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
@@ -115,12 +146,15 @@ class CreateDJForm(forms.ModelForm):
         *args,
         not_readonly=True,
         typ_arch_z=None,
+        typ_akce=None,
         **kwargs,
     ):
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         self.fields["typ"] = forms.ModelChoiceField(
-            queryset=self.get_typ_queryset(jednotky, self.instance, typ_arch_z),
+            queryset=self.get_typ_queryset(
+                jednotky, self.instance, typ_arch_z, typ_akce
+            ),
             help_text=_("dj.form.typ.tooltip"),
             widget=forms.Select(
                 attrs={

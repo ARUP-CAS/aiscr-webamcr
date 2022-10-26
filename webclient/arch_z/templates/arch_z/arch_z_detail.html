@@ -99,15 +99,25 @@
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Datum zahájení" %}</label>
+              {% if presna_specifikace %}
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
                      readonly>
+              {% else %}
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'Y'|check_if_none }}"
+                     readonly>
+              {% endif %}
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Datum ukončení" %}</label>
+              {% if presna_specifikace %}
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
                      readonly>
+              {% else %}
+              <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'Y'|check_if_none }}"
+                     readonly>
+              {% endif %}
             </div>
           </div>
           <div class="col-sm-12">
@@ -147,6 +157,14 @@
               <input class="form-control" type="text" value="{{ zaznam.akce.je_nz|true_false }}" readonly>
             </div>
           </div>
+          {% if not zaznam.akce.projekt %}
+          <div class="col-sm-2">
+            <div class="form-group">
+              <label>{% trans "Odlozena NZ" %}</label>
+              <input class="form-control" type="text" value="{{ zaznam.akce.odlozena_nz|true_false }}" readonly>
+            </div>
+          </div>
+          {% endif %}
         </div>
         {% if ostatni_vedouci_objekt_formset.forms %}
           <div class="row">
@@ -232,6 +250,14 @@
         modalFormID: "#smazat-akci-form",
       })
       smazat_akci_modal = new Modal(options, "akce-smazat");
+      if ("{{show.zmenit_proj_akci}}" != "False"){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+          formURL: "{% url 'arch_z:zmenit-proj-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+          formID: "zmenit-akci-form",
+          modalFormID: "#zmenit-akci-form",
+        })
+        new Modal(options, "arch_z-akce-change");
+    }
     });
   </script>
 {% endblock %}

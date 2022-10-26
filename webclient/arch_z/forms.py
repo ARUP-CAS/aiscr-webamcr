@@ -1,3 +1,5 @@
+import datetime
+import re
 from django.forms import ValidationError
 import structlog
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
@@ -213,13 +215,37 @@ class CreateArchZForm(forms.ModelForm):
                     )
 
 
+class StartDateInput(forms.DateField):
+    def to_python(self, value):
+        if value:
+            if re.match(r"\d{4}", value):
+                value = datetime.date(int(value), 1, 1)
+            else:
+                value = datetime.datetime.strptime(value, "%d.%m.%Y")
+        else:
+            value = None
+        return value
+
+
+class EndDateInput(forms.DateField):
+    def to_python(self, value):
+        if value:
+            if re.match(r"\d{4}", value):
+                value = datetime.date(int(value), 12, 31)
+            else:
+                value = datetime.datetime.strptime(value, "%d.%m.%Y")
+        else:
+            value = None
+        return value
+
+
 class CreateAkceForm(forms.ModelForm):
-    datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+    datum_zahajeni = StartDateInput(
+        # validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("arch_z.form.datum_zahajeni.tooltip"),
     )
-    datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+    datum_ukonceni = EndDateInput(
+        # validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("arch_z.form.datum_ukonceni.tooltip"),
         required=False,
     )
@@ -331,10 +357,7 @@ class CreateAkceForm(forms.ModelForm):
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
-        if "uzamknout_specifikace" in kwargs:
-            uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
-        else:
-            uzamknout_specifikace = False
+        uzamknout_specifikace = kwargs.pop("uzamknout_specifikace", False)
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateAkceForm, self).__init__(*args, **kwargs)
@@ -376,10 +399,7 @@ class CreateAkceForm(forms.ModelForm):
             ].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
-            self.fields["specifikace_data"].widget.attrs["readonly"] = True
-            self.fields["specifikace_data"].widget.attrs[
-                "style"
-            ] = "pointer-events: none;"
+            self.fields["specifikace_data"].disabled = True
             self.fields["specifikace_data"].initial = Heslar.objects.filter(
                 heslo="přesně"
             ).first()

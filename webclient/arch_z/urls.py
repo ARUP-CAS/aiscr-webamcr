@@ -20,6 +20,7 @@ urlpatterns = [
     path("akce/archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("akce/vratit/<str:ident_cely>", views.vratit, name="vratit"),
     path("akce/smazat/<str:ident_cely>", views.smazat, name="smazat"),
+    path("akce/zmenit-proj-akci/<str:ident_cely>", views.ProjektAkceChange.as_view(), name="zmenit-proj-akci"),
     path(
         "akce/pripojit/dokument/<str:arch_z_ident_cely>",
         views.pripojit_dokument,

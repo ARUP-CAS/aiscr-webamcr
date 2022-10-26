@@ -40,6 +40,7 @@ from core.constants import (
     ZAPSANI_SN,
     VRACENI_NAVRHU_ZRUSENI,
     VRACENI_ZRUSENI,
+    ZMENA_AZ,
 )
 from django.db import models
 from django.utils.translation import gettext as _
@@ -68,6 +69,7 @@ class Historie(models.Model):
         (ODESLANI_AZ, "Odeslání archeologického záznamu"),
         (ARCHIVACE_AZ, "Archivace archeologického záznamu"),
         (VRACENI_AZ, "Vrácení archeologického záznamu"),
+        (ZMENA_AZ, "Změna typu archeologického záznamu"),
         # Dokument
         (ZAPSANI_DOK, "Zápis dokumentu"),
         (ODESLANI_DOK, "Odeslání dokumentu"),

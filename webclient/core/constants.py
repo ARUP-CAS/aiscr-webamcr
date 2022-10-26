@@ -55,6 +55,7 @@ ZAPSANI_AZ: Final = "AZ01"  # 1
 ODESLANI_AZ: Final = "AZ12"  # 2
 ARCHIVACE_AZ: Final = "AZ23"  # 3
 VRACENI_AZ: Final = "AZ-1"  # New
+ZMENA_AZ: Final = "AZ-2"  # New
 # Dokument
 ZAPSANI_DOK: Final = "D01"  # 1
 ODESLANI_DOK: Final = "D12"  # 2
@@ -143,14 +144,19 @@ KLADYZM_KATEGORIE = (
     (KLADYZM200, "1:200 000"),
 )
 # Podporovane souradnicove systemy
-COORDINATE_SYSTEM = [(2, "S-JTSK"),(1, "WGS-84")]
+COORDINATE_SYSTEM = [(2, "S-JTSK"), (1, "WGS-84")]
 
 DOK_MESTO = (_("constants.dok.mesto_praha"), _("constants.dok.mesto_brno"))
 DOK_VE_MESTE = (_("constants.dok.v_praze"), _("constants.dok.v_brne"))
 DOK_ADRESA = (_("constants.dok.adresa_praha"), _("constants.dok.adresa_brno"))
-DOK_TELEFON = {0: _("constants.dok.telefon"), 116: _("constants.dok.telefon_k116"),
-               141: _("constants.dok.telefon_k141"), 108: _("constants.dok.telefon_k108"),
-               124: _("constants.dok.telefon_k124"), 132: _("constants.dok.telefon_k132")}
+DOK_TELEFON = {
+    0: _("constants.dok.telefon"),
+    116: _("constants.dok.telefon_k116"),
+    141: _("constants.dok.telefon_k141"),
+    108: _("constants.dok.telefon_k108"),
+    124: _("constants.dok.telefon_k124"),
+    132: _("constants.dok.telefon_k132"),
+}
 DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
 DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
 DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
