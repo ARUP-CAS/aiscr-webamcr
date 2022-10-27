@@ -1,3 +1,5 @@
+from asyncio.log import logger
+from datetime import datetime, date, timedelta
 from typing import Dict
 
 from pyparsing import empty
@@ -10,14 +12,22 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import escape
 from django.utils.http import urlencode
 
-from django_tables2.templatetags.django_tables2 import token_kwargs, context_processor_error_msg 
+from django_tables2.templatetags.django_tables2 import (
+    token_kwargs,
+    context_processor_error_msg,
+)
+
+from core.models import OdstavkaSystemu
+from django.core.cache import cache
 
 register = template.Library()
 
 # to get message constant for auto logout
 @register.simple_tag
 def get_message(message):
-    return mark_safe("'%s'" % str(getattr(mc, message)))
+    return mark_safe("'%s'" % str(getattr(mc, message, "Message constant not found")))
+
+
 class QuerystringNodeMulti(Node):
     def __init__(self, updates, removals, asvar=None):
         super().__init__()
@@ -36,21 +46,25 @@ class QuerystringNodeMulti(Node):
                 if key in params and key == "sort":
                     old_params[key] = list(params[key])
                     for index, val in enumerate(params[key]):
-                        if val == value or val == str("-"+value):
+                        if val == value or val == str("-" + value):
                             old_params[key].pop(index)
                 params[key] = value
                 continue
             key = key.resolve(context)
             value = value.resolve(context)
-            
+
             if key not in ("", None):
                 if key in params and key == "sort":
                     old_params[key] = list(params[key])
                     for index, val in enumerate(params[key]):
-                        if val == value or val == str("-"+value) or str("-"+val) == str(value):
-                            old_params[key].pop(index)   
+                        if (
+                            val == value
+                            or val == str("-" + value)
+                            or str("-" + val) == str(value)
+                        ):
+                            old_params[key].pop(index)
                 params[key] = value
-                    
+
         for removal in self.removals:
             params.pop(removal.resolve(context), None)
         value = escape("?" + urlencode(params, doseq=True))
@@ -62,6 +76,7 @@ class QuerystringNodeMulti(Node):
             return ""
         else:
             return value
+
 
 @register.tag
 def querystring_multi(parser, token):
@@ -81,8 +96,6 @@ def querystring_multi(parser, token):
     tag = bits.pop(0)
     updates = token_kwargs(bits, parser)
 
-    
-
     asvar_key = None
     for key in updates:
         if str(key) == "as":
@@ -100,3 +113,46 @@ def querystring_multi(parser, token):
         raise TemplateSyntaxError("Malformed arguments to '%s'" % tag)
     removals = [parser.compile_filter(bit) for bit in bits]
     return QuerystringNodeMulti(updates, removals, asvar=asvar)
+
+
+# To get info about maintenance
+@register.simple_tag
+def get_maintenance():
+    last_maintenance = cache.get("last_maintenance")
+    if last_maintenance is None:
+        odstavka = OdstavkaSystemu.objects.filter(
+            info_od__lte=datetime.today(),
+            datum_odstavky__gte=datetime.today(),
+            status=True,
+        ).order_by("-datum_odstavky", "-cas_odstavky")
+        if odstavka:
+            last_maintenance = odstavka[0]
+            cache.set("last_maintenance", last_maintenance, 600)
+    else:
+        if last_maintenance.datum_odstavky != date.today():
+            return True
+        elif last_maintenance.cas_odstavky > datetime.now().time():
+            return True
+    return False
+
+
+@register.simple_tag
+def get_maintenance_login():
+    last_maintenance = cache.get("last_maintenance")
+    if last_maintenance is None:
+        odstavka = OdstavkaSystemu.objects.filter(
+            info_od__lte=datetime.today(),
+            datum_odstavky__gte=datetime.today(),
+            status=True,
+        ).order_by("-datum_odstavky", "-cas_odstavky")
+        if odstavka:
+            last_maintenance = odstavka[0]
+            cache.set("last_maintenance", last_maintenance, 600)
+    else:
+        if (
+            last_maintenance.datum_odstavky == date.today()
+            and last_maintenance.cas_odstavky
+            < (datetime.now() + timedelta(hours=1)).time()
+        ):
+            return True
+    return False

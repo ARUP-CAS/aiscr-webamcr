@@ -8,6 +8,8 @@ from core.message_constants import (
     FORM_NOT_VALID,
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
+    MAINTENANCE_AFTER_LOGOUT,
+    AUTOLOGOUT_AFTER_LOGOUT,
 )
 from dal import autocomplete
 from django.contrib import messages
@@ -22,7 +24,6 @@ from django_registration.backends.activation.views import RegistrationView
 from django.contrib.auth.views import LoginView, LogoutView
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm
 from uzivatel.models import Osoba, User
-from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 
 logger = logging.getLogger(__name__)
 
@@ -151,5 +152,8 @@ class UserLogoutView(LogoutView):
             messages.add_message(
                 self.request, messages.SUCCESS, AUTOLOGOUT_AFTER_LOGOUT
             )
-            logger.debug("something")
+        if request.GET.get("maintenance_logout") == "true":
+            messages.add_message(
+                self.request, messages.SUCCESS, MAINTENANCE_AFTER_LOGOUT
+            )
         return super().dispatch(request, *args, **kwargs)

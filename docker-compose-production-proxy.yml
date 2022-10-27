@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  proxy:
+    build:
+      context: ./proxy
+    volumes:
+      - static_data:/vol/static
+      - nginx_data:/vol/nginx/data
+    ports:
+      - "8080:8080"
+    networks:
+      - reverse-proxy
+
+volumes:
+  static_data:
+  locale_data:
+  nginx_data:
+
+
+networks:
+  reverse-proxy:

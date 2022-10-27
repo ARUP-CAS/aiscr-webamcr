@@ -21,12 +21,20 @@ body {
           max-width: $container-max-width-xl;
         }
       }
-    } 
+    }
   }
+}
+
+.maintenance {
+  font-size: 20px;
+  background-color: #322348;
+  padding-left: 300px;
+
 }
 
 #app-wrapper {
   overflow-x: hidden;
+
 }
 
 #app-page-wrapper {
@@ -61,52 +69,54 @@ body {
 }
 
 .form-group {
-   margin-bottom: 0.15rem!important;
+  margin-bottom: 0.15rem !important;
 }
 
 .card-body {
-  padding: 0.75rem!important;
+  padding: 0.75rem !important;
 }
 
 .mt-0 {
-  margin: 0.25rem!important;
+  margin: 0.25rem !important;
 }
 
 table td {
-  padding-top: 0.1rem!important;
-  padding-bottom: 0.1rem!important;
+  padding-top: 0.1rem !important;
+  padding-bottom: 0.1rem !important;
 }
 
 table th {
-  padding-top: 0.1rem!important;
-  padding-bottom: 0.1rem!important;
+  padding-top: 0.1rem !important;
+  padding-bottom: 0.1rem !important;
 }
 
-.form-control-sm:not(textarea), .form-control:not(textarea), .app-daterangepicker .form-group > div .textinput  {
-  height: 1.5rem!important;
-  padding-top: 0!important;
-  padding-bottom: 0!important;
+.form-control-sm:not(.textarea),
+.form-control:not(.textarea),
+.app-daterangepicker .form-group>div .textinput {
+  height: 1.5rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .bootstrap-select .dropdown-toggle {
-  padding-top: 0!important;
-  padding-bottom: 0!important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .dropdown-toggle {
   //height: 20px!important;
   //line-height: 1!important;
-  margin: 0px!important;
+  margin: 0px !important;
 }
 
 .app-btn-in-form {
-  height: 22px!important;
-  padding-top: 0!important;
-  padding-bottom: 0!important;
+  height: 22px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 td .badge {
-  vertical-align:middle;
+  vertical-align: middle;
   flex: 0 0 auto;
 }
 
@@ -115,7 +125,7 @@ td .badge {
 }
 
 div .app-right .btn-group .btn {
-  margin-top: 0!important;
+  margin-top: 0 !important;
 }
 
 .form-group.map .btn {
@@ -131,8 +141,8 @@ div .app-right .btn-group .btn {
 }
 
 .app-btn-in-form {
-  margin-top: 0!important;
-  font-size: 0.5rem!important;
+  margin-top: 0 !important;
+  font-size: 0.5rem !important;
 }
 
 .btn.dropdown-toggle.btn-light {
@@ -141,19 +151,19 @@ div .app-right .btn-group .btn {
 }
 
 .select2-selection__choice {
-  margin-top: 0.125rem!important;
-  margin-bottom: 0.25rem!important;
+  margin-top: 0.125rem !important;
+  margin-bottom: 0.25rem !important;
 }
 
 .select2-selection__rendered {
-  height: 1.5rem!important;
-  overflow-y: scroll!important;
+  height: 1.5rem !important;
+  overflow-y: auto !important;
 }
 
 .select2-search__field {
-  margin-top: 1px!important;
+  margin-top: 1px !important;
 }
 
 .select2-selection__clear {
-  margin-top: 0.125rem!important;
+  margin-top: 0.125rem !important;
 }

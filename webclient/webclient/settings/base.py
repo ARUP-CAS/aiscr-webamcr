@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "rosetta",
     "django_cron",
     "lokalita",
+    "bs4",
 ]
 
 MIDDLEWARE = [
