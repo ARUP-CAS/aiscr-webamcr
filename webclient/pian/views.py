@@ -46,6 +46,7 @@ logger_s = structlog.get_logger(__name__)
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
     dj_ident_cely = request.POST["dj_ident_cely"]
+    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
     form = PianCreateForm(
         request.POST,
@@ -98,7 +99,7 @@ def detail(request, ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
-    response = redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(dj.get_reverse())
     response.set_cookie("show-form", f"detail_dj_form_{dj_ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -129,7 +130,7 @@ def odpojit(request, dj_ident_cely):
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
         else:
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
-        response = JsonResponse({"redirect": redirect_view})
+        response = JsonResponse({"redirect": dj.get_reverse()})
         response.set_cookie(
             "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
         )
@@ -174,7 +175,7 @@ def potvrdit(request, dj_ident_cely):
             pian.set_potvrzeny(request.user)
             logger.debug("Pian potvrzen: " + pian.ident_cely)
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
-            response = JsonResponse({"redirect": redirect_view})
+            response = JsonResponse({"redirect": dj.get_reverse()})
             response.set_cookie(
                 "show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000
             )
@@ -208,7 +209,7 @@ def create(request, dj_ident_cely):
         validation_results = c.fetchone()[0]
         c.execute("COMMIT")
         logger_s.debug(
-            "pian.views.create.commit", validation_results=validation_results
+            "pian.views.create.commit", validation_results=validation_results, geom=str(form.data["geom"])
         )
     except Exception as ex:
         logger_s.warning("pian.views.create.validation_exception", exception=ex)
@@ -283,7 +284,7 @@ def create(request, dj_ident_cely):
         logger.warning(f"pian.views.create: Form errors: {form.errors}")
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    response = redirect(request.META.get("HTTP_REFERER"))
+    response = redirect(dj.get_reverse())
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
