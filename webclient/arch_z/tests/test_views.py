@@ -1,11 +1,15 @@
 import datetime
 
-from arch_z.models import ArcheologickyZaznam
+from django.urls import reverse
+
+from arch_z.models import Akce, ArcheologickyZaznam
 from arch_z.views import detail, odeslat, pripojit_dokument, vratit, zapsat
 from core.tests.runner import (
     EL_CHEFE_ID,
     EXISTING_DOCUMENT_ID,
     EXISTING_EVENT_IDENT,
+    EXISTING_EVENT_IDENT2,
+    EXISTING_SAM_EVENT_IDENT,
     HLAVNI_TYP_SONDA_ID,
     KATASTR_ODROVICE_ID,
     D_STAV_ZAPSANY,
@@ -22,6 +26,7 @@ from dokument.models import Dokument, DokumentCast
 from heslar.hesla import PRISTUPNOST_ANONYM_ID, TYP_DOKUMENTU_NALEZOVA_ZPRAVA
 from heslar.models import Heslar
 from uzivatel.models import User, Organizace, Osoba
+from projekt.models import Projekt
 
 
 class UrlTests(TestCase):
@@ -31,12 +36,10 @@ class UrlTests(TestCase):
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_detail(self):
-        request = self.factory.get("/arch-z/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = detail(request, EXISTING_EVENT_IDENT)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(
+            reverse("arch_z:detail", kwargs={"ident_cely": EXISTING_EVENT_IDENT})
+        )
         self.assertEqual(200, response.status_code)
 
     def test_get_zapsat(self):
@@ -77,15 +80,23 @@ class UrlTests(TestCase):
             "_osv-1-vedouci": "",
             "_osv-1-organizace": "",
             "_osv-1-id": "",
-            "_osv-1-akce": ""
+            "_osv-1-akce": "",
         }
-        request = self.factory.post("/arch-z/zapsat/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
+        # request = self.factory.post("/arch-z/zapsat/", data)
+        # request.user = self.existing_user
+        # request = add_middleware_to_request(request, SessionMiddleware)
+        # request = add_middleware_to_request(request, MessageMiddleware)
+        # request.session.save()
 
-        response = zapsat(request, self.existing_projekt_ident)
+        # response = zapsat(request, self.existing_projekt_ident)
+        self.client.force_login(self.existing_user)
+        response = self.client.post(
+            reverse(
+                "arch_z:zapsat",
+                kwargs={"projekt_ident_cely": self.existing_projekt_ident},
+            ),
+            data,
+        )
         az = ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B").first()
         az.refresh_from_db()
         self.assertEqual(200, response.status_code)
@@ -103,21 +114,30 @@ class UrlTests(TestCase):
         request.session.save()
 
         response = odeslat(request, EXISTING_EVENT_IDENT_INCOMPLETE)
-        self.assertTrue(_("Datum zahájení není vyplněn.") in request.session['temp_data'])
-        self.assertTrue(_("Datum ukončení není vyplněn.") in request.session['temp_data'])
-        self.assertTrue(_("Lokalizace okolností není vyplněna.") in request.session['temp_data'])
-        self.assertTrue(_("Hlavní typ není vyplněn.") in request.session['temp_data'])
-        self.assertTrue(_("Hlavní vedoucí není vyplněn.") in request.session['temp_data'])
+        self.assertTrue(
+            _("Datum zahájení není vyplněn.") in request.session["temp_data"]
+        )
+        self.assertTrue(
+            _("Datum ukončení není vyplněn.") in request.session["temp_data"]
+        )
+        self.assertTrue(
+            _("Lokalizace okolností není vyplněna.") in request.session["temp_data"]
+        )
+        self.assertTrue(_("Hlavní typ není vyplněn.") in request.session["temp_data"])
+        self.assertTrue(
+            _("Hlavní vedoucí není vyplněn.") in request.session["temp_data"]
+        )
         self.assertEqual(403, response.status_code)
 
     def test_get_odeslat(self):
-        request = self.factory.get("/arch-z/odeslat/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
-
-        response = odeslat(request, EXISTING_EVENT_IDENT)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(
+            "%s?sent_stav=1"
+            % reverse(
+                "arch_z:odeslat",
+                kwargs={"ident_cely": EXISTING_EVENT_IDENT},
+            ),
+        )
         self.assertEqual(200, response.status_code)
 
     def test_get_vratit(self):
@@ -161,3 +181,72 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertEqual(documents_before + 1, documents_after)
+
+    def test_get_akce_vyber(self):
+        self.client.force_login(self.existing_user)
+        response = self.client.get("/arch-z/akce/vyber")
+        self.assertEqual(200, response.status_code)
+
+    def test_get_zmenit_proj_akci(self):
+        self.client.force_login(self.existing_user)
+        response = self.client.get(
+            reverse(
+                "arch_z:zmenit-proj-akci", kwargs={"ident_cely": EXISTING_EVENT_IDENT2}
+            )
+        )
+        self.assertEqual(200, response.status_code)
+
+    def test_post_zmenit_proj_akci(self):
+        data = {
+            "csrfmiddlewaretoken": "27ZVK57GOldButY8IAxsDdqBlpUtsWBcpykJT7DgTENfOsy7uqkfoSoYWkbXmcu2",
+            "old_stav": str(1),
+        }
+        akce_count = Akce.objects.filter(typ=Akce.TYP_AKCE_SAMOSTATNA).count()
+        stav = ArcheologickyZaznam.objects.get(ident_cely=EXISTING_EVENT_IDENT2).stav
+        self.client.force_login(self.existing_user)
+        response = self.client.post(
+            "%s?sent_stav=%s"
+            % (
+                reverse(
+                    "arch_z:zmenit-proj-akci",
+                    kwargs={"ident_cely": EXISTING_EVENT_IDENT2},
+                ),
+                stav,
+            ),
+            data,
+        )
+        new_akce_count = Akce.objects.filter(typ=Akce.TYP_AKCE_SAMOSTATNA).count()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(akce_count + 1, new_akce_count)
+
+    def test_get_zmenit_sam_akci(self):
+        self.client.force_login(self.existing_user)
+        response = self.client.get(
+            "%s?sent_stav=1"
+            % reverse(
+                "arch_z:zmenit-proj-akci",
+                kwargs={"ident_cely": EXISTING_SAM_EVENT_IDENT},
+            ),
+        )
+        self.assertEqual(200, response.status_code)
+
+    def test_post_zmenit_sam_akci(self):
+        projekt_id = Projekt.objects.get(ident_cely=self.existing_projekt_ident).id
+        data = {
+            "csrfmiddlewaretoken": "27ZVK57GOldButY8IAxsDdqBlpUtsWBcpykJT7DgTENfOsy7uqkfoSoYWkbXmcu2",
+            "old_stav": str(1),
+            "projekt": projekt_id,
+        }
+        akce_count = Akce.objects.filter(typ=Akce.TYP_AKCE_PROJEKTOVA).count()
+        self.client.force_login(self.existing_user)
+        response = self.client.post(
+            "%s?sent_stav=1"
+            % reverse(
+                "arch_z:zmenit-sam-akci",
+                kwargs={"ident_cely": EXISTING_SAM_EVENT_IDENT},
+            ),
+            data,
+        )
+        new_akce_count = Akce.objects.filter(typ=Akce.TYP_AKCE_PROJEKTOVA).count()
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(akce_count + 1, new_akce_count)

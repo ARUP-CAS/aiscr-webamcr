@@ -1,0 +1,18 @@
+<tr>
+    <td class="app-ident-cely">
+      <a href="{% url 'projekt:detail' p.ident_cely %}">
+        <span class="material-icons">description</span>
+        {{ p.ident_cely }}
+      </a>
+    </td>
+    <td>
+      <div class="container">
+        <span class="badge-span">
+          <span class="badge">{{ p.get_stav_display }}</span>
+        </span>
+      </div>
+    </td>
+    <td>{{ p.typ_projektu }}</td>
+    <td>{{ p.hlavni_katastr }}</td>
+    <td>{{ p.podnet|length }}</td>
+</tr>

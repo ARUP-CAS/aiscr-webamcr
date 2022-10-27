@@ -9,7 +9,7 @@ from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT, SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
@@ -241,11 +241,9 @@ class EndDateInput(forms.DateField):
 
 class CreateAkceForm(forms.ModelForm):
     datum_zahajeni = StartDateInput(
-        # validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("arch_z.form.datum_zahajeni.tooltip"),
     )
     datum_ukonceni = EndDateInput(
-        # validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("arch_z.form.datum_ukonceni.tooltip"),
         required=False,
     )
@@ -274,6 +272,7 @@ class CreateAkceForm(forms.ModelForm):
         fields = (
             "hlavni_vedouci",
             "organizace",
+            "specifikace_data",
             "datum_zahajeni",
             "datum_ukonceni",
             "lokalizace_okolnosti",
@@ -282,7 +281,6 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz",
             "hlavni_typ",
             "vedlejsi_typ",
-            "specifikace_data",
             "ulozeni_dokumentace",
             "odlozena_nz",
         )
@@ -460,3 +458,23 @@ class CreateAkceForm(forms.ModelForm):
         if odlozena_nz and je_nz:
             raise ValidationError(_("arch_z.form.odlozenaNz.error"))
         return odlozena_nz
+
+    def clean_datum_zahajeni(self):
+        if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
+            id=SPECIFIKACE_DATA_PRESNE
+        ):
+            validators.datum_max_1_mesic_v_budoucnosti(
+                self.cleaned_data["datum_zahajeni"].date()
+            )
+        else:
+            return self.cleaned_data["datum_zahajeni"]
+
+    def clean_datum_ukonceni(self):
+        if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
+            id=SPECIFIKACE_DATA_PRESNE
+        ):
+            validators.datum_max_1_mesic_v_budoucnosti(
+                self.cleaned_data["datum_ukonceni"].date()
+            )
+        else:
+            return self.cleaned_data["datum_ukonceni"]

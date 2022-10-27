@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ProjectTableRowView,
     ProjektListView,
     archivovat,
     create,
@@ -23,6 +24,7 @@ from .views import (
     vratit_navrh_zruseni,
     zahajit_v_terenu,
     zrusit,
+    ProjektAutocompleteBezZrusenych,
 )
 
 app_name = "projekt"
@@ -90,4 +92,7 @@ urlpatterns = [
         generovat_expertni_list,
         name="generovat_expertni_list",
     ),
+    path("seznam-projektu-bez-zrusenych/", ProjektAutocompleteBezZrusenych.as_view(),
+         name="projekt-autocomplete-bez-zrusenych"),
+    path("get-projekt-table-row", ProjectTableRowView.as_view(), name="get_projekt_table_row")
 ]

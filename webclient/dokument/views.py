@@ -1118,7 +1118,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 @login_required
 @require_http_methods(["GET"])
 def get_dokument_table_row(request):
-    context = {"d": Dokument.objects.get(id=request.GET.get("dok_id", ""))}
+    context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 

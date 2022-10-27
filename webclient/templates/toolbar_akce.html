@@ -38,7 +38,10 @@
           <button id="{{type}}-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat akci" %}</button>
           <a class="dropdown-item" href="{% url 'historie:'|add:type zaznam.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.zmenit_proj_akci %}
-          <button id="arch_z-akce-change" class="dropdown-item" type="button" name="button">{% trans "akce.zmenitNaSamostatnou.label" %}</button>
+          <button id="arch_z-proj-akce-change" class="dropdown-item" type="button" name="button">{% trans "akce.zmenitNaSamostatnou.label" %}</button>
+          {% endif %}
+          {% if show.zmenit_sam_akci %}
+          <button id="arch_z-sam-akce-change" class="dropdown-item" type="button" name="button">{% trans "akce.zmenitNaProjektovou.label" %}</button>
           {% endif %}
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{{digi_archiv_label}}</a>

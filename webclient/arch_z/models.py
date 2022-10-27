@@ -111,7 +111,7 @@ class ArcheologickyZaznam(models.Model):
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
         ):
-            self.set_akce_permanent_ident()
+            self.set_akce_ident()
 
     def set_vraceny(self, user, new_state, poznamka):
         self.stav = new_state
@@ -253,8 +253,11 @@ class ArcheologickyZaznam(models.Model):
             self.ident_cely = prefix + sequence
         self.save()
 
-    def set_akce_permanent_ident(self):
-        new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
+    def set_akce_ident(self, ident=None):
+        if ident:
+            new_ident = ident
+        else:
+            new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
         for dj in self.dokumentacni_jednotky_akce.all():
             dj.ident_cely = new_ident + dj.ident_cely[-4:]
             for komponenta in dj.komponenty.komponenty.all():
