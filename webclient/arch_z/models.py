@@ -265,7 +265,10 @@ class ArcheologickyZaznam(models.Model):
             else:
                 return redirect(reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely]))
         else:
-            return redirect("lokalita:detail", self.ident_cely)
+            if dj_ident_cely is None:
+                return redirect(reverse("lokalita:update-dj", args=[self.ident_cely, dj_ident_cely]))
+            else:
+                return redirect("lokalita:detail", self.ident_cely)
 
 
 class ArcheologickyZaznamKatastr(models.Model):

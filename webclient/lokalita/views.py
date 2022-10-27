@@ -1,6 +1,13 @@
+import logging
+
 import structlog
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.forms import inlineformset_factory
+from django.shortcuts import get_object_or_404
+
+from adb.forms import VyskovyBodFormSetHelper, create_vyskovy_bod_form, CreateADBForm
+from adb.models import Adb, VyskovyBod
 from core.views import ExportMixinDate, check_stav_changed
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
@@ -10,8 +17,9 @@ from django.views.generic.edit import UpdateView, CreateView
 from django.contrib import messages
 from arch_z.models import ArcheologickyZaznam
 from arch_z.forms import CreateArchZForm
-from arch_z.views import get_arch_z_context
-from core.constants import AZ_STAV_ZAPSANY
+from arch_z.views import get_arch_z_context, DokumentacniJednotkaRelatedUpdateView, AkceRelatedRecordUpdateView, \
+    get_detail_template_shows, get_dj_form_detail
+from core.constants import AZ_STAV_ZAPSANY, PIAN_NEPOTVRZEN
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_temp_lokalita_ident
 from core.message_constants import (
@@ -20,6 +28,9 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
 )
+from dj.forms import CreateDJForm
+from dj.models import DokumentacniJednotka
+from heslar.hesla import TYP_DJ_SONDA_ID
 
 from .forms import LokalitaForm
 
@@ -28,6 +39,7 @@ from .filters import LokalitaFilter
 from .models import Lokalita
 from .tables import LokalitaTable
 
+logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
 
 
@@ -211,6 +223,78 @@ class LokalitaEditView(UpdateView, LoginRequiredMixin):
         logger_s.debug("main form is invalid")
         logger_s.debug(form.errors)
         return super().form_invalid(form)
+
+
+class LokalitaDokumentacniJednotkaRelatedView(LokalitaDetailView):
+    model = Lokalita
+    slug_field = "archeologicky_zaznam__ident_cely"
+
+    def get_jednotky(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return DokumentacniJednotka.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)\
+            .select_related("komponenty", "typ", "pian")\
+            .prefetch_related(
+                "komponenty__komponenty",
+                "komponenty__komponenty__aktivity",
+                "komponenty__komponenty__obdobi",
+                "komponenty__komponenty__areal",
+                "komponenty__komponenty__objekty",
+                "komponenty__komponenty__predmety",
+                "adb",
+            )
+
+    def get_shows(self):
+        return get_detail_template_shows(self.get_object().archeologicky_zaznam, self.get_jednotky())
+
+
+class LokalitaDokumentacniJednotkaCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    template_name = "lokalita/dj/dj_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dj_form_create"] = CreateDJForm(jednotky=self.get_jednotky())
+        return context
+
+
+class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    template_name = "lokalita/dj/dj_update.html"
+
+    def get_dokumentacni_jednotka(self):
+        dj_ident_cely = self.kwargs["dj_ident_cely"]
+        logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
+        object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+        return object
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        old_adb_post = self.request.session.pop("_old_adb_post", None)
+
+        show = self.get_shows()
+        jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
+        jednotky = self.get_jednotky()
+
+        context["j"] = get_dj_form_detail(jednotka, jednotky, show, old_adb_post)
+        return context
+
+
+class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    pass
+
+
+class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    pass
+
+
+class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    pass
+
+
+class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    pass
+
+
+class LokalitaAdbCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    pass
 
 
 def get_required_fields(zaznam=None, next=0):

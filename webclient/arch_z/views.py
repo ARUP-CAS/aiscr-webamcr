@@ -185,6 +185,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["dokumenty"] = self.get_dokumenty()
         context["history_dates"] = get_history_dates(zaznam.historie)
         context["show"] = get_detail_template_shows(zaznam, self.get_jednotky())
+        context["app"] = "akce"
         return context
 
 
@@ -232,67 +233,8 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         show = self.get_shows()
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
-        vyskovy_bod_formset = inlineformset_factory(
-            Adb,
-            VyskovyBod,
-            form=create_vyskovy_bod_form(
-                pian=jednotka.pian, not_readonly=show["editovat"]
-            ),
-            extra=1,
-            can_delete=False,
-        )
-        has_adb = jednotka.has_adb()
-        show_adb_add = (
-                jednotka.pian
-                and jednotka.typ.id == TYP_DJ_SONDA_ID
-                and not has_adb
-                and show["editovat"]
-        )
-        show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
-        show_add_pian = False if jednotka.pian else True
-        show_approve_pian = (
-            True
-            if jednotka.pian
-               and jednotka.pian.stav == PIAN_NEPOTVRZEN
-               and show["editovat"]
-            else False
-        )
-        dj_form_detail = {
-            "ident_cely": jednotka.ident_cely,
-            "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-            "form": CreateDJForm(
-                instance=jednotka,
-                jednotky=jednotky,
-                prefix=jednotka.ident_cely,
-                not_readonly=show["editovat"],
-            ),
-            "show_add_adb": show_adb_add,
-            "show_add_komponenta": show_add_komponenta,
-            "show_add_pian": (show_add_pian and show["editovat"]),
-            "show_remove_pian": (not show_add_pian and show["editovat"]),
-            "show_uprav_pian": jednotka.pian
-                               and jednotka.pian.stav == PIAN_NEPOTVRZEN
-                               and show["editovat"],
-            "show_approve_pian": show_approve_pian,
-            "show_pripojit_pian": True,
-        }
-        if has_adb:
-            logger.debug(jednotka.ident_cely)
-            dj_form_detail["adb_form"] = (
-                CreateADBForm(
-                    old_adb_post,
-                    instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
-                    readonly=not show["editovat"],
-                )
-            )
-            dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
-            dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
-                instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
-            )
-            dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
-            dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
-        context["j"] = dj_form_detail
+
+        context["j"] = get_dj_form_detail(jednotka, jednotky, show, old_adb_post)
         return context
 
 
@@ -1291,3 +1233,66 @@ def get_arch_z_context(request, ident_cely, zaznam):
     context["dokumentacni_jednotky"] = jednotky
     context["show"] = show
     return context
+
+def get_dj_form_detail(jednotka, jednotky, show, old_adb_post):
+    vyskovy_bod_formset = inlineformset_factory(
+        Adb,
+        VyskovyBod,
+        form=create_vyskovy_bod_form(
+            pian=jednotka.pian, not_readonly=show["editovat"]
+        ),
+        extra=1,
+        can_delete=False,
+    )
+    has_adb = jednotka.has_adb()
+    show_adb_add = (
+            jednotka.pian
+            and jednotka.typ.id == TYP_DJ_SONDA_ID
+            and not has_adb
+            and show["editovat"]
+    )
+    show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
+    show_add_pian = False if jednotka.pian else True
+    show_approve_pian = (
+        True
+        if jednotka.pian
+           and jednotka.pian.stav == PIAN_NEPOTVRZEN
+           and show["editovat"]
+        else False
+    )
+    dj_form_detail = {
+        "ident_cely": jednotka.ident_cely,
+        "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
+        "form": CreateDJForm(
+            instance=jednotka,
+            jednotky=jednotky,
+            prefix=jednotka.ident_cely,
+            not_readonly=show["editovat"],
+        ),
+        "show_add_adb": show_adb_add,
+        "show_add_komponenta": show_add_komponenta,
+        "show_add_pian": (show_add_pian and show["editovat"]),
+        "show_remove_pian": (not show_add_pian and show["editovat"]),
+        "show_uprav_pian": jednotka.pian
+                           and jednotka.pian.stav == PIAN_NEPOTVRZEN
+                           and show["editovat"],
+        "show_approve_pian": show_approve_pian,
+        "show_pripojit_pian": True,
+    }
+    if has_adb:
+        logger.debug(jednotka.ident_cely)
+        dj_form_detail["adb_form"] = (
+            CreateADBForm(
+                old_adb_post,
+                instance=jednotka.adb,
+                prefix=jednotka.adb.ident_cely,
+                readonly=not show["editovat"],
+            )
+        )
+        dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+        dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
+            instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
+        )
+        dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
+        dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
+    return dj_form_detail
