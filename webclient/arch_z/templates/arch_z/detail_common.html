@@ -287,11 +287,6 @@
           }
       }
 
-      function show_grap_geom_from_map(dj){
-        global_map_can_grab_geom_from_map=dj;
-        map_show_edit(false)
-      }
-
     </script>
       {% block script_detail %}
       {% endblock %}
@@ -488,26 +483,5 @@
         el_detail_pian_dj_indent.value = dj_ident_cely;
     }
 
-</script>
-<script>
-    var update_pian = function (dj_ident) {
-      id = "#id_" + dj_ident + "-pian"
-        console.log("najdene")
-        $(id).prop('disabled', false);
-    };
-</script>
-<script>
-  var filtrAkci =  function(){
-    var typ_dj=document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title;
-    if(typ_dj.includes("Katastrální území")){
-      document.getElementById("show_menu_pian_from_map_id").style.display = 'none';
-      document.getElementById("show_menu_pian_new_id").style.display = 'none';
-      document.getElementById("pian-pripoj-").style.display = 'none';
-    } else{
-      document.getElementById("show_menu_pian_from_map_id").style.display = '';
-      document.getElementById("show_menu_pian_new_id").style.display = '';
-      document.getElementById("pian-pripoj-").style.display = '';
-    }
-  }
 </script>
 {% endblock %}

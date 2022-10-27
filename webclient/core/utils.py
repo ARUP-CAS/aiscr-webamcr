@@ -53,7 +53,23 @@ def get_cadastre_from_point(point):
         )
         return katastr
     except IndexError:
-        logger.error("Could not find cadastre for pont: " + str(point))
+        logger.error("Could not find cadastre for point: " + str(point))
+        return None
+
+
+def get_cadastre_from_point_with_geometry(point):
+    query = (
+        "select id, nazev_stary,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
+        "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
+    )
+    try:
+        logger.debug([point[0], point[1]])
+        cursor = connection.cursor()
+        cursor.execute(query, [point[0], point[1]])
+        line = cursor.fetchone()
+        return [line[1], line[2], line[3]]
+    except IndexError:
+        logger.error("Could not find cadastre for ponit: " + str(point))
         return None
 
 

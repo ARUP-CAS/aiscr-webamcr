@@ -25,6 +25,12 @@
           </a>
           {% endif %}
           {% if j.show_add_pian %}
+                    <a id="show_menu_ku_from_map_id"  class="dropdown-item" href="#"
+                       onclick="show_grap_geom_from_map('ku')">
+                      {% trans 'Nastav Katarální uzemí z mapy' %}
+                    </a>
+          {% endif %}
+          {% if j.show_add_pian %}
           <a class="dropdown-item" href="#"
              onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
             {% trans 'Připojit pian z mapy' %}
@@ -64,13 +70,14 @@
           </button>
           {% if j.show_pripojit_pian %}
           <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button"
-                  name="button" onclick=update_pian("{{j.ident_cely}}")>
+                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
             {% trans 'Připojit PIAN podle ID' %}
           </button>
           {% endif %}
         </div>
         <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}"
+                onclick="filtrAkci()">
           <span class="material-icons">more_vert</span>
         </button>
       </div>
@@ -122,5 +129,47 @@
     document.addEventListener('DOMContentLoaded', () => {
         show_form(`detail_dj_form_{{j.ident_cely}}`);
     });
+</script>
+<script>
+  function show_grap_geom_from_map(dj){
+        global_map_can_grab_geom_from_map=dj;
+        map_show_edit(false)
+      }
+  var getFiltrType=()=>{
+    return document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title
+  }
+
+  var getFiltrTypeIsKuSafe=()=>{
+    try{
+      return getFiltrType().includes("Katastrální území")
+    } catch(e){
+      return false;
+    }
+  }
+
+  var filtrAkci =()=>{
+    var positive= getFiltrTypeIsKuSafe()? 'none' : '';
+    var negative= positive===''? 'none' : '';
+
+    ["show_menu_pian_from_map_id","show_menu_pian_new_id","show_menu_pian_new_id","pian-pripoj-"]
+    .forEach(element => {
+      if(document.getElementById(element)!==null){
+        document.getElementById(element).style.display = positive;
+      }
+     });
+
+     ["show_menu_ku_from_map_id"]
+    .forEach(element => {
+      if(document.getElementById(element)!==null){
+          document.getElementById(element).style.display = negative;
+      }
+     });
+    }
+</script>
+<script>
+  var set_pian_by_id = function (dj_ident) {
+    id = "#id_" + dj_ident + "-pian"
+    $(id).prop('disabled', false);
+  };
 </script>
 {% endblock %}

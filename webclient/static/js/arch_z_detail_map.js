@@ -544,6 +544,40 @@ function geomToText(){//Desc: This fce moves edited geometry into HTML element
 
 }
 
+var clickOnMap=(e)=>{
+    if(global_map_can_grab_geom_from_map==='ku'){
+        if(getFiltrTypeIsKuSafe()){
+            console.log("Your zoom is: "+map.getZoom())
+
+            var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
+
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/pas/pas-zjisti-katastr-with-geom');
+            xhr.setRequestHeader('Content-type', 'application/json');
+            if (typeof global_csrftoken !== 'undefined') {
+                xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+            } else {
+                console.log("neni X-CSRFToken token")
+            }
+            xhr.onload = function () {
+                rs = JSON.parse(this.responseText)
+                if (rs.katastr_name) {
+                    document.getElementById("main_cadastre_id").value = rs.katastr_name
+                }
+            };
+            xhr.send(JSON.stringify(
+                {
+                    'cX': parseFloat(corX),
+                    'cY': parseFloat(corY),
+                }))
+        }
+    }
+}
+
+map.on('click', function (e) {
+    clickOnMap(e);
+});
+
 var mouseOverGeometry =(geom)=>{
     function getContent(e){
         let content="";
@@ -559,7 +593,7 @@ var mouseOverGeometry =(geom)=>{
         if(global_measuring_toolbox._measuring){
             global_measuring_toolbox._stopMeasuring()
         }
-        if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit){
+        if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit && global_map_can_grab_geom_from_map!=="ku"){
             map.spin(false);
             map.spin(true);
             $.ajax({
@@ -579,6 +613,8 @@ var mouseOverGeometry =(geom)=>{
                    // global_map_can_grab_geom_from_map=false;
                 }
               })
+        } else{
+            clickOnMap(e);
         }
     })
 
