@@ -109,7 +109,7 @@ def detail(request, ident_cely):
         .select_related("pristupnost"),
         ident_cely=ident_cely,
     )
-    context = get_arch_z_context(request, ident_cely, zaznam)
+    context = get_arch_z_context(request, ident_cely, zaznam, app="akce")
     ostatni_vedouci_objekt_formset = inlineformset_factory(
         Akce,
         AkceVedouci,
@@ -135,15 +135,17 @@ def detail(request, ident_cely):
     return render(request, "arch_z/arch_z_detail.html", context)
 
 
+def get_obdobi_choices():
+    return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+
+
+def get_areal_choices():
+    return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+
+
 class AkceRelatedRecordUpdateView(TemplateView):
     def get_shows(self):
         return get_detail_template_shows(self.get_archeologicky_zaznam(), self.get_jednotky())
-
-    def get_obdobi_choices(self):
-        return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
-
-    def get_areal_choices(self):
-        return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
 
     def get_archeologicky_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -234,7 +236,7 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
 
-        context["j"] = get_dj_form_detail(jednotka, jednotky, show, old_adb_post)
+        context["j"] = get_dj_form_detail("akce", jednotka, jednotky, show, old_adb_post)
         return context
 
 
@@ -244,7 +246,7 @@ class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
-        context["komponenta_form_create"] = CreateKomponentaForm(self.get_obdobi_choices(), self.get_areal_choices())
+        context["komponenta_form_create"] = CreateKomponentaForm(get_obdobi_choices(), get_areal_choices())
         context["j"] = self.get_dokumentacni_jednotka()
         return context
 
@@ -270,59 +272,7 @@ class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
 
-        NalezObjektFormset = inlineformset_factory(
-            Komponenta,
-            NalezObjekt,
-            form=create_nalez_objekt_form(
-                heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
-                heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
-                not_readonly=show["editovat"],
-            ),
-            extra=1 if show["editovat"] else 0,
-            can_delete=False,
-        )
-        NalezPredmetFormset = inlineformset_factory(
-            Komponenta,
-            NalezPredmet,
-            form=create_nalez_predmet_form(
-                heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-                list(Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list("id", "heslo")),
-                not_readonly=show["editovat"],
-            ),
-            extra=1 if show["editovat"] else 0,
-            can_delete=False,
-        )
-
-        context["k"] = {
-            "ident_cely": komponenta.ident_cely,
-            "form": CreateKomponentaForm(
-                self.get_obdobi_choices(),
-                self.get_areal_choices(),
-                instance=komponenta,
-                prefix=komponenta.ident_cely,
-                readonly=not show["editovat"],
-            ),
-            "form_nalezy_objekty": NalezObjektFormset(
-                old_nalez_post,
-                instance=komponenta,
-                prefix=komponenta.ident_cely + "_o",
-            )
-            if komponenta.ident_cely == komp_ident_cely
-            else NalezObjektFormset(
-                instance=komponenta, prefix=komponenta.ident_cely + "_o"
-            ),
-            "form_nalezy_predmety": NalezPredmetFormset(
-                old_nalez_post,
-                instance=komponenta,
-                prefix=komponenta.ident_cely + "_p",
-            )
-            if komponenta.ident_cely == komp_ident_cely
-            else NalezPredmetFormset(
-                instance=komponenta, prefix=komponenta.ident_cely + "_p"
-            ),
-            "helper_predmet": NalezFormSetHelper(typ="predmet"),
-            "helper_objekt": NalezFormSetHelper(typ="objekt"),
-        }
+        context["k"] = get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
         context["j"] = self.get_dokumentacni_jednotka()
         context["active_komp_ident"] = komponenta.ident_cely
         return context
@@ -951,10 +901,10 @@ def get_history_dates(historie_vazby):
     return historie
 
 
-def get_detail_template_shows(archeologicky_zaznam, dok_jednotky):
+def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, app="akce"):
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY
+    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce"
     show_edit = archeologicky_zaznam.stav not in [
         AZ_STAV_ARCHIVOVANY,
     ]
@@ -1036,11 +986,14 @@ def post_ajax_get_akce_other_katastr(request):
         return JsonResponse({"points": []}, status=200)
 
 
-def get_arch_z_context(request, ident_cely, zaznam):
+def get_arch_z_context(request, ident_cely, zaznam, app):
     context = {
-        "warnings": request.session.pop("temp_data", None),
-        "arch_projekt_link": request.session.pop("arch_projekt_link", None),
+        "warnings": request.session.pop("temp_data", None)
     }
+    if app == "akce":
+        context["arch_projekt_link"] = request.session.pop("arch_projekt_link", None)
+    else:
+        context["arch_projekt_link"] = None
     old_nalez_post = request.session.pop("_old_nalez_post", None)
     komp_ident_cely = request.session.pop("komp_ident_cely", None)
     old_adb_post = request.session.pop("_old_adb_post", None)
@@ -1234,7 +1187,7 @@ def get_arch_z_context(request, ident_cely, zaznam):
     context["show"] = show
     return context
 
-def get_dj_form_detail(jednotka, jednotky, show, old_adb_post):
+def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None):
     vyskovy_bod_formset = inlineformset_factory(
         Adb,
         VyskovyBod,
@@ -1260,15 +1213,24 @@ def get_dj_form_detail(jednotka, jednotky, show, old_adb_post):
            and show["editovat"]
         else False
     )
-    dj_form_detail = {
-        "ident_cely": jednotka.ident_cely,
-        "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
-        "form": CreateDJForm(
+    if app == "akce":
+        create_db_form = CreateDJForm(
             instance=jednotka,
             jednotky=jednotky,
             prefix=jednotka.ident_cely,
             not_readonly=show["editovat"],
-        ),
+        )
+    else:
+        create_db_form = CreateDJForm(
+            instance=jednotka,
+            typ_arch_z=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
+            prefix=jednotka.ident_cely,
+            not_readonly=show["editovat"],
+        )
+    dj_form_detail = {
+        "ident_cely": jednotka.ident_cely,
+        "pian_ident_cely": jednotka.pian.ident_cely if jednotka.pian else "",
+        "form": create_db_form,
         "show_add_adb": show_adb_add,
         "show_add_komponenta": show_add_komponenta,
         "show_add_pian": (show_add_pian and show["editovat"]),
@@ -1279,7 +1241,7 @@ def get_dj_form_detail(jednotka, jednotky, show, old_adb_post):
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True,
     }
-    if has_adb:
+    if has_adb and app != "lokalita":
         logger.debug(jednotka.ident_cely)
         dj_form_detail["adb_form"] = (
             CreateADBForm(
@@ -1296,3 +1258,60 @@ def get_dj_form_detail(jednotka, jednotky, show, old_adb_post):
         dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
         dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
     return dj_form_detail
+
+
+def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely):
+    NalezObjektFormset = inlineformset_factory(
+        Komponenta,
+        NalezObjekt,
+        form=create_nalez_objekt_form(
+            heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+            heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+    NalezPredmetFormset = inlineformset_factory(
+        Komponenta,
+        NalezPredmet,
+        form=create_nalez_predmet_form(
+            heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+            list(Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list("id", "heslo")),
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+
+    komponenta_form_detail = {
+        "ident_cely": komponenta.ident_cely,
+        "form": CreateKomponentaForm(
+            get_obdobi_choices(),
+            get_areal_choices(),
+            instance=komponenta,
+            prefix=komponenta.ident_cely,
+            readonly=not show["editovat"],
+        ),
+        "form_nalezy_objekty": NalezObjektFormset(
+            old_nalez_post,
+            instance=komponenta,
+            prefix=komponenta.ident_cely + "_o",
+        )
+        if komponenta.ident_cely == komp_ident_cely
+        else NalezObjektFormset(
+            instance=komponenta, prefix=komponenta.ident_cely + "_o"
+        ),
+        "form_nalezy_predmety": NalezPredmetFormset(
+            old_nalez_post,
+            instance=komponenta,
+            prefix=komponenta.ident_cely + "_p",
+        )
+        if komponenta.ident_cely == komp_ident_cely
+        else NalezPredmetFormset(
+            instance=komponenta, prefix=komponenta.ident_cely + "_p"
+        ),
+        "helper_predmet": NalezFormSetHelper(typ="predmet"),
+        "helper_objekt": NalezFormSetHelper(typ="objekt"),
+    }
+    return komponenta_form_detail

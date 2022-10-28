@@ -1,0 +1,71 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+<div class="card app-card-form" id="detail_komponenta_form_{{ k.ident_cely }}">
+  <div class="card-header">
+    <div class="app-fx app-left">
+      {% trans "Komponenta" %} {{ k.ident_cely }}
+    </div>
+    {% if show.editovat %}
+    <div class="app-fx app-right">
+      <div class="btn-group" role="group">
+        <div class="dropdown-menu" aria-labelledby="others">
+          <button id="komponenta-smazat-{{k.ident_cely}}" class="dropdown-item komponenta-smazat-btn" type="button" name="button" href="{% url 'komponenta:smazat' k.ident_cely %}">
+            {% trans 'Smazat komponentu' %}
+          </button>
+        </div>
+        <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+          <span class="material-icons">more_vert</span>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <form class="mb-3" method="POST" action="{% url 'komponenta:detail' k.ident_cely %}" onsubmit="editKompSubmitButton.disabled = true; return true;">
+      {% crispy k.form %}
+
+    <div class="card app-card-form app-card-inner">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Nálezy" %}
+        </div>
+      </div>
+      <div class="card-body formset-table">
+        <h5>{% trans "Objekty" %}</h5>
+          {% if k.form_nalezy_objekty.forms %}
+            <input type="hidden" name="nalez_edit_nalez" value="{{ k.ident_cely }}" />
+            {% crispy k.form_nalezy_objekty k.helper_objekt %}
+          {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Komponenta neobsahuje žádné objekty." %}
+          </div>
+          {% endif %}
+        <h5>{% trans "Předměty" %}</h5>
+          {% if k.form_nalezy_predmety.forms %}
+          {% crispy k.form_nalezy_predmety k.helper_predmet %}
+          {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Komponenta neobsahuje žádné předměty." %}
+          </div>
+          {% endif %}
+      </div>
+    </div>
+    {% if show.editovat %}
+      <button type="submit" id="editKompSubmitButton"
+              class="btn btn-primary">{% trans "Uložit změnu" %}</button>
+    {% endif %}
+    </form>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        show_form(`detail_komponenta_form_{{ k.ident_cely }}`)
+    });
+</script>
