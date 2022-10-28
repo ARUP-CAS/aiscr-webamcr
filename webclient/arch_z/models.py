@@ -256,19 +256,22 @@ class ArcheologickyZaznam(models.Model):
             else:
                 return reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely])
         else:
-            return reverse("lokalita:detail", kwargs={"slug": self.ident_cely})
+            if dj_ident_cely is None:
+                return reverse("lokalita:detail", kwargs={"slug": self.ident_cely})
+            else:
+                return reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely])
 
     def get_redirect(self, dj_ident_cely=None):
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
-                return redirect("arch_z:detail", self.ident_cely)
+                return redirect(reverse("arch_z:detail", self.ident_cely))
             else:
                 return redirect(reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely]))
         else:
             if dj_ident_cely is None:
-                return redirect(reverse("lokalita:update-dj", args=[self.ident_cely, dj_ident_cely]))
+                return redirect(reverse("lokalita:detail", self.ident_cely))
             else:
-                return redirect("lokalita:detail", self.ident_cely)
+                return redirect(reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely]))
 
 
 class ArcheologickyZaznamKatastr(models.Model):

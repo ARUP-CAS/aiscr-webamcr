@@ -1,0 +1,28 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+<div class="card app-card-form" id="detail_pian_form_{{ p.ident_cely }}">
+<div class="card-header">
+  <div class="app-fx app-left">
+    {% trans "Pian" %} {{ p.ident_cely }}
+  </div>
+</div>
+<div class="card-body">
+  <form class="mb-3" method="POST" action="{% url 'pian:detail' object.ident_cely %}" onsubmit="editPianButton.disabled = true; return true;">
+    {% crispy pian_form_update %}
+    {% if show.editovat %}
+      <input type="hidden" id="detail_pian_dj_indent_{{ p.ident_cely }}" name="dj_ident_cely">
+    <button type="submit" id="editPianButton"
+            class="btn btn-primary">{% trans "Upravit pian" %}</button>
+    {% endif %}
+  </form>
+</div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        show_form(`detail_pian_form_{{ p.ident_cely }}`);
+        map_show_edit(true)
+    });
+</script>

@@ -31,6 +31,7 @@ from core.message_constants import (
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from heslar.hesla import TYP_DJ_SONDA_ID
+from pian.forms import PianCreateForm
 
 from .forms import LokalitaForm
 
@@ -225,7 +226,7 @@ class LokalitaEditView(UpdateView, LoginRequiredMixin):
         return super().form_invalid(form)
 
 
-class LokalitaDokumentacniJednotkaRelatedView(LokalitaDetailView):
+class LokalitaRelatedView(LokalitaDetailView):
     model = Lokalita
     slug_field = "archeologicky_zaznam__ident_cely"
 
@@ -247,7 +248,7 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaDetailView):
         return get_detail_template_shows(self.get_object().archeologicky_zaznam, self.get_jednotky())
 
 
-class LokalitaDokumentacniJednotkaCreateView(LokalitaDokumentacniJednotkaRelatedView):
+class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -256,14 +257,20 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaDokumentacniJednotkaRelated
         return context
 
 
-class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
-    template_name = "lokalita/dj/dj_update.html"
-
+class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger_s.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", dj_ident_cely=dj_ident_cely)
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["dj_ident_cely"] = self.get_dokumentacni_jednotka().ident_cely
+        return context
+
+class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    template_name = "lokalita/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -286,11 +293,21 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
-    pass
+    template_name = "lokalita/dj/pian_create.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pian_form_create"] = PianCreateForm()
+        return context
 
 
 class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
-    pass
+    template_name = "lokalita/dj/pian_update.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["pian_form_create"] = PianCreateForm()
+        return context
 
 
 class LokalitaAdbCreateView(LokalitaDokumentacniJednotkaRelatedView):

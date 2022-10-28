@@ -171,28 +171,24 @@ def zapsat(request, arch_z_ident_cely):
 
         dj = form.save(commit=False)
         try:
-            dj.ident_cely = get_dj_ident(az)
+            ident_cely = get_dj_ident(az)
+            dj.ident_cely = ident_cely
+            redirect = az.get_redirect(dj.ident_cely)
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_DJ_DOSAZENO)
+            redirect = az.get_redirect()
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
             resp = dj.save()
             logger.debug(resp)
-
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-    response = az.get_redirect(dj.ident_cely)
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-        max_age=1000,
-    )
-    return response
+        redirect = az.get_redirect()
+    return redirect
 
 
 @login_required
