@@ -1,0 +1,175 @@
+{% extends "lokalita/lokalita_detail.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block dj_form %}
+<div class="card app-card-form" id="detail_dj_form_{{ j.ident_cely }}">
+  <div class="card-header">
+    <div class="app-fx app-left">
+      {% trans "Dokumentační jednotka" %} {{ j.ident_cely }}
+    </div>
+    <div class="app-fx app-right">
+      {% if show.editovat %}
+      <div class="btn-group" role="group">
+        <div class="dropdown-menu" aria-labelledby="others">
+          {% if j.show_add_komponenta %}
+          <a class="dropdown-item" href="{% url 'lokalita:create-komponenta' zaznam.ident_cely j.ident_cely %}">
+            {% trans 'Přidat komponentu' %}
+          </a>
+          {% endif %}
+          {% if j.show_add_pian %}
+          <a class="dropdown-item" href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
+            {% trans 'Přidat nový pian' %}
+          </a>
+          {% endif %}
+          {% if j.show_add_pian %}
+                    <a id="show_menu_ku_from_map_id"  class="dropdown-item" href="#"
+                       onclick="show_grap_geom_from_map('ku')">
+                      {% trans 'Nastav Katarální uzemí z mapy' %}
+                    </a>
+          {% endif %}
+          {% if j.show_add_pian %}
+          <a class="dropdown-item" href="#"
+             onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
+            {% trans 'Připojit pian z mapy' %}
+          </a>
+          {% endif %}
+          {% if j.show_approve_pian %}
+          <button id="pian-potvrdit-{{j.adb_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
+                  name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
+            {% trans 'Potvrdit pian' %}
+          </button>
+          {% endif %}
+          {% if j.show_uprav_pian and j.pian_ident_cely %}
+          <a class="dropdown-item" href="{% url 'lokalita:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
+            {% trans 'Upravit pian' %}
+          </a>
+          {% endif %}
+          {% if j.show_remove_pian %}
+          <button id="pian-odpojit-{{j.adb_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
+                  name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
+            {% trans 'Odpojit pian' %}
+          </button>
+          {% endif %}
+          {% if j.show_add_adb %}
+          <a class="dropdown-item" href="{% url 'lokalita:create-adb' zaznam.ident_cely j.ident_cely %}">
+            {% trans 'Přidat ADB' %}
+          </a>
+          {% endif %}
+          {% if j.show_remove_adb %}
+          <button id="adb-smazat-{{j.adb_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button"
+                  href="{% url 'adb:smazat' j.adb_ident_cely %}">
+            {% trans 'Smazat ADB' %}
+          </button>
+          {% endif %}
+          <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
+                  href="{% url 'dj:smazat' j.ident_cely %}">
+            {% trans 'Smazat DJ' %}
+          </button>
+          {% if j.show_pripojit_pian %}
+          <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button"
+                  name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
+            {% trans 'Připojit PIAN podle ID' %}
+          </button>
+          {% endif %}
+        </div>
+        <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}"
+                onclick="filtrAkci()">
+          <span class="material-icons">more_vert</span>
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    {% if not j.adb_form %}
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+          onsubmit="editDjSubmitButton.disabled = true; return true;">
+      {% crispy j.form %}
+      {% if show.editovat %}
+      <button type="submit" id="editDjSubmitButton"
+              class="btn btn-primary">{% trans "Uložit změny" %}
+      </button>
+      {% endif %}
+    </form>
+    {% endif %}
+
+    {% if j.adb_form %}
+    <form class="mb-3" method="POST" action="{% url 'dj:detail' j.ident_cely %}"
+          onsubmit="editDjSubmitButton.disabled = true; return true;">
+      {% crispy j.form %}
+      <div class="card app-card-form app-card-inner">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+          </div>
+        </div>
+        <div class="card-body formset-table">
+          <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}"/>
+          {% crispy j.adb_form %}
+          <h5>{% trans "Výškové body" %}</h5>
+          <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}"/>
+          {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
+        </div>
+      </div>
+      {% if show.editovat %}
+      <button type="submit" id="editDjSubmitButton"
+              class="btn btn-primary">{% trans "Uložit změny" %}
+      </button>
+      {% endif %}
+      {% endif %}
+    </form>
+  </div>
+
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        show_form(`detail_dj_form_{{j.ident_cely}}`);
+    });
+</script>
+<script>
+  function show_grap_geom_from_map(dj){
+        global_map_can_grab_geom_from_map=dj;
+        map_show_edit(false)
+      }
+  var getFiltrType=()=>{
+    return document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title
+  }
+
+  var getFiltrTypeIsKuSafe=()=>{
+    try{
+      return getFiltrType().includes("Katastrální území")
+    } catch(e){
+      return false;
+    }
+  }
+
+  var filtrAkci =()=>{
+    var positive= getFiltrTypeIsKuSafe()? 'none' : '';
+    var negative= positive===''? 'none' : '';
+
+    ["show_menu_pian_from_map_id","show_menu_pian_new_id","show_menu_pian_new_id","pian-pripoj-"]
+    .forEach(element => {
+      if(document.getElementById(element)!==null){
+        document.getElementById(element).style.display = positive;
+      }
+     });
+
+     ["show_menu_ku_from_map_id"]
+    .forEach(element => {
+      if(document.getElementById(element)!==null){
+          document.getElementById(element).style.display = negative;
+      }
+     });
+    }
+</script>
+<script>
+  var set_pian_by_id = function (dj_ident) {
+    id = "#id_" + dj_ident + "-pian"
+    $(id).prop('disabled', false);
+  };
+</script>
+{% endblock %}
