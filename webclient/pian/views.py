@@ -51,21 +51,22 @@ def detail(request, ident_cely):
     form = PianCreateForm(
         request.POST,
         instance=pian,
-        prefix=ident_cely,
     )
     c = connection.cursor()
     validation_results = ""
     validation_geom = ""
+    logger_s.debug("pian.views.detail.start")
     try:
         dict1 = dict(request.POST)
+        logger_s.debug("pian.views.detail", post=dict1.items())
         for key in dict1.keys():
-            if key.endswith("-geom"):
-                # logger.debug("++ "+key)
-                # logger.debug("++ "+dict1.get(key)[0])
+            if key == "geom":
                 validation_geom = dict1.get(key)[0]
                 c.execute("BEGIN")
                 c.callproc("validateGeom", [validation_geom])
                 validation_results = c.fetchone()[0]
+                logger_s.debug("pian.views.detail", validation_results=validation_results, validation_geom=validation_geom,
+                         key=key)
                 # logger.debug(validation_results)
                 c.execute("COMMIT")
     except Exception:
@@ -89,14 +90,13 @@ def detail(request, ident_cely):
             + get_validation_messages(validation_results),
         )
     elif form.is_valid():
-        logger.debug("Pian.Form is valid:1")
+        logger_s.debug("pian.views.detail.form.valid", pian_ident_cely=pian.ident_cely)
         form.save()
         update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
-        logger.warning("Pian.Form is not valid:1")
-        logger.debug(form.errors)
+        logger_s.debug("pian.views.detail.form.not_valid", form_errors=form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(dj.get_reverse())
