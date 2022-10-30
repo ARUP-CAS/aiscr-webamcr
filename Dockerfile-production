@@ -50,7 +50,8 @@ RUN mkdir -p /vol/web/media
 # Staic files for the app
 RUN mkdir -p /vol/web/static
 # locales for translations
-RUN mkdir -p /code/locale
+RUN mkdir -p /vol/web/locale/cs/LC_MESSAGES
+RUN mkdir -p /vol/web/locale/en/LC_MESSAGES
 
 RUN adduser user
 RUN passwd -d user
