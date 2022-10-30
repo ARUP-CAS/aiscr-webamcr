@@ -5,25 +5,6 @@
 {% load template_filters %}
 
 {% block dj_form %}
-<div class="card app-card-form" id="create_dj_form">
-  <div class="card-header">
-    <div class="app-fx app-left">
-      {% trans "Nová dokumentační jednotka" %}
-    </div>
-  </div>
-  <div class="card-body">
-    <form method="POST" action="{% url 'dj:zapsat' zaznam.ident_cely %}"
-          onsubmit="newDjSubmitButton.disabled = true; return true;">
-      {% crispy dj_form_create %}
-      <button type="submit" id="newDjSubmitButton"
-              class="btn btn-primary">{% trans "Vytvořit jednotku" %}
-      </button>
-    </form>
-  </div>
-</div>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        show_form(`create_dj_form`);
-    });
-</script>
+{% include "arch_z/dj/partials/dj_create.html" %}
 {% endblock %}
+

@@ -294,7 +294,7 @@ class PianUpdateView(DokumentacniJednotkaRelatedUpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
-        context["pian_form_create"] = PianCreateForm()
+        context["pian_form_update"] = PianCreateForm()
         return context
 
 
