@@ -589,64 +589,103 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
 class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
+    history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+        "translation": _(u"projekt.filter.history.divider.label")
+    }
+    akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+        "translation": _(u"projekt.filter.akce.divider.label")
+    }
+    dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+        "translation": _(u"projekt.filter.dok.divider.label")
+    }
     layout = Layout(
         Div(
-            Div("ident_cely", css_class="col-sm-2"),
-            Div("typ_projektu", css_class="col-sm-2"),
-            Div("stav", css_class="col-sm-2"),
-            Div("organizace", css_class="col-sm-2"),
-            Div("vedouci_projektu", css_class="col-sm-2"),
-            Div("kulturni_pamatka", css_class="col-sm-2"),
-            Div("katastr", css_class="col-sm-2"),
-            Div("okres", css_class="col-sm-2"),
-            Div("kraj", css_class="col-sm-2"),
-            Div("oblast", css_class="col-sm-2"),
-            Div("popisne_udaje", css_class="col-sm-4"),
-            Div("planovane_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-            Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-            Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
-            Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
             Div(
-                HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
-                HTML(_('<hr class="mt-0" />')),
-                css_class="col-sm-12",
+                Div("ident_cely", css_class="col-sm-2"),
+                Div("typ_projektu", css_class="col-sm-2"),
+                Div("stav", css_class="col-sm-2"),
+                Div("organizace", css_class="col-sm-2"),
+                Div("vedouci_projektu", css_class="col-sm-2"),
+                Div("kulturni_pamatka", css_class="col-sm-2"),
+                Div("katastr", css_class="col-sm-2"),
+                Div("okres", css_class="col-sm-2"),
+                Div("kraj", css_class="col-sm-2"),
+                Div("oblast", css_class="col-sm-2"),
+                Div("popisne_udaje", css_class="col-sm-4"),
+                Div("planovane_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+                Div("termin_odevzdani_nz", css_class="col-sm-4 app-daterangepicker"),
+                css_class="row",
             ),
-            Div("historie_typ_zmeny", css_class="col-sm-2"),
-            Div("historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"),
-            Div("historie_uzivatel", css_class="col-sm-4"),
             Div(
-                HTML(_('<span class="app-divider-label">Výběr podle akcí</span>')),
+                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                HTML(history_divider),
                 HTML(_('<hr class="mt-0" />')),
-                css_class="col-sm-12",
+                data_toggle="collapse",
+                href="#historieCollapse",
+                role="button",
+                aria_expanded="false",
+                aria_controls="historieCollapse",
+                css_class="col-sm-12 app-btn-show-more collapsed",
             ),
-            Div("akce_ident_obsahuje", css_class="col-sm-2"),
-            Div("typ_akce", css_class="col-sm-2"),
-            Div("stav_akce", css_class="col-sm-2"),
-            Div("akce_vedouci_organizace", css_class="col-sm-2"),
-            Div("akce_vedouci", css_class="col-sm-2"),
-            Div("pristupnost_akce", css_class="col-sm-2"),
-            Div("akce_katastr", css_class="col-sm-2"),
-            Div("akce_okres", css_class="col-sm-2"),
-            Div("akce_kraj", css_class="col-sm-2"),
-            Div("akce_popisne_udaje", css_class="col-sm-6"),
-            Div("akce_datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
-            Div("akce_datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
-            Div("akce_zjisteni", css_class="col-sm-2"),
-            Div("akce_je_nz", css_class="col-sm-2"),
             Div(
-                HTML(
-                    _(
-                        '<span class="app-divider-label">Výběr podle souvisejících záznamů</span>'
-                    )
+                Div("historie_typ_zmeny", css_class="col-sm-2"),
+                Div(
+                    "historie_datum_zmeny_od", css_class="col-sm-4 app-daterangepicker"
                 ),
-                HTML(_('<hr class="mt-0" />')),
-                css_class="col-sm-12",
+                Div("historie_uzivatel", css_class="col-sm-4"),
+                id="historieCollapse",
+                css_class="collapse row",
             ),
-            Div("dokument_ident_obsahuje", css_class="col-sm-2"),
-            Div("pian_ident_obsahuje", css_class="col-sm-2"),
-            Div("zdroj_ident_obsahuje", css_class="col-sm-2"),
-            Div("adb_ident_obsahuje", css_class="col-sm-2"),
-            css_class="row",
+            Div(
+                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                HTML(akce_divider),
+                HTML(_('<hr class="mt-0" />')),
+                data_toggle="collapse",
+                href="#akcieCollapse",
+                role="button",
+                aria_expanded="false",
+                aria_controls="akcieCollapse",
+                css_class="col-sm-12 app-btn-show-more collapsed",
+            ),
+            Div(
+                Div("akce_ident_obsahuje", css_class="col-sm-2"),
+                Div("typ_akce", css_class="col-sm-2"),
+                Div("stav_akce", css_class="col-sm-2"),
+                Div("akce_vedouci_organizace", css_class="col-sm-2"),
+                Div("akce_vedouci", css_class="col-sm-2"),
+                Div("pristupnost_akce", css_class="col-sm-2"),
+                Div("akce_katastr", css_class="col-sm-2"),
+                Div("akce_okres", css_class="col-sm-2"),
+                Div("akce_kraj", css_class="col-sm-2"),
+                Div("akce_popisne_udaje", css_class="col-sm-6"),
+                Div("akce_datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
+                Div("akce_datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+                Div("akce_zjisteni", css_class="col-sm-2"),
+                Div("akce_je_nz", css_class="col-sm-2"),
+                id="akcieCollapse",
+                css_class="collapse row",
+            ),
+            Div(
+                HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
+                HTML(dok_divider),
+                HTML(_('<hr class="mt-0" />')),
+                data_toggle="collapse",
+                href="#zaznamyCollapse",
+                role="button",
+                aria_expanded="false",
+                aria_controls="zaznamyCollapse",
+                css_class="col-sm-12 app-btn-show-more collapsed",
+            ),
+            Div(
+                Div("dokument_ident_obsahuje", css_class="col-sm-2"),
+                Div("pian_ident_obsahuje", css_class="col-sm-2"),
+                Div("zdroj_ident_obsahuje", css_class="col-sm-2"),
+                Div("adb_ident_obsahuje", css_class="col-sm-2"),
+                id="zaznamyCollapse",
+                css_class="collapse row",
+            ),
         ),
     )
     form_tag = False

@@ -341,6 +341,9 @@ class DokumentFilter(HistorieFilter):
 
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
+    history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
+        "translation": _(u"historie.filter.history.divider.label")
+    }
     layout = Layout(
         Div(
             Div(
@@ -369,7 +372,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             ),
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
-                HTML(_('<span class="app-divider-label">Výběr podle historie</span>')),
+                HTML(history_divider),
                 HTML(_('<hr class="mt-0" />')),
                 data_toggle="collapse",
                 href="#historieCollapse",
