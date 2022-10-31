@@ -665,6 +665,14 @@
         modalFormID: "#smazat-form",
       })
       var smazat_modal = new Modal(options, "projekt-smazat");
+      if ("{{show.pridat_oznamovatele}}" != "False") {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'projekt:pridat-oznamovatele' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
+        formID: "pridat-oznamovatele-form",
+        modalFormID: "#pridat-oznamovatele-form",
+      })
+      var schvalit_modal = new Modal(options, "projekt-pridat-oznamovatele");
+      }
     });
 
 

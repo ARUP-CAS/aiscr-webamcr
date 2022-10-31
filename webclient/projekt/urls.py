@@ -1,5 +1,7 @@
 from django.urls import path
 
+from oznameni.views import OznamovatelCreateView
+
 from .views import (
     ProjektListView,
     archivovat,
@@ -89,5 +91,10 @@ urlpatterns = [
         "generovat-expertni-list/<str:ident_cely>",
         generovat_expertni_list,
         name="generovat_expertni_list",
+    ),
+    path(
+        "pridat-oznamovatele/<str:ident_cely>",
+        OznamovatelCreateView.as_view(),
+        name="pridat-oznamovatele",
     ),
 ]

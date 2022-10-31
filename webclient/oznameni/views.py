@@ -1,9 +1,10 @@
 import logging
 
 import simplejson as json
-from core.constants import PROJEKT_STAV_ARCHIVOVANY
+from django.utils.translation import gettext as _
+from core.constants import PRIDANI_OZNAMOVATELE_PROJ, PROJEKT_STAV_ARCHIVOVANY
 from core.ident_cely import get_temporary_project_ident
-from core.message_constants import ZAZNAM_USPESNE_EDITOVAN
+from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.utils import get_cadastre_from_point
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,6 +17,12 @@ from django.views.decorators.http import require_http_methods
 from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from core.forms import CheckStavNotChangedForm
+from core.views import check_stav_changed
+from historie.models import Historie
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
@@ -27,8 +34,16 @@ logger = logging.getLogger(__name__)
 def index(request, test_run=False):
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
-        form_ozn = OznamovatelForm(request.POST)
-        form_projekt = ProjektOznameniForm(request.POST)
+        if request.POST.get("ident_cely"):
+            projekt = get_object_or_404(
+                Projekt, ident_cely=request.POST.get("ident_cely")
+            )
+            form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
+            form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
+            ident_cely = projekt.ident_cely
+        else:
+            form_ozn = OznamovatelForm(request.POST)
+            form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
         logger.debug(f"oznameni.views.index form_ozn.is_valid {form_ozn.is_valid()}")
         logger.debug(
@@ -97,7 +112,11 @@ def index(request, test_run=False):
         p.set_oznameny()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
-
+    elif request.method == "GET" and "ident_cely" in request.GET:
+        projekt = get_object_or_404(Projekt, ident_cely=request.GET.get("ident_cely"))
+        form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
+        form_projekt = ProjektOznameniForm(instance=projekt, change=True)
+        form_captcha = FormWithCaptcha()
     else:
         form_ozn = OznamovatelForm()
         form_projekt = ProjektOznameniForm()
@@ -150,3 +169,57 @@ def post_poi2kat(request):
         return JsonResponse({"cadastre": str(katastr)}, status=200)
     else:
         return JsonResponse({"cadastre": ""}, status=200)
+
+
+class OznamovatelCreateView(TemplateView, LoginRequiredMixin):
+    template_name = "core/transakce_modal.html"
+
+    def get_context_data(self, **kwargs):
+        ident_cely = self.kwargs.get("ident_cely")
+        projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+        form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
+        context = {
+            "object": projekt,
+            "title": _("projekt.modalForm.pridaniOznamovatele.title.text"),
+            "id_tag": "pridat-oznamovatele-form",
+            "button": _("projekt.modalForm.pridaniOznamovatele.submit.button"),
+            "form_check": form_check,
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if check_stav_changed(request, context["object"]):
+            return JsonResponse(
+                {"redirect": context["object"].get_absolute_url()},
+                status=403,
+            )
+        form = OznamovatelForm(required_next=True, add_oznamovatel=True)
+        context["form"] = form
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        projekt = context["object"]
+        if check_stav_changed(request, projekt):
+            return JsonResponse(
+                {"redirect": projekt.get_absolute_url()},
+                status=403,
+            )
+        form = OznamovatelForm(request.POST, required_next=True, add_oznamovatel=True)
+        if form.is_valid():
+            ozn = form.save(commit=False)
+            ozn.projekt = projekt
+            ozn.save()
+            Historie(
+                typ_zmeny=PRIDANI_OZNAMOVATELE_PROJ,
+                uzivatel=request.user,
+                vazba=projekt.historie,
+            ).save()
+
+            logger.debug("Pridan oznamovatel do projektu: " + str(projekt.ident_cely))
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+
+        return JsonResponse({"redirect": projekt.get_absolute_url()})

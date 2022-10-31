@@ -48,6 +48,7 @@ ARCHIVACE_PROJ: Final = "P56"  # 6
 NAVRZENI_KE_ZRUSENI_PROJ: Final = "P*7"  # 7
 RUSENI_PROJ: Final = "P78"  # 8
 VRACENI_PROJ: Final = "P-1"  # New
+PRIDANI_OZNAMOVATELE_PROJ: Final = "PO1"  # New
 VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 VRACENI_ZRUSENI: Final = "P81"  # New
 # Akce + Lokalita (archeologicke zaznamy)
@@ -143,14 +144,19 @@ KLADYZM_KATEGORIE = (
     (KLADYZM200, "1:200 000"),
 )
 # Podporovane souradnicove systemy
-COORDINATE_SYSTEM = [(2, "S-JTSK"),(1, "WGS-84")]
+COORDINATE_SYSTEM = [(2, "S-JTSK"), (1, "WGS-84")]
 
 DOK_MESTO = (_("constants.dok.mesto_praha"), _("constants.dok.mesto_brno"))
 DOK_VE_MESTE = (_("constants.dok.v_praze"), _("constants.dok.v_brne"))
 DOK_ADRESA = (_("constants.dok.adresa_praha"), _("constants.dok.adresa_brno"))
-DOK_TELEFON = {0: _("constants.dok.telefon"), 116: _("constants.dok.telefon_k116"),
-               141: _("constants.dok.telefon_k141"), 108: _("constants.dok.telefon_k108"),
-               124: _("constants.dok.telefon_k124"), 132: _("constants.dok.telefon_k132")}
+DOK_TELEFON = {
+    0: _("constants.dok.telefon"),
+    116: _("constants.dok.telefon_k116"),
+    141: _("constants.dok.telefon_k141"),
+    108: _("constants.dok.telefon_k108"),
+    124: _("constants.dok.telefon_k124"),
+    132: _("constants.dok.telefon_k132"),
+}
 DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
 DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
 DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
