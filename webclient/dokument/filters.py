@@ -342,7 +342,7 @@ class DokumentFilter(HistorieFilter):
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"historie.filter.history.divider.label")
+        "translation": _(u"dokument.filter.history.divider.label")
     }
     layout = Layout(
         Div(
