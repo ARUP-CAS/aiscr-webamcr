@@ -1,8 +1,10 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout,Field
+from crispy_forms.layout import Div, Layout, Field
 from crispy_forms.bootstrap import AppendedText
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserChangeForm
+from django.contrib.auth.password_validation import validate_password
+from django.forms import PasswordInput
 from django.utils.translation import gettext_lazy as _
 from django_registration.forms import RegistrationForm
 from django.core.exceptions import ValidationError
@@ -65,17 +67,118 @@ class AuthUserCreationForm(RegistrationForm):
                 self.fields[key].empty_label = ""
 
 
-class AuthUserChangeForm(UserChangeForm):
+class AuthUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ("email", "organizace", "jazyk", "ident_cely", "telefon")
+        fields = ("telefon", )
         help_texts = {
-            "email": _("uzivatel.form.userChange.email.tooltip"),
-            "jazyk": _("uzivatel.form.userChange.jazyk.tooltip"),
-            "organizace": _("uzivatel.form.userChange.organizace.tooltip"),
-            "ident_cely": _("uzivatel.form.userChange.ident_cely.tooltip"),
             "telefon": _("uzivatel.form.userChange.telefon.tooltip"),
         }
+
+        widgets = {
+            "telefon": forms.TextInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+                Div(
+                Div("telefon", css_class="col-sm-3"),
+                css_class="row",
+            )
+        )
+
+
+class AuthReadOnlyUserChangeForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "hlavni_role", "groups")
+        help_texts = {
+            "first_name": _("uzivatel.form.userChange.first_name.tooltip"),
+            "last_name": _("uzivatel.form.userChange.last_name.tooltip"),
+            "email": _("uzivatel.form.userChange.email.tooltip"),
+            "ident_cely": _("uzivatel.form.userChange.ident_cely.tooltip"),
+            "date_joined": _("uzivatel.form.userChange.date_joined.tooltip"),
+            "organizace": _("uzivatel.form.userChange.organizace.tooltip"),
+            "hlavni_role": _("uzivatel.form.userChange.hlavni_role.tooltip"),
+            "groups": _("uzivatel.form.userChange.hlavni_role.tooltip"),
+        }
+
+        widgets = {
+            "first_name": forms.TextInput(attrs={"readonly": True}),
+            "last_name": forms.TextInput(attrs={"readonly": True}),
+            "email": forms.TextInput(attrs={"readonly": True}),
+            "ident_cely": forms.TextInput(attrs={"readonly": True}),
+            "date_joined": forms.TextInput(attrs={"readonly": True}),
+            "organizace": forms.TextInput(attrs={"readonly": True}),
+            "hlavni_role": forms.TextInput(attrs={"readonly": True}),
+            "groups": forms.TextInput(attrs={"readonly": True}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["organizace"].widget.attrs["value"] \
+            = self.instance.organizace.nazev if self.instance.organizace else ""
+        self.fields["hlavni_role"].widget.attrs["value"] \
+            = str(self.instance.hlavni_role) if self.instance.hlavni_role else ""
+        self.fields["groups"].widget.attrs["value"] \
+            = ", ".join(self.instance.groups.values_list('name', flat=True))
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div("first_name", css_class="col-sm-3"),
+                Div("last_name", css_class="col-sm-3"),
+                Div("email", css_class="col-sm-3"),
+                Div("ident_cely", css_class="col-sm-3"),
+                Div("date_joined", css_class="col-sm-3"),
+                Div("organizace", css_class="col-sm-3"),
+                Div("hlavni_role", css_class="col-sm-3"),
+                Div("groups", css_class="col-sm-3"),
+                css_class="row"
+            )
+        )
+
+
+class UpdatePasswordSettings(forms.ModelForm):
+    password1 = forms.CharField(required=False, widget=PasswordInput())
+    password2 = forms.CharField(required=False, widget=PasswordInput())
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if password1 == "" and password2 != "":
+            raise ValidationError({"password1": [_("Toto pole musí být vyplněno!")]})
+        elif password2 != "" and password2 == "":
+            raise ValidationError({"password2": [_("Toto pole musí být vyplněno!")]})
+        if password1 != password2:
+            raise ValidationError(_("Hesla se neshodují"))
+        validate_password(password1)
+
+    class Meta:
+        model = User
+        fields = ["password1", "password2"]
+        help_texts = {
+            "password1": _("uzivatel.form.UpdatePasswordSettings.password1.tooltip"),
+            "password2": _("uzivatel.form.UpdatePasswordSettings.password2.tooltip"),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        self.helper.layout = Layout(
+            Div(
+                Div("password1", css_class="col-sm-3"),
+                Div("password2", css_class="col-sm-3"),
+                css_class="row",
+            )
+        )
+
 
 
 class AuthUserLoginForm(AuthenticationForm):
@@ -87,7 +190,7 @@ class AuthUserLoginForm(AuthenticationForm):
             Field("username"),
             AppendedText('password', '<i class="bi bi-eye-slash" id="togglePassword"></i>'),
             )
-        
+
 
     def get_invalid_login_error(self):
         return ValidationError(

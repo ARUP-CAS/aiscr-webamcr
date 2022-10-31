@@ -11,7 +11,6 @@ from simple_history import register
 
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
-    # form = AuthUserChangeForm
     model = User
     list_display = ("email", "is_staff", "is_active", "organizace", "ident_cely", "first_name", "last_name", "telefon")
     list_filter = ("is_staff", "is_active", "organizace")

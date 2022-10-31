@@ -18,11 +18,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import IntegrityError
 from django.db.models import Q
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+from django.urls import reverse_lazy, reverse
 from django.views.decorators.http import require_http_methods
+from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
 from django.contrib.auth.views import LoginView, LogoutView
-from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm
+from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
+    UpdatePasswordSettings, AuthUserChangeForm
 from uzivatel.models import Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -157,3 +160,64 @@ class UserLogoutView(LogoutView):
                 self.request, messages.SUCCESS, MAINTENANCE_AFTER_LOGOUT
             )
         return super().dispatch(request, *args, **kwargs)
+
+
+class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
+    model = User
+    form_class = AuthUserChangeForm
+    template_name = "uzivatel/update_user.html"
+
+    def get_object(self, queryset=None):
+        user_pk = self.request.user.pk
+        return User.objects.get(pk=user_pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = self.form_class(instance=self.request.user)
+        context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
+        context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
+        return context
+
+    def _change_password(self, request, request_data):
+        form = UpdatePasswordSettings(request_data, instance=self.request.user, prefix="pass")
+        if form.is_valid():
+            self.request.user.set_password(str(request_data["pass-password1"][0]))
+            self.request.user.save()
+            messages.add_message(request, messages.SUCCESS,
+                                 _("uzivatel.UserAccountUpdateView._change_password.success"))
+            return None
+        else:
+            messages.add_message(request, messages.ERROR,
+                                 _("uzivatel.UserAccountUpdateView._change_password.fail"))
+            return self.invalid_form_context(form, "form_password")
+
+    def invalid_form_context(self, form, form_tag="form"):
+        # Attribute "object" needs to exist.
+        # This is because Django's get_context_data() function uses the object to pass it into the context.
+        self.object = None
+        context = self.get_context_data()
+        # Update context with need form instances which contain form validation errors.
+        context[form_tag] = form
+        return context
+
+    def post(self, request, *args, **kwargs):
+        request_data = dict(request.POST)
+        form = self.form_class(data=request.POST, instance=self.request.user)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.save(update_fields=("telefon",))
+        else:
+            messages.add_message(request, messages.ERROR,
+                                 _("uzivatel.UserAccountUpdateView._change_password.fail"))
+            context = self.invalid_form_context(form, "form")
+            return render(request, self.template_name, context)
+        if request_data.get("pass-password1", "") != "" and request_data.get("pass-password2", "") != "":
+            result = self._change_password(request, request_data)
+        else:
+            result = None
+        if result is not None:
+            return render(request, self.template_name, result)
+        else:
+            return redirect("/accounts/login")
+
+

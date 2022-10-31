@@ -1,13 +1,16 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
+from simple_history.models import HistoricalRecords
+
 from historie.models import Historie
-from historie.tables import HistorieTable
+from historie.tables import HistorieTable, SimpleHistoryTable
 from core.forms import SouborMetadataForm
 from core.models import Soubor
 
 from projekt.models import Projekt
 from core.views import ExportMixinDate
+from uzivatel.models import User
 
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
@@ -135,3 +138,21 @@ class LokalitaHistorieListView(HistorieListView):
         context["entity"] = context["typ"]
         context["ident_cely"] = self.kwargs["ident_cely"]
         return context
+
+class UzivatelHistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
+    table_class = SimpleHistoryTable
+    model = HistoricalRecords
+    template_name = "historie/historie_list.html"
+    export_name = "export_historie_"
+    def get_queryset(self):
+        uzivatel_ident = self.kwargs["ident_cely"]
+        history_records = User.objects.get(ident_cely=uzivatel_ident).history.all()
+        return history_records
+
+    def get_context_data(self, **kwargs):
+        context = super(UzivatelHistorieListView, self).get_context_data(**kwargs)
+        context["typ"] = "uzivatel"
+        context["entity"] = context["typ"]
+        context["ident_cely"] = self.kwargs["ident_cely"]
+        return context
+
