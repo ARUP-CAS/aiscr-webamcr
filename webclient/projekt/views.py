@@ -1114,6 +1114,7 @@ def get_detail_template_shows(projekt, user):
     admin_group = Group.objects.get(id=ROLE_ADMIN_ID)
     show_pridat_akci = False
     show_pridat_sam_nalez = False
+    show_pridat_oznamovatele = False
     if projekt.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
         if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
             show_pridat_akci = (
@@ -1132,6 +1133,11 @@ def get_detail_template_shows(projekt, user):
             show_pridat_sam_nalez = (
                 PROJEKT_STAV_PRIHLASENY < projekt.stav < PROJEKT_STAV_UZAVRENY
             )
+    if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+        if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
+            if not projekt.has_oznamovatel():
+                if PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_UZAVRENY:
+                    show_pridat_oznamovatele = True
     show_edit = projekt.stav not in [
         PROJEKT_STAV_ARCHIVOVANY,
     ]
@@ -1163,6 +1169,7 @@ def get_detail_template_shows(projekt, user):
         "akce": show_akce,
         "pripojit_dokumenty": show_pripojit_dokumenty,
         "pridat_sam_nalez": show_pridat_sam_nalez,
+        "pridat_oznamovatele": show_pridat_oznamovatele,
     }
     return show
 

@@ -50,11 +50,14 @@ class DateRangeWidget(forms.TextInput):
 class OznamovatelForm(forms.ModelForm):
     telefon = forms.CharField(
         validators=[validate_phone_number],
-        help_text= _("oznameni.forms.telefon.tooltip"),
+        help_text=_("oznameni.forms.telefon.tooltip"),
         widget=forms.TextInput(
             attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
-        ),)
-    email = forms.EmailField(help_text= _("oznameni.forms.telefon.tooltip"),)
+        ),
+    )
+    email = forms.EmailField(
+        help_text=_("oznameni.forms.telefon.tooltip"),
+    )
 
     class Meta:
         model = Oznamovatel
@@ -85,6 +88,7 @@ class OznamovatelForm(forms.ModelForm):
         uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
+        add_oznamovatel = kwargs.pop("add_oznamovatel", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
         if uzamknout_formular:
             self.fields["oznamovatel"].widget.attrs["readonly"] = True
@@ -95,18 +99,23 @@ class OznamovatelForm(forms.ModelForm):
         if required == False:
             logger.debug(required)
             for field in self.fields:
-                self.fields[field].required=False
+                self.fields[field].required = False
+        if add_oznamovatel:
+            header = Div()
+        else:
+            header = Div(
+                Div(
+                    HTML(_("Oznamovatel")),
+                    css_class="app-fx app-left",
+                ),
+                css_class="card-header",
+            )
+
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Oznamovatel")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
-                ),
+                header,
                 Div(
                     Div(
                         Div("oznamovatel", css_class="col-sm-6"),
@@ -125,9 +134,11 @@ class OznamovatelForm(forms.ModelForm):
         if required_next:
             for key in self.fields:
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next')
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next'
+                    self.fields[key].widget.attrs["class"] = "required-next"
 
 
 class ProjektOznameniForm(forms.ModelForm):
@@ -181,7 +192,9 @@ class ProjektOznameniForm(forms.ModelForm):
                 "název polní trati, místní název  apod.). "
             ),
             "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
-            "oznaceni_stavby": _("Identifikační číslo stavby podle stavebního nebo jiného úřadu. Číslo jednací nebo spisová značka."),
+            "oznaceni_stavby": _(
+                "Identifikační číslo stavby podle stavebního nebo jiného úřadu. Číslo jednací nebo spisová značka."
+            ),
             "katastry": _("Vyberte případné další katastry dotčené záměrem."),
         }
 
