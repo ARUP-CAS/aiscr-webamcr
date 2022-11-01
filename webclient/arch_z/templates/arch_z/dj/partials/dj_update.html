@@ -134,7 +134,7 @@
         map_show_edit(false)
       }
   var getFiltrType=()=>{
-    return document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title
+    return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
   }
 
   var getFiltrTypeIsKuSafe=()=>{
@@ -149,16 +149,16 @@
     var positive= getFiltrTypeIsKuSafe()? 'none' : '';
     var negative= positive===''? 'none' : '';
 
-    ["show_menu_pian_from_map_id","show_menu_pian_new_id","pian-pripoj-"]
+    ["show_menu_pian_from_map_id","show_menu_pian_new_id","pian-pripoj-","pian-odpojit-"]
     .forEach(element => {
-      if(document.getElementById(element)!==null){
+      if(document.getElementById(element)!=null){
         document.getElementById(element).style.display = positive;
       }
      });
 
      ["show_menu_ku_from_map_id"]
     .forEach(element => {
-      if(document.getElementById(element)!==null){
+      if(document.getElementById(element)!=null){
           document.getElementById(element).style.display = negative;
       }
      });
