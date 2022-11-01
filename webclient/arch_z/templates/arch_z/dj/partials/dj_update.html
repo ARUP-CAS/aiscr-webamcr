@@ -18,7 +18,7 @@
           </a>
           {% endif %}
           {% if j.show_add_pian %}
-          <a class="dropdown-item" href="{% url 'arch_z:create-pian' zaznam.ident_cely j.ident_cely %}">
+          <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'arch_z:create-pian' zaznam.ident_cely j.ident_cely %}">
             {% trans 'Přidat nový pian' %}
           </a>
           {% endif %}
@@ -29,7 +29,7 @@
                     </a>
           {% endif %}
           {% if j.show_add_pian %}
-          <a class="dropdown-item" href="#"
+          <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
              onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
             {% trans 'Připojit pian z mapy' %}
           </a>
@@ -149,7 +149,7 @@
     var positive= getFiltrTypeIsKuSafe()? 'none' : '';
     var negative= positive===''? 'none' : '';
 
-    ["show_menu_pian_from_map_id","show_menu_pian_new_id","show_menu_pian_new_id","pian-pripoj-"]
+    ["show_menu_pian_from_map_id","show_menu_pian_new_id","pian-pripoj-"]
     .forEach(element => {
       if(document.getElementById(element)!==null){
         document.getElementById(element).style.display = positive;

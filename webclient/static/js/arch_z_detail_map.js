@@ -545,7 +545,7 @@ function geomToText(){//Desc: This fce moves edited geometry into HTML element
 }
 
 var clickOnMap=(e)=>{
-    if(global_map_can_grab_geom_from_map==='ku'){
+    if(global_map_can_grab_geom_from_map.includes('ku:')){
         if(getFiltrTypeIsKuSafe()){
             console.log("Your zoom is: "+map.getZoom())
 
@@ -563,6 +563,7 @@ var clickOnMap=(e)=>{
                 rs = JSON.parse(this.responseText)
                 if (rs.katastr_name) {
                     document.getElementById("main_cadastre_id").value = rs.katastr_name
+                    document.getElementById(global_map_can_grab_geom_from_map.replace("ku:","id_")+"-ku_change").value = rs.katastr_name
                 }
             };
             xhr.send(JSON.stringify(
@@ -732,7 +733,7 @@ var addPointToPoiLayerWithForceG =(st_text,layer,text,overview=false) => {
 }
 
 function addLogText(text) {
-    console.log(text)
+    //console.log(text)
 }
 
 function addWGS84Geometry(text) {

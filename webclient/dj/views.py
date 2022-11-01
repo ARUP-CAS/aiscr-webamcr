@@ -15,7 +15,10 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import update_all_katastr_within_akce_or_lokalita
+from core.utils import (
+    update_all_katastr_within_akce_or_lokalita,
+    update_main_katastr_within_ku,
+)
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -87,6 +90,25 @@ def detail(request, ident_cely):
                 ).first()
                 dokumentacni_jednotka.save()
                 update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+        elif dj.typ.heslo == "Katastrální území":
+            logger.debug("katastralni uzemi")
+            new_ku = form.cleaned_data["ku_change"]
+            dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
+                Q(archeologicky_zaznam=dj.archeologicky_zaznam)
+                & Q(ident_cely=dj.ident_cely)
+            )
+            # logger.debug(dokumentacni_jednotka_query)
+            # logger.debug(dj.archeologicky_zaznam)
+            # logger.debug(dj.ident_cely)
+            for dokumentacni_jednotka in dokumentacni_jednotka_query:
+                dokumentacni_jednotka.typ = Heslar.objects.filter(
+                    Q(nazev_heslare=HESLAR_DJ_TYP)
+                    & Q(heslo__iexact="Katastrální území")
+                ).first()
+                dokumentacni_jednotka.save()
+                if len(new_ku) > 3:
+                    update_main_katastr_within_ku(dj.ident_cely, new_ku)
+
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)

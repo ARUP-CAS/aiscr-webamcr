@@ -20,18 +20,18 @@
           </a>
           {% endif %}
           {% if j.show_add_pian %}
-          <a class="dropdown-item" href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
+          <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
             {% trans 'Přidat nový pian' %}
           </a>
           {% endif %}
           {% if j.show_add_pian %}
                     <a id="show_menu_ku_from_map_id"  class="dropdown-item" href="#"
-                       onclick="show_grap_geom_from_map('ku')">
+                       onclick="show_grap_geom_from_map('ku:{{ j.ident_cely}}')">
                       {% trans 'Nastav Katarální uzemí z mapy' %}
                     </a>
           {% endif %}
           {% if j.show_add_pian %}
-          <a class="dropdown-item" href="#"
+          <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
              onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
             {% trans 'Připojit pian z mapy' %}
           </a>
@@ -136,7 +136,7 @@
         map_show_edit(false)
       }
   var getFiltrType=()=>{
-    return document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title
+    return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
   }
 
   var getFiltrTypeIsKuSafe=()=>{
@@ -150,17 +150,18 @@
   var filtrAkci =()=>{
     var positive= getFiltrTypeIsKuSafe()? 'none' : '';
     var negative= positive===''? 'none' : '';
+    console.log(" "+positive+" /  " +negative);
 
-    ["show_menu_pian_from_map_id","show_menu_pian_new_id","show_menu_pian_new_id","pian-pripoj-"]
+    ["show_menu_pian_from_map_id","show_menu_pian_new_id","pian-pripoj-"]
     .forEach(element => {
-      if(document.getElementById(element)!==null){
+      if(document.getElementById(element)!=null){
         document.getElementById(element).style.display = positive;
       }
      });
 
      ["show_menu_ku_from_map_id"]
     .forEach(element => {
-      if(document.getElementById(element)!==null){
+      if(document.getElementById(element)!=null){
           document.getElementById(element).style.display = negative;
       }
      });

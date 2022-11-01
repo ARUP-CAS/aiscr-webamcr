@@ -268,9 +268,6 @@
                       'pian': pian_id,
                   }))
 
-          }else if (form_id.includes("detail_pian_form_")){
-            map_show_edit(true, false)
-            loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
           document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
       }
@@ -309,26 +306,6 @@
           } else if (detail_to_show != null && element_of_the_detail != null) {
               show_form(detail_to_show)
               document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
-          } else {
-              let xhr3 = new XMLHttpRequest();
-              xhr3.open('POST', '/arch-z/akce-zjisti-katastr');
-              xhr3.setRequestHeader('Content-type', 'application/json');
-              if (typeof global_csrftoken !== 'undefined') {
-                  xhr3.setRequestHeader('X-CSRFToken', global_csrftoken);
-              } else {
-                  console.log("neni X-CSRFToken token")
-              }
-              xhr3.onload = function () {
-                  rs = JSON.parse(this.responseText)
-                  if(rs.lat>0){
-                    map.setView([rs.lat, rs.lng], rs.zoom)
-                  }
-              };
-              xhr3.send(JSON.stringify(
-                  {
-                      'cadastre': document.getElementById("main_cadastre_id").value,
-                      'pian': '',
-                  }))
           }
           let i = 0;
           let vedouci_filed = null;
@@ -477,11 +454,5 @@
       console.log(e);
     }
   });
-    const show_uprav_pian_click = (pian_ident_cely, dj_ident_cely) => {
-        show_form(`detail_pian_form_${pian_ident_cely}`, `detail_pian_form_${pian_ident_cely}`);
-        const el_detail_pian_dj_indent = document.getElementById(`detail_pian_dj_indent_${ pian_ident_cely }`);
-        el_detail_pian_dj_indent.value = dj_ident_cely;
-    }
-
 </script>
 {% endblock %}

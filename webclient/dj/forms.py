@@ -20,6 +20,10 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 
 class CreateDJForm(forms.ModelForm):
+    ku_change = forms.CharField(
+        max_length=50, required=False, widget=forms.HiddenInput()
+    )
+
     def get_typ_queryset(
         self, jednotky, instance: DokumentacniJednotka = None, typ_arch_z=None
     ):
@@ -138,6 +142,7 @@ class CreateDJForm(forms.ModelForm):
                 Div("pian", css_class="col-sm-2"),
                 Div("nazev", css_class="col-sm-4"),
                 Div("negativni_jednotka", css_class="col-sm-2"),
+                Div("ku_change", id="id_ku_change", css_class="hidden"),
                 css_class="row",
             ),
         )
