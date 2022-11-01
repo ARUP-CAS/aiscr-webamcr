@@ -34,8 +34,16 @@ logger = logging.getLogger(__name__)
 def index(request, test_run=False):
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
-        form_ozn = OznamovatelForm(request.POST)
-        form_projekt = ProjektOznameniForm(request.POST)
+        if request.POST.get("ident_cely"):
+            projekt = get_object_or_404(
+                Projekt, ident_cely=request.POST.get("ident_cely")
+            )
+            form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
+            form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
+            ident_cely = projekt.ident_cely
+        else:
+            form_ozn = OznamovatelForm(request.POST)
+            form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
         logger.debug(f"oznameni.views.index form_ozn.is_valid {form_ozn.is_valid()}")
         logger.debug(
@@ -104,7 +112,11 @@ def index(request, test_run=False):
         p.set_oznameny()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
-
+    elif request.method == "GET" and "ident_cely" in request.GET:
+        projekt = get_object_or_404(Projekt, ident_cely=request.GET.get("ident_cely"))
+        form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
+        form_projekt = ProjektOznameniForm(instance=projekt, change=True)
+        form_captcha = FormWithCaptcha()
     else:
         form_ozn = OznamovatelForm()
         form_projekt = ProjektOznameniForm()

@@ -13,6 +13,8 @@ from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 from psycopg2._range import DateRange
 
+from core.utils import get_cadastre_from_point
+
 logger = logging.getLogger(__name__)
 
 
@@ -145,7 +147,7 @@ class ProjektOznameniForm(forms.ModelForm):
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=forms.TextInput(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("Termín plánovaného zahájení realizace záměru."),
     )
     latitude = forms.CharField(widget=forms.HiddenInput())
@@ -159,6 +161,7 @@ class ProjektOznameniForm(forms.ModelForm):
     class Meta:
         model = Projekt
         fields = (
+            "ident_cely",
             "planovane_zahajeni",
             "podnet",
             "lokalizace",
@@ -174,6 +177,7 @@ class ProjektOznameniForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
+            "ident_cely": forms.HiddenInput(),
         }
         labels = {
             "podnet": _("Podnět"),
@@ -199,11 +203,19 @@ class ProjektOznameniForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True
         self.fields["parcelni_cislo"].required = True
+        if change:
+            self.fields["katastralni_uzemi"].initial = get_cadastre_from_point(
+                self.instance.geom
+            ).__str__()
+            self.fields["longitude"].initial = self.instance.geom[0]
+            self.fields["latitude"].initial = self.instance.geom[1]
+
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
@@ -229,6 +241,7 @@ class ProjektOznameniForm(forms.ModelForm):
                     "oznaceni_stavby",
                     "latitude",
                     "longitude",
+                    "ident_cely",
                     css_class="card-body",
                 ),
                 css_class="card app-card-form",
