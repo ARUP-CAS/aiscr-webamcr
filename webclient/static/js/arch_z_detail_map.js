@@ -574,6 +574,37 @@ var clickOnMap=(e)=>{
     }
 }
 
+var clickOnMap=(e)=>{
+    if(global_map_can_grab_geom_from_map.includes('ku:')){
+        if(getFiltrTypeIsKuSafe()){
+            console.log("Your zoom is: "+map.getZoom())
+
+            var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
+
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/pas/pas-zjisti-katastr-with-geom');
+            xhr.setRequestHeader('Content-type', 'application/json');
+            if (typeof global_csrftoken !== 'undefined') {
+                xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+            } else {
+                console.log("neni X-CSRFToken token")
+            }
+            xhr.onload = function () {
+                rs = JSON.parse(this.responseText)
+                if (rs.katastr_name) {
+                    document.getElementById("main_cadastre_id").value = rs.katastr_name
+                    document.getElementById(global_map_can_grab_geom_from_map.replace("ku:","id_")+"-ku_change").value = rs.katastr_name
+                }
+            };
+            xhr.send(JSON.stringify(
+                {
+                    'cX': parseFloat(corX),
+                    'cY': parseFloat(corY),
+                }))
+        }
+    }
+}
+
 map.on('click', function (e) {
     clickOnMap(e);
 });
@@ -582,24 +613,35 @@ var mouseOverGeometry =(geom)=>{
     function getContent(e){
         let content="";
         try{
+            content = e.target.getPopup().getContent();
+        }catch(ee){
+            content = e.target.getTooltip().getContent();
+        }
+        return content;
+    }
+
+    geom.on('click', function (e) {
+        if(global_measuring_toolbox._measuring){
+            global_measuring_toolbox._stopMeasuring()
+        }
         if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit && global_map_can_grab_geom_from_map!=="ku"){
             map.spin(false);
             map.spin(true);
             $.ajax({
                 type: "GET",
-                url: "/pian/seznam-pian/?q=" + getContent(e),
+                url:"/pian/seznam-pian/?q="+getContent(e),
                 dataType: 'json',
-                success: function (data) {
-                    if (data.results.length > 0) {
-                        $('#id_' + global_map_can_grab_geom_from_map + '-pian').select2("trigger", "select", { data: data.results[0] })
-                    }
-                    map.spin(false);
-                    document.getElementById('id_' + global_map_can_grab_geom_from_map + '-pian').removeAttribute("disabled");
-                    //global_map_can_grab_geom_from_map=false;
+                success: function(data){
+                  if(data.results.length>0){
+                  $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
+                  }
+                  map.spin(false);
+                  document.getElementById('id_'+global_map_can_grab_geom_from_map+'-pian' ).removeAttribute("disabled");
+                  //global_map_can_grab_geom_from_map=false;
 
                 },
-                error: () => {
-                    // global_map_can_grab_geom_from_map=false;
+                error: ()=>{
+                   // global_map_can_grab_geom_from_map=false;
                 }
               })
         } else{
@@ -607,28 +649,28 @@ var mouseOverGeometry =(geom)=>{
         }
     })
 
-    geom.on('mouseover', function () {
-        if (!global_map_can_edit) {
-            if (geom instanceof L.Marker) {
-                this.options.iconOld = this.options.icon;
-                if (this.options.changeIcon) {
+    geom.on('mouseover', function() {
+        if(!global_map_can_edit){
+            if (geom instanceof L.Marker){
+                this.options.iconOld=this.options.icon;
+                if(this.options.changeIcon){
                     this.setIcon(pinIconYellowHW);
-                } else {
+                }else{
                     this.setIcon(pinIconYellowPoint);
                 }
             } else {
-                this.options.iconOld = this.options.color;
-                this.setStyle({ color: 'gold' });
+                this.options.iconOld=this.options.color;
+                this.setStyle({color: 'gold'});
             }
         }
     });
 
-    geom.on('mouseout', function () {
-        if (!global_map_can_edit) {
-            if (geom instanceof L.Marker) {
+    geom.on('mouseout', function() {
+        if(!global_map_can_edit){
+            if (geom instanceof L.Marker){
                 this.setIcon(this.options.iconOld);
             } else {
-                this.setStyle({ color: this.options.iconOld });
+                this.setStyle({color:this.options.iconOld});
             }
             delete this.options.iconOld;
         }
