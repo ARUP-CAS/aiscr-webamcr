@@ -17,6 +17,7 @@ from core.constants import (
     POTVRZENI_EXT_ZD,
     POTVRZENI_PIAN,
     POTVRZENI_SN,
+    PRIDANI_OZNAMOVATELE_PROJ,
     PRIHLASENI_PROJ,
     PROJEKT_RELATION_TYPE,
     RUSENI_PROJ,
@@ -62,6 +63,7 @@ class Historie(models.Model):
         (NAVRZENI_KE_ZRUSENI_PROJ, "Navržení ke zrušení projektu"),
         (RUSENI_PROJ, "Rušení projektu"),
         (VRACENI_PROJ, "Vrácení projektu"),
+        (PRIDANI_OZNAMOVATELE_PROJ, "Přidání oznamovatele do projektu"),
         (VRACENI_NAVRHU_ZRUSENI, "Vrácení návrhu ke zrušení projektu"),
         (VRACENI_ZRUSENI, "Vrácení zrušení projektu"),
         # Akce + Lokalita (archeologicke zaznamy)

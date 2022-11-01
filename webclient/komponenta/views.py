@@ -1,5 +1,6 @@
 import logging
 
+from arch_z.models import ArcheologickyZaznam
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_komponenta_ident
 from core.message_constants import (
@@ -116,8 +117,14 @@ def detail(request, ident_cely):
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
-    url = reverse("arch_z:update-komponenta", args=[komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
-                                                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely, komponenta.ident_cely])
+    if komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+        url = reverse("arch_z:update-komponenta",
+                      args=[komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                            komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely, komponenta.ident_cely])
+    else:
+        url = reverse("lokalita:update-komponenta",
+                      args=[komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                            komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely, komponenta.ident_cely])
     response = redirect(url)
     response.set_cookie(
         "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
@@ -150,7 +157,12 @@ def zapsat(request, dj_ident_cely):
             form.save_m2m()  # this must be called to store komponenta_aktivity
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-        url = reverse("arch_z:update-komponenta", args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely])
+        if dj.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            url = reverse("arch_z:update-komponenta",
+                          args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely])
+        else:
+            url = reverse("lokalita:update-komponenta",
+                          args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely])
     else:
         logger.warning("Form CreateKomponentaForm is not valid")
         logger.debug(form.errors)

@@ -39,7 +39,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import get_cadastre_from_point
+from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import ExportMixinDate, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -61,7 +61,7 @@ from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
-from uzivatel.models import User, Organizace
+from uzivatel.models import Organizace, User
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -841,7 +841,7 @@ def get_detail_template_shows(sn):
 
 
 @require_http_methods(["POST"])
-def post_pas2kat(request):
+def post_point_position_2_katastre(request):
     body = json.loads(request.body.decode("utf-8"))
     logger.debug(body)
     katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
@@ -849,6 +849,25 @@ def post_pas2kat(request):
         return JsonResponse(
             {
                 "katastr_name": katastr_name.nazev_stary,
+            },
+            status=200,
+        )
+    else:
+        return JsonResponse({"katastr_name": ""}, status=200)
+
+
+@require_http_methods(["POST"])
+def post_point_position_2_katastre_with_geom(request):
+    body = json.loads(request.body.decode("utf-8"))
+    [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(
+        Point(body["cX"], body["cY"])
+    )
+    if katastr_name is not None:
+        return JsonResponse(
+            {
+                "katastr_name": katastr_name,
+                "katastr_db": katastr_db,
+                "katastr_geom": katastr_geom,
             },
             status=200,
         )

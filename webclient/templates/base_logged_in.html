@@ -4,6 +4,18 @@
 {% load static %}
 {% load l10n %}
 {% load template_tags%}
+{% load cache %}
+
+{% block infobar%}
+{% cache 600 maintenance %}
+{% get_maintenance as action %}
+{% if action %}
+<div class="maintenance">
+  <p class="d-block px-3 py-2 text-center text-bold text-white old-bv">{% trans "base.odstavka.text" %}</p>
+</div>
+{% endif %}
+{% endcache %}
+{% endblock%}
 
 {% block sidebar %}
   <!-- {% compress css %}
@@ -280,6 +292,7 @@
 <script>
   // for autologout functionality timer and messages
     var time = {% if seconds_until_idle_end %} {{ seconds_until_idle_end|unlocalize }} {% else %} 60 * 60 {% endif %};
+    var maintenance = "{{ maintenance }}"
     var timer = new Timer();
     var interval = null;
     let document_title = document.title;
@@ -330,8 +343,8 @@
       var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
       if (idle_warning !== false) {
         if (actual_time <= idle_warning.padStart(5,"0") && notifyShown === false) { 
-          startNotify(fav_not)                
-          createMessage("warning",({% get_message "AUTOLOGOUT_EXPIRATION_WARNING" %}), 'True','True','False')
+          startNotify(fav_not)               
+          createMessage("warning",({% get_message logout_warning_text %}), 'True','True','False')
         };
       };
     });
@@ -339,28 +352,30 @@
     timer.addEventListener('targetAchieved', function (e) {
       {{redirect_to_login_immediately}}
     });
-    $('.message-container').on('click', '#prolong_btn', function () {
-      $.ajax({
-        type: "GET",
-        url: '{% url "core:prolong_session" %}',
-        dataType: 'json',
-        success: function(data){
-          console.log("session prolonged"+data.session_time)
-          $(".app-alert-floating").alert('close');
-          timer.stop();
-          timer.start({countdown: true, startValues: {seconds: data.session_time}});
-          $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
-          createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}));
-          stopNotify(fav) 
-        },
-          
-        error: ()=>{
-          $(".app-alert-floating").alert('close');
-          createMessage("danger",({% get_message "AUTOLOGOUT_REFRESH_ERROR" %}))
-          stopNotify(fav)
-        }
-      })
-    });
+    if (maintenance != "true"){
+      $('.message-container').on('click', '#prolong_btn', function () {
+        $.ajax({
+          type: "GET",
+          url: '{% url "core:prolong_session" %}',
+          dataType: 'json',
+          success: function(data){
+            console.log("session prolonged"+data.session_time)
+            $(".app-alert-floating").alert('close');
+            timer.stop();
+            timer.start({countdown: true, startValues: {seconds: data.session_time}});
+            $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
+            createMessage("success",({% get_message "AUTOLOGOUT_REFRESH_SUCCESS" %}));
+            stopNotify(fav) 
+          },
+            
+          error: ()=>{
+            $(".app-alert-floating").alert('close');
+            createMessage("danger",({% get_message "AUTOLOGOUT_REFRESH_ERROR" %}))
+            stopNotify(fav)
+          }
+        })
+      });
+    }
 
     const increase_ul_height = (parent_element) => {
         const li_elements = parent_element.querySelectorAll("li.select2-selection__choice");
@@ -417,7 +432,6 @@
             });
         })
     }, 5000);
-
 
 </script>
 {% endblock %}

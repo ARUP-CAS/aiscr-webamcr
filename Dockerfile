@@ -47,10 +47,14 @@ RUN mkdir -p /vol/web/static
 
 RUN mkdir -p /vol/web/locale
 
+RUN mkdir -p /vol/web/nginx/data
+ADD ./proxy/custom_html /vol/web/nginx/data
+
 RUN adduser user
 RUN passwd -d user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
+RUN chmod 777 -R  /vol/web/nginx/data
 USER user
 
 ENV PYTHONUNBUFFERED=1

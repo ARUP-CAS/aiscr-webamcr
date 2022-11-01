@@ -2,12 +2,18 @@ import json
 
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from oznameni.views import index, post_poi2kat
+from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY
+from oznameni.models import Oznamovatel
+from projekt.models import Projekt
+from uzivatel.models import User
 
 
 class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
+        self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_index(self):
         request = self.factory.get("/oznameni/")
@@ -52,3 +58,37 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
         data = json.loads(response.content)
         self.assertEqual(data["cadastre"], "JOSEFOV (Praha)")
+
+    def test_get_add_oznamovatel(self):
+        self.client.force_login(self.existing_user)
+        response = self.client.get(
+            reverse(
+                "projekt:pridat-oznamovatele",
+                kwargs={"ident_cely": EXISTING_PROJECT_IDENT_ZACHRANNY},
+            )
+        )
+        self.assertEqual(200, response.status_code)
+
+    def test_post_add_oznamovatel(self):
+        stav = Projekt.objects.get(ident_cely=EXISTING_PROJECT_IDENT_ZACHRANNY).stav
+        data = {
+            "csrfmiddlewaretoken": "27ZVK57GOldButY8IAxsDdqBlpUtsWBcpykJT7DgTENfOsy7uqkfoSoYWkbXmcu2",
+            "old_stav": str(stav),
+            "oznamovatel": "Janko Hrasko",
+            "odpovedna_osoba": "Matus Macko",
+            "adresa": "Praha",
+            "telefon": "+420555666777",
+            "email": "email@email.cz",
+        }
+        oznamovatel_count = Oznamovatel.objects.count()
+        self.client.force_login(self.existing_user)
+        response = self.client.post(
+            reverse(
+                "projekt:pridat-oznamovatele",
+                kwargs={"ident_cely": EXISTING_PROJECT_IDENT_ZACHRANNY},
+            ),
+            data,
+        )
+        new_oznamovatel_count = Oznamovatel.objects.count()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(oznamovatel_count + 1, new_oznamovatel_count)

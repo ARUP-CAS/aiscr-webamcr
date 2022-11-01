@@ -113,6 +113,7 @@ DOCUMENT_NALEZOVA_ZPRAVA_IDENT = "C-TX-201501986"
 AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 EXISTING_PROJECT_IDENT = "C-202000001"
+EXISTING_PROJECT_IDENT_ZACHRANNY = "C-202000002"
 EXISTING_EVENT_IDENT = "C-202000001A"
 EXISTING_EVENT_IDENT2 = "C-202000001C"
 EXISTING_LOKALITA_IDENT = "X-C-L0000004"
@@ -453,6 +454,15 @@ class AMCRTestRunner(BaseRunner):
             projekt=p,
         )
         oznamovatel.save()
+
+        # PROJEKT ZACHRANNY
+        p = Projekt(
+            typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
+            ident_cely=EXISTING_PROJECT_IDENT_ZACHRANNY,
+            stav=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+            hlavni_katastr=praha,
+        )
+        p.save()
 
         # Osoba
         osoba = Osoba(

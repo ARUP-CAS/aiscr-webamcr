@@ -5,8 +5,9 @@ from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
 from django.utils.translation import gettext as _
-from core.models import Soubor
+from core.models import Soubor, OdstavkaSystemu
 from heslar.models import Heslar
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -47,8 +48,8 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 class CheckStavNotChangedForm(forms.Form):
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
-    def __init__(self, db_stav= None, *args, **kwargs):
-        self.db_stav=db_stav
+    def __init__(self, db_stav=None, *args, **kwargs):
+        self.db_stav = db_stav
         super(CheckStavNotChangedForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
@@ -57,15 +58,22 @@ class CheckStavNotChangedForm(forms.Form):
         cleaned_data = super().clean()
         old_stav = self.cleaned_data.get("old_stav")
         if str(self.db_stav) != str(old_stav):
-            logger_s.debug("CheckStavNotChangedForm.clean.ValidationError",
-                         message="Stav zaznamu se zmenil mezi posunutim stavu.", db_stav=self.db_stav,
-                         old_stav=old_stav)
+            logger_s.debug(
+                "CheckStavNotChangedForm.clean.ValidationError",
+                message="Stav zaznamu se zmenil mezi posunutim stavu.",
+                db_stav=self.db_stav,
+                old_stav=old_stav,
+            )
             raise forms.ValidationError("State_changed")
         return cleaned_data
 
 
 class VratitForm(forms.Form):
-    reason = forms.CharField(label=_("Zdůvodnění vrácení"), required=True, help_text= _("core.forms.vratit.tooltip"))
+    reason = forms.CharField(
+        label=_("Zdůvodnění vrácení"),
+        required=True,
+        help_text=_("core.forms.vratit.tooltip"),
+    )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, *args, **kwargs):
@@ -83,7 +91,14 @@ class SouborMetadataForm(forms.ModelForm):
 
     class Meta:
         model = Soubor
-        fields = ("nazev_zkraceny", "nazev_puvodni", "rozsah", "nazev", "mimetype", "size_bytes")
+        fields = (
+            "nazev_zkraceny",
+            "nazev_puvodni",
+            "rozsah",
+            "nazev",
+            "mimetype",
+            "size_bytes",
+        )
 
     def __init__(self, *args, **kwargs):
         super(SouborMetadataForm, self).__init__(*args, **kwargs)
@@ -105,3 +120,48 @@ class SouborMetadataForm(forms.ModelForm):
         self.fields["nazev"].widget.attrs["readonly"] = True
         self.fields["mimetype"].widget.attrs["readonly"] = True
         self.fields["size_bytes"].widget.attrs["readonly"] = True
+
+
+class OdstavkaSystemuForm(forms.ModelForm):
+    error_text_cs = forms.CharField(
+        label=_("core.forms.odstavkaSystemu.errorTextCs"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
+    error_text_en = forms.CharField(
+        label=_("core.forms.odstavkaSystemu.errorTextEn"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
+    error_text_oznam_cs = forms.CharField(
+        label=_("core.forms.odstavkaSystemu.errorTextOznamCs"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
+    error_text_oznam_en = forms.CharField(
+        label=_("core.forms.odstavkaSystemu.errorTextOznamEn"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
+
+    class Meta:
+        model = OdstavkaSystemu
+        fields = (
+            "info_od",
+            "datum_odstavky",
+            "cas_odstavky",
+            "status",
+            "text_cs",
+            "text_en",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super(OdstavkaSystemuForm, self).__init__(*args, **kwargs)
+        with open("/vol/web/nginx/data/cs/custom_50x.html") as fp:
+            soup = BeautifulSoup(fp)
+        self.fields["error_text_cs"].initial = soup.find("h1").string
+        with open("/vol/web/nginx/data/en/custom_50x.html") as fp:
+            soup = BeautifulSoup(fp)
+        self.fields["error_text_en"].initial = soup.find("h1").string
+        with open("/vol/web/nginx/data/cs/oznameni/custom_50x.html") as fp:
+            soup = BeautifulSoup(fp)
+        self.fields["error_text_oznam_cs"].initial = soup.find("h1").string
+        with open("/vol/web/nginx/data/en/oznameni/custom_50x.html") as fp:
+            soup = BeautifulSoup(fp)
+        self.fields["error_text_oznam_en"].initial = soup.find("h1").string

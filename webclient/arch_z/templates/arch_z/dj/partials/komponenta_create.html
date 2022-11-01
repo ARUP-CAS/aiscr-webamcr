@@ -1,0 +1,27 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+<div class="card app-card-form" id="create_komponenta_form">
+  <div class="card-header">
+    <div class="app-fx app-left">
+      {% trans "Nová komponenta" %}
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{% url 'komponenta:zapsat' j.ident_cely %}" id="create_komponenta_form_id"
+          onsubmit="createCompotSubmitButton.disabled = true; return true;">
+      <!-- Action is filled using javascript -->
+      {% crispy komponenta_form_create %}
+      <button type="submit" id="createCompotSubmitButton"
+              class="btn btn-primary">{% trans "Vytvořit komponentu" %}
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        show_form(`create_komponenta_form`);
+    });
+</script>

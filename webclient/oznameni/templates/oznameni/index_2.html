@@ -109,6 +109,7 @@
   <form method="post" onSubmit="return confirm('{% trans "Nahrali jste všechny dokumenty?" %}') ">
     {% csrf_token %}
     <input name="ident_cely" type="hidden" value="{{ confirm.ident_cely }}">
+    <a href="{% url 'oznameni:index' %}?ident_cely={{confirm.ident_cely}}" class="btn btn-secondary">{% trans "Upravit oznameni" %}</a>
     <button type="submit" class="btn btn-success ">{% trans "Dokončit oznámení" %}</button>
   </form>
 

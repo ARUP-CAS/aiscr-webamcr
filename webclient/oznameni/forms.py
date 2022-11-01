@@ -13,6 +13,8 @@ from oznameni.models import Oznamovatel
 from projekt.models import Projekt
 from psycopg2._range import DateRange
 
+from core.utils import get_cadastre_from_point
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,11 +52,14 @@ class DateRangeWidget(forms.TextInput):
 class OznamovatelForm(forms.ModelForm):
     telefon = forms.CharField(
         validators=[validate_phone_number],
-        help_text= _("oznameni.forms.telefon.tooltip"),
+        help_text=_("oznameni.forms.telefon.tooltip"),
         widget=forms.TextInput(
             attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
-        ),)
-    email = forms.EmailField(help_text= _("oznameni.forms.telefon.tooltip"),)
+        ),
+    )
+    email = forms.EmailField(
+        help_text=_("oznameni.forms.telefon.tooltip"),
+    )
 
     class Meta:
         model = Oznamovatel
@@ -85,6 +90,7 @@ class OznamovatelForm(forms.ModelForm):
         uzamknout_formular = kwargs.pop("uzamknout_formular", False)
         required = kwargs.pop("required", True)
         required_next = kwargs.pop("required_next", False)
+        add_oznamovatel = kwargs.pop("add_oznamovatel", False)
         super(OznamovatelForm, self).__init__(*args, **kwargs)
         if uzamknout_formular:
             self.fields["oznamovatel"].widget.attrs["readonly"] = True
@@ -95,18 +101,23 @@ class OznamovatelForm(forms.ModelForm):
         if required == False:
             logger.debug(required)
             for field in self.fields:
-                self.fields[field].required=False
+                self.fields[field].required = False
+        if add_oznamovatel:
+            header = Div()
+        else:
+            header = Div(
+                Div(
+                    HTML(_("Oznamovatel")),
+                    css_class="app-fx app-left",
+                ),
+                css_class="card-header",
+            )
+
         self.helper = FormHelper(self)
 
         self.helper.layout = Layout(
             Div(
-                Div(
-                    Div(
-                        HTML(_("Oznamovatel")),
-                        css_class="app-fx app-left",
-                    ),
-                    css_class="card-header",
-                ),
+                header,
                 Div(
                     Div(
                         Div("oznamovatel", css_class="col-sm-6"),
@@ -125,16 +136,18 @@ class OznamovatelForm(forms.ModelForm):
         if required_next:
             for key in self.fields:
                 if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next')
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next")
                 else:
-                    self.fields[key].widget.attrs["class"]= 'required-next'
+                    self.fields[key].widget.attrs["class"] = "required-next"
 
 
 class ProjektOznameniForm(forms.ModelForm):
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
-        widget=forms.TextInput(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
+        widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
         help_text=_("Termín plánovaného zahájení realizace záměru."),
     )
     latitude = forms.CharField(widget=forms.HiddenInput())
@@ -148,6 +161,7 @@ class ProjektOznameniForm(forms.ModelForm):
     class Meta:
         model = Projekt
         fields = (
+            "ident_cely",
             "planovane_zahajeni",
             "podnet",
             "lokalizace",
@@ -163,6 +177,7 @@ class ProjektOznameniForm(forms.ModelForm):
             "katastry": autocomplete.ModelSelect2Multiple(
                 url="heslar:katastr-autocomplete"
             ),
+            "ident_cely": forms.HiddenInput(),
         }
         labels = {
             "podnet": _("Podnět"),
@@ -181,16 +196,26 @@ class ProjektOznameniForm(forms.ModelForm):
                 "název polní trati, místní název  apod.). "
             ),
             "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
-            "oznaceni_stavby": _("Identifikační číslo stavby podle stavebního nebo jiného úřadu. Číslo jednací nebo spisová značka."),
+            "oznaceni_stavby": _(
+                "Identifikační číslo stavby podle stavebního nebo jiného úřadu. Číslo jednací nebo spisová značka."
+            ),
             "katastry": _("Vyberte případné další katastry dotčené záměrem."),
         }
 
     def __init__(self, *args, **kwargs):
+        change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True
         self.fields["parcelni_cislo"].required = True
+        if change:
+            self.fields["katastralni_uzemi"].initial = get_cadastre_from_point(
+                self.instance.geom
+            ).__str__()
+            self.fields["longitude"].initial = self.instance.geom[0]
+            self.fields["latitude"].initial = self.instance.geom[1]
+
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
@@ -216,6 +241,7 @@ class ProjektOznameniForm(forms.ModelForm):
                     "oznaceni_stavby",
                     "latitude",
                     "longitude",
+                    "ident_cely",
                     css_class="card-body",
                 ),
                 css_class="card app-card-form",
