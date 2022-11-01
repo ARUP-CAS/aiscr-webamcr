@@ -96,7 +96,7 @@ urlpatterns = [
     ),
     path("seznam-projektu-bez-zrusenych/", ProjektAutocompleteBezZrusenych.as_view(),
          name="projekt-autocomplete-bez-zrusenych"),
-    path("get-projekt-table-row", ProjectTableRowView.as_view(), name="get_projekt_table_row")
+    path("get-projekt-table-row", ProjectTableRowView.as_view(), name="get_projekt_table_row"),
     path(
         "pridat-oznamovatele/<str:ident_cely>",
         OznamovatelCreateView.as_view(),
