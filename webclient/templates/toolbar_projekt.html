@@ -84,6 +84,9 @@
           {% if projekt.has_oznamovatel %}
             <a class="dropdown-item" data-toggle="modal" data-target="#nove_potvrzeni">{% trans "Generovat nové potvrzení" %}</a>
           {% endif %}
+          {% if show.pridat_oznamovatele %}
+            <button id="projekt-pridat-oznamovatele" class="dropdown-item" type="button" name="button">{% trans "Přidat oznamovatele" %}</button>
+          {% endif %}
           <a class="dropdown-item" href="{% url 'historie:projekt' projekt.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "projekt.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
