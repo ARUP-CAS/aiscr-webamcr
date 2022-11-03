@@ -5,9 +5,6 @@ CREATE SEQUENCE public.uzivatel_historicaluser_history_id_seq
     MAXVALUE 2147483647
     CACHE 1;
 
-ALTER SEQUENCE public.uzivatel_historicaluser_history_id_seq
-    OWNER TO cz_archeologickamapa_api;
-
 CREATE TABLE public.uzivatel_historicaluser
 (
     id integer NOT NULL,
@@ -40,8 +37,3 @@ CREATE TABLE public.uzivatel_historicaluser
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
 )
-
-TABLESPACE pg_default;
-
-ALTER TABLE public.uzivatel_historicaluser
-    OWNER to cz_archeologickamapa_api;
