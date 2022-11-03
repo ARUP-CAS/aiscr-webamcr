@@ -26,9 +26,10 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from heslar.hesla import HESLAR_DJ_TYP
+from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
+from pian.models import Pian
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,10 @@ def detail(request, ident_cely):
                 ).first()
                 dokumentacni_jednotka.save()
                 update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+        elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
+            logger.debug("katastralni uzemi")
+            dj.pian = Pian.objects.get(id=dj.archeologicky_zaznam.hlavni_katastr.pian)
+            dj.save()
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)
@@ -180,6 +185,8 @@ def zapsat(request, arch_z_ident_cely):
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
+            if dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
+                dj.pian = Pian.objects.get(id=az.hlavni_katastr.pian)
             resp = dj.save()
             logger.debug(resp)
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)

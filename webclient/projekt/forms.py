@@ -11,6 +11,8 @@ from django.utils.translation import gettext as _
 from arch_z import validators
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
+from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
+from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID
 
 logger_s = structlog.get_logger(__name__)
 
@@ -694,3 +696,20 @@ class GenerovatExpertniListForm(forms.Form):
                 ),
             ),
         )
+
+class PripojitProjektForm(forms.Form):
+    def __init__(self, projekt=None, *args, **kwargs):
+        super(PripojitProjektForm, self).__init__(projekt, *args, **kwargs)
+        self.fields["projekt"] = forms.ChoiceField(
+            label=_("arch_z.forms.projektPripojit.label"),
+            choices=list(
+                Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,stav__lte=PROJEKT_STAV_ARCHIVOVANY)
+                .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+                .values_list("id", "ident_cely")
+            ),
+            widget=autocomplete.ListSelect2(
+                url="projekt:projekt-autocomplete-bez-zrusenych"
+            ),
+        )
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False

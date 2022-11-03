@@ -1,3 +1,6 @@
+import datetime
+import re
+from django.forms import ValidationError
 import structlog
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
@@ -6,7 +9,7 @@ from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT, SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt
@@ -141,21 +144,25 @@ class CreateArchZForm(forms.ModelForm):
             self.fields["hlavni_katastr"].initial = projekt.hlavni_katastr
             self.fields["uzivatelske_oznaceni"].initial = projekt.uzivatelske_oznaceni
             self.fields["katastry"].initial = projekt.katastry.all()
-        try:
-            self.fields["hlavni_katastr"].initial = self.instance.hlavni_katastr
-            self.fields["katastry"].initial = self.instance.katastry.all()
-        except Exception as e:
-            logger_s.debug(e)
+        else:
+            try:
+                self.fields["hlavni_katastr"].initial = self.instance.hlavni_katastr
+                self.fields["katastry"].initial = self.instance.katastry.all()
+            except Exception as e:
+                logger_s.debug(e)
+                pass
         try:
             self.fields["hlavni_katastr_show"] = forms.CharField(
                 label=_("Hlavní katastr"),
                 help_text=_("arch_z.form.hlavni_katastr.tooltip"),
                 required=False,
+                disabled=True,
             )
             self.fields["katastry_show"] = forms.CharField(
                 label=_("Další katastry"),
                 help_text=_("arch_z.form.katastry.tooltip"),
                 required=False,
+                disabled=True,
             )
             self.fields["hlavni_katastr_show"].initial = self.fields[
                 "hlavni_katastr"
@@ -208,13 +215,35 @@ class CreateArchZForm(forms.ModelForm):
                     )
 
 
+class StartDateInput(forms.DateField):
+    def to_python(self, value):
+        if value:
+            if re.match(r"\d{4}", value):
+                value = datetime.date(int(value), 1, 1)
+            else:
+                value = datetime.datetime.strptime(value, "%d.%m.%Y")
+        else:
+            value = None
+        return value
+
+
+class EndDateInput(forms.DateField):
+    def to_python(self, value):
+        if value:
+            if re.match(r"\d{4}", value):
+                value = datetime.date(int(value), 12, 31)
+            else:
+                value = datetime.datetime.strptime(value, "%d.%m.%Y")
+        else:
+            value = None
+        return value
+
+
 class CreateAkceForm(forms.ModelForm):
-    datum_zahajeni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+    datum_zahajeni = StartDateInput(
         help_text=_("arch_z.form.datum_zahajeni.tooltip"),
     )
-    datum_ukonceni = forms.DateField(
-        validators=[validators.datum_max_1_mesic_v_budoucnosti],
+    datum_ukonceni = EndDateInput(
         help_text=_("arch_z.form.datum_ukonceni.tooltip"),
         required=False,
     )
@@ -243,6 +272,7 @@ class CreateAkceForm(forms.ModelForm):
         fields = (
             "hlavni_vedouci",
             "organizace",
+            "specifikace_data",
             "datum_zahajeni",
             "datum_ukonceni",
             "lokalizace_okolnosti",
@@ -251,8 +281,8 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz",
             "hlavni_typ",
             "vedlejsi_typ",
-            "specifikace_data",
             "ulozeni_dokumentace",
+            "odlozena_nz",
         )
 
         labels = {
@@ -265,6 +295,7 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz": _("Odeslat ZAA jako NZ"),
             "specifikace_data": _("Specifikace data"),
             "ulozeni_dokumentace": _("Uložení dokumentace"),
+            "odlozena_nz": _("arch_z.form.odlozenaNZ.label"),
         }
 
         widgets = {
@@ -301,6 +332,14 @@ class CreateAkceForm(forms.ModelForm):
                     "data-live-search": "true",
                 },
             ),
+            "odlozena_nz": forms.Select(
+                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
         }
 
         help_texts = {
@@ -312,13 +351,11 @@ class CreateAkceForm(forms.ModelForm):
             "je_nz": _("arch_z.form.je_nz.tooltip"),
             "specifikace_data": _("arch_z.form.specifikace_data.tooltip"),
             "ulozeni_dokumentace": _("arch_z.form.ulozeni_dokumentace.tooltip"),
+            "odlozena_nz": _("arch_z.form.odlozenaNZ.tooltip"),
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
-        if "uzamknout_specifikace" in kwargs:
-            uzamknout_specifikace = kwargs.pop("uzamknout_specifikace")
-        else:
-            uzamknout_specifikace = False
+        uzamknout_specifikace = kwargs.pop("uzamknout_specifikace", False)
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateAkceForm, self).__init__(*args, **kwargs)
@@ -360,10 +397,7 @@ class CreateAkceForm(forms.ModelForm):
             ].initial = f"{projekt.lokalizace}. Parc.č.: {projekt.parcelni_cislo}"
         self.helper = FormHelper(self)
         if uzamknout_specifikace:
-            self.fields["specifikace_data"].widget.attrs["readonly"] = True
-            self.fields["specifikace_data"].widget.attrs[
-                "style"
-            ] = "pointer-events: none;"
+            self.fields["specifikace_data"].disabled = True
             self.fields["specifikace_data"].initial = Heslar.objects.filter(
                 heslo="přesně"
             ).first()
@@ -417,3 +451,30 @@ class CreateAkceForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+
+    def clean_odlozena_nz(self):
+        je_nz = self.cleaned_data["je_nz"]
+        odlozena_nz = self.cleaned_data["odlozena_nz"]
+        if odlozena_nz and je_nz:
+            raise ValidationError(_("arch_z.form.odlozenaNz.error"))
+        return odlozena_nz
+
+    def clean_datum_zahajeni(self):
+        if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
+            id=SPECIFIKACE_DATA_PRESNE
+        ):
+            validators.datum_max_1_mesic_v_budoucnosti(
+                self.cleaned_data["datum_zahajeni"].date()
+            )
+        else:
+            return self.cleaned_data["datum_zahajeni"]
+
+    def clean_datum_ukonceni(self):
+        if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
+            id=SPECIFIKACE_DATA_PRESNE
+        ):
+            validators.datum_max_1_mesic_v_budoucnosti(
+                self.cleaned_data["datum_ukonceni"].date()
+            )
+        else:
+            return self.cleaned_data["datum_ukonceni"]

@@ -2,8 +2,12 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block content %}  
-  <form method="POST" id="{{ id_tag }}">
+{% block content %} 
+{% if id_tag == "akce-change-form" %}
+  <form method="POST" id="{{ id_tag }}" action="{% url "arch_z:zmenit-sam-akci" object.ident_cely %}" >
+    {% else %}
+    <form method="POST" id="{{ id_tag }}" >
+    {% endif %}
     <div class="modal-header">
       <h5 class="modal-title">{{ title }} {{ object.ident_cely }}</h5>
       <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -35,11 +39,20 @@
       {{ text }}
     </div>
     {% endif %}
+    {% if id_tag == "pripojit-dokument-form" %}
     <div class="app-entity-dokument">
         <div class="app-table-list-wrapper add-dokument-table" {% if hide_table %} style="display: none;" {%endif%}>
     {%include "dokument/dokument_table_only.html"%}
         </div>
     </div>
+    {% endif %}
+    {% if id_tag == "akce-change-form" %}
+    <div class="app-entity-projekt">
+        <div class="app-table-list-wrapper add-projekt-table" {% if hide_table %} style="display: none;" {%endif%}>
+    {%include "projekt/projekt_table.html"%}
+        </div>
+    </div>
+    {% endif %}
     <input name="next" type="hidden" value="{{ request.GET.next }}">
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">{% translate "core.modalForm.transakce.button.close.text" %}</button>
@@ -49,30 +62,43 @@
 {% endblock %}
 {% block script %}
 <script>
-    base_url = '{% url "dokument:get_dokument_table_row" %}',
-    $('#id_dokument').on('select2:select', function (e) {
+    if ("{{ id_tag }}" == "pripojit-dokument-form"){
+        base_url = '{% url "dokument:get_dokument_table_row" %}'
+        tag = $('#id_dokument')
+        cl = '.add-dokument-table'
+    }
+    else{
+        base_url = '{% url "projekt:get_projekt_table_row" %}'
+        tag = $('#id_projekt')
+        cl = '.add-projekt-table'
+    }
+    tag.on('select2:select', function (e) {
         var data = e.params.data;
         console.log(data);
+        var first_row = $(cl + " table tbody tr:first")
         $.ajax({
             type: "GET",
             url: base_url, 
-            data: {'dok_id': data.id },
+            data: {'id': data.id },
             success : function(data) {
-                $('.add-dokument-table table').append(data);
-                $('.add-dokument-table').css("display", "block");
+                if (cl == '.add-projekt-table'){
+                    first_row.remove()
+                }
+                $(cl + ' table').append(data);
+                $(cl).css("display", "block");
                 // $('.row.replace').html(data);
              }
     });
     });
-    $('#id_dokument').on('select2:unselect', function (e) {
-        $(".add-dokument-table table tbody tr:contains('" + e.params.data.text + "')").remove();
-        if ($(".add-dokument-table table tbody tr").length == 0){
-            $('.add-dokument-table').css("display", "none");
+    tag.on('select2:unselect', function (e) {
+        $(cd + " table tbody tr:contains('" + e.params.data.text + "')").remove();
+        if ($(cl + " table tbody tr").length == 0){
+            $(cl).css("display", "none");
         }
     });
 </script>
 <script>
-  if ("{{ id_tag }}" == "pripojit-dokument-form"){
+  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form"){
 window.addEventListener("modalLoaded", function () {
       window.django = window.django || {};
     if (!django.hasOwnProperty('jQuery') && jQuery !== 'undefined') {

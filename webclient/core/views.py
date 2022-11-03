@@ -32,7 +32,6 @@ from core.constants import (
 )
 from core.forms import CheckStavNotChangedForm
 from core.message_constants import (
-    AKCI_NEKDO_ZMENIL_STAV,
     DOKUMENT_NEKDO_ZMENIL_STAV,
     PROJEKT_NEKDO_ZMENIL_STAV,
     SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
@@ -45,6 +44,7 @@ from core.utils import (
     get_mime_type,
     get_multi_transform_towgs84,
     get_transform_towgs84,
+    get_message,
 )
 from dokument.models import Dokument
 from pas.models import SamostatnyNalez
@@ -451,11 +451,13 @@ def check_stav_changed(request, zaznam):
                     )
                 elif isinstance(zaznam, ArcheologickyZaznam):
                     messages.add_message(
-                        request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV
+                        request,
+                        messages.ERROR,
+                        get_message(zaznam, "NEKDO_ZMENIL_STAV"),
                     )
                     logger_s.debug(
                         "check_stav_changed.state_changed.error",
-                        reason=AKCI_NEKDO_ZMENIL_STAV,
+                        reason=get_message(zaznam, "NEKDO_ZMENIL_STAV"),
                         form_check_errors=str(form_check.errors),
                     )
                 elif isinstance(zaznam, Dokument):
@@ -496,10 +498,12 @@ def check_stav_changed(request, zaznam):
                     sent_stav=sent_stav,
                 )
             elif isinstance(zaznam, ArcheologickyZaznam):
-                messages.add_message(request, messages.ERROR, AKCI_NEKDO_ZMENIL_STAV)
+                messages.add_message(
+                    request, messages.ERROR, get_message(zaznam, "NEKDO_ZMENIL_STAV")
+                )
                 logger_s.debug(
                     "check_stav_changed.sent_stav.error",
-                    reason=AKCI_NEKDO_ZMENIL_STAV,
+                    reason=get_message(zaznam, "NEKDO_ZMENIL_STAV"),
                     zaznam_stav=zaznam_stav,
                     sent_stav=sent_stav,
                 )

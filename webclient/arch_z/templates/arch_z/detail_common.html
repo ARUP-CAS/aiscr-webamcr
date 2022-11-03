@@ -196,6 +196,7 @@
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
+  <script src="{% static 'leaflet.measure.js' %}"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
           const url = "/pian/create/1";
@@ -267,14 +268,12 @@
                       'cadastre': document.getElementById("main_cadastre_id").value,
                       'pian': pian_id,
                   }))
-
           }else if (form_id.includes("detail_pian_form_")){
             map_show_edit(true, false)
             loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
           document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
       }
-
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {
           clearUnfinishedEditGeometry()
@@ -285,6 +284,10 @@
           if (form_id === "create_pian_form") {
               map_show_edit(true, false)
           }
+      }
+      function show_grap_geom_from_map(dj){
+        global_map_can_grab_geom_from_map=dj;
+        map_show_edit(false)
       }
 
     </script>

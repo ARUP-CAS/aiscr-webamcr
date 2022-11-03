@@ -8,6 +8,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
+    IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_AZ,
     PIAN_POTVRZEN,
     VRACENI_AZ,
@@ -29,6 +30,8 @@ from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
+
+# from dj.models import DokumentacniJednotka
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +107,11 @@ class ArcheologickyZaznam(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
+        if (
+            self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
+            and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
+        ):
+            self.set_akce_ident()
 
     def set_vraceny(self, user, new_state, poznamka):
         self.stav = new_state
@@ -142,15 +150,11 @@ class ArcheologickyZaznam(models.Model):
             for req_field in required_fields:
                 if not req_field[0]:
                     result.append(req_field[1])
-            if (
-                len(
-                    self.casti_dokumentu.filter(
-                        dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
-                    )
+            if len(
+                self.casti_dokumentu.filter(
+                    dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
                 )
-                == 0
-                and not self.akce.je_nz
-            ):
+            ) == 0 and not (self.akce.je_nz or self.akce.odlozena_nz):
                 result.append(_("Nemá nálezovou zprávu."))
                 logger.warning("Akce " + self.ident_cely + " nema nalezovou zpravu.")
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
@@ -249,12 +253,28 @@ class ArcheologickyZaznam(models.Model):
             self.ident_cely = prefix + sequence
         self.save()
 
+    def set_akce_ident(self, ident=None):
+        if ident:
+            new_ident = ident
+        else:
+            new_ident = get_akce_ident(self.hlavni_katastr.okres.kraj.rada_id)
+        for dj in self.dokumentacni_jednotky_akce.all():
+            dj.ident_cely = new_ident + dj.ident_cely[-4:]
+            for komponenta in dj.komponenty.komponenty.all():
+                komponenta.ident_cely = new_ident + komponenta.ident_cely[-5:]
+                komponenta.save()
+            dj.save()
+        self.ident_cely = new_ident
+        self.save()
+
     def get_reverse(self, dj_ident_cely=None):
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
                 return reverse("arch_z:detail", kwargs={"ident_cely": self.ident_cely})
             else:
-                return reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely])
+                return reverse(
+                    "arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely]
+                )
         else:
             if dj_ident_cely is None:
                 return reverse("lokalita:detail", kwargs={"slug": self.ident_cely})
@@ -266,7 +286,9 @@ class ArcheologickyZaznam(models.Model):
             if dj_ident_cely is None:
                 return redirect(reverse("arch_z:detail", self.ident_cely))
             else:
-                return redirect(reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely]))
+                return redirect(
+                    reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely])
+                )
         else:
             if dj_ident_cely is None:
                 return redirect(reverse("lokalita:detail", self.ident_cely))
@@ -291,7 +313,12 @@ class ArcheologickyZaznamKatastr(models.Model):
 
 class Akce(models.Model):
 
-    typ = models.CharField(max_length=1, blank=True, null=True)
+    TYP_AKCE_PROJEKTOVA = "R"
+    TYP_AKCE_SAMOSTATNA = "N"
+
+    CHOICES = ((TYP_AKCE_PROJEKTOVA, "Projektova"), (TYP_AKCE_SAMOSTATNA, "Samostatna"))
+
+    typ = models.CharField(max_length=1, blank=True, null=True, choices=CHOICES)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,
@@ -351,6 +378,11 @@ class Akce(models.Model):
     class Meta:
         db_table = "akce"
 
+    def get_absolute_url(self):
+        return reverse(
+            "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
+        )
+
 
 class AkceVedouci(models.Model):
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
@@ -386,3 +418,37 @@ class ExterniOdkaz(models.Model):
 
     class Meta:
         db_table = "externi_odkaz"
+
+
+def get_akce_ident(region, temp=None):
+    MAXIMAL: int = 999999
+    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
+    if temp:
+        prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9")
+    else:
+        prefix = str(region + "-9")
+    l = ArcheologickyZaznam.objects.filter(
+        ident_cely__regex="^" + prefix + "\\d{6}A$"
+    ).order_by("-ident_cely")
+    if l.filter(ident_cely=str(prefix + "000001A")).count() == 0:
+        return prefix + "000001A"
+    else:
+        # temp number from empty spaces
+        idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
+        idents = [sub.replace(prefix, "") for sub in idents]
+        idents = [sub.replace("A", "") for sub in idents]
+        idents = [sub.lstrip("0") for sub in idents]
+        idents = [eval(i) for i in idents]
+        start = idents[0]
+        end = idents[-1]
+        missing = sorted(set(range(start, end + 1)).difference(idents))
+        logger.debug(missing[0])
+        if missing[0] >= MAXIMAL:
+            logger.error(
+                "Maximal number of temporary document ident is "
+                + str(MAXIMAL)
+                + "for given region and rada"
+            )
+            raise MaximalIdentNumberError(MAXIMAL)
+        sequence = str(missing[0]).zfill(6)
+        return prefix + sequence + "A"

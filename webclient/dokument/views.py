@@ -2,7 +2,7 @@ import logging
 import os
 
 import structlog
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import Akce, ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -848,8 +848,11 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
 class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
     def get_queryset(self):
         qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
-        qs = qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)).annotate(ident_len=Length('ident_cely'))\
+        qs = (
+            qs.filter(stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY))
+            .annotate(ident_len=Length("ident_cely"))
             .filter(ident_len__gt=0)
+        )
         return qs
 
 
@@ -911,9 +914,8 @@ def zapsat(request, zaznam):
             try:
                 prefix = zaznam.ident_cely[0]
                 if isinstance(zaznam, ArcheologickyZaznam):
-                    if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
-                        if zaznam.ident_cely.startswith("X"):
-                            prefix = zaznam.ident_cely[2]
+                    if zaznam.ident_cely.startswith("X"):
+                        prefix = zaznam.ident_cely[2]
                 dokument.ident_cely = get_temp_dokument_ident(
                     rada=dokument.rada.zkratka, region=prefix
                 )
@@ -1116,7 +1118,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 @login_required
 @require_http_methods(["GET"])
 def get_dokument_table_row(request):
-    context = {"d": Dokument.objects.get(id=request.GET.get("dok_id", ""))}
+    context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 

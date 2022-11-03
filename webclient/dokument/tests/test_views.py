@@ -139,7 +139,7 @@ class UrlTests(TestCase):
 
     def test_get_table_row(self):
         data = {
-            "dok_id": EXISTING_DOCUMENT_ID,
+            "id": EXISTING_DOCUMENT_ID,
         }
         request = self.factory.get("/dokument/dokument-radek-tabulky",data)
         request = add_middleware_to_request(request, SessionMiddleware)

@@ -1,7 +1,11 @@
 import logging
+from django.views import View
 
 import simplejson as json
 import structlog
+from django.db.models.functions import Length
+from django.template.loader import render_to_string
+from dal import autocomplete
 from arch_z.models import Akce
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -1235,3 +1239,27 @@ def katastr_text_to_id(request):
         else:
             logger.error(f"Cannot find katastr {hlavni_katastr_name} in {okres_name}!")
         return request.POST.copy()
+
+
+class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return Projekt.objects.none()
+        qs = (
+            Projekt.objects.filter(
+                stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                stav__lte=PROJEKT_STAV_ARCHIVOVANY,
+            )
+            .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+            .annotate(ident_len=Length("ident_cely"))
+            .filter(ident_len__gt=0)
+        )
+        if self.q:
+            qs = qs.filter(ident_cely__icontains=self.q)
+        return qs
+
+
+class ProjectTableRowView(LoginRequiredMixin, View):
+    def get(self, request):
+        context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
+        return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))

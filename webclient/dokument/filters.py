@@ -96,7 +96,7 @@ class HistorieFilter(filters.FilterSet):
             filtered = filtered.filter(datum_zmeny__gte=datum.start)
         if datum and datum.stop:
             filtered = filtered.filter(datum_zmeny__lte=datum.stop)
-        if self.filter_typ and self.filter_typ == "lokalita":
+        if self.filter_typ and self.filter_typ == "arch_z":
             queryset = queryset.filter(
                 archeologicky_zaznam__historie__historie__in=filtered
             ).distinct()

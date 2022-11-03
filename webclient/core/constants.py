@@ -56,6 +56,7 @@ ZAPSANI_AZ: Final = "AZ01"  # 1
 ODESLANI_AZ: Final = "AZ12"  # 2
 ARCHIVACE_AZ: Final = "AZ23"  # 3
 VRACENI_AZ: Final = "AZ-1"  # New
+ZMENA_AZ: Final = "AZ-2"  # New
 # Dokument
 ZAPSANI_DOK: Final = "D01"  # 1
 ODESLANI_DOK: Final = "D12"  # 2

@@ -6,7 +6,18 @@
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
-{% endblock %}
+<script>
+    var global_csrftoken = '{{ csrf_token }}';
+</script>
+ <!-- Autocomplete media files -->
+ <link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+ <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+ <script src="/static/static/autocomplete_light/select2.js"></script>
+ <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+ {% endblock %}
 
 {% block content %}
 <div class="app-entity-akce">
@@ -22,15 +33,22 @@
         {{ formAZ|as_crispy_errors }}
         {{ formAkce|as_crispy_errors }}
         <div class="row">
-          <div class="form-group col-sm-2">
-            {{ formAZ.hlavni_katastr_show|as_crispy_field }}
+          {% if create_akce %}
+          <div class="form-group col-sm-2" >
+            {{ formAZ.hlavni_katastr|as_crispy_field }}
           </div>
-          <div class="form-group col-sm-4">
-            {{ formAZ.katastry_show|as_crispy_field }}
-          </div>
+          {% else %}
           <div class="form-group col-sm-2" style="display:none">
             {{ formAZ.hlavni_katastr|as_crispy_field }}
           </div>
+          <div class="form-group col-sm-2">
+            {{ formAZ.hlavni_katastr_show|as_crispy_field }}
+          </div>
+          {% endif %}
+          <div class="form-group col-sm-4">
+            {{ formAZ.katastry_show|as_crispy_field }}
+          </div>
+          
           <div class="form-group col-sm-4" style="display:none">
             {{ formAZ.katastry|as_crispy_field }}
           </div>
@@ -79,6 +97,11 @@
           <div class="form-group col-sm-2">
             {{ formAkce.je_nz|as_crispy_field }}
           </div>
+          {% if  sam_akce %}
+          <div class="form-group col-sm-2">
+            {{ formAkce.odlozena_nz|as_crispy_field }}
+          </div>
+          {% endif %}
         </div>
         <div class="row">
           <div class="col-sm-12">
@@ -123,7 +146,48 @@
     modalIDD : "#modal-form",
     successFunc:successFunction,
   })
-  create_osoba_modal = new Modal(options, "create-osoba"); 
+  create_osoba_modal = new Modal(options, "create-osoba");
+  datum_zahajeni = document.getElementById("id_datum_zahajeni")
+  datum_ukonceni = document.getElementById("id_datum_ukonceni")
+  if (specifikace.value == 884 || specifikace.value == 887){
+    $(".dateinput").datepicker('destroy')
+    $(".dateinput").datepicker({
+      format: "yyyy",
+      viewMode: "years",
+        minViewMode: "years",
+      language: 'cs',
+      todayHighlight: true,
+      endDate: new Date(2100,12,31)
+  })
+  datum_zahajeni.value = datum_zahajeni.value.slice(-4)
+  datum_ukonceni.value = datum_ukonceni.value.slice(-4)} 
   });
+
+  var specifikace = document.getElementById("id_specifikace_data");
+  specifikace.addEventListener('change', function (event) {
+    if (specifikace.value == 884 || specifikace.value == 887){
+      $(".dateinput").datepicker('destroy')
+      $(".dateinput").datepicker({
+        format: "yyyy",
+        viewMode: "years",
+          minViewMode: "years",
+        language: 'cs',
+        todayHighlight: true,
+        endDate: new Date(2100,12,31)
+    })
+    datum_zahajeni.value = datum_zahajeni.value.slice(-4)
+    datum_ukonceni.value = datum_ukonceni.value.slice(-4)
+    }
+    else {
+      $(".dateinput").datepicker('destroy')
+      $(".dateinput").datepicker({
+          format: "dd.mm.yyyy",
+          viewMode: "days",
+          minViewMode: "days",
+      })
+      datum_zahajeni.value = "01.01." + datum_zahajeni.value.slice(-4)
+      datum_ukonceni.value = "31.12." + datum_ukonceni.value.slice(-4)
+    }
+  })
 </script>
 {% endblock %}

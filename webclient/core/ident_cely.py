@@ -310,26 +310,20 @@ def get_temp_lokalita_ident(typ, region):
         return prefix + "0000001"
     else:
         # temp number from empty spaces
-        sequence = l[l.count() - 1].ident_cely[-7:]
-        logger.warning(sequence)
-        while True:
-            if l.filter(ident_cely=prefix + sequence).exists():
-                old_sequence = sequence
-                sequence = str(int(sequence) + 1).zfill(7)
-                logger.warning(
-                    "Ident "
-                    + prefix
-                    + old_sequence
-                    + " already exists, trying next number "
-                    + str(sequence)
-                )
-            else:
-                break
-        if int(sequence) >= MAXIMAL:
+        idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
+        idents = [sub.replace(prefix, "") for sub in idents]
+        idents = [sub.lstrip("0") for sub in idents]
+        idents = [eval(i) for i in idents]
+        start = idents[0]
+        end = idents[-1]
+        missing = sorted(set(range(start, end + 1)).difference(idents))
+        logger.debug(missing[0])
+        if missing[0] >= MAXIMAL:
             logger.error(
                 "Maximal number of temporary document ident is "
                 + str(MAXIMAL)
                 + "for given region and rada"
             )
             raise MaximalIdentNumberError(MAXIMAL)
+        sequence = str(missing[0]).zfill(7)
         return prefix + sequence

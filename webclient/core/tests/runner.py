@@ -89,6 +89,7 @@ MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID = 229
 JAZYK_DOKUMENTU_CESTINA_ID = 1256
 ULOZENI_ORIGINALU_ID = 5588
 TYP_DJ_CELEK_AKCE_ID = 321
+TYP_DJ_KATASTR_ID = 1071
 OBDOBI_STREDNI_PALEOLIT_ID = 336
 OBDOBI_NADRIZENE_ID = 330
 AREAL_HRADISTE_ID = 337
@@ -114,8 +115,10 @@ ARCHEOLOGICKY_POSUDEK_ID = 1111
 EXISTING_PROJECT_IDENT = "C-202000001"
 EXISTING_PROJECT_IDENT_ZACHRANNY = "C-202000002"
 EXISTING_EVENT_IDENT = "C-202000001A"
+EXISTING_EVENT_IDENT2 = "C-202000001C"
 EXISTING_LOKALITA_IDENT = "X-C-L0000004"
 EXISTING_EVENT_IDENT_INCOMPLETE = "C-202000001B"
+EXISTING_SAM_EVENT_IDENT = "X-M-9123456A"
 EXISTING_DOCUMENT_ID = 123654
 DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
 DOKUMENT_CAST_IDENT = "M-TX-202100115-D001"
@@ -308,6 +311,7 @@ class AMCRTestRunner(BaseRunner):
         ).save()
         Heslar(id=ULOZENI_ORIGINALU_ID, heslo="uloz+orig", nazev_heslare=hjd).save()
         Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj).save()
+        Heslar(id=TYP_DJ_KATASTR_ID, heslo="katastr", nazev_heslare=hdj).save()
         Heslar(
             id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd
         ).save()
@@ -495,6 +499,7 @@ class AMCRTestRunner(BaseRunner):
         )
         az.save()
         a = Akce(
+            typ=Akce.TYP_AKCE_PROJEKTOVA,
             archeologicky_zaznam=az,
             specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
             datum_zahajeni=datetime.datetime.today(),
@@ -506,6 +511,28 @@ class AMCRTestRunner(BaseRunner):
         )
         a.projekt = p
         a.save()
+
+        az3 = ArcheologickyZaznam(
+            typ_zaznamu="A",
+            hlavni_katastr=praha,
+            ident_cely=EXISTING_EVENT_IDENT2,
+            stav=AZ_STAV_ZAPSANY,
+            pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
+        )
+        az3.save()
+        a3 = Akce(
+            typ=Akce.TYP_AKCE_PROJEKTOVA,
+            archeologicky_zaznam=az3,
+            specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
+            datum_zahajeni=datetime.datetime.today(),
+            datum_ukonceni=datetime.datetime.today() + datetime.timedelta(days=1),
+            lokalizace_okolnosti="test",
+            hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
+            hlavni_vedouci=Osoba.objects.first(),
+            organizace=o,
+        )
+        a3.projekt = p
+        a3.save()
 
         # LOKALITA
         az_lokalita = ArcheologickyZaznam(
@@ -523,6 +550,28 @@ class AMCRTestRunner(BaseRunner):
             nazev="nazev lokality",
         )
         lokalita.save()
+
+        # EVENT
+        az2 = ArcheologickyZaznam(
+            typ_zaznamu="A",
+            hlavni_katastr=praha,
+            ident_cely=EXISTING_SAM_EVENT_IDENT,
+            stav=AZ_STAV_ZAPSANY,
+            pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
+        )
+        az2.save()
+        a2 = Akce(
+            typ=Akce.TYP_AKCE_SAMOSTATNA,
+            archeologicky_zaznam=az2,
+            specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
+            datum_zahajeni=datetime.datetime.today(),
+            datum_ukonceni=datetime.datetime.today() + datetime.timedelta(days=1),
+            lokalizace_okolnosti="test",
+            hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
+            hlavni_vedouci=Osoba.objects.first(),
+            organizace=o,
+        )
+        a2.save()
 
         vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
         vazba_pian.save()

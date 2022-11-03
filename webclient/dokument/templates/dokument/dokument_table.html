@@ -18,7 +18,7 @@
             <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">
               {% trans "Připojit existující dokument" %}
             </button>
-            {% if app != "lokalita" %}
+            {% if app == "pr" %}
             <button id="dokument-pripojit-z-projektu" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">
               {% trans "Připojit existující dokument z projektu" %}
             </button>
