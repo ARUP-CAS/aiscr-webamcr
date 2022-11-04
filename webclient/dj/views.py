@@ -15,7 +15,10 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.utils import update_all_katastr_within_akce_or_lokalita
+from core.utils import (
+    update_all_katastr_within_akce_or_lokalita,
+    update_main_katastr_within_ku,
+)
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -90,8 +93,12 @@ def detail(request, ident_cely):
                 update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
             logger.debug("katastralni uzemi")
+            new_ku = form.cleaned_data["ku_change"]
             dj.pian = Pian.objects.get(id=dj.archeologicky_zaznam.hlavni_katastr.pian)
             dj.save()
+            if len(new_ku) > 3:
+                update_main_katastr_within_ku(dj.ident_cely, new_ku)
+
     else:
         logger.warning("Form is not valid")
         logger.debug(form.errors)

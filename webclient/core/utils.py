@@ -3,7 +3,9 @@ import logging
 import mimetypes
 import zlib
 
+import core.message_constants as mc
 import requests
+from arch_z.models import ArcheologickyZaznam
 from core.message_constants import (
     VALIDATION_EMPTY,
     VALIDATION_LINE_LENGTH,
@@ -16,8 +18,6 @@ from django.db import connection
 from heslar.models import RuianKatastr
 from pian.models import Pian
 from projekt.models import Projekt
-from arch_z.models import ArcheologickyZaznam
-import core.message_constants as mc
 
 logger = logging.getLogger(__name__)
 
@@ -147,6 +147,23 @@ def get_all_pians_with_akce(ident_cely):
         return None
 
 
+def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
+    akce_ident_cely = ident_cely.split("-D")[0]
+
+    query_update_archz = (
+        "update PUBLIC.archeologicky_zaznam set hlavni_katastr="
+        " (select id from public.ruian_katastr where nazev_stary=%s and aktualni='t' limit 1)"
+        " where ident_cely = %s and typ_zaznamu IN('L')"
+    )
+
+    try:
+        if len(ku_nazev_stary) > 2:
+            cursor = connection.cursor()
+            cursor.execute(query_update_archz, [ku_nazev_stary, akce_ident_cely])
+    except IndexError:
+        return None
+
+
 def update_all_katastr_within_akce_or_lokalita(ident_cely):
 
     akce_ident_cely = ident_cely.split("-D")[0]
@@ -186,7 +203,8 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
         cursor.execute(query_select_archz, [akce_ident_cely])
         zaznam_id = cursor.fetchone()[0]
         if len(str(zaznam_id)) > 0:
-            cursor.execute(query_update_archz, [hlavni_id, zaznam_id])
+            if hlavni_id != None:
+                cursor.execute(query_update_archz, [hlavni_id, zaznam_id])
             if len(ostatni_id):
                 cursor.execute(query_select_other, [zaznam_id, tuple(ostatni_id)])
                 ostatni_already_inserted = []

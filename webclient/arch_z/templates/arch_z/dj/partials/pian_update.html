@@ -3,10 +3,10 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
-<div class="card app-card-form" id="detail_pian_form_{{ p.ident_cely }}">
+<div class="card app-card-form" id="detail_pian_form_{{ pian_ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">
-      {% trans "Pian" %} {{ p.ident_cely }}
+      {% trans "Pian" %}  {{ pian_ident_cely }}
     </div>
   </div>
   <div class="card-body">
@@ -23,7 +23,34 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        show_form(`detail_pian_form_{{ p.ident_cely }}`);
-        map_show_edit(true)
+      let xhr = new XMLHttpRequest();
+              xhr.open('POST', '/arch-z/akce-zjisti-katastr');
+              xhr.setRequestHeader('Content-type', 'application/json');
+              if (typeof global_csrftoken !== 'undefined') {
+                  xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+              } else {
+                  console.log("neni X-CSRFToken token")
+              }
+              xhr.onload = function () {
+                  rs = JSON.parse(this.responseText)
+                  if(rs.lat>0){
+                    map.setView([rs.lat, rs.lng], rs.zoom)
+                  }
+                  if (rs.zoom == 17) {
+                      drawnItems.clearLayers();
+                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom)
+                  }
+              };
+              xhr.send(JSON.stringify(
+                  {
+                      'cadastre': document.getElementById("main_cadastre_id").value,
+                      'pian': '{{ dj_ident_cely }}',
+                  }))
+
+
+        //show_form(`detail_pian_form_{{ pian_ident_cely}}`);
+        map_show_edit(true);
+        global_map_projekt_ident='{{ dj_ident_cely }}';
+       // switchMap(true,'{{ pian_ident_cely}}')
     });
 </script>

@@ -20,35 +20,35 @@
           </a>
           {% endif %}
           {% if j.show_add_pian %}
-          <a class="dropdown-item" href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
+          <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
             {% trans 'Přidat nový pian' %}
           </a>
           {% endif %}
           {% if j.show_add_pian %}
                     <a id="show_menu_ku_from_map_id"  class="dropdown-item" href="#"
-                       onclick="show_grap_geom_from_map('ku')">
+                       onclick="show_grap_geom_from_map('ku:{{ j.ident_cely}}')">
                       {% trans 'Nastav Katarální uzemí z mapy' %}
                     </a>
           {% endif %}
           {% if j.show_add_pian %}
-          <a class="dropdown-item" href="#"
+          <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
              onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
             {% trans 'Připojit pian z mapy' %}
           </a>
           {% endif %}
           {% if j.show_approve_pian %}
-          <button id="pian-potvrdit-{{j.adb_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
+          <button id="pian-potvrdit-{{j.pian_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
                   name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
             {% trans 'Potvrdit pian' %}
           </button>
           {% endif %}
           {% if j.show_uprav_pian and j.pian_ident_cely %}
-          <a class="dropdown-item" href="{% url 'lokalita:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
+          <a id="pian-upravit-{{j.pian_ident_cely}}" class="dropdown-item" href="{% url 'lokalita:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
             {% trans 'Upravit pian' %}
           </a>
           {% endif %}
           {% if j.show_remove_pian %}
-          <button id="pian-odpojit-{{j.adb_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
+          <button id="pian-odpojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
                   name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
             {% trans 'Odpojit pian' %}
           </button>
@@ -69,7 +69,7 @@
             {% trans 'Smazat DJ' %}
           </button>
           {% if j.show_pripojit_pian %}
-          <button id="pian-pripoj-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button"
+          <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button"
                   name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
             {% trans 'Připojit PIAN podle ID' %}
           </button>
@@ -136,7 +136,7 @@
         map_show_edit(false)
       }
   var getFiltrType=()=>{
-    return document.forms["create_dj_form_id"].querySelector('[data-id="dj_typ_id"]').title
+    return document.forms[0].querySelector('[data-id="dj_typ_id"]').title
   }
 
   var getFiltrTypeIsKuSafe=()=>{
@@ -148,19 +148,20 @@
   }
 
   var filtrAkci =()=>{
+    console.log("++++++++++++++filtr: "+getFiltrTypeIsKuSafe())
     var positive= getFiltrTypeIsKuSafe()? 'none' : '';
     var negative= positive===''? 'none' : '';
 
-    ["show_menu_pian_from_map_id","show_menu_pian_new_id","show_menu_pian_new_id","pian-pripoj-"]
+    ["show_menu_pian_from_map_id","show_menu_pian_new_id","pian-pripojit-"+'{{j.pian_ident_cely }}',"pian-upravit-"+'{{j.pian_ident_cely }}',"pian-potvrdit-"+'{{j.pian_ident_cely }}']
     .forEach(element => {
-      if(document.getElementById(element)!==null){
+      if(document.getElementById(element)!=null){
         document.getElementById(element).style.display = positive;
       }
      });
 
      ["show_menu_ku_from_map_id"]
     .forEach(element => {
-      if(document.getElementById(element)!==null){
+      if(document.getElementById(element)!=null){
           document.getElementById(element).style.display = negative;
       }
      });
