@@ -187,6 +187,7 @@ table {
 .select2-container {
   //min-width: unset !important; commented because there was bug, which sent Juraj by skype
   min-width: 100% !important;
+  max-width: 100% !important;
 
   .select2-selection--multiple{
       height: $app-form-control-fix-height !important;
