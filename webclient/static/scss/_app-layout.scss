@@ -155,9 +155,13 @@ div .app-right .btn-group .btn {
   margin-bottom: 0.25rem !important;
 }
 
-.select2-selection__rendered {
+.modelselect2multiple .select2-selection__rendered {
   height: 1.5rem !important;
   overflow-y: auto !important;
+}
+
+.select2-selection__rendered {
+  height: 1.5rem !important;
 }
 
 .select2-search__field {
