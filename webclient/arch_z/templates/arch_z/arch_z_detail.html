@@ -206,7 +206,7 @@
     //console.log("zaznam "+global_map_projekt_ident)
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
-      {% if arch_projekt_link %}
+      {% if arch_projekt_link and arch_projekt_link.0 %}
         if ("{{arch_projekt_link}}" !== "None"){
           var options = Object.assign(defaults, {modalID: "modal-form",
           formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
