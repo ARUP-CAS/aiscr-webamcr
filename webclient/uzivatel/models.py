@@ -122,13 +122,16 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
 
     def email_user(self, *args, **kwargs):
-        send_mail(
-            "{}".format(args[0]),
-            "{}".format(args[1]),
-            "{}".format(args[2]),
-            [self.email],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                "{}".format(args[0]),
+                "{}".format(args[1]),
+                "{}".format(args[2]),
+                [self.email],
+                fail_silently=False,
+            )
+        except ConnectionRefusedError as err:
+            logger_s.error("user.email_user.error", user_id=self.pk, email=self.email)
 
     def name_and_id(self):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
