@@ -173,3 +173,10 @@ ALTER TABLE uzivatel_spoluprace DROP CONSTRAINT uzivatel_spoluprace_vedouci_fkey
 ALTER TABLE uzivatel_spoluprace DROP CONSTRAINT vazba_spoluprace_historie_fkey;
 ALTER TABLE vyskovy_bod DROP CONSTRAINT vyskovy_bod_adb_fkey;
 ALTER TABLE vyskovy_bod DROP CONSTRAINT vyskovy_bod_typ_fkey;
+
+ALTER TABLE dokument_cast DROP CONSTRAINT dokument_cast_projekt_fkey;
+ALTER TABLE dokument_cast DROP CONSTRAINT dokument_cast_dokument_fkey;
+ALTER TABLE soubor DROP CONSTRAINT soubor_historie_fkey;
+ALTER TABLE soubor DROP CONSTRAINT soubor_projekt_fkey;
+ALTER TABLE stats_login DROP CONSTRAINT stats_login_uzivatel_fkey;
+ALTER TABLE uzivatel_historicaluser DROP CONSTRAINT uzivatel_historicaluser_history_user_id_fkey;
