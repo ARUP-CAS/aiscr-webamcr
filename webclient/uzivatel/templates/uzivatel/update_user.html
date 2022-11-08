@@ -22,8 +22,15 @@
         <h6>{% trans "Změna hesla" %}</h6>
         <hr class="mt-0"/>
         {% crispy form_password %}
+        <h6>{% trans "Historie přihlášení" %}</h6>
+        <hr class="mt-0"/>
+        <ul>
+          {% for item in sing_in_history %}
+            <li style="color: #6c757d;" class="small">{{ item.last_login }}</li>
+          {% endfor %}
+        </ul>
         <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
-        <a href="{% url 'historie:uzivatel' user.ident_cely %}">Historie uživatele</a>
+        <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">Historie uživatele</a>
       </div>
     </form>
   </div>

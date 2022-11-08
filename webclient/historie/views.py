@@ -1,3 +1,6 @@
+import logging
+
+import structlog as structlog
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
@@ -11,6 +14,8 @@ from core.models import Soubor
 from projekt.models import Projekt
 from core.views import ExportMixinDate
 from uzivatel.models import User
+
+logger_s = structlog.get_logger(__name__)
 
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
@@ -139,15 +144,13 @@ class LokalitaHistorieListView(HistorieListView):
         context["ident_cely"] = self.kwargs["ident_cely"]
         return context
 
-class UzivatelHistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
-    table_class = SimpleHistoryTable
-    model = HistoricalRecords
-    template_name = "historie/historie_list.html"
-    export_name = "export_historie_"
+
+class UzivatelHistorieListView(HistorieListView):
     def get_queryset(self):
-        uzivatel_ident = self.kwargs["ident_cely"]
-        history_records = User.objects.get(ident_cely=uzivatel_ident).history.all()
-        return history_records
+        user_ident = self.kwargs["ident_cely"]
+        return self.model.objects.filter(
+            vazba__uzivatelhistorievazba__ident_cely=user_ident
+        ).order_by("-datum_zmeny")
 
     def get_context_data(self, **kwargs):
         context = super(UzivatelHistorieListView, self).get_context_data(**kwargs)
@@ -155,4 +158,3 @@ class UzivatelHistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableM
         context["entity"] = context["typ"]
         context["ident_cely"] = self.kwargs["ident_cely"]
         return context
-

@@ -51,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     organizace = models.ForeignKey(
         "Organizace", models.DO_NOTHING, db_column="organizace", null=True
     )
-    # historie = models.ForeignKey('HistorieVazby', models.DO_NOTHING, db_column='historie', blank=True, null=True)
+    history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie', on_delete=models.ForeignKey, related_name="uzivatelhistorievazba")
     email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)

@@ -176,6 +176,7 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
         context["form"] = self.form_class(instance=self.request.user)
         context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
         context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
+        context["sing_in_history"] = self.get_object().history.all()[:5]
         return context
 
     def _change_password(self, request, request_data):
