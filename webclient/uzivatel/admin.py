@@ -2,12 +2,11 @@ import structlog
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
+from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATION_TYPE
 from .forms import AuthUserCreationForm
 from .models import User
 
-from historie.models import Historie
-
+from historie.models import Historie, HistorieVazby
 
 logger_s = structlog.get_logger(__name__)
 
@@ -71,22 +70,29 @@ class CustomUserAdmin(UserAdmin):
 
     def save_model(self, request, obj: User, form, change):
         user = request.user
-        user_db: User = User.objects.get(pk=obj.pk)
         logger_s.debug("uzivatel.admin.save_model.start", user=user.pk, obj_pk=obj.pk, change=change, form=form)
+        super().save_model(request, obj, form, change)
+        user_db: User = User.objects.get(id=obj.pk)
+        if user_db.history_vazba is None:
+            historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
+            historie_vazba.save()
+            user_db.history_vazba = historie_vazba
+            user_db.save()
+        else:
+            historie_vazba = user_db.history_vazba
         if user_db.hlavni_role != obj.hlavni_role:
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
                 poznamka=obj.hlavni_role,
-                vazba=obj.history_vazba,
+                vazba=historie_vazba,
             ).save()
-        group_ids = [x.pk for x in obj.groups.all()]
-        super().save_model(request, obj, form, change)
+        group_ids = [str(x) for x in obj.groups.all()]
         Historie(
             typ_zmeny=ZMENA_UDAJU_ADMIN,
             uzivatel=user,
             poznamka=f"Role: {group_ids}",
-            vazba=obj.history_vazba,
+            vazba=historie_vazba,
         ).save()
 
 
