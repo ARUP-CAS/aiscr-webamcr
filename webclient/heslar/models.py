@@ -116,6 +116,9 @@ class HeslarNazev(models.Model):
     nazev = models.TextField(unique=True)
     povolit_zmeny = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.nazev
+
     class Meta:
         db_table = "heslar_nazev"
 
