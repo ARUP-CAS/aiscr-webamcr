@@ -462,7 +462,7 @@ class CreateAkceForm(forms.ModelForm):
     def clean_datum_zahajeni(self):
         if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
             id=SPECIFIKACE_DATA_PRESNE
-        ):
+        ) and self.cleaned_data.get("datum_zahajeni", None) is not None:
             validators.datum_max_1_mesic_v_budoucnosti(
                 self.cleaned_data["datum_zahajeni"].date()
             )
@@ -472,7 +472,7 @@ class CreateAkceForm(forms.ModelForm):
     def clean_datum_ukonceni(self):
         if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
             id=SPECIFIKACE_DATA_PRESNE
-        ):
+        ) and self.cleaned_data.get("datum_ukonceni", None) is not None:
             validators.datum_max_1_mesic_v_budoucnosti(
                 self.cleaned_data["datum_ukonceni"].date()
             )
