@@ -18,7 +18,7 @@ from core.constants import (
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
-    PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI,
+    PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE,
 )
 from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -51,7 +51,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     organizace = models.ForeignKey(
         "Organizace", models.DO_NOTHING, db_column="organizace", null=True
     )
-    # historie = models.ForeignKey('HistorieVazby', models.DO_NOTHING, db_column='historie', blank=True, null=True)
+    history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie',
+                                      on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
     email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)

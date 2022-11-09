@@ -70,6 +70,10 @@ ARCHIVACE_SN: Final = "SN34"  # 4
 VRACENI_SN: Final = "SN-1"  # 5
 # Soubory
 NAHRANI_SBR: Final = "SBR0"  # 0
+# Uzivatel
+ZMENA_HLAVNI_ROLE: Final = "HR"  # 0
+ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
+ADMIN_UPDATE: Final = "AU"  # 0
 
 # Uzivatel
 ROLE_BADATEL_ID = 1

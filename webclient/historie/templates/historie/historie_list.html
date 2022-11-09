@@ -31,6 +31,8 @@
           <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie spoluprace" %}</a>
           {% elif typ == "soubor" %}
           <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "Historie souboru" %}</a>
+          {% elif typ == "uzivatel" %}
+          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "Historie uživatele" %}</a>
           {% endif %}
         </div>
         <div id="id-app-entity-item" class="app-entity-item">

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import UzivatelAutocomplete
+from .views import UserAccountUpdateView, UzivatelAutocomplete
 
 app_name = "uzivatel"
 
@@ -9,5 +9,6 @@ urlpatterns = [
         "seznam-uzivatele/",
         UzivatelAutocomplete.as_view(),
         name="uzivatel-autocomplete",
-    )
+    ),
+    path("upravit-uzivatele/", UserAccountUpdateView.as_view(), name="update-uzivatel"),
 ]
