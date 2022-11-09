@@ -33,7 +33,7 @@ update historie_akce set typ_zmeny = 7 where typ_zmeny = 0;
 -- Doplnění historie_akce o chybějící údaje stejného typu z tabulky akce (zbytek migrován v migrace_3.sql).
 -- Stav 3
 INSERT INTO historie_akce ( uzivatel, datum_zmeny, typ_zmeny, akce )
-SELECT akce.odpovedny_pracovnik_vraceni_zaa, akce.datum_vraceni_zaa, 7 AS typ, akce.id
+SELECT akce.odpovedny_pracovnik_vraceni_zaa, akce.datum_vraceni_zaa, 3 AS typ, akce.id
 FROM akce LEFT JOIN historie_akce ON (akce.odpovedny_pracovnik_zamitnuti = historie_akce.uzivatel) AND (akce.datum_zamitnuti = historie_akce.datum_zmeny) AND (akce.id = historie_akce.akce)
 WHERE (((akce.odpovedny_pracovnik_vraceni_zaa) Is Not Null) AND ((historie_akce.id) Is Null)) OR (((akce.datum_vraceni_zaa) Is Not Null) AND ((historie_akce.id) Is Null));
 
