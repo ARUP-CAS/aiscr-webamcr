@@ -37,7 +37,7 @@ insert into akce_vedouci(akce, vedouci, hlavni) select id, vedouci_akce, true fr
 CREATE OR REPLACE FUNCTION migrateVedouciOstatniFromAkce() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..7
+    FOR counter IN 1..10
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -62,11 +62,11 @@ drop function migrateVedouciOstatniFromAkce();
 CREATE OR REPLACE FUNCTION migrateVedouciFromNeidentAkce() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..7
+    FOR counter IN 1..10
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into neident_akce_vedouci(neident_akce, vedouci) select distinct a.id, r.id from neident_akce a join osoba r on (r.prijmeni || ', ' || r.jmeno) = split_part(vedouci, ';', counter) where split_part(a.vedouci, ';', counter) != '';
+            insert into neident_akce_vedouci(neident_akce, vedouci) select distinct a.id, r.id from neident_akce a join osoba r on r.vypis_cely = split_part(vedouci, ';', counter) where split_part(a.vedouci, ';', counter) != '';
         END;
     END LOOP;
 END;
@@ -106,7 +106,7 @@ where dokument.id = sel.id;
 CREATE OR REPLACE FUNCTION migrateAutorFromDokument() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..7
+    FOR counter IN 1..10
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -134,7 +134,7 @@ update externi_zdroj set autori = substr(autori, 1, length(autori) - 1) where au
 CREATE OR REPLACE FUNCTION migrateAutorFromExterniZdroj() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..7
+    FOR counter IN 1..20
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
