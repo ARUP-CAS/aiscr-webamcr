@@ -2,7 +2,7 @@
 CREATE table public.archeologicky_zaznam (
     id serial primary key,
     typ_zaznamu text not null,
-    pristupnost integer default 1 not null ,
+    pristupnost integer not null ,
     ident_cely text,
     stav smallint not null,
     historie integer not null,
