@@ -110,7 +110,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into dokument_autor(dokument, autor, poradi) select distinct a.id, r.id, counter from dokument a join osoba r on (r.prijmeni || ', ' || r.jmeno) = split_part(autor, ';', counter) where split_part(a.autor, ';', counter) != '';
+            insert into dokument_autor(dokument, autor, poradi) select distinct a.id, r.id, counter from dokument a join osoba r on r.vypis_cely = split_part(autor, ';', counter) where split_part(a.autor, ';', counter) != '';
         END;
     END LOOP;
 END;
@@ -121,7 +121,7 @@ drop function migrateAutorFromDokument();
 
 -- c) Test migrace
 
--- COMMENT: sloupec autor obsahuje taky hodnotu anonym ktera nejde namapovat takze se nezmigruje (14 000 zaznamu)
+-- COMMENT: sloupec autor obsahuje taky hodnotu anonym ktera nejde namapovat takze se nezmigruje (14 000 zaznamu); DN: Opraveno změnou napojení na vypis_cely.
 
 -- 4. migrace mapovani autora externiho zdroje na jejich id z heslare jmen
 
@@ -138,7 +138,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into externi_zdroj_autor(externi_zdroj, autor, poradi) select distinct a.id, r.id, counter from externi_zdroj a join osoba r on (r.prijmeni || ', ' || r.jmeno) = split_part(autori, ';', counter) where split_part(a.autori, ';', counter) != '';
+            insert into externi_zdroj_autor(externi_zdroj, autor, poradi) select distinct a.id, r.id, counter from externi_zdroj a join osoba r on r.vypis_cely = split_part(autori, ';', counter) where split_part(a.autori, ';', counter) != '';
         END;
     END LOOP;
 END;
