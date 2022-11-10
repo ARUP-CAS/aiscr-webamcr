@@ -27,7 +27,7 @@ update dokument set typ_dokumentu_posudek = substr(typ_dokumentu_posudek, 1, len
 CREATE OR REPLACE FUNCTION migratePosudkyFromDokument() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..10
+    FOR counter IN 1..20
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -157,16 +157,25 @@ update neident_akce d set dokument_cast = sub.id from (select vazba, id from dok
 update dokument_cast set vazba = null where vazba in (select id from neident_akce);
 
 -- 8. migrace externi_zdroj.sbornik_editor
-insert into externi_zdroj_editor(externi_zdroj, editor, poradi) values
-(920770,29277, 1),
-(778484,28785, 1),
-(778484,29256, 2),
-(778485,28785, 1),
-(778485,29256, 2),
-(734337,28771, 1),
-(809030,29810, 1),
-(700801,700800,1),
-(769546,29277, 1),
-(1030059,28950,1),
-(778488,28785, 1),
-(778488,29256, 2);
+
+-- a) Validace dat
+
+update externi_zdroj set sbornik_editor = substr(sbornik_editor, 1, length(sbornik_editor) - 1) where sbornik_editor like '%;';
+
+-- b) Migrace dat
+
+CREATE OR REPLACE FUNCTION migrateEditorFromExterniZdroj() RETURNS void AS $$
+DECLARE
+BEGIN
+    FOR counter IN 1..10
+    LOOP
+        RAISE NOTICE '%', counter;
+        BEGIN
+            insert into externi_zdroj_editor(externi_zdroj, editor, poradi) select distinct a.id, r.id, counter from externi_zdroj a join osoba r on r.vypis_cely = split_part(sbornik_editor, ';', counter) where split_part(a.sbornik_editor, ';', counter) != '';
+        END;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+select migrateEditorFromExterniZdroj();
+drop function migrateAutorFromExterniZdroj();
