@@ -65,10 +65,10 @@ alter table heslar_letiste add column en text;
 update heslar_letiste set en = nazev;
 -- helsar_specifikace_data TODO doplnit preklad
 alter table heslar_specifikace_data add column en text;
-update heslar_specifikace_data set en = 'translate: ' & ident_cely;
+update heslar_specifikace_data set en = 'translate: ' || ident_cely;
 -- heslar_typ_organizace TODO doplnit preklad
 alter table heslar_typ_organizace add column en text;
-update heslar_typ_organizace set en = 'translate: ' & ident_cely;
+update heslar_typ_organizace set en = 'translate: ' || ident_cely;
 
 -- COMMENT: musim odebrat key "heslar_heslo_en_key", protoze napr. preklad 'hradba' a 'val' v heslar_objekt_druh je stejny
 -- stejny problem je v heslari heslar_specifikace_objektu_druha u sloupce heslo (stribro je tam 2x), to je mozna ale chyba dat
