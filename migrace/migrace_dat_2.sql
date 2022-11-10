@@ -21,7 +21,7 @@ where akce.id = sel.id;
 
 --- odstraneni duplicit kde uz je vedouci_akce_ostatni uveden jako hlavni
 update akce set vedouci_akce_ostatni = sel.trimmed from (
-select a.id as pid, a.vedouci_akce_ostatni, REPLACE(a.vedouci_akce_ostatni, r.prijmeni || ', ' || r.jmeno, '') as trimmed from akce a join osoba r on r.id = a.vedouci_akce where a.vedouci_akce_ostatni like '%;' || r.prijmeni || ', ' || r.jmeno || '%' or a.vedouci_akce_ostatni like r.prijmeni || ', ' || r.jmeno || '%') as sel where sel.pid = akce.id;
+select a.id as pid, a.vedouci_akce_ostatni, REPLACE(a.vedouci_akce_ostatni, r.vypis_cely, '') as trimmed from akce a join osoba r on r.id = a.vedouci_akce where a.vedouci_akce_ostatni like '%;' || r.vypis_cely || '%' or a.vedouci_akce_ostatni like r.vypis_cely || '%') as sel where sel.pid = akce.id;
 
 -- Uklidit oddelovace
 update akce set vedouci_akce_ostatni = REPLACE(vedouci_akce_ostatni, ';;', ';') where vedouci_akce_ostatni like '%;;%';
@@ -41,7 +41,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into akce_vedouci(akce, vedouci, hlavni) select distinct a.id, r.id, false from akce a join osoba r on (r.prijmeni || ', ' || r.jmeno) = split_part(vedouci_akce_ostatni, ';', counter) where split_part(a.vedouci_akce_ostatni, ';', counter) != '';
+            insert into akce_vedouci(akce, vedouci, hlavni) select distinct a.id, r.id, false from akce a join osoba r on (r.vypis_cely) = split_part(vedouci_akce_ostatni, ';', counter) where split_part(a.vedouci_akce_ostatni, ';', counter) != '';
         END;
     END LOOP;
 END;
