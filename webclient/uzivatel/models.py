@@ -201,6 +201,8 @@ class Organizace(models.Model):
     class Meta:
         db_table = "organizace"
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
+        verbose_name = "Organizace"
+        verbose_name_plural = "Organizace"
 
 
 class Osoba(models.Model):
@@ -220,6 +222,8 @@ class Osoba(models.Model):
                 fields=["jmeno", "prijmeni"], name="unique jmeno a prijmeni"
             )
         ]
+        verbose_name = "Osoba"
+        verbose_name_plural = "Osoby"
 
     def __str__(self):
         return self.vypis_cely

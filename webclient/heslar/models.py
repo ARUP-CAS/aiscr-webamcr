@@ -29,6 +29,7 @@ class Heslar(models.Model):
             ("nazev_heslare", "zkratka_en"),
         )
         ordering = ["razeni"]
+        verbose_name_plural = "Heslář"
 
     def __str__(self):
         if self.heslo:
@@ -60,6 +61,7 @@ class HeslarDatace(models.Model):
 
     class Meta:
         db_table = "heslar_datace"
+        verbose_name_plural = "Heslář datace"
 
 
 class HeslarDokumentTypMaterialRada(models.Model):
@@ -121,6 +123,7 @@ class HeslarNazev(models.Model):
 
     class Meta:
         db_table = "heslar_nazev"
+        verbose_name_plural = "Heslář název"
 
 
 class HeslarOdkaz(models.Model):
@@ -132,6 +135,7 @@ class HeslarOdkaz(models.Model):
 
     class Meta:
         db_table = "heslar_odkaz"
+        verbose_name_plural = "Heslář odkaz"
 
 
 class RuianKatastr(models.Model):
