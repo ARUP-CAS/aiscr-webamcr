@@ -49,3 +49,6 @@ update heslar_objekt_druh set en = 'defensive wall' where nazev = 'hradba';
 update samostatny_nalez set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace = -1;
 update samostatny_nalez set katastr = null where katastr = -1;
 
+-- DN: Pokud je v jednotka_dokument.vazba totéž co ve vazba_druha, nastavit vazba_druha na null.
+UPDATE jednotka_dokument SET vazba_druha = Null WHERE vazba = vazba_druha;
+
