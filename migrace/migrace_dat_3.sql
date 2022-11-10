@@ -178,4 +178,4 @@ END;
 $$ LANGUAGE plpgsql;
 
 select migrateEditorFromExterniZdroj();
-drop function migrateAutorFromExterniZdroj();
+drop function migrateEditorFromExterniZdroj();
