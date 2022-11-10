@@ -100,7 +100,7 @@ ALTER TABLE projekt DROP CONSTRAINT projekt_ident_cely_key1;
 -- Nove not null constraints
 ALTER TABLE samostatny_nalez alter column projekt set not null;
 ALTER TABLE samostatny_nalez alter column pristupnost set not null;
-ALTER TABLE samostatny_nalez alter column pristupnost set default 3;
+-- ALTER TABLE samostatny_nalez alter column pristupnost set default 3;
 ALTER TABLE vazba_spoluprace alter column aktivni set not null;
 ALTER TABLE vazba_spoluprace alter column aktivni set default false;
 ALTER TABLE vazba_spoluprace alter column potvrzeno set not null;
