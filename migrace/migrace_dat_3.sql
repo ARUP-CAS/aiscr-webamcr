@@ -150,11 +150,13 @@ alter table externi_odkaz add constraint externi_odkaz_vazba_fkey foreign key (v
 --alter table let add column pilot integer;
 --alter table let add constraint let_pilot_fkey foreign key (pilot) references osoba(id);
 
--- 7. migrace referenci na neident_akci z dokument_cast.vazba do neidnet_akce.dokument_cast
+-- 7. migrace referenci na neident_akci z dokument_cast.vazba a dokument_cast.vazba_druha do neidnet_akce.dokument_cast
 
 update neident_akce d set dokument_cast = sub.id from (select vazba, id from dokument_cast where vazba in (select id from neident_akce)) sub where d.id = sub.vazba;
+update neident_akce d set dokument_cast = sub.id from (select vazba_druha, id from dokument_cast where vazba_druha in (select id from neident_akce)) sub where d.id = sub.vazba_druha;
 -- smazu reference z vazby na neident_akci
 update dokument_cast set vazba = null where vazba in (select id from neident_akce);
+update dokument_cast set vazba_druha = null where vazba_druha in (select id from neident_akce);
 
 -- 8. migrace externi_zdroj.sbornik_editor
 
