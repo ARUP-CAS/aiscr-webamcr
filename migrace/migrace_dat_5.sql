@@ -35,7 +35,7 @@ insert into nalez(komponenta, typ_nalezu, kategorie, druh_nalezu, specifikace, p
 -- TODO test migrace 9631 nalezu dokumentu zmigrovano
 
 -- 2. externi_zdroj.podnazev (migrace do nazev), oznaceni (migrace do nazev)
-UPDATE externi_zdroj SET externi_zdroj.nazev = externi_zdroj.nazev & ": " & externi_zdroj.podnazev WHERE (((externi_zdroj.podnazev) Is Not Null));
+UPDATE externi_zdroj SET externi_zdroj.nazev = externi_zdroj.nazev & ': ' & externi_zdroj.podnazev WHERE (((externi_zdroj.podnazev) Is Not Null));
 UPDATE externi_zdroj SET externi_zdroj.nazev = externi_zdroj.oznaceni WHERE (((externi_zdroj.oznaceni) Is Not Null) AND ((externi_zdroj.typ)=5));
 
 -- 3. TODO vyskovy_bod.geom co kam?
