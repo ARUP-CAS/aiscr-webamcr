@@ -3,9 +3,9 @@ ALTER TABLE "soubor" ADD COLUMN "path" varchar(100) DEFAULT 'not specified yet' 
 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
 -- TODO nezapomenout kdyz se bude precislovavat
-ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
+-- ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 1 na 857)
-ALTER TABLE "archeologicky_zaznam" ALTER COLUMN "pristupnost" SET DEFAULT 857;
+-- ALTER TABLE "archeologicky_zaznam" ALTER COLUMN "pristupnost" SET DEFAULT 857;
 
 ALTER TABLE projekt_katastr add column id serial;
 ALTER TABLE projekt_katastr rename column projekt to projekt_id;
