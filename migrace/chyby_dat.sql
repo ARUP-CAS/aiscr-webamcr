@@ -52,3 +52,9 @@ update samostatny_nalez set katastr = null where katastr = -1;
 -- DN: Pokud je v jednotka_dokument.vazba totéž co ve vazba_druha, nastavit vazba_druha na null.
 UPDATE jednotka_dokument SET vazba_druha = Null WHERE vazba = vazba_druha;
 
+-- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
+UPDATE projekt SET email = '-' WHERE (typ_projektu = 1135) and email is null;
+UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 1135) and adresa is null;
+UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 1135) and telefon is null;
+UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 1135) and odpovedna_osoba is null;
+UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 1135) and objednatel is null;
