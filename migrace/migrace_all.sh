@@ -41,8 +41,6 @@ echo "9"
 psql -d prod_zaloha -f 9_migrace_heslare_specifikace_data.sql
 echo "11"
 psql -d prod_zaloha -f 11_migrace_dokument_many_to_many.sql
-echo "12"
-psql -d prod_zaloha -f 12_migrace_fk_revision.sql
 echo "13"
 psql -d prod_zaloha -f 13_migrace_rozdeleni_tabulky_nalez.sql
 echo "14"
