@@ -1,0 +1,119 @@
+{% extends "base_logged_in.html" %}
+{% load widget_tweaks %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block head %}
+ {% endblock %}
+
+{% block content %}
+  <div class="app-entity-ext_zdroj">
+    {% include "toolbar_externi_zdroj.html" with name=toolbar_name %}
+    <form method="post" onsubmit="newEntitySubmitBtn.disabled = true; return true;">
+      {% csrf_token %}
+      <div class="card app-card-form">
+        <div class="card-header">
+          <div class="app-fx app-left">
+            {{ header }}
+          </div>
+        </div>
+        <div class="card-body">
+          {% crispy form %}
+        </div>  
+      </div>
+      <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+    </form>
+  </div>
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'js/form_fields_disabling.js' %}"></script>
+  <script>
+      window.addEventListener("DOMContentLoaded", function() {
+        var checked_field = document.getElementById("id_typ");
+        console.log(checked_field)
+        var fields = new Map()
+        fields.set("id_editori", "")
+        fields.set("id_casopis_denik_nazev", "")
+        fields.set("id_casopis_rocnik", "")
+        fields.set("id_datum_rd", "")
+        fields.set("id_paginace_titulu", "")
+        fields.set("id_sbornik_nazev", "")
+        fields.set("id_edice_rada", "")
+        fields.set("id_misto", "")
+        fields.set("id_vydavatel", "")
+        fields.set("id_isbn", "")
+        fields.set("id_issn", "")
+        fields.set("id_typ_dokumentu", "")
+        fields.set("id_organizace", "")
+        var required = new Map()
+        required.set("1115", ["id_misto"])
+        required.set("1116", ["id_editori","id_paginace_titulu","id_sbornik_nazev","id_misto"])
+        required.set("1117", ["id_casopis_denik_nazev", "id_casopis_rocnik","id_paginace_titulu"])
+        required.set("1118", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
+        required.set("1119", [])
+        var allowed = new Map()
+        allowed.set("1115", ["id_edice_rada", "id_vydavatel","id_isbn","id_misto"])
+        allowed.set("1116", ["id_editori", "id_misto","id_paginace_titulu","id_sbornik_nazev","id_edice_rada","id_vydavatel","id_isbn"])
+        allowed.set("1117", ["id_casopis_denik_nazev", "id_casopis_rocnik", "id_paginace_titulu","id_issn"])
+        allowed.set("1118", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
+        allowed.set("1119", ["id_typ_dokumentu", "id_organizace"])
+
+        ChangeFields(checked_field, fields,allowed,required);
+        checked_field.addEventListener("change", ChangeFields.bind(event, checked_field, fields,allowed,required));
+      })
+    </script>
+    <script type="text/javascript" id="js-id-create-osoba">
+      //var create autor and editor
+      var successFunctionAutor = function(settings, response) {
+        let dropdown = document.getElementById('id_autori');
+        let newOption = document.createElement('option');
+        newOption.text = response.text;
+        newOption.value = response.value;
+  
+        dropdown.add(newOption);
+        
+        $('#id_autori').selectpicker('refresh');
+        $('#id_autori').selectpicker('val', response.value);
+        dropdown.value = response.value;
+        $(settings.modalIDD).modal("hide");
+      };
+      var successFunctionEditor = function(settings, response) {
+        let dropdown = document.getElementById('id_editori');
+        let newOption = document.createElement('option');
+        newOption.text = response.text;
+        newOption.value = response.value;
+  
+        dropdown.add(newOption);
+        
+        $('#id_editori').selectpicker('refresh');
+        $('#id_editori').selectpicker('val', response.value);
+        dropdown.value = response.value;
+        $(settings.modalIDD).modal("hide");
+      };
+      window.addEventListener("DOMContentLoaded", function() {
+        var options = Object.assign(defaults, {
+          modalID: "modal-form",
+          formURL: "{% url 'heslar:create_osoba' %}",
+          formID: "create-osoba-form",
+          modalFormID: "#create-osoba-form",
+          modalIDD : "#modal-form",
+          successFunc: successFunctionAutor,
+        })
+        new Modal(options, "create-autor");
+        var options = Object.assign(defaults, {
+          modalID: "modal-form",
+          formURL: "{% url 'heslar:create_osoba' %}",
+          formID: "create-osoba-form",
+          modalFormID: "#create-osoba-form",
+          modalIDD : "#modal-form",
+          successFunc: successFunctionEditor,
+        })
+        new Modal(options, "create-editor");  
+      });
+    
+      </script>
+{% endblock %}

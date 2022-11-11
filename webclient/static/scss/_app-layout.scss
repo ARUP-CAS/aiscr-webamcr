@@ -62,6 +62,8 @@ body {
   }
 }
 
+@include setEntityTransakceColor();
+
 #app-wrapper.toggled {
   #app-page-wrapper {
     margin-left: 0;

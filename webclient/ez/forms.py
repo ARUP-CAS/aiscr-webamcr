@@ -1,0 +1,256 @@
+from django.urls import reverse
+import structlog
+
+from django import forms
+from django.utils.translation import gettext as _
+from crispy_forms.helper import FormHelper
+from crispy_forms.bootstrap import AppendedText
+from crispy_forms.layout import Div, Layout
+from dal import autocomplete
+
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+
+from .models import ExterniZdroj
+
+logger_s = structlog.get_logger(__name__)
+
+
+class ExterniZdrojForm(forms.ModelForm):
+    class Meta:
+        model = ExterniZdroj
+        fields = (
+            "typ",
+            "autori",
+            "editori",
+            "rok_vydani_vzniku",
+            "nazev",
+            "casopis_denik_nazev",
+            "casopis_rocnik",
+            "datum_rd",
+            "paginace_titulu",
+            "sbornik_nazev",
+            "edice_rada",
+            "misto",
+            "vydavatel",
+            "isbn",
+            "issn",
+            "typ_dokumentu",
+            "organizace",
+            "link",
+            "poznamka",
+            "sysno",
+        )
+
+        labels = {
+            "typ": _("externiZdroj.forms.typ.label"),
+            "autori": _("externiZdroj.forms.autori.label"),
+            "editori": _("externiZdroj.forms.editori.label"),
+            "rok_vydani_vzniku": _("externiZdroj.forms.rokVydaniVzniku.label"),
+            "nazev": _("externiZdroj.forms.nazev.label"),
+            "casopis_denik_nazev": _("externiZdroj.forms.casopisNazev.label"),
+            "casopis_rocnik": _("externiZdroj.forms.casopisRocnik.label"),
+            "datum_rd": _("externiZdroj.forms.datumRd.label"),
+            "paginace_titulu": _("externiZdroj.forms.paginaceTitulu.label"),
+            "sbornik_nazev": _("externiZdroj.forms.sbornikNazev.label"),
+            "edice_rada": _("externiZdroj.forms.ediceRada.label"),
+            "misto": _("externiZdroj.forms.misto.label"),
+            "vydavatel": _("externiZdroj.forms.vydavatel.label"),
+            "isbn": _("externiZdroj.forms.isbn.label"),
+            "issn": _("externiZdroj.forms.issn.label"),
+            "typ_dokumentu": _("externiZdroj.forms.typDokumentu.label"),
+            "organizace": _("externiZdroj.forms.organizace.label"),
+            "link": _("externiZdroj.forms.link.label"),
+            "poznamka": _("externiZdroj.forms.poznamka.label"),
+            "sysno": _("externiZdroj.forms.sysno.label"),
+        }
+
+        widgets = {
+            "typ": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "typ_dokumentu": forms.Select(
+                attrs={"class": "selectpicker", "data-live-search": "true"}
+            ),
+            "autori": forms.SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            "editori": forms.SelectMultiple(
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
+            ),
+            "rok_vydani_vzniku": forms.TextInput(),
+            "nazev": forms.Textarea(attrs={"rows": 1, "cols": 81}),
+            "casopis_denik_nazev": forms.Textarea(attrs={"rows": 1, "cols": 81}),
+            "casopis_rocnik": forms.TextInput(),
+            "datum_rd": forms.TextInput(),
+            "paginace_titulu": forms.TextInput(),
+            "sbornik_nazev": forms.Textarea(attrs={"rows": 1, "cols": 81}),
+            "edice_rada": forms.TextInput(),
+            "misto": forms.TextInput(),
+            "vydavatel": forms.TextInput(),
+            "isbn": forms.TextInput(),
+            "issn": forms.TextInput(),
+            "typ_dokumentu": forms.TextInput(),
+            "organizace": forms.TextInput(),
+            "link": forms.TextInput(),
+            "poznamka": forms.TextInput(),
+            "sysno": forms.TextInput(),
+        }
+
+        help_texts = {
+            "typ": _("externiZdroj.forms.typ.tooltip"),
+            "autori": _("externiZdroj.forms.autori.tooltip"),
+            "editori": _("externiZdroj.forms.editori.tooltip"),
+            "rok_vydani_vzniku": _("externiZdroj.forms.rokVydaniVzniku.tooltip"),
+            "nazev": _("externiZdroj.forms.nazev.tooltip"),
+            "casopis_denik_nazev": _("externiZdroj.forms.casopisNazev.tooltip"),
+            "casopis_rocnik": _("externiZdroj.forms.casopisRocnik.tooltip"),
+            "datum_rd": _("externiZdroj.forms.datumRd.tooltip"),
+            "paginace_titulu": _("externiZdroj.forms.paginaceTitulu.tooltip"),
+            "sbornik_nazev": _("externiZdroj.forms.sbornikNazev.tooltip"),
+            "edice_rada": _("externiZdroj.forms.ediceRada.tooltip"),
+            "misto": _("externiZdroj.forms.misto.tooltip"),
+            "vydavatel": _("externiZdroj.forms.vydavatel.tooltip"),
+            "isbn": _("externiZdroj.forms.isbn.tooltip"),
+            "issn": _("externiZdroj.forms.issn.tooltip"),
+            "typ_dokumentu": _("externiZdroj.forms.typDokumentu.tooltip"),
+            "organizace": _("externiZdroj.forms.organizace.tooltip"),
+            "link": _("externiZdroj.forms.link.tooltip"),
+            "poznamka": _("externiZdroj.forms.poznamka.tooltip"),
+            "sysno": _("externiZdroj.forms.sysno.tooltip"),
+        }
+
+    def __init__(
+        self, *args, required=None, required_next=None, readonly=False, **kwargs
+    ):
+        super(ExterniZdrojForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        if readonly:
+            autori = Div(
+                "autori",
+                css_class="col-sm-4",
+            )
+            editori = Div("editori", css_class="col-sm-4")
+        else:
+            autori = Div(
+                AppendedText(
+                    "autori",
+                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                ),
+                css_class="col-sm-4 input-osoba",
+            )
+            editori = Div(
+                AppendedText(
+                    "editori",
+                    '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                ),
+                css_class="col-sm-4 input-osoba",
+            )
+
+        self.helper.layout = Layout(
+            Div(
+                Div("typ", css_class="col-sm-2"),
+                autori,
+                editori,
+                Div("rok_vydani_vzniku", css_class="col-sm-2"),
+                Div("nazev", css_class="col-sm-12"),
+                Div("casopis_denik_nazev", css_class="col-sm-6"),
+                Div(
+                    "casopis_rocnik",
+                    css_class="col-sm-2",
+                ),
+                Div("datum_rd", css_class="col-sm-2"),
+                Div("paginace_titulu", css_class="col-sm-2"),
+                Div("sbornik_nazev", css_class="col-sm-12"),
+                Div("edice_rada", css_class="col-sm-4"),
+                Div("misto", css_class="col-sm-2"),
+                Div("vydavatel", css_class="col-sm-2"),
+                Div("isbn", css_class="col-sm-2"),
+                Div("issn", css_class="col-sm-2"),
+                Div("typ_dokumentu", css_class="col-sm-2"),
+                Div("organizace", css_class="col-sm-2"),
+                Div("link", css_class="col-sm-8"),
+                Div("poznamka", css_class="col-sm-10"),
+                Div("sysno", css_class="col-sm-2"),
+                css_class="row",
+            ),
+        )
+        self.helper.form_tag = False
+
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+            if required or required_next:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"] = str(
+                        self.fields[key].widget.attrs["class"]
+                    ) + (" required-next" if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"] = (
+                        "required-next" if key in required_next else ""
+                    )
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled == True:
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
+
+
+class ExterniOdkazForm(forms.ModelForm):
+    class Meta:
+        model = ExterniOdkaz
+        fields = ("paginace",)
+        labels = {
+            "paginace": _("externiOdkaz.forms.paginace.label"),
+        }
+        widgets = {
+            "paginace": forms.TextInput(),
+        }
+
+    def __init__(self, type_arch=None, *args, **kwargs):
+        super(ExterniOdkazForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
+    def __init__(self, type_arch=None, *args, **kwargs):
+        super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
+        logger_s.debug(type_arch)
+        if type_arch == "akce":
+            new_choices = list(
+                ArcheologickyZaznam.objects.filter(
+                    typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+                ).values_list("id", "ident_cely")
+            )
+        else:
+            new_choices = list(
+                ArcheologickyZaznam.objects.filter(
+                    typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+                ).values_list("id", "ident_cely")
+            )
+        logger_s.debug(new_choices)
+        self.fields["arch_z"] = forms.ChoiceField(
+            label=_("externiZdroj.forms.vyberArchz.label"),
+            choices=new_choices,
+            widget=autocomplete.ListSelect2(
+                url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})
+            ),
+        )
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("arch_z", css_class="col-sm-8"),
+                Div("paginace", css_class="col-sm-4"),
+                css_class="row",
+            ),
+        )
+        self.helper.form_tag = False

@@ -1,11 +1,33 @@
+import logging
 from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar
-from historie.models import HistorieVazby
+from historie.models import Historie, HistorieVazby
 from uzivatel.models import Osoba
+from core.constants import (
+    EZ_STAV_ODESLANY,
+    EZ_STAV_POTVRZENY,
+    EZ_STAV_ZAPSANY,
+    IDENTIFIKATOR_DOCASNY_PREFIX,
+    POTVRZENI_EXT_ZD,
+    VRACENI_EXT_ZD,
+    ZAPSANI_EXT_ZD,
+)
+from core.exceptions import MaximalIdentNumberError
+
+logger = logging.getLogger(__name__)
 
 
 class ExterniZdroj(models.Model):
+
+    STATES = (
+        (EZ_STAV_ZAPSANY, _("EZ1 - Zapsána")),
+        (EZ_STAV_ODESLANY, _("EZ2 - Odeslána")),
+        (EZ_STAV_POTVRZENY, _("EZ3 - Potvrzená")),
+    )
+
     sysno = models.TextField(blank=True, null=True)
     typ = models.ForeignKey(
         Heslar,
@@ -37,16 +59,104 @@ class ExterniZdroj(models.Model):
     issn = models.TextField(blank=True, null=True)
     link = models.TextField(blank=True, null=True)
     datum_rd = models.TextField(blank=True, null=True)
-    stav = models.SmallIntegerField()
+    stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, blank=True, null=True)
-    final_cj = models.BooleanField()
+    final_cj = models.BooleanField(blank=True, null=True)
     historie = models.ForeignKey(
         HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
+    )
+    autori = models.ManyToManyField(
+        Osoba, through="ExterniZdrojAutor", related_name="ez_autori"
+    )
+    editori = models.ManyToManyField(
+        Osoba,
+        through="ExterniZdrojEditor",
+        related_name="ez_editori",
+        blank=True,
+        null=True,
     )
 
     class Meta:
         db_table = "externi_zdroj"
+
+    def get_absolute_url(self):
+        return reverse(
+            "ez:detail",
+            kwargs={"slug": self.ident_cely},
+        )
+
+    def set_odeslany(self, user):
+        self.stav = EZ_STAV_ODESLANY
+        Historie(
+            typ_zmeny=ZAPSANI_EXT_ZD,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_vraceny(self, user, new_state, poznamka):
+        self.stav = new_state
+        Historie(
+            typ_zmeny=VRACENI_EXT_ZD,
+            uzivatel=user,
+            poznamka=poznamka,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_potvrzeny(self, user):
+        self.stav = EZ_STAV_POTVRZENY
+        if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            self.ident_cely = get_ez_ident()
+        Historie(
+            typ_zmeny=POTVRZENI_EXT_ZD,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+    def set_zapsany(self, user):
+        self.stav = EZ_STAV_ZAPSANY
+        Historie(
+            typ_zmeny=ZAPSANI_EXT_ZD,
+            uzivatel=user,
+            vazba=self.historie,
+        ).save()
+        self.save()
+
+
+def get_ez_ident(temp=False):
+    MAXIMAL: int = 9999999
+    # [BIB]-[pořadové číslo v sedmimístném formátu]
+    if temp:
+        prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + "BIB-")
+    else:
+        prefix = "BIB-"
+    ez = ExterniZdroj.objects.filter(
+        ident_cely__regex="^" + prefix + "\\d{7}$"
+    ).order_by("-ident_cely")
+    if ez.filter(ident_cely=str(prefix + "0000001")).count() == 0:
+        return prefix + "0000001"
+    else:
+        # temp number from empty spaces
+        idents = list(ez.values_list("ident_cely", flat=True).order_by("ident_cely"))
+        idents = [sub.replace(prefix, "") for sub in idents]
+        idents = [sub.lstrip("0") for sub in idents]
+        idents = [eval(i) for i in idents]
+        start = idents[0]
+        end = MAXIMAL
+        missing = sorted(set(range(start, end + 1)).difference(idents))
+        logger.debug(missing[0])
+        if missing[0] >= MAXIMAL:
+            logger.error(
+                "Maximal number of temporary document ident is "
+                + str(MAXIMAL)
+                + "for given region and rada"
+            )
+            raise MaximalIdentNumberError(MAXIMAL)
+        sequence = str(missing[0]).zfill(7)
+        return prefix + sequence
 
 
 class ExterniZdrojAutor(models.Model):
@@ -54,7 +164,7 @@ class ExterniZdrojAutor(models.Model):
         ExterniZdroj, models.DO_NOTHING, db_column="externi_zdroj", primary_key=True
     )
     autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
-    poradi = models.IntegerField()
+    poradi = models.IntegerField(null=True)
 
     class Meta:
         db_table = "externi_zdroj_autor"
@@ -66,7 +176,7 @@ class ExterniZdrojEditor(models.Model):
         ExterniZdroj, models.DO_NOTHING, db_column="externi_zdroj", primary_key=True
     )
     editor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="editor")
-    poradi = models.IntegerField()
+    poradi = models.IntegerField(null=True)
 
     class Meta:
         db_table = "externi_zdroj_editor"

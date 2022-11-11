@@ -34,6 +34,10 @@ PIAN_POTVRZEN: Final = 2
 # Uzivatel_spoluprace
 SPOLUPRACE_NEAKTIVNI: Final = 1
 SPOLUPRACE_AKTIVNI: Final = 2
+# Externi zdroje
+EZ_STAV_ZAPSANY: Final = 1
+EZ_STAV_ODESLANY: Final = 2
+EZ_STAV_POTVRZENY: Final = 3
 
 # Transakce historie
 # Projekty
@@ -92,8 +96,8 @@ SPOLUPRACE_AKTIVACE: Final = "SP12"
 SPOLUPRACE_DEAKTIVACE: Final = "SP-1"
 
 # Externi_zdroj
-IMPORT_EXT_ZD: Final = "EZ01"  # 1
-ZAPSANI_EXT_ZD: Final = "EZ12"  # 2
+ZAPSANI_EXT_ZD: Final = "EZ01"  # 1
+ODESLANI_EXT_ZD: Final = "EZ12"  # 2
 POTVRZENI_EXT_ZD: Final = "EZ23"  # 3
 VRACENI_EXT_ZD: Final = "EZ-1"  # New
 

@@ -236,20 +236,22 @@ class ArcheologickyZaznam(models.Model):
             self.ident_cely = prefix + "0000001"
         else:
             # number from empty spaces
-            sequence = l[l.count() - 1].ident_cely[-7:]
-            logger.warning(sequence)
-            while True:
-                if l.filter(ident_cely=prefix + sequence).exists():
-                    sequence = str(int(sequence) + 1).zfill(7)
-                else:
-                    break
-            if int(sequence) >= MAXIMAL:
+            idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
+            idents = [sub.replace(prefix, "") for sub in idents]
+            idents = [sub.lstrip("0") for sub in idents]
+            idents = [eval(i) for i in idents]
+            start = idents[0]
+            end = MAXIMAL
+            missing = sorted(set(range(start, end + 1)).difference(idents))
+            logger.debug(missing[0])
+            if missing[0] >= MAXIMAL:
                 logger.error(
-                    "Maximal number of lokalita ident is "
+                    "Maximal number of temporary document ident is "
                     + str(MAXIMAL)
-                    + "for given region and typ"
+                    + "for given region and rada"
                 )
                 raise MaximalIdentNumberError(MAXIMAL)
+            sequence = str(missing[0]).zfill(7)
             self.ident_cely = prefix + sequence
         self.save()
 
@@ -279,7 +281,9 @@ class ArcheologickyZaznam(models.Model):
             if dj_ident_cely is None:
                 return reverse("lokalita:detail", kwargs={"slug": self.ident_cely})
             else:
-                return reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely])
+                return reverse(
+                    "lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely]
+                )
 
     def get_redirect(self, dj_ident_cely=None):
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -293,7 +297,15 @@ class ArcheologickyZaznam(models.Model):
             if dj_ident_cely is None:
                 return redirect(reverse("lokalita:detail", self.ident_cely))
             else:
-                return redirect(reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely]))
+                return redirect(
+                    reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely])
+                )
+
+    def __str__(self):
+        if self.ident_cely:
+            return self.ident_cely
+        else:
+            return "[ident_cely not yet assigned]"
 
 
 class ArcheologickyZaznamKatastr(models.Model):
@@ -440,7 +452,7 @@ def get_akce_ident(region, temp=None):
         idents = [sub.lstrip("0") for sub in idents]
         idents = [eval(i) for i in idents]
         start = idents[0]
-        end = idents[-1]
+        end = MAXIMAL
         missing = sorted(set(range(start, end + 1)).difference(idents))
         logger.debug(missing[0])
         if missing[0] >= MAXIMAL:

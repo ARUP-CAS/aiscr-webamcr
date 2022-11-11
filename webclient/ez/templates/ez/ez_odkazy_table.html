@@ -1,0 +1,41 @@
+{% load i18n %}
+{% load template_filters %}
+<div class="card app-card-form app-card-{{card_type}} app-table-list-container">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {{tableLabel}}
+      </div>
+      {% if show.editovat %}
+      <div class="app-fx app-right">
+        <div class="btn-group" role="group">
+          <button class="btn" id="eo-pripojit-{{card_type}}" type="button" type="button" rel="tooltip" data-placement="top" title="{{pridatLabel}}" name="button" href="{% url 'ez:pripojit_eo' zaznam.ident_cely %}?type={{ card_type | urlencode }}">
+            <span class="material-icons">add</span>
+          </button>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+        <div class="card-body">
+    {% if zaznamy %}
+    {%include "ez/ez_odkazy_table_only.html"%}
+    {% else %}
+    <div class="app-note">
+      <span class="material-icons">info</span>
+      {{tabletext}}
+    </div>
+    {% endif %}
+  </div>
+</div>
+<script>
+  //modal scripts
+  document.addEventListener('DOMContentLoaded', function (event) {
+    if ("{{show.editovat}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "pripojit-eo-form",
+        modalFormID: "#pripojit-eo-form",
+      })
+      dokument_pripojit_modal = new Modal(options, "eo-pripojit-{{card_type}}");
+    };
+});
+
+</script>

@@ -1,1 +1,468 @@
-# Create your views here.
+import logging
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+
+import structlog
+from core.views import ExportMixinDate, check_stav_changed
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.translation import gettext as _
+from django.views.generic import DetailView, TemplateView
+from django.contrib import messages
+from django.views.generic.edit import CreateView, UpdateView
+from django_filters.views import FilterView
+from django_tables2 import SingleTableMixin
+from core.constants import (
+    EZ_STAV_ODESLANY,
+    EZ_STAV_POTVRZENY,
+    EZ_STAV_ZAPSANY,
+    ODESLANI_EXT_ZD,
+    POTVRZENI_EXT_ZD,
+    ZAPSANI_EXT_ZD,
+)
+
+from core.forms import CheckStavNotChangedForm, VratitForm
+from core.message_constants import (
+    EO_USPESNE_SMAZAN,
+    EZ_USPESNE_ODESLAN,
+    EZ_USPESNE_POTVRZEN,
+    EZ_USPESNE_VRACENA,
+    EZ_USPESNE_ZAPSAN,
+    PRISTUP_ZAKAZAN,
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
+    ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
+    ZAZNAM_USPESNE_EDITOVAN,
+    ZAZNAM_USPESNE_SMAZAN,
+)
+from core.exceptions import MaximalIdentNumberError
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.utils import get_message
+from .filters import ExterniZdrojFilter
+
+# from .forms import LokalitaForm
+from .models import ExterniZdroj, get_ez_ident
+from .tables import ExterniZdrojTable
+from .forms import ExterniOdkazForm, ExterniZdrojForm, PripojitArchZaznamForm
+
+logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
+
+
+class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
+    template_name = "ez/index.html"
+
+
+class ExterniZdrojListView(
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
+):
+    table_class = ExterniZdrojTable
+    model = ExterniZdroj
+    template_name = "search_list.html"
+    filterset_class = ExterniZdrojFilter
+    paginate_by = 100
+    export_name = "export_lokalita_"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = ["csv", "json", "xlsx"]
+        context["page_title"] = _("externiZdroj.vyber.pageTitle")
+        context["app"] = "ext_zdroj"
+        context["toolbar"] = "toolbar_externi_zdroj.html"
+        context["search_sum"] = _("externiZdroj.vyber.pocetVyhledanych")
+        context["pick_text"] = _("externiZdroj.vyber.pickText")
+        context["hasOnlyVybrat_header"] = _("externiZdroj.vyber.header.hasOnlyVybrat")
+        context["hasOnlyVlastnik_header"] = _(
+            "externiZdroj.vyber.header.hasOnlyVlastnik"
+        )
+        context["hasOnlyArchive_header"] = _("externiZdroj.vyber.header.hasOnlyArchive")
+        context["hasOnlyPotvrdit_header"] = _(
+            "externiZdroj.vyber.header.hasOnlyPotvrdit"
+        )
+        context["default_header"] = _("externiZdroj.vyber.header.default")
+        return context
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs
+
+
+class ExterniZdrojDetailView(DetailView, LoginRequiredMixin):
+    model = ExterniZdroj
+    template_name = "ez/detail.html"
+    slug_field = "ident_cely"
+
+    def get_context_data(self, **kwargs):
+        context = {}
+        zaznam = self.get_object()
+        ez_odkazy = ExterniOdkaz.objects.filter(externi_zdroj=zaznam)
+        ez_akce = (
+            ez_odkazy.filter(
+                archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+            )
+            .select_related("archeologicky_zaznam")
+            .select_related("archeologicky_zaznam__akce")
+        )
+        ez_lokality = (
+            ez_odkazy.filter(
+                archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            )
+            .select_related("archeologicky_zaznam")
+            .select_related("archeologicky_zaznam__lokalita")
+        )
+        context["form"] = ExterniZdrojForm(
+            instance=zaznam, readonly=True, required=False
+        )
+        context["zaznam"] = zaznam
+        context["app"] = "ext_zdroj"
+        context["page_title"] = _("externiZdroj.detail.pageTitle")
+        context["toolbar_name"] = _("externiZdroj.detail.toolbar.title")
+        context["toolbar_label"] = _("externiZdroj.detail.toolbar.label")
+        context["history_dates"] = get_history_dates(zaznam.historie)
+        context["show"] = get_detail_template_shows(zaznam)
+        context["ez_akce"] = ez_akce
+        context["ez_lokality"] = ez_lokality
+        return context
+
+
+class ExterniZdrojCreateView(CreateView, LoginRequiredMixin):
+    model = ExterniZdroj
+    template_name = "ez/create.html"
+    form_class = ExterniZdrojForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        logger_s.debug("context is called")
+        required_fields = get_required_fields()
+        context["form"] = ExterniZdrojForm(
+            data=self.request.POST if self.request.POST else None,
+            required=required_fields,
+            required_next=required_fields,
+        )
+        context["toolbar_name"] = _("externiZdroj.zapsat.toolbar.title")
+        context["toolbar_label"] = _("externiZdroj.zapsat.toolbar.label")
+        context["page_title"] = _("externiZdroj.zapsat.pageTitle")
+        context["header"] = _("externiZdroj.zapsat.formHeader.label")
+        return context
+
+    def form_valid(self, form):
+        ez = form.save(commit=False)
+        try:
+            ez.ident_cely = get_ez_ident(temp=True)
+        except MaximalIdentNumberError as e:
+            logger_s.debug("Maximum lokalit dosazeno")
+            messages.add_message(self.request, messages.ERROR, e.message)
+            return self.form_invalid(form)
+        ez.stav = EZ_STAV_ZAPSANY
+        ez.save()
+        ez.set_zapsany(self.request.user)
+        messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
+        logger_s.debug("main form is invalid")
+        logger_s.debug(form.errors)
+        return super().form_invalid(form)
+
+
+class ExterniZdrojEditView(UpdateView, LoginRequiredMixin):
+    model = ExterniZdroj
+    template_name = "ez/create.html"
+    form_class = ExterniZdrojForm
+    slug_field = "ident_cely"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        required_fields = get_required_fields()
+        context["form"] = ExterniZdrojForm(
+            instance=self.object,
+            required=required_fields,
+            required_next=required_fields,
+        )
+
+        context["toolbar_name"] = _("externiZdroj.edit.toolbar.title")
+        context["toolbar_label"] = _("externiZdroj.edit.toolbar.label")
+        context["page_title"] = _("externiZdroj.edit.pageTitle")
+        context["header"] = _("externiZdroj.edit.formHeader.label")
+        return context
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        logger_s.debug("main form is invalid")
+        logger_s.debug(form.errors)
+        return super().form_invalid(form)
+
+
+class TransakceView(LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+    title = "title"
+    id_tag = "id_tag"
+    button = "button"
+    allowed_states = []
+    success_message = "success"
+    action = ""
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        logger.debug(ident_cely)
+        return get_object_or_404(
+            ExterniZdroj,
+            ident_cely=ident_cely,
+        )
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.stav})
+        context = {
+            "object": zaznam,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+            "form_check": form_check,
+        }
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        if zaznam.stav not in self.allowed_states:
+            logger.debug("state not allowed for action: %s", self.action)
+            messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+            return JsonResponse(
+                {"redirect": zaznam.get_absolute_url()},
+                status=403,
+            )
+        if check_stav_changed(request, zaznam):
+            return JsonResponse(
+                {"redirect": zaznam.get_absolute_url()},
+                status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        zaznam = context["object"]
+        getattr(ExterniZdroj, self.action)(zaznam, request.user)
+        messages.add_message(request, messages.SUCCESS, self.success_message)
+
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
+
+class ExterniZdrojOdeslatView(TransakceView):
+    title = _("externiZdroj.modalForm.odeslat.title.text")
+    id_tag = "odeslat-ez-form"
+    button = _("externiZdroj.modalForm.odeslat.submit.button")
+    allowed_states = [EZ_STAV_ZAPSANY]
+    success_message = EZ_USPESNE_ODESLAN
+    action = "set_odeslany"
+
+
+class ExterniZdrojPotvrditView(TransakceView):
+    title = _("externiZdroj.modalForm.potvrdit.title.text")
+    id_tag = "potvrdit-ez-form"
+    button = _("externiZdroj.modalForm.potvrdit.submit.button")
+    allowed_states = [EZ_STAV_ODESLANY]
+    success_message = EZ_USPESNE_POTVRZEN
+    action = "set_potvrzeny"
+
+
+class ExterniZdrojSmazatView(TransakceView):
+    title = _("externiZdroj.modalForm.smazat.title.text")
+    id_tag = "smazat-ez-form"
+    button = _("externiZdroj.modalForm.smazat.submit.button")
+    allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
+    success_message = ZAZNAM_USPESNE_SMAZAN
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        zaznam = context["object"]
+        historie_vazby = zaznam.historie
+        zaznam.delete()
+        historie_vazby.delete()
+        messages.add_message(request, messages.SUCCESS, self.success_message)
+        return JsonResponse({"redirect": reverse("ez:index")})
+
+
+class ExterniZdrojVratitView(TransakceView):
+    title = _("externiZdroj.modalForm.vratit.title.text")
+    id_tag = "vratit-ez-form"
+    button = _("externiZdroj.modalForm.vratit.submit.button")
+    allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY]
+    success_message = EZ_USPESNE_VRACENA
+    action = "set_vraceny"
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        form = VratitForm(initial={"old_stav": context["object"].stav})
+        context["form"] = form
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        zaznam = context["object"]
+        form = VratitForm(request.POST)
+        if form.is_valid():
+            duvod = form.cleaned_data["reason"]
+            getattr(ExterniZdroj, self.action)(
+                zaznam, request.user, zaznam.stav - 1, duvod
+            )
+            messages.add_message(request, messages.SUCCESS, self.success_message)
+
+            return JsonResponse({"redirect": zaznam.get_absolute_url()})
+        else:
+            logger.debug("The form is not valid")
+            logger.debug(form.errors)
+            return self.render_to_response(context)
+
+
+class ExterniOdkazOdpojitView(TransakceView):
+    title = _("externiZdroj.modalForm.odpojitAZ.title.text")
+    id_tag = "odpojit-az-form"
+    button = _("externiZdroj.modalForm.odpojitAZ.submit.button")
+    allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
+    success_message = EO_USPESNE_SMAZAN
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = get_object_or_404(
+            ArcheologickyZaznam,
+            externi_odkazy__id=self.kwargs.get("eo_id"),
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        ez = self.get_zaznam()
+        eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
+        eo.delete()
+        messages.add_message(request, messages.SUCCESS, self.success_message)
+        return JsonResponse({"redirect": ez.get_absolute_url()})
+
+
+class ExterniOdkazPripojitView(TransakceView):
+    template_name = "core/transakce_table_modal.html"
+    title = _("externiZdroj.modalForm.pripojitAZ.title.text")
+    id_tag = "pripojit-eo-form"
+    button = _("externiZdroj.modalForm.pripojitAZ.submit.button")
+    allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        type_arch = self.request.GET.get("type")
+        form = PripojitArchZaznamForm(type_arch=type_arch)
+        context["form"] = form
+        context["hide_table"] = True
+        context["type"] = type_arch
+        context["card_type"] = type_arch
+        return context
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        ez = self.get_zaznam()
+        form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
+        if form.is_valid():
+            arch_z_id = form.cleaned_data["arch_z"]
+            arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
+            eo = ExterniOdkaz.objects.create(
+                externi_zdroj=ez,
+                paginace=form.cleaned_data["paginace"],
+                archeologicky_zaznam=arch_z,
+            )
+            eo.save()
+            messages.add_message(
+                request, messages.SUCCESS, get_message(arch_z, "EO_USPESNE_PRIPOJEN")
+            )
+        else:
+            logger.debug("not valid")
+            logger.debug(form.errors)
+        return JsonResponse({"redirect": ez.get_absolute_url()})
+
+
+class ExterniOdkazEditView(UpdateView, LoginRequiredMixin):
+    model = ExterniOdkaz
+    template_name = "core/transakce_modal.html"
+    title = _("externiZdroj.modalForm.zmeniPaginaci.title.text")
+    id_tag = "zmenit-eo-form"
+    button = _("externiZdroj.modalForm.zmeniPaginaci.submit.button")
+    allowed_states = []
+    success_message = "success"
+    form_class = ExterniOdkazForm
+    slug_field = "id"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        zaznam = self.object
+        context = {
+            "object": zaznam,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+        }
+        context["form"] = ExterniOdkazForm(
+            instance=self.object,
+        )
+        return context
+
+    def get_success_url(self):
+        context = self.get_context_data()
+        eo = context["object"]
+        return eo.externi_zdroj.get_absolute_url()
+
+    def post(self, request, *args, **kwargs):
+        super().post(request, *args, **kwargs)
+        return JsonResponse({"redirect": self.get_success_url()})
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        logger_s.debug("main form is invalid")
+        logger_s.debug(form.errors)
+        return super().form_invalid(form)
+
+
+def get_history_dates(historie_vazby):
+    historie = {
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD),
+        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_EXT_ZD),
+    }
+    return historie
+
+
+def get_detail_template_shows(zaznam):
+    show_vratit = zaznam.stav > EZ_STAV_ZAPSANY
+    show_odeslat = zaznam.stav == EZ_STAV_ZAPSANY
+    show_potvrdit = zaznam.stav == EZ_STAV_ODESLANY
+    show_edit = zaznam.stav not in []
+    show_arch_links = zaznam.stav == EZ_STAV_POTVRZENY
+    show_ez_odkazy = True
+    show_paginace = True
+    show = {
+        "vratit_link": show_vratit,
+        "odeslat_link": show_odeslat,
+        "potvrdit_link": show_potvrdit,
+        "editovat": show_edit,
+        "arch_links": show_arch_links,
+        "ez_odkazy": show_ez_odkazy,
+        "paginace": show_paginace,
+    }
+    return show
+
+
+def get_required_fields():
+    required_fields = [
+        "typ",
+        "autori",
+        "rok_vydani_vzniku",
+        "nazev",
+    ]
+    return required_fields

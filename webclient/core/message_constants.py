@@ -120,3 +120,14 @@ LOKALITA_USPESNE_VRACENA: Final = _("lokalita.message.uspesneVracena.text")
 LOKALITA_NELZE_ODESLAT: Final = _("lokalita.message.nelzeOdeslat.text")
 LOKALITA_NELZE_ARCHIVOVAT: Final = _("lokalita.message.nelzeArchivovat.text")
 LOKALITA_NEKDO_ZMENIL_STAV: Final = _("lokalita.message.zmenaStavuNekymJinym.text")
+
+# Externi zdroj
+EZ_USPESNE_ZAPSAN: Final = _("externiZdroj.message.uspesneZapsan.text")
+EZ_USPESNE_ODESLAN: Final = _("externiZdroj.message.uspesneOdeslan.text")
+EZ_USPESNE_POTVRZEN: Final = _("externiZdroj.message.uspesnePotvrzen.text")
+EZ_USPESNE_VRACENA: Final = _("externiZdroj.message.uspesneVracen.text")
+EO_USPESNE_SMAZAN: Final = _("externiZdroj.message.uspesneSmazanEO.text")
+AKCE_EO_USPESNE_PRIPOJEN: Final = _("externiZdroj.message.uspesnePripojenaAkceEO.text")
+LOKALITA_EO_USPESNE_PRIPOJEN: Final = _(
+    "externiZdroj.message.uspesnePripojenaLokalitaEO.text"
+)
