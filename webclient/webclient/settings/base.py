@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "django_cron",
     "lokalita",
     "bs4",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
