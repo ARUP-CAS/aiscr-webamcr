@@ -30,7 +30,8 @@ class CustomUserAdmin(UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
-                    "groups"
+                    "groups",
+                    "user_permissions",
                 )
             },
         ),

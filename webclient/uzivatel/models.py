@@ -28,6 +28,7 @@ from django.db import models
 from django.db.models import DEFERRED
 from django.db.models.functions import Collate
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
@@ -168,32 +169,34 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Organizace(models.Model):
-    nazev = models.TextField()
-    nazev_zkraceny = models.TextField()
+    nazev = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev"))
+    nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
     typ_organizace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.PROTECT,
         db_column="typ_organizace",
         related_name="typy_organizaci",
-        null=True
+        null=True,
+        verbose_name=_("uzivatel.models.Organizace.typ_organizace")
     )
-    oao = models.BooleanField(default=False)
-    mesicu_do_zverejneni = models.IntegerField(default=36)
+    oao = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.oao"))
+    mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.PROTECT,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
-        null=True
+        null=True,
+        verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost")
     )
-    nazev_zkraceny_en = models.TextField(blank=True, null=True)
-    email = models.TextField(blank=True, null=True)
-    telefon = models.TextField(blank=True, null=True)
-    adresa = models.TextField(blank=True, null=True)
-    ico = models.TextField(blank=True, null=True)
+    nazev_zkraceny_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny_en"))
+    email = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.email"))
+    telefon = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"))
+    adresa = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"))
+    ico = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"))
     # soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
-    nazev_en = models.TextField(blank=True, null=True)
-    zanikla = models.BooleanField(blank=True, null=True)
+    nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
+    zanikla = models.BooleanField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.zanikla"))
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -201,16 +204,18 @@ class Organizace(models.Model):
     class Meta:
         db_table = "organizace"
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
+        verbose_name = "Organizace"
+        verbose_name_plural = "Organizace"
 
 
 class Osoba(models.Model):
-    jmeno = models.TextField()
-    prijmeni = models.TextField()
-    vypis = models.TextField()
-    vypis_cely = models.TextField()
-    rok_narozeni = models.IntegerField(blank=True, null=True)
-    rok_umrti = models.IntegerField(blank=True, null=True)
-    rodne_prijmeni = models.TextField(blank=True, null=True)
+    jmeno = models.TextField(verbose_name=_("uzivatel.models.Osoba.jmeno"))
+    prijmeni = models.TextField(verbose_name=_("uzivatel.models.Osoba.prijmeni"))
+    vypis = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis"))
+    vypis_cely = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"))
+    rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
+    rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
+    rodne_prijmeni = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"))
 
     class Meta:
         db_table = "osoba"
@@ -220,6 +225,8 @@ class Osoba(models.Model):
                 fields=["jmeno", "prijmeni"], name="unique jmeno a prijmeni"
             )
         ]
+        verbose_name = "Osoba"
+        verbose_name_plural = "Osoby"
 
     def __str__(self):
         return self.vypis_cely
