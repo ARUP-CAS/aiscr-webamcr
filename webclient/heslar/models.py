@@ -24,7 +24,7 @@ class HeslarBaseClass:
             last_object = objects.filter(ident_cely__isnull=False).order_by("ident_cely").last()
             if last_object is not None:
                 if hasattr(last_object, "ident_cely"):
-                    ident_number = int(last_object.ident_cely.replace(f"{self.ident_prefix}-")) + 1
+                    ident_number = int(last_object.ident_cely[-6:]) + 1
         except:
             logger_s.error("HeslarBaseClass.save.get_pian.error")
         return f"{self.ident_prefix}-{ident_number:06}"
