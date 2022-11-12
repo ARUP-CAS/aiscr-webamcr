@@ -15,22 +15,7 @@ from heslar.hesla import (
 logger_s = structlog.get_logger(__name__)
 
 
-class HeslarBaseClass:
-    ident_prefix = "HES"
-
-    def get_ident(self, objects):
-        ident_number = 1
-        try:
-            last_object = objects.filter(ident_cely__isnull=False).order_by("ident_cely").last()
-            if last_object is not None:
-                if hasattr(last_object, "ident_cely"):
-                    ident_number = int(last_object.ident_cely[-6:]) + 1
-        except:
-            logger_s.error("HeslarBaseClass.save.get_pian.error")
-        return f"{self.ident_prefix}-{ident_number:06}"
-
-
-class Heslar(models.Model, HeslarBaseClass):
+class Heslar(models.Model):
     ident_cely = models.TextField(unique=True, blank=True, null=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
         "HeslarNazev", models.DO_NOTHING, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
@@ -61,13 +46,8 @@ class Heslar(models.Model, HeslarBaseClass):
         else:
             return ""
 
-    def save(self, *args, **kwargs):
-        if self._state.adding:
-            self.ident_cely = self.get_ident(Heslar.objects.all())
-        super().save(*args, **kwargs)
 
-
-class HeslarDatace(models.Model, HeslarBaseClass):
+class HeslarDatace(models.Model):
     obdobi = models.OneToOneField(
         Heslar,
         models.DO_NOTHING,
@@ -95,7 +75,7 @@ class HeslarDatace(models.Model, HeslarBaseClass):
         verbose_name_plural = "Heslář datace"
 
 
-class HeslarDokumentTypMaterialRada(models.Model, HeslarBaseClass):
+class HeslarDokumentTypMaterialRada(models.Model):
     dokument_rada = models.ForeignKey(
         Heslar,
         models.PROTECT,
@@ -131,7 +111,7 @@ class HeslarDokumentTypMaterialRada(models.Model, HeslarBaseClass):
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
 
-class HeslarHierarchie(models.Model, HeslarBaseClass):
+class HeslarHierarchie(models.Model):
     TYP_CHOICES = [
         ('PO', _('HeslarHierarchie.TYP_CHOICES.podrizenost')),
         ('UP', _('HeslarHierarchie.TYP_CHOICES.uplatneni')),
@@ -157,7 +137,7 @@ class HeslarHierarchie(models.Model, HeslarBaseClass):
         verbose_name_plural = "Heslář hierarchie"
 
 
-class HeslarNazev(models.Model, HeslarBaseClass):
+class HeslarNazev(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.HeslarNazev.nazev"))
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
@@ -169,7 +149,7 @@ class HeslarNazev(models.Model, HeslarBaseClass):
         verbose_name_plural = "Heslář název"
 
 
-class HeslarOdkaz(models.Model, HeslarBaseClass):
+class HeslarOdkaz(models.Model):
     heslo = models.ForeignKey(Heslar, models.PROTECT, db_column="heslo", verbose_name=_("heslar.models.HeslarOdkaz.heslo"))
     zdroj = models.TextField(verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
     nazev_kodu = models.TextField(verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
@@ -181,7 +161,7 @@ class HeslarOdkaz(models.Model, HeslarBaseClass):
         verbose_name_plural = "Heslář odkaz"
 
 
-class RuianKatastr(models.Model, HeslarBaseClass):
+class RuianKatastr(models.Model):
     okres = models.ForeignKey("RuianOkres", models.PROTECT, db_column="okres", verbose_name=_("heslar.models.RuianKatastr.okres"))
     aktualni = models.BooleanField(verbose_name=_("heslar.models.RuianKatastr.aktualni"))
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"))
@@ -204,7 +184,7 @@ class RuianKatastr(models.Model, HeslarBaseClass):
         return self.nazev + " (" + self.okres.nazev + ")"
 
 
-class RuianKraj(models.Model, HeslarBaseClass):
+class RuianKraj(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
@@ -221,7 +201,7 @@ class RuianKraj(models.Model, HeslarBaseClass):
         return self.nazev
 
 
-class RuianOkres(models.Model, HeslarBaseClass):
+class RuianOkres(models.Model):
     nazev = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev"))
     kraj = models.ForeignKey(RuianKraj, models.PROTECT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
     spz = models.CharField(max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
