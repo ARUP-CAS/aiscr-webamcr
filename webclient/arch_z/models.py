@@ -8,6 +8,8 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
+    EZ_STAV_ODESLANY,
+    EZ_STAV_ZAPSANY,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_AZ,
     PIAN_POTVRZEN,
@@ -112,6 +114,12 @@ class ArcheologickyZaznam(models.Model):
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
         ):
             self.set_akce_ident()
+        # posun Zdroju do stavu ZAPSANY
+        externi_zdroje = ExterniZdroj.objects.filter(
+            stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
+        )
+        for ez in externi_zdroje:
+            ez.set_odeslany(user)
 
     def set_vraceny(self, user, new_state, poznamka):
         self.stav = new_state

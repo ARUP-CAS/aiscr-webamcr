@@ -31,12 +31,12 @@ urlpatterns = [
     path("edit/<slug:slug>", views.ExterniZdrojEditView.as_view(), name="edit"),
     path("vyber", views.ExterniZdrojListView.as_view(), name="list"),
     path(
-        "/odpojit-externi-odkaz/<str:ident_cely>/<int:eo_id>",
+        "odpojit-externi-odkaz/<str:ident_cely>/<int:eo_id>",
         views.ExterniOdkazOdpojitView.as_view(),
         name="odpojit_eo",
     ),
     path(
-        "/pripojit-externi-odkaz/<str:ident_cely>",
+        "pripojit-externi-odkaz/<str:ident_cely>",
         views.ExterniOdkazPripojitView.as_view(),
         name="pripojit_eo",
     ),
@@ -44,5 +44,25 @@ urlpatterns = [
         "edit-paginace/<slug:slug>",
         views.ExterniOdkazEditView.as_view(),
         name="zmenit_eo",
+    ),
+    path(
+        "pripojit-externi-odkaz-do-az/<str:ident_cely>",
+        views.ExterniOdkazPripojitDoAzView.as_view(),
+        name="pripojit_eo_do_az",
+    ),
+    path(
+        "odpojit-externi-odkaz-az/<str:ident_cely>/<int:eo_id>",
+        views.ExterniOdkazOdpojitAZView.as_view(),
+        name="odpojit_eo_az",
+    ),
+    path(
+        "ez-autocomplete",
+        views.ExterniZdrojAutocomplete.as_view(),
+        name="ez-autocomplete",
+    ),
+    path(
+        "get-ez-table-row",
+        views.ExterniZdrojTableRowView.as_view(),
+        name="get_ez_table_row",
     ),
 ]

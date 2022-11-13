@@ -224,7 +224,6 @@ class ExterniOdkazForm(forms.ModelForm):
 class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     def __init__(self, type_arch=None, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
-        logger_s.debug(type_arch)
         if type_arch == "akce":
             new_choices = list(
                 ArcheologickyZaznam.objects.filter(
@@ -237,7 +236,6 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
                     typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
                 ).values_list("id", "ident_cely")
             )
-        logger_s.debug(new_choices)
         self.fields["arch_z"] = forms.ChoiceField(
             label=_("externiZdroj.forms.vyberArchz.label"),
             choices=new_choices,
@@ -249,6 +247,28 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         self.helper.layout = Layout(
             Div(
                 Div("arch_z", css_class="col-sm-8"),
+                Div("paginace", css_class="col-sm-4"),
+                css_class="row",
+            ),
+        )
+        self.helper.form_tag = False
+
+
+class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
+    def __init__(self, *args, **kwargs):
+        super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
+        new_choices = list(
+            ExterniZdroj.objects.filter().values_list("id", "ident_cely")
+        )
+        self.fields["ez"] = forms.ChoiceField(
+            label=_("externiZdroj.forms.vyberEZ.label"),
+            choices=new_choices,
+            widget=autocomplete.ListSelect2(url=reverse("ez:ez-autocomplete")),
+        )
+        self.helper = FormHelper(self)
+        self.helper.layout = Layout(
+            Div(
+                Div("ez", css_class="col-sm-8"),
                 Div("paginace", css_class="col-sm-4"),
                 css_class="row",
             ),

@@ -86,6 +86,12 @@ class ExterniZdroj(models.Model):
             kwargs={"slug": self.ident_cely},
         )
 
+    def __str__(self):
+        if self.ident_cely:
+            return self.ident_cely
+        else:
+            return "[ident_cely not yet assigned]"
+
     def set_odeslany(self, user):
         self.stav = EZ_STAV_ODESLANY
         Historie(

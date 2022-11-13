@@ -1,7 +1,8 @@
 import logging
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.views import View
 
 import structlog
 from core.views import ExportMixinDate, check_stav_changed
@@ -11,8 +12,13 @@ from django.views.generic import DetailView, TemplateView
 from django.contrib import messages
 from django.views.generic.edit import CreateView, UpdateView
 from django_filters.views import FilterView
+from django.template.loader import render_to_string
 from django_tables2 import SingleTableMixin
+from dal import autocomplete
 from core.constants import (
+    AZ_STAV_ARCHIVOVANY,
+    AZ_STAV_ODESLANY,
+    AZ_STAV_ZAPSANY,
     EZ_STAV_ODESLANY,
     EZ_STAV_POTVRZENY,
     EZ_STAV_ZAPSANY,
@@ -23,7 +29,7 @@ from core.constants import (
 
 from core.forms import CheckStavNotChangedForm, VratitForm
 from core.message_constants import (
-    EO_USPESNE_SMAZAN,
+    EO_USPESNE_ODPOJEN,
     EZ_USPESNE_ODESLAN,
     EZ_USPESNE_POTVRZEN,
     EZ_USPESNE_VRACENA,
@@ -42,7 +48,12 @@ from .filters import ExterniZdrojFilter
 # from .forms import LokalitaForm
 from .models import ExterniZdroj, get_ez_ident
 from .tables import ExterniZdrojTable
-from .forms import ExterniOdkazForm, ExterniZdrojForm, PripojitArchZaznamForm
+from .forms import (
+    ExterniOdkazForm,
+    ExterniZdrojForm,
+    PripojitArchZaznamForm,
+    PripojitExterniOdkazForm,
+)
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -284,6 +295,8 @@ class ExterniZdrojSmazatView(TransakceView):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
         historie_vazby = zaznam.historie
+        for eo in zaznam.externi_odkazy_zdroje.all():
+            eo.delete()
         zaznam.delete()
         historie_vazby.delete()
         messages.add_message(request, messages.SUCCESS, self.success_message)
@@ -327,7 +340,7 @@ class ExterniOdkazOdpojitView(TransakceView):
     id_tag = "odpojit-az-form"
     button = _("externiZdroj.modalForm.odpojitAZ.submit.button")
     allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
-    success_message = EO_USPESNE_SMAZAN
+    success_message = EO_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -363,7 +376,10 @@ class ExterniOdkazPripojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
+        logger.debug("Pripojit EO")
         context = self.get_context_data(**kwargs)
+        logger.debug("Pripojit EO")
+        logger.debug(self.kwargs)
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
@@ -427,6 +443,113 @@ class ExterniOdkazEditView(UpdateView, LoginRequiredMixin):
         logger_s.debug("main form is invalid")
         logger_s.debug(form.errors)
         return super().form_invalid(form)
+
+
+class ExterniOdkazOdpojitAZView(TransakceView):
+    id_tag = "odpojit-az-form"
+    allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
+    success_message = EO_USPESNE_ODPOJEN
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        logger.debug(ident_cely)
+        return get_object_or_404(
+            ArcheologickyZaznam,
+            ident_cely=ident_cely,
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        logger.debug("eo_id")
+        logger.debug(self.kwargs.get("eo_id"))
+        context["object"] = ExterniZdroj.objects.get(
+            externi_odkazy_zdroje__id=self.kwargs.get("eo_id")
+        )
+        if self.get_zaznam().typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            context["title"] = _("arch_z.modalForm.odpojitEO.title.text")
+            context["button"] = _("arch_z.modalForm.odpojitEO.submit.button")
+        else:
+            context["title"] = _("lokalita.modalForm.odpojitEO.title.text")
+            context["button"] = _("lokalita.modalForm.odpojitEO.submit.button")
+        return context
+
+    def post(self, request, *args, **kwargs):
+        az = self.get_zaznam()
+        eo = ExterniOdkaz.objects.get(id=self.kwargs.get("eo_id"))
+        eo.delete()
+        messages.add_message(
+            request, messages.SUCCESS, get_message(az, "EO_USPESNE_ODPOJEN")
+        )
+        return JsonResponse({"redirect": az.get_reverse()})
+
+
+class ExterniZdrojAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return ExterniZdroj.objects.none()
+
+        qs = ExterniZdroj.objects.filter()
+        if self.q:
+            qs = qs.filter(ident_cely__icontains=self.q)
+        return qs
+
+
+class ExterniZdrojTableRowView(LoginRequiredMixin, View):
+    def get(self, request):
+        zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
+        context = {"ez": zaznam}
+        context["hide_paginace"] = True
+        return HttpResponse(render_to_string("ez/az_ez_odkazy_table_row.html", context))
+
+
+class ExterniOdkazPripojitDoAzView(TransakceView):
+    template_name = "core/transakce_table_modal.html"
+    title = _("externiZdroj.modalForm.pripojitAZ.title.text")
+    id_tag = "pripojit-eo-doaz-form"
+    button = _("externiZdroj.modalForm.pripojitAZ.submit.button")
+    allowed_states = [EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY]
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        logger.debug(ident_cely)
+        return get_object_or_404(
+            ArcheologickyZaznam,
+            ident_cely=ident_cely,
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = PripojitExterniOdkazForm()
+        context["form"] = form
+        context["hide_table"] = True
+        context["hide_paginace"] = True
+        if self.get_zaznam().typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            context["title"] = _("arch_z.modalForm.pripojitEO.title.text")
+            context["button"] = _("arch_z.modalForm.pripojitEO.submit.button")
+        else:
+            context["title"] = _("lokalita.modalForm.pripojitEO.title.text")
+            context["button"] = _("lokalita.modalForm.pripojitEO.submit.button")
+        return context
+
+    def post(self, request, *args, **kwargs):
+        az = self.get_zaznam()
+        form = PripojitExterniOdkazForm(data=request.POST)
+        if form.is_valid():
+            ez_id = form.cleaned_data["ez"]
+            ez = ExterniZdroj.objects.get(id=ez_id)
+            eo = ExterniOdkaz.objects.create(
+                externi_zdroj=ez,
+                paginace=form.cleaned_data["paginace"],
+                archeologicky_zaznam=az,
+            )
+            eo.save()
+            messages.add_message(
+                request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")
+            )
+        else:
+            logger.debug("not valid")
+            logger.debug(form.errors)
+        return JsonResponse({"redirect": az.get_reverse()})
 
 
 def get_history_dates(historie_vazby):

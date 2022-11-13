@@ -27,7 +27,13 @@ from arch_z.forms import (
     CreateArchZForm,
     create_akce_vedouci_objekt_form,
 )
-from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, get_akce_ident
+from arch_z.models import (
+    Akce,
+    AkceVedouci,
+    ArcheologickyZaznam,
+    ExterniOdkaz,
+    get_akce_ident,
+)
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -210,6 +216,14 @@ class AkceRelatedRecordUpdateView(TemplateView):
             .order_by("ident_cely")
         )
 
+    def get_externi_odkazy(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return (
+            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+            .select_related("externi_zdroj")
+            .order_by("id")
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         zaznam = self.get_archeologicky_zaznam()
@@ -220,6 +234,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["show"] = get_detail_template_shows(
             zaznam, self.get_jednotky(), self.request.user
         )
+        context["externi_odkazy"] = self.get_externi_odkazy()
         if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             context["presna_specifikace"] = (
                 True
@@ -831,6 +846,8 @@ def smazat(request, ident_cely):
         for dj in az.dokumentacni_jednotky_akce.all():
             if dj.komponenty:
                 komponenty_jednotek_vazby.append(dj.komponenty)
+        for eo in az.externi_odkazy.all():
+            eo.delete()
         az.delete()
         historie_vazby.delete()
         for komponenta_vazba in komponenty_jednotek_vazby:
@@ -1305,6 +1322,11 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
                     "helper_objekt": NalezFormSetHelper(typ="objekt"),
                 }
             )
+    externi_odkazy = (
+        ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+        .select_related("externi_zdroj")
+        .order_by("id")
+    )
 
     context["dj_form_create"] = dj_form_create
     context["pian_form_create"] = pian_form_create
@@ -1318,6 +1340,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
     context["show"] = show
+    context["externi_odkazy"] = externi_odkazy
     if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
             context["showbackdetail"] = True
@@ -1513,7 +1536,6 @@ class ArchZTableRowView(LoginRequiredMixin, View):
         else:
             context["type"] = "lokalita"
             context["card_type"] = "lokalita"
-        logger.debug(context)
         return HttpResponse(render_to_string("ez/ez_odkazy_table_row.html", context))
 
 

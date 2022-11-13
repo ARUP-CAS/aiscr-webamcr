@@ -40,7 +40,7 @@
     </div>
     {% endif %}
     {% if id_tag == "pripojit-dokument-form" %}
-    <div class="app-entity-dokument">
+    <div class="app-card-dokument">
         <div class="app-table-list-wrapper add-dokument-table" {% if hide_table %} style="display: none;" {%endif%}>
     {%include "dokument/dokument_table_only.html"%}
         </div>
@@ -57,6 +57,13 @@
     <div class="app-card-{{type}}">
         <div class="app-table-list-wrapper add-eo-table" {% if hide_table %} style="display: none;" {%endif%}>
     {%include "ez/ez_odkazy_table_only.html"%}
+        </div>
+    </div>
+    {% endif %}
+    {% if id_tag == "pripojit-eo-doaz-form" %}
+    <div class="app-card-ext_zdroj">
+        <div class="app-table-list-wrapper add-ez-table" {% if hide_table %} style="display: none;" {%endif%}>
+    {%include "ez/az_ez_odkazy_table_only.html" with hide_paginace="True" %}
         </div>
     </div>
     {% endif %}
@@ -79,6 +86,11 @@
         tag = $('#id_arch_z')
         cl = '.add-eo-table'
     }
+    else if ("{{ id_tag }}" == "pripojit-eo-doaz-form"){
+        base_url = '{% url "ez:get_ez_table_row" %}'
+        tag = $('#id_ez')
+        cl = '.add-ez-table'
+    }
     else{
         base_url = '{% url "projekt:get_projekt_table_row" %}'
         tag = $('#id_projekt')
@@ -94,7 +106,7 @@
             url: base_url, 
             data: {'id': data.id },
             success : function(data) {
-                if (cl == '.add-projekt-table' || cl == '.add-eo-table'){
+                if (cl == '.add-projekt-table' || cl == '.add-eo-table' || cl == '.add-ez-table'){
                     first_row.remove()
                 }
                 $(cl + ' table tbody').append(data);
@@ -111,7 +123,7 @@
     });
 </script>
 <script>
-  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form" || "{{ id_tag }}" == "pripojit-eo-form"){
+  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form" || "{{ id_tag }}" == "pripojit-eo-form"|| "{{ id_tag }}" == "pripojit-eo-doaz-form"){
 window.addEventListener("modalLoaded", function () {
       window.django = window.django || {};
     if (!django.hasOwnProperty('jQuery') && jQuery !== 'undefined') {
