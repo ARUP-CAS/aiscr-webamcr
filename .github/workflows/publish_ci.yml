@@ -10,11 +10,12 @@ on:
       - '*'
 
 env:
-  REPO_DEV: huldcz/aiscr_dev
-  REPO_DB: huldcz/aiscr_db
-  REPO_PROD: huldcz/aiscr_prod
-  DUNAME: huldcz
-  DTKN: dckr_pat_fpWRR1MNMpRZiycqTtFc2bEJh2Q
+  DOCKER_HUB_REPO_DEV: huldcz/aiscr_dev
+  DOCKER_HUB_REPO_DB: huldcz/aiscr_db
+  DOCKER_HUB_REPO_PROD: huldcz/aiscr_prod
+  DOCKER_HUB_USERNAME: huldcz
+  # @IMPORTANT: when Github secrets settings for repository will be accessible (i.e. permission granted by maintainer) this shall be IMMEDIATELY replaced!
+  DOCKER_HUB_ACCESS_TOKEN: dckr_pat_fpWRR1MNMpRZiycqTtFc2bEJh2Q
 
 jobs:
   push_development:
@@ -27,14 +28,14 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ env.DUNAME }}
-          password: ${{ env.DTKN }}
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
       
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images:  ${{ env.REPO_DEV }}
+          images:  ${{ env.DOCKER_HUB_REPO_DEV }}
       
       - name: Get tag 
         id: step_tag1
@@ -43,6 +44,12 @@ jobs:
       - name: Put version into file 
         id: step_tag2
         run: echo ${{ env.tag_version }} >> ./webclient/version.txt
+
+      - name: ChangeVersion
+        id: step_version2footer
+        run: |
+            echo ${{ env.tag_version }}
+            sed -i 's/1.0.0/${{ env.tag_version }}/g' ./webclient/templates/base_logged_in.html 
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
@@ -65,14 +72,14 @@ jobs:
         - name: Log in to Docker Hub
           uses: docker/login-action@v2
           with:
-            username: ${{ env.DUNAME }}
-            password: ${{ env.DTKN }}
+            username: ${{ env.DOCKER_HUB_USERNAME }}
+            password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
         
         - name: Extract metadata (tags, labels) for Docker
           id: meta
           uses: docker/metadata-action@v4
           with:
-            images: ${{ env.REPO_PROD }}
+            images: ${{ env.DOCKER_HUB_REPO_PROD }}
         
         - name: Get tag 
           id: step_tag1
@@ -81,6 +88,12 @@ jobs:
         - name: Put version into file 
           id: step_tag2
           run: echo ${{ env.tag_version }} >> ./webclient/version.txt
+
+        - name: ChangeVersion
+          id: step_version2file
+          run: |
+              echo ${{ env.tag_version }}
+              sed -i 's/1.0.0/${{ env.tag_version }}/g' ./webclient/templates/base_logged_in.html 
 
         - name: Build and push Docker image
           uses: docker/build-push-action@v3
@@ -103,14 +116,14 @@ jobs:
           - name: Log in to Docker Hub
             uses: docker/login-action@v2
             with:
-              username: ${{ env.DUNAME }}
-              password: ${{ env.DTKN }}
+              username: ${{ env.DOCKER_HUB_USERNAME }}
+              password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
 
           - name: Extract metadata (tags, labels) for Docker
             id: meta
             uses: docker/metadata-action@v4
             with:
-              images: ${{ env.REPO_DB }}
+              images: ${{ env.DOCKER_HUB_REPO_DB }}
           
           - name: Get tag 
             id: step_tag1
@@ -130,4 +143,6 @@ jobs:
               build-args: | 
                   VERSION_APP=${{ env.tag_version }}
                   TAG_APP=${{ github.ref }}
-        
+          
+
+  
