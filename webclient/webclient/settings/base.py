@@ -176,6 +176,15 @@ LOCALE_PATHS = ["/vol/web/locale"]
 ROSETTA_SHOW_AT_ADMIN_PANEL = True
 ROSETTA_WSGI_AUTO_RELOAD = True
 ROSETTA_UWSGI_AUTO_RELOAD = True
+
+
+def rosetta_translation_rights(user):
+    from uzivatel.models import User
+    user: User
+    return len([x.name for x in user.groups.all() if x.name == "Úprava textů"]) > 0
+
+
+ROSETTA_ACCESS_CONTROL_FUNCTION = rosetta_translation_rights
 # DEFAULT_CHARSET = "utf-8"
 
 STATIC_URL = "/static/static/"
