@@ -7,6 +7,13 @@ FROM ubuntu:focal
 RUN apt-get update
 #RUN apt-get upgrade -y
 
+ARG VERSION_APP
+ARG TAG_APP
+
+ENV VERSION=$VERSION_APP
+ENV TAG=$TAG_APP
+
+
 ENV TZ 'Europe/Prague'
 RUN echo $TZ > /etc/timezone
 RUN apt-get update
