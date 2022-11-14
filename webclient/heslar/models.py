@@ -60,15 +60,7 @@ class HeslarDatace(models.Model):
     rok_od_max = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_od_max"))
     rok_do_min = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_do_min"))
     rok_do_max = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_do_max"))
-    region = models.OneToOneField(
-        Heslar,
-        models.DO_NOTHING,
-        db_column="region",
-        blank=True,
-        null=True,
-        related_name="datace_region",
-        verbose_name=_("heslar.models.HeslarDatace.region"),
-    )
+    poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarDatace.poznamka"))
 
     class Meta:
         db_table = "heslar_datace"
