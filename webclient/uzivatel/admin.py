@@ -14,9 +14,8 @@ logger_s = structlog.get_logger(__name__)
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
     model = User
-    list_display = ("email", "is_staff", "is_active", "organizace", "ident_cely", "first_name", "last_name", "telefon")
-    list_filter = ("is_staff", "is_active", "organizace")
-    readonly_fields = ("ident_cely", )
+    list_display = ("email", "is_active", "organizace", "ident_cely", "first_name", "last_name", "telefon")
+    list_filter = ("is_active", "organizace")
     fieldsets = (
         (
             None,
@@ -35,7 +34,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             },
         ),
-        ("Oprávnění", {"fields": ("is_staff", "is_active", "is_superuser")}),
+        ("Oprávnění", {"fields": ("is_active", "is_superuser")}),
     )
     add_fieldsets = (
         (
@@ -46,7 +45,6 @@ class CustomUserAdmin(UserAdmin):
                     "email",
                     "password1",
                     "password2",
-                    "is_staff",
                     "is_active",
                     "is_superuser",
                     "organizace",
@@ -95,6 +93,13 @@ class CustomUserAdmin(UserAdmin):
             poznamka=f"Role: {group_ids}",
             vazba=historie_vazba,
         ).save()
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            readonly_fields = ("ident_cely",)
+        else:
+            readonly_fields = ("ident_cely", "is_superuser")
+        return readonly_fields
 
 
 admin.site.register(User, CustomUserAdmin)
