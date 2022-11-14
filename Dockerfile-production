@@ -3,6 +3,13 @@
 #### Use latest Ubuntu
 FROM ubuntu:focal
 
+
+ARG VERSION_APP
+ARG TAG_APP
+
+ENV VERSION=$VERSION_APP
+ENV TAG=$TAG_APP
+
 # Update base container install
 RUN apt-get clean
 RUN apt-get update

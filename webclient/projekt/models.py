@@ -440,20 +440,16 @@ class Projekt(models.Model):
 
     def create_confirmation_document(self, additional=False, user=None):
         from core.utils import get_mime_type
-        creator = OznameniPDFCreator(self.oznamovatel, self)
-        filename = creator.build_document()
-        filename_without_path = f"oznameni_{self.ident_cely}.pdf"
-        if additional:
-            soubory_count = Soubor.objects.filter(nazev__startswith=filename_without_path[:-4] + "_").count()
-            postfix = chr(65 + soubory_count)
-            filename_without_path = f"oznameni_{self.ident_cely}_{postfix}.pdf"
+        creator = OznameniPDFCreator(self.oznamovatel, self, additional)
+        filename, filename_without_checksum = creator.build_document()
+        filename_without_path = os.path.basename(filename)
         duplikat = Soubor.objects.filter(nazev=filename)
         if not duplikat.exists():
             soubor = Soubor(
                 path=filename,
                 vazba=self.soubory,
                 nazev=filename_without_path,
-                nazev_zkraceny=filename_without_path,
+                nazev_zkraceny=filename_without_checksum,
                 nazev_puvodni=filename_without_path,
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(filename_without_path),

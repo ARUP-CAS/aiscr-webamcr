@@ -27,7 +27,6 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
-from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
 
@@ -360,7 +359,7 @@ class Akce(models.Model):
     datum_ukonceni = models.DateField(blank=True, null=True)
     je_nz = models.BooleanField(default=False)
     projekt = models.ForeignKey(
-        Projekt, models.DO_NOTHING, db_column="projekt", blank=True, null=True
+        "projekt.Projekt", models.DO_NOTHING, db_column="projekt", blank=True, null=True
     )
     ulozeni_dokumentace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.OneToOneField(

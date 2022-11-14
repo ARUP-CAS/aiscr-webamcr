@@ -1,6 +1,12 @@
 FROM postgis/postgis:latest
 VOLUME /tmp
 
+ARG VERSION_APP
+ARG TAG_APP
+
+ENV VERSION=$VERSION_APP
+ENV TAG=$TAG_APP
+
 ENV FILE=backup_file_db_v4.tar
 
 COPY ${FILE} /tmp/${FILE}
