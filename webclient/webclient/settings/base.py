@@ -179,9 +179,8 @@ ROSETTA_UWSGI_AUTO_RELOAD = True
 
 
 def rosetta_translation_rights(user):
-    from uzivatel.models import User
-    user: User
-    return len([x.name for x in user.groups.all() if x.name == "Úprava textů"]) > 0
+    from core.constants import ROLE_UPRAVA_TEXTU
+    return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0
 
 
 ROSETTA_ACCESS_CONTROL_FUNCTION = rosetta_translation_rights
