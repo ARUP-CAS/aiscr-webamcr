@@ -16,7 +16,6 @@ class CustomUserAdmin(UserAdmin):
     model = User
     list_display = ("email", "is_active", "organizace", "ident_cely", "first_name", "last_name", "telefon")
     list_filter = ("is_active", "organizace")
-    readonly_fields = ("ident_cely", )
     fieldsets = (
         (
             None,
@@ -94,6 +93,13 @@ class CustomUserAdmin(UserAdmin):
             poznamka=f"Role: {group_ids}",
             vazba=historie_vazba,
         ).save()
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            readonly_fields = ("ident_cely",)
+        else:
+            readonly_fields = ("ident_cely", "is_superuser")
+        return readonly_fields
 
 
 admin.site.register(User, CustomUserAdmin)

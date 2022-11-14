@@ -160,7 +160,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 logger_s.debug("User.save.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
-        self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID
+        self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
         super().save(*args, **kwargs)
 
     class Meta:
