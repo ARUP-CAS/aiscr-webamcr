@@ -17,7 +17,6 @@ from dj.models import DokumentacniJednotka
 from django.db import connection
 from heslar.models import RuianKatastr
 from pian.models import Pian
-from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
 
@@ -241,6 +240,7 @@ def get_centre_from_akce(katastr, pian):
 
 
 def get_points_from_envelope(left, bottom, right, top):
+    from projekt.models import Projekt
     query = (
         "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng "
         " from public.projekt where "
@@ -327,6 +327,7 @@ def get_num_projects_from_envelope(left, bottom, right, top):
 
 
 def get_projects_from_envelope(left, bottom, right, top):
+    from projekt.models import Projekt
     query = (
         "select p.id,p.ident_cely,ST_AsText(p.geom) as geometry "
         "from public.projekt p "

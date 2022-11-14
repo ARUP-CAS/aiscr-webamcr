@@ -1,8 +1,10 @@
+import tempfile
 from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
 import os
 
+from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT
 
 from reportlab.lib import utils
@@ -383,17 +385,30 @@ class OznameniPDFCreator(DocumentCreator):
         directory = f"{MEDIA_ROOT}/soubory/AG/{datetime.datetime.now().strftime('%Y/%m/%d')}"
         if not os.path.exists(directory):
             os.makedirs(directory)
-        path = f"{directory}/oznameni_{self.projekt.ident_cely}.pdf"
+        if self.additional:
+            from core.models import Soubor
+            soubory_count = Soubor.objects.filter(nazev_zkraceny__startswith=f"oznameni_{self.projekt.ident_cely}_").count()
+            postfix = "_" + chr(65 + soubory_count)
+        else:
+            postfix = ""
+        path = f"{directory}/oznameni_{self.projekt.ident_cely}{postfix}.pdf"
         with open(path, "wb") as file:
             file.write(pdf_value)
-            size = file.tell()
-        return path
+        with open(path, mode="rb") as file:
+            checksum = calculate_crc_32(file)
+        os.remove(path)
+        path = f"{directory}/{checksum}_oznameni_{self.projekt.ident_cely}{postfix}.pdf"
+        filename_without_checksum = f"oznameni_{self.projekt.ident_cely}{postfix}.pdf"
+        with open(path, "wb") as file:
+            file.write(pdf_value)
+        return path, filename_without_checksum
 
-    def __init__(self, oznamovatel, projekt):
+    def __init__(self, oznamovatel, projekt, additional=False):
         from oznameni.models import Oznamovatel
         self.oznamovatel: Oznamovatel = oznamovatel
         from projekt.models import Projekt
         self.projekt: Projekt = projekt
+        self.additional = additional
         self.styles = getSampleStyleSheet()
         self._create_style_dict()
         self.texts = {}
