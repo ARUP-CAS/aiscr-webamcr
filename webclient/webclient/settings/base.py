@@ -179,11 +179,10 @@ ROSETTA_UWSGI_AUTO_RELOAD = True
 
 
 def rosetta_translation_rights(user):
-    from core.constants import ROLE_UPRAVA_TEXTU
-    return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0
+    return user.groups.filter(pk=6).count() > 0
 
 
-ROSETTA_ACCESS_CONTROL_FUNCTION = rosetta_translation_rights
+ROSETTA_ACCESS_CONTROL_FUNCTION = "settings.rosetta_translation_rights"
 # DEFAULT_CHARSET = "utf-8"
 
 STATIC_URL = "/static/static/"
