@@ -178,11 +178,6 @@ ROSETTA_WSGI_AUTO_RELOAD = True
 ROSETTA_UWSGI_AUTO_RELOAD = True
 
 
-def rosetta_translation_rights(user):
-    return user.groups.filter(pk=6).count() > 0
-
-
-ROSETTA_ACCESS_CONTROL_FUNCTION = "settings.rosetta_translation_rights"
 # DEFAULT_CHARSET = "utf-8"
 
 STATIC_URL = "/static/static/"
