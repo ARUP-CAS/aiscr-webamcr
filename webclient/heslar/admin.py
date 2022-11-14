@@ -34,7 +34,7 @@ class HeslarAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         if obj and obj.nazev_heslare and not obj.nazev_heslare.povolit_zmeny:
             return False
-        return True
+        return super().has_change_permission(request, obj)
 
     def get_readonly_fields(self, request, obj=None):
         if obj is not None and obj.pk is not None:
