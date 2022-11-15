@@ -2,9 +2,10 @@ version: "3.8"
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile-production
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile-production
+    image: huldcz/aiscr_prod:latest
     container_name: web
     volumes:
       - static_data:/vol/web

@@ -7,10 +7,11 @@ name: Publish Docker images
 on:
   create:
     tags:
-      - '*'
+      - "*"
 
 env:
   DOCKER_HUB_REPO_DEV: huldcz/aiscr_dev
+  DOCKER_HUB_REPO_PROXY: huldcz/aiscr_proxy
   DOCKER_HUB_REPO_DB: huldcz/aiscr_db
   DOCKER_HUB_REPO_PROD: huldcz/aiscr_prod
   DOCKER_HUB_USERNAME: huldcz
@@ -30,27 +31,29 @@ jobs:
         with:
           username: ${{ env.DOCKER_HUB_USERNAME }}
           password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
-      
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images:  ${{ env.DOCKER_HUB_REPO_DEV }}
-      
-      - name: Get tag 
+          images: ${{ env.DOCKER_HUB_REPO_DEV }}
+
+      - name: Get tag
         id: step_tag1
         run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
 
-      - name: Put version into file 
+      - name: Put version into file
         id: step_tag2
         run: echo ${{ env.tag_version }} >> ./webclient/version.txt
 
-      - name: ChangeVersion
+      - name: Change version inside footer
         id: step_version2footer
         run: |
-            echo ${{ env.tag_version }}
-            sed -i 's/1.0.0/${{ env.tag_version }}/g' ./webclient/templates/base_logged_in.html 
-
+          echo ${{ env.tag_version }}
+          sed -i 's/1.0.0/${{ env.tag_version }}/g' ./webclient/templates/base_logged_in.html
+      #---------------------
+      # BUILD DEV
+      #---------------------
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
@@ -58,91 +61,65 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: | 
-              VERSION_APP=${{ env.tag_version }}
-              TAG_APP=${{ github.ref }}
-    
-  push_production:
-      name: Push Production Docker image to Docker Hub
-      runs-on: ubuntu-latest
-      steps:
-        - name: Check out the repo
-          uses: actions/checkout@v3
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+      #---------------------
+      # BUILD PROD
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta_prod
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_PROD }}
 
-        - name: Log in to Docker Hub
-          uses: docker/login-action@v2
-          with:
-            username: ${{ env.DOCKER_HUB_USERNAME }}
-            password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
-        
-        - name: Extract metadata (tags, labels) for Docker
-          id: meta
-          uses: docker/metadata-action@v4
-          with:
-            images: ${{ env.DOCKER_HUB_REPO_PROD }}
-        
-        - name: Get tag 
-          id: step_tag1
-          run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          dockerfile: Dockerfile-production
+          push: true
+          tags: ${{ steps.meta_prod.outputs.tags }}
+          labels: ${{ steps.meta_prod.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+              - name: Build and push Docker image
+      #---------------------
+      # BUILD DB
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_DB }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          dockerfile: Dockerfile-DB
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+      #---------------------
+      # BUILD PROXY
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta_proxy
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_PROXY }}
 
-        - name: Put version into file 
-          id: step_tag2
-          run: echo ${{ env.tag_version }} >> ./webclient/version.txt
-
-        - name: ChangeVersion
-          id: step_version2file
-          run: |
-              echo ${{ env.tag_version }}
-              sed -i 's/1.0.0/${{ env.tag_version }}/g' ./webclient/templates/base_logged_in.html 
-
-        - name: Build and push Docker image
-          uses: docker/build-push-action@v3
-          with:
-            context: .
-            push: true
-            tags: ${{ steps.meta.outputs.tags }}
-            labels: ${{ steps.meta.outputs.labels }}
-            build-args: | 
-                VERSION_APP=${{ env.tag_version }}
-                TAG_APP=${{ github.ref }}
-      
-  push_db:
-        name: Push db Docker image to Docker Hub
-        runs-on: ubuntu-latest
-        steps:
-          - name: Check out the repo
-            uses: actions/checkout@v3
-
-          - name: Log in to Docker Hub
-            uses: docker/login-action@v2
-            with:
-              username: ${{ env.DOCKER_HUB_USERNAME }}
-              password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
-
-          - name: Extract metadata (tags, labels) for Docker
-            id: meta
-            uses: docker/metadata-action@v4
-            with:
-              images: ${{ env.DOCKER_HUB_REPO_DB }}
-          
-          - name: Get tag 
-            id: step_tag1
-            run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
-
-          - name: Put version into file 
-            id: step_tag2
-            run: echo ${{ env.tag_version }} >> version.txt
-
-          - name: Build and push Docker image
-            uses: docker/build-push-action@v3
-            with:
-              context: .
-              push: true
-              tags: ${{ steps.meta.outputs.tags }}
-              labels: ${{ steps.meta.outputs.labels }}
-              build-args: | 
-                  VERSION_APP=${{ env.tag_version }}
-                  TAG_APP=${{ github.ref }}
-          
-
-  
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./proxy
+          push: true
+          tags: ${{ steps.meta_proxy.outputs.tags }}
+          labels: ${{ steps.meta_proxy.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
