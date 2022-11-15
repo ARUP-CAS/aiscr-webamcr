@@ -40,16 +40,30 @@
     </div>
     {% endif %}
     {% if id_tag == "pripojit-dokument-form" %}
-    <div class="app-entity-dokument">
+    <div class="app-card-dokument">
         <div class="app-table-list-wrapper add-dokument-table" {% if hide_table %} style="display: none;" {%endif%}>
     {%include "dokument/dokument_table_only.html"%}
         </div>
     </div>
     {% endif %}
     {% if id_tag == "akce-change-form" %}
-    <div class="app-entity-projekt">
+    <div class="app-card-projekt">
         <div class="app-table-list-wrapper add-projekt-table" {% if hide_table %} style="display: none;" {%endif%}>
     {%include "projekt/projekt_table.html"%}
+        </div>
+    </div>
+    {% endif %}
+    {% if id_tag == "pripojit-eo-form" %}
+    <div class="app-card-{{type}}">
+        <div class="app-table-list-wrapper add-eo-table" {% if hide_table %} style="display: none;" {%endif%}>
+    {%include "ez/ez_odkazy_table_only.html"%}
+        </div>
+    </div>
+    {% endif %}
+    {% if id_tag == "pripojit-eo-doaz-form" %}
+    <div class="app-card-ext_zdroj">
+        <div class="app-table-list-wrapper add-ez-table" {% if hide_table %} style="display: none;" {%endif%}>
+    {%include "ez/az_ez_odkazy_table_only.html" with hide_paginace="True" %}
         </div>
     </div>
     {% endif %}
@@ -67,11 +81,22 @@
         tag = $('#id_dokument')
         cl = '.add-dokument-table'
     }
+    else if ("{{ id_tag }}" == "pripojit-eo-form"){
+        base_url = '{% url "arch_z:get_archz_table_row" %}'
+        tag = $('#id_arch_z')
+        cl = '.add-eo-table'
+    }
+    else if ("{{ id_tag }}" == "pripojit-eo-doaz-form"){
+        base_url = '{% url "ez:get_ez_table_row" %}'
+        tag = $('#id_ez')
+        cl = '.add-ez-table'
+    }
     else{
         base_url = '{% url "projekt:get_projekt_table_row" %}'
         tag = $('#id_projekt')
         cl = '.add-projekt-table'
     }
+    
     tag.on('select2:select', function (e) {
         var data = e.params.data;
         console.log(data);
@@ -81,10 +106,10 @@
             url: base_url, 
             data: {'id': data.id },
             success : function(data) {
-                if (cl == '.add-projekt-table'){
+                if (cl == '.add-projekt-table' || cl == '.add-eo-table' || cl == '.add-ez-table'){
                     first_row.remove()
                 }
-                $(cl + ' table').append(data);
+                $(cl + ' table tbody').append(data);
                 $(cl).css("display", "block");
                 // $('.row.replace').html(data);
              }
@@ -98,7 +123,7 @@
     });
 </script>
 <script>
-  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form"){
+  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form" || "{{ id_tag }}" == "pripojit-eo-form"|| "{{ id_tag }}" == "pripojit-eo-doaz-form"){
 window.addEventListener("modalLoaded", function () {
       window.django = window.django || {};
     if (!django.hasOwnProperty('jQuery') && jQuery !== 'undefined') {

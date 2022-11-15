@@ -1,0 +1,47 @@
+{% load i18n %}
+
+<div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
+  <div class="app-left">
+    <div class="app-entity-title">
+      <a href="#"><span class="material-icons">library_books</span> {{name}}</a>
+    </div>
+    <div id="id-app-entity-item" class="app-entity-item">
+      {% if toolbar_label %}{{toolbar_label}}{%endif%}
+    </div>
+  </div>
+  {% if showcontrols %}
+    <div class="app-right app-controls">
+      <div class="btn-group app-entity-akce" role="group">
+        {% if show.vratit_link %}
+          <button id="ez-vratit" class="btn m-0" type="button" name="button">
+            <span class="material-icons">arrow_back</span>
+            {% trans "Vrátit" %}
+          </button>
+        {% endif %}
+        {% if show.odeslat_link %}
+          <button id="ez-odeslat" class="btn m-0" type="button" name="button">
+            <span class="material-icons">send</span>
+            {% trans "Odeslat" %}
+          </button>
+        {% endif %}
+        {% if show.potvrdit_link %}
+          <button id="ez-potvrdit" class="btn m-0" type="button" name="button">
+            <span class="material-icons">flag</span>
+            {% trans "Potvrdit" %}
+          </button>
+        {% endif %}
+        <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          {% trans "Další volby" %}
+        </button>
+        <div class="dropdown-menu" aria-labelledby="otherOptions">
+          <button id="ez-smazat" class="dropdown-item" type="button" name="button">{% trans "externiZdroj.toolbar.smazat.label" %}</button>
+          <a class="dropdown-item" href="{% url 'historie:ez' zaznam.ident_cely %}">{% trans "Historie" %}</a>
+          {% if show.arch_links%}
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "externiZdroj.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:zaznam.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "externiZdroj.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>

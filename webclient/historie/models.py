@@ -6,7 +6,7 @@ from core.constants import (
     ARCHIVACE_SN,
     DOKUMENT_RELATION_TYPE,
     EXTERNI_ZDROJ_RELATION_TYPE,
-    IMPORT_EXT_ZD,
+    ODESLANI_EXT_ZD,
     NAHRANI_SBR,
     NAVRZENI_KE_ZRUSENI_PROJ,
     ODESLANI_AZ,
@@ -89,8 +89,8 @@ class Historie(models.Model):
         (POTVRZENI_PIAN, "Potvrzení pian"),
         # Uzivatel_spoluprace
         # Externi_zdroj
-        (IMPORT_EXT_ZD, "Import externí zdroj"),
-        (ZAPSANI_EXT_ZD, "Zápis externí zdroj"),
+        (ZAPSANI_EXT_ZD, "Import externí zdroj"),
+        (ODESLANI_EXT_ZD, "Zápis externí zdroj"),
         (POTVRZENI_EXT_ZD, "Potvrzení externí zdroj"),
         (VRACENI_EXT_ZD, "Vrácení externí zdroj"),
         # Soubor

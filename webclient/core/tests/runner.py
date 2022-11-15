@@ -1,12 +1,14 @@
 import datetime
 from decimal import Decimal
 
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import Akce, ArcheologickyZaznam, ExterniOdkaz
 from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
     DOKUMENT_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
+    EZ_STAV_ODESLANY,
+    EZ_STAV_ZAPSANY,
     KLADYZM10,
     KLADYZM50,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
@@ -35,6 +37,7 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_RADA,
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ZACHOVALOST,
+    HESLAR_EXTERNI_ZDROJ_TYP,
     HESLAR_JAZYK,
     HESLAR_LOKALITA_DRUH,
     HESLAR_LOKALITA_TYP,
@@ -73,6 +76,7 @@ from uzivatel.models import Organizace, Osoba, User
 import logging
 
 from lokalita.models import Lokalita
+from ez.models import ExterniZdroj
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +124,9 @@ EXISTING_LOKALITA_IDENT = "X-C-L0000004"
 EXISTING_EVENT_IDENT_INCOMPLETE = "C-202000001B"
 EXISTING_SAM_EVENT_IDENT = "X-M-9123456A"
 EXISTING_DOCUMENT_ID = 123654
+EXISTING_EZ_IDENT = "BIB-0000001"
+EXISTING_EZ_ODESLANY = "BIB-0000002"
+EXISTIN_EO_ID = 22
 DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
 DOKUMENT_CAST_IDENT = "M-TX-202100115-D001"
 USER_ARCHEOLOG_EMAIL = "indiana.jones@uchicago.edu"
@@ -133,6 +140,9 @@ PREDMET_SPECIFIKACE_ID = 999
 LOKALITA_TYP = 1021
 LOKALITA_TYP_NEW = 1020
 LOKALITA_DRUH = 1031
+
+EZ_TYP = 2035
+EZ_TYP_NEW = 2036
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -247,6 +257,7 @@ class AMCRTestRunner(BaseRunner):
         hpdr = HeslarNazev(id=HESLAR_PREDMET_DRUH, nazev="heslar_predmet_druh")
         hld = HeslarNazev(id=HESLAR_LOKALITA_DRUH, nazev="heslar_lokalita_druh")
         hlt = HeslarNazev(id=HESLAR_LOKALITA_TYP, nazev="heslar_lokalita_typ")
+        hezt = HeslarNazev(id=HESLAR_EXTERNI_ZDROJ_TYP, nazev="heslar_ez_typ")
         nazvy_heslaru = [
             hn,
             hp,
@@ -270,6 +281,7 @@ class AMCRTestRunner(BaseRunner):
             hpdr,
             hld,
             hlt,
+            hezt,
         ]
         for n in nazvy_heslaru:
             n.save()
@@ -354,6 +366,8 @@ class AMCRTestRunner(BaseRunner):
         Heslar(id=LOKALITA_DRUH, nazev_heslare=hld, zkratka=1).save()
         Heslar(id=LOKALITA_TYP, nazev_heslare=hlt, zkratka="L").save()
         Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka="M").save()
+        Heslar(id=EZ_TYP, nazev_heslare=hezt, zkratka="K", heslo="kniha").save()
+        Heslar(id=EZ_TYP_NEW, nazev_heslare=hezt, zkratka="C", heslo="casopis").save()
 
         kl10 = Kladyzm(
             gid=2,
@@ -572,6 +586,31 @@ class AMCRTestRunner(BaseRunner):
             organizace=o,
         )
         a2.save()
+
+        # Externi Zdroj
+        ez = ExterniZdroj(
+            typ=Heslar.objects.get(pk=EZ_TYP),
+            ident_cely=EXISTING_EZ_IDENT,
+            stav=EZ_STAV_ZAPSANY,
+            rok_vydani_vzniku="1991",
+            nazev="Taka pekna kniha",
+        )
+        ez.save()
+        ez2 = ExterniZdroj(
+            typ=Heslar.objects.get(pk=EZ_TYP),
+            ident_cely=EXISTING_EZ_ODESLANY,
+            stav=EZ_STAV_ODESLANY,
+            rok_vydani_vzniku="1991",
+            nazev="Taka pekna kniha",
+        )
+        ez2.save()
+
+        eo = ExterniOdkaz(
+            externi_zdroj=ez,
+            archeologicky_zaznam=az,
+            id=EXISTIN_EO_ID,
+        )
+        eo.save()
 
         vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
         vazba_pian.save()

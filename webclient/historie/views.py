@@ -158,3 +158,18 @@ class UzivatelHistorieListView(HistorieListView):
         context["entity"] = context["typ"]
         context["ident_cely"] = self.kwargs["ident_cely"]
         return context
+
+
+class ExterniZdrojHistorieListView(HistorieListView):
+    def get_queryset(self):
+        ez_ident = self.kwargs["ident_cely"]
+        return self.model.objects.filter(
+            vazba__externizdroj__ident_cely=ez_ident
+        ).order_by("-datum_zmeny")
+
+    def get_context_data(self, **kwargs):
+        context = super(ExterniZdrojHistorieListView, self).get_context_data(**kwargs)
+        context["typ"] = "ext_zdroj"
+        context["entity"] = context["typ"]
+        context["ident_cely"] = self.kwargs["ident_cely"]
+        return context

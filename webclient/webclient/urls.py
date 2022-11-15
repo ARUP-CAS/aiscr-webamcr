@@ -56,6 +56,7 @@ urlpatterns = [
     ),
     path("accounts/", include("django.contrib.auth.urls")),
     path("arch-z/lokalita/", include("lokalita.urls")),
+    path("ext-zdroj/", include("ez.urls")),
 ]
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]

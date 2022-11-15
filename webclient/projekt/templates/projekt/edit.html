@@ -85,7 +85,26 @@
 
   <script src="{% static 'daterangepicker.js' %}"></script>
 
-  <script src="{% static 'js/pamatkova_ochrana_validator.js' %}"></script>
+  <script src="{% static 'js/form_fields_disabling.js' %}"></script>
+  <script>
+      window.addEventListener("DOMContentLoaded", function() {
+        var checked_field = document.getElementById("id_kulturni_pamatka");
+        console.log(checked_field)
+        var fields = new Map()
+        fields.set("id_kulturni_pamatka_cislo", "")
+        fields.set("id_kulturni_pamatka_popis", "")
+        var required = new Map()
+        required.set("176", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("177", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("178", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("179", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("180", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+        required.set("181", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
+
+        ChangeFields(checked_field, fields,required,required);
+        checked_field.addEventListener("change", ChangeFields.bind(event, checked_field, fields,required,required));
+      })
+    </script>
   <script>
     $(document).ready(function () {
         var sel = document.getElementById('id_katastry');

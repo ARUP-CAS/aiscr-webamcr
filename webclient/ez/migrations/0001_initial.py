@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('stav', models.SmallIntegerField()),
                 ('poznamka', models.TextField(blank=True, null=True)),
                 ('ident_cely', models.TextField(blank=True, null=True, unique=True)),
-                ('final_cj', models.BooleanField()),
+                ('final_cj', models.BooleanField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'externi_zdroj',
@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
             name='ExterniZdrojAutor',
             fields=[
                 ('externi_zdroj', models.OneToOneField(db_column='externi_zdroj', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='ez.externizdroj')),
-                ('poradi', models.IntegerField()),
+                ('poradi', models.IntegerField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'externi_zdroj_autor',
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             name='ExterniZdrojEditor',
             fields=[
                 ('externi_zdroj', models.OneToOneField(db_column='externi_zdroj', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='ez.externizdroj')),
-                ('poradi', models.IntegerField()),
+                ('poradi', models.IntegerField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'externi_zdroj_editor',

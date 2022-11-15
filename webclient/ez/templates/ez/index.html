@@ -1,0 +1,121 @@
+{% extends "base_logged_in.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{%trans externiZdroj.template.index.Title%}{% endblock %}
+
+{% block content %}
+  <div class="app-entity-ext_zdroj">
+    {% include "toolbar_externi_zdroj.html" %}
+
+    <div class="row app-entity-cards mb-3">
+      <div class="col">
+        <a href="{% url 'ez:create' %}" class="card app-card-entity app-card-zapsat-ez">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "externiZdroj.template.index.zapsatEZ.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'ez:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-ez">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "externiZdroj.template.index.mojeEZ.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'ez:list' %}" class="card app-card-entity app-card-vybrat">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "externiZdroj.template.index.vybratEZ.label" %}
+          </div>
+        </a>
+      </div>
+      
+      <div class="col">
+        <a href="{% url 'ez:list' %}?stav=3" class="card app-card-entity app-card-potvrdit">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "externiZdroj.template.index.potvrditEZ.label" %}
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-card-desc-wrapper">
+    <div class="app-collapse-zapsat-ez collapse">
+      <div class="p-3">
+        <h4>{% trans "externiZdroj.template.index.zapsatEZ.label" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+    <div class="app-collapse-moje-ez collapse">
+      <div class="p-3">
+        <h4>{% trans "externiZdroj.template.index.mojeEZ.label" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+    <div class="app-collapse-vybrat collapse">
+      <div class="p-3">
+        <h4>{% trans "externiZdroj.template.index.vybratEZ.label" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+  <div class="app-collapse-potvrdit collapse">
+      <div class="p-3">
+        <h4>{% trans "externiZdroj.template.index.potvrditEZ.label" %}</h4>
+        <hr />
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // show / hide card description
+    $(".app-card-zapsat-ez").mouseleave(function(){
+      $(".app-collapse-zapsat-ez").hide(100);
+    });
+    $(".app-card-zapsat-ez").mouseover(function(){
+      $(".app-collapse-zapsat-ez").show(100);
+    });
+    $(".app-card-moje-ez").mouseleave(function(){
+      $(".app-collapse-moje-ez").hide(100);
+    });
+    $(".app-card-moje-ez").mouseover(function(){
+      $(".app-collapse-moje-ez").show(100);
+    });
+    $(".app-card-vybrat").mouseleave(function(){
+      $(".app-collapse-vybrat").hide(100);
+    });
+    $(".app-card-vybrat").mouseover(function(){
+      $(".app-collapse-vybrat").show(100);
+    });
+    $(".app-card-potvrdit").mouseleave(function(){
+      $(".app-collapse-potvrdit").hide(100);
+    });
+    $(".app-card-potvrdit").mouseover(function(){
+      $(".app-collapse-potvrdit").show(100);
+    });
+</script>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

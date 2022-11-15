@@ -133,12 +133,12 @@
                       {% endfor %}
                     </ul>
                   {% endif %}
-                  {% empty %}
+                </li>
+                {% empty %}
                   <div class="app-note">
                     <span class="material-icons">info</span>
                     {% trans "Akce nemá žádné dokumentační jednotky." %}
                   </div>
-                </li>
               {% endfor %}
             </ul>
           </div>
@@ -168,6 +168,10 @@
     <!-- dokumenty -->
 
       {% include "dokument/dokument_table.html" with type="arch_z"%}
+
+    <!-- externe odkazy -->
+
+    {% include "ez/az_ez_odkazy_table.html"%}
 
   </div>
   {% block arch_projekt %}
@@ -458,6 +462,16 @@
      create_autor_revize_modal = new Modal(options, "create-autor-revize");
     } catch (e) {
       console.log(e);
+    }
+    if (document.getElementsByClassName("ez-odpojit-btn")){
+      elements = document.getElementsByClassName("ez-odpojit-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "odpojit-az-form",
+        modalFormID: "#odpojit-az-form",
+        })
+        new Modal(options, elements.item(i).id);
+      }
     }
   });
 </script>

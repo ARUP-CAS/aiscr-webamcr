@@ -246,3 +246,33 @@
     }
   }
 }
+
+// set entity color for all transakce table idents
+@mixin setEntityTransakceColor() {
+  @each $entity, $color in $entities {
+    .app-card-#{$entity} {
+      table {
+        tr {
+          td {
+            &.app-ident-cely {
+              color: $color !important;
+
+              .material-icons {
+                color: $color;
+              }
+
+              a {
+                color: $color;
+              }
+            }
+
+            .badge {
+              background-color: $color;
+              color: $white;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -55,4 +55,6 @@ urlpatterns = [
     ),
     path("akce/vyber", views.AkceListView.as_view(), name="list"),
     path("akce", views.AkceIndexView.as_view(), name="index"),
+    path("arch-z-autocomplete/<str:type>",views.ArchZAutocomplete.as_view(),name="arch-z-autocomplete"),
+    path("get-archz-table-row", views.ArchZTableRowView.as_view(), name="get_archz_table_row"),
 ]

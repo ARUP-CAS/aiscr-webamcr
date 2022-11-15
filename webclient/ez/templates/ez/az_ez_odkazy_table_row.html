@@ -1,0 +1,22 @@
+{% load template_filters %}
+<tr>
+    <td class="app-ident-cely">
+      <a href="{% url 'ez:detail' ez.ident_cely %}">
+        <span class="material-icons">location_on</span>
+        {{ ez.ident_cely }}
+      </a>
+    </td>
+    <td>{{ ez.autori.all|katastry_to_list }}</td>
+    <td>{{ ez.rok|check_if_none }}</td>
+    <td>{{ ez.nazev|check_if_none }}</td>
+    {% if hide_paginace != True %}
+    <td>{{ z.paginace|check_if_none }}</td>
+    {% endif %}
+    {% if show.editovat %}
+    <td>
+      <button id="ez-odpojit-{{z.id}}" class="ez-odpojit-btn" type="button" name="button" href="{% url 'ez:odpojit_eo_az' zaznam.ident_cely z.id %}">
+        <span class="material-icons app-color-danger">delete_forever</span>
+      </button>
+    </td>
+    {% endif %}
+</tr>

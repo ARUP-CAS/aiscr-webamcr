@@ -1,0 +1,123 @@
+{% extends "base_logged_in.html" %}
+{% load widget_tweaks %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{{page_title}}{% endblock %}
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-ext_zdroj">
+    {% include "toolbar_externi_zdroj.html" with showcontrols=True %}
+    {% include "ez/stepper.html" %}
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="{% url 'ez:edit' zaznam.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      <form>
+        {% crispy form %}
+      </form>
+      </div>
+    </div>
+    {% if show.ez_odkazy %}
+    {% trans "externiZdroj.detail.odkazy.pridatAkci.label" as pridatLabel %}
+    {% trans "externiZdroj.detail.odkazy.tableAkce.label" as tableLabel %}
+    {% trans "externiZdroj.detail.odkazy.zadnaAkce.text" as tabletext %}
+    {% include "ez/ez_odkazy_table.html" with zaznamy=ez_akce type="arch_z" card_type="akce"%}
+
+    {% trans "externiZdroj.detail.odkazy.pridatLokalitu.label" as pridatLabel %}
+    {% trans "externiZdroj.detail.odkazy.tableLokalitu.label" as tableLabel %}
+    {% trans "externiZdroj.detail.odkazy.zadnaLokalitu.text" as tabletext %}
+    {% include "ez/ez_odkazy_table.html" with zaznamy=ez_lokality type="lokalita" card_type="lokalita"%}
+    {% endif %}
+  </div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+  //modal scripts
+  document.addEventListener('DOMContentLoaded', function (event) {
+    if ("{{show.odeslat_link}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'ez:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+      formID: "odeslat-ez-form",
+      modalFormID: "#odeslat-ez-form",
+    })
+    new Modal(options, "ez-odeslat");
+    };
+    if ("{{show.vratit_link}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'ez:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+      formID: "vratit-ez-form",
+      modalFormID: "#vratit-ez-form",
+    })
+    new Modal(options, "ez-vratit");
+    }
+    if ("{{show.potvrdit_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'ez:potvrdit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+        formID: "potvrdit-ez-form",
+        modalFormID: "#potvrdit-ez-form",
+      })
+      new Modal(options, "ez-potvrdit");
+    }
+    if ("{{show.smazat}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'ez:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
+      formID: "smazat-ez-form",
+      modalFormID: "#smazat-ez-form",
+    })
+    new Modal(options, "ez-smazat");
+    };
+    if (document.getElementsByClassName("ez-odpojit-btn")){
+      elements = document.getElementsByClassName("ez-odpojit-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "odpojit-az-form",
+        modalFormID: "#odpojit-az-form",
+        })
+        new Modal(options, elements.item(i).id);
+      }
+    }
+    if (document.getElementsByClassName("ez-change-btn")){
+      elements = document.getElementsByClassName("ez-change-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "zmenit-eo-form",
+        modalFormID: "#zmenit-eo-form",
+        })
+        new Modal(options, elements.item(i).id);
+      }
+    }
+});
+
+</script>
+{% endblock %}

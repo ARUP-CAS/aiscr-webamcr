@@ -1,4 +1,5 @@
 import logging
+from django.views import View
 
 import simplejson as json
 import structlog
@@ -7,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import is_safe_url
@@ -15,6 +16,8 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.contrib.auth.models import Group
+from dal import autocomplete
+from django.template.loader import render_to_string
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -24,7 +27,13 @@ from arch_z.forms import (
     CreateArchZForm,
     create_akce_vedouci_objekt_form,
 )
-from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam, get_akce_ident
+from arch_z.models import (
+    Akce,
+    AkceVedouci,
+    ArcheologickyZaznam,
+    ExterniOdkaz,
+    get_akce_ident,
+)
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -207,6 +216,14 @@ class AkceRelatedRecordUpdateView(TemplateView):
             .order_by("ident_cely")
         )
 
+    def get_externi_odkazy(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return (
+            ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+            .select_related("externi_zdroj")
+            .order_by("id")
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         zaznam = self.get_archeologicky_zaznam()
@@ -217,6 +234,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["show"] = get_detail_template_shows(
             zaznam, self.get_jednotky(), self.request.user
         )
+        context["externi_odkazy"] = self.get_externi_odkazy()
         if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             context["presna_specifikace"] = (
                 True
@@ -296,8 +314,10 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         show = self.get_shows()
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         jednotky = self.get_jednotky()
-        #check po MR
-        context["j"] = get_dj_form_detail("akce", jednotka, jednotky, show, old_adb_post)
+        # check po MR
+        context["j"] = get_dj_form_detail(
+            "akce", jednotka, jednotky, show, old_adb_post
+        )
         return context
 
 
@@ -310,7 +330,7 @@ class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
         context["komponenta_form_create"] = CreateKomponentaForm(
             self.get_obdobi_choices(), self.get_areal_choices()
         )
-        #check po MR
+        # check po MR
         context["j"] = self.get_dokumentacni_jednotka()
         return context
 
@@ -339,8 +359,10 @@ class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
 
-        #check po MR
-        context["k"] = get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely)
+        # check po MR
+        context["k"] = get_komponenta_form_detail(
+            komponenta, show, old_nalez_post, komp_ident_cely
+        )
         context["j"] = self.get_dokumentacni_jednotka()
         context["active_komp_ident"] = komponenta.ident_cely
         return context
@@ -824,6 +846,8 @@ def smazat(request, ident_cely):
         for dj in az.dokumentacni_jednotky_akce.all():
             if dj.komponenty:
                 komponenty_jednotek_vazby.append(dj.komponenty)
+        for eo in az.externi_odkazy.all():
+            eo.delete()
         az.delete()
         historie_vazby.delete()
         for komponenta_vazba in komponenty_jednotek_vazby:
@@ -1011,8 +1035,8 @@ def get_history_dates(historie_vazby):
     return historie
 
 
-#Fix  function call user je povinnny
-def get_detail_template_shows(archeologicky_zaznam, dok_jednotky,user, app="akce"):
+# Fix  function call user je povinnny
+def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akce"):
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
     show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce"
@@ -1115,9 +1139,7 @@ def post_ajax_get_akce_other_katastr(request):
 
 
 def get_arch_z_context(request, ident_cely, zaznam, app):
-    context = {
-        "warnings": request.session.pop("temp_data", None)
-    }
+    context = {"warnings": request.session.pop("temp_data", None)}
     if app == "akce":
         context["arch_projekt_link"] = request.session.pop("arch_projekt_link", None)
     else:
@@ -1300,6 +1322,11 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
                     "helper_objekt": NalezFormSetHelper(typ="objekt"),
                 }
             )
+    externi_odkazy = (
+        ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
+        .select_related("externi_zdroj")
+        .order_by("id")
+    )
 
     context["dj_form_create"] = dj_form_create
     context["pian_form_create"] = pian_form_create
@@ -1313,6 +1340,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky
     context["show"] = show
+    context["externi_odkazy"] = externi_odkazy
     if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
             context["showbackdetail"] = True
@@ -1479,30 +1507,58 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
 
         return redirect(az.get_reverse())
 
+
+class ArchZAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return ArcheologickyZaznam.objects.none()
+        type = self.kwargs.get("type")
+        if type == "akce":
+            qs = ArcheologickyZaznam.objects.filter(
+                typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+            )
+        else:
+            qs = ArcheologickyZaznam.objects.filter(
+                typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
+            )
+        if self.q:
+            qs = qs.filter(ident_cely__icontains=self.q)
+        return qs
+
+
+class ArchZTableRowView(LoginRequiredMixin, View):
+    def get(self, request):
+        zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))
+        context = {"arch_z": zaznam}
+        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            context["type"] = "arch_z"
+            context["card_type"] = "akce"
+        else:
+            context["type"] = "lokalita"
+            context["card_type"] = "lokalita"
+        return HttpResponse(render_to_string("ez/ez_odkazy_table_row.html", context))
+
+
 def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None):
     vyskovy_bod_formset = inlineformset_factory(
         Adb,
         VyskovyBod,
-        form=create_vyskovy_bod_form(
-            pian=jednotka.pian, not_readonly=show["editovat"]
-        ),
+        form=create_vyskovy_bod_form(pian=jednotka.pian, not_readonly=show["editovat"]),
         extra=1,
         can_delete=False,
     )
     has_adb = jednotka.has_adb()
     show_adb_add = (
-            jednotka.pian
-            and jednotka.typ.id == TYP_DJ_SONDA_ID
-            and not has_adb
-            and show["editovat"]
+        jednotka.pian
+        and jednotka.typ.id == TYP_DJ_SONDA_ID
+        and not has_adb
+        and show["editovat"]
     )
     show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
     show_add_pian = False if jednotka.pian else True
     show_approve_pian = (
         True
-        if jednotka.pian
-           and jednotka.pian.stav == PIAN_NEPOTVRZEN
-           and show["editovat"]
+        if jednotka.pian and jednotka.pian.stav == PIAN_NEPOTVRZEN and show["editovat"]
         else False
     )
     if app == "akce":
@@ -1528,20 +1584,18 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_add_pian": (show_add_pian and show["editovat"]),
         "show_remove_pian": (not show_add_pian and show["editovat"]),
         "show_uprav_pian": jednotka.pian
-                           and jednotka.pian.stav == PIAN_NEPOTVRZEN
-                           and show["editovat"],
+        and jednotka.pian.stav == PIAN_NEPOTVRZEN
+        and show["editovat"],
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True,
     }
     if has_adb and app != "lokalita":
         logger.debug(jednotka.ident_cely)
-        dj_form_detail["adb_form"] = (
-            CreateADBForm(
-                old_adb_post,
-                instance=jednotka.adb,
-                prefix=jednotka.adb.ident_cely,
-                readonly=not show["editovat"],
-            )
+        dj_form_detail["adb_form"] = CreateADBForm(
+            old_adb_post,
+            instance=jednotka.adb,
+            prefix=jednotka.adb.ident_cely,
+            readonly=not show["editovat"],
         )
         dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
         dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
@@ -1569,7 +1623,11 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
         NalezPredmet,
         form=create_nalez_predmet_form(
             heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-            list(Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE).values_list("id", "heslo")),
+            list(
+                Heslar.objects.filter(
+                    nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
+                ).values_list("id", "heslo")
+            ),
             not_readonly=show["editovat"],
         ),
         extra=1 if show["editovat"] else 0,

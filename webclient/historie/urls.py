@@ -9,6 +9,7 @@ from .views import (
     SouborHistorieListView,
     LokalitaHistorieListView,
     UzivatelHistorieListView,
+    ExterniZdrojHistorieListView,
 )
 
 app_name = "historie"
@@ -32,4 +33,5 @@ urlpatterns = [
     path(
         "uzivatel/<str:ident_cely>", UzivatelHistorieListView.as_view(), name="uzivatel"
     ),
+    path("ez/<str:ident_cely>", ExterniZdrojHistorieListView.as_view(), name="ez"),
 ]

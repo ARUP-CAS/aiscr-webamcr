@@ -315,7 +315,7 @@ def get_temp_lokalita_ident(typ, region):
         idents = [sub.lstrip("0") for sub in idents]
         idents = [eval(i) for i in idents]
         start = idents[0]
-        end = idents[-1]
+        end = MAXIMAL
         missing = sorted(set(range(start, end + 1)).difference(idents))
         logger.debug(missing[0])
         if missing[0] >= MAXIMAL:
