@@ -77,7 +77,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          dockerfile: Dockerfile-production
+          file: Dockerfile-production
           push: true
           tags: ${{ steps.meta_prod.outputs.tags }}
           labels: ${{ steps.meta_prod.outputs.labels }}
@@ -97,7 +97,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          dockerfile: Dockerfile-DB
+          file: Dockerfile-DB
           push: true
           tags: ${{ steps.meta_db.outputs.tags }}
           labels: ${{ steps.meta_db.outputs.labels }}
