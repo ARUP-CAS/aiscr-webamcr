@@ -4,6 +4,8 @@ services:
   web:
     image: huldcz/aiscr_prod:latest
     container_name: web
+    secrets:
+      - db_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
