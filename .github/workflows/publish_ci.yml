@@ -12,7 +12,6 @@ on:
 env:
   DOCKER_HUB_REPO_DEV: huldcz/aiscr_dev
   DOCKER_HUB_REPO_PROXY: huldcz/aiscr_proxy
-  DOCKER_HUB_REPO_DB: huldcz/aiscr_db
   DOCKER_HUB_REPO_PROD: huldcz/aiscr_prod
   DOCKER_HUB_USERNAME: huldcz
   # @IMPORTANT: when Github secrets settings for repository will be accessible (i.e. permission granted by maintainer) this shall be IMMEDIATELY replaced!
@@ -85,25 +84,6 @@ jobs:
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
               - name: Build and push Docker image
-      #---------------------
-      # BUILD DB
-      #---------------------
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta_db
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.DOCKER_HUB_REPO_DB }}
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: Dockerfile-DB
-          push: true
-          tags: ${{ steps.meta_db.outputs.tags }}
-          labels: ${{ steps.meta_db.outputs.labels }}
-          build-args: |
-            VERSION_APP=${{ env.tag_version }}
-            TAG_APP=${{ github.ref }}
       #---------------------
       # BUILD PROXY
       #---------------------
