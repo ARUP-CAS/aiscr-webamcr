@@ -32,3 +32,7 @@ volumes:
 networks:
   aiscr-webamcr_reverse-proxy:
     external: true
+
+secrets:
+  db_conf:
+   external : true
