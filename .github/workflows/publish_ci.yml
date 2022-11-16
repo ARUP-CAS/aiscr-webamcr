@@ -89,7 +89,7 @@ jobs:
       # BUILD DB
       #---------------------
       - name: Extract metadata (tags, labels) for Docker
-        id: meta
+        id: meta_db
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.DOCKER_HUB_REPO_DB }}
@@ -99,8 +99,8 @@ jobs:
           context: .
           dockerfile: Dockerfile-DB
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_db.outputs.tags }}
+          labels: ${{ steps.meta_db.outputs.labels }}
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
