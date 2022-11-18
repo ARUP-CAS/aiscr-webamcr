@@ -1,0 +1,22 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans 'Dobrý den' %},
+
+{% trans "v AMČR-PAS byly dnes Vaším spolupracovníkem odeslány nové nálezy ke schválení" %}:
+
+<ul style="list-style: none">
+{% for id in ids %}
+    <li>{{ id }}</li>
+{% endfor %}
+</ul>
+
+{% trans "Detaily zjistíte po přihlášení do AMČR-PAS" %}.
+
+</body>
+</html>

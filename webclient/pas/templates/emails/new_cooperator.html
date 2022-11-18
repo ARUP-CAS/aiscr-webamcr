@@ -1,0 +1,25 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+
+{% trans 'Dobrý den' %},
+
+{% trans "nový uživatel žádá o zařazení mezi spolupracovníky" %}:
+
+ID: {{ ident_cely }}
+Jméno: {{ name }}
+Příjmení: {{ surname }}
+Organizace: {{ organization }}
+Email (přihlašovací jméno): {{ email }}
+Telefon: {{ phone }}
+Zdůvodnění: {{ message }}
+
+{% trans "Spolupráci potvrdíte po přihlášení do AMČR-PAS, nebo kliknutím na tento odkaz" %}: {{ link }}
+
+</body>
+</html>

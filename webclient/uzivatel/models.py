@@ -32,6 +32,8 @@ from django.utils.translation import gettext as _
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 logger_s = structlog.get_logger(__name__)
 
@@ -68,6 +70,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=ROLE_NEAKTIVNI_UZIVATEL_ID,
     )
     history = HistoricalRecords()
+    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user')
+    notification_log = GenericRelation('NotificationsLog')
+    created_from_admin_panel = False
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -231,3 +236,29 @@ class Osoba(models.Model):
 
     def __str__(self):
         return self.vypis_cely
+
+
+class UserNotificationType(models.Model):
+    ident_cely = models.TextField(unique=True)
+    zasilat_neaktivnim = models.BooleanField(default=False)
+    predmet = models.TextField()
+    cesta_sablony = models.TextField(blank=True)
+    notification_log = GenericRelation('NotificationsLog')
+    class Meta:
+        db_table = "uzivatel_notifikace_typ"
+
+    def __str__(self):
+        return self.ident_cely
+
+class NotificationsLog(models.Model):
+    notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "notifications_log"
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]

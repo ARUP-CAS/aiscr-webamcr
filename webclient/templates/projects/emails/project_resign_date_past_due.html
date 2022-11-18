@@ -1,0 +1,17 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans 'Dobrý den' %},
+
+{% blocktrans %} v aplikaci IS AMČR vypršela lhůta pro odevzdání NZ u projektu {{ ident_cely }} na
+    katastru {{ katastr }}{% endblocktrans %}.
+
+{% trans "Detaily projektu zjistíte po přihlášení do AMČR" %}.
+
+</body>
+</html>

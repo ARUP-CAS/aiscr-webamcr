@@ -3,11 +3,19 @@ import logging
 import os
 import zlib
 
+from django.contrib.gis.db import models as pgmodels
+from django.contrib.postgres.fields import DateRangeField
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.base import ContentFile
+from django.db import models
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.utils.translation import gettext as _
+
 from core.constants import (
     ARCHIVACE_PROJ,
     AZ_STAV_ARCHIVOVANY,
     NAVRZENI_KE_ZRUSENI_PROJ,
-    OTHER_PROJECT_FILES,
     OZNAMENI_PROJ,
     PRIHLASENI_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
@@ -30,22 +38,14 @@ from core.constants import (
     ZAPSANI_PROJ,
     VRACENI_ZRUSENI,
 )
-from core.models import ProjektSekvence, Soubor, SouborVazby
 from core.exceptions import MaximalIdentNumberError
-from django.contrib.gis.db import models as pgmodels
-from django.contrib.postgres.fields import DateRangeField
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
-from django.shortcuts import get_object_or_404
-from django.urls import reverse
-from django.utils.translation import gettext as _
+from core.models import ProjektSekvence, Soubor, SouborVazby
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
     TYP_PROJEKTU_PRUZKUM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )
-from django.core.files.base import ContentFile
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import OznameniPDFCreator
@@ -56,7 +56,6 @@ logger = logging.getLogger(__name__)
 
 
 class Projekt(models.Model):
-
     CHOICES = (
         (PROJEKT_STAV_OZNAMENY, "P0 - Oznámen"),
         (PROJEKT_STAV_ZAPSANY, "P1 - Zapsán"),
@@ -226,6 +225,7 @@ class Projekt(models.Model):
         self.save()
 
     def set_archivovany(self, user):
+        from services.mailer import Mailer
         if self.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
             # Removing personal information from the projekt announcement
             if self.has_oznamovatel():
@@ -238,12 +238,12 @@ class Projekt(models.Model):
             logger.debug(soubory)
             if soubory.count() > 0:
                 filename = (
-                    "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
+                        "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
                 )
                 ("soubory/APD/" + filename, "w+")
                 file_content = (
-                    "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
-                    % today.strftime("%d. %m. %Y")
+                        "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
+                        % today.strftime("%d. %m. %Y")
                 )
                 file_content += "\n".join(soubory.values_list("nazev_zkraceny", flat=True))
                 prev = 0
@@ -271,6 +271,7 @@ class Projekt(models.Model):
 
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
+        Mailer.sendEA01(self)
         self.save()
 
     def set_navrzen_ke_zruseni(self, user, poznamka):
@@ -284,7 +285,7 @@ class Projekt(models.Model):
         self.save()
 
     def set_zruseny(self, user, poznamka):
-        self.datum_ukonceni=None
+        self.datum_ukonceni = None
         self.termin_odevzdani_nz = None
         self.datum_zahajeni = None
         self.vedouci_projektu = None
@@ -298,7 +299,7 @@ class Projekt(models.Model):
 
     def set_vracen(self, user, new_state, poznamka):
         if self.stav == PROJEKT_STAV_UKONCENY_V_TERENU:
-            self.datum_ukonceni=None
+            self.datum_ukonceni = None
             self.termin_odevzdani_nz = None
         elif self.stav == PROJEKT_STAV_ZAHAJENY_V_TERENU:
             self.datum_zahajeni = None
@@ -318,7 +319,7 @@ class Projekt(models.Model):
     def set_znovu_zapsan(self, user, poznamka):
         if self.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
             zmena = VRACENI_NAVRHU_ZRUSENI
-            self.datum_ukonceni=None
+            self.datum_ukonceni = None
             self.termin_odevzdani_nz = None
             self.datum_zahajeni = None
             self.vedouci_projektu = None
@@ -383,8 +384,8 @@ class Projekt(models.Model):
         permanent = None
         if self.ident_cely:
             last_dash_index = self.ident_cely.rfind("-")
-            region = self.ident_cely[last_dash_index - 1 : last_dash_index]
-            last_part = self.ident_cely[last_dash_index + 1 :]
+            region = self.ident_cely[last_dash_index - 1: last_dash_index]
+            last_part = self.ident_cely[last_dash_index + 1:]
             year = last_part[:4]
             number = last_part[4:]
             permanent = False if "X-" in self.ident_cely else True
@@ -411,7 +412,7 @@ class Projekt(models.Model):
             0
         ]
         perm_ident_cely = (
-            region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+                region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
         )
         # Loop through all of the idents that have been imported
         while True:
@@ -424,10 +425,10 @@ class Projekt(models.Model):
                     + str(sequence.sekvence)
                 )
                 perm_ident_cely = (
-                    region
-                    + "-"
-                    + str(current_year)
-                    + "{0}".format(sequence.sekvence).zfill(5)
+                        region
+                        + "-"
+                        + str(current_year)
+                        + "{0}".format(sequence.sekvence).zfill(5)
                 )
             else:
                 break

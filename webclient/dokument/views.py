@@ -97,6 +97,7 @@ from nalez.models import NalezObjekt, NalezPredmet
 from urllib.parse import urlparse
 from projekt.models import Projekt
 from core.utils import calculate_crc_32
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -738,6 +739,7 @@ def archivovat(request, ident_cely):
 
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
+        Mailer.sendEK01(document=d)
         return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})
     else:
         warnings = d.check_pred_archivaci()
