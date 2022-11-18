@@ -2,10 +2,10 @@ version: "3.8"
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile-production
+    image: huldcz/aiscr_prod:latest
     container_name: web
+    secrets:
+      - db_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
@@ -32,3 +32,7 @@ volumes:
 networks:
   aiscr-webamcr_reverse-proxy:
     external: true
+
+secrets:
+  db_conf:
+   external : true

@@ -9,8 +9,8 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 file_path = (
-    "webclient/settings/secrets.json"
-    if os.path.exists(BASE_DIR / "webclient/settings/secrets.json")
+    "/run/secrets/db_conf"
+    if os.path.exists(BASE_DIR / "/run/secrets/db_conf")
     else "webclient/settings/secrets_test.json"
 )
 with open(BASE_DIR / file_path, "r") as f:

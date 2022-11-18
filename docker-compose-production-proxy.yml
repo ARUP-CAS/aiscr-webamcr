@@ -2,8 +2,7 @@ version: "3.8"
 
 services:
   proxy:
-    build:
-      context: ./proxy
+    image: huldcz/aiscr_proxy
     volumes:
       - static_data:/vol/static
       - nginx_data:/vol/nginx/data
