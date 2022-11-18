@@ -56,17 +56,19 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from dokument.filters import DokumentFilter
+from django.views.generic import DetailView, TemplateView
+from dokument.filters import Model3DFilter, DokumentFilter
 from dokument.forms import (
     CoordinatesDokumentForm,
     CreateModelDokumentForm,
     CreateModelExtraDataForm,
+    DokumentCastForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
     PripojitDokumentForm,
 )
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
-from dokument.tables import DokumentTable
+from dokument.tables import Model3DTable, DokumentTable
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
     HESLAR_AREAL,
@@ -295,6 +297,38 @@ def detail_model_3D(request, ident_cely):
     return render(request, "dokument/detail_model_3D.html", context)
 
 
+class Model3DListView(
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
+):
+    table_class = Model3DTable
+    model = Dokument
+    template_name = "dokument/dokument_list.html"
+    filterset_class = Model3DFilter
+    paginate_by = 100
+    export_name = "export_dokumenty_"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = ["csv", "json", "xlsx"]
+        context["is_3d"] = True
+        context["header_vybrat"] = _("Vybrat modely 3D")
+        context["header_moje"] = _("Moje modely 3D")
+        context["header_podle_filtru"] = _("Modely podle filtru")
+        return context
+
+    def get_queryset(self):
+        # Only allow to view 3D models
+        qs = super().get_queryset().filter(ident_cely__contains="3D")
+        qs = qs.select_related(
+            "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+        )
+        return qs
+
+
+class DokumentIndexView(LoginRequiredMixin, TemplateView):
+    template_name = "dokument/index_dokument.html"
+
+
 class DokumentListView(
     ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
 ):
@@ -308,15 +342,134 @@ class DokumentListView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["export_formats"] = ["csv", "json", "xlsx"]
+        context["is_3d"] = False
+        context["header_vybrat"] = _("Vybrat dokumenty")
+        context["header_moje"] = _("Moje dokumenty")
+        context["header_podle_filtru"] = _("Dokumenty podle filtru")
         return context
 
     def get_queryset(self):
         # Only allow to view 3D models
-        qs = super().get_queryset().filter(ident_cely__contains="3D")
+        qs = super().get_queryset().exclude(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
         )
         return qs
+
+
+class RelatedContext(LoginRequiredMixin, TemplateView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["warnings"] = self.request.session.pop("temp_data", None)
+        dokument = get_object_or_404(
+            Dokument.objects.select_related(
+                "soubory",
+                "organizace",
+                "material_originalu",
+                "typ_dokumentu",
+                "rada",
+            ),
+            ident_cely=self.kwargs["ident_cely"],
+        )
+        if not dokument.has_extra_data():
+            extra_data = DokumentExtraData(dokument=dokument)
+            extra_data.save()
+        else:
+            extra_data = dokument.extra_data
+        form_dokument = EditDokumentForm(instance=dokument, readonly=True)
+        form_dokument_extra = EditDokumentExtraDataForm(
+            rada=dokument.rada,
+            let=(dokument.let.id if dokument.let else ""),
+            dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
+            instance=extra_data,
+            readonly=True,
+        )
+        context["dokument"] = dokument
+        context["form_dokument"] = form_dokument
+        context["form_dokument_extra"] = form_dokument_extra
+        context["history_dates"] = get_history_dates(dokument.historie)
+        context["show"] = get_detail_template_shows(dokument)
+
+        if dokument.soubory:
+            context["soubory"] = dokument.soubory.soubory.all()
+        else:
+            context["soubory"] = None
+
+        context["casti"] = dokument.casti.all()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path
+        referer_next = urlparse(self.request.META.get("HTTP_REFERER", False)).query
+        if referer:
+            ident_referer = referer.split("/")[-1]
+            if context["dokument"].ident_cely == ident_referer:
+                pass
+            elif (
+                "arch-z/akce/detail/" in referer
+                or "/projekt/detail/"
+                or "arch-z/lokalita/detail/" in referer
+            ):
+                found = False
+                for cast in context["casti"]:
+                    if cast.archeologicky_zaznam:
+                        if cast.archeologicky_zaznam.ident_cely == ident_referer:
+                            logger.debug("back option for akce found")
+                            response.set_cookie(
+                                "zpet",
+                                cast.archeologicky_zaznam.get_reverse(),
+                                max_age=1000,
+                            )
+                            found = True
+                            break
+                    if cast.projekt:
+                        if cast.projekt.ident_cely == ident_referer:
+                            logger.debug("back option for projekt found")
+                            response.set_cookie(
+                                "zpet",
+                                reverse("projekt:detail", args=(ident_referer,)),
+                                max_age=1000,
+                            )
+                            found = True
+                            break
+                if found == False:
+                    logger.debug("no back option for projekt/akce found")
+                    response.delete_cookie("zpet")
+            elif (
+                "nahrat-soubor" in referer
+                and context["dokument"].ident_cely in referer_next
+            ):
+                logger.debug("referer is nahradit soubor so back option not changed")
+            else:
+                logger.debug("referer is other so no back option")
+                response.delete_cookie("zpet")
+        else:
+            logger.debug("no referer so no back option")
+            response.delete_cookie("zpet")
+        return response
+
+
+class DokumentDetailView(RelatedContext):
+    template_name = "dokument/detail.html"
+
+
+class DokumentCastDetailView(RelatedContext):
+    template_name = "dokument/detail_cast_dokumentu.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cast = get_object_or_404(
+            DokumentCast,
+            ident_cely=self.kwargs["cast_ident_cely"],
+        )
+        context["cast"] = cast
+        cast_form = DokumentCastForm(
+            instance=cast,
+            readonly=True,
+        )
+        context["cast_form"] = cast_form
+        return context
 
 
 @login_required
@@ -560,7 +713,7 @@ def create_model_3D(request):
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
             )
             try:
-                dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C")
+                dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C-")
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
@@ -898,7 +1051,7 @@ def get_detail_template_shows(dokument):
     return show
 
 
-def zapsat(request, zaznam):
+def zapsat(request, zaznam=None):
     required_fields = get_required_fields_dokument()
     required_fields_next = get_required_fields_dokument(next=1)
     if request.method == "POST":
@@ -914,10 +1067,13 @@ def zapsat(request, zaznam):
                 dokument.typ_dokumentu, dokument.material_originalu
             )
             try:
-                prefix = zaznam.ident_cely[0]
-                if isinstance(zaznam, ArcheologickyZaznam):
-                    if zaznam.ident_cely.startswith("X"):
-                        prefix = zaznam.ident_cely[2]
+                if zaznam:
+                    prefix = zaznam.ident_cely[0]
+                    if isinstance(zaznam, ArcheologickyZaznam):
+                        if zaznam.ident_cely.startswith("X"):
+                            prefix = zaznam.ident_cely[2] + "-"
+                else:
+                    prefix = ""
                 dokument.ident_cely = get_temp_dokument_ident(
                     rada=dokument.rada.zkratka, region=prefix
                 )
@@ -929,18 +1085,19 @@ def zapsat(request, zaznam):
                 dokument.set_zapsany(request.user)
 
                 # Vytvorit defaultni cast dokumentu
-                if zaznam._meta.verbose_name == "archeologicky zaznam":
-                    DokumentCast(
-                        dokument=dokument,
-                        ident_cely=get_cast_dokumentu_ident(dokument),
-                        archeologicky_zaznam=zaznam,
-                    ).save()
-                else:
-                    DokumentCast(
-                        dokument=dokument,
-                        ident_cely=get_cast_dokumentu_ident(dokument),
-                        projekt=zaznam,
-                    ).save()
+                if zaznam:
+                    if isinstance(zaznam, ArcheologickyZaznam):
+                        DokumentCast(
+                            dokument=dokument,
+                            ident_cely=get_cast_dokumentu_ident(dokument),
+                            archeologicky_zaznam=zaznam,
+                        ).save()
+                    else:
+                        DokumentCast(
+                            dokument=dokument,
+                            ident_cely=get_cast_dokumentu_ident(dokument),
+                            projekt=zaznam,
+                        ).save()
 
                 form_d.save_m2m()
 

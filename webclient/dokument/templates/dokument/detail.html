@@ -15,6 +15,35 @@
 
     {% include "state_component_document.html" with dokument=dokument %}
 
+    <div class="card app-card-form app-table-list-container">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Soubory" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
@@ -44,7 +73,7 @@
           {% crispy form_dokument %}
 
         <div css_class="col-sm-12">
-                <span class="app-divider-label">Rozšiřující popis</span>
+                <span class="app-divider-label">{% trans "Rozšiřující popis" %}</span>
                 <hr class="mt-0" />
         </div>
         <div>
@@ -53,80 +82,73 @@
       </div>
     </div>
 
-    <div class="card app-card-form app-card-casti-dokumentu">
-      <div id="karta-casti-dokumentu" class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Části dokumentu" %}
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <ul class="list-group list-group-flush">
-          {% for dc in dokument.casti.all %}
-            <li class="list-group-item">
-              <div class="d-flex align-items-center">
-                <a href="#" class="app-entity-color mr-1" onclick="show_form('detail_dj_form_{{ dc.ident_cely }}')">
-                  <strong>{{ dc.ident_cely|last_x_letters:4 }}</strong>
-                </a>
-                {% if dc.archeologicky_zaznam %}
-                  <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
-                    ({{ dc.archeologicky_zaznam.ident_cely }})
-                  </a>
-                {% endif %}
-              </div>
-              {% if dc.komponenty.komponenty.all %}
-                <ul class="app-list-group-in">
-                  {% for k in dc.komponenty.komponenty.all %}
-                    <li>
-                      <div class="d-flex align-items-baseline">
-                        <a href="#" class="flex-fill mr-2 app-entity-color"
-                           onclick="show_form('detail_komponenta_form_{{ k.ident_cely }}')">
-                          {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+    <div class="row mb-3">
+      <div class="col-sm-4">
+        <div class="card app-card-form app-card-casti-dokumentu">
+          <div id="karta-casti-dokumentu" class="card-header">
+            <div class="app-fx app-left">
+              {% trans "Části dokumentu" %}
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              {% for dc in casti.all %}
+                <li class="list-group-item">
+                  <div class="d-flex align-items-center" {% if dc.ident_cely == active_dj_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                    <a href="{% url 'dokument:detail-cast' dokument.ident_cely dc.ident_cely %}" class="app-entity-color mr-1">
+                      <strong>{{ dc.ident_cely|last_x_letters:4 }}  </strong>
+                    </a>
+                    {% if dc.archeologicky_zaznam %}
+                      {% if dc.archeologicky_zaznam.akce %}
+                        <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
+                        ({{ dc.archeologicky_zaznam.ident_cely }})
                         </a>
-                        <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
-                      </div>
-                    </li>
-                  {% endfor %}
-                </ul>
-              {% endif %}
-              {% empty %}
-              <div class="app-note">
-                <span class="material-icons">info</span>
-                {% trans "Dokument nemá žádné části dokumentu" %}
-              </div>
-            </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-
-    <div class="card app-card-form app-table-list-container">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Soubory" %}
-        </div>
-        {% if show.editovat %}
-        <div class="app-fx app-right">
-          <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
-               rel="tooltip"
-               data-placement="top" title="{% trans 'Nahrát soubory' %}">
-              <span class="material-icons">publish</span>
-            </a>
+                      {% elif dc.archeologicky_zaznam.lokalita %}
+                        <a href="{% url 'lokalita:detail' dc.archeologicky_zaznam.ident_cely %}">
+                        ({{ dc.archeologicky_zaznam.ident_cely }})
+                        </a>
+                      {% endif %}
+                    {% elif dc.projekt  %} <!-- projekt -->
+                      <a href="{% url 'projekt:detail' dc.projekt.ident_cely %}">
+                      ({{ dc.projekt.ident_cely }})
+                      </a>
+                    {% elif dc.neident_akce %}
+                      <a href="#">
+                      ({{ dc.neident_akce.ident_cely }})
+                      </a>
+                      <span class="material-icons">no_accounts</span>
+                    {% endif %}
+                  </div>
+                  {% if dc.komponenty.komponenty.all %}
+                    <ul class="app-list-group-in">
+                      {% for k in dc.komponenty.komponenty.all %}
+                        <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
+                          <div class="d-flex align-items-baseline" {% if k.ident_cely == active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                            <a href="{% url 'dokument:detail' dokument.ident_cely %}" class="flex-fill mr-2 app-entity-color">
+                              {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+                            </a>
+                            <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                          </div>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+                {% empty %}
+                  <div class="app-note">
+                    <span class="material-icons">info</span>
+                    {% trans "Dokument nemá žádné části dokumentu." %}
+                  </div>
+              {% endfor %}
+            </ul>
           </div>
         </div>
-        {% endif %}
       </div>
-      <div class="card-body">
-        {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
-        {% else %}
-          <div class="app-note">
-            <span class="material-icons">info</span>
-            {% trans "Dokument zatím neobsahuje žádné soubory." %}
-          </div>
-        {% endif %}
+      <div class="col-sm-8 pl-0">        
+        {% block cast_dokumentu %}
+        {% endblock %}
       </div>
-    </div>
+    </div>    
   </div>
 {% endblock %}
 

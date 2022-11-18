@@ -10,7 +10,7 @@ from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
-from dokument.models import Dokument, DokumentExtraData, Let
+from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
     HESLAR_DOKUMENT_FORMAT,
@@ -621,3 +621,24 @@ class PripojitDokumentForm(forms.Form):
         )
         self.helper = FormHelper(self)
         self.helper.form_tag = False
+
+
+class DokumentCastForm(forms.ModelForm):
+    poznamka = forms.CharField(
+        help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
+        label=_("dokument.form.castDokumentu.poznamka.label"),
+    )
+    class Meta:
+        model = DokumentCast
+        fields = ("poznamka",)
+
+    def __init__(self, readonly=False, *args, **kwargs):
+        super(DokumentCastForm, self).__init__(*args, **kwargs)
+        
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+        for key in self.fields.keys():
+            self.fields[key].disabled = readonly
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
+                self.fields[key].required = False

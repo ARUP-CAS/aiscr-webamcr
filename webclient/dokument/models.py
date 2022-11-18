@@ -86,7 +86,8 @@ class Dokument(models.Model):
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     material_originalu = models.ForeignKey(
         Heslar,
@@ -136,7 +137,8 @@ class Dokument(models.Model):
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
-        blank=True, null=True,
+        blank=True,
+        null=True,
     )
     osoby = models.ManyToManyField(
         Osoba,
@@ -145,6 +147,9 @@ class Dokument(models.Model):
     )
     autori = models.ManyToManyField(
         Osoba, through="DokumentAutor", related_name="dokumenty_autoru"
+    )
+    tvary = models.ManyToManyField(
+        Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
 
     class Meta:
@@ -220,7 +225,9 @@ class Dokument(models.Model):
             if not self.popis:
                 result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
             if not self.ulozeni_originalu:
-                result.append(_("dokument.formCheckOdeslani.missingUlozeniOriginalu.text"))
+                result.append(
+                    _("dokument.formCheckOdeslani.missingUlozeniOriginalu.text")
+                )
             if self.jazyky.all().count() == 0:
                 result.append(_("dokument.formCheckOdeslani.missingJazyky.text"))
         # At least one soubor must be attached to the dokument

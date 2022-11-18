@@ -405,6 +405,14 @@ form {
       overflow-y: auto;
     }
   }
+  &.app-card-casti-dokumentu {
+    min-height: 300px;
+
+    .card-body {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  }
 }
 
 // list group

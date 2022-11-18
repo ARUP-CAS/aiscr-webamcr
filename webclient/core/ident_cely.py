@@ -73,12 +73,7 @@ def get_temp_dokument_ident(rada, region):
     if rada == "TX" or rada == "DD" or rada == "3D":
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
         prefix = str(
-            IDENTIFIKATOR_DOCASNY_PREFIX
-            + region
-            + "-"
-            + rada
-            + "-"
-            + str(date.today().year)
+            IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-" + str(date.today().year)
         )
         d = Dokument.objects.filter(
             ident_cely__regex="^" + prefix + "\\d{5}$"

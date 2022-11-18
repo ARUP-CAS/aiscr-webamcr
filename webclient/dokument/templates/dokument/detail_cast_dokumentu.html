@@ -1,0 +1,28 @@
+{% extends "dokument/detail.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block cast_dokumentu %}
+<div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "dokument.detail.castDokumentu.cardHeader" %}  {{ cast.ident_cely }}
+      </div>
+      <div class="app-fx app-right">
+        {% if show.editovat %}
+        <div class="btn-group" role="group">
+            <a id="button-edit-cast" class="btn" href="{% url 'dokument:cast-edit' cast.ident_cely %}"
+            rel="tooltip" data-placement="top"
+            title="{% trans 'dokument.detail.editCastDokumentu.tooltip' %}">
+            <span class="material-icons">edit</span>
+            </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card-body">
+        {% crispy cast_form %}
+    </div>
+{% endblock %}
+
