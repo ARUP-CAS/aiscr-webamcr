@@ -11,7 +11,7 @@ services:
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
     networks:
-      - aiscr-webamcr_reverse-proxy
+      - reverse-proxy
     ports:
       - "8000:8000"
 
@@ -21,7 +21,7 @@ services:
     ports:
       - "11211:11211"
     networks:
-      - aiscr-webamcr_reverse-proxy
+      - reverse-proxy
 
 volumes:
   static_data:
@@ -30,7 +30,7 @@ volumes:
 
 
 networks:
-  aiscr-webamcr_reverse-proxy:
+  reverse-proxy:
     external: true
 
 secrets:
