@@ -19,7 +19,7 @@ env:
 
 jobs:
   push_development:
-    name: Push Dev Docker image to Docker Hub
+    name: Build and push docker images for production/testing to Docker Hub
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -31,13 +31,13 @@ jobs:
           username: ${{ env.DOCKER_HUB_USERNAME }}
           password: ${{ env.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels) for docker dev image
         id: meta
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.DOCKER_HUB_REPO_DEV }}
 
-      - name: Get tag
+      - name: Get tag from GITHUB_REF
         id: step_tag1
         run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
 
@@ -53,7 +53,7 @@ jobs:
       #---------------------
       # BUILD DEV
       #---------------------
-      - name: Build and push Docker image
+      - name: DEV - Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -66,13 +66,13 @@ jobs:
       #---------------------
       # BUILD PROD
       #---------------------
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels) for Docker production image
         id: meta_prod
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.DOCKER_HUB_REPO_PROD }}
 
-      - name: Build and push Docker image
+      - name: PRODUCTION - Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -87,13 +87,13 @@ jobs:
       #---------------------
       # BUILD PROXY
       #---------------------
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata (tags, labels) for Docker proxy image
         id: meta_proxy
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.DOCKER_HUB_REPO_PROXY }}
 
-      - name: Build and push Docker image
+      - name: PROXY - Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: ./proxy
