@@ -1,0 +1,50 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+    command: scripts/entrypoint_migrations.sh
+    user: root
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+      - locale_data:/vol/web/locale
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    environment:
+      - DJANGO_SETTINGS_MODULE=webclient.settings.dev
+    depends_on:
+      - db
+#  livereload:
+#    build:
+#      context: .
+#    command: python3 manage.py livereload --host=0.0.0.0 --port=35729
+#    volumes:
+#      - ./webclient:/code
+#    restart: on-failure
+#    ports:
+#      - "35729:35729"
+#    environment:
+#      - DJANGO_SETTINGS_MODULE=webclient.settings.dev
+#    depends_on:
+#      - web
+#      - db
+  db:
+    image: postgis/postgis:13-3.3
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=amcr_db
+  memcached:
+    container_name: memcached
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+
+volumes:
+  locale_data:
+
+

@@ -1,1 +1,9 @@
 # aiscr-amcr-webclient
+
+
+```sql
+BEGIN;
+--ALTER TABLE adb DISABLE TRIGGER ALL;
+--ALTER TABLE adb ENABLE TRIGGER ALL;
+COMMIT;
+```
