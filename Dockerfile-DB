@@ -1,4 +1,4 @@
-FROM postgis/postgis:latest
+FROM postgis/postgis:14-3.3
 VOLUME /tmp
 
 ARG VERSION_APP

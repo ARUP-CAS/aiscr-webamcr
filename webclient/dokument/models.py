@@ -1,10 +1,17 @@
-import datetime
 import calendar
-import math
+import datetime
 import logging
+import math
 
-from arch_z.models import ArcheologickyZaznam
+from django.contrib.gis.db.models import PointField
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext as _
+
 from projekt.models import Projekt
+from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -16,12 +23,6 @@ from core.constants import (
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
 from core.models import SouborVazby
-from django.contrib.gis.db.models import PointField
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
-from django.urls import reverse
-from django.utils.translation import gettext as _
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -48,7 +49,6 @@ logger = logging.getLogger(__name__)
 
 
 class Dokument(models.Model):
-
     STATES = (
         (D_STAV_ZAPSANY, "D1 - Zapsán"),
         (D_STAV_ODESLANY, "D2 - Odeslán"),
@@ -202,7 +202,7 @@ class Dokument(models.Model):
 
     def check_pred_odeslanim(self):
         result = []
-        
+
         if "3D" in self.ident_cely:
             if not self.extra_data.format:
                 result.append(_("dokument.formCheckOdeslani.missingFormat.text"))
@@ -260,7 +260,7 @@ class Dokument(models.Model):
             0
         ]
         perm_ident_cely = (
-            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+                rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
         )
         # Loop through all of the idents that have been imported
         while True:
@@ -273,10 +273,10 @@ class Dokument(models.Model):
                     + str(sequence.sekvence)
                 )
                 perm_ident_cely = (
-                    rada
-                    + "-"
-                    + str(current_year)
-                    + "{0}".format(sequence.sekvence).zfill(5)
+                        rada
+                        + "-"
+                        + str(current_year)
+                        + "{0}".format(sequence.sekvence).zfill(5)
                 )
             else:
                 break

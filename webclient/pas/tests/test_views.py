@@ -2,13 +2,15 @@ from django.test import RequestFactory, TestCase
 
 from core.constants import SPOLUPRACE_ZADOST, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI
 from historie.models import Historie
-from uzivatel.models import User
+from uzivatel.models import User, UserNotificationType
 from core.tests.runner import USER_ARCHEOLOG_EMAIL, USER_ARCHEOLOG_ID
 
 
 class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
+        UserNotificationType(ident_cely='E-N-05', predmet="Test", cesta_sablony="emails/new_cooperator.html").save()
+        UserNotificationType(ident_cely='E-N-06', predmet="Test", cesta_sablony="emails/new_cooperator.html").save()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_spoluprace(self):

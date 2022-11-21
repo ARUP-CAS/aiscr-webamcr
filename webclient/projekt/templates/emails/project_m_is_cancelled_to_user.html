@@ -1,0 +1,22 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans 'Vážená paní/Vážený pane' %},
+
+{% blocktrans %} projekt {{ ident_cely }} ({{ podnet}}), který byl evidován v souvislosti s Vaším oznámením o stavební
+    nebo jiné činností na území s archeologickými nálezy dle § 22, odst. 2 zák. č. 20/1987 na k.ú. {{ katastr }},
+    parcela {{ parcela }} ({{ lokalita }}) {% endblocktrans %}{% if datum_oznameni %}{% trans "ze dne" %} {{datum_oznameni}},{% endif %}{% trans 'byl zrušen' %}.
+
+{% trans "Důvod zrušení" %}: {{ reason }}
+
+{% trans "Vaše případné dotazy pište na adresu oznameni@arub.cz nebo volejte na tel. +420 515 911 133 (Jihomoravský a Zlínský kraj), +420 515 911 121 (Vysočina a Olomoucký kraj), +420 553 821 603 (Moravskoslezský kraj)" %}.
+{% trans "S pozdravem" %}
+{% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}
+{% trans "Na tuto zprávu prosím neodpovídejte, je automaticky generována" %}.
+</body>
+</html>

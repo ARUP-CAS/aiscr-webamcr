@@ -1,0 +1,18 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+
+{% trans 'Dobrý den' %},
+
+{% blocktrans %} vaše spolupráce s uživatelem {{ name }} {{ surname }} ({{ organization }}) byla úspěšně
+    potvrzena. {% endblocktrans %}
+
+{% trans "Detaily o spolupráci získáte po přihlášení do AMČR-PAS" %}.
+
+</body>
+</html>

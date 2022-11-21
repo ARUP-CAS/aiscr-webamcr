@@ -7,13 +7,15 @@ from oznameni.views import index, post_poi2kat
 from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY
 from oznameni.models import Oznamovatel
 from projekt.models import Projekt
-from uzivatel.models import User
+from uzivatel.models import User, UserNotificationType
 
 
 class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
+        UserNotificationType(ident_cely='E-N-05', predmet="Test", cesta_sablony="emails/new_cooperator.html").save()
+        UserNotificationType(ident_cely='E-O-01', predmet="Test", cesta_sablony="emails/new_cooperator.html").save()
 
     def test_get_index(self):
         request = self.factory.get("/oznameni/")
