@@ -1,0 +1,24 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans 'Dobrý den' %},
+{% blocktrans %} v aplikaci IS AMČR byl právě zapsán nový projekt [ident_cely].
+Typ projektu: {{ project_type }}
+Katastr: {{ katastr}} ({{ okres}})
+Podnět: {{ podnet}}
+Lokalizace: {{ lokalita}}
+Plánované zahájení: {{ planned_start}}
+{% endblocktrans %}
+
+{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+
+</body>
+</html>
+
+
+

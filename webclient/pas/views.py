@@ -62,6 +62,7 @@ from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, PotvrditNalez
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from uzivatel.models import Organizace, User
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -390,6 +391,7 @@ def vratit(request, ident_cely):
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
+            Mailer.sendEN03EN04(project=sn, reason=duvod)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
@@ -669,7 +671,7 @@ def zadost(request):
                     hist_id=hist.pk,
                     message=ZADOST_O_SPOLUPRACI_VYTVORENA,
                 )
-                # TODO send email to archeolog
+                Mailer.sendEN05(email_to=uzivatel_email, reason=uzivatel_text, user=request.user)
                 return redirect("pas:spoluprace_list")
         else:
             print("Form is no valid")
@@ -718,6 +720,7 @@ def aktivace(request, pk):
     if request.method == "POST":
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
+        Mailer.sendEN06(cooperation=spoluprace)
         return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_aktivaci()

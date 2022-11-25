@@ -26,6 +26,7 @@ from historie.models import Historie
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,10 @@ def index(request, test_run=False):
             }
 
             context = {"confirm": confirmation}
+            if (p.ident_cely[2:3] == 'C'):
+                Mailer.sendEO01(project=p)
+            else:
+                Mailer.sendEO02(project=p)
             return render(request, "oznameni/index_2.html", context)
         else:
             logger.debug("One of the forms is not valid")

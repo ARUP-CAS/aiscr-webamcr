@@ -1,0 +1,18 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans 'Dobrý den' %},
+
+{% blocktrans %} vámi odeslaná akce {{ ident_cely }} na katastru {{ katastr }} byla převedena do stavu
+{{ state }}{% endblocktrans %}.
+
+{% trans 'Detaily o akci zjistíte po přihlášení do AMČR' %}.
+{% trans 'Nejpozději během následujícího dne bude záznam zveřejněn v Digitálním archivu AMČR' %}.
+
+</body>
+</html>

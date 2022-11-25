@@ -2,16 +2,16 @@ version: "3.8"
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile-production
+    image: huldcz/aiscr_prod:latest
     container_name: web
+    secrets:
+      - db_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
     networks:
-      - aiscr-webamcr_reverse-proxy
+      - reverse-proxy
     ports:
       - "8000:8000"
 
@@ -21,7 +21,7 @@ services:
     ports:
       - "11211:11211"
     networks:
-      - aiscr-webamcr_reverse-proxy
+      - reverse-proxy
 
 volumes:
   static_data:
@@ -30,5 +30,9 @@ volumes:
 
 
 networks:
-  aiscr-webamcr_reverse-proxy:
+  reverse-proxy:
     external: true
+
+secrets:
+  db_conf:
+   external : true

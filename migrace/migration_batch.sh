@@ -1,0 +1,79 @@
+#!/bin/bash
+
+migration_scripts=("chyby_dat.sql"
+"migrace_1.sql"
+"migrace_2.sql"
+"migrace_3.sql"
+"migrace_4.sql"
+"migrace_dat_1.sql"
+"migrace_dat_2.sql"
+"migrace_dat_3.sql"
+"migrace_dat_4.sql"
+"migrace_dat_5.sql"
+"django.sql"
+"1_migrace_django_users.sql"
+"2_migrace_notifikace.sql"
+"3_migrace_archeologicky_zaznam.sql"
+"4_migrace_akce_stavy.sql"
+"5_migrace_oznamovatel.sql"
+"6_migrace_dalsi.sql"
+"7_migrace_hlavni_katastry.sql"
+"8_check_constraints.sql"
+"9_migrace_heslare_specifikace_data.sql"
+"11_migrace_dokument_many_to_many.sql"
+"12_migrace_fk_revision.sql"
+"13_migrace_rozdeleni_tabulky_nalez.sql"
+"14_migrace_nazvy_heslaru.sql"
+"15_migrace_aktivity_komponent_id_a_dalsi.sql"
+"16_migrace_ident_adb.sql"
+"17_migrace_ident_projekt.sql"
+"18_migrace_mix.sql"
+"19_migrace.sql"
+"20_migrace.sql"
+"21_rules.sql"
+"22_dokumenty_projekt.sql"
+"23_user_history.sql"
+"24_soubor_vazba.sql"
+"25_komponenta_null_fields.sql"
+"26_ostatni_vedouci_id.sql"
+"27_adb_ident_update.sql"
+"27_validation_linie.sql"
+"27_vychozi_aktivity_podle_arealu.sql"
+"28_validation_geometry.sql"
+"29_sjtsk_geometrie.sql"
+"30_geometry_migration_timestamp.sql"
+"31_heat_mapa.sql"
+"32_Triger_fixes.sql"
+"33_komponenta_boolean.sql"
+"33_typ_souboru.sql"
+"34_presnost_bodu.sql"
+"35_vyskovy_bod_geom.sql"
+"36_migrace-sam_nalez.sql"
+"37_odstavka_systemu.sql"
+"38_migrace_lokalita.sql"
+"39_migrace_revize_cizich_klicu_delete.sql"
+"40_migrace_revize_cizich_klicu_create.sql"
+)
+
+
+
+mkdir -p ./logs
+n=1
+
+for item in "${migration_scripts[@]}"
+do
+    echo "run [${n}] - migration with: ${item}"
+    psql -d prod_zaloha -f ${item} -l logs/${item}.log
+    let n++
+done
+
+echo "*** MIGRATIONS DONE [${n}] ***"
+
+# hashovani hesel
+python3 encrypt_passwords.py
+
+#echo "Migrace mazani" TOHLE ZAVOLAT MANULANE
+#psql -d prod_zaloha -f migrace_mazani.sql
+
+#echo "This is only for development, comment out for production"
+#psql -d prod_zaloha -f import_testovacich_uctu.sql

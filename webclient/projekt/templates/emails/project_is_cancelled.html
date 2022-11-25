@@ -1,0 +1,19 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans "Dobrý den" %},
+
+{% blocktrans %} projekt {{ ident_cely }} na katastru {{ katastr }} byl navržen k odhlášení oprávněnou organizací
+    {{ organizace }}. {% endblocktrans %}
+
+{% trans "Důvod" %}: {{ reason }}
+
+{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+
+</body>
+</html>

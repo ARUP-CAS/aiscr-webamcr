@@ -13,12 +13,13 @@ from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from projekt.views import create, detail, edit, smazat
-from uzivatel.models import User
+from uzivatel.models import User, UserNotificationType
 
 
 class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
+        UserNotificationType(ident_cely='E-P-01a', predmet="Test", cesta_sablony="emails/new_cooperator.html").save()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
         self.lokace_zahradky = Point(50.40, 15.70)
         self.projekt = Projekt(

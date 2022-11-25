@@ -18,6 +18,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.models import Group
 from dal import autocomplete
 from django.template.loader import render_to_string
+from services.mailer import Mailer
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -569,6 +570,7 @@ def archivovat(request, ident_cely):
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
         )
+        Mailer.sendEA02(arch_z=az)
         return JsonResponse({"redirect": az.get_reverse()})
     else:
         warnings = az.check_pred_archivaci()
@@ -641,6 +643,7 @@ def vratit(request, ident_cely):
                     projekt.save()
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
+            Mailer.sendEV01(arch_z=az, reason=duvod)
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
             )
