@@ -71,7 +71,7 @@ class ExterniZdrojListView(
     template_name = "search_list.html"
     filterset_class = ExterniZdrojFilter
     paginate_by = 100
-    export_name = "export_lokalita_"
+    export_name = "export_externi-zdroje_"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -376,9 +376,7 @@ class ExterniOdkazPripojitView(TransakceView):
         return context
 
     def post(self, request, *args, **kwargs):
-        logger.debug("Pripojit EO")
         context = self.get_context_data(**kwargs)
-        logger.debug("Pripojit EO")
         logger.debug(self.kwargs)
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])

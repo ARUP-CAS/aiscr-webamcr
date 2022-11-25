@@ -151,6 +151,7 @@ class Dokument(models.Model):
     tvary = models.ManyToManyField(
         Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
+    main_autor = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = "dokument"
@@ -349,6 +350,15 @@ class DokumentCast(models.Model):
     class Meta:
         db_table = "dokument_cast"
 
+    def get_absolute_url(self):
+        return reverse(
+            "dokument:detail-cast",
+            kwargs={
+                "ident_cely": self.dokument.ident_cely,
+                "cast_ident_cely": self.ident_cely,
+            },
+        )
+
 
 class DokumentExtraData(models.Model):
     dokument = models.OneToOneField(
@@ -431,6 +441,7 @@ class DokumentAutor(models.Model):
     class Meta:
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"),)
+        ordering = (["poradi"],)
 
 
 class DokumentJazyk(models.Model):

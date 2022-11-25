@@ -142,16 +142,23 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
         raise MaximalIdentNumberError(max_count)
 
 
-def get_komponenta_ident(event: ArcheologickyZaznam) -> str:
+def get_komponenta_ident(zaznam) -> str:
     MAXIMAL_KOMPONENTAS: int = 999
     last_digit_count = 3
     max_count = 0
-    for dj in event.dokumentacni_jednotky_akce.all():
-        for komponenta in dj.komponenty.komponenty.all():
-            last_digits = int(komponenta.ident_cely[-last_digit_count:])
-            if max_count < last_digits:
-                max_count = last_digits
-    event_ident = event.ident_cely
+    if isinstance(zaznam, ArcheologickyZaznam):
+        for dj in zaznam.dokumentacni_jednotky_akce.all():
+            for komponenta in dj.komponenty.komponenty.all():
+                last_digits = int(komponenta.ident_cely[-last_digit_count:])
+                if max_count < last_digits:
+                    max_count = last_digits
+    else:
+        for dc in zaznam.casti.all():
+            for komponenta in dc.komponenty.komponenty.all():
+                last_digits = int(komponenta.ident_cely[-last_digit_count:])
+                if max_count < last_digits:
+                    max_count = last_digits
+    event_ident = zaznam.ident_cely
     if max_count < MAXIMAL_KOMPONENTAS:
         ident = event_ident + "-K" + str(max_count + 1).zfill(last_digit_count)
         return ident

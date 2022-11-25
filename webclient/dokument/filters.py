@@ -63,6 +63,15 @@ from core.models import Soubor
 logger = logging.getLogger(__name__)
 
 
+class SouborTypFilter(MultipleChoiceFilter):
+    @property
+    def field(self):
+        qs = self.model._default_manager.distinct()
+        qs = qs.order_by(self.field_name).values_list(self.field_name, flat=True)
+        self.extra["choices"] = [(o, o) for o in qs if o is not None]
+        return super().field
+
+
 class HistorieFilter(filters.FilterSet):
 
     filter_typ = None
@@ -677,15 +686,6 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
-    let_ucel = ModelMultipleChoiceFilter(
-        queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOHLEDNOST),
-        label=_("dokument.filter.letUcel.label"),
-        field_name="let__ucel_letu",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
-    )
-
     tvary = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LETFOTO_TVAR),
         label=_("dokument.filter.tvary.label"),
@@ -698,6 +698,19 @@ class DokumentFilter(Model3DFilter):
         label=_("dokument.filter.tvaryPoznamka.label"),
         distinct=True,
     )
+    soubor_typ = SouborTypFilter(
+        field_name="soubory__soubory__mimetype",
+        label=_("dokument.filter.tvaryPoznamka.label"),
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
+
     soubor_velikost_od = NumberFilter(
         method="filter_soubory_velikost_od",
         label=_("dokument.filter.souborVelikost.label"),
@@ -1130,8 +1143,6 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("let_pocasi", css_class="col-sm-2"),
                 Div("let_dohlednost", css_class="col-sm-2"),
                 Div("let_poznamka", css_class="col-sm-4"),
-                Div("let_ucel", css_class="col-sm-2"),
-                Div(css_class="col-sm-4"),
                 Div("tvary", css_class="col-sm-2"),
                 Div("tvar_poznamka", css_class="col-sm-4"),
                 id="letyTvaryCollapse",
@@ -1149,6 +1160,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 css_class="col-sm-12 app-btn-show-more collapsed",
             ),
             Div(
+                Div("soubor_typ", css_class="col-sm-2"),
                 Div("soubor_velikost_od", css_class="col-sm-2"),
                 Div("soubor_velikost_do", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_od", css_class="col-sm-2"),

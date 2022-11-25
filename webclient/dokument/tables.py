@@ -1,8 +1,14 @@
 import logging
+from django.urls import reverse
 
 import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from django.utils.translation import gettext as _
+from django.utils.html import conditional_escape, mark_safe
+from django.utils.encoding import force_str
+from django.utils.html import format_html
+
+from uzivatel.models import Osoba
 
 from .models import Dokument
 
@@ -50,6 +56,23 @@ class Model3DTable(ColumnShiftTableBootstrap4):
         super(Model3DTable, self).__init__(*args, **kwargs)
 
 
+class AutorColumn(tables.Column):
+    def render(self, record, value):
+        osoby = Osoba.objects.filter(
+            dokumentautor__dokument__ident_cely=record
+        ).order_by("dokumentautor__poradi")
+        items = []
+        for autor in osoby:
+            content = conditional_escape(force_str(autor))
+            items.append(content)
+
+        return mark_safe(conditional_escape("; ").join(items))
+
+    def order(self, queryset, is_descending):
+        queryset = queryset.order_by(("-" if is_descending else "") + "main_autor")
+        return (queryset, True)
+
+
 class DokumentTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
@@ -59,7 +82,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
     )
     popis = tables.columns.Column(default="")
     rok_vzniku = tables.columns.Column(default="")
-    autori = tables.ManyToManyColumn(attrs={"th": {"class": "white"}})
+    autori = AutorColumn()
     popis = tables.columns.Column(default="")
     pristupnost = tables.columns.Column(default="")
     rada = tables.columns.Column(default="")
@@ -70,6 +93,26 @@ class DokumentTable(ColumnShiftTableBootstrap4):
     oznamceni_originalu = tables.columns.Column(default="")
     datum_zverejneni = tables.columns.Column(default="")
     licence = tables.columns.Column(default="")
+    nahled = tables.columns.Column(
+        default="",
+        accessor="soubory__soubory",
+        attrs={
+            "th": {"class": "white"},
+            # "td": {"class": "no-tooltip"},
+        },
+        orderable=False,
+        verbose_name=_("dokument.list.soubory.label"),
+    )
+
+    def render_nahled(self, value, record):
+        soubor = record.soubory.soubory.filter(mimetype__startswith="image").first()
+        if soubor is not None:
+            soubor_url = reverse("core:download_file", args=(soubor.id,))
+            return format_html(
+                '<img src="{}" class="image-nahled" >',
+                soubor_url,
+            )
+        return ""
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
@@ -87,6 +130,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
                 "oznamceni_originalu",
                 "datum_zverejneni",
                 "licence",
+                "nahled",
             )
         for column in columns_to_hide:
             if column is not None and column in self.column_default_show:
@@ -113,6 +157,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
             "oznamceni_originalu",
             "datum_zverejneni",
             "licence",
+            "nahled",
         )
 
     def __init__(self, *args, **kwargs):

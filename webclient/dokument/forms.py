@@ -5,18 +5,19 @@ from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 from django import forms
 from django.db import utils
-from django.db.models.functions import Length
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.db.models import Value, IntegerField
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
-from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
+from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let, Tvar
 from heslar.hesla import (
     ALLOWED_DOKUMENT_TYPES,
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_JAZYK,
+    HESLAR_LETFOTO_TVAR,
     HESLAR_POSUDEK_TYP,
     MODEL_3D_DOKUMENT_TYPES,
 )
@@ -25,6 +26,19 @@ from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
+class AutoriField(forms.models.ModelMultipleChoiceField):
+    def clean(self, value):
+        qs = super().clean(value)
+        i = 1
+        for item in value:
+            part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
+            if i ==1:
+                new_qs = part_qs
+            else:
+                new_qs = part_qs.union(new_qs)
+            i = i+1
+        qs = new_qs.order_by("qs_order")
+        return qs
 
 class CoordinatesDokumentForm(forms.Form):
     detector_system_coordinates = forms.ChoiceField(
@@ -232,6 +246,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
+                    if key == "let":
+                        self.fields[key].widget.url = "#"
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -249,6 +265,16 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
 
 class EditDokumentForm(forms.ModelForm):
+    autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
+                url="heslar:osoba-autocomplete-choices",
+            ),)
+    region = forms.ChoiceField(choices=[("C-",_("dokument.create.regionCech.text")),("M-",_("dokument.create.regionMorava.text"))],
+                label=_("dokument.form.createDokument.region.label"),
+                required=False,
+                widget=forms.Select(
+                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                ),
+                help_text= _("dokument.form.createDokument.region.tooltip"),)
     class Meta:
         model = Dokument
         fields = (
@@ -269,14 +295,14 @@ class EditDokumentForm(forms.ModelForm):
         )
         widgets = {
             "typ_dokumentu": forms.Select(
-                attrs={
-                    "class": "selectpicker", "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                    "required": "",
-                }
+                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true", "required": ""}
             ),
             "material_originalu": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                }
             ),
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
@@ -293,8 +319,8 @@ class EditDokumentForm(forms.ModelForm):
             "posudky": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
-            "autori": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            "autori": autocomplete.Select2Multiple(
+                url="heslar:osoba-autocomplete-choices",
             ),
             "oznaceni_originalu": forms.TextInput(),
             "licence": forms.TextInput(),
@@ -388,10 +414,10 @@ class EditDokumentForm(forms.ModelForm):
                 Div("pristupnost", css_class="col-sm-2"),
                 Div("licence", css_class="col-sm-2"),
                 Div("datum_zverejneni", css_class="col-sm-2"),
+                Div("region", style="display: none"),
                 css_class="row",
             ),
         )
-
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -400,6 +426,9 @@ class EditDokumentForm(forms.ModelForm):
                 else:
                     self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
+                    if key == "autori":
+                        self.fields[key].widget = forms.widgets.Select()
+                        self.fields[key].widget.attrs.update({'name_id': "autori;"+ str(self.instance)})
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -627,6 +656,7 @@ class DokumentCastForm(forms.ModelForm):
     poznamka = forms.CharField(
         help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
         label=_("dokument.form.castDokumentu.poznamka.label"),
+        required=False,
     )
     class Meta:
         model = DokumentCast
@@ -634,7 +664,7 @@ class DokumentCastForm(forms.ModelForm):
 
     def __init__(self, readonly=False, *args, **kwargs):
         super(DokumentCastForm, self).__init__(*args, **kwargs)
-        
+
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         for key in self.fields.keys():
@@ -642,3 +672,66 @@ class DokumentCastForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
                 self.fields[key].required = False
+
+
+class DokumentCastCreateForm(forms.Form):
+    poznamka = forms.CharField(
+        help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
+        label=_("dokument.form.castDokumentu.poznamka.label"),
+        required=False,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(DokumentCastCreateForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
+
+
+# Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
+def create_tvar_form(not_readonly=True):
+    class TvarForm(forms.ModelForm):
+        class Meta:
+            model = Tvar
+            fields = ["tvar", "poznamka"]
+            labels = {"tvar": _("Tvar"), "poznamka": _("Poznámka")}
+            widgets = {
+                "poznamka": forms.TextInput(),
+                "tvar": forms.Select(
+                    attrs={
+                        "class": "selectpicker",
+                        "data-multiple-separator": "; ",
+                        "data-live-search": "true",
+                    },
+                ),
+            }
+            help_texts = {
+                "tvar": _("tvar.form.tvar.tooltip"),
+                "poznamka": _("tvar.form.poznamka.tooltip"),
+            }
+
+        def __init__(self, *args, **kwargs):
+            super(TvarForm, self).__init__(*args, **kwargs)
+            self.fields["tvar"].required = True
+            self.fields["tvar"].choices = [("", "")] + list(
+                Heslar.objects.filter(nazev_heslare=HESLAR_LETFOTO_TVAR).values_list(
+                    "id", "heslo"
+                )
+            )
+            for key in self.fields.keys():
+                self.fields[key].disabled = not not_readonly
+                if self.fields[key].disabled == True:
+                    if isinstance(self.fields[key].widget, forms.widgets.Select):
+                        self.fields[
+                            key
+                        ].widget.template_name = "core/select_to_text.html"
+                    self.fields[key].help_text = ""
+
+    return TvarForm
+
+
+class TvarFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.template = "inline_formset.html"
+        self.form_tag = False
+        self.form_id = "tvar"

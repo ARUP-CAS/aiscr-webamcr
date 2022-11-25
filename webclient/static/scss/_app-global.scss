@@ -571,6 +571,13 @@ form {
   .table {
     td {
       vertical-align: middle;
+
+      .image-nahled{
+        max-height: 100px;
+        max-width: 100%;
+        border-radius: 5px;
+        width: auto;
+      }
     }
   }
 
@@ -646,15 +653,84 @@ form {
       }
     }
   }
+  #soubor-nahled {
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  #soubor-nahled:hover {
+    opacity: 0.7;
+  }
+
+  /* The Modal (background) */
+  .modal {
+    /* Sit on top */
+    padding-top: 100px;
+    /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.9);
+    /* Black w/ opacity */
+  }
+
+  /* Modal Content (Image) */
+  .modal-content-xxl {
+    background-color: rgb(0, 0, 0);
+    margin: auto;
+    display: block;
+    max-width: 1200px;
+  }
+
+  .modal-content {
+    background-color: rgb(0, 0, 0);
+  }
+
+
+  /* The Close Button */
+  .close {
+    position: absolute;
+    top: -50px;
+    right: 5px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* 100% Image Width on Smaller Screens */
+  @media only screen and (max-width: 700px) {
+    .modal-content {
+      width: 100%;
+    }
+  }
 }
 
 .form-control {
   &.required-next {
     &:not(:focus) {
-      border: 1px solid;
-      border-color: #ffc107;
+      border: 1px solid !important;
+      border-color: #ffc107 !important;
     }
   }
+}
+// line height for select2
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: inherit !important;
 }
 
 // test
