@@ -1152,7 +1152,7 @@ def get_detail_template_shows(projekt, user):
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
         if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
             if not projekt.has_oznamovatel():
-                if PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_UZAVRENY:
+                if PROJEKT_STAV_ZAPSANY <= projekt.stav <= PROJEKT_STAV_UZAVRENY:
                     show_pridat_oznamovatele = True
     show_edit = projekt.stav not in [
         PROJEKT_STAV_ARCHIVOVANY,
