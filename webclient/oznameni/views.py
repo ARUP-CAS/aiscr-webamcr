@@ -2,7 +2,11 @@ import logging
 
 import simplejson as json
 from django.utils.translation import gettext as _
-from core.constants import PRIDANI_OZNAMOVATELE_PROJ, PROJEKT_STAV_ARCHIVOVANY
+from core.constants import (
+    PRIDANI_OZNAMOVATELE_PROJ,
+    PROJEKT_STAV_ARCHIVOVANY,
+    PROJEKT_STAV_VYTVORENY,
+)
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
 from core.utils import get_cadastre_from_point
@@ -103,7 +107,9 @@ def index(request, test_run=False):
                 Mailer.sendEO01(project=p)
             else:
                 Mailer.sendEO02(project=p)
-            return render(request, "oznameni/index_2.html", context)
+            response = render(request, "oznameni/index_2.html", context)
+            response.set_cookie("project", hash(p.ident_cely), 3600)
+            return response
         else:
             logger.debug("One of the forms is not valid")
             logger.debug(form_ozn.errors)
@@ -118,10 +124,25 @@ def index(request, test_run=False):
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
     elif request.method == "GET" and "ident_cely" in request.GET:
-        projekt = get_object_or_404(Projekt, ident_cely=request.GET.get("ident_cely"))
-        form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
-        form_projekt = ProjektOznameniForm(instance=projekt, change=True)
-        form_captcha = FormWithCaptcha()
+        cookie_project = request.COOKIES.get("project", None)
+        ident = request.GET.get("ident_cely")
+        logger.debug(ident)
+        hash_from_ident = hash(ident)
+        logger.debug(hash_from_ident)
+        logger.debug(cookie_project)
+        if cookie_project is not None and str(hash_from_ident) == str(cookie_project):
+            projekty = Projekt.objects.filter(
+                ident_cely=request.GET.get("ident_cely"), stav=PROJEKT_STAV_VYTVORENY
+            )
+            if projekty is None:
+                raise PermissionDenied
+            else:
+                projekt = projekty[0]
+                form_ozn = OznamovatelForm(instance=projekt.oznamovatel)
+                form_projekt = ProjektOznameniForm(instance=projekt, change=True)
+                form_captcha = FormWithCaptcha()
+        else:
+            raise PermissionDenied
     else:
         form_ozn = OznamovatelForm()
         form_projekt = ProjektOznameniForm()
