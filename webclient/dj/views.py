@@ -192,8 +192,6 @@ def zapsat(request, arch_z_ident_cely):
         else:
             dj.komponenty = vazba
             dj.archeologicky_zaznam = az
-            if dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
-                dj.pian = Pian.objects.get(id=az.hlavni_katastr.pian)
             resp = dj.save()
             logger.debug(resp)
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
