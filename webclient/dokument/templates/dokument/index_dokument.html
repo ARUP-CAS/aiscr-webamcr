@@ -1,0 +1,93 @@
+{% extends "base_logged_in.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Modely{% endblock %}
+
+{% block content %}
+  <div class="app-entity-dokument">
+    {% include "toolbar_dokument.html" with is_3d=False %}
+
+    <div class="row app-entity-cards mb-3">
+      <div class="col">
+        <a href="{% url 'dokument:zapsat' %}" class="card app-card-entity app-card-zapsat-model">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Zapsat doument" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'dokument:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-modely">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Moje dokumenty" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'dokument:list' %}" class="card app-card-entity app-card-vybrat">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Vybrat" %}
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-card-desc-wrapper">
+    <div class="app-collapse-zapsat-model collapse">
+      <div class="p-3">
+        <h4>{% trans "Zapsat dokument" %}</h4>
+        <hr />
+        {% trans "dokumenty.index.zapsat.text" %}
+      </div>
+    </div>
+    <div class="app-collapse-moje-modely collapse">
+      <div class="p-3">
+        <h4>{% trans "Moje dokumenty" %}</h4>
+        <hr />
+        {% trans "dokumenty.index.mojeDokumenty.text" %}
+      </div>
+    </div>
+    <div class="app-collapse-vybrat collapse">
+      <div class="p-3">
+        <h4>{% trans "Vybrat" %}</h4>
+        <hr />
+        {% trans "dokumenty.index.vybrat.text" %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // show / hide card description
+    $(".app-card-zapsat-model").mouseleave(function(){
+      $(".app-collapse-zapsat-model").hide(100);
+    });
+    $(".app-card-zapsat-model").mouseover(function(){
+      $(".app-collapse-zapsat-model").show(100);
+    });
+    $(".app-card-moje-modely").mouseleave(function(){
+      $(".app-collapse-moje-modely").hide(100);
+    });
+    $(".app-card-moje-modely").mouseover(function(){
+      $(".app-collapse-moje-modely").show(100);
+    });
+    $(".app-card-vybrat").mouseleave(function(){
+      $(".app-collapse-vybrat").hide(100);
+    });
+    $(".app-card-vybrat").mouseover(function(){
+      $(".app-collapse-vybrat").show(100);
+    });
+</script>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

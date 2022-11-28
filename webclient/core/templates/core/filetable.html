@@ -4,6 +4,7 @@
   <thead>
   <tr>
     <th scope="col">{% trans "Název" %}</th>
+    <th scope="col">{% trans "Nahled" %}</th>
     <th scope="col">{% trans "Typ" %}</th>
     <th scope="col">{% trans "Velikost" %}</th>
     <th scope="col">{% trans "Datum vytvoření" %}</th>
@@ -21,6 +22,11 @@
   {% for soubor in soubory %}
     <tr>
       <td>{{ soubor.nazev_zkraceny }}</td>
+      <td>
+        {% if soubor.mimetype|slice:5 == "image" %}
+        <img id="soubor-nahled" src="{% url 'core:download_file' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
+        {% endif %}  
+      </td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_bytes }}</td>
       <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
@@ -52,6 +58,18 @@
   {% endfor %}
   </tbody>
 </table>
+
+<div class="modal fade" id="soubor-modal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-content-xxl" role="document">
+    <div class="modal-content">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <img class="modal-content" id="nahled-image">
+      </div>
+  </div>
+</div>
+
 <script>
   //script for modal for delete files
   document.addEventListener('DOMContentLoaded', function (event) {
@@ -67,4 +85,11 @@
       }
     }
   });
+  //Show soubory modal
+$('#soubor-modal').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget)
+  console.log(button[0])
+  var modalImg = document.getElementById("nahled-image");
+  modalImg.src = button[0].src
+})
 </script>

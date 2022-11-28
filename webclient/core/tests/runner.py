@@ -5,6 +5,7 @@ from arch_z.models import Akce, ArcheologickyZaznam, ExterniOdkaz
 from core.constants import (
     AZ_STAV_ZAPSANY,
     D_STAV_ZAPSANY,
+    DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENT_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
     EZ_STAV_ODESLANY,
@@ -24,7 +25,13 @@ from dj.models import DokumentacniJednotka
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import GEOSGeometry
 from django.test.runner import DiscoverRunner as BaseRunner
-from dokument.models import Dokument, DokumentCast, DokumentExtraData, DokumentJazyk
+from dokument.models import (
+    Dokument,
+    DokumentCast,
+    DokumentExtraData,
+    DokumentJazyk,
+    Tvar,
+)
 from heslar import hesla
 from heslar.hesla import (
     GEOMETRY_BOD,
@@ -48,9 +55,11 @@ from heslar.hesla import (
     HESLAR_POSUDEK_TYP,
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
+    HESLAR_LETFOTO_TVAR,
     PRISTUPNOST_ANONYM_ID,
     PRISTUPNOST_ARCHEOLOG_ID,
     SPECIFIKACE_DATA_PRESNE,
+    TYP_PROJEKTU_PRUZKUM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_PREDMET_SPECIFIKACE,
@@ -67,7 +76,7 @@ from heslar.models import (
     RuianOkres,
 )
 from historie.models import HistorieVazby
-from komponenta.models import KomponentaVazby
+from komponenta.models import Komponenta, KomponentaVazby
 from oznameni.models import Oznamovatel
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
@@ -77,6 +86,7 @@ import logging
 
 from lokalita.models import Lokalita
 from ez.models import ExterniZdroj
+from neidentakce.models import NeidentAkce
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +128,7 @@ AMCR_TESTOVACI_ORGANIZACE_ID = 769066
 ARCHEOLOGICKY_POSUDEK_ID = 1111
 EXISTING_PROJECT_IDENT = "C-202000001"
 EXISTING_PROJECT_IDENT_ZACHRANNY = "C-202000002"
+EXISTING_PROJECT_IDENT_PRUZKUMNY = "C-202000003"
 EXISTING_EVENT_IDENT = "C-202000001A"
 EXISTING_EVENT_IDENT2 = "C-202000001C"
 EXISTING_LOKALITA_IDENT = "X-C-L0000004"
@@ -127,8 +138,11 @@ EXISTING_DOCUMENT_ID = 123654
 EXISTING_EZ_IDENT = "BIB-0000001"
 EXISTING_EZ_ODESLANY = "BIB-0000002"
 EXISTIN_EO_ID = 22
+EXISTIN_NEIDENT_AKCE_IDENT = "M-TX-202100115-D01"
 DOCUMENT_NALEZOVA_ZPRAVA_ID = 12347
 DOKUMENT_CAST_IDENT = "M-TX-202100115-D001"
+DOKUMENT_CAST_IDENT2 = "M-TX-202100115-D002"
+DOKUMENT_KOMPONENTA_IDENT = "M-TX-202100115-K001"
 USER_ARCHEOLOG_EMAIL = "indiana.jones@uchicago.edu"
 USER_ARCHEOLOG_ID = 47
 
@@ -143,6 +157,8 @@ LOKALITA_DRUH = 1031
 
 EZ_TYP = 2035
 EZ_TYP_NEW = 2036
+
+LETFOTO_TVAR_ID = 3036
 
 
 def add_middleware_to_request(request, middleware_class):
@@ -258,6 +274,7 @@ class AMCRTestRunner(BaseRunner):
         hld = HeslarNazev(id=HESLAR_LOKALITA_DRUH, nazev="heslar_lokalita_druh")
         hlt = HeslarNazev(id=HESLAR_LOKALITA_TYP, nazev="heslar_lokalita_typ")
         hezt = HeslarNazev(id=HESLAR_EXTERNI_ZDROJ_TYP, nazev="heslar_ez_typ")
+        hlft = HeslarNazev(id=HESLAR_LETFOTO_TVAR, nazev="heslar_letfoto_tvar")
         nazvy_heslaru = [
             hn,
             hp,
@@ -282,12 +299,16 @@ class AMCRTestRunner(BaseRunner):
             hld,
             hlt,
             hezt,
+            hlft,
         ]
         for n in nazvy_heslaru:
             n.save()
 
         Heslar(
             id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="zachranny"
+        ).save()
+        Heslar(
+            id=hesla.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="pruzkumny"
         ).save()
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp, zkratka=1).save()
         Heslar(id=GEOMETRY_PLOCHA, nazev_heslare=ha).save()
@@ -337,6 +358,11 @@ class AMCRTestRunner(BaseRunner):
             id=PRISTUPNOST_ARCHEOLOG_ID,
             heslo="archeolog pristupnost",
             nazev_heslare=hpr,
+        ).save()
+        Heslar(
+            id=LETFOTO_TVAR_ID,
+            heslo="tvar fotky 1",
+            nazev_heslare=hlft,
         ).save()
         zp.save()
         typ_muzeum.save()
@@ -468,6 +494,13 @@ class AMCRTestRunner(BaseRunner):
             projekt=p,
         )
         oznamovatel.save()
+
+        Projekt(
+            typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_PRUZKUM_ID),
+            ident_cely=EXISTING_PROJECT_IDENT_PRUZKUMNY,
+            stav=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+            hlavni_katastr=praha,
+        ).save()
 
         # PROJEKT ZACHRANNY
         p = Projekt(
@@ -673,7 +706,31 @@ class AMCRTestRunner(BaseRunner):
             archeologicky_zaznam=az_incoplete,
             ident_cely=DOKUMENT_CAST_IDENT,
         )
+        kv2 = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+        kv2.save()
+        dc.komponenty = kv2
         dc.save()
+
+        dc2 = DokumentCast(
+            dokument=d,
+            ident_cely=DOKUMENT_CAST_IDENT2,
+        )
+        kv3 = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+        kv3.save()
+        dc2.komponenty = kv3
+        dc2.save()
+
+        komp = Komponenta(
+            obdobi=Heslar.objects.get(id=OBDOBI_STREDNI_PALEOLIT_ID),
+            areal=Heslar.objects.get(id=AREAL_HRADISTE_ID),
+            ident_cely=DOKUMENT_KOMPONENTA_IDENT,
+            komponenta_vazby=kv2,
+        )
+        komp.save()
+
+        Tvar(dokument=d, tvar=Heslar.objects.get(id=AREAL_HRADISTE_ID)).save()
+
+        NeidentAkce(ident_cely=EXISTIN_NEIDENT_AKCE_IDENT, dokument_cast=dc2).save()
 
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()

@@ -15,4 +15,9 @@ class Migration(migrations.Migration):
             name='stav',
             field=models.SmallIntegerField(choices=[(1, 'D1 - Zapsán'), (2, 'D2 - Odeslán'), (3, 'D3 - Archivován')]),
         ),
+        migrations.AddField(
+            model_name="dokument",
+            name="main_autor",
+            field=models.TextField(blank=True, null=True),
+        )
     ]

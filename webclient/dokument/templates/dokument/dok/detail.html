@@ -1,0 +1,277 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block title %}{% trans "Detail dokumentu" %}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="app-entity-dokument">
+    {% include "toolbar_dokument.html" with d=dokument  showcontrols=True  is_3d=False showback=True%}
+
+    {% include "state_component_document.html" with dokument=dokument %}
+
+    <div class="card app-card-form app-table-list-container">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Soubory" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+               rel="tooltip"
+               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+              <span class="material-icons">publish</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if soubory %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
+        {% else %}
+          <div class="app-note">
+            <span class="material-icons">info</span>
+            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card app-card-form">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Detail" %}
+        </div>
+        {% if show.editovat %}
+        <div class="app-fx app-right">
+          <div class="btn-group" role="group">
+            <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
+               data-placement="top" title="{% trans 'Upravit' %}">
+              <span class="material-icons">edit</span>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if warnings %}
+        <div class="alert alert-info" role="alert">
+          <ul>
+            {% for warning in warnings %}
+              <li>{{ warning }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+          {% crispy form_dokument %}
+
+        <div css_class="col-sm-12">
+                <span class="app-divider-label">{% trans "Rozšiřující popis" %}</span>
+                <hr class="mt-0" />
+        </div>
+        <div>
+          {% crispy form_dokument_extra %}
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-sm-4">
+        <div class="card app-card-form app-card-casti-dokumentu">
+          <div id="karta-casti-dokumentu" class="card-header">
+            <div class="app-fx app-left">
+              {% trans "Části dokumentu" %}
+            </div>
+            {% if show.editovat %}
+            <div class="app-fx app-right">
+              <div class="btn-group" role="group">
+                <button id="button-add-cast" class="btn" href="{% url 'dokument:vytvorit-cast' dokument.ident_cely %}"
+                rel="tooltip" data-placement="top"
+                title="{% trans 'Přidat dokumentační část' %}">
+                <span class="material-icons">add</span>
+                </button>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+              {% for dc in casti.all|dictsort:"pk" %}
+                <li class="list-group-item">
+                  <div class="d-flex align-items-center" {% if dc.ident_cely == active_dc_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                    <a href="{% url 'dokument:detail-cast' dokument.ident_cely dc.ident_cely %}" class="app-entity-color mr-1">
+                      <strong>{{ dc.ident_cely|last_x_letters:4 }}  </strong>
+                    </a>
+                    {% if dc.archeologicky_zaznam %}
+                      {% if dc.archeologicky_zaznam.akce %}
+                        <a href="{% url 'arch_z:detail' dc.archeologicky_zaznam.ident_cely %}">
+                        ({{ dc.archeologicky_zaznam.ident_cely }})
+                        </a>
+                      {% elif dc.archeologicky_zaznam.lokalita %}
+                        <a href="{% url 'lokalita:detail' dc.archeologicky_zaznam.ident_cely %}">
+                        ({{ dc.archeologicky_zaznam.ident_cely }})
+                        </a>
+                      {% endif %}
+                    {% elif dc.projekt  %} <!-- projekt -->
+                      <a href="{% url 'projekt:detail' dc.projekt.ident_cely %}">
+                      ({{ dc.projekt.ident_cely }})
+                      </a>
+                    {% elif dc.neident_akce %}
+                      <a href="#">
+                      ({{ dc.neident_akce.ident_cely }})
+                      </a>
+                      <span class="material-icons">no_accounts</span>
+                    {% endif %}
+                  </div>
+                  {% if dc.komponenty.komponenty.all %}
+                    <ul class="app-list-group-in">
+                      {% for k in dc.komponenty.komponenty.all %}
+                        <li id="el_li_komponenta_{{ k.ident_cely_safe }}">
+                          <div class="d-flex align-items-baseline" {% if k.ident_cely == active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                            <a href="{% url 'dokument:detail-komponenta' dokument.ident_cely k.ident_cely%}" class="flex-fill mr-2 app-entity-color">
+                              {{ k.ident_cely|last_x_letters:4 }} ({{ k.obdobi }} - {{ k.areal }})
+                            </a>
+                            <span class="badge badge-primary badge-pill">{{ k.pocet_nalezu }}</span>
+                          </div>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+                {% empty %}
+                  <div class="app-note">
+                    <span class="material-icons">info</span>
+                    {% trans "Dokument nemá žádné části dokumentu." %}
+                  </div>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-8 pl-0">        
+        {% block cast_dokumentu %}
+        {% endblock %}
+      </div>
+    </div>    
+    {% block komponenta %}
+    {% endblock %}
+    {% if show.tvary %}
+    <div class="card app-card-form" id="tvary">
+      <div class="card-header">
+        <div class="app-fx app-left">
+          {% trans "Tvary" %}
+        </div>
+      </div>
+      <div class="card-body formset-table">
+        {% if form_tvary %}  
+        <form class="mb-3" method="POST" action="{% url 'dokument:edit-tvar' dokument.ident_cely %}" onsubmit="editTvarSubmitButton.disabled = true; return true;">
+            {% crispy form_tvary tvary_helper %}
+            {% if show.editovat %}
+          <button type="submit" id="editTvarSubmitButton"
+                  class="btn btn-primary">{% trans "document.detail.tvary.button" %}
+          </button>
+          {% endif %}
+        </form>
+        {% else %}
+        <div class="app-note">
+          <span class="material-icons">info</span>
+          {% trans "Dokument neobsahuje žádné tvary." %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  //modal scripts
+  document.addEventListener('DOMContentLoaded', function (event) {
+    if ("{{show.odeslat_link}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'dokument:odeslat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+      formID: "odeslat-dokument-form",
+      modalFormID: "#odeslat-dokument-form",
+    })
+    odeslat_akci_modal = new Modal(options, "dokument-odeslat");
+    };
+    if ("{{show.vratit_link}}" != "False"){
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'dokument:vratit' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+      formID: "vratit-dokument-form",
+      modalFormID: "#vratit-dokument-form",
+    })
+    vratit_akci_modal = new Modal(options, "dokument-vratit");
+    }
+    if ("{{show.archivovat_link}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'dokument:archivovat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+        formID: "archivovat-dokument-form",
+        modalFormID: "#archivovat-dokument-form",
+      })
+    archivovat_akci_modal = new Modal(options, "dokument-archivovat");
+    }
+    var options = Object.assign(defaults, {modalID: "modal-form",
+      formURL: "{% url 'dokument:smazat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
+      formID: "smazat-dokument-form",
+      modalFormID: "#smazat-dokument-form",
+    })
+    smazat_akci_modal = new Modal(options, "dokument-smazat");
+    if (document.getElementsByClassName("tvar-smazat-btn")){
+      elements = document.getElementsByClassName("tvar-smazat-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "smazat-tvar-form",
+        modalFormID: "#smazat-tvar-form",
+        })
+        new Modal(options, elements.item(i).id);
+      }
+    }
+    if ("{{show.editovat}}" != "False"){
+      var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "vytvor-cast-form",
+        modalFormID: "#vytvor-cast-form",
+      })
+      new Modal(options, "button-add-cast");
+    };
+});
+
+</script>
+<script>
+  //Functionality for back button based on cookie
+  function getCookie(name) {
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+  }
+  const akce_back = "{% trans 'document.detail.back.akce.title' %}"
+  const lokalita_back = "{% trans 'document.detail.back.lokalita.title' %}"
+  const projekt_back = "{% trans 'document.detail.back.projekt.title' %}"
+  document.addEventListener('DOMContentLoaded', function (event) {
+    let back = document.getElementById("document-back")
+    if (back){
+      let zpet = getCookie("zpet")
+      if (zpet){
+        back.style.display = "inline";
+        back.querySelectorAll('a')[0].href=zpet.replace(/['"]+/g, '');
+        if (zpet.includes('akce')){
+          back.querySelectorAll('a')[0].textContent=akce_back;
+        }
+        if (zpet.includes('lokalita')){
+          back.querySelectorAll('a')[0].textContent=lokalita_back;
+        }
+        else{
+          back.querySelectorAll('a')[0].textContent=projekt_back;
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

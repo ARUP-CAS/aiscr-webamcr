@@ -4,9 +4,9 @@
   <div class="app-left">
     <div class="app-entity-title">
       {% if is_3d %}
-      <a href="{% url 'dokument:index-model-3D' %}"><span class="material-icons">brush</span> Knihovna 3D</a>
+      <a href="{% url 'dokument:index-model-3D' %}"><span class="material-icons">3d_rotation</span> {% trans "Knihovna 3D" %}</a>
       {% else %}
-      <a href="#"><span class="material-icons">brush</span> Dokument</a>
+      <a href="#"><span class="material-icons">description</span> {% trans "Dokument" %}</a>
       {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">

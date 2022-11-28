@@ -222,8 +222,14 @@ class ExterniOdkazForm(forms.ModelForm):
 
 
 class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
-    def __init__(self, type_arch=None, *args, **kwargs):
+    def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
+        if dok:
+            ez_label = _("dokument.forms.vyberArchz.label")
+            pagin = Div()
+        else:
+            ez_label = _("externiZdroj.forms.vyberArchz.label")
+            pagin = Div("paginace", css_class="col-sm-4")
         if type_arch == "akce":
             new_choices = list(
                 ArcheologickyZaznam.objects.filter(
@@ -237,7 +243,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
                 ).values_list("id", "ident_cely")
             )
         self.fields["arch_z"] = forms.ChoiceField(
-            label=_("externiZdroj.forms.vyberArchz.label"),
+            label=ez_label,
             choices=new_choices,
             widget=autocomplete.ListSelect2(
                 url=reverse("arch_z:arch-z-autocomplete", kwargs={"type": type_arch})
@@ -247,7 +253,7 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
         self.helper.layout = Layout(
             Div(
                 Div("arch_z", css_class="col-sm-8"),
-                Div("paginace", css_class="col-sm-4"),
+                pagin,
                 css_class="row",
             ),
         )
