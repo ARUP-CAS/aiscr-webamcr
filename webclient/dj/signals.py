@@ -6,6 +6,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
+from heslar.models import RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Pian
 
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 def create_dokumentacni_jednotka(sender, instance, created, **kwargs):
     instance: DokumentacniJednotka
     if created and instance.pian is None:
-        ruian_katastr = instance.archeologicky_zaznam.hlavni_katastr
+        ruian_katastr: RuianKatastr = instance.archeologicky_zaznam.hlavni_katastr
         if ruian_katastr.pian is not None:
             pian = ruian_katastr.pian
 
