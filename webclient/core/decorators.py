@@ -34,15 +34,21 @@ def odstavka_in_progress(view_func):
         else:
             language = "cs"
         if "oznameni" in request.path:
-            response = render(
-                request,
-                "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html",
-            )
+            try:
+                response = render(
+                    request,
+                    "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html",
+                )
+            except:
+                pass
         else:
-            response = render(
-                request,
-                "/vol/web/nginx/data/" + language + "/custom_50x.html",
-            )
+            try:
+                response = render(
+                    request,
+                    "/vol/web/nginx/data/" + language + "/custom_50x.html",
+                )
+            except:
+                pass
         if last_maintenance is None:
             odstavka = OdstavkaSystemu.objects.filter(
                 info_od__lte=datetime.today(),
