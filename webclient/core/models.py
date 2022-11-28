@@ -4,6 +4,7 @@ import os
 import re
 
 from django.db import models
+from django.forms import ValidationError
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import User
 from PyPDF2 import PdfFileReader
@@ -142,10 +143,19 @@ class OdstavkaSystemu(models.Model):
     info_od = models.DateField(_("model.odstavka.infoOd"))
     datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
     cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
-    text_en = models.TextField(_("model.odstavka.textEn"))
-    text_cs = models.TextField(_("model.odstavka.textcz"))
+    text_en = models.TextField(_("base.odstavka.textEN.label"))
+    text_cs = models.TextField(_("base.odstavka.textCS.label"))
     status = models.BooleanField(_("model.odstavka.status"), default=True)
 
     class Meta:
         db_table = "odstavky_systemu"
         verbose_name = _("model.odstavka.modelTitle")
+        verbose_name_plural = _("model.odstavka.modelTitle")
+
+    def clean(self):
+        odstavky = OdstavkaSystemu.objects.filter(status=True)
+        if odstavky is not None and self.status:
+            raise ValidationError(
+                _("model.odstavka.jenJednaAktivniOdstavkaPovolena.text")
+            )
+        super(OdstavkaSystemu, self).clean()

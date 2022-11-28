@@ -97,6 +97,7 @@ MIDDLEWARE = [
     "simple_history.middleware.HistoryRequestMiddleware",
     "django_structlog.middlewares.RequestMiddleware",
     "django_auto_logout.middleware.auto_logout",
+    "django.middleware.locale.LocaleMiddleware",
 ]
 
 CRON_CLASSES = [
@@ -118,7 +119,7 @@ STATICFILES_DIRS = [
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [BASE_DIR / "templates", "/vol/web/nginx/data"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -354,9 +355,10 @@ structlog.configure(
 # auto logout settings
 AUTO_LOGOUT = {
     "IDLE_TIME": 3600,
-    "IDLE_WARNING_TIME": "10:00",
+    "MAINTENANCE_LOGOUT_TIME": 600,
     "MESSAGE": AUTOLOGOUT_AFTER_LOGOUT,
     "REDIRECT_TO_LOGIN_IMMEDIATELY": True,
+    "IDLE_WARNING_TIME": 600,
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
