@@ -29,17 +29,19 @@ def odstavka_in_progress(view_func):
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         last_maintenance = cache.get("last_maintenance")
+        if "LANGUAGE_CODE" in request:
+            language = request.LANGUAGE_CODE
+        else:
+            language = "cs"
         if "oznameni" in request.path:
             response = render(
                 request,
-                "/vol/web/nginx/data/"
-                + request.LANGUAGE_CODE
-                + "/oznameni/custom_50x.html",
+                "/vol/web/nginx/data/" + language + "/oznameni/custom_50x.html",
             )
         else:
             response = render(
                 request,
-                "/vol/web/nginx/data/" + request.LANGUAGE_CODE + "/custom_50x.html",
+                "/vol/web/nginx/data/" + language + "/custom_50x.html",
             )
         if last_maintenance is None:
             odstavka = OdstavkaSystemu.objects.filter(
@@ -50,11 +52,12 @@ def odstavka_in_progress(view_func):
             if odstavka:
                 last_maintenance = odstavka[0]
                 cache.set("last_maintenance", last_maintenance, 600)
-        if last_maintenance.datum_odstavky == date.today():
-            if last_maintenance.cas_odstavky > datetime.now():
+        if last_maintenance is not None:
+            if last_maintenance.datum_odstavky == date.today():
+                if datetime.now().time() > last_maintenance.cas_odstavky:
+                    return response
+            elif date.today() > last_maintenance.datum_odstavky:
                 return response
-        elif last_maintenance.datum_odstavky > date.today():
-            return response
-        return False
+        return view_func(request, *args, **kwargs)
 
     return wrapper

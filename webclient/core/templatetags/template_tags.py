@@ -128,10 +128,11 @@ def get_maintenance():
         if odstavka:
             last_maintenance = odstavka[0]
             cache.set("last_maintenance", last_maintenance, 600)
-    if last_maintenance.datum_odstavky != date.today():
-        return True
-    elif last_maintenance.cas_odstavky > datetime.now().time():
-        return True
+    if last_maintenance is not None:
+        if last_maintenance.datum_odstavky != date.today():
+            return True
+        elif last_maintenance.cas_odstavky > datetime.now().time():
+            return True
     return False
 
 
@@ -147,9 +148,11 @@ def get_maintenance_login():
         if odstavka:
             last_maintenance = odstavka[0]
             cache.set("last_maintenance", last_maintenance, 600)
-    if (
-        last_maintenance.datum_odstavky == date.today()
-        and last_maintenance.cas_odstavky < (datetime.now() + timedelta(hours=1)).time()
-    ):
-        return True
+    if last_maintenance is not None:
+        if (
+            last_maintenance.datum_odstavky == date.today()
+            and last_maintenance.cas_odstavky
+            < (datetime.now() + timedelta(hours=1)).time()
+        ):
+            return True
     return False

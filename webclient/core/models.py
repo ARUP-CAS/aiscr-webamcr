@@ -155,7 +155,8 @@ class OdstavkaSystemu(models.Model):
     def clean(self):
         odstavky = OdstavkaSystemu.objects.filter(status=True)
         if odstavky is not None and self.status:
-            raise ValidationError(
-                _("model.odstavka.jenJednaAktivniOdstavkaPovolena.text")
-            )
+            if odstavky.first().pk != self.pk:
+                raise ValidationError(
+                    _("model.odstavka.jenJednaAktivniOdstavkaPovolena.text")
+                )
         super(OdstavkaSystemu, self).clean()
