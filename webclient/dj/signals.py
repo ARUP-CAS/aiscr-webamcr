@@ -13,6 +13,7 @@ from heslar.hesla import GEOMETRY_PLOCHA
 from heslar.models import RuianKatastr, Heslar
 from historie.models import HistorieVazby
 from pian.models import Pian, Kladyzm
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -54,6 +55,7 @@ def create_dokumentacni_jednotka(sender, instance, created, **kwargs):
                 pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom)
                 pian.set_permanent_ident_cely()
                 pian.save()
+                pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())
                 ruian_katastr.pian = pian.pk
                 ruian_katastr.save()
                 instance.pian = pian

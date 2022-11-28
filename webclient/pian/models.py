@@ -112,12 +112,15 @@ class Pian(models.Model):
 
     def set_vymezeny(self, user):
         self.stav = PIAN_NEPOTVRZEN
-        Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
-        self.save()
+        self.zaznamenej_zapsani(user)
 
     def set_potvrzeny(self, user):
         self.stav = PIAN_POTVRZEN
         Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie).save()
+        self.save()
+
+    def zaznamenej_zapsani(self, user):
+        Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
 
 
