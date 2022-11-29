@@ -249,7 +249,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         return context
 
 
-class ArcheologickyZaznamDetailView(AkceRelatedRecordUpdateView):
+class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     template_name = "arch_z/dj/arch_z_detail.html"
 
     def get_archeologicky_zaznam(self):
@@ -283,7 +283,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
         return context
 
 
-class DokumentacniJednotkaCreateView(AkceRelatedRecordUpdateView):
+class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     template_name = "arch_z/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -307,7 +307,7 @@ class DokumentacniJednotkaCreateView(AkceRelatedRecordUpdateView):
         return context
 
 
-class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
+class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     template_name = "arch_z/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
@@ -324,7 +324,7 @@ class DokumentacniJednotkaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         return context
 
 
-class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
+class KomponentaCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     template_name = "arch_z/dj/komponenta_create.html"
 
     def get_context_data(self, **kwargs):
@@ -338,7 +338,7 @@ class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
         return context
 
 
-class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
+class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     template_name = "arch_z/dj/komponenta_detail.html"
 
     def get_komponenta(self):
@@ -371,7 +371,7 @@ class KomponentaUpdateView(DokumentacniJednotkaRelatedUpdateView):
         return context
 
 
-class PianCreateView(DokumentacniJednotkaRelatedUpdateView):
+class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     template_name = "arch_z/dj/pian_create.html"
 
     def get_context_data(self, **kwargs):
@@ -381,7 +381,7 @@ class PianCreateView(DokumentacniJednotkaRelatedUpdateView):
         return context
 
 
-class PianUpdateView(DokumentacniJednotkaRelatedUpdateView):
+class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
     template_name = "arch_z/dj/pian_update.html"
 
     def get_context_data(self, **kwargs):

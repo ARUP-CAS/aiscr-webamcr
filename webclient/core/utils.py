@@ -1,6 +1,7 @@
 import json
 import logging
 import mimetypes
+import structlog
 import zlib
 
 import core.message_constants as mc
@@ -19,7 +20,7 @@ from heslar.models import RuianKatastr
 from pian.models import Pian
 
 logger = logging.getLogger(__name__)
-
+logger_s = structlog.get_logger(__name__)
 
 def get_mime_type(file_name):
     mime_type = mimetypes.guess_type(file_name)[0]
@@ -164,7 +165,7 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
 
 
 def update_all_katastr_within_akce_or_lokalita(ident_cely):
-
+    logger_s.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     akce_ident_cely = ident_cely.split("-D")[0]
     # logger.debug("dj.ident_cely %s", [ident_cely])
     # logger.debug("akce.ident_cely %s", [akce_ident_cely])
@@ -217,6 +218,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
             cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
     except IndexError:
         return None
+    logger_s.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
 def get_centre_from_akce(katastr, pian):
