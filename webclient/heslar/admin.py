@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib import admin
+from django.db.models import ManyToManyField
+from django.forms import Form
+
 from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMaterialRada, HeslarOdkaz, RuianKraj, \
     RuianOkres, RuianKatastr, HeslarHierarchie
 from uzivatel.models import Osoba, Organizace
@@ -24,7 +27,7 @@ class HeslarNazevAdmin(admin.ModelAdmin):
 
 @admin.register(Heslar)
 class HeslarAdmin(admin.ModelAdmin):
-    list_display = ("ident_cely", "nazev_heslare", "heslo", "zkratka")
+    list_display = ("ident_cely", "nazev_heslare", "heslo", "zkratka", "heslo_en", "zkratka_en", "razeni")
     fields = ("nazev_heslare", "ident_cely", "heslo",
               "popis", "zkratka", "heslo_en", "popis_en", "zkratka_en", "razeni")
     search_fields = ("ident_cely", "nazev_heslare__nazev", "heslo",
@@ -41,6 +44,11 @@ class HeslarAdmin(admin.ModelAdmin):
             return ("ident_cely", "nazev_heslare")
         else:
             return ("ident_cely", )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None:
+            return not obj.has_connections
+        return super().has_delete_permission(request)
 
 
 @admin.register(HeslarDatace)
@@ -71,7 +79,7 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarOdkaz)
 class HeslarOdkazAdmin(admin.ModelAdmin):
-    list_display = ("heslo", "zdroj", "nazev_kodu", "kod")
+    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
     fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
     search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
@@ -81,28 +89,39 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
     list_display = ("heslo_podrazene", "heslo_nadrazene", "typ")
     fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
     search_fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
-    list_filter = ("heslo_podrazene", "heslo_nadrazene", "typ")
+    list_filter = ("heslo_nadrazene", "typ")
 
 
 @admin.register(Osoba)
 class OsobaAdmin(admin.ModelAdmin):
-    list_display = ("jmeno", "prijmeni", "vypis", "rok_narozeni", "rok_umrti", "rok_umrti")
+    list_display = ("jmeno", "prijmeni", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely", "rodne_prijmeni")
     fields = ("jmeno", "prijmeni", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti", "rodne_prijmeni")
     search_fields = ("jmeno", "prijmeni", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti", "rodne_prijmeni")
     # Uncomment when field added to database, add field to other tuples
     # readonly_fields = ("ident_cely", )
 
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None:
+            return not obj.has_connections
+        return super().has_delete_permission(request)
+
 
 @admin.register(Organizace)
 class OrganizaceAdmin(admin.ModelAdmin):
-    list_display = ("nazev_zkraceny", "typ_organizace", "oao", "zanikla")
+    list_display = ("nazev_zkraceny", "typ_organizace", "oao", "zanikla", "nazev", "nazev_zkraceny_en", "nazev_en",
+                    "soucast", "ico", "adresa", "email", "telefon", "zverejneni_pristupnost", "mesicu_do_zverejneni")
     list_filter = ("oao", "zanikla")
-    search_fields = ("nazev", "nazev_zkraceny", "typ_organizace", "zverejneni_pristupnost")
+    search_fields = ("nazev", "nazev_zkraceny", "typ_organizace__heslo", "zverejneni_pristupnost__heslo")
     fields = ("nazev", "nazev_zkraceny", "typ_organizace", "oao", "mesicu_do_zverejneni",
               "zverejneni_pristupnost", "nazev_zkraceny_en", "email", "telefon", "adresa", "ico",
               "nazev_en", "zanikla")
     # Uncomment when field added to database, add field to other tuples
     # readonly_fields = ("ident_cely", )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None:
+            return not obj.has_connections
+        return super().has_delete_permission(request)
 
 
 class HeslarRuianAdmin(admin.ModelAdmin):
@@ -115,6 +134,7 @@ class HeslarRuianAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(HeslarRuianAdmin):
     list_display = ("nazev", "kod", "rada_id", "definicni_bod", "aktualni")
@@ -125,7 +145,7 @@ class HeslarRuianKrajAdmin(HeslarRuianAdmin):
 
 @admin.register(RuianOkres)
 class HeslarRuianOkresAdmin(HeslarRuianAdmin):
-    list_display = ("nazev", "kraj", "spz", "kod", "nazev_en", "aktualni")
+    list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
     fields = ("nazev", "kraj", "spz", "kod", "nazev_en", "aktualni")
     search_fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
     list_filter = ("kraj", "aktualni")
@@ -133,7 +153,7 @@ class HeslarRuianOkresAdmin(HeslarRuianAdmin):
 
 @admin.register(RuianKatastr)
 class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
-    list_display = ("nazev", "okres", "aktualni", "kod", "nazev_stary")
+    list_display = ("nazev", "okres", "pian", "kod", "nazev_stary")
     fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
     search_fields = ("okres", "aktualni", "nazev", "kod", "nazev_stary")
     list_filter = ("okres", "okres__kraj", "aktualni")
