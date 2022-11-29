@@ -40,6 +40,8 @@ from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
+from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
+from dokument.models import DokumentCast
 
 logger = logging.getLogger(__name__)
 
@@ -117,14 +119,36 @@ def detail(request, ident_cely):
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
 
-    if komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        url = reverse("arch_z:update-komponenta",
-                      args=[komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
-                            komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely, komponenta.ident_cely])
+    if komponenta.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+        if (
+            komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.typ_zaznamu
+            == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+        ):
+            url = reverse(
+                "arch_z:update-komponenta",
+                args=[
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely,
+                    komponenta.ident_cely,
+                ],
+            )
+        else:
+            url = reverse(
+                "lokalita:update-komponenta",
+                args=[
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
+                    komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely,
+                    komponenta.ident_cely,
+                ],
+            )
     else:
-        url = reverse("lokalita:update-komponenta",
-                      args=[komponenta.komponenta_vazby.dokumentacni_jednotka.archeologicky_zaznam.ident_cely,
-                            komponenta.komponenta_vazby.dokumentacni_jednotka.ident_cely, komponenta.ident_cely])
+        url = reverse(
+            "dokument:detail-komponenta",
+            args=[
+                komponenta.komponenta_vazby.casti_dokumentu.dokument.ident_cely,
+                komponenta.ident_cely,
+            ],
+        )
     response = redirect(url)
     response.set_cookie(
         "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
@@ -138,7 +162,14 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
-    dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
+    druh = request.GET.get("typ", None)
+    logger.debug(druh)
+    dj = None
+    cast = None
+    if druh:
+        cast = get_object_or_404(DokumentCast, ident_cely=dj_ident_cely)
+    else:
+        dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
@@ -147,28 +178,63 @@ def zapsat(request, dj_ident_cely):
         logger.debug("K.Form is valid:3")
         komponenta = form.save(commit=False)
         try:
-            komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
+            if dj:
+                komponenta.ident_cely = get_komponenta_ident(dj.archeologicky_zaznam)
+            else:
+                komponenta.ident_cely = get_komponenta_ident(cast.dokument)
             komp_ident_cely = komponenta.ident_cely
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_KOMPONENT_DOSAZENO)
         else:
-            komponenta.komponenta_vazby = dj.komponenty
+            if dj:
+                komponenta.komponenta_vazby = dj.komponenty
+            else:
+                komponenta.komponenta_vazby = cast.komponenty
             komponenta.save()
             form.save_m2m()  # this must be called to store komponenta_aktivity
 
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-        if dj.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            url = reverse("arch_z:update-komponenta",
-                          args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely])
+        if dj:
+            if (
+                dj.archeologicky_zaznam.typ_zaznamu
+                == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
+            ):
+                url = reverse(
+                    "arch_z:update-komponenta",
+                    args=[
+                        dj.archeologicky_zaznam.ident_cely,
+                        dj.ident_cely,
+                        komponenta.ident_cely,
+                    ],
+                )
+            else:
+                url = reverse(
+                    "lokalita:update-komponenta",
+                    args=[
+                        dj.archeologicky_zaznam.ident_cely,
+                        dj.ident_cely,
+                        komponenta.ident_cely,
+                    ],
+                )
         else:
-            url = reverse("lokalita:update-komponenta",
-                          args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely, komponenta.ident_cely])
+            url = reverse(
+                "dokument:detail-komponenta",
+                args=[cast.dokument.ident_cely, komponenta.ident_cely],
+            )
     else:
         logger.warning("Form CreateKomponentaForm is not valid")
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        url = reverse("arch_z:create-komponenta", args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely])
-
+        if dj:
+            url = reverse(
+                "arch_z:create-komponenta",
+                args=[dj.archeologicky_zaznam.ident_cely, dj.ident_cely],
+            )
+        else:
+            url = reverse(
+                "dokument:create-komponenta",
+                args=[cast.dokument.ident_cely, cast.ident_cely],
+            )
     response = redirect(url)
     if komp_ident_cely:
         response.set_cookie(
@@ -186,35 +252,61 @@ def zapsat(request, dj_ident_cely):
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
     k = get_object_or_404(Komponenta, ident_cely=ident_cely)
+    dj = None
+    cast = None
+    if k.komponenta_vazby.typ_vazby == DOKUMENTACNI_JEDNOTKA_RELATION_TYPE:
+        dj = k.komponenta_vazby.dokumentacni_jednotka
+    else:
+        cast = k.komponenta_vazby.casti_dokumentu
     if request.method == "POST":
         resp = k.delete()
 
         if resp:
             logger.debug("Byla smazána komponenta: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            response = JsonResponse(
-                {
-                    "redirect": k.komponenta_vazby.dokumentacni_jednotka.get_reverse()
-                }
-            )
-            response.set_cookie(
-                "show-form",
-                f"detail_dj_form_{k.komponenta_vazby.dokumentacni_jednotka.ident_cely}",
-                max_age=1000,
-            )
+            if dj:
+                response = JsonResponse({"redirect": dj.get_reverse()})
+                response.set_cookie(
+                    "show-form",
+                    f"detail_dj_form_{dj.ident_cely}",
+                    max_age=1000,
+                )
+            else:
+                response = JsonResponse(
+                    {
+                        "redirect": reverse(
+                            "dokument:detail-cast",
+                            args=[
+                                cast.dokument.ident_cely,
+                                cast.ident_cely,
+                            ],
+                        )
+                    }
+                )
             return response
         else:
             logger.warning("Komponenta nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
-            response = JsonResponse(
-                {
-                    "redirect": k.komponenta_vazby.dokumentacni_jednotka.get_reverse()
-                },
-                status=403,
-            )
-            response.set_cookie(
-                "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-            )
+            if dj:
+                response = JsonResponse(
+                    {"redirect": dj.get_reverse()},
+                    status=403,
+                )
+                response.set_cookie(
+                    "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
+                )
+            else:
+                response = JsonResponse(
+                    {
+                        "redirect": reverse(
+                            "dokument:detail-komponenta",
+                            args=[
+                                cast.dokument.ident_cely,
+                                k.ident_cely,
+                            ],
+                        )
+                    }
+                )
             return response
     else:
         context = {

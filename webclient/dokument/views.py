@@ -1,8 +1,9 @@
 import logging
 import os
+from django.views import View
 
 import structlog
-from arch_z.models import Akce, ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam
 from core.constants import (
     ARCHIVACE_DOK,
     D_STAV_ARCHIVOVANY,
@@ -21,11 +22,16 @@ from core.ident_cely import (
     get_temp_dokument_ident,
 )
 from core.message_constants import (
+    DOKUMENT_AZ_USPESNE_PRIPOJEN,
+    DOKUMENT_CAST_USPESNE_ODPOJEN,
+    DOKUMENT_CAST_USPESNE_SMAZANA,
     DOKUMENT_JIZ_BYL_PRIPOJEN,
+    DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA,
     DOKUMENT_NELZE_ARCHIVOVAT,
     DOKUMENT_NELZE_ODESLAT,
     DOKUMENT_ODPOJ_ZADNE_RELACE,
     DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
+    DOKUMENT_PROJEKT_USPESNE_PRIPOJEN,
     DOKUMENT_USPESNE_ARCHIVOVAN,
     DOKUMENT_USPESNE_ODESLAN,
     DOKUMENT_USPESNE_ODPOJEN,
@@ -34,6 +40,7 @@ from core.message_constants import (
     MAXIMUM_IDENT_DOSAZEN,
     PRISTUP_ZAKAZAN,
     VYBERTE_PROSIM_POLOHU,
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
@@ -56,17 +63,30 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from dokument.filters import DokumentFilter
+from django.views.generic import DetailView, TemplateView
+from django.views.generic.edit import UpdateView
+from dokument.filters import Model3DFilter, DokumentFilter
 from dokument.forms import (
     CoordinatesDokumentForm,
     CreateModelDokumentForm,
     CreateModelExtraDataForm,
+    DokumentCastCreateForm,
+    DokumentCastForm,
     EditDokumentExtraDataForm,
     EditDokumentForm,
     PripojitDokumentForm,
+    TvarFormSetHelper,
+    create_tvar_form,
 )
-from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let
-from dokument.tables import DokumentTable
+from dokument.models import (
+    Dokument,
+    DokumentAutor,
+    DokumentCast,
+    DokumentExtraData,
+    Let,
+    Tvar,
+)
+from dokument.tables import Model3DTable, DokumentTable
 from heslar.hesla import (
     DOKUMENT_RADA_DATA_3D,
     HESLAR_AREAL,
@@ -98,6 +118,10 @@ from urllib.parse import urlparse
 from projekt.models import Projekt
 from core.utils import calculate_crc_32
 from services.mailer import Mailer
+from neidentakce.forms import NeidentAkceForm
+from neidentakce.models import NeidentAkce
+from ez.forms import PripojitArchZaznamForm
+from projekt.forms import PripojitProjektForm
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -107,92 +131,6 @@ logger_s = structlog.get_logger(__name__)
 @require_http_methods(["GET"])
 def index_model_3D(request):
     return render(request, "dokument/index_model_3D.html")
-
-
-@login_required
-@require_http_methods(["GET"])
-def detail(request, ident_cely):
-    context = {"warnings": request.session.pop("temp_data", None)}
-    dokument = get_object_or_404(
-        Dokument.objects.select_related(
-            "soubory",
-            "organizace",
-            "material_originalu",
-            "typ_dokumentu",
-            "rada",
-        ),
-        ident_cely=ident_cely,
-    )
-    if not dokument.has_extra_data():
-        extra_data = DokumentExtraData(dokument=dokument)
-        extra_data.save()
-    else:
-        extra_data = dokument.extra_data
-    form_dokument = EditDokumentForm(instance=dokument, readonly=True)
-    form_dokument_extra = EditDokumentExtraDataForm(
-        rada=dokument.rada,
-        let=(dokument.let.id if dokument.let else ""),
-        dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
-        instance=extra_data,
-        readonly=True,
-    )
-    context["dokument"] = dokument
-    context["form_dokument"] = form_dokument
-    context["form_dokument_extra"] = form_dokument_extra
-    context["history_dates"] = get_history_dates(dokument.historie)
-    context["show"] = get_detail_template_shows(dokument)
-
-    if dokument.soubory:
-        context["soubory"] = dokument.soubory.soubory.all()
-    else:
-        context["soubory"] = None
-    response = render(request, "dokument/detail.html", context)
-    casti = dokument.casti.all()
-    referer = urlparse(request.META.get("HTTP_REFERER", False)).path
-    referer_next = urlparse(request.META.get("HTTP_REFERER", False)).query
-    if referer:
-        ident_referer = referer.split("/")[-1]
-        if ident_cely == ident_referer:
-            pass
-        elif (
-            "arch-z/akce/detail/" in referer
-            or "/projekt/detail/"
-            or "arch-z/lokalita/detail/" in referer
-        ):
-            found = False
-            for cast in casti:
-                if cast.archeologicky_zaznam:
-                    if cast.archeologicky_zaznam.ident_cely == ident_referer:
-                        logger.debug("back option for akce found")
-                        response.set_cookie(
-                            "zpet",
-                            cast.archeologicky_zaznam.get_reverse(),
-                            max_age=1000,
-                        )
-                        found = True
-                        break
-                if cast.projekt:
-                    if cast.projekt.ident_cely == ident_referer:
-                        logger.debug("back option for projekt found")
-                        response.set_cookie(
-                            "zpet",
-                            reverse("projekt:detail", args=(ident_referer,)),
-                            max_age=1000,
-                        )
-                        found = True
-                        break
-            if found == False:
-                logger.debug("no back option for projekt/akce found")
-                response.delete_cookie("zpet")
-        elif "nahrat-soubor" in referer and ident_cely in referer_next:
-            logger.debug("referer is nahradit soubor so back option not changed")
-        else:
-            logger.debug("referer is other so no back option")
-            response.delete_cookie("zpet")
-    else:
-        logger.debug("no referer so no back option")
-        response.delete_cookie("zpet")
-    return response
 
 
 @login_required
@@ -295,6 +233,38 @@ def detail_model_3D(request, ident_cely):
     return render(request, "dokument/detail_model_3D.html", context)
 
 
+class Model3DListView(
+    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
+):
+    table_class = Model3DTable
+    model = Dokument
+    template_name = "dokument/dokument_list.html"
+    filterset_class = Model3DFilter
+    paginate_by = 100
+    export_name = "export_modely_"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = ["csv", "json", "xlsx"]
+        context["is_3d"] = True
+        context["header_vybrat"] = _("Vybrat modely 3D")
+        context["header_moje"] = _("Moje modely 3D")
+        context["header_podle_filtru"] = _("Modely podle filtru")
+        return context
+
+    def get_queryset(self):
+        # Only allow to view 3D models
+        qs = super().get_queryset().filter(ident_cely__contains="3D")
+        qs = qs.select_related(
+            "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+        )
+        return qs
+
+
+class DokumentIndexView(LoginRequiredMixin, TemplateView):
+    template_name = "dokument/index_dokument.html"
+
+
 class DokumentListView(
     ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
 ):
@@ -308,15 +278,551 @@ class DokumentListView(
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["export_formats"] = ["csv", "json", "xlsx"]
+        context["is_3d"] = False
+        context["header_vybrat"] = _("Vybrat dokumenty")
+        context["header_moje"] = _("Moje dokumenty")
+        context["header_podle_filtru"] = _("Dokumenty podle filtru")
         return context
 
     def get_queryset(self):
         # Only allow to view 3D models
-        qs = super().get_queryset().filter(ident_cely__contains="3D")
+        qs = super().get_queryset().exclude(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
         )
         return qs
+
+
+class RelatedContext(LoginRequiredMixin, TemplateView):
+    def get_cast(self, context, cast, **kwargs):
+        context["cast"] = cast
+        cast_form = DokumentCastForm(
+            instance=cast,
+            readonly=True,
+        )
+        context["cast_form"] = cast_form
+        neident_akce = NeidentAkce.objects.filter(dokument_cast=cast)
+        if neident_akce.exists():
+            context["neident_akce_form"] = NeidentAkceForm(
+                instance=neident_akce[0], readonly=True
+            )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["warnings"] = self.request.session.pop("temp_data", None)
+        dokument = get_object_or_404(
+            Dokument.objects.select_related(
+                "soubory",
+                "organizace",
+                "material_originalu",
+                "typ_dokumentu",
+                "rada",
+            ),
+            ident_cely=self.kwargs["ident_cely"],
+        )
+        if not dokument.has_extra_data():
+            extra_data = DokumentExtraData(dokument=dokument)
+            extra_data.save()
+        else:
+            extra_data = dokument.extra_data
+        form_dokument = EditDokumentForm(instance=dokument, readonly=True)
+        form_dokument_extra = EditDokumentExtraDataForm(
+            rada=dokument.rada,
+            let=(dokument.let.id if dokument.let else ""),
+            dok_osoby=list(dokument.osoby.all().values_list("id", flat=True)),
+            instance=extra_data,
+            readonly=True,
+        )
+        show = get_detail_template_shows(dokument)
+        if dokument.rada.zkratka in ["LD", "LN", "DL"]:
+            TvarFormset = inlineformset_factory(
+                Dokument,
+                Tvar,
+                form=create_tvar_form(
+                    not_readonly=show["editovat"],
+                ),
+                extra=1 if show["editovat"] else 0,
+                can_delete=False,
+            )
+            context["form_tvary"] = TvarFormset(
+                instance=dokument,
+                prefix=dokument.ident_cely + "_d",
+            )
+            context["tvary_helper"] = TvarFormSetHelper()
+        context["dokument"] = dokument
+        context["form_dokument"] = form_dokument
+        context["form_dokument_extra"] = form_dokument_extra
+        context["history_dates"] = get_history_dates(dokument.historie)
+        context["show"] = show
+
+        if dokument.soubory:
+            context["soubory"] = dokument.soubory.soubory.all()
+        else:
+            context["soubory"] = None
+
+        context["casti"] = dokument.casti.all()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super().render_to_response(context, **response_kwargs)
+        referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path
+        referer_next = urlparse(self.request.META.get("HTTP_REFERER", False)).query
+        if referer:
+            ident_referer = referer.split("/")[-1]
+            if context["dokument"].ident_cely == ident_referer:
+                pass
+            elif (
+                "arch-z/akce/detail/" in referer
+                or "/projekt/detail/"
+                or "arch-z/lokalita/detail/" in referer
+            ):
+                found = False
+                for cast in context["casti"]:
+                    if cast.archeologicky_zaznam:
+                        if cast.archeologicky_zaznam.ident_cely == ident_referer:
+                            logger.debug("back option for akce found")
+                            response.set_cookie(
+                                "zpet",
+                                cast.archeologicky_zaznam.get_reverse(),
+                                max_age=1000,
+                            )
+                            found = True
+                            break
+                    if cast.projekt:
+                        if cast.projekt.ident_cely == ident_referer:
+                            logger.debug("back option for projekt found")
+                            response.set_cookie(
+                                "zpet",
+                                reverse("projekt:detail", args=(ident_referer,)),
+                                max_age=1000,
+                            )
+                            found = True
+                            break
+                if found == False:
+                    logger.debug("no back option for projekt/akce found")
+                    response.delete_cookie("zpet")
+            elif (
+                "nahrat-soubor" in referer
+                and context["dokument"].ident_cely in referer_next
+            ):
+                logger.debug("referer is nahradit soubor so back option not changed")
+            else:
+                logger.debug("referer is other so no back option")
+                response.delete_cookie("zpet")
+        else:
+            logger.debug("no referer so no back option")
+            response.delete_cookie("zpet")
+        return response
+
+
+class DokumentDetailView(RelatedContext):
+    template_name = "dokument/dok/detail.html"
+
+
+class DokumentCastDetailView(RelatedContext):
+    template_name = "dokument/dok/detail_cast_dokumentu.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cast = get_object_or_404(
+            DokumentCast,
+            ident_cely=self.kwargs["cast_ident_cely"],
+        )
+        self.get_cast(context, cast)
+        context["active_dc_ident"] = cast.ident_cely
+        return context
+
+
+class DokumentCastEditView(UpdateView, LoginRequiredMixin):
+    model = DokumentCast
+    template_name = "core/transakce_modal.html"
+    title = _("dokumentCast.modalForm.zmenitPoznamku.title.text")
+    id_tag = "edit-cast-form"
+    button = _("dokumentCast.modalForm.zmenitPoznamku.submit.button")
+    form_class = DokumentCastForm
+    slug_field = "ident_cely"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        zaznam = self.object
+        context = {
+            "object": zaznam,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+        }
+        context["form"] = DokumentCastForm(
+            instance=self.object,
+        )
+        return context
+
+    def get_success_url(self):
+        context = self.get_context_data()
+        dc = context["object"]
+        return dc.get_absolute_url()
+
+    def post(self, request, *args, **kwargs):
+        super().post(request, *args, **kwargs)
+        return JsonResponse({"redirect": self.get_success_url()})
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        logger_s.debug("main form is invalid")
+        logger_s.debug(form.errors)
+        return super().form_invalid(form)
+
+
+class KomponentaDokumentDetailView(RelatedContext):
+    template_name = "dokument/dok/detail_komponenta.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        komponenta = get_object_or_404(
+            Komponenta.objects.select_related(
+                "komponenta_vazby__casti_dokumentu",
+            ),
+            ident_cely=self.kwargs["komp_ident_cely"],
+        )
+        context["k"] = komponenta
+        cast = komponenta.komponenta_vazby.casti_dokumentu
+        self.get_cast(context, cast)
+        old_nalez_post = self.request.session.pop("_old_nalez_post", None)
+        komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
+
+        context["k"] = get_komponenta_form_detail(
+            komponenta, context["show"], old_nalez_post, komp_ident_cely
+        )
+        context["active_komp_ident"] = komponenta.ident_cely
+        return context
+
+
+class KomponentaDokumentCreateView(RelatedContext):
+    template_name = "dokument/dok/create_komponenta.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cast = get_object_or_404(
+            DokumentCast,
+            ident_cely=self.kwargs["cast_ident_cely"],
+        )
+        self.get_cast(context, cast)
+        context["komponenta_form_create"] = CreateKomponentaForm(
+            get_obdobi_choices(), get_areal_choices()
+        )
+        return context
+
+
+class TvarEditView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        dokument = get_object_or_404(Dokument, ident_cely=self.kwargs["ident_cely"])
+        TvarFormset = inlineformset_factory(
+            Dokument,
+            Tvar,
+            form=create_tvar_form(),
+            extra=1,
+        )
+        formset = TvarFormset(
+            request.POST, instance=dokument, prefix=dokument.ident_cely + "_d"
+        )
+        if formset.is_valid():
+            logger.debug("Formset is valid")
+            formset.save()
+            if formset.has_changed():
+                logger.debug("Form data was changed")
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.warning("Formset is not valid")
+            logger.debug(formset.errors)
+            logger.debug(formset.non_form_errors())
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        return redirect(dokument.get_absolute_url())
+
+
+class TvarSmazatView(LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+    title = _("dokument.modalForm.smazatTvar.title.text")
+    id_tag = "smazat-tvar-form"
+    button = _("dokument.modalForm.smazatTvar.submit.button")
+
+    def get_zaznam(self):
+        id = self.kwargs.get("pk")
+        return get_object_or_404(
+            Tvar,
+            pk=id,
+        )
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "object": zaznam,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        dokument = zaznam.dokument
+        zaznam.delete()
+        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+
+        return JsonResponse({"redirect": dokument.get_absolute_url()})
+
+
+class VytvoritCastView(LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+    title = _("dokument.modalForm.vytvoritCast.title.text")
+    id_tag = "vytvor-cast-form"
+    button = _("dokument.modalForm.vytvoritCast.submit.button")
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return get_object_or_404(
+            Dokument,
+            ident_cely=ident_cely,
+        )
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        form = DokumentCastCreateForm()
+        context = {
+            "object": zaznam,
+            "form": form,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        form = DokumentCastCreateForm(data=request.POST)
+        if form.is_valid():
+            dc_ident = get_cast_dokumentu_ident(zaznam)
+            DokumentCast(
+                dokument=zaznam,
+                ident_cely=dc_ident,
+                poznamka=form.cleaned_data["poznamka"],
+            ).save()
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
+            return JsonResponse(
+                {
+                    "redirect": reverse(
+                        "dokument:detail-cast",
+                        kwargs={
+                            "ident_cely": zaznam.ident_cely,
+                            "cast_ident_cely": dc_ident,
+                        },
+                    )
+                }
+            )
+        else:
+            logger.debug(form.errors)
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
+
+class TransakceView(LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+    title = "title"
+    id_tag = "id_tag"
+    button = "button"
+    allowed_states = [D_STAV_ZAPSANY, D_STAV_ODESLANY, D_STAV_ARCHIVOVANY]
+    success_message = "success"
+    action = ""
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        logger.debug(ident_cely)
+        return get_object_or_404(
+            DokumentCast,
+            ident_cely=ident_cely,
+        )
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        form_check = CheckStavNotChangedForm(initial={"old_stav": zaznam.dokument.stav})
+        context = {
+            "object": zaznam,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+            "form_check": form_check,
+        }
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam().dokument
+        if zaznam.stav not in self.allowed_states:
+            logger.debug("state not allowed for action: %s", self.action)
+            messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
+            return JsonResponse(
+                {"redirect": zaznam.get_absolute_url()},
+                status=403,
+            )
+        if check_stav_changed(request, zaznam):
+            return JsonResponse(
+                {"redirect": zaznam.get_absolute_url()},
+                status=403,
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        getattr(Dokument, self.action)(zaznam, request.user)
+        messages.add_message(request, messages.SUCCESS, self.success_message)
+
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
+
+
+class DokumentCastPripojitAkciView(TransakceView):
+    template_name = "core/transakce_table_modal.html"
+    title = _("dokument.modalForm.pripojitAZ.title.text")
+    id_tag = "pripojit-eo-form"
+    button = _("dokument.modalForm.pripojitAZ.submit.button")
+    success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        type_arch = self.request.GET.get("type")
+        form = PripojitArchZaznamForm(type_arch=type_arch, dok=True)
+        context["form"] = form
+        context["hide_table"] = True
+        context["type"] = type_arch
+        context["card_type"] = type_arch
+        return context
+
+    def post(self, request, *args, **kwargs):
+        cast = self.get_zaznam()
+        type_arch = self.request.GET.get("type")
+        form = PripojitArchZaznamForm(data=request.POST, type_arch=type_arch, dok=True)
+        if form.is_valid():
+            arch_z_id = form.cleaned_data["arch_z"]
+            arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
+            cast.archeologicky_zaznam = arch_z
+            cast.projekt = None
+            cast.save()
+            messages.add_message(request, messages.SUCCESS, self.success_message)
+        else:
+            logger.debug("not valid")
+            logger.debug(form.errors)
+        return JsonResponse({"redirect": cast.get_absolute_url()})
+
+
+class DokumentCastPripojitProjektView(TransakceView):
+    template_name = "core/transakce_table_modal.html"
+    title = _("dokument.modalForm.pripojitProjekt.title.text")
+    id_tag = "pripojit-projekt-form"
+    button = _("dokument.modalForm.pripojitProjekt.submit.button")
+    success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        form = PripojitProjektForm(dok=True)
+        context["form"] = form
+        context["hide_table"] = True
+        return context
+
+    def post(self, request, *args, **kwargs):
+        cast = self.get_zaznam()
+        form = PripojitProjektForm(data=request.POST, dok=True)
+        if form.is_valid():
+            projekt = form.cleaned_data["projekt"]
+            cast.archeologicky_zaznam = None
+            cast.projekt = Projekt.objects.get(id=projekt)
+            cast.save()
+            messages.add_message(request, messages.SUCCESS, self.success_message)
+        else:
+            logger.debug("not valid")
+            logger.debug(form.errors)
+        return JsonResponse({"redirect": cast.get_absolute_url()})
+
+
+class DokumentCastOdpojitView(TransakceView):
+    title = _("dokument.modalForm.odpojitVazbuCast.title.text")
+    id_tag = "odpojit-cast-form"
+    button = _("dokument.modalForm.odpojitVazbuCast.submit.button")
+    success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cast = self.get_zaznam()
+        if cast.archeologicky_zaznam is not None:
+            context["object"] = get_object_or_404(
+                ArcheologickyZaznam,
+                id=cast.archeologicky_zaznam.id,
+            )
+        else:
+            context["object"] = get_object_or_404(
+                Projekt,
+                id=cast.projekt.id,
+            )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        cast = self.get_zaznam()
+        cast.archeologicky_zaznam = None
+        cast.projekt = None
+        cast.save()
+        messages.add_message(request, messages.SUCCESS, self.success_message)
+        return JsonResponse({"redirect": cast.get_absolute_url()})
+
+
+class DokumentCastSmazatView(TransakceView):
+    title = _("dokument.modalForm.smazatCast.title.text")
+    id_tag = "smazat-cast-form"
+    button = _("dokument.modalForm.smazatCast.submit.button")
+    success_message = DOKUMENT_CAST_USPESNE_SMAZANA
+
+    def post(self, request, *args, **kwargs):
+        cast = self.get_zaznam()
+        dokument = cast.dokument
+        if cast.komponenty:
+            komps = cast.komponenty
+            cast.komponenty = None
+            cast.save()
+            komps.delete()
+        cast.delete()
+        messages.add_message(request, messages.SUCCESS, self.success_message)
+        return JsonResponse({"redirect": dokument.get_absolute_url()})
+
+
+class DokumentNeidentAkceSmazatView(TransakceView):
+    title = _("dokument.modalForm.smazatNeidentAkce.title.text")
+    id_tag = "smazat-neident-akce-form"
+    button = _("dokument.modalForm.smazatNeidentAkce.submit.button")
+    success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["object"] = context["object"].neident_akce
+        return context
+
+    def post(self, request, *args, **kwargs):
+        cast = self.get_zaznam()
+        if cast.neident_akce:
+            cast.neident_akce.delete()
+            messages.add_message(request, messages.SUCCESS, self.success_message)
+        else:
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
 @login_required
@@ -349,11 +855,21 @@ def edit(request, ident_cely):
             logger.debug("webclient.dokument.views: Both forms are valid")
             instance_d = form_d.save(commit=False)
             instance_d.osoby.set(form_extra.cleaned_data["dokument_osoba"])
+            # instance_d.osoby.set(form_d.cleaned_data["jazyky"])
             if form_extra.cleaned_data["let"]:
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
+            instance_d.autori.clear()
             instance_d.save()
-            form_d.save_m2m()
+            # form_d.save_m2m()
             form_extra.save()
+            i = 1
+            for autor in form_d.cleaned_data["autori"]:
+                DokumentAutor(
+                    dokument=dokument,
+                    autor=autor,
+                    poradi=i,
+                ).save()
+                i = i + 1
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -560,7 +1076,7 @@ def create_model_3D(request):
                 id=MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR
             )
             try:
-                dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C")
+                dokument.ident_cely = get_temp_dokument_ident(rada="3D", region="C-")
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
             else:
@@ -888,17 +1404,19 @@ def get_detail_template_shows(dokument):
         D_STAV_ARCHIVOVANY,
     ]
     show_arch_links = dokument.stav == D_STAV_ARCHIVOVANY
+    show_tvary = True if dokument.rada.zkratka in ["LD", "LN", "DL"] else False
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "archivovat_link": show_archivovat,
         "editovat": show_edit,
         "arch_links": show_arch_links,
+        "tvary": show_tvary,
     }
     return show
 
 
-def zapsat(request, zaznam):
+def zapsat(request, zaznam=None):
     required_fields = get_required_fields_dokument()
     required_fields_next = get_required_fields_dokument(next=1)
     if request.method == "POST":
@@ -914,10 +1432,13 @@ def zapsat(request, zaznam):
                 dokument.typ_dokumentu, dokument.material_originalu
             )
             try:
-                prefix = zaznam.ident_cely[0]
-                if isinstance(zaznam, ArcheologickyZaznam):
-                    if zaznam.ident_cely.startswith("X"):
-                        prefix = zaznam.ident_cely[2]
+                if zaznam:
+                    prefix = zaznam.ident_cely[0]
+                    if isinstance(zaznam, ArcheologickyZaznam):
+                        if zaznam.ident_cely.startswith("X"):
+                            prefix = zaznam.ident_cely[2] + "-"
+                else:
+                    prefix = form_d.cleaned_data["region"]
                 dokument.ident_cely = get_temp_dokument_ident(
                     rada=dokument.rada.zkratka, region=prefix
                 )
@@ -927,20 +1448,29 @@ def zapsat(request, zaznam):
                 dokument.stav = D_STAV_ZAPSANY
                 dokument.save()
                 dokument.set_zapsany(request.user)
+                i = 1
+                for autor in form_d.cleaned_data["autori"]:
+                    DokumentAutor(
+                        dokument=dokument,
+                        autor=autor,
+                        poradi=i,
+                    ).save()
+                    i = i + 1
 
                 # Vytvorit defaultni cast dokumentu
-                if zaznam._meta.verbose_name == "archeologicky zaznam":
-                    DokumentCast(
-                        dokument=dokument,
-                        ident_cely=get_cast_dokumentu_ident(dokument),
-                        archeologicky_zaznam=zaznam,
-                    ).save()
-                else:
-                    DokumentCast(
-                        dokument=dokument,
-                        ident_cely=get_cast_dokumentu_ident(dokument),
-                        projekt=zaznam,
-                    ).save()
+                if zaznam:
+                    if isinstance(zaznam, ArcheologickyZaznam):
+                        DokumentCast(
+                            dokument=dokument,
+                            ident_cely=get_cast_dokumentu_ident(dokument),
+                            archeologicky_zaznam=zaznam,
+                        ).save()
+                    else:
+                        DokumentCast(
+                            dokument=dokument,
+                            ident_cely=get_cast_dokumentu_ident(dokument),
+                            projekt=zaznam,
+                        ).save()
 
                 form_d.save_m2m()
 
@@ -1185,3 +1715,72 @@ def get_required_fields_dokument(zaznam=None, next=0):
             "jazyky",
         ]
     return required_fields
+
+
+def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely):
+    NalezObjektFormset = inlineformset_factory(
+        Komponenta,
+        NalezObjekt,
+        form=create_nalez_objekt_form(
+            heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
+            heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+    NalezPredmetFormset = inlineformset_factory(
+        Komponenta,
+        NalezPredmet,
+        form=create_nalez_predmet_form(
+            heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
+            list(
+                Heslar.objects.filter(
+                    nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
+                ).values_list("id", "heslo")
+            ),
+            not_readonly=show["editovat"],
+        ),
+        extra=1 if show["editovat"] else 0,
+        can_delete=False,
+    )
+
+    komponenta_form_detail = {
+        "ident_cely": komponenta.ident_cely,
+        "form": CreateKomponentaForm(
+            get_obdobi_choices(),
+            get_areal_choices(),
+            instance=komponenta,
+            prefix=komponenta.ident_cely,
+            readonly=not show["editovat"],
+        ),
+        "form_nalezy_objekty": NalezObjektFormset(
+            old_nalez_post,
+            instance=komponenta,
+            prefix=komponenta.ident_cely + "_o",
+        )
+        if komponenta.ident_cely == komp_ident_cely
+        else NalezObjektFormset(
+            instance=komponenta, prefix=komponenta.ident_cely + "_o"
+        ),
+        "form_nalezy_predmety": NalezPredmetFormset(
+            old_nalez_post,
+            instance=komponenta,
+            prefix=komponenta.ident_cely + "_p",
+        )
+        if komponenta.ident_cely == komp_ident_cely
+        else NalezPredmetFormset(
+            instance=komponenta, prefix=komponenta.ident_cely + "_p"
+        ),
+        "helper_predmet": NalezFormSetHelper(typ="predmet"),
+        "helper_objekt": NalezFormSetHelper(typ="objekt"),
+    }
+    return komponenta_form_detail
+
+
+def get_obdobi_choices():
+    return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
+
+
+def get_areal_choices():
+    return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)

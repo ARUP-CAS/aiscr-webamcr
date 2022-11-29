@@ -10,7 +10,7 @@
 
 {% block content %}
   <div class="app-entity-knihovna_3d app-table-list-container">
-    {% include "toolbar_dokument.html" with is_3d=True %}
+    {% include "toolbar_dokument.html" %}
 
     {% if filter %}
       <form method="get">
@@ -136,7 +136,7 @@
 
           function hasOnlyVybratModely(actualParams, actualValues) {
               if (listMatch([], actualParams) && listMatch([], actualValues)) {
-                  setHeader("Vybrat modely 3D")
+                  setHeader("{{header_vybrat}}")
                   return true
               } else {
                   return false
@@ -145,7 +145,7 @@
 
           function hasOnlyVlastnik(actualParams, actualValues) {
               if (listMatch(['vlastnik'], actualParams) && listMatch(['{{ user.id }}'], actualValues)) {
-                  setHeader("Moje modely")
+                  setHeader("{{header_moje}}")
                   return true
               } else {
                   return false
@@ -160,7 +160,7 @@
               if (!(hasOnlyVlastnik(keys, values) ||
                     hasOnlyVybratModely(keys, values)
               )) {
-                  setHeader("Modely podle filtru")
+                  setHeader("{{header_podle_filtru}}")
               }
           }
 

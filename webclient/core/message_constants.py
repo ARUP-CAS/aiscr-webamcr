@@ -64,7 +64,15 @@ DOKUMENT_ODPOJ_ZADNE_RELACE: Final = _("dokument.message.odpojitDokumentBezRelac
 DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM: Final = _(
     "dokument.message.odpojitDokumentBezRelaceMeziZaznamemDokumentem.text"
 )
-
+DOKUMENT_AZ_USPESNE_PRIPOJEN: Final = _("dokument.message.archzUspesnePripojen.text")
+DOKUMENT_PROJEKT_USPESNE_PRIPOJEN: Final = _(
+    "dokument.message.projektUspesnePripojen.text"
+)
+DOKUMENT_CAST_USPESNE_ODPOJEN: Final = _("dokument.message.castUspesneOdpojena.text")
+DOKUMENT_CAST_USPESNE_SMAZANA: Final = _("dokument.message.castUspesneSmazana.text")
+DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA: Final = _(
+    "dokument.message.neidentAkceUspesneSmazana.text"
+)
 # Osoba
 OSOBA_USPESNE_PRIDANA: Final = "Osoba úspěšně přidána."
 OSOBA_JIZ_EXISTUJE: Final = "Jméno již existuje."

@@ -86,7 +86,8 @@ class Dokument(models.Model):
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-        blank=True, null=True
+        blank=True,
+        null=True,
     )
     material_originalu = models.ForeignKey(
         Heslar,
@@ -136,7 +137,8 @@ class Dokument(models.Model):
         Heslar,
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
-        blank=True, null=True,
+        blank=True,
+        null=True,
     )
     osoby = models.ManyToManyField(
         Osoba,
@@ -146,6 +148,10 @@ class Dokument(models.Model):
     autori = models.ManyToManyField(
         Osoba, through="DokumentAutor", related_name="dokumenty_autoru"
     )
+    tvary = models.ManyToManyField(
+        Heslar, through="Tvar", related_name="dokumenty_tvary"
+    )
+    main_autor = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = "dokument"
@@ -220,7 +226,9 @@ class Dokument(models.Model):
             if not self.popis:
                 result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
             if not self.ulozeni_originalu:
-                result.append(_("dokument.formCheckOdeslani.missingUlozeniOriginalu.text"))
+                result.append(
+                    _("dokument.formCheckOdeslani.missingUlozeniOriginalu.text")
+                )
             if self.jazyky.all().count() == 0:
                 result.append(_("dokument.formCheckOdeslani.missingJazyky.text"))
         # At least one soubor must be attached to the dokument
@@ -342,6 +350,15 @@ class DokumentCast(models.Model):
     class Meta:
         db_table = "dokument_cast"
 
+    def get_absolute_url(self):
+        return reverse(
+            "dokument:detail-cast",
+            kwargs={
+                "ident_cely": self.dokument.ident_cely,
+                "cast_ident_cely": self.ident_cely,
+            },
+        )
+
 
 class DokumentExtraData(models.Model):
     dokument = models.OneToOneField(
@@ -424,6 +441,7 @@ class DokumentAutor(models.Model):
     class Meta:
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"),)
+        ordering = (["poradi"],)
 
 
 class DokumentJazyk(models.Model):

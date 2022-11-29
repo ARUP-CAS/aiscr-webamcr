@@ -1,0 +1,1 @@
+alter table externi_zdroj ALTER COLUMN final_cj DROP NOT NULL;

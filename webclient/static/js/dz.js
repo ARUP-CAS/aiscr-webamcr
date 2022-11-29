@@ -39,7 +39,11 @@ window.onload = function () {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
     } else if (currentLocation.includes("nahrat-soubor/dokument/")) {
-        acceptFile = "application/pdf"
+        acceptFile = "image/*, " +
+            "text/plain, " +
+            "application/pdf" +
+            ".csv, " +
+            ".CSV"
         RejectedFileMessage = reject_dict["rejected_dokument"]
     } else {
         acceptFile = "image/*, " +
@@ -61,48 +65,48 @@ window.onload = function () {
         RejectedFileMessage = reject_dict["rejected_all"]
     }
 
-var dropzoneOptions = {
-    dictDefaultMessage: get_description(),
-    acceptedFiles: acceptFile,
-    dictInvalidFileType: RejectedFileMessage,
-    addRemoveLinks: true,
-    dictCancelUpload: "Zrušit nahrávání",
-    dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
-    dictRemoveFile: "Odstranit soubor",
-    maxFilesize: 100, // MB
-    maxFiles: maxFiles,
-    addRemoveLinks: addRemoveLinks,
-    init: function () {
-        this.on("success", function (file, response) {
-            file.id = response.id
-            file.previewElement.lastChild.style.display = null
-            if (response.duplicate) {
-                alert(response.duplicate)
-                console.log("success > " + file.name);
+    var dropzoneOptions = {
+        dictDefaultMessage: get_description(),
+        acceptedFiles: acceptFile,
+        dictInvalidFileType: RejectedFileMessage,
+        addRemoveLinks: true,
+        dictCancelUpload: "Zrušit nahrávání",
+        dictCancelUploadConfirmation: "Naozaj chcete zrušit nahrávání?",
+        dictRemoveFile: "Odstranit soubor",
+        maxFilesize: 100, // MB
+        maxFiles: maxFiles,
+        addRemoveLinks: addRemoveLinks,
+        init: function () {
+            this.on("success", function (file, response) {
+                file.id = response.id
+                file.previewElement.lastChild.style.display = null
+                if (response.duplicate) {
+                    alert(response.duplicate)
+                    console.log("success > " + file.name);
 
-            }
-        });
-        this.on("removedfile", function (file) {
-            if (file.id) {
-                xhttp.open("POST", "/smazat-soubor/" + file.id);
-                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
-                xhttp.send("dropzone=true");
-            }
-        });
-        this.on("sending", function (file) {
-            file.previewElement.lastChild.style.display = "none"
-        });
-    },
-    error: function (file, response) {
-        console.log(response);
-        alert(response)
-        this.removeFile(file);
+                }
+            });
+            this.on("removedfile", function (file) {
+                if (file.id) {
+                    xhttp.open("POST", "/smazat-soubor/" + file.id);
+                    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
+                    xhttp.send("dropzone=true");
+                }
+            });
+            this.on("sending", function (file) {
+                file.previewElement.lastChild.style.display = "none"
+            });
+        },
+        error: function (file, response) {
+            console.log(response);
+            alert(response)
+            this.removeFile(file);
 
-    },
-    params: get_params(),
-};
-var uploader = document.querySelector('#my-awesome-dropzone');
-var newDropzone = new Dropzone(uploader, dropzoneOptions);
-console.log("Loaded");
+        },
+        params: get_params(),
+    };
+    var uploader = document.querySelector('#my-awesome-dropzone');
+    var newDropzone = new Dropzone(uploader, dropzoneOptions);
+    console.log("Loaded");
 };

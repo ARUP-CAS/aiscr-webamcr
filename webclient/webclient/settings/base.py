@@ -288,7 +288,7 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
         },
-        "neident_akce": {
+        "neidentakce": {
             "handlers": ["console"],
             "level": "DEBUG",
         },

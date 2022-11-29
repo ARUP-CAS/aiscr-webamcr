@@ -46,7 +46,7 @@
         </div>
     </div>
     {% endif %}
-    {% if id_tag == "akce-change-form" %}
+    {% if id_tag == "akce-change-form" or id_tag == "pripojit-projekt-form" %}
     <div class="app-card-projekt">
         <div class="app-table-list-wrapper add-projekt-table" {% if hide_table %} style="display: none;" {%endif%}>
     {%include "projekt/projekt_table.html"%}
@@ -123,7 +123,7 @@
     });
 </script>
 <script>
-  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form" || "{{ id_tag }}" == "pripojit-eo-form"|| "{{ id_tag }}" == "pripojit-eo-doaz-form"){
+  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "akce-change-form" || "{{ id_tag }}" == "pripojit-eo-form"|| "{{ id_tag }}" == "pripojit-eo-doaz-form" || "{{ id_tag }}" == "pripojit-projekt-form"){
 window.addEventListener("modalLoaded", function () {
       window.django = window.django || {};
     if (!django.hasOwnProperty('jQuery') && jQuery !== 'undefined') {

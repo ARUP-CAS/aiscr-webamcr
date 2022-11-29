@@ -94,9 +94,16 @@ urlpatterns = [
         generovat_expertni_list,
         name="generovat_expertni_list",
     ),
-    path("seznam-projektu-bez-zrusenych/", ProjektAutocompleteBezZrusenych.as_view(),
-         name="projekt-autocomplete-bez-zrusenych"),
-    path("get-projekt-table-row", ProjectTableRowView.as_view(), name="get_projekt_table_row"),
+    path(
+        "seznam-projektu-bez-zrusenych/<str:typ>",
+        ProjektAutocompleteBezZrusenych.as_view(),
+        name="projekt-autocomplete-bez-zrusenych",
+    ),
+    path(
+        "get-projekt-table-row",
+        ProjectTableRowView.as_view(),
+        name="get_projekt_table_row",
+    ),
     path(
         "pridat-oznamovatele/<str:ident_cely>",
         OznamovatelCreateView.as_view(),

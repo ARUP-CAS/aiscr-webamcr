@@ -1,3 +1,4 @@
+from django.urls import reverse
 import structlog
 from crispy_forms.bootstrap import FormActions, AppendedText
 from crispy_forms.helper import FormHelper
@@ -698,17 +699,27 @@ class GenerovatExpertniListForm(forms.Form):
         )
 
 class PripojitProjektForm(forms.Form):
-    def __init__(self, projekt=None, *args, **kwargs):
-        super(PripojitProjektForm, self).__init__(projekt, *args, **kwargs)
-        self.fields["projekt"] = forms.ChoiceField(
-            label=_("arch_z.forms.projektPripojit.label"),
-            choices=list(
+    def __init__(self,dok=False, *args, **kwargs):
+        super(PripojitProjektForm, self).__init__(*args, **kwargs)
+        if dok:
+            new_choices = list(
+                Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,stav__lte=PROJEKT_STAV_ARCHIVOVANY)
+                .filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+                .values_list("id", "ident_cely")
+            )
+            typ = "dok"
+        else:
+            new_choices = list(
                 Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,stav__lte=PROJEKT_STAV_ARCHIVOVANY)
                 .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .values_list("id", "ident_cely")
-            ),
+            )
+            typ= "projekt"
+        self.fields["projekt"] = forms.ChoiceField(
+            label=_("arch_z.forms.projektPripojit.label"),
+            choices=new_choices,
             widget=autocomplete.ListSelect2(
-                url="projekt:projekt-autocomplete-bez-zrusenych"
+                url=reverse("projekt:projekt-autocomplete-bez-zrusenych", kwargs={"typ": typ})
             ),
         )
         self.helper = FormHelper(self)

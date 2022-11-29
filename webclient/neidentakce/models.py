@@ -23,6 +23,12 @@ class NeidentAkce(models.Model):
         blank=True,
         null=True,
     )
+    vedouci = models.ManyToManyField(
+        Osoba,
+        through="NeidentAkceVedouci",
+        related_name="neident_akce_vedouci",
+        blank=True,
+    )
 
     class Meta:
         db_table = "neident_akce"

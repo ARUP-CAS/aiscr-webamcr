@@ -6,6 +6,9 @@ from psycopg2._range import DateRange
 from heslar.models import RuianKatastr
 from django.utils.translation import gettext_lazy as _
 
+from uzivatel.models import Osoba
+from dokument.models import DokumentAutor
+
 register = template.Library()
 
 logger = logging.getLogger(__name__)
@@ -87,8 +90,17 @@ def check_if_none(value):
 
 @register.filter
 def get_katastr_name(value):
-    katastr = RuianKatastr.objects.get(pk=value)
+    if isinstance(value, list):
+        katastre = RuianKatastr.objects.filter(pk__in=value)
+        katastr_str = []
+        for katastr in katastre:
+            katastr_str.append(katastr.nazev + " (" + katastr.okres.nazev + ")")
+        list_hesla = "; ".join(katastr_str)
+        return list_hesla
+    else:
+        katastr = RuianKatastr.objects.get(pk=value)
     return katastr.nazev + " (" + katastr.okres.nazev + ")"
+
 
 @register.filter
 def true_false(value):
@@ -96,3 +108,23 @@ def true_false(value):
         return _("Ano")
     else:
         return _("Ne")
+
+
+@register.filter
+def get_osoby_name(value, args=""):
+    if "autori" in args:
+        arg_list = [arg.strip() for arg in args.split(";")]
+        i = 1
+        dok_autory = DokumentAutor.objects.filter(
+            dokument__ident_cely=arg_list[1]
+        ).order_by("poradi")
+        for item in dok_autory:
+            if i == 1:
+                list_hesla = item.autor.vypis_cely
+            else:
+                list_hesla = list_hesla + "; " + item.autor.vypis_cely
+            i = i + 1
+    else:
+        osoby = Osoba.objects.filter(pk__in=value)
+        list_hesla = "; ".join(osoby.values_list("vypis_cely", flat=True))
+    return list_hesla

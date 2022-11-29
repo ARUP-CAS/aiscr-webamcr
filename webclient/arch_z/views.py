@@ -55,6 +55,7 @@ from core.ident_cely import get_project_event_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
+    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
 )
@@ -123,6 +124,7 @@ from arch_z.tables import AkceTable
 from arch_z.filters import AkceFilter
 from historie.models import Historie
 from projekt.forms import PripojitProjektForm
+from dokument.views import get_komponenta_form_detail
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -329,7 +331,7 @@ class KomponentaCreateView(DokumentacniJednotkaRelatedUpdateView):
         context = super().get_context_data(**kwargs)
         jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         context["komponenta_form_create"] = CreateKomponentaForm(
-            self.get_obdobi_choices(), self.get_areal_choices()
+            get_obdobi_choices(), get_areal_choices()
         )
         # check po MR
         context["j"] = self.get_dokumentacni_jednotka()
@@ -1487,7 +1489,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 {"redirect": az.get_reverse()},
                 status=403,
             )
-        form = PripojitProjektForm(request.POST)
+        form = PripojitProjektForm(data=request.POST)
         if form.is_valid():
             projekt = form.cleaned_data["projekt"]
             az.akce.projekt = Projekt.objects.get(id=projekt)
@@ -1507,6 +1509,10 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 "Byl zmenenena samostatna akce na projektovou: " + str(az.ident_cely)
             )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.debug(form.errors)
+            logger.debug(form.non_field_errors())
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
         return redirect(az.get_reverse())
 
@@ -1607,64 +1613,3 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
         dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
     return dj_form_detail
-
-
-def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely):
-    NalezObjektFormset = inlineformset_factory(
-        Komponenta,
-        NalezObjekt,
-        form=create_nalez_objekt_form(
-            heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
-            heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-    NalezPredmetFormset = inlineformset_factory(
-        Komponenta,
-        NalezPredmet,
-        form=create_nalez_predmet_form(
-            heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-            list(
-                Heslar.objects.filter(
-                    nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
-                ).values_list("id", "heslo")
-            ),
-            not_readonly=show["editovat"],
-        ),
-        extra=1 if show["editovat"] else 0,
-        can_delete=False,
-    )
-
-    komponenta_form_detail = {
-        "ident_cely": komponenta.ident_cely,
-        "form": CreateKomponentaForm(
-            get_obdobi_choices(),
-            get_areal_choices(),
-            instance=komponenta,
-            prefix=komponenta.ident_cely,
-            readonly=not show["editovat"],
-        ),
-        "form_nalezy_objekty": NalezObjektFormset(
-            old_nalez_post,
-            instance=komponenta,
-            prefix=komponenta.ident_cely + "_o",
-        )
-        if komponenta.ident_cely == komp_ident_cely
-        else NalezObjektFormset(
-            instance=komponenta, prefix=komponenta.ident_cely + "_o"
-        ),
-        "form_nalezy_predmety": NalezPredmetFormset(
-            old_nalez_post,
-            instance=komponenta,
-            prefix=komponenta.ident_cely + "_p",
-        )
-        if komponenta.ident_cely == komp_ident_cely
-        else NalezPredmetFormset(
-            instance=komponenta, prefix=komponenta.ident_cely + "_p"
-        ),
-        "helper_predmet": NalezFormSetHelper(typ="predmet"),
-        "helper_objekt": NalezFormSetHelper(typ="objekt"),
-    }
-    return komponenta_form_detail

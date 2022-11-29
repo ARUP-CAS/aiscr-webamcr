@@ -1152,7 +1152,7 @@ def get_detail_template_shows(projekt, user):
     if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
         if user.hlavni_role == archivar_group or user.hlavni_role == admin_group:
             if not projekt.has_oznamovatel():
-                if PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_UZAVRENY:
+                if PROJEKT_STAV_ZAPSANY <= projekt.stav <= PROJEKT_STAV_UZAVRENY:
                     show_pridat_oznamovatele = True
     show_edit = projekt.stav not in [
         PROJEKT_STAV_ARCHIVOVANY,
@@ -1257,15 +1257,27 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
-        qs = (
-            Projekt.objects.filter(
-                stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,
-                stav__lte=PROJEKT_STAV_ARCHIVOVANY,
+        typ = self.kwargs.get("typ")
+        if typ == "projekt":
+            qs = (
+                Projekt.objects.filter(
+                    stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    stav__lte=PROJEKT_STAV_ARCHIVOVANY,
+                )
+                .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+                .annotate(ident_len=Length("ident_cely"))
+                .filter(ident_len__gt=0)
             )
-            .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
-            .annotate(ident_len=Length("ident_cely"))
-            .filter(ident_len__gt=0)
-        )
+        else:
+            qs = (
+                Projekt.objects.filter(
+                    stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,
+                    stav__lte=PROJEKT_STAV_ARCHIVOVANY,
+                )
+                .filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
+                .annotate(ident_len=Length("ident_cely"))
+                .filter(ident_len__gt=0)
+            )
         if self.q:
             qs = qs.filter(ident_cely__icontains=self.q)
         return qs

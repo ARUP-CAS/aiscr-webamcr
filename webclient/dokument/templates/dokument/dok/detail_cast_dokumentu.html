@@ -1,0 +1,151 @@
+{% extends "dokument/dok/detail.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+{% load template_filters %}
+
+{% block cast_dokumentu %}
+<div class="card app-card-form" id="karta-dokumentacni-cast">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "dokument.detail.castDokumentu.cardHeader" %}  {{ cast.ident_cely }}
+      </div>
+      <div class="app-fx app-right">
+        {% if show.editovat %}
+        <div class="btn-group" role="group">
+            <button id="button-edit-cast" class="btn" href="{% url 'dokument:edit-cast' cast.ident_cely %}"
+            rel="tooltip" data-placement="top"
+            title="{% trans 'dokument.detail.editCastDokumentu.tooltip' %}">
+            <span class="material-icons">edit</span>
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <a class="dropdown-item" href="{% url 'dokument:create-komponenta' dokument.ident_cely cast.ident_cely %}">
+              {% trans 'dokument.detail.pridatKomponentu.label' %}
+            </a>
+            <button id="button-pripojit-akci" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-az-cast' cast.ident_cely %}?type=akce">
+            {% trans 'dokument.detail.pripojitAkci.label' %}
+            </button>
+            <button id="button-pripojit-lokalitu" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-az-cast' cast.ident_cely %}?type=lokalita">
+              {% trans 'dokument.detail.pripojitLokalitu.label' %}
+            </button>
+            <button id="pripojit-projekt-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-projekt-cast' cast.ident_cely %}">
+              {% trans 'dokument.detail.pripojitProjekt.label' %}
+            </button>
+            <button id="odpojit-cast-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:odpojit-cast' cast.ident_cely %}">
+              {% trans 'dokument.detail.odpojitCast.label' %}
+            </button>
+            <button id="smazat-cast-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:smazat-cast' cast.ident_cely %}">
+              {% trans 'dokument.detail.smazatCast.label' %}
+            </button>
+          </div>
+          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+            <span class="material-icons">more_vert</span>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card-body">
+        {% crispy cast_form %}
+    </div>
+</div>
+{% if cast.neident_akce %}
+<div class="card app-card-form">
+    <div class="card-header">
+      <div class="app-fx app-left">
+        {% trans "dokument.detail.neidentAkce.cardHeader" %}  {{ cast.neident_akce.ident_cely }}
+      </div>
+      <div class="app-fx app-right">
+        {% if show.editovat %}
+        <div class="btn-group" role="group">
+            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.neident_akce.ident_cely %}"
+            rel="tooltip" data-placement="top"
+            title="{% trans 'dokument.detail.editNeidentAkci.tooltip' %}">
+            <span class="material-icons">edit</span>
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+          <div class="dropdown-menu" aria-labelledby="others">
+            <button id="smazat-neident-akce-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:smazat-neident-akce' cast.ident_cely %}">
+              {% trans 'dokument.detail.smazatNeidentAkci.label' %}
+            </button>
+          </div>
+          <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
+                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+            <span class="material-icons">more_vert</span>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="card-body">
+        {% crispy neident_akce_form %}
+    </div>
+</div>
+{% endif %}
+    <script>
+        //modal scripts
+        document.addEventListener('DOMContentLoaded', function (event) {
+          if ("{{show.editovat}}" != "False"){
+            var options = Object.assign(defaults, {modalID: "modal-form",
+              formID: "edit-cast-form",
+              modalFormID: "#edit-cast-form",
+            })
+            new Modal(options, "button-edit-cast");
+            var options = Object.assign(defaults, {modalID: "modal-form",
+                formID: "pripojit-eo-form",
+                modalFormID: "#pripojit-eo-form",
+              })
+              new Modal(options, "button-pripojit-akci");
+              var options = Object.assign(defaults, {modalID: "modal-form",
+                formID: "pripojit-eo-form",
+                modalFormID: "#pripojit-eo-form",
+              })
+              new Modal(options, "button-pripojit-lokalitu");
+              var options = Object.assign(defaults, {modalID: "modal-form",
+                formID: "pripojit-projekt-form",
+                modalFormID: "#pripojit-projekt-form",
+              })
+              new Modal(options, "pripojit-projekt-btn");
+              var options = Object.assign(defaults, {modalID: "modal-form",
+                formID: "odpojit-cast-form",
+                modalFormID: "#odpojit-cast-form",
+              })
+              new Modal(options, "odpojit-cast-btn");
+              var options = Object.assign(defaults, {modalID: "modal-form",
+                formID: "smazat-cast-form",
+                modalFormID: "#smazat-cast-form",
+              })
+              new Modal(options, "smazat-cast-btn");
+          };
+          if ("{{show.editovat}}" != "False" && "{{cast.neident_akce}}" != ""){
+            var options = Object.assign(defaults, {modalID: "modal-form",
+              formID: "edit-neident-form",
+              modalFormID: "#edit-neident-form",
+            })
+            new Modal(options, "button-edit-neident");
+            var options = Object.assign(defaults, {modalID: "modal-form",
+                formID: "smazat-neident-akce-form",
+                modalFormID: "#smazat-neident-akce-form",
+              })
+              new Modal(options, "smazat-neident-akce-btn");
+          };
+          if (document.getElementsByClassName("komponenta-smazat-btn")){
+            elements = document.getElementsByClassName("komponenta-smazat-btn")
+            for (let i = 0; i < elements.length; i++){
+              var options = Object.assign(defaults, {modalID: "modal-form",
+              formID: "smazat-komponenta-form",
+              modalFormID: "#smazat-komponenta-form",
+              })
+              new Modal(options, elements.item(i).id);
+            }
+          }
+          show_form(`create_dj_form`);
+      });
+      function show_form(form_id, form_to_show_next) {
+          document.getElementById("karta-dokumentacni-cast").scrollIntoView();
+      }
+    </script>
+{% endblock %}
