@@ -62,7 +62,7 @@ compose_proxy="git_docker-compose-production-proxy.yml"
 compose_override="git_docker-compose-production.override.yml"
 
 secrets_1="secrets.json"
-secrets_2="secrets.local.json"
+secrets_2="secrets.alternative.json"
 
 msg_fail_build="!! Build not successfull"
 msg_success="DEPLOYED from GIT REPO ---> APPLICATION ACCESSIBLE on: port 8081"
@@ -78,15 +78,15 @@ if [ -z "$1" ]; then
     # SELECT OPTION for deployment
     while true; do
         
-        read -p "DB secrets PROD (using ${secrets_1}) / LOCAL (using overriding compose with ${secrets_2}) ==> (p/l): " db_secret  
+        read -p "DB secrets PROD (using ${secrets_1}) / ALTERNATIVE (using overriding compose with ${secrets_2}) ==> (p/a): " db_secret  
         case $db_secret in
             [pP]*)
                 echo "--Using PRODUCTION ${secrets_1}"
                 check_file_exist ${secrets_1}
                 break
                 ;;
-            [lL]*)
-                echo "--Using LOCAL ${secrets_2}"
+            [aA]*)
+                echo "--Using ALTERNATIVE ${secrets_2}"
                 do_override="yes"
                 check_file_exist ${secrets_2}
                 break

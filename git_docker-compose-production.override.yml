@@ -7,4 +7,4 @@ services:
 
 secrets:
   db_conf:
-   file : secrets.local.json
+   file : secrets.alternative.json
