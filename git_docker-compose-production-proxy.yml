@@ -2,19 +2,22 @@ version: "3.8"
 
 services:
   proxy:
-    image: huldcz/aiscr_proxy
+    build:
+      context: ./proxy
     volumes:
       - static_data:/vol/static
       - nginx_data:/vol/nginx/data
     ports:
-      - "8080:8080"
+      - "8081:8080"
     networks:
-      - reverse-proxy
+      - git-reverse-proxy
 
 volumes:
   static_data:
   locale_data:
   nginx_data:
+
+
 networks:
-  reverse-proxy:
-      name: reverse-proxy
+  git-reverse-proxy:
+      name: git-reverse-proxy

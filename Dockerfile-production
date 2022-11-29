@@ -7,8 +7,8 @@ FROM ubuntu:focal
 ARG VERSION_APP
 ARG TAG_APP
 
-ENV VERSION=$VERSION_APP
-ENV TAG=$TAG_APP
+ENV VERSION=${VERSION_APP}
+ENV TAG=${TAG_APP}
 
 # Update base container install
 RUN apt-get clean
@@ -54,6 +54,7 @@ RUN chmod +x /scripts/*
 
 # Uploaded images
 RUN mkdir -p /vol/web/media
+
 # Staic files for the app
 RUN mkdir -p /vol/web/static
 # locales for translations
@@ -67,5 +68,8 @@ RUN chmod -R 755 /vol/web
 RUN chown -R user:user /code
 RUN chmod -R 755 /code
 USER user
+
+RUN sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html
+RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > version.txt
 
 CMD ["entrypoint.sh"]
