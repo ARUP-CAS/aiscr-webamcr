@@ -2,11 +2,12 @@ import logging
 
 import structlog
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.signals import pre_save, post_save
+from django.db.models import ProtectedError
+from django.db.models.signals import pre_save, post_save, pre_delete
 from django.dispatch import receiver
 
 from services.mailer import Mailer
-from uzivatel.models import User
+from uzivatel.models import User, Osoba
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)

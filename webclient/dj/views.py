@@ -1,4 +1,5 @@
 import logging
+import structlog
 
 from adb.forms import CreateADBForm, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -35,16 +36,17 @@ from komponenta.models import KomponentaVazby
 from pian.models import Pian
 
 logger = logging.getLogger(__name__)
-
+logger_s = structlog.get_logger(__name__)
 
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
+    logger_s.debug("dj.views.detail.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     pian_db = dj.pian
     form = CreateDJForm(request.POST, instance=dj, prefix=ident_cely)
     if form.is_valid():
-        logger.debug("Dj.Form is valid:1")
+        logger_s.debug("dj.views.detail.form_is_valid")
         dj = form.save()
         if dj.pian is None and pian_db is not None:
             dj.pian = pian_db
@@ -53,29 +55,27 @@ def detail(request, ident_cely):
             logger.debug("changed data")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         if dj.typ.heslo == "Celek akce":
-            logger.debug("celek akce")
+            logger_s.debug("dj.views.detail.celek_akce")
+            typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="část akce")).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
-                & ~Q(ident_cely=dj.ident_cely)
+                & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
-                dokumentacni_jednotka.typ = Heslar.objects.filter(
-                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="část akce")
-                ).first()
+                dokumentacni_jednotka.typ = typ
                 dokumentacni_jednotka.save()
-                update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Sonda":
-            logger.debug("sonda")
+            logger_s.debug("dj.views.detail.sonda")
+            typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="sonda")).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
-                & ~Q(ident_cely=dj.ident_cely)
+                & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
             )
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
-                dokumentacni_jednotka.typ = Heslar.objects.filter(
-                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="sonda")
-                ).first()
+                dokumentacni_jednotka.typ = typ
                 dokumentacni_jednotka.save()
-                update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Lokalita":
             logger.debug("lokalita")
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
@@ -90,7 +90,7 @@ def detail(request, ident_cely):
                     Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="lokalita")
                 ).first()
                 dokumentacni_jednotka.save()
-                update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
             logger.debug("katastralni uzemi")
             new_ku = form.cleaned_data["ku_change"]
@@ -100,12 +100,11 @@ def detail(request, ident_cely):
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
 
     else:
-        logger.warning("Form is not valid")
-        logger.debug(form.errors)
+        logger_s.warning("dj.views.detail.form_is_not_valid", erros=form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "adb_detail" in request.POST:
-        logger.debug("adb_detail")
+        logger_s.debug("dj.views.detail.adb_detail")
         ident_cely = request.POST.get("adb_detail")
         adb = get_object_or_404(Adb, ident_cely=ident_cely)
         form = CreateADBForm(
@@ -114,12 +113,12 @@ def detail(request, ident_cely):
             prefix=ident_cely,
         )
         if form.is_valid():
-            logger.debug("Dj.Form is valid:")
+            logger_s.debug("dj.views.detail.adb_detail.form_is_valid")
             form.save()
             if form.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.warning("Form is not valid")
+            logger_s.debug("dj.views.detail.adb_detail.form_is_not_valid")
             logger.debug(form.errors)
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_adb_post"] = request.POST
@@ -127,7 +126,7 @@ def detail(request, ident_cely):
             logger.debug(ident_cely)
 
     if "adb_zapsat_vyskove_body" in request.POST:
-        logger.debug("adb_zapsat_vyskove_body")
+        logger_s.debug("dj.views.detail.adb_zapsat_vyskove_body")
         adb_ident_cely = request.POST.get("adb_zapsat_vyskove_body")
         adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
         vyskovy_bod_formset = inlineformset_factory(
@@ -140,21 +139,20 @@ def detail(request, ident_cely):
             request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
         )
         if formset.is_valid():
-            logger.debug("Formset is valid")
+            logger_s.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
             instances = formset.save()
             for vyskovy_bod in instances:
                 if isinstance(vyskovy_bod, VyskovyBod):
                     vyskovy_bod.save()
                     # vyskovy_bod.set_ident()
         if formset.is_valid():
-            logger.debug("Dj.Form is valid:3")
+            logger_s.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
             if (
                 formset.has_changed()
             ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.warning("Form is not valid")
-            logger.debug(formset.errors)
+            logger_s.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_not_valid", errors=formset.errors)
             messages.add_message(
                 request,
                 messages.ERROR,
@@ -162,12 +160,6 @@ def detail(request, ident_cely):
             )
 
     response = dj.archeologicky_zaznam.get_redirect(dj.ident_cely)
-    response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
-    response.set_cookie(
-        "set-active",
-        f"el_div_dokumentacni_jednotka_{dj.ident_cely.replace('-', '_')}",
-        max_age=1000,
-    )
     return response
 
 

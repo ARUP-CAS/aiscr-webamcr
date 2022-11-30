@@ -1,11 +1,11 @@
 import logging
+import structlog
 
 from django.http import JsonResponse
 from django.db.models.functions import Concat
 from django.db.models import F, Value, CharField, IntegerField
 
 from core.message_constants import (
-    FORM_NOT_VALID,
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
     MAINTENANCE_AFTER_LOGOUT,
@@ -31,6 +31,7 @@ from core.decorators import odstavka_in_progress
 from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
@@ -174,6 +175,7 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
         return User.objects.get(pk=user_pk)
 
     def get_context_data(self, **kwargs):
+        self.object = self.get_object()
         context = super().get_context_data(**kwargs)
         context["form"] = self.form_class(instance=self.request.user)
         context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
@@ -205,6 +207,7 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
 
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
+        logger_s.debug("uzivatel.views.UserAccountUpdateView.post.start", request_data=request_data)
         form = self.form_class(data=request.POST, instance=self.request.user)
         if form.is_valid():
             obj = form.save(commit=False)
@@ -214,13 +217,14 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
                                  _("uzivatel.UserAccountUpdateView._change_password.fail"))
             context = self.invalid_form_context(form, "form")
             return render(request, self.template_name, context)
-        if request_data.get("pass-password1", "") != "" and request_data.get("pass-password2", "") != "":
+        if tuple(request_data.get("pass-password1", [""])) != ("", ) \
+                or tuple(request_data.get("pass-password2", [""])) != ("", ):
             result = self._change_password(request, request_data)
-        else:
-            result = None
-        if result is not None:
-            return render(request, self.template_name, result)
-        else:
-            return redirect("/accounts/login")
+            if result is not None:
+                return render(request, self.template_name, result)
+            else:
+                return redirect("/accounts/login")
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
 
 
