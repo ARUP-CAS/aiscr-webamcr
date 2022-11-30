@@ -384,11 +384,12 @@
     $('#time').html(timer.getTimeValues().toString(['minutes', 'seconds']));
     
     timer.addEventListener('secondsUpdated', function (e) {
+      console.log(timer.getTotalTimeValues().seconds)
       var actual_time = timer.getTimeValues().toString(['minutes', 'seconds']).padStart(5,"0")
       $('#time').html(actual_time);
       var idle_warning = {% if IDLE_WARNING_TIME %} '{{IDLE_WARNING_TIME}}' {%else%} false {% endif%};
       if (idle_warning !== false) {
-        if (actual_time <= idle_warning.padStart(5,"0") && notifyShown === false) { 
+        if (timer.getTotalTimeValues().seconds <= idle_warning && notifyShown === false) { 
           startNotify(fav_not)               
           createMessage("warning",({% get_message logout_warning_text %}), 'True','True','False')
         };

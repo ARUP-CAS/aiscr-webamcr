@@ -1,4 +1,3 @@
-from pkgutil import extend_path
 from django.contrib import admin
 from core.models import OdstavkaSystemu
 from .forms import OdstavkaSystemuForm
@@ -38,14 +37,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
         cache.delete("last_maintenance")
-
+        cache.delete("maintenance")
         super().save_model(request, obj, form, change)
-
-    def has_add_permission(*args, **kwargs):
-        odstavka = OdstavkaSystemu.objects.filter(status=True)
-        if odstavka:
-            return False
-        return True
 
     def has_delete_permission(request, obj=None, *args):
         odstavka = OdstavkaSystemu.objects.filter(

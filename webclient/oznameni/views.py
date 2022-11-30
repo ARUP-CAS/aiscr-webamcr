@@ -27,6 +27,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from core.forms import CheckStavNotChangedForm
 from core.views import check_stav_changed
 from historie.models import Historie
+from core.decorators import odstavka_in_progress
 
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
@@ -35,6 +36,7 @@ from services.mailer import Mailer
 logger = logging.getLogger(__name__)
 
 
+@odstavka_in_progress
 @require_http_methods(["GET", "POST"])
 def index(request, test_run=False):
     # First step of the form
@@ -103,7 +105,7 @@ def index(request, test_run=False):
             }
 
             context = {"confirm": confirmation}
-            if (p.ident_cely[2:3] == 'C'):
+            if p.ident_cely[2:3] == "C":
                 Mailer.sendEO01(project=p)
             else:
                 Mailer.sendEO02(project=p)

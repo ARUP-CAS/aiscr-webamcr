@@ -27,6 +27,8 @@ from django.contrib.auth.views import LoginView, LogoutView
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm
 from uzivatel.models import Osoba, User
+from core.decorators import odstavka_in_progress
+from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +145,7 @@ class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
 
-
+@method_decorator(odstavka_in_progress, name='dispatch')
 class UserLoginView(LoginView):
     authentication_form = AuthUserLoginForm
 
