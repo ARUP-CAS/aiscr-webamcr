@@ -139,6 +139,14 @@
   <script>
     window.onload = function (){
       load_daterangepicker("div_id_planovane_zahajeni")
+      var addPointToPoiLayer = (lat, long, text) => {
+            L.marker([lat, long],{icon: pinIconRedProject}).bindPopup(text).addTo(poi);
+        }
+      corX=document.getElementById('id_latitude').value;
+      corY=document.getElementById('id_longitude').value;
+      if(corX>0 ){
+      addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
+      }
     };
   </script>
 {% endblock %}
