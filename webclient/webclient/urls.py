@@ -27,7 +27,7 @@ urlpatterns = [
     path("pian/", include("pian.urls")),
     path("projekt/", include("projekt.urls")),
     path(
-        "projekt/oznamovatel/edit/<int:pk>", oznameni_views.edit, name="oznameni_edit"
+        "projekt/oznamovatel/edit/<str:ident_cely>", oznameni_views.edit, name="oznameni_edit"
     ),
     path("pas/", include("pas.urls")),
     path("arch-z/", include("arch_z.urls")),

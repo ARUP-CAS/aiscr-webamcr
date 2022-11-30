@@ -163,15 +163,17 @@ def index(request, test_run=False):
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def edit(request, pk):
-    oznameni = Oznamovatel.objects.get(id=pk)
-    projekt = get_object_or_404(Projekt, ident_cely=oznameni.projekt.ident_cely)
+def edit(request, ident_cely):
+    projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+    oznameni = projekt.oznamovatel
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
     if request.method == "POST":
         form = OznamovatelForm(request.POST, instance=oznameni, required_next=True)
         if form.is_valid():
-            form.save()
+            oznameni = form.save(commit=False)
+            oznameni.projekt=projekt
+            oznameni.save()
             if form.changed_data:
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("/projekt/detail/" + oznameni.projekt.ident_cely)
