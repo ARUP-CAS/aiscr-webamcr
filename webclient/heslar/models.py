@@ -30,7 +30,6 @@ class Heslar(models.Model, ManyToManyRestrictedClassMixin):
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
     zkratka_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka_en"))
     razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
-    puvodni_id = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.puvodni_id"))
 
     ident_prefix = "HES"
 

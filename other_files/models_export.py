@@ -542,6 +542,7 @@ class Heslar(models.Model):
     popis_en = models.TextField(blank=True, null=True)
     zkratka_en = models.TextField(blank=True, null=True)
     razeni = models.IntegerField(blank=True, null=True)
+    puvodni_id = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
