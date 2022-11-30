@@ -17,7 +17,6 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
-    ROLE_NEAKTIVNI_UZIVATEL_ID,
     PIAN_RELATION_TYPE,
 )
 from core.models import ProjektSekvence, Soubor, SouborVazby
@@ -446,8 +445,6 @@ class AMCRTestRunner(BaseRunner):
         archivar_group.save()
         badatel_group = Group(id=ROLE_BADATEL_ID, name="Badatel")
         badatel_group.save()
-        neaktivni = Group(id=ROLE_NEAKTIVNI_UZIVATEL_ID, name="Neaktivni uzivatel")
-        neaktivni.save()
 
         o = Organizace(
             id=AMCR_TESTOVACI_ORGANIZACE_ID,

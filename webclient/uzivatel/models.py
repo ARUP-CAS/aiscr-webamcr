@@ -9,7 +9,6 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
-    ROLE_NEAKTIVNI_UZIVATEL_ID,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     PROJEKT_STAV_OZNAMENY,
@@ -52,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
-    # osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
+    osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
     auth_level = models.IntegerField(blank=True, null=True)
     organizace = models.ForeignKey(
         "Organizace", models.DO_NOTHING, db_column="organizace", null=True
@@ -70,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         models.DO_NOTHING,
         db_column="hlavni_role",
         related_name="uzivatele",
-        default=ROLE_NEAKTIVNI_UZIVATEL_ID,
+        default=ROLE_BADATEL_ID,
     )
     history = HistoricalRecords()
     notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user')
