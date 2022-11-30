@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   web:
-    image: huldcz/aiscr_prod:latest
+    build:
+      context: .
+      dockerfile: Dockerfile-production
     secrets:
       - db_conf
     volumes:
@@ -10,7 +12,7 @@ services:
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
     networks:
-      - reverse-proxy
+      - git-reverse-proxy
     expose:
       - "8000"
 
@@ -19,18 +21,17 @@ services:
     expose:
       - "11211"
     networks:
-      - reverse-proxy
+      - git-reverse-proxy
 
 volumes:
   static_data:
   locale_data:
   nginx_data:
 
-
 networks:
-  reverse-proxy:
+  git-reverse-proxy:
     external: true
 
 secrets:
   db_conf:
-   external : true
+   file : secrets.json

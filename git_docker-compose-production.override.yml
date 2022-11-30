@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  web:
+    secrets:
+      - db_conf
+
+secrets:
+  db_conf:
+   file : secrets.alternative.json
