@@ -895,12 +895,12 @@ L.Control.Search = L.Control.extend({
 			dataType: 'json',
 			success: function(json) {
 			if(json.candidates.length){
+				posX=[json.candidates[0].location.y,json.candidates[0].location.x]
 
-				map.panTo([json.candidates[0].location.y,json.candidates[0].location.x]);
 				if(latlng.split(":")[1]=='Obec'){
-					map.setZoom(14);
+					map.setView(posX,13);
 				}else{
-					map.setZoom(10);
+					map.setView(posX,10);
 				}
 			}
 			//console.log("Nalezeno")
