@@ -347,7 +347,7 @@
           {% if show.editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
-              <a class="btn app-entity-projekt" href="{% url 'oznameni_edit' projekt.oznamovatel.id %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
+              <a class="btn app-entity-projekt" href="{% url 'oznameni_edit' projekt.ident_cely %}" rel="tooltip" data-placement="top" title="{% trans 'Upravit' %}">
                 <span class="material-icons">edit</span>
               </a>
             </div>

@@ -62,7 +62,6 @@ class ExterniZdroj(models.Model):
     stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, blank=True, null=True)
-    final_cj = models.BooleanField(blank=True, null=True)
     historie = models.ForeignKey(
         HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
     )
