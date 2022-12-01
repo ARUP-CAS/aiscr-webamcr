@@ -69,7 +69,7 @@ def auto_logout_client(request):
         if odstavka:
             last_maintenance = odstavka[0]
             cache.set("last_maintenance", last_maintenance, 600)
-    else:
+    if last_maintenance is not None:
         if (
             last_maintenance.datum_odstavky == date.today()
             and last_maintenance.cas_odstavky
@@ -99,8 +99,8 @@ def auto_logout_client(request):
             )
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
-        ctx["seconds_until_idle_end"] = 30
-        ctx["IDLE_WARNING_TIME"] = "00:25"
+        ctx["seconds_until_idle_end"] = options["MAINTENANCE_LOGOUT_TIME"]
+        ctx["IDLE_WARNING_TIME"] = options["MAINTENANCE_LOGOUT_TIME"] - 5
         ctx["redirect_to_login_immediately"] = mark_safe(
             "window.location.href = '/accounts/logout/?maintenance_logout=true'"
         )

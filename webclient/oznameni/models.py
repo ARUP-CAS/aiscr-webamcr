@@ -10,6 +10,7 @@ class Oznamovatel(models.Model):
         on_delete=models.CASCADE,
         related_name="oznamovatel",
         db_column="projekt",
+        primary_key=True,
     )
     email = models.TextField()
     adresa = models.TextField()

@@ -5,17 +5,20 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.utils.translation import gettext as _
+
+from core.mixins import ManyToManyRestrictedClassMixin
 from heslar.hesla import (
     HESLAR_DOKUMENT_MATERIAL,
     HESLAR_DOKUMENT_RADA,
-    HESLAR_DOKUMENT_TYP,
+    HESLAR_DOKUMENT_TYP, HESLAR_OBDOBI,
 )
 
 
 logger_s = structlog.get_logger(__name__)
 
 
-class Heslar(models.Model):
+class Heslar(models.Model, ManyToManyRestrictedClassMixin):
+    # TextFields should be changed to CharField if no long text is expected to be written in
     ident_cely = models.TextField(unique=True, blank=True, null=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
         "HeslarNazev", models.DO_NOTHING, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
@@ -27,7 +30,6 @@ class Heslar(models.Model):
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
     zkratka_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka_en"))
     razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
-    puvodni_id = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.puvodni_id"))
 
     ident_prefix = "HES"
 
@@ -55,6 +57,7 @@ class HeslarDatace(models.Model):
         primary_key=True,
         related_name="datace_obdobi",
         verbose_name=_("heslar.models.HeslarDatace.obdobi"),
+        limit_choices_to={"nazev_heslare": HESLAR_OBDOBI},
     )
     rok_od_min = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_od_min"))
     rok_od_max = models.IntegerField(verbose_name=_("heslar.models.HeslarDatace.rok_od_max"))
@@ -105,9 +108,9 @@ class HeslarDokumentTypMaterialRada(models.Model):
 
 class HeslarHierarchie(models.Model):
     TYP_CHOICES = [
-        ('PO', _('HeslarHierarchie.TYP_CHOICES.podrizenost')),
-        ('UP', _('HeslarHierarchie.TYP_CHOICES.uplatneni')),
-        ('VH', _('HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
+        ('podřízenost', _('HeslarHierarchie.TYP_CHOICES.podrizenost')),
+        ('uplatnění', _('HeslarHierarchie.TYP_CHOICES.uplatneni')),
+        ('výchozí hodnota', _('HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
     ]
 
     heslo_podrazene = models.OneToOneField(
@@ -119,7 +122,7 @@ class HeslarHierarchie(models.Model):
         verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
     )
     heslo_nadrazene = models.ForeignKey(
-        Heslar, models.PROTECT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
+        Heslar, models.PROTECT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
 

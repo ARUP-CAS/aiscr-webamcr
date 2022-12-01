@@ -7,7 +7,7 @@ name: Publish Docker images
 on:
   create:
     tags:
-      - "*"
+      - "v**"
 
 env:
   DOCKER_HUB_REPO_DEV: huldcz/aiscr_dev
@@ -41,15 +41,6 @@ jobs:
         id: step_tag1
         run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
 
-      - name: Put version into file
-        id: step_tag2
-        run: echo ${{ env.tag_version }} >> ./webclient/version.txt
-
-      - name: Change version inside footer
-        id: step_version2footer
-        run: |
-          echo ${{ env.tag_version }}
-          sed -i 's/1.0.0/${{ env.tag_version }}/g' ./webclient/templates/base_logged_in.html
       #---------------------
       # BUILD DEV
       #---------------------

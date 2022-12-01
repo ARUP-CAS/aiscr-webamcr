@@ -9,7 +9,6 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
-    ROLE_NEAKTIVNI_UZIVATEL_ID,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
     PROJEKT_STAV_OZNAMENY,
@@ -20,6 +19,7 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE,
 )
+from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
@@ -29,6 +29,8 @@ from django.db.models import DEFERRED
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext as _
+
+from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
@@ -49,7 +51,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
-    # osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
+    osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
     auth_level = models.IntegerField(blank=True, null=True)
     organizace = models.ForeignKey(
         "Organizace", models.DO_NOTHING, db_column="organizace", null=True
@@ -67,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         models.DO_NOTHING,
         db_column="hlavni_role",
         related_name="uzivatele",
-        default=ROLE_NEAKTIVNI_UZIVATEL_ID,
+        default=ROLE_BADATEL_ID,
     )
     history = HistoricalRecords()
     notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user')
@@ -174,7 +176,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Uživatelé"
 
 
-class Organizace(models.Model):
+class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     nazev = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev"))
     nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
     typ_organizace = models.ForeignKey(
@@ -183,7 +185,8 @@ class Organizace(models.Model):
         db_column="typ_organizace",
         related_name="typy_organizaci",
         null=True,
-        verbose_name=_("uzivatel.models.Organizace.typ_organizace")
+        verbose_name=_("uzivatel.models.Organizace.typ_organizace"),
+        limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
     )
     oao = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.oao"))
     mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
@@ -193,16 +196,17 @@ class Organizace(models.Model):
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
         null=True,
-        verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost")
+        verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
     )
     nazev_zkraceny_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny_en"))
     email = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.email"))
     telefon = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"))
     adresa = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"))
     ico = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"))
-    # soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
+    soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
     nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
-    zanikla = models.BooleanField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.zanikla"))
+    zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -214,7 +218,7 @@ class Organizace(models.Model):
         verbose_name_plural = "Organizace"
 
 
-class Osoba(models.Model):
+class Osoba(models.Model, ManyToManyRestrictedClassMixin):
     jmeno = models.TextField(verbose_name=_("uzivatel.models.Osoba.jmeno"))
     prijmeni = models.TextField(verbose_name=_("uzivatel.models.Osoba.prijmeni"))
     vypis = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis"))

@@ -98,7 +98,7 @@
             <ul class="list-group list-group-flush">
               {% for j in dokumentacni_jednotky %}
                 <li class="list-group-item">
-                  <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}" {% if j.ident_cely == active_dj_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                  <div class="d-flex align-items-center" id="el_div_dokumentacni_jednotka_{{ j.ident_cely_safe }}" {% if j.ident_cely == active_dj_ident and not active_komp_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
                     {% if j.pian.stav == 2 %} <!-- POTVRZENY JE 2 -->
                       <a href="{% if app == 'akce' %}{% url 'arch_z:detail-dj' zaznam.ident_cely  j.ident_cely %}{% else %}{% url 'lokalita:detail-dj' zaznam.ident_cely  j.ident_cely %}{% endif %}" class="d-flex mr-2 text-decoration-none app-pian app-confirmed" rel="tooltip"
                          data-placement="top" title="{% trans 'DJ má potvrzený pian' %}">
