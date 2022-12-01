@@ -25,7 +25,7 @@ from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
 from django.contrib.auth.views import LoginView, LogoutView
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
-    UpdatePasswordSettings, AuthUserChangeForm
+    UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm
 from uzivatel.models import Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,6 @@ class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetV
 @login_required
 @require_http_methods(["POST", "GET"])
 def create_osoba(request):
-
     if request.method == "POST":
         form = OsobaForm(request.POST)
         if form.is_valid():
@@ -176,7 +175,8 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
         context["form"] = self.form_class(instance=self.request.user)
         context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
         context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
-        context["sing_in_history"] = self.get_object().history.all()[:5]
+        context["sign_in_history"] = self.get_object().history.all()[:5]
+        context["form_notifications"] = NotificationsForm(instance=self.request.user)
         return context
 
     def _change_password(self, request, request_data):
@@ -222,3 +222,31 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
             return redirect("/accounts/login")
 
 
+@login_required
+def update_notifications(request):
+    form = NotificationsForm(request.POST)
+    if form.is_valid():
+        notifications = form.cleaned_data.get('notification_types')
+        user: User = request.user
+        user.notification_types.set(notifications)
+        return redirect("/upravit-uzivatele/")
+
+
+def test(request):
+    from cron.notifications import Notifications
+    from django.http import HttpResponse
+    from projekt.models import Projekt
+    from services.mailer import Mailer
+    from django.template.loader import render_to_string
+    dataEn01 = Notifications().collect_EN01()
+    for email, ids in dataEn01.items():
+        Mailer.sendEN01(send_to=email, project_ids=ids)
+    # m = Mailer.sendEP02(dict_of_projects=emails)
+    # project = Projekt.objects.get(ident_cely='C-202105929')
+    #
+    # subject = "xxx"
+    # html = render_to_string('../templates/projects/emails/observer_project_was_registered.html', {
+    #     "title": subject,
+    #     "project": project
+    # })
+    return HttpResponse('777')

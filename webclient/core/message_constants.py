@@ -91,7 +91,6 @@ SPOLUPRACE_BYLA_DEAKTIVOVANA: Final = "Spolupráce byla deaktivována."
 SPOLUPRACI_NELZE_AKTIVOVAT: Final = "Spolupráci nejde aktivovat."
 SPOLUPRACI_NELZE_DEAKTIVOVAT: Final = "Spolupráci nejde deaktivovat."
 
-
 # Auto-logout
 AUTOLOGOUT_AFTER_LOGOUT: Final = _("autologout.message.afterlogout.text")
 AUTOLOGOUT_EXPIRATION_WARNING: Final = _("autologout.message.expirationwarning.text")
@@ -133,3 +132,7 @@ LOKALITA_EO_USPESNE_PRIPOJEN: Final = _(
 )
 AKCE_EO_USPESNE_ODPOJEN: Final = _("arch_z.message.uspesneOdpojenEO.text")
 LOKALITA_EO_USPESNE_ODPOJEN: Final = _("arch_z.message.uspesneOdpojenEO.text")
+
+# Watchdog
+WATCHDOG_CREATED_SUCCESSFULLY: Final = _("Hlídací pes byl úspěšně vytvořen")
+WATCHDOG_DELETED_SUCCESSFULLY: Final = _("Hlídací pes byl úspěšně smazan")

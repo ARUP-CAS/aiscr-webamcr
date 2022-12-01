@@ -4,7 +4,8 @@ from django.contrib.auth.admin import UserAdmin
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATION_TYPE
 from .forms import AuthUserCreationForm
-from .models import User
+from .models import User, UserNotificationType
+from services.mailer import Mailer
 
 from historie.models import Historie, HistorieVazby
 
@@ -31,6 +32,7 @@ class CustomUserAdmin(UserAdmin):
                     "telefon",
                     "groups",
                     "user_permissions",
+                    "notification_types"
                 )
             },
         ),
@@ -52,7 +54,8 @@ class CustomUserAdmin(UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
-                    "groups"
+                    "groups",
+                    "notification_types"
                 ),
             },
         ),
@@ -69,6 +72,7 @@ class CustomUserAdmin(UserAdmin):
 
     def save_model(self, request, obj: User, form, change):
         user = request.user
+        user.created_from_admin_panel = True
         logger_s.debug("uzivatel.admin.save_model.start", user=user.pk, obj_pk=obj.pk, change=change, form=form)
         super().save_model(request, obj, form, change)
         user_db: User = User.objects.get(id=obj.pk)
@@ -86,6 +90,7 @@ class CustomUserAdmin(UserAdmin):
                 poznamka=obj.hlavni_role,
                 vazba=historie_vazba,
             ).save()
+            Mailer.sendEU06(user=user)
         group_ids = [str(x) for x in obj.groups.all()]
         Historie(
             typ_zmeny=ZMENA_UDAJU_ADMIN,

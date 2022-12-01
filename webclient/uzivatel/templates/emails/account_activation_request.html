@@ -1,0 +1,25 @@
+{% load i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans "Dobrý den" %},
+
+{% trans "nový uživatel žádá o přístup do AMČR." %}:
+<ul style="list-style: none">
+    <li>ID: {{ id }}</li>
+    <li>{% trans "Jméno" %}: {{ name }}</li>
+    <li>{% trans "Příjmení" %}: {{ surname }}</li>
+    <li>{% trans "Organizace" %}: {{ organization }}</li>
+    <li>{% trans "Email" %}: {{ email }}</li>
+    <li>{% trans "Telefon" %}: {{ phone }}</li>
+    {% trans "Uživatelský účet aktivujete v administraci AMČR nebo kliknutím na tento odkaz:" %}
+</ul>
+</body>
+</html>

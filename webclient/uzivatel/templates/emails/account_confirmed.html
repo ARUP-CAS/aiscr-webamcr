@@ -1,0 +1,29 @@
+{% load i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans "Dobrý den" %},
+
+{% trans "pro tuto emailovou adresu byl registrován nový uživatelský účet do AMČR s následujícími údaji" %}:
+<ul style="list-style: none">
+    <li>ID: {{ id }}</li>
+    <li>{% trans "Jméno" %}: {{ name }}</li>
+    <li>{% trans "Příjmení" %}: {{ surname }}</li>
+    <li>{% trans "Organizace" %}: {{ organization }}</li>
+    <li>{% trans "Email" %}: {{ email }}</li>
+    <li>{% trans "Telefon" %}: {{ phone }}</li>
+    <li>{% trans "Heslo: vámi zvolené heslo" %}</li>
+    <li>{% trans "User role" %}: {{ role }}</li>
+</ul>
+<p>
+    {% trans "UPOZORNĚNÍ: Registrace v AMČR uživatele neopravňuje k provádění archeologických výzkumů na území České republiky, a to vč. vyhledávání archeologických nálezů." %} {% trans "Tuto činnost mohu vykonávat pouze oprávněné archeologické organizace a jejich oficiální spolupracovníci." %} {% trans "K možnostem spolupráce více viz https://amcr-info.aiscr.cz/pas." %}
+</p>
+</body>
+</html>

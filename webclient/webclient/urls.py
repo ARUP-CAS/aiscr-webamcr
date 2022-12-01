@@ -17,7 +17,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from oznameni import views as oznameni_views
-from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView
+from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, test
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -57,11 +57,13 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("arch-z/lokalita/", include("lokalita.urls")),
     path("ext-zdroj/", include("ez.urls")),
+    path("watchdog/",  include("watchdog.urls")),
+    path("test/", test)
 ]
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]
 
-if settings.DEBUG:
-    import debug_toolbar
-
-    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
+# if settings.DEBUG:
+    # import debug_toolbar
+    #
+    # urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
