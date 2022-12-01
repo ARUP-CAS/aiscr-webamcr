@@ -20,7 +20,7 @@ class DokumentacniJednotka(models.Model):
     )
     nazev = models.TextField(blank=True, null=True)
     negativni_jednotka = models.BooleanField()
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
+    ident_cely = models.TextField(unique=True, blank=True, null=False)
     pian = models.ForeignKey(
         Pian,
         models.DO_NOTHING,

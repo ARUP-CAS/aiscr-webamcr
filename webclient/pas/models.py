@@ -122,11 +122,12 @@ class SamostatnyNalez(models.Model):
         blank=True,
         null=True,
     )
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
+    ident_cely = models.TextField(unique=True, blank=True, null=False)
     pocet = models.TextField(blank=True, null=True)
     soubory = models.ForeignKey(
         SouborVazby,
         models.DO_NOTHING,
+        unique=True
         db_column="soubory",
         blank=True,
         null=True,
@@ -135,6 +136,7 @@ class SamostatnyNalez(models.Model):
     historie = models.ForeignKey(
         HistorieVazby,
         models.DO_NOTHING,
+        unique=True
         db_column="historie",
         blank=True,
         null=True,
@@ -246,6 +248,7 @@ class UzivatelSpoluprace(models.Model):
     historie = models.ForeignKey(
         HistorieVazby,
         models.DO_NOTHING,
+        unique=True
         db_column="historie",
         blank=True,
         null=True,

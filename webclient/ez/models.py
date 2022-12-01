@@ -61,9 +61,11 @@ class ExterniZdroj(models.Model):
     datum_rd = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
+    ident_cely = models.TextField(unique=True, blank=True, null=False)
+    # final_cj = models.BooleanField(blank=True, null=True) #Removed by #474
+
     historie = models.ForeignKey(
-        HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
+        HistorieVazby, unique=True, db_column="historie", blank=True, null=True
     )
     autori = models.ManyToManyField(
         Osoba, through="ExterniZdrojAutor", related_name="ez_autori"
@@ -174,6 +176,7 @@ class ExterniZdrojAutor(models.Model):
     class Meta:
         db_table = "externi_zdroj_autor"
         unique_together = (("externi_zdroj", "autor"),)
+        unique_together = (("externi_zdroj", "poradi"),)
 
 
 class ExterniZdrojEditor(models.Model):

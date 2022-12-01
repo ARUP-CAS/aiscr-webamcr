@@ -52,7 +52,7 @@ class Komponenta(models.Model):
         db_column="komponenta_vazby",
         related_name="komponenty",
         blank=True,
-        null=True,
+        null=False,
     )
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")
 
