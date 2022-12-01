@@ -1,0 +1,57 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "Hlídací psi" %}{% endblock %}
+{% block head %}{% endblock %}
+
+{% block content %}
+    <div class="card app-card-form">
+        <form method="post" action="{% url 'watchdog:create' %}">
+            <div class="card-header">
+                <div class="app-fx app-left">
+                    {% trans "Hlídací psi" %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="">
+                <a href="{% url "watchdog:create" %}" class="btn btn-info mb-2">{% trans "Pridat psa" %}</a>
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">{% trans 'Kraj' %}</th>
+                        <th scope="col">{% trans 'Okres' %}</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for watchdog in watchdogs %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>
+                                {% if watchdog.content_type.model == 'ruiankraj' %}
+                                    {{ watchdog.content_object.nazev }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if watchdog.content_type.model == 'ruianokres' %}
+                                    {{ watchdog.content_object.nazev }}
+                                {% endif %}
+                            </td>
+                            <td><a href="{% url 'watchdog:delete' watchdog.id %}" class="btn btn-sm btn-danger mt-0">Delete</a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block script %}
+
+{% endblock %}

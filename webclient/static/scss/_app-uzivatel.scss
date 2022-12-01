@@ -1,0 +1,9 @@
+div#user_notifications_settings_card {
+  div.card-body {
+    div#div_id_notification_types {
+      select#id_notification_types {
+        height: auto !important;
+      }
+    }
+  }
+}

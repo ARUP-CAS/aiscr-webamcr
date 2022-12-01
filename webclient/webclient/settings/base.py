@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     "lokalita",
     "bs4",
     "django_extensions",
+    "watchdog"
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,7 @@ MIDDLEWARE = [
 CRON_CLASSES = [
     "cron.job01.MyCronJobPianToJTSK",
     "cron.job02.MyCronJobPianToWGS84",
+    "cron.notifications.Notifications",
 ]
 
 ROOT_URLCONF = "webclient.urls"

@@ -1,2 +1,1 @@
-*/2 * * * * python3 manage.py runcrons "cron.job01.MyCronJobPianToJTSK"  --settings=webclient.settings.dev > /home/ubuntu/cronjob.log
-*/2 * * * * python3 manage.py runcrons "cron.job02.MyCronJobPianToWGS84" --settings=webclient.settings.dev > /home/ubuntu/cronjob.log
+0 0 * * * python3 /code/webclient/manage.py runcrons "cron.notifications.Notifications" --settings=webclient.settings.dev > /code/cronjob.log

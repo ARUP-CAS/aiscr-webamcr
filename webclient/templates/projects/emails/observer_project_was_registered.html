@@ -1,0 +1,25 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+{% trans 'Dobrý den' %},
+{% for project in projects %}
+    {% trans 'v aplikaci IS AMČR byl právě zapsán nový projekt' %} {{ project.ident_cely }}.
+    {% trans 'Typ projektu' %}: {{ project.typ_projektu.heslo }}
+    {% trans 'Katastr' %}: {{ project.hlavni_katastr.nazev }} ({{ project.hlavni_katastr.okres.nazev }})
+    {% trans 'Podnět' %}: {{ project.podnet }}
+    {% trans 'Lokalizace' %}: {{ project.lokalizace }}
+    {% trans 'Plánované zahájení' %}: {{ project.planovane_zahajeni_text }}
+{% endfor %}
+
+{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+
+</body>
+</html>
+
+
+
