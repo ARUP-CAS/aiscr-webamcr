@@ -1,11 +1,9 @@
----this issue solve - revize db id #474
-
 Command
 ALTER TABLE adb DROP CONSTRAINT adb_dokumentacni_jednotka_key;
 
 
 ALTER TABLE akce DROP CONSTRAINT akce_archeologicky_zaznam_key;
-ALTER TABLE akce ADD CONTRAINT akce_organizace_fkey REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
+ALTER TABLE akce ADD CONSTRAINT akce_organizace_fkey FOREIGN KEY (organizace) REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
 
 
 
@@ -22,13 +20,13 @@ ALTER TABLE akce_vedouci ADD CONSTRAINT akce_vedouci_akce_vedouci_key UNIQUE (ak
 
 ALTER TABLE archeologicky_zaznam ALTER COLUMN ident_cely SET NOT NULL;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_ident_cely_key UNIQUE (ident_cely);
-ALTER TABLE archeologicky_zaznam DROP COLUMN stav_staryů
+ALTER TABLE archeologicky_zaznam DROP COLUMN stav_stary;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT  archeologicky_zaznam_historie_key  UNIQUE (historie);
 
 
 ALTER TABLE archeologicky_zaznam_katastr DROP CONSTRAINT archeologicky_zaznam_katastr_pkey;
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT  archeologicky_zaznam_katastr_pkey PRIMARY KEY (id);
-ALTER TABLE  archeologicky_zaznam_katastr  ADD CONSTRAINT  archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_key UNIQUE ( archeologicky_zaznam_id, katastr);
+ALTER TABLE  archeologicky_zaznam_katastr  ADD CONSTRAINT  archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_key UNIQUE ( archeologicky_zaznam_id, katastr_id);
 
 
 
@@ -49,7 +47,7 @@ ALTER TABLE  dokument_autor  ADD CONSTRAINT  dokument_autor_dokument_autor_key U
 ALTER TABLE dokument_autor ADD CONSTRAINT dokument_autor_dokument_poradi_key UNIQUE (dokument, poradi);
 
 
-
+COMMENT ON COLUMN dokument_cast.archeologicky_zaznam IS NULL;
 
 
 ALTER TABLE dokument_jazyk ADD CONSTRAINT dokument_jazyk_dokument_jazyk_key UNIQUE (dokument, jazyk);
@@ -82,7 +80,7 @@ ALTER TABLE  externi_odkaz ALTER COLUMN externi_zdroj SET NOT NULL;
 ALTER TABLE  externi_odkaz ALTER COLUMN archeologicky_zaznam SET NOT NULL;
 
 
-ALTER TABLE externi_zdroj DROP COLUMN final_cj
+ALTER TABLE externi_zdroj DROP COLUMN final_cj;
 ALTER TABLE externi_zdroj ADD CONSTRAINT externi_zdroj_historie_key UNIQUE (historie);
 ALTER TABLE  externi_zdroj ALTER COLUMN  ident_cely SET NOT NULL;
 
@@ -93,7 +91,7 @@ ALTER TABLE externi_zdroj_autor ADD CONSTRAINT externi_zdroj_autor_externi_zdroj
 ALTER TABLE externi_zdroj_autor ADD CONSTRAINT externi_zdroj_autor_externi_zdroj_poradi_key UNIQUE (externi_zdroj, poradi);
 
 
-CREATE SEQUENCE externi_zdroj_editor_id_seq;
+CREATE SEQUENCE externi_zdroj_editor_id_seq;  alter table externi_zdroj_editor drop constraint externi_zdroj_editor_pkey;
 ALTER TABLE externi_zdroj_editor ADD COLUMN id integer NOT NULL  default nextval('externi_zdroj_editor_id_seq'::regclass) PRIMARY KEY;
 ALTER TABLE externi_zdroj_editor ADD CONSTRAINT externi_zdroj_editor_externi_zdroj_editor_key UNIQUE (externi_zdroj, editor);
 
@@ -111,13 +109,13 @@ ALTER TABLE heslar_datace DROP COLUMN region;
 ALTER TABLE heslar_datace ADD COLUMN poznamka text;
 
 
+
 ALTER TABLE heslar_dokument_typ_material_rada DROP COLUMN validated;
 ALTER TABLE heslar_dokument_typ_material_rada DROP constraint heslar_typ_material_rada_heslar_rada_id_heslar_typ_dokumentu_id;
 
-
-CREATE SEQUENCE heslar_hiearchie_id_seq;
-ALTER TABLE heslar_hiearchie ADD COLUMN id integer NOT NULL  default nextval(heslar_hiearchie _id_seq'::regclass) PRIMARY KEY;
-ALTER TABLE  heslar_hiearchie ADD CONSTRAINT  heslar_hiearchie_heslo_podrazene_heslo_nadrazene_typ_key UNIQUE (heslo_podrazene, heslo_nadrazene, typ);
+CREATE SEQUENCE heslar_hierarchie_id_seq;  alter table heslar_hierarchie drop constraint heslar_hierarchie_pkey;
+ALTER TABLE heslar_hierarchie ADD COLUMN id integer NOT NULL  default nextval('heslar_hierarchie_id_seq'::regclass) PRIMARY KEY;
+ALTER TABLE  heslar_hierarchie ADD CONSTRAINT  heslar_hierarchie_heslo_podrazene_heslo_nadrazene_typ_key UNIQUE (heslo_podrazene, heslo_nadrazene, typ);
 
 
 ALTER TABLE historie  DROP COLUMN typ_zmeny_old;
@@ -148,9 +146,7 @@ ALTER TABLE nalez_objekt ADD CONSTRAINT nalez_objekt_pkey PRIMARY KEY (id);
 ALTER TABLE nalez_predmet ADD CONSTRAINT nalez_predmet_pkey PRIMARY KEY (id);
 
 
-ALTER TABLE neident_akce  DROP CONSTRAINT neident_akce_pkey;
-ALTER TABLE neident_akce DROP COLUMN puvodni_id;
-DROP SEQUENCE neident_akce_id_seq;
+ALTER TABLE neident_akce  DROP CONSTRAINT neident_akce_pkey;    ALTER TABLE neident_akce DROP COLUMN puvodni_id; DROP SEQUENCE neident_akce_id_seq;
 
 ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_key;
@@ -158,7 +154,7 @@ ALTER TABLE neident_akce ALTER COLUMN dokument_cast SET NOT NULL;
 ALTER TABLE neident_akce  DROP COLUMN ident_cely;
 
 
-CREATE SEQUENCE neident_akce_vedouci_id_seq;
+CREATE SEQUENCE neident_akce_vedouci_id_seq;  alter table neident_akce_vedouci drop constraint neident_akce_vedouci_pkey;
 ALTER TABLE neident_akce_vedouci ADD COLUMN id integer NOT NULL DEFAULT nextval('neident_akce_vedouci_id_seq'::regclass) PRIMARY KEY;
 ALTER TABLE neident_akce_vedouci ADD CONSTRAINT neident_akce_vedouci_neident_akce_vedouci_key UNIQUE (neident_akce, vedouci);
 
@@ -168,23 +164,13 @@ CREATE SEQUENCE notifikace_projekt_id_seq;  ALTER TABLE notifikace_projekt ADD C
 
 
 ALTER TABLE  organizace ALTER COLUMN nazev_zkraceny_en SET NOT NULL;
-"CREATE SEQUENCE organizace_ident_cely_seq
-START WITH 1
-INCREMENT BY 1
-MINVALUE  0
-MAXVALUE  999999
-;"
+CREATE SEQUENCE organizace_ident_cely_seq  START WITH 1 INCREMENT BY 1 MINVALUE  0 MAXVALUE  999999 ;
 ALTER TABLE organizace ADD COLUMN ident_cely text NOT NULL DEFAULT('ORG-'::text || right(concat('000000', nextval('organizace_ident_cely_seq')::text), 6));
 ALTER TABLE organizace ADD CONSTRAINT organizace_ident_cely UNIQUE(ident_cely);
 ALTER TABLE  organizace ALTER COLUMN nazev_zkraceny SET NOT NULL;
 
 
-"CREATE SEQUENCE osoba_ident_cely_seq
-START WITH 1
-INCREMENT BY 1
-MINVALUE  0
-MAXVALUE  999999
-;"
+CREATE SEQUENCE osoba_ident_cely_seq START WITH 1 INCREMENT BY 1  MINVALUE  0  MAXVALUE  999999 ;
 ALTER TABLE osoba ADD COLUMN ident_cely text NOT NULL DEFAULT('OS-'::text || right(concat('000000', nextval('osoba_ident_cely_seq')::text), 6));
 ALTER TABLE osoba ADD CONSTRAINT osoba_ident_cely UNIQUE(ident_cely);
 
@@ -196,7 +182,7 @@ ALTER TABLE pian  ADD CONSTRAINT pian_historie UNIQUE(historie);
 
 
 ALTER TABLE projekt DROP COLUMN  planovane_zahajeni_text;
-ALTER TABLE projekt ALTER COLUMN ident_cely  NOT NULL ;
+ALTER TABLE projekt ALTER COLUMN ident_cely  SET NOT NULL ;
 ALTER TABLE projekt  ADD CONSTRAINT projekt_soubory UNIQUE(soubory);
 ALTER TABLE projekt  ADD CONSTRAINT projekt_historie UNIQUE(historie);
 
@@ -209,8 +195,8 @@ ALTER TABLE projekt_katastr  ADD CONSTRAINT projekt_katastr_projekt_id_katastr_i
 ALTER TABLE projekt_sekvence ADD CONSTRAINT  projekt_sekvence_pkey PRIMARY KEY (id);
 
 
-ALTER TABLE ruian_katastr ALTER COLUMN hranice NOT NULL ;
-ALTER TABLE ruian_katastr DROP COLUMN poznamka;
+ALTER TABLE ruian_katastr ALTER COLUMN hranice SET NOT NULL ;
+ALTER TABLE ruian_katastr DROP COLUMN poznamka ;
 ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_nazev UNIQUE(nazev);
 ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_kod UNIQUE(kod);
 ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_pian UNIQUE(pian);
@@ -221,22 +207,22 @@ ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_pian UNIQUE(pian);
 
 
 ALTER TABLE ruian_kraj DROP COLUMN aktualni;
-ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod  NOT NULL ;
-ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod NOT NULL ;
-ALTER TABLE ruian_kraj ADD COLUMN nazev_en  NOT NULL;
+ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod  SET NOT NULL ;
+ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod SET NOT NULL ;
+ALTER TABLE ruian_kraj ADD COLUMN nazev_en text NOT NULL;
 
 
 ALTER TABLE ruian_okres DROP COLUMN aktualni;
-ALTER TABLE ruian_okres ADD COLUMN nazev_en  NOT NULL;
-ALTER TABLE ruian_okres ADD COLUMN definicni_bod  NOT NULL;
-ALTER TABLE ruian_okres ADD COLUMN hranice  NOT NULL;
+ALTER TABLE ruian_okres ALTER COLUMN nazev_en SET NOT NULL;
+ALTER TABLE ruian_okres ALTER COLUMN definicni_bod SET  NOT NULL;
+ALTER TABLE ruian_okres ALTER COLUMN hranice  SET NOT NULL;
 ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_hranice UNIQUE(hranice);
 ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_kod UNIQUE(kod);
 ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_spz UNIQUE(spz);
 
 
 
-ALTER TABLE samostatny_nalez ADD COLUMN ident_cely  NOT NULL;
+ALTER TABLE samostatny_nalez ALTER COLUMN ident_cely SET NOT NULL;
 ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_soubory UNIQUE(soubory);
 ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_historie UNIQUE(historie);
 
