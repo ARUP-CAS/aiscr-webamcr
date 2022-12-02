@@ -117,14 +117,14 @@ update projekt p set historie = sub.rn from (select id, (select count(*) from ak
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu, 1, odpovedny_pracovnik_zapisu, historie from projekt where odpovedny_pracovnik_zapisu is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_prihlaseni, 2, odpovedny_pracovnik_prihlaseni, historie from projekt where odpovedny_pracovnik_prihlaseni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archivace, 6, odpovedny_pracovnik_archivace, historie from projekt where odpovedny_pracovnik_archivace is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_navrzeni_zruseni, 7, odpovedny_pracovnik_navrhu_zruseni, historie from projekt where odpovedny_pracovnik_navrhu_zruseni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba, poznamka) select datum_navrzeni_zruseni, 7, odpovedny_pracovnik_navrhu_zruseni, historie, duvod_navrzeni_zruseni from projekt where odpovedny_pracovnik_navrhu_zruseni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zruseni, 8, odpovedny_pracovnik_zruseni, historie from projekt where odpovedny_pracovnik_zruseni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_navrhu_archivace, 5, odpovedny_pracovnik_navrhu_archivace, historie from projekt where odpovedny_pracovnik_navrhu_archivace is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_zahajeni, 3, odpovedny_pracovnik_zahajeni, historie from projekt where odpovedny_pracovnik_zahajeni is not null and datum_zapisu_zahajeni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu_ukonceni, 4, odpovedny_pracovnik_ukonceni, historie from projekt where odpovedny_pracovnik_ukonceni is not null;
 -- COMMENT: vetsina projektu ma v datetime_born null
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datetime_born, 0, 598610, historie from projekt where datetime_born is not null;
--- COMMENT: Protoze zaznamy typu 7 v historii chybi je potreba nejdriv vyresit chybu predtim COMMENT: docela dlouhy dotaz
+-- COMMENT: Protoze zaznamy typu 7 v historii chybi je potreba nejdriv vyresit chybu predtim COMMENT: docela dlouhy dotaz - DN: toto se zdá být úplně irelevantní řešení, když to jde ošetřit na řádku 120 velice snadno
 --update historie set poznamka = sel.d from (select p.id, p.odpovedny_pracovnik_navrhu_zruseni, p.duvod_navrzeni_zruseni as d from projekt p join historie h on p.historie = h.vazba where p.odpovedny_pracovnik_navrhu_zruseni is not null) as sel where historie.typ_zmeny = 7;
 
 -- Pridat not null
