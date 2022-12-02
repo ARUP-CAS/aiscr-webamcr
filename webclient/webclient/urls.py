@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
+
 from oznameni import views as oznameni_views
 from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView
 
@@ -58,6 +59,7 @@ urlpatterns = [
     path("arch-z/lokalita/", include("lokalita.urls")),
     path("ext-zdroj/", include("ez.urls")),
     path("neident-akce/", include("neidentakce.urls")),
+    path("watchdog/",  include("watchdog.urls")),
 ]
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]

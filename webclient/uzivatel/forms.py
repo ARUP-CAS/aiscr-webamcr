@@ -61,7 +61,7 @@ class AuthUserCreationForm(RegistrationForm):
             Field("organizace"),
             AppendedText('password1', '<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
             AppendedText('password2', '<i class="bi bi-eye-slash" id="togglePassword2"></i>'),
-            )
+        )
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
@@ -70,7 +70,7 @@ class AuthUserCreationForm(RegistrationForm):
 class AuthUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ("telefon", )
+        fields = ("telefon",)
         help_texts = {
             "telefon": _("uzivatel.form.userChange.telefon.tooltip"),
         }
@@ -84,7 +84,7 @@ class AuthUserChangeForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
-                Div(
+            Div(
                 Div("telefon", css_class="col-sm-3"),
                 css_class="row",
             )
@@ -94,7 +94,8 @@ class AuthUserChangeForm(forms.ModelForm):
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "hlavni_role", "groups")
+        fields = (
+            "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "hlavni_role", "groups")
         help_texts = {
             "first_name": _("uzivatel.form.userChange.first_name.tooltip"),
             "last_name": _("uzivatel.form.userChange.last_name.tooltip"),
@@ -142,6 +143,12 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         )
 
 
+class NotificationsForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('notification_types',)
+
+
 class UpdatePasswordSettings(forms.ModelForm):
     password1 = forms.CharField(required=False, widget=PasswordInput())
     password2 = forms.CharField(required=False, widget=PasswordInput())
@@ -180,7 +187,6 @@ class UpdatePasswordSettings(forms.ModelForm):
         )
 
 
-
 class AuthUserLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
@@ -189,8 +195,7 @@ class AuthUserLoginForm(AuthenticationForm):
         self.helper.layout = Layout(
             Field("username"),
             AppendedText('password', '<i class="bi bi-eye-slash" id="togglePassword"></i>'),
-            )
-
+        )
 
     def get_invalid_login_error(self):
         return ValidationError(

@@ -9,35 +9,51 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="card app-card-form">
-    <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;" action="{% url 'uzivatel:update-uzivatel' %}">
-      <div class="card-header">
-        <div class="app-fx app-left">
-          {% trans "Nastavení uživatelského účtu" %}
+    <div class="card app-card-form">
+        <form method="post" onsubmit="actionSubmitBtn.disabled = true; return true;"
+              action="{% url 'uzivatel:update-uzivatel' %}">
+            <div class="card-header">
+                <div class="app-fx app-left">
+                    {% trans "Nastavení uživatelského účtu" %}
+                </div>
+            </div>
+            <div class="card-body formset-table">
+                {% crispy form_read_only %}
+                {% crispy form %}
+                <h6>{% trans "Změna hesla" %}</h6>
+                <hr class="mt-0"/>
+                {% crispy form_password %}
+                <h6>{% trans "Historie přihlášení" %}</h6>
+                <hr class="mt-0"/>
+                <ul>
+                    {% for item in sign_in_history %}
+                        <li style="color: #6c757d;" class="small">{{ item.last_login }}</li>
+                    {% endfor %}
+                </ul>
+                <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+                <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">Historie
+                    uživatele</a>
+            </div>
+        </form>
+    </div>
+    <div class="card app-card-form" id="user_notifications_settings_card">
+        <div class="card-header">
+            <div class="app-fx app-left">
+                {% trans "Nastavení notifikace" %}
+                <a href="{% url "watchdog:list" %}" class="ml-3">{% trans "Hlídací psi" %}</a>
+            </div>
         </div>
-      </div>
-      <div class="card-body formset-table">
-        {% crispy form_read_only %}
-        {% crispy form %}
-        <h6>{% trans "Změna hesla" %}</h6>
-        <hr class="mt-0"/>
-        <p>{% trans "update_user.logout_warning" %}</p>
-        {% crispy form_password %}
-        <h6>{% trans "Historie přihlášení" %}</h6>
-        <hr class="mt-0"/>
-        <ul>
-          {% for item in sing_in_history %}
-            <li style="color: #6c757d;" class="small">{{ item.last_login }}</li>
-          {% endfor %}
-        </ul>
-        <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
-        <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">Historie uživatele</a>
-      </div>
-    </form>
-  </div>
-
+        <div class="card-body">
+            <div class="col-md-3">
+                <form method="post" action="{% url 'uzivatel:update-notifications' %}">
+                    {% csrf_token %}
+                    {{ form_notifications|crispy }}
+                    <input type="submit" value="{% trans 'Uložit' %}" class="btn btn-primary mt-2">
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block script %}
-
 {% endblock %}

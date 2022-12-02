@@ -4,7 +4,9 @@
 FROM ubuntu:focal
 
 # Update base container install
-RUN apt-get update
+RUN apt-get -qq update && apt-get -qq -y install cron
+RUN apt-get -y -qq install nano
+RUN apt-get -y -qq install sudo
 #RUN apt-get upgrade -y
 
 ARG VERSION_APP
@@ -14,7 +16,7 @@ ENV VERSION=$VERSION_APP
 ENV TAG=$TAG_APP
 
 
-ENV TZ 'Europe/Prague'
+ENV TZ "Europe/Prague"
 RUN echo $TZ > /etc/timezone
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
@@ -26,11 +28,11 @@ RUN apt-get install -y python3-pip libgdal-dev locales gettext
 
 # Ensure locales configured correctly
 RUN locale-gen cs_CZ.utf8
-ENV LC_ALL='cs_CZ.utf8'
+ENV LC_ALL="cs_CZ.utf8"
 
 # Set python aliases for python3
-RUN echo 'alias python=python3' >> ~/.bashrc
-RUN echo 'alias pip=pip3' >> ~/.bashrc
+RUN echo "alias python=python3" >> ~/.bashrc
+RUN echo "alias pip=pip3" >> ~/.bashrc
 
 # Update C env vars so compiler can find gdal
 ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
@@ -45,6 +47,7 @@ RUN pip3 install -r dev.txt
 
 RUN mkdir /code
 COPY ./webclient /code
+COPY ./scripts /scripts
 WORKDIR /code
 
 # Uploaded images
@@ -59,9 +62,11 @@ ADD ./proxy/custom_html /vol/web/nginx/data
 
 RUN adduser user
 RUN passwd -d user
-RUN chown -R user:user /vol
-RUN chmod -R 755 /vol/web
+RUN usermod -aG sudo user
+RUN chown -R user:user /vol /scripts
+RUN chmod -R 755 /vol/web /scripts
 RUN chmod 777 -R  /vol/web/nginx/data
+RUN crontab -u user /scripts/crontab.txt
 USER user
 
 ENV PYTHONUNBUFFERED=1
