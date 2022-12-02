@@ -101,7 +101,7 @@ class Projekt(models.Model):
     datum_ukonceni = models.DateField(
         blank=True, null=True, verbose_name=_("Datum ukončení")
     )
-    planovane_zahajeni_text = models.TextField(blank=True, null=True)
+    # planovane_zahajeni_text = models.TextField(blank=True, null=True) #Removed by #474
     kulturni_pamatka = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,

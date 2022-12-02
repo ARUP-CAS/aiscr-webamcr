@@ -14,7 +14,7 @@ class NeidentAkce(models.Model):
     pian = models.TextField(blank=True, null=True)
     popis = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
-    ident_cely = models.TextField(unique=True)
+    #ident_cely = models.TextField(unique=True) #Removed by #474
     dokument_cast = models.OneToOneField(
         DokumentCast,
         on_delete=models.CASCADE,
