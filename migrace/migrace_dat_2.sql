@@ -31,9 +31,10 @@ update akce set vedouci_akce_ostatni = REPLACE(vedouci_akce_ostatni, ';', '') wh
 -- COMMENT: zatim nemigrujeme organizaci, proto odstranim not null
 alter table akce_vedouci alter column organizace drop not null;
 
--- Vlozeni hlavnich vedoucich
-insert into akce_vedouci(akce, vedouci, hlavni) select id, vedouci_akce, true from akce where vedouci_akce is not null;
+-- Vlozeni hlavnich vedoucich + jejich organizace (to jen pro jistotu, protože sloupec nakonec zachováme a data by se tak neměla ztratit)
+insert into akce_vedouci(akce, vedouci, hlavni, organizace) select id, vedouci_akce, true, organizace from akce where vedouci_akce is not null;
 
+-- Vlozeni ostatnich vecoucích + výchozí organizace pro ostatní vedoucí (správné nastavení budeme řešit updatem na konci migrace jako samostatný problém)
 CREATE OR REPLACE FUNCTION migrateVedouciOstatniFromAkce() RETURNS void AS $$
 DECLARE
 BEGIN
@@ -41,7 +42,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into akce_vedouci(akce, vedouci, hlavni) select distinct a.id, r.id, false from akce a join osoba r on (r.vypis_cely) = split_part(vedouci_akce_ostatni, ';', counter) where split_part(a.vedouci_akce_ostatni, ';', counter) != '';
+            insert into akce_vedouci(akce, vedouci, hlavni, organizace) select distinct a.id, r.id, false, (SELECT organizace.id FROM organizace WHERE organizace.nazev_zkraceny = '[neuvedeno]') from akce a join osoba r on (r.vypis_cely) = split_part(vedouci_akce_ostatni, ';', counter) where split_part(a.vedouci_akce_ostatni, ';', counter) != '';
         END;
     END LOOP;
 END;
