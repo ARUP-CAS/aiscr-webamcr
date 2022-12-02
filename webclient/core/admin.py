@@ -8,6 +8,8 @@ import os
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 from django.core.cache import cache
+from core.constants import ROLE_NASTAVENI_ODSTAVKY
+from django.core.cache.utils import make_template_fragment_key
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +20,6 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         "datum_odstavky",
         "cas_odstavky",
         "status",
-        "text_cs",
-        "text_en",
     )
     form = OdstavkaSystemuForm
 
@@ -31,16 +31,21 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             po_file = pofile(path)
             entry = po_file.find("base.odstavka.text")
             text = "text_" + code
-            entry.msgstr = getattr(obj, text)
+            entry.msgstr = form.cleaned_data[text]
             po_file.save()
             po_filepath, ext = os.path.splitext(path)
             po_file.save_as_mofile(po_filepath + ".mo")
             self.file_handler(code, form)
         cache.delete("last_maintenance")
-        cache.delete("maintenance")
+        cache.delete(make_template_fragment_key("maintenance"))
         super().save_model(request, obj, form, change)
 
-    def has_delete_permission(request, obj=None, *args):
+    def has_module_permission(self, request):
+        return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
+
+    def has_delete_permission(self, request, obj=None, *args):
+        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
+            return False
         odstavka = OdstavkaSystemu.objects.filter(
             info_od__lte=datetime.today(), datum_odstavky__gte=datetime.today()
         )
@@ -50,6 +55,21 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             elif odstavka[0].cas_odstavky > datetime.now().time():
                 return True
         return False
+
+    def has_view_permission(self, request, obj=None, *args):
+        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
+            return False
+        return super().has_view_permission(request, obj, *args)
+
+    def has_add_permission(self, request, *args):
+        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
+            return False
+        return super().has_add_permission(request, *args)
+
+    def has_change_permission(self, request, obj=None, *args):
+        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
+            return False
+        return super().has_change_permission(request, obj, *args)
 
     def file_handler(self, language, form):
         with open("/vol/web/nginx/data/" + language + "/custom_50x.html") as fp:

@@ -8,6 +8,8 @@ from django.utils.translation import gettext as _
 from core.models import Soubor, OdstavkaSystemu
 from heslar.models import Heslar
 from bs4 import BeautifulSoup
+from polib import pofile
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -139,6 +141,14 @@ class OdstavkaSystemuForm(forms.ModelForm):
         label=_("core.forms.odstavkaSystemu.errorTextOznamEn"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
+    text_en = forms.CharField(
+        label=_("base.odstavka.textEN.label"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
+    text_cs = forms.CharField(
+        label=_("base.odstavka.textCZ.label"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
 
     class Meta:
         model = OdstavkaSystemu
@@ -147,8 +157,6 @@ class OdstavkaSystemuForm(forms.ModelForm):
             "datum_odstavky",
             "cas_odstavky",
             "status",
-            "text_cs",
-            "text_en",
         )
 
     def __init__(self, *args, **kwargs):
@@ -165,3 +173,11 @@ class OdstavkaSystemuForm(forms.ModelForm):
         with open("/vol/web/nginx/data/en/oznameni/custom_50x.html") as fp:
             soup = BeautifulSoup(fp)
         self.fields["error_text_oznam_en"].initial = soup.find("h1").string
+        locale_path = settings.LOCALE_PATHS[0]
+        languages = settings.LANGUAGES
+        for code, lang in languages:
+            path = locale_path + "/" + code + "/LC_MESSAGES/django.po"
+            po_file = pofile(path)
+            entry = po_file.find("base.odstavka.text")
+            text = "text_" + code
+            self.fields[text].initial = entry.msgstr
