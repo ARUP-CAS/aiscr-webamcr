@@ -23,6 +23,9 @@ from django_auto_logout.utils import (
 from django.core.cache import cache
 from core.models import OdstavkaSystemu
 from datetime import datetime, date, timedelta
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def constants_import(request):
@@ -99,8 +102,16 @@ def auto_logout_client(request):
             )
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
-        ctx["seconds_until_idle_end"] = options["MAINTENANCE_LOGOUT_TIME"]
-        ctx["IDLE_WARNING_TIME"] = options["MAINTENANCE_LOGOUT_TIME"] - 5
+        cache_name = str(request.user.id) + "_maintenanteLogoutTime"
+        logout_time = cache.get_or_set(
+            cache_name,
+            datetime.now() + timedelta(seconds=options["MAINTENANCE_LOGOUT_TIME"]),
+            900,
+        )
+        logger.debug(logout_time)
+        until_logout = logout_time - datetime.now()
+        ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
+        ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5
         ctx["redirect_to_login_immediately"] = mark_safe(
             "window.location.href = '/accounts/logout/?maintenance_logout=true'"
         )

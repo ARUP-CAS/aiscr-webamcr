@@ -143,8 +143,6 @@ class OdstavkaSystemu(models.Model):
     info_od = models.DateField(_("model.odstavka.infoOd"))
     datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
     cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
-    text_en = models.TextField(_("base.odstavka.textEN.label"))
-    text_cs = models.TextField(_("base.odstavka.textCS.label"))
     status = models.BooleanField(_("model.odstavka.status"), default=True)
 
     class Meta:
@@ -154,9 +152,12 @@ class OdstavkaSystemu(models.Model):
 
     def clean(self):
         odstavky = OdstavkaSystemu.objects.filter(status=True)
-        if odstavky is not None and self.status:
+        if odstavky.count() > 0 and self.status:
             if odstavky.first().pk != self.pk:
                 raise ValidationError(
                     _("model.odstavka.jenJednaAktivniOdstavkaPovolena.text")
                 )
         super(OdstavkaSystemu, self).clean()
+
+    def __str__(self) -> str:
+        return "{}: {} {}".format(_("Odstavka"), self.datum_odstavky, self.cas_odstavky)
