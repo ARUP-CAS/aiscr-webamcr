@@ -79,7 +79,7 @@ from komponenta.models import Komponenta, KomponentaVazby
 from oznameni.models import Oznamovatel
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
-from uzivatel.models import Organizace, Osoba, User
+from uzivatel.models import Organizace, Osoba, User, UserNotificationType
 
 import logging
 
@@ -185,6 +185,10 @@ class AMCRTestRunner(BaseRunner):
             projektove_sekvence.append(ProjektSekvence(rada="C", rok=rok, sekvence=1))
             projektove_sekvence.append(ProjektSekvence(rada="M", rok=rok, sekvence=1))
         ProjektSekvence.objects.bulk_create(projektove_sekvence)
+
+        UserNotificationType(ident_cely="E-U-04", zasilat_neaktivnim=False,
+                             predmet="AMČR: uživatelský účet čeká na aktivaci",
+                             cesta_sablony="emails/account_activation_request.html").save()
 
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
@@ -462,6 +466,7 @@ class AMCRTestRunner(BaseRunner):
             hlavni_role=admin_group,
             is_active=True,
         )
+        user.created_from_admin_panel = True
         user.save()
 
         user_archeolog = User.objects.create_user(
@@ -472,6 +477,7 @@ class AMCRTestRunner(BaseRunner):
             is_active=True,
             id=USER_ARCHEOLOG_ID,
         )
+        user_archeolog.created_from_admin_panel = True
         user_archeolog.save()
 
         # PROJEKT
