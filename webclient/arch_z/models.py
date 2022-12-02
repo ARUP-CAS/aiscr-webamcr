@@ -275,7 +275,7 @@ class ArcheologickyZaznam(models.Model):
         self.ident_cely = new_ident
         self.save()
 
-    def get_reverse(self, dj_ident_cely=None):
+    def get_absolute_url(self, dj_ident_cely=None):
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
                 return reverse("arch_z:detail", kwargs={"ident_cely": self.ident_cely})

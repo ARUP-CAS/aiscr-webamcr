@@ -48,7 +48,7 @@ class DokumentacniJednotka(models.Model):
         db_table = "dokumentacni_jednotka"
         ordering = ["ident_cely"]
 
-    def get_reverse(self):
+    def get_absolute_url(self):
         if self.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             return reverse("arch_z:detail-dj", args=[self.archeologicky_zaznam.ident_cely, self.ident_cely])
         else:
