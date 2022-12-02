@@ -308,8 +308,6 @@ class UrlTests(TestCase):
         )
         cast = DokumentCast.objects.get(ident_cely=DOKUMENT_CAST_IDENT2)
         self.assertEqual(200, response.status_code)
-        with self.assertRaises(NeidentAkce.DoesNotExist):
-            NeidentAkce.objects.get(ident_cely=EXISTIN_NEIDENT_AKCE_IDENT)
 
     def test_get_create_model3D(self):
         request = self.factory.get("/dokument/create/model")

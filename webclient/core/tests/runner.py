@@ -727,7 +727,7 @@ class AMCRTestRunner(BaseRunner):
 
         Tvar(dokument=d, tvar=Heslar.objects.get(id=AREAL_HRADISTE_ID)).save()
 
-        NeidentAkce(ident_cely=EXISTIN_NEIDENT_AKCE_IDENT, dokument_cast=dc2).save()
+        NeidentAkce(dokument_cast=dc2).save()
 
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()
