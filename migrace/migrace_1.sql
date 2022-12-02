@@ -26,21 +26,21 @@ ALTER TABLE ONLY public.historie_akce ADD CONSTRAINT historie_akce_pkey PRIMARY 
 ALTER TABLE ONLY public.historie_akce ADD CONSTRAINT historie_akce_uzivatel_fkey FOREIGN KEY (uzivatel) REFERENCES public.user_storage(id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE ONLY public.historie_akce ADD CONSTRAINT historie_akce_akce_fkey FOREIGN KEY (akce) REFERENCES public.akce(id) ON UPDATE CASCADE ON DELETE CASCADE;
 -- Migrace sloupce zprava do historie_akce a typ_logu(0 = 7, 1 = 3) do typ zmeny a id_objektu do akce
-insert into historie_akce(typ_zmeny, akce, uzivatel, zprava, datum_zmeny) select typ_logu, id_objektu, uzivatel, zprava, (SELECT TIMESTAMP 'epoch' + (cas::int) * INTERVAL '1 second') from log where log.id_objektu in (select id from akce);
+insert into historie_akce(typ_zmeny, akce, uzivatel, zprava, datum_zmeny) select typ_logu, id_objektu, uzivatel, zprava, (SELECT TIMESTAMP WITH TIME ZONE 'epoch' + (cas::int) * INTERVAL '1 second') from log where log.id_objektu in (select id from akce);
 update historie_akce set typ_zmeny = 3 where typ_zmeny = 1;
 update historie_akce set typ_zmeny = 7 where typ_zmeny = 0;
 
 -- Doplnění historie_akce o chybějící údaje stejného typu z tabulky akce (zbytek migrován v migrace_3.sql).
 -- Stav 3
 INSERT INTO historie_akce ( uzivatel, datum_zmeny, typ_zmeny, akce )
-SELECT akce.odpovedny_pracovnik_vraceni_zaa, akce.datum_vraceni_zaa, 3 AS typ, akce.id
-FROM akce LEFT JOIN historie_akce ON (akce.odpovedny_pracovnik_zamitnuti = historie_akce.uzivatel) AND (akce.datum_zamitnuti = historie_akce.datum_zmeny) AND (akce.id = historie_akce.akce)
+SELECT akce.odpovedny_pracovnik_vraceni_zaa, (SELECT TIMESTAMP WITH TIME ZONE 'epoch' + (akce.datum_vraceni_zaa::int) * INTERVAL '1 second'), 3 AS typ, akce.id
+FROM akce LEFT JOIN historie_akce ON (akce.odpovedny_pracovnik_vraceni_zaa = historie_akce.uzivatel) AND ((SELECT TIMESTAMP WITH TIME ZONE 'epoch' + (akce.datum_vraceni_zaa::int) * INTERVAL '1 second') = historie_akce.datum_zmeny) AND (akce.id = historie_akce.akce)
 WHERE (((akce.odpovedny_pracovnik_vraceni_zaa) Is Not Null) AND ((historie_akce.id) Is Null)) OR (((akce.datum_vraceni_zaa) Is Not Null) AND ((historie_akce.id) Is Null));
 
 -- Stav 7
 INSERT INTO historie_akce ( uzivatel, datum_zmeny, typ_zmeny, akce )
 SELECT akce.odpovedny_pracovnik_zamitnuti, akce.datum_zamitnuti, 7 AS typ, akce.id
-FROM akce LEFT JOIN historie_akce ON (akce.odpovedny_pracovnik_zamitnuti = historie_akce.uzivatel) AND (akce.datum_zamitnuti = historie_akce.datum_zmeny) AND (akce.id = historie_akce.akce)
+FROM akce LEFT JOIN historie_akce ON (akce.odpovedny_pracovnik_zamitnuti = historie_akce.uzivatel) AND (akce.datum_zamitnuti = (historie_akce.datum_zmeny::date)) AND (akce.id = historie_akce.akce)
 WHERE (((akce.odpovedny_pracovnik_zamitnuti) Is Not Null) AND ((historie_akce.id) Is Null)) OR (((akce.datum_zamitnuti) Is Not Null) AND ((historie_akce.id) Is Null));
 
 
