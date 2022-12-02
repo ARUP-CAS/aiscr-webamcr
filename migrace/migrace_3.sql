@@ -66,7 +66,7 @@ update akce d set historie = sub.rn from (select id, row_number() OVER (order by
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_zapisu, 1, odpovedny_pracovnik_zapisu, historie from akce where odpovedny_pracovnik_zapisu is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_autorizace, 2, odpovedny_pracovnik_autorizace, historie from akce where odpovedny_pracovnik_autorizace is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archivace_zaa, 4, odpovedny_pracovnik_archivace_zaa, historie from akce where odpovedny_pracovnik_archivace_zaa is not null;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_odlozeni_nz::int) * INTERVAL '1 second'), 5, odpovedny_pracovnik_odlozeni_nz, historie from akce where odpovedny_pracovnik_odlozeni_nz is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP WITH TIME ZONE 'epoch' + (datum_odlozeni_nz::int) * INTERVAL '1 second'), 5, odpovedny_pracovnik_odlozeni_nz, historie from akce where odpovedny_pracovnik_odlozeni_nz is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_podani_nz, 6, odpovedny_pracovnik_podani_nz, historie from akce where odpovedny_pracovnik_podani_nz is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archivace, 8, odpovedny_pracovnik_archivace, historie from akce where odpovedny_pracovnik_archivace is not null;
 
