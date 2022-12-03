@@ -478,7 +478,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "EO_USPESNE_ODPOJEN")
         )
-        return JsonResponse({"redirect": az.get_reverse()})
+        return JsonResponse({"redirect": az.get_absolute_url()})
 
 
 class ExterniZdrojAutocomplete(autocomplete.Select2QuerySetView):
@@ -547,7 +547,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         else:
             logger.debug("not valid")
             logger.debug(form.errors)
-        return JsonResponse({"redirect": az.get_reverse()})
+        return JsonResponse({"redirect": az.get_absolute_url()})
 
 
 def get_history_dates(historie_vazby):

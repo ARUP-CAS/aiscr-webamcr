@@ -205,12 +205,12 @@ def smazat(request, ident_cely):
         if resp:
             logger.debug("Byla smazána dokumentacni jednotka: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": dj.archeologicky_zaznam.get_reverse()})
+            return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
         else:
             logger.warning("DJ nebyla smazana: " + str(ident_cely))
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             return JsonResponse(
-                {"redirect": dj.archeologicky_zaznam.get_reverse()},
+                {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
                 status=403,
             )
     else:

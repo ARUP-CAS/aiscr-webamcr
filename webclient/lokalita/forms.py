@@ -3,6 +3,10 @@ import structlog
 from django import forms
 from django.utils.translation import gettext as _
 
+from core.forms import TwoLevelSelectField
+from heslar.hesla import HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT
+from heslar.views import heslar_12
+
 from .models import Lokalita
 
 logger_s = structlog.get_logger(__name__)
@@ -22,7 +26,6 @@ class LokalitaForm(forms.ModelForm):
         )
 
         labels = {
-            "druh": _("lokalita.forms.druh.label"),
             "nazev": _("lokalita.forms.nazev.label"),
             "typ_lokality": _("lokalita.forms.typLokality.label"),
             "zachovalost": _("lokalita.forms.zachovalost.label"),
@@ -32,9 +35,6 @@ class LokalitaForm(forms.ModelForm):
         }
 
         widgets = {
-            "druh": forms.Select(
-                attrs={"class": "selectpicker", "data-live-search": "true"}
-            ),
             "typ_lokality": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
@@ -50,7 +50,6 @@ class LokalitaForm(forms.ModelForm):
         }
 
         help_texts = {
-            "druh": _("lokalita.forms.druh.tooltip"),
             "nazev": _("lokalita.forms.nazev.tooltip"),
             "typ_lokality": _("lokalita.forms.typLokality.tooltip"),
             "zachovalost": _("lokalita.forms.zachovalost.tooltip"),
@@ -69,6 +68,19 @@ class LokalitaForm(forms.ModelForm):
         **kwargs
     ):
         super(LokalitaForm, self).__init__(*args, **kwargs)
+        choices = heslar_12(HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT)
+        self.fields["druh"] = TwoLevelSelectField(
+            label=_("lokalita.forms.druh.label"),
+            widget=forms.Select(
+                choices=choices,
+                attrs={
+                    "class": "selectpicker",
+                    "data-multiple-separator": "; ",
+                    "data-live-search": "true",
+                },
+            ),
+            help_text=_("lokalita.forms.druh.tooltip"),
+        )
 
         for key in self.fields.keys():
             if detail:

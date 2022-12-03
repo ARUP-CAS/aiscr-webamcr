@@ -383,7 +383,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                             logger.debug("back option for akce found")
                             response.set_cookie(
                                 "zpet",
-                                cast.archeologicky_zaznam.get_reverse(),
+                                cast.archeologicky_zaznam.get_absolute_url(),
                                 max_age=1000,
                             )
                             found = True
@@ -1498,19 +1498,19 @@ def zapsat(request, zaznam=None):
     )
 
 
-def odpojit(request, ident_doku, ident_zaznamu, view):
+def odpojit(request, ident_doku, ident_zaznamu, zaznam):
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
     remove_orphan = False
     if len(relace_dokumentu) == 0:
         logger.debug("Nelze najít zadne relace dokumentu " + str(ident_doku))
         messages.add_message(request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE)
-        return JsonResponse({"redirect": reverse(f"{view}:detail")}, status=404)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
     if len(relace_dokumentu) == 1:
         orphan_dokument = relace_dokumentu[0].dokument
         if orphan_dokument.ident_cely.startswith("X-"):
             remove_orphan = True
     if request.method == "POST":
-        if view == "arch_z" or view == "lokalita":
+        if isinstance(zaznam, ArcheologickyZaznam):
             dokument_cast = relace_dokumentu.filter(
                 archeologicky_zaznam__ident_cely=ident_zaznamu
             )
@@ -1521,7 +1521,7 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
             messages.add_message(
                 request, messages.ERROR, DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM
             )
-            return JsonResponse({"redirect": reverse(f"{view}:detail")}, status=404)
+            return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=404)
         resp = dokument_cast[0].delete()
         logger.debug("Byla smazana cast dokumentu " + str(resp))
         if remove_orphan:
@@ -1530,9 +1530,7 @@ def odpojit(request, ident_doku, ident_zaznamu, view):
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
         return JsonResponse(
             {
-                "redirect": reverse(
-                    f"{view}:detail", kwargs={"ident_cely": ident_zaznamu}
-                )
+                "redirect": zaznam.get_absolute_url()
             }
         )
     else:
@@ -1564,7 +1562,7 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
             archeologicky_zaznam__ident_cely=ident_zaznam
         )
         debug_name = "akci "
-        redirect_name = zaznam.get_reverse()
+        redirect_name = zaznam.get_absolute_url()
         context = {
             "object": zaznam,
             "title": _("dokument.modalForm.pripojitDoAkce.title.text"),

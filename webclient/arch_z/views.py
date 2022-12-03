@@ -493,14 +493,14 @@ def odeslat(request, ident_cely):
         logger.debug("arch_z.views.odeslat permission denied")
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
-            {"redirect": az.get_reverse()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
         logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
         return JsonResponse(
-            {"redirect": az.get_reverse()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
     if request.method == "POST":
@@ -513,7 +513,7 @@ def odeslat(request, ident_cely):
             "arch_z.views.odeslat akce uspesne odeslana "
             + get_message(az, "USPESNE_ODESLANA")
         )
-        return JsonResponse({"redirect": az.get_reverse()})
+        return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_odeslanim()
         logger.debug(
@@ -527,7 +527,7 @@ def odeslat(request, ident_cely):
             )
             logger.debug("arch_z.views.odeslat akci nelze odeslat AKCE_NELZE_ODESLAT")
             return JsonResponse(
-                {"redirect": az.get_reverse()},
+                {"redirect": az.get_absolute_url()},
                 status=403,
             )
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -548,13 +548,13 @@ def archivovat(request, ident_cely):
     if az.stav != AZ_STAV_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
-            {"redirect": az.get_reverse()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": az.get_reverse()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
     if request.method == "POST":
@@ -573,7 +573,7 @@ def archivovat(request, ident_cely):
             request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
         )
         Mailer.sendEA02(arch_z=az)
-        return JsonResponse({"redirect": az.get_reverse()})
+        return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
         logger.debug(warnings)
@@ -583,7 +583,7 @@ def archivovat(request, ident_cely):
                 request, messages.ERROR, get_message(az, "NELZE_ARCHIVOVAT")
             )
             return JsonResponse(
-                {"redirect": az.get_reverse()},
+                {"redirect": az.get_absolute_url()},
                 status=403,
             )
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
@@ -604,12 +604,12 @@ def vratit(request, ident_cely):
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
-            {"redirect": az.get_reverse()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
     if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": az.get_reverse()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
     if request.method == "POST":
@@ -649,7 +649,7 @@ def vratit(request, ident_cely):
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
             )
-            return JsonResponse({"redirect": az.get_reverse()})
+            return JsonResponse({"redirect": az.get_absolute_url()})
         else:
             logger.debug("The form is not valid")
             logger.debug(form.errors)
@@ -837,7 +837,7 @@ def smazat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": az.archeologicky_zaznam.get_reverse()},
+            {"redirect": az.archeologicky_zaznam.get_absolute_url()},
             status=403,
         )
     if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -894,9 +894,9 @@ def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        return odpojit(request, ident_cely, arch_z_ident_cely, "arch_z")
+        return odpojit(request, ident_cely, arch_z_ident_cely, az)
     else:
-        return odpojit(request, ident_cely, arch_z_ident_cely, "lokalita")
+        return odpojit(request, ident_cely, arch_z_ident_cely, az)
 
 
 @login_required
@@ -1414,7 +1414,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
-                {"redirect": context["object"].get_reverse()},
+                {"redirect": context["object"].get_absolute_url()},
                 status=403,
             )
         return self.render_to_response(context)
@@ -1424,7 +1424,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         az = context["object"]
         if check_stav_changed(request, az):
             return JsonResponse(
-                {"redirect": az.get_reverse()},
+                {"redirect": az.get_absolute_url()},
                 status=403,
             )
 
@@ -1451,7 +1451,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         )
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
 
-        return JsonResponse({"redirect": az.get_reverse()})
+        return JsonResponse({"redirect": az.get_absolute_url()})
 
 
 class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
@@ -1473,7 +1473,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
-                {"redirect": context["object"].get_reverse()},
+                {"redirect": context["object"].get_absolute_url()},
                 status=403,
             )
         form = PripojitProjektForm()
@@ -1486,7 +1486,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         az = context["object"]
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
-                {"redirect": az.get_reverse()},
+                {"redirect": az.get_absolute_url()},
                 status=403,
             )
         form = PripojitProjektForm(data=request.POST)
@@ -1514,7 +1514,7 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             logger.debug(form.non_field_errors())
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
-        return redirect(az.get_reverse())
+        return redirect(az.get_absolute_url())
 
 
 class ArchZAutocomplete(autocomplete.Select2QuerySetView):

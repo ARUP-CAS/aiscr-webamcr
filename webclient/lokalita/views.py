@@ -146,27 +146,22 @@ class LokalitaCreateView(CreateView, LoginRequiredMixin):
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             lokalita = form.save(commit=False)
-            try:
-                region = az.hlavni_katastr.okres.kraj.rada_id
-                typ = lokalita.typ_lokality.zkratka
-                az.ident_cely = get_temp_lokalita_ident(typ, region)
-            except MaximalIdentNumberError as e:
-                logger_s.debug("Maximum lokalit dosazeno")
-                messages.add_message(self.request, messages.ERROR, e.message)
-                return self.form_invalid(form)
-            else:
-                az.save()
-                form_az.save_m2m()
-                az.set_zapsany(self.request.user)
-                lokalita.archeologicky_zaznam = az
-                lokalita.save()
+            az.save()
+            form_az.save_m2m()
+            region = az.hlavni_katastr.okres.kraj.rada_id
+            typ = lokalita.typ_lokality.zkratka
+            az.ident_cely = get_temp_lokalita_ident(typ, region, az)
+            az.save()
+            az.set_zapsany(self.request.user)
+            lokalita.archeologicky_zaznam = az
+            lokalita.save()
 
-                messages.add_message(
-                    self.request, messages.SUCCESS, LOKALITA_USPESNE_ZAPSANA
-                )
-                logger_s.debug(
-                    f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}."
-                )
+            messages.add_message(
+                self.request, messages.SUCCESS, LOKALITA_USPESNE_ZAPSANA
+            )
+            logger_s.debug(
+                f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}."
+            )
         else:
             logger_s.debug(form_az.errors)
             self.form_invalid(form)

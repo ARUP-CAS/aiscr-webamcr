@@ -54,13 +54,12 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(f"/arch-z/lokalita/zapsat", data, follow=True)
-        az = ArcheologickyZaznam.objects.filter(ident_cely="X-C-M0000001").first()
-        az.refresh_from_db()
+        az = ArcheologickyZaznam.objects.filter(ident_cely="X-C-M0000006").first()
         self.assertEqual(200, response.status_code)
         self.assertEqual(az.lokalita.typ_lokality.pk, LOKALITA_TYP_NEW)
         self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ANONYM_ID)
         self.assertTrue(
-            len(ArcheologickyZaznam.objects.filter(ident_cely="X-C-M0000001")) == 1
+            len(ArcheologickyZaznam.objects.filter(ident_cely="X-C-M0000006")) == 1
         )
 
     def test_get_editovat(self):
