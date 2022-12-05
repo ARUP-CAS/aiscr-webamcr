@@ -14,8 +14,8 @@ logger_s = structlog.get_logger(__name__)
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
     model = User
-    list_display = ("email", "is_active", "organizace", "ident_cely", "first_name", "last_name", "telefon",
-                    "is_active", "date_joined", "last_login", "osoba")
+    list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
+                    "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
     fieldsets = (
         (
