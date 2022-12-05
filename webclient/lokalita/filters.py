@@ -62,6 +62,7 @@ class LokalitaFilter(ArchZaznamFilter):
     druh_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_DRUH),
         label=_("lokalita.filter.druhLokality.label"),
+        field_name="druh",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -71,6 +72,7 @@ class LokalitaFilter(ArchZaznamFilter):
     zachovalost_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_STAV_DOCHOVANI),
         label=_("lokalita.filter.zachovalostLokality.label"),
+        field_name="zachovalost",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -80,6 +82,7 @@ class LokalitaFilter(ArchZaznamFilter):
     jistota_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_JISTOTA_URCENI),
         label=_("lokalita.filter.jistotaLokality.label"),
+        field_name="jistota",
         widget=SelectMultiple(
             attrs={"class": "selectpicker", "data-live-search": "true"}
         ),
@@ -191,7 +194,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
             ),
             Div(
                 Div("komponenta_obdobi", css_class="col-sm-2"),
-                Div("komponenta_datace", css_class="col-sm-2"),
+                Div("komponenta_jistota", css_class="col-sm-2"),
                 Div("komponenta_areal", css_class="col-sm-2"),
                 Div("komponenta_aktivity", css_class="col-sm-2"),
                 Div("komponenta_poznamka", css_class="col-sm-4"),
