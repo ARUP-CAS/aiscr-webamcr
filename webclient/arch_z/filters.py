@@ -12,6 +12,7 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
+    BooleanFilter,
 )
 from django_filters.widgets import DateRangeWidget
 
@@ -181,9 +182,17 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    komponenta_datace = CharFilter(
-        label=_("lokalita.filter.komponentaDatace.label"),
-        field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__presna_datace",
+    komponenta_jistota = MultipleChoiceFilter(
+        label=_("lokalita.filter.komponentaJistota.label"),
+        method="filter_komponenta_jistota",
+        # field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota",
+        choices=[
+            ("True", _("lokalita.filter.komponentaJistota.ano.label")),
+            ("False", _("lokalita.filter.komponentaJistota.ne.label")),
+        ],
+        widget=SelectMultiple(
+            attrs={"class": "selectpicker", "data-live-search": "true"}
+        ),
         distinct=True,
     )
     komponenta_aktivity = ModelMultipleChoiceFilter(
@@ -290,20 +299,39 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
 
     def filtr_katastr_okres(self, queryset, name, value):
         return queryset.filter(
-            Q(harcheologicky_zaznam__hlavni_katastr__okres__in=value)
+            Q(archeologicky_zaznam__hlavni_katastr__okres__in=value)
             | Q(archeologicky_zaznam__katastry__okres__in=value)
         ).distinct()
 
     def filter_has_positive_find(self, queryset, name, value):
         if "True" in value and "False" in value:
-            return queryset.distinct()
+            return queryset.filter(
+                Q(
+                    archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+                )
+                | Q(
+                    archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
+                )
+            ).distinct()
         elif "True" in value:
             return queryset.filter(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
         elif "False" in value:
+            return queryset.filter(
+                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
+            ).distinct()
+
+    def filter_komponenta_jistota(self, queryset, name, value):
+        if "True" in value and "False" in value:
+            return queryset.distinct()
+        elif "True" in value:
+            return queryset.filter(
+                archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota=True
+            ).distinct()
+        elif "False" in value:
             return queryset.exclude(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+                archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota=True
             ).distinct()
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
@@ -705,7 +733,7 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
             ),
             Div(
                 Div("komponenta_obdobi", css_class="col-sm-2"),
-                Div("komponenta_datace", css_class="col-sm-2"),
+                Div("komponenta_jistota", css_class="col-sm-2"),
                 Div("komponenta_areal", css_class="col-sm-2"),
                 Div("komponenta_aktivity", css_class="col-sm-2"),
                 Div("komponenta_poznamka", css_class="col-sm-4"),
