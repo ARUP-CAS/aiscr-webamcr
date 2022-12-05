@@ -486,14 +486,21 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     def filter_has_positive_find(self, queryset, name, value):
         if "True" in value and "False" in value:
-            return queryset
+            return queryset.filter(
+                Q(
+                    akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+                )
+                | Q(
+                    akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
+                )
+            ).distinct()
         elif "True" in value:
             return queryset.filter(
                 akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
         elif "False" in value:
-            return queryset.exclude(
-                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+            return queryset.filter(
+                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
             ).distinct()
 
     def filter_by_oblast(self, queryset, name, value):

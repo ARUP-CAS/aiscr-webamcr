@@ -2,6 +2,11 @@ import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from django_tables2.utils import A
 from django.utils.translation import gettext as _
+from django.utils.html import conditional_escape, mark_safe
+from django.utils.encoding import force_str
+from django.db import models
+
+from heslar.models import RuianKatastr
 
 from .models import Lokalita
 
@@ -32,7 +37,7 @@ class LokalitaTable(ColumnShiftTableBootstrap4):
     dalsi_katastry = tables.Column(
         verbose_name=_("Další katastry"),
         default="",
-        accessor="archeologicky_zaznam.katastry",
+        accessor="archeologicky_zaznam.katastry.all",
     )
     pristupnost = tables.Column(
         verbose_name=_("Pristupnost"),
@@ -42,6 +47,32 @@ class LokalitaTable(ColumnShiftTableBootstrap4):
 
     columns_to_hide = None
     first_columns = None
+
+    def render_dalsi_katastry(self, value):
+        if value:
+            items = []
+            for item in value:
+                content = conditional_escape(force_str(item))
+                items.append(content)
+
+            return mark_safe(conditional_escape("; ").join(items))
+        else:
+            return ""
+
+    def order_dalsi_katastry(self, queryset, is_descending):
+        comments = (
+            RuianKatastr.objects.filter(
+                archeologickyzaznamkatastr__archeologicky_zaznam_id=models.OuterRef(
+                    "pk"
+                )
+            )
+            .order_by("nazev")
+            .values("nazev")
+        )
+        queryset = queryset.annotate(length=models.Subquery(comments[:1])).order_by(
+            ("-" if is_descending else "") + "length"
+        )
+        return (queryset, True)
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
