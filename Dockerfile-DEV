@@ -3,11 +3,6 @@
 #### Use latest Ubuntu
 FROM ubuntu:focal
 
-# Update base container install
-RUN apt-get -qq update && apt-get -qq -y install cron
-RUN apt-get -y -qq install nano
-RUN apt-get -y -qq install sudo
-#RUN apt-get upgrade -y
 
 ARG VERSION_APP
 ARG TAG_APP
@@ -21,8 +16,11 @@ RUN echo $TZ > /etc/timezone
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
+# Update base container install
+RUN apt-get -qq update && apt-get -qq -y install cron
+RUN apt-get -y -qq install nano curl && apt-get -y -qq install sudo
+
 # Install GDAL dependencies
-RUN apt-get update
 RUN apt-get install -y python3-pip libgdal-dev locales gettext
 
 
@@ -72,4 +70,4 @@ USER user
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["entrypoint.sh"]
+CMD ["entrypoint.dev.sh"]

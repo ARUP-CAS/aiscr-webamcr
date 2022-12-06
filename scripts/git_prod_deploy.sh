@@ -115,32 +115,34 @@ export REVISION_REPO=${git_revision}
 
 # BUILD docker commands syntax
 cmd_docker_base="docker-compose -p ${project_name} -f ${compose_prod} -f ${compose_proxy}"
-cmd_docker_base_ext="${cmd_docker_base} -f ${compose_override}"
+cmd_docker_base_alt="${cmd_docker_base} -f ${compose_override}"
 cmd_docker_build_args="--pull --build-arg VERSION_APP=${git_revision} --build-arg TAG_APP=$(git symbolic-ref HEAD)"
 
 cmd_docker_build="${cmd_docker_base} build ${cmd_docker_build_args}"
-cmd_docker_build_ext="${cmd_docker_base_ext} build ${cmd_docker_build_args}"
+cmd_docker_build_alt="${cmd_docker_base_ext} build ${cmd_docker_build_args}"
 
 cmd_docker_up="${cmd_docker_base} up -d"
-cmd_docker_up_ext="${cmd_docker_base_ext} up -d"
+cmd_docker_up_alt="${cmd_docker_base_alt} up -d"
 
 cmd_docker_down="${cmd_docker_base} down --remove-orphans"
-cmd_docker_down_ext="${cmd_docker_base_ext} down --remove-orphans" 
+cmd_docker_down_alt="${cmd_docker_base_alt} down --remove-orphans" 
 
 # BUILD docker commands syntax
  if [ -z "${do_override}" ]; then 
 
 
      er "${cmd_docker_down}"
+     er "docker image prune && docker container prune"
      er "${cmd_docker_build}" && er "${cmd_docker_up}" && echo_dec "$msg_success" || echo "${msg_fail_build}"
 
  else
      
-     er "${cmd_docker_down_ext}"
-     er "${cmd_docker_build_ext}" && er "${cmd_docker_up_ext}" && echo_dec "$msg_success" || echo "${msg_fail_build}"
+     er "${cmd_docker_down_alt}"
+     er "${cmd_docker_build_alt}" && er "${cmd_docker_up_alt}" && echo_dec "$msg_success" || echo "${msg_fail_build}"
 
 fi
 
+docker ps
 unset REVISION_REPO
 exit 0
 

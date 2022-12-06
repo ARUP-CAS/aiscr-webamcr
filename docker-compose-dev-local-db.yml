@@ -4,8 +4,9 @@ services:
   web:
     build:
       context: .
+      dockerfile: Dockerfile-DEV
     #sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then web service must be restarted manually to work correctly
-    command: /scripts/dev.sh #sh -c "sleep 100 && python3 manage.py runserver 0.0.0.0:8000"
+    command: sh -c "sleep 100 && /scripts/entrypoint.dev.sh"
     #  [
     #    "sh",
     #    "-c",
@@ -29,6 +30,7 @@ services:
   livereload:
     build:
       context: .
+      dockerfile: Dockerfile-DEV
     #sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then livereload service must be restarted manually to work correctly
     command: sh -c "sleep 120 && python3 manage.py livereload --host=0.0.0.0 --port=35729"
     volumes:

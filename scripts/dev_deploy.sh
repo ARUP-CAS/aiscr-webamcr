@@ -88,7 +88,7 @@ cmd_docker_stop="${cmd_docker_base} stop"
 cmd_docker_restart="${cmd_docker_base} restart"
 cmd_docker_down="${cmd_docker_base} down --remove-orphans"
 
-while getopts "hp:f:dxr:est" option; do
+while getopts "hdxr:est" option; do
    case ${option} in
       h) # display Help
          Help
@@ -123,6 +123,8 @@ while getopts "hp:f:dxr:est" option; do
          exit;;
    esac
 done
+
+docker ps
 
 unset REVISION_REPO
 exit 0
