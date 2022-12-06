@@ -12,16 +12,13 @@ ENV TAG=${TAG_APP}
 
 # Update base container install
 RUN apt-get clean
-RUN apt-get update
-#RUN apt-get upgrade -y
 
 ENV TZ 'Europe/Prague'
 RUN echo $TZ > /etc/timezone
-RUN apt-get update
+RUN apt-get update && apt-get -qq -y install cron
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install GDAL dependencies
-RUN apt-get update
 RUN apt-get install -y python3-pip libgdal-dev locales gettext
 
 # Ensure locales configured correctly
