@@ -18,7 +18,9 @@ echo_dec ()
 er () {
     echo_dec "${1}"
     eval "${1}"
+    ret_val=$?
     echo "DONE: ${1}"
+    return $ret_val
 }
 
 

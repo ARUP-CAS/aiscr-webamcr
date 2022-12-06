@@ -40,7 +40,9 @@ echo_dec "# DEPLOYMENT in from GIT Repository, i.e. building docker images from 
 er () {
     echo_dec "${1}"
     eval "${1}"
+    ret_val=$?
     echo "DONE: ${1}"
+    return $ret_val
 }
 
 
