@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile-production
     secrets:
       - db_conf
+      - mail_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
@@ -35,3 +36,5 @@ networks:
 secrets:
   db_conf:
    file : secrets.json
+  mail_conf:
+   file : secrets_mail_client.json
