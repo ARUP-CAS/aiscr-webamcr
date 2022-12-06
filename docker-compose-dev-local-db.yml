@@ -14,6 +14,7 @@ services:
     #  ]
     secrets:
       - db_conf
+      - mail_conf
     restart: on-failure
     volumes:
       - ./webclient:/code
@@ -38,6 +39,7 @@ services:
     restart: on-failure
     secrets:
       - db_conf
+      - mail_conf
     ports:
       - "35729:35729"
     environment:
@@ -87,3 +89,5 @@ secrets:
     file : ./secrets/local_db_pass
   db_conf:
      file: ./secrets.alternative.json
+  mail_conf:
+     file: ./secrets_mail_client.json

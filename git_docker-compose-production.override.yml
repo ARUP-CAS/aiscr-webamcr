@@ -4,7 +4,10 @@ services:
   web:
     secrets:
       - db_conf
+      - mail_conf
 
 secrets:
   db_conf:
    file : secrets.alternative.json
+  mail_conf:
+   file : secrets_mail_client.json

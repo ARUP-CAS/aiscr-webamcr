@@ -5,6 +5,7 @@ services:
     image: huldcz/aiscr_prod:latest
     secrets:
       - db_conf
+      - mail_conf
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
@@ -33,4 +34,6 @@ networks:
 
 secrets:
   db_conf:
-   external : true
+   external: true
+  mail_conf:
+   external: true
