@@ -14,7 +14,7 @@ ARG TAG_APP
 
 ENV VERSION=$VERSION_APP
 ENV TAG=$TAG_APP
-
+ENV DEV_CONTAINER=1
 
 ENV TZ "Europe/Prague"
 RUN echo $TZ > /etc/timezone
@@ -60,6 +60,7 @@ RUN mkdir -p /vol/web/locale
 RUN mkdir -p /vol/web/nginx/data
 ADD ./proxy/custom_html /vol/web/nginx/data
 
+RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
 RUN adduser user
 RUN passwd -d user
 RUN usermod -aG sudo user
