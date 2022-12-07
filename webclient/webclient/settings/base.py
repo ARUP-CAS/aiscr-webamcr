@@ -16,6 +16,14 @@ file_path = (
 with open(BASE_DIR / file_path, "r") as f:
     secrets = json.load(f)
 
+file_mail_path = (
+    "/run/secrets/mail_conf"
+    if os.path.exists(BASE_DIR / "/run/secrets/mail_conf")
+    else "webclient/settings/secrets_mail_client.json"
+)
+with open(BASE_DIR / file_mail_path, "r") as f:
+    secrets_mail = json.load(f)
+
 
 def get_secret(setting, file=secrets):
     try:
@@ -84,6 +92,7 @@ INSTALLED_APPS = [
     "lokalita",
     "bs4",
     "django_extensions",
+    "watchdog"
 ]
 
 MIDDLEWARE = [
@@ -103,6 +112,7 @@ MIDDLEWARE = [
 CRON_CLASSES = [
     "cron.job01.MyCronJobPianToJTSK",
     "cron.job02.MyCronJobPianToWGS84",
+    "cron.notifications.Notifications",
 ]
 
 ROOT_URLCONF = "webclient.urls"
@@ -308,8 +318,10 @@ STATICFILES_FINDERS = [
 ]
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "192.168.254.17"
-EMAIL_PORT = "25"
+EMAIL_HOST = get_secret("EMAIL_HOST", file=secrets_mail)
+EMAIL_PORT = get_secret("EMAIL_PORT", file=secrets_mail)
+EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER", file=secrets_mail)
+EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD", file=secrets_mail)
 EAMIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = "noreply@amcr.cz"

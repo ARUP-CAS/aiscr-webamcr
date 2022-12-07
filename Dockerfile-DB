@@ -1,18 +1,20 @@
 FROM postgis/postgis:14-3.3
-VOLUME /tmp
 
 ARG VERSION_APP
 ARG TAG_APP
+ARG DB_BACKUP_FILE
 
 ENV VERSION=$VERSION_APP
 ENV TAG=$TAG_APP
 
-ENV FILE=backup_file_db_v4.tar
+#RUN export POSTGRES_PASSWORD_FILE=$(cat /run/secrets/local_db_pass)
 
-COPY ${FILE} /tmp/${FILE}
-RUN echo ${FILE}
-COPY /scripts/restore_database.sh /docker-entrypoint-initdb.d/restore_database.sh
+ENV USED_DB_BACKUP=${DB_BACKUP_FILE}
+COPY ${USED_DB_BACKUP} /tmp/${USED_DB_BACKUP}
+
+COPY ./scripts/restore_database.sh /docker-entrypoint-initdb.d/restore_database.sh
 RUN sed -i 's/\r$//g' /docker-entrypoint-initdb.d/restore_database.sh
 RUN chmod 777 /docker-entrypoint-initdb.d/restore_database.sh
 
+RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION},DB_BACKUP:${USED_DB_BACKUP}" > version.txt
 EXPOSE 5432

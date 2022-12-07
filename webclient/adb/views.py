@@ -52,7 +52,7 @@ def zapsat(request, dj_ident_cely):
         logger.debug(form.errors)
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
-    response = redirect(dj.get_reverse())
+    response = redirect(dj.get_absolute_url())
     response.set_cookie("show-form", f"detail_dj_form_{dj.ident_cely}", max_age=1000)
     response.set_cookie(
         "set-active",
@@ -111,7 +111,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse(
                 {
-                    "redirect": dj.get_reverse()
+                    "redirect": dj.get_absolute_url()
                 }
             )
         else:
@@ -119,7 +119,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse(
                 {
-                    "redirect": dj.get_reverse()
+                    "redirect": dj.get_absolute_url()
                 },
                 status=403,
             )

@@ -6,4 +6,4 @@ create table public.odstavky_systemu (
     text_en text not NULL,
     text_cs text not NULL,
     status boolean not NULL
-)
+);

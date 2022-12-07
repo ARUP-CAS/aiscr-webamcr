@@ -1,16 +1,16 @@
 import logging
-
 import structlog
+
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import ProtectedError
-from django.db.models.signals import pre_save, post_save, pre_delete
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 from services.mailer import Mailer
-from uzivatel.models import User, Osoba
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
+
 
 @receiver(pre_save, sender=User)
 def create_ident_cely(sender, instance, **kwargs):
@@ -20,7 +20,8 @@ def create_ident_cely(sender, instance, **kwargs):
         try:
             instance.old = User.objects.get(id=instance.id)
         except ObjectDoesNotExist as err:
-            logger_s.error("signals.create_ident_cely.err", err=err)
+            # Primary for the automatic testing where a new instance is created with ID
+            logger_s.error("uzivatel.signals.create_ident_cely.ObjectDoesNotExist", err=err)
     if instance.pk is None:
         instance.model_is_updated = False
         logger.debug("Running create_ident_cely receiver ...")
@@ -42,17 +43,14 @@ def send_deactivation_email(sender, instance: User, **kwargs):
         if instance.is_active != instance.old.is_active:
             kwargs['update_fields'].append('is_active')
     if kwargs['update_fields']:
-        if 'is_active' in kwargs['update_fields'] and instance.is_active == False:
+        if 'is_active' in kwargs['update_fields'] and instance.is_active is False:
             Mailer.sendEU03(user=instance)
 
 
 @receiver(post_save, sender=User)
 def send_new_user_email_to_admin(sender, instance: User, **kwargs):
-    if (kwargs.get('created') is True) and instance.created_from_admin_panel is False:
-        try:
-            Mailer.sendEU04(user=instance)
-        except ObjectDoesNotExist as err:
-            logger_s.error("signals.send_new_user_email_to_admin.err", err=err)
+    if kwargs.get('created') is True and instance.created_from_admin_panel is False:
+        Mailer.sendEU04(user=instance)
 
 
 @receiver(post_save, sender=User)

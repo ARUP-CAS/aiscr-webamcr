@@ -300,32 +300,13 @@ def get_adb_ident(pian: Pian) -> str:
         raise MaximalIdentNumberError(sequence.sekvence)
 
 
-def get_temp_lokalita_ident(typ, region):
+def get_temp_lokalita_ident(typ, region, lokalita):
     MAXIMAL: int = 9999999
-    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
+    # [region] - [typ] - [7 mistne cislo]
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-" + typ)
-    l = ArcheologickyZaznam.objects.filter(
-        ident_cely__regex="^" + prefix + "\\d{7}$",
-        typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
-    ).order_by("-ident_cely")
-    if l.filter(ident_cely=str(prefix + "0000001")).count() == 0:
-        return prefix + "0000001"
+    if lokalita.id is not None:
+        id_number = "{0}".format(str(lokalita.id)).zfill(7)
+        return prefix + id_number
     else:
-        # temp number from empty spaces
-        idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
-        idents = [sub.replace(prefix, "") for sub in idents]
-        idents = [sub.lstrip("0") for sub in idents]
-        idents = [eval(i) for i in idents]
-        start = idents[0]
-        end = MAXIMAL
-        missing = sorted(set(range(start, end + 1)).difference(idents))
-        logger.debug(missing[0])
-        if missing[0] >= MAXIMAL:
-            logger.error(
-                "Maximal number of temporary document ident is "
-                + str(MAXIMAL)
-                + "for given region and rada"
-            )
-            raise MaximalIdentNumberError(MAXIMAL)
-        sequence = str(missing[0]).zfill(7)
-        return prefix + sequence
+        logger.error("Could not assign temporary identifier to lokalita with Null ID")
+        return None

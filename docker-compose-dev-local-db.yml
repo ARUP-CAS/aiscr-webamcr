@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    #sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then web service must be restarted manually to work correctly
+    command: sh -c "sleep 100 && /scripts/entrypoint.dev.sh"
+    #  [
+    #    "sh",
+    #    "-c",
+    #    "pip install debugpy -t /tmp && python3 /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000",
+    #  ]
+    secrets:
+      - db_conf
+      - mail_conf
+    restart: on-failure
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+      - locale_data:/vol/web/locale
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    environment:
+      - DJANGO_SETTINGS_MODULE=webclient.settings.dev
+    depends_on:
+      - db  
+  
+  livereload:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    #sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then livereload service must be restarted manually to work correctly
+    command: sh -c "sleep 120 && python3 manage.py livereload --host=0.0.0.0 --port=35729"
+    volumes:
+      - ./webclient:/code
+    restart: on-failure
+    secrets:
+      - db_conf
+      - mail_conf
+    ports:
+      - "35729:35729"
+    environment:
+      - DJANGO_SETTINGS_MODULE=webclient.settings.dev
+    depends_on:
+      - web
+      - db
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile-DB
+    ports:
+      - "5432:5432"
+    secrets:
+     - local_db_pass
+    environment:
+      - DBNAME=aiscrrestore
+      - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
+    
+  pgadmin:
+    image: dpage/pgadmin4
+    secrets:
+      - pg_admin_pass
+    ports:
+     - 88:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.net
+      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pg_admin_pass
+    volumes:
+      - pg_admin_vol:/var/lib/pgadmin/
+    depends_on:
+      - db
+
+  memcached:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+
+volumes:
+  locale_data:
+  pg_admin_vol:
+
+secrets:
+  pg_admin_pass:
+   file: ./secrets/pg_admin_pass
+  local_db_pass:
+    file : ./secrets/local_db_pass
+  db_conf:
+     file: ./secrets.alternative.json
+  mail_conf:
+     file: ./secrets_mail_client.json

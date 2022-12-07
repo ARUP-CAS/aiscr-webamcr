@@ -1044,7 +1044,8 @@ def vratit_navrh_zruseni(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, proj_ident_cely):
-    return odpojit(request, ident_cely, proj_ident_cely, "projekt")
+    projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
+    return odpojit(request, ident_cely, proj_ident_cely, projekt)
 
 
 @login_required

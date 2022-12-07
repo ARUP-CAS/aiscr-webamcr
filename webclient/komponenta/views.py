@@ -265,7 +265,7 @@ def smazat(request, ident_cely):
             logger.debug("Byla smazána komponenta: " + str(resp))
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             if dj:
-                response = JsonResponse({"redirect": dj.get_reverse()})
+                response = JsonResponse({"redirect": dj.get_absolute_url()})
                 response.set_cookie(
                     "show-form",
                     f"detail_dj_form_{dj.ident_cely}",
@@ -289,7 +289,7 @@ def smazat(request, ident_cely):
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             if dj:
                 response = JsonResponse(
-                    {"redirect": dj.get_reverse()},
+                    {"redirect": dj.get_absolute_url()},
                     status=403,
                 )
                 response.set_cookie(

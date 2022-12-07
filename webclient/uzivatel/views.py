@@ -1,34 +1,34 @@
 import logging
+
 import structlog
-
-from django.http import JsonResponse
-from django.db.models.functions import Concat
+from dal import autocomplete
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.db import IntegrityError
 from django.db.models import F, Value, CharField, IntegerField
+from django.db.models import Q
+from django.db.models.functions import Concat
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_http_methods
+from django.views.generic.edit import UpdateView
+from django_registration.backends.activation.views import RegistrationView
 
+from core.decorators import odstavka_in_progress
 from core.message_constants import (
     OSOBA_JIZ_EXISTUJE,
     OSOBA_USPESNE_PRIDANA,
     MAINTENANCE_AFTER_LOGOUT,
     AUTOLOGOUT_AFTER_LOGOUT,
 )
-from dal import autocomplete
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import IntegrityError
-from django.db.models import Q
-from django.shortcuts import redirect, render
-from django.utils.translation import gettext_lazy as _
-from django.urls import reverse_lazy, reverse
-from django.views.decorators.http import require_http_methods
-from django.views.generic.edit import UpdateView
-from django_registration.backends.activation.views import RegistrationView
-from django.contrib.auth.views import LoginView, LogoutView
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
-    UpdatePasswordSettings, AuthUserChangeForm
+    UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm
 from uzivatel.models import Osoba, User
-from core.decorators import odstavka_in_progress
-from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -90,7 +90,6 @@ class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetV
 @login_required
 @require_http_methods(["POST", "GET"])
 def create_osoba(request):
-
     if request.method == "POST":
         form = OsobaForm(request.POST)
         if form.is_valid():
@@ -146,6 +145,7 @@ class UserRegistrationView(RegistrationView):
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
 
+
 @method_decorator(odstavka_in_progress, name='dispatch')
 class UserLoginView(LoginView):
     authentication_form = AuthUserLoginForm
@@ -180,7 +180,8 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
         context["form"] = self.form_class(instance=self.request.user)
         context["form_read_only"] = AuthReadOnlyUserChangeForm(instance=self.request.user, prefix="ro_")
         context["form_password"] = UpdatePasswordSettings(instance=self.request.user, prefix="pass")
-        context["sing_in_history"] = self.get_object().history.all()[:5]
+        context["sign_in_history"] = self.get_object().history.all()[:5]
+        context["form_notifications"] = NotificationsForm(instance=self.request.user)
         return context
 
     def _change_password(self, request, request_data):
@@ -217,8 +218,8 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
                                  _("uzivatel.UserAccountUpdateView._change_password.fail"))
             context = self.invalid_form_context(form, "form")
             return render(request, self.template_name, context)
-        if tuple(request_data.get("pass-password1", [""])) != ("", ) \
-                or tuple(request_data.get("pass-password2", [""])) != ("", ):
+        if tuple(request_data.get("pass-password1", [""])) != ("",) \
+                or tuple(request_data.get("pass-password2", [""])) != ("",):
             result = self._change_password(request, request_data)
             if result is not None:
                 return render(request, self.template_name, result)
@@ -228,3 +229,11 @@ class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
         return render(request, self.template_name, context)
 
 
+@login_required
+def update_notifications(request):
+    form = NotificationsForm(request.POST)
+    if form.is_valid():
+        notifications = form.cleaned_data.get('notification_types')
+        user: User = request.user
+        user.notification_types.set(notifications)
+        return redirect("/upravit-uzivatele/")
