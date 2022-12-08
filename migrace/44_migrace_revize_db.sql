@@ -181,7 +181,7 @@ ALTER TABLE pian  ADD CONSTRAINT pian_historie UNIQUE(historie);
 
 
 
-ALTER TABLE projekt DROP COLUMN  planovane_zahajeni_text;
+ALTER TABLE projekt DROP COLUMN planovane_zahajeni_text;
 ALTER TABLE projekt ALTER COLUMN ident_cely  SET NOT NULL ;
 ALTER TABLE projekt  ADD CONSTRAINT projekt_soubory UNIQUE(soubory);
 ALTER TABLE projekt  ADD CONSTRAINT projekt_historie UNIQUE(historie);
