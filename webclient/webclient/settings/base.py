@@ -92,7 +92,8 @@ INSTALLED_APPS = [
     "lokalita",
     "bs4",
     "django_extensions",
-    "watchdog"
+    "watchdog",
+    'django_select2',
 ]
 
 MIDDLEWARE = [
