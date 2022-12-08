@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'arch_z:list' %}" class="card app-card-entity app-card-vybrat">
+        <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -41,7 +41,7 @@
       </div>
       
       <div class="col">
-        <a href="{% url 'arch_z:list' %}?stav=3" class="card app-card-entity app-card-archivovat">
+        <a href="{% url 'arch_z:list' %}?stav=2" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>

@@ -11,6 +11,34 @@ from heslar.models import RuianKatastr
 from .models import Lokalita
 
 
+class DalsiKatastryColumn(tables.Column):
+    def render(self, value):
+        if value:
+            items = []
+            for item in value:
+                content = conditional_escape(force_str(item))
+                items.append(content)
+
+            return mark_safe(conditional_escape("; ").join(items))
+        else:
+            return ""
+
+    def order(self, queryset, is_descending):
+        comments = (
+            RuianKatastr.objects.filter(
+                archeologickyzaznamkatastr__archeologicky_zaznam_id=models.OuterRef(
+                    "pk"
+                )
+            )
+            .order_by("nazev")
+            .values("nazev")
+        )
+        queryset = queryset.annotate(length=models.Subquery(comments[:1])).order_by(
+            ("-" if is_descending else "") + "length"
+        )
+        return (queryset, True)
+
+
 class LokalitaTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True, accessor="archeologicky_zaznam.ident_cely")
@@ -34,7 +62,7 @@ class LokalitaTable(ColumnShiftTableBootstrap4):
         default="",
         accessor="archeologicky_zaznam.uzivatelske_oznaceni",
     )
-    dalsi_katastry = tables.Column(
+    dalsi_katastry = DalsiKatastryColumn(
         verbose_name=_("Další katastry"),
         default="",
         accessor="archeologicky_zaznam.katastry.all",
@@ -47,32 +75,6 @@ class LokalitaTable(ColumnShiftTableBootstrap4):
 
     columns_to_hide = None
     first_columns = None
-
-    def render_dalsi_katastry(self, value):
-        if value:
-            items = []
-            for item in value:
-                content = conditional_escape(force_str(item))
-                items.append(content)
-
-            return mark_safe(conditional_escape("; ").join(items))
-        else:
-            return ""
-
-    def order_dalsi_katastry(self, queryset, is_descending):
-        comments = (
-            RuianKatastr.objects.filter(
-                archeologickyzaznamkatastr__archeologicky_zaznam_id=models.OuterRef(
-                    "pk"
-                )
-            )
-            .order_by("nazev")
-            .values("nazev")
-        )
-        queryset = queryset.annotate(length=models.Subquery(comments[:1])).order_by(
-            ("-" if is_descending else "") + "length"
-        )
-        return (queryset, True)
 
     def get_column_default_show(self):
         self.column_default_show = list(self.columns.columns.keys())
