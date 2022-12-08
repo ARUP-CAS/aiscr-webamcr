@@ -45,6 +45,7 @@ from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
+    ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     ZAPSANI_AZ,
     ZMENA_AZ,
@@ -227,6 +228,31 @@ class AkceRelatedRecordUpdateView(TemplateView):
             .order_by("id")
         )
 
+    def get_vedouci(self, context):
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(readonly=True),
+            extra=0,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            instance=context["zaznam"].akce,
+            prefix="",
+        )
+        akce_zaznam_ostatni_vedouci = []
+        for vedouci in AkceVedouci.objects.filter(akce=context["zaznam"].akce).order_by(
+            "id"
+        ):
+            vedouci: AkceVedouci
+            akce_zaznam_ostatni_vedouci.append(
+                [str(vedouci.vedouci), str(vedouci.organizace)]
+            )
+        context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
+        context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
+        context["ostatni_vedouci_objekt_formset_readonly"] = True
+        context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         zaznam = self.get_archeologicky_zaznam()
@@ -246,6 +272,11 @@ class AkceRelatedRecordUpdateView(TemplateView):
                 else False
             )
         context["app"] = "akce"
+        context["showbackdetail"] = False
+        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+                context["showbackdetail"] = True
+        self.get_vedouci(context)
         return context
 
 
@@ -307,7 +338,9 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
         return context
 
 
-class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
+class DokumentacniJednotkaUpdateView(
+    LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView
+):
     template_name = "arch_z/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
@@ -1052,8 +1085,8 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     zmenit_proj_akci = False
     zmenit_sam_akci = False
     if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
-        if user.hlavni_role == archivar_group:
+        allowed_groups = Group.objects.filter(id__in=[ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])
+        if user.hlavni_role in allowed_groups:
             if archeologicky_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 zmenit_proj_akci = True
             else:
