@@ -21,7 +21,8 @@ class NeidentAkce(models.Model):
         db_column="dokument_cast",
         related_name="neident_akce",
         blank=True,
-        null=True,
+        null=False,
+        primary_key=True,
     )
     vedouci = models.ManyToManyField(
         Osoba,
