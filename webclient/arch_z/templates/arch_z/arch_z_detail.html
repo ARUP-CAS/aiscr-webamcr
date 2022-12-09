@@ -67,7 +67,7 @@
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.organizace|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
@@ -93,7 +93,7 @@
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Specifikace data" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">

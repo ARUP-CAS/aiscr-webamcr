@@ -1,7 +1,8 @@
 import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
-from django_tables2.utils import A
 from django.utils.translation import gettext as _
+
+from lokalita.tables import DalsiKatastryColumn
 
 from .models import Akce
 
@@ -24,10 +25,10 @@ class AkceTable(ColumnShiftTableBootstrap4):
         default="",
         accessor="archeologicky_zaznam.uzivatelske_oznaceni",
     )
-    dalsi_katastry = tables.Column(
+    dalsi_katastry = DalsiKatastryColumn(
         verbose_name=_("Další katastry"),
         default="",
-        accessor="archeologicky_zaznam.katastry",
+        accessor="archeologicky_zaznam.katastry.all",
     )
 
     columns_to_hide = None
