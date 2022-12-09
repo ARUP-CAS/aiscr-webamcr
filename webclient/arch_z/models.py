@@ -438,11 +438,11 @@ class ExterniOdkaz(models.Model):
         db_table = "externi_odkaz"
 
 
-def get_akce_ident(region, temp=None):
+def get_akce_ident(region, temp=None, id=None):
     MAXIMAL: int = 999999
     # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
     if temp:
-        prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9")
+        return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + str(id) + "A")
     else:
         prefix = str(region + "-9")
     l = ArcheologickyZaznam.objects.filter(
