@@ -139,7 +139,6 @@ class Migration(migrations.Migration):
             name='HeslarDokumentTypMaterialRada',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('validated', models.SmallIntegerField()),
                 ('dokument_material', models.ForeignKey(db_column='dokument_material', limit_choices_to={'nazev_heslare': 12}, on_delete=django.db.models.deletion.PROTECT, related_name='material', to='heslar.heslar', verbose_name='heslar.models.HeslarDokumentTypMaterialRada.dokument_material')),
                 ('dokument_rada', models.ForeignKey(db_column='dokument_rada', limit_choices_to={'nazev_heslare': 26}, on_delete=django.db.models.deletion.PROTECT, related_name='rada', to='heslar.heslar', verbose_name='heslar.models.HeslarDokumentTypMaterialRada.dokument_rada')),
                 ('dokument_typ', models.ForeignKey(db_column='dokument_typ', limit_choices_to={'nazev_heslare': 35}, on_delete=django.db.models.deletion.PROTECT, related_name='typ', to='heslar.heslar', verbose_name='heslar.models.HeslarDokumentTypMaterialRada.dokument_typ')),
