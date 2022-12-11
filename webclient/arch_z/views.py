@@ -1,27 +1,10 @@
 import logging
-from django.views import View
 
 import simplejson as json
 import structlog
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.forms import inlineformset_factory
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from django.utils.http import is_safe_url
-from django.utils.translation import gettext as _
-from django.views.decorators.http import require_http_methods
-from django.views.generic import TemplateView
-from django.contrib.auth.models import Group
-from dal import autocomplete
-from django.template.loader import render_to_string
-from services.mailer import Mailer
-
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
+from arch_z.filters import AkceFilter
 from arch_z.forms import (
     AkceVedouciFormSetHelper,
     CreateAkceForm,
@@ -35,6 +18,7 @@ from arch_z.models import (
     ExterniOdkaz,
     get_akce_ident,
 )
+from arch_z.tables import AkceTable
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -66,31 +50,34 @@ from core.utils import (
     get_centre_from_akce,
     get_heatmap_pian,
     get_heatmap_pian_density,
+    get_message,
     get_num_pians_from_envelope,
     get_pians_from_envelope,
-    get_message,
 )
-from core.views import check_stav_changed
+from core.views import ExportMixinDate, check_stav_changed
+from dal import autocomplete
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.utils.translation import gettext as _
+from django.views import View
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.mixins import LoginRequiredMixin
-from core.views import ExportMixinDate
+from django.views.generic import TemplateView
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from django.views.generic import TemplateView
 from dokument.models import Dokument
-from dokument.views import odpojit, pripojit
+from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -110,6 +97,7 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from heslar.views import heslar_12
+from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from nalez.forms import (
@@ -119,13 +107,9 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
-from pian.models import Pian
-from projekt.models import Projekt
-from arch_z.tables import AkceTable
-from arch_z.filters import AkceFilter
-from historie.models import Historie
 from projekt.forms import PripojitProjektForm
-from dokument.views import get_komponenta_form_detail
+from projekt.models import Projekt
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -1048,7 +1032,7 @@ def post_akce2kat(request):
     pian_ident_cely = body["pian"]
 
     if len(katastr_name) > 0:
-        [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
+        [poi, geom, presnost] = get_centre_from_akce(katastr_name, pian_ident_cely)
         if len(str(poi)) > 0:
             return JsonResponse(
                 {
@@ -1058,6 +1042,7 @@ def post_akce2kat(request):
                     "geom": str(geom).split(";")[1].replace(", ", ",")
                     if geom
                     else None,
+                    "presnost": str(presnost) if geom else 4,
                 },
                 status=200,
             )

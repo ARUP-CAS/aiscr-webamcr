@@ -580,7 +580,7 @@ map.on('click', function (e) {
     clickOnMap(e);
 });
 
-var mouseOverGeometry =(geom)=>{
+var mouseOverGeometry =(geom, allowClick=true)=>{
     function getContent(e){
         let content="";
         try{
@@ -591,34 +591,36 @@ var mouseOverGeometry =(geom)=>{
         return content;
     }
 
-    geom.on('click', function (e) {
-        if(global_measuring_toolbox._measuring){
-            global_measuring_toolbox._stopMeasuring()
-        }
-        if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit && global_map_can_grab_geom_from_map!=="ku"){
-            map.spin(false);
-            map.spin(true);
-            $.ajax({
-                type: "GET",
-                url:"/pian/seznam-pian/?q="+getContent(e),
-                dataType: 'json',
-                success: function(data){
-                  if(data.results.length>0){
-                  $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
-                  }
-                  map.spin(false);
-                  document.getElementById('id_'+global_map_can_grab_geom_from_map+'-pian' ).removeAttribute("disabled");
-                  //global_map_can_grab_geom_from_map=false;
+    if(allowClick){
+        geom.on('click', function (e) {
+            if(global_measuring_toolbox._measuring){
+                global_measuring_toolbox._stopMeasuring()
+            }
+            if(global_map_can_grab_geom_from_map!==false && !global_map_can_edit && global_map_can_grab_geom_from_map!=="ku"){
+                map.spin(false);
+                map.spin(true);
+                $.ajax({
+                    type: "GET",
+                    url:"/pian/seznam-pian/?q="+getContent(e),
+                    dataType: 'json',
+                    success: function(data){
+                    if(data.results.length>0){
+                    $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
+                    }
+                    map.spin(false);
+                    document.getElementById('id_'+global_map_can_grab_geom_from_map+'-pian' ).removeAttribute("disabled");
+                    //global_map_can_grab_geom_from_map=false;
 
-                },
-                error: ()=>{
-                   // global_map_can_grab_geom_from_map=false;
-                }
-              })
-        } else{
-            clickOnMap(e);
-        }
-    })
+                    },
+                    error: ()=>{
+                    // global_map_can_grab_geom_from_map=false;
+                    }
+                })
+            } else{
+                clickOnMap(e);
+            }
+        })
+    }
 
     geom.on('mouseover', function() {
         if(!global_map_can_edit){
@@ -648,35 +650,38 @@ var mouseOverGeometry =(geom)=>{
     })
 }
 
-var addPointToPoiLayerWithForce = (geom, layer, text, st_text) => {
+var addPointToPoiLayerWithForce = (geom, layer, text, st_text, presnost4=false) => {
     addLogText("arch_z_detail_map.addPointToPoiLayerWithForce")
     let coor = []
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
         //ToDo" 21.06.2022 pinIconYellow
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true }).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true },presnost4).bindPopup(text).addTo(layer));
         if (st_text.includes("POLYGON")) {
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]));
             })
-            mouseOverGeometry(L.polygon(coor, { color: 'gold' }).bindTooltip(text, { sticky: true }).addTo(layer));
+            mouseOverGeometry(L.polygon(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },presnost4).addTo(layer));
         } else if (st_text.includes("LINESTRING")) {
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
             })
-            mouseOverGeometry(L.polyline(coor, { color: 'gold' }).bindTooltip(text, { sticky: true }).addTo(layer));
+            mouseOverGeometry(L.polyline(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },presnost4).addTo(layer));
         }
     } else {
         //ToDo" 21.06.2022 pinIconYellowPoint
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowPoint, zIndexOffset: 2000 }).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: !presnost4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost4 },presnost4).bindPopup(text).addTo(layer));
     }
 
 }
-var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false) => {
+var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false, presnost4=false) => {
     addLogText("arch_z_detail_map.addPointToPoiLayerWithForceG")
     let coor = []
     let myIco = { icon: pinIconPurplePoint };
     let myIco2 = { icon: pinIconPurpleHW };
     let myColor = { color: "rgb(151, 0, 156)" };
+    if(presnost4){
+        myIco = { icon: pinIconPurpleHW};
+    }
 
 
 
@@ -685,27 +690,30 @@ var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false) => {
         myIco = { icon: pinIconGreenPoint, zIndexOffset: 1000 };
         myIco2 = { icon: pinIconGreenHW, zIndexOffset: 1000, changeIcon: true };
         myColor = { color: 'green', zIndexOffset: 1000, };
+        if(presnost4){
+            myIco = { icon: pinIconGreenHW};
+        }
     } /*else if(layer==gm_correct){
         myIco={icon: pinIconRedPoint};
         myIco2={icon: pinIconRed};
         myColor='red';
     }*/
 
-    if (st_text.includes("POLYGON")) {
+    if (st_text.includes("POLYGON") && !presnost4) {
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(", "")]))
         })
-        mouseOverGeometry(L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer));
+        mouseOverGeometry(L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer),presnost4);
     } else if (st_text.includes("LINESTRING")) {
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
-        mouseOverGeometry(L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer));
+        mouseOverGeometry(L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer),presnost4);
     } else if (st_text.includes("POINT")) {
         let i = st_text.split("(")[1].split(")")[0];
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         if (layer === poi_other) {
-            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]), myIco).bindTooltip(text).addTo(layer));
+            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]), myIco).bindTooltip(text).addTo(layer),presnost4);
         }
 
     }
@@ -934,17 +942,17 @@ switchMap = function (overview = false) {
                     var pocet = 0;
                     resPoints.forEach((i) => {
                         pocet += 1;
+                        //console.log(i.geom+" "+poi_dj+" "+i.ident_cely+" "+i.presnost)
                         if (i.dj != null) {
-                            //console.log(i.geom+" "+poi_dj+" "+i.ident_cely)
                             if (!global_map_can_edit) {
-                                addPointToPoiLayerWithForceG(i.geom, poi_dj, i.ident_cely, true)
+                                addPointToPoiLayerWithForceG(i.geom, poi_dj, i.ident_cely, true,i.presnost==4)
                             }
                         }
-                        else {
+                        else{
                             if (!detail_clusters) {
-                                addPointToPoiLayerWithForceG(i.geom, poi_other, i.ident_cely, true)
+                                addPointToPoiLayerWithForceG(i.geom, poi_other, i.ident_cely, true,i.presnost==4)
                             } else {
-                                addPointToPoiLayerWithForceG(i.geom, poi_other_dp, i.ident_cely, true)
+                                addPointToPoiLayerWithForceG(i.geom, poi_other_dp, i.ident_cely, true,i.presnost==4)
                             }
                         }
                     })
