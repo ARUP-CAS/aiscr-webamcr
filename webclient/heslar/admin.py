@@ -56,19 +56,19 @@ class HeslarAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarDatace)
 class HeslarDataceAdmin(admin.ModelAdmin):
-    list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
-    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
-    search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
+    list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     list_filter = ("obdobi", )
 
 
 @admin.register(HeslarDokumentTypMaterialRada)
 class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
-    list_display = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    fields = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    search_fields = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    list_filter = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
+    list_display = ("dokument_rada", "dokument_typ", "dokument_material")
+    readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
         return False

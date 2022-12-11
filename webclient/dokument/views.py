@@ -250,6 +250,7 @@ class Model3DListView(
         context["header_vybrat"] = _("Vybrat modely 3D")
         context["header_moje"] = _("Moje modely 3D")
         context["header_podle_filtru"] = _("Modely podle filtru")
+        context["app_entity"] = "knihovna_3d"
         return context
 
     def get_queryset(self):
@@ -282,6 +283,7 @@ class DokumentListView(
         context["header_vybrat"] = _("Vybrat dokumenty")
         context["header_moje"] = _("Moje dokumenty")
         context["header_podle_filtru"] = _("Dokumenty podle filtru")
+        context["app_entity"] = "dokument"
         return context
 
     def get_queryset(self):
@@ -430,6 +432,11 @@ class DokumentCastDetailView(RelatedContext):
         )
         self.get_cast(context, cast)
         context["active_dc_ident"] = cast.ident_cely
+        context["show_odpojit"] = False
+        context["show_pripojit"] = True
+        if cast.projekt or cast.archeologicky_zaznam:
+            context["show_odpojit"] = True
+            context["show_pripojit"] = False
         return context
 
 
@@ -1433,10 +1440,11 @@ def zapsat(request, zaznam=None):
             )
             try:
                 if zaznam:
-                    prefix = zaznam.ident_cely[0]
+                    prefix = zaznam.ident_cely[0] + "-"
                     if isinstance(zaznam, ArcheologickyZaznam):
                         if zaznam.ident_cely.startswith("X"):
                             prefix = zaznam.ident_cely[2] + "-"
+                            logger.debug(prefix)
                 else:
                     prefix = form_d.cleaned_data["region"]
                 dokument.ident_cely = get_temp_dokument_ident(
@@ -1494,6 +1502,7 @@ def zapsat(request, zaznam=None):
         {
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
+            "samostatny": True if not zaznam else False,
         },
     )
 
@@ -1528,11 +1537,7 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             orphan_dokument.delete()
             logger.debug("Docasny soubor bez relaci odstranen.")
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ODPOJEN)
-        return JsonResponse(
-            {
-                "redirect": zaznam.get_absolute_url()
-            }
-        )
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
     else:
         warnings = []
         if remove_orphan:

@@ -9,7 +9,7 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-knihovna_3d app-table-list-container">
+  <div class="app-entity-{{app_entity}} app-table-list-container">
     {% include "toolbar_dokument.html" %}
 
     {% if filter %}
@@ -107,7 +107,18 @@
       </form>
     {% endif %}
     {% render_table table 'projekt/bootstrap4.html' %}
+    <div class="modal fade" id="soubor-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-content-xxl" role="document">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <img class="modal-content" id="nahled-image">
+          </div>
+      </div>
+    </div>
   </div>
+  
 {% endblock %}
 
 {% block script %}
@@ -210,6 +221,12 @@
               userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
           }
       });
+      // show image modal
+      $('#soubor-modal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget)
+        var modalImg = document.getElementById("nahled-image");
+        modalImg.src = button[0].src
+      })
   </script>
   <script
       type="text/javascript"

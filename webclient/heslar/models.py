@@ -95,7 +95,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
         verbose_name=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_material"),
     )
-    validated = models.SmallIntegerField()
+    # validated = models.SmallIntegerField() Odstraneno v 474
 
     class Meta:
         db_table = "heslar_dokument_typ_material_rada"
@@ -164,7 +164,7 @@ class RuianKatastr(models.Model):
     definicni_bod = pgmodels.GeometryField(null=False, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"))
     hranice = pgmodels.GeometryField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"))
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
-    poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.poznamka"))
+    # poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.poznamka")) Odstraneno v 474
     # pian = models.ForeignKey("Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"))
     pian = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.pian"))  # TODO
     soucasny = models.ForeignKey(

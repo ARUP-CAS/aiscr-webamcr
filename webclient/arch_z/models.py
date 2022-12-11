@@ -8,7 +8,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
-    EZ_STAV_ODESLANY,
+    D_STAV_ZAPSANY,
     EZ_STAV_ZAPSANY,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_AZ,
@@ -98,6 +98,9 @@ class ArcheologickyZaznam(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
+        for dc in self.casti_dokumentu.all():
+            if dc.dokument.stav == D_STAV_ZAPSANY:
+                dc.dokument.set_odeslany(user)
 
     def set_archivovany(self, user):
         self.stav = AZ_STAV_ARCHIVOVANY
