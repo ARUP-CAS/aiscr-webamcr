@@ -56,9 +56,9 @@ class HeslarAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarDatace)
 class HeslarDataceAdmin(admin.ModelAdmin):
-    list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
-    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
-    search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
+    list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     list_filter = ("obdobi", )
 
 

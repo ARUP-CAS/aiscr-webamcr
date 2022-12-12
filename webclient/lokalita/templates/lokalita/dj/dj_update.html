@@ -69,7 +69,7 @@
             {% trans 'Smazat DJ' %}
           </button>
           {% if j.show_pripojit_pian %}
-          <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button"
+          <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
                   name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
             {% trans 'Připojit PIAN podle ID' %}
           </button>
@@ -124,7 +124,7 @@
     </form>
   </div>
 
-</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         show_form(`detail_dj_form_{{j.ident_cely}}`);
@@ -170,6 +170,8 @@
   var set_pian_by_id = function (dj_ident) {
     id = "#id_" + dj_ident + "-pian"
     $(id).prop('disabled', false);
+    document.getElementById("pian_text").style.display = "none"
+    document.getElementById("pian_select").style.display = "block"
   };
 </script>
 {% endblock %}

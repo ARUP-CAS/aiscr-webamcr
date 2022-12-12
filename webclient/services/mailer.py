@@ -525,8 +525,9 @@ class Mailer():
             "ident_cely": document.ident_cely,
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        if first_log_entry:
+            if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+                cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod
     def sendEK02(cls, document: "dokument.models.Dokument", reason):

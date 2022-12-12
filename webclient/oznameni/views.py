@@ -136,7 +136,7 @@ def index(request, test_run=False):
             projekty = Projekt.objects.filter(
                 ident_cely=request.GET.get("ident_cely"), stav=PROJEKT_STAV_VYTVORENY
             )
-            if projekty is None:
+            if not projekty:
                 raise PermissionDenied
             else:
                 projekt = projekty[0]

@@ -219,24 +219,16 @@ class StartDateInput(forms.DateField):
     def to_python(self, value):
         if value:
             if re.match(r"\d{4}", value):
-                value = datetime.date(int(value), 1, 1)
-            else:
-                value = datetime.datetime.strptime(value, "%d.%m.%Y")
-        else:
-            value = None
-        return value
+                return datetime.date(int(value), 1, 1)
+        return super().to_python(value)
 
 
 class EndDateInput(forms.DateField):
     def to_python(self, value):
         if value:
             if re.match(r"\d{4}", value):
-                value = datetime.date(int(value), 12, 31)
-            else:
-                value = datetime.datetime.strptime(value, "%d.%m.%Y")
-        else:
-            value = None
-        return value
+                return datetime.date(int(value), 12, 31)
+        return super().to_python(value)
 
 
 class CreateAkceForm(forms.ModelForm):
@@ -460,21 +452,23 @@ class CreateAkceForm(forms.ModelForm):
         return odlozena_nz
 
     def clean_datum_zahajeni(self):
-        if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
-            id=SPECIFIKACE_DATA_PRESNE
-        ) and self.cleaned_data.get("datum_zahajeni", None) is not None:
+        if (
+            self.cleaned_data["specifikace_data"]
+            == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+            and self.cleaned_data["datum_zahajeni"] is not None
+        ):
             validators.datum_max_1_mesic_v_budoucnosti(
-                self.cleaned_data["datum_zahajeni"].date()
+                self.cleaned_data["datum_zahajeni"]
             )
-        else:
-            return self.cleaned_data["datum_zahajeni"]
+        return self.cleaned_data["datum_zahajeni"]
 
     def clean_datum_ukonceni(self):
-        if self.cleaned_data["specifikace_data"] == Heslar.objects.get(
-            id=SPECIFIKACE_DATA_PRESNE
-        ) and self.cleaned_data.get("datum_ukonceni", None) is not None:
+        if (
+            self.cleaned_data["specifikace_data"]
+            == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
+            and self.cleaned_data["datum_ukonceni"] is not None
+        ):
             validators.datum_max_1_mesic_v_budoucnosti(
-                self.cleaned_data["datum_ukonceni"].date()
+                self.cleaned_data["datum_ukonceni"]
             )
-        else:
-            return self.cleaned_data["datum_ukonceni"]
+        return self.cleaned_data["datum_ukonceni"]

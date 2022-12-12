@@ -23,6 +23,12 @@ class CreateDJForm(forms.ModelForm):
     ku_change = forms.CharField(
         max_length=50, required=False, widget=forms.HiddenInput()
     )
+    pian_text = forms.CharField(
+        max_length=100,
+        required=False,
+        disabled=True,
+        label=_("PIAN"),
+    )
 
     def get_typ_queryset(
         self,
@@ -128,7 +134,9 @@ class CreateDJForm(forms.ModelForm):
                 }
             ),
             "nazev": forms.TextInput(),
-            "pian": MyAutocompleteWidget(url="pian:pian-autocomplete"),
+            "pian": MyAutocompleteWidget(
+                url="pian:pian-autocomplete",
+            ),
             "negativni_jednotka": forms.Select(
                 choices=[("False", _("Ne")), ("True", _("Ano"))],
                 attrs={
@@ -143,6 +151,7 @@ class CreateDJForm(forms.ModelForm):
             "negativni_jednotka": _("dj.form.negativni_jednotka.tooltip"),
             "nazev": _("dj.form.nazev.tooltip"),
             "pian": _("dj.form.pian.tooltip"),
+            "pian_text": _("dj.form.pian.tooltip"),
         }
 
     def __init__(
@@ -168,12 +177,17 @@ class CreateDJForm(forms.ModelForm):
                 }
             ),
         )
+        if self.instance:
+            self.fields["pian_text"].initial = self.instance.pian
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
                 Div("typ", css_class="col-sm-2"),
-                Div("pian", css_class="col-sm-2"),
+                Div(
+                    "pian", css_class="col-sm-2", style="display:none", id="pian_select"
+                ),
+                Div("pian_text", css_class="col-sm-2", id="pian_text"),
                 Div("nazev", css_class="col-sm-4"),
                 Div("negativni_jednotka", css_class="col-sm-2"),
                 Div("ku_change", id="id_ku_change", css_class="hidden"),
@@ -196,3 +210,4 @@ class CreateDJForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+        self.fields["pian_text"].disabled = True

@@ -1,50 +1,23 @@
 import logging
 
 import crispy_forms
-from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
 from django.db.models import Q
-from django.forms import Select, SelectMultiple
 from django.utils.translation import gettext as _
 from django_filters import (
-    CharFilter,
     ModelMultipleChoiceFilter,
-    MultipleChoiceFilter,
-    DateFromToRangeFilter,
 )
-from django_filters.widgets import DateRangeWidget
 
 from heslar.hesla import (
-    HESLAR_AKTIVITA,
-    HESLAR_AREAL,
-    HESLAR_AREAL_KAT,
-    HESLAR_DJ_TYP,
     HESLAR_JISTOTA_URCENI,
     HESLAR_LOKALITA_DRUH,
     HESLAR_LOKALITA_TYP,
-    HESLAR_OBDOBI,
-    HESLAR_OBDOBI_KAT,
-    HESLAR_OBJEKT_DRUH,
-    HESLAR_OBJEKT_DRUH_KAT,
-    HESLAR_OBJEKT_SPECIFIKACE,
-    HESLAR_OBJEKT_SPECIFIKACE_KAT,
-    HESLAR_PIAN_PRESNOST,
-    HESLAR_PIAN_TYP,
-    HESLAR_PREDMET_DRUH,
-    HESLAR_PREDMET_DRUH_KAT,
-    HESLAR_PREDMET_SPECIFIKACE,
-    HESLAR_PRISTUPNOST,
     HESLAR_STAV_DOCHOVANI,
 )
 from heslar.models import Heslar
-from historie.models import Historie
-from projekt.filters import KatastrFilter
 from arch_z.filters import ArchZaznamFilter
+from core.forms import SelectMultipleSeparator
 from .models import Lokalita
-from arch_z.models import ArcheologickyZaznam
-from uzivatel.models import User
-from dokument.filters import HistorieFilter
-from heslar.views import heslar_12
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +26,7 @@ class LokalitaFilter(ArchZaznamFilter):
     typ_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_TYP),
         label=_("lokalita.filter.typLokality.label"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -63,9 +34,7 @@ class LokalitaFilter(ArchZaznamFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_DRUH),
         label=_("lokalita.filter.druhLokality.label"),
         field_name="druh",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -73,9 +42,7 @@ class LokalitaFilter(ArchZaznamFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_STAV_DOCHOVANI),
         label=_("lokalita.filter.zachovalostLokality.label"),
         field_name="zachovalost",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -83,9 +50,7 @@ class LokalitaFilter(ArchZaznamFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_JISTOTA_URCENI),
         label=_("lokalita.filter.jistotaLokality.label"),
         field_name="jistota",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 

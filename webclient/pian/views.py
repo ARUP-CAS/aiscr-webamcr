@@ -65,8 +65,12 @@ def detail(request, ident_cely):
                 c.execute("BEGIN")
                 c.callproc("validateGeom", [validation_geom])
                 validation_results = c.fetchone()[0]
-                logger_s.debug("pian.views.detail", validation_results=validation_results, validation_geom=validation_geom,
-                         key=key)
+                logger_s.debug(
+                    "pian.views.detail",
+                    validation_results=validation_results,
+                    validation_geom=validation_geom,
+                    key=key,
+                )
                 # logger.debug(validation_results)
                 c.execute("COMMIT")
     except Exception:
@@ -119,7 +123,7 @@ def odpojit(request, dj_ident_cely):
     )
     pian = dj.pian
     if request.method == "POST":
-        redirect_view = dj.archeologicky_zaznam.get_absolute_url()
+        dj.archeologicky_zaznam.get_absolute_url()
         dj.pian = None
         dj.save()
         update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
@@ -209,7 +213,9 @@ def create(request, dj_ident_cely):
         validation_results = c.fetchone()[0]
         c.execute("COMMIT")
         logger_s.debug(
-            "pian.views.create.commit", validation_results=validation_results, geom=str(form.data["geom"])
+            "pian.views.create.commit",
+            validation_results=validation_results,
+            geom=str(form.data["geom"]),
         )
     except Exception as ex:
         logger_s.warning("pian.views.create.validation_exception", exception=ex)
@@ -298,5 +304,5 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q)
+            qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
         return qs

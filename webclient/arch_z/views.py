@@ -1,27 +1,10 @@
 import logging
-from django.views import View
 
 import simplejson as json
 import structlog
-from django.conf import settings
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
-from django.forms import inlineformset_factory
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-from django.utils.http import is_safe_url
-from django.utils.translation import gettext as _
-from django.views.decorators.http import require_http_methods
-from django.views.generic import TemplateView
-from django.contrib.auth.models import Group
-from dal import autocomplete
-from django.template.loader import render_to_string
-from services.mailer import Mailer
-
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
+from arch_z.filters import AkceFilter
 from arch_z.forms import (
     AkceVedouciFormSetHelper,
     CreateAkceForm,
@@ -35,6 +18,7 @@ from arch_z.models import (
     ExterniOdkaz,
     get_akce_ident,
 )
+from arch_z.tables import AkceTable
 from core.constants import (
     ARCHIVACE_AZ,
     AZ_STAV_ARCHIVOVANY,
@@ -45,6 +29,7 @@ from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAPSANY,
+    ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     ZAPSANI_AZ,
     ZMENA_AZ,
@@ -65,31 +50,34 @@ from core.utils import (
     get_centre_from_akce,
     get_heatmap_pian,
     get_heatmap_pian_density,
+    get_message,
     get_num_pians_from_envelope,
     get_pians_from_envelope,
-    get_message,
 )
-from core.views import check_stav_changed
+from core.views import ExportMixinDate, check_stav_changed
+from dal import autocomplete
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.forms import inlineformset_factory
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.http import is_safe_url
 from django.utils.translation import gettext as _
+from django.views import View
 from django.views.decorators.http import require_http_methods
-from django.contrib.auth.mixins import LoginRequiredMixin
-from core.views import ExportMixinDate
+from django.views.generic import TemplateView
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from django.views.generic import TemplateView
 from dokument.models import Dokument
-from dokument.views import odpojit, pripojit
+from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
@@ -109,6 +97,7 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from heslar.views import heslar_12
+from historie.models import Historie
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from nalez.forms import (
@@ -118,13 +107,9 @@ from nalez.forms import (
 )
 from nalez.models import NalezObjekt, NalezPredmet
 from pian.forms import PianCreateForm
-from pian.models import Pian
-from projekt.models import Projekt
-from arch_z.tables import AkceTable
-from arch_z.filters import AkceFilter
-from historie.models import Historie
 from projekt.forms import PripojitProjektForm
-from dokument.views import get_komponenta_form_detail
+from projekt.models import Projekt
+from services.mailer import Mailer
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -227,6 +212,31 @@ class AkceRelatedRecordUpdateView(TemplateView):
             .order_by("id")
         )
 
+    def get_vedouci(self, context):
+        ostatni_vedouci_objekt_formset = inlineformset_factory(
+            Akce,
+            AkceVedouci,
+            form=create_akce_vedouci_objekt_form(readonly=True),
+            extra=0,
+            can_delete=False,
+        )
+        ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
+            instance=context["zaznam"].akce,
+            prefix="",
+        )
+        akce_zaznam_ostatni_vedouci = []
+        for vedouci in AkceVedouci.objects.filter(akce=context["zaznam"].akce).order_by(
+            "id"
+        ):
+            vedouci: AkceVedouci
+            akce_zaznam_ostatni_vedouci.append(
+                [str(vedouci.vedouci), str(vedouci.organizace)]
+            )
+        context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
+        context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
+        context["ostatni_vedouci_objekt_formset_readonly"] = True
+        context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         zaznam = self.get_archeologicky_zaznam()
@@ -246,6 +256,11 @@ class AkceRelatedRecordUpdateView(TemplateView):
                 else False
             )
         context["app"] = "akce"
+        context["showbackdetail"] = False
+        if zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
+            if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
+                context["showbackdetail"] = True
+        self.get_vedouci(context)
         return context
 
 
@@ -307,7 +322,9 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
         return context
 
 
-class DokumentacniJednotkaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
+class DokumentacniJednotkaUpdateView(
+    LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView
+):
     template_name = "arch_z/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
@@ -740,8 +757,9 @@ def zapsat(request, projekt_ident_cely=None):
                     az.ident_cely = get_project_event_ident(projekt)
                     typ_akce = Akce.TYP_AKCE_PROJEKTOVA
                 else:
+                    az.save()
                     az.ident_cely = get_akce_ident(
-                        az.hlavni_katastr.okres.kraj.rada_id, True
+                        az.hlavni_katastr.okres.kraj.rada_id, True, az.id
                     )
                     typ_akce = Akce.TYP_AKCE_SAMOSTATNA
             except MaximalEventCount:
@@ -1015,7 +1033,7 @@ def post_akce2kat(request):
     pian_ident_cely = body["pian"]
 
     if len(katastr_name) > 0:
-        [poi, geom] = get_centre_from_akce(katastr_name, pian_ident_cely)
+        [poi, geom, presnost] = get_centre_from_akce(katastr_name, pian_ident_cely)
         if len(str(poi)) > 0:
             return JsonResponse(
                 {
@@ -1025,6 +1043,7 @@ def post_akce2kat(request):
                     "geom": str(geom).split(";")[1].replace(", ", ",")
                     if geom
                     else None,
+                    "presnost": str(presnost) if geom else 4,
                 },
                 status=200,
             )
@@ -1052,8 +1071,8 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     zmenit_proj_akci = False
     zmenit_sam_akci = False
     if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        archivar_group = Group.objects.get(id=ROLE_ARCHIVAR_ID)
-        if user.hlavni_role == archivar_group:
+        allowed_groups = Group.objects.filter(id__in=[ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])
+        if user.hlavni_role in allowed_groups:
             if archeologicky_zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 zmenit_proj_akci = True
             else:
@@ -1436,7 +1455,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             az.set_akce_ident(get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id))
         else:
             az.set_akce_ident(
-                get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id, True)
+                get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id, True, az.id)
             )
         az.save()
         Historie(

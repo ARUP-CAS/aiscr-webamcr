@@ -1,5 +1,3 @@
-import logging
-
 import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
@@ -12,7 +10,6 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
-    BooleanFilter,
 )
 from django_filters.widgets import DateRangeWidget
 
@@ -42,14 +39,12 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from historie.models import Historie
 from projekt.filters import KatastrFilter
+from core.forms import SelectMultipleSeparator
 from .models import Akce
 from arch_z.models import ArcheologickyZaznam
 from uzivatel.models import Organizace, Osoba, User
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
-from psycopg2._range import DateRange
-
-logger = logging.getLogger(__name__)
 
 
 class ArchZaznamFilter(HistorieFilter, KatastrFilter):
@@ -59,9 +54,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         choices=ArcheologickyZaznam.STATES,
         field_name="archeologicky_zaznam__stav",
         label=_("archZaznam.filter.stav.label"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -76,9 +69,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("archZaznam.filter.pristupnost.label"),
         field_name="archeologicky_zaznam__pristupnost",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -87,9 +78,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         choices=filter(lambda x: x[0].startswith("AZ"), Historie.CHOICES),
         label=_("historie.filter.typZmeny.label"),
         field_name="archeologicky_zaznam__historie__historie__typ_zmeny",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -113,9 +102,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         label=_("lokalita.filter.djtyp.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__typ",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -130,9 +117,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         method="filter_has_positive_find",
         label=_("lokalita.filter.djZjisteni.label"),
         choices=[("True", "pozitivní"), ("False", "negativní")],
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -147,9 +132,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         label=_("lokalita.filter.pianTyp.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PIAN_TYP),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__pian__typ",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -157,9 +140,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         label=_("lokalita.filter.pianPresnost.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PIAN_PRESNOST),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__pian__presnost",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -167,18 +148,14 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         method="filter_obdobi",
         label=_("Období"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
     )
 
     komponenta_areal = MultipleChoiceFilter(
         method="filter_areal",
         label=_("Areál"),
         choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -190,18 +167,14 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             ("True", _("lokalita.filter.komponentaJistota.ano.label")),
             ("False", _("lokalita.filter.komponentaJistota.ne.label")),
         ],
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
     komponenta_aktivity = ModelMultipleChoiceFilter(
         label=_("lokalita.filter.komponentaAktivity.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_AKTIVITA),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__komponentaaktivita__aktivita",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
     komponenta_poznamka = CharFilter(
@@ -214,9 +187,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         method="filter_predmety_druh",
         label=_("Druh předmětu"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -224,9 +195,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         label=_("lokalita.filter.predmetSpecifikace.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PREDMET_SPECIFIKACE),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__predmety__specifikace",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -240,9 +209,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         method="filter_objekty_druh",
         label=_("Druh objektu"),
         choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -250,9 +217,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         method="filter_objekty_specifikace",
         label=_("Specifikace objektu"),
         choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -280,9 +245,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         queryset=User.objects.select_related("organizace").all(),
         field_name="archeologicky_zaznam__historie__historie__uzivatel",
         label="Vlastník",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
     )
 
     def filtr_katastr(self, queryset, name, value):
@@ -438,7 +401,7 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     datum_ukonceni = DateFromToRangeFilter(
-        label=_("akce.filter.datumZahajeni.label"),
+        label=_("akce.filter.datumUkonceni.label"),
         field_name="datum_ukonceni",
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
@@ -446,6 +409,7 @@ class AkceFilter(ArchZaznamFilter):
 
     je_nz = MultipleChoiceFilter(
         choices=[("False", _("Ne")), ("True", _("Ano"))],
+        label=_("akce.filter.terenniZjisteni.label"),
         method="filtr_je_nz",
         widget=SelectMultiple(
             attrs={
@@ -459,6 +423,7 @@ class AkceFilter(ArchZaznamFilter):
 
     odlozena_nz = MultipleChoiceFilter(
         choices=[("False", _("Ne")), ("True", _("Ano"))],
+        label=_("akce.filter.odlozenaNz.label"),
         method="filtr_odlozena_nz",
         widget=SelectMultiple(
             attrs={
@@ -481,19 +446,15 @@ class AkceFilter(ArchZaznamFilter):
         label=_("akce.filter.adbTypSondy.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_ADB_TYP),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__typ_sondy",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
     adb_podnet = ModelMultipleChoiceFilter(
-        label=_("akce.filter.adbTypSondy.label"),
+        label=_("akce.filter.adbPodnet.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_ADB_PODNET),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__podnet",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -515,7 +476,7 @@ class AkceFilter(ArchZaznamFilter):
 
     adb_roky = DateFromToRangeFilter(
         label=_("akce.filter.adbRoky.label"),
-        method="filtr_adb_roky",
+        method="filter_adb_roky",
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
@@ -531,9 +492,7 @@ class AkceFilter(ArchZaznamFilter):
         label=_("akce.filter.vbUroven.label"),
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_VYSKOVY_BOD_TYP),
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__vyskove_body__typ",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -558,27 +517,35 @@ class AkceFilter(ArchZaznamFilter):
             Q(lokalizace_okolnosti__icontains=value)
             | Q(souhrn_upresneni__icontains=value)
             | Q(ulozeni_nalezu__icontains=value)
-            | Q(ulozeni_dokumentace_icontains=value)
+            | Q(ulozeni_dokumentace__icontains=value)
             | Q(archeologicky_zaznam__uzivatelske_oznaceni__icontains=value)
         ).distinct()
 
     def filtr_zahrnout_projektove(self, queryset, name, value):
-        if value:
+        if value is None:
+            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA).distinct()
+        if "True" in value:
             return queryset
-        else:
-            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
+        elif "False" in value:
+            return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA).distinct()
 
     def filtr_je_nz(self, queryset, name, value):
-        if value:
-            return queryset.filtr(je_nz=value)
-        else:
-            return queryset.filtr(je_nz=False)
+        if "True" in value and "False" in value:
+            return queryset.filter(Q(je_nz=False) | Q(je_nz=True)).distinct()
+        elif "True" in value:
+            return queryset.filter(je_nz=True).distinct()
+        elif "False" in value:
+            return queryset.filter(je_nz=False).distinct()
 
     def filtr_odlozena_nz(self, queryset, name, value):
-        if value:
-            return queryset.filtr(odlozena_nz=value)
-        else:
-            return queryset.filtr(odlozena_nz=False)
+        if "True" in value and "False" in value:
+            return queryset.filter(
+                Q(odlozena_nz=False) | Q(odlozena_nz=True)
+            ).distinct()
+        elif "True" in value:
+            return queryset.filter(odlozena_nz=True).distinct()
+        elif "False" in value:
+            return queryset.filter(odlozena_nz=False).distinct()
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
         return queryset.filter(
@@ -592,7 +559,7 @@ class AkceFilter(ArchZaznamFilter):
                 archeologicky_zaznam__dokumentacni_jednotky_akce__adb__trat__icontains=value
             )
             | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__parcelni_cislo_icontains=value
+                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__parcelni_cislo__icontains=value
             )
             | Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__adb__poznamka__icontains=value
@@ -609,27 +576,27 @@ class AkceFilter(ArchZaznamFilter):
             )
         ).distinct()
 
-    def filter_planovane_zahajeni(self, queryset, name, value):
+    def filter_adb_roky(self, queryset, name, value):
         if value.start and value.stop:
-            rng = DateRange(
-                lower=value.start.strftime("%m/%d/%Y"),
-                upper=value.stop.strftime("%m/%d/%Y"),
+            rng = (
+                value.start.year,
+                value.stop.year,
             )
         elif value.start and not value.stop:
-            rng = DateRange(
-                lower=value.start.strftime("%m/%d/%Y"),
-                upper="01/01/2100",
+            rng = (
+                value.start.year,
+                2100,
             )
         elif value.stop and not value.start:
-            rng = DateRange(lower="01/01/1900", upper=value.stop.strftime("%m/%d/%Y"))
+            rng = (1900, value.stop.year)
         else:
-            rng = DateRange(lower="01/01/1900", upper="01/01/2100")
+            rng = (1900, 2100)
         return queryset.filter(
             Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_popisu__overlap=rng
+                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_popisu__range=rng
             )
             | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_revize__overlap=rng
+                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_revize__range=rng
             )
         ).distinct()
 
@@ -640,6 +607,12 @@ class AkceFilter(ArchZaznamFilter):
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)
         self.helper = AkceFilterFormHelper()
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        if not self.form.cleaned_data["zahrnout_projektove"]:
+            queryset = queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
+        return queryset
 
 
 class AkceFilterFormHelper(crispy_forms.helper.FormHelper):

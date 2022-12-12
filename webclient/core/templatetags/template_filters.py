@@ -118,6 +118,7 @@ def get_osoby_name(value, args=""):
         dok_autory = DokumentAutor.objects.filter(
             dokument__ident_cely=arg_list[1]
         ).order_by("poradi")
+        list_hesla = ""
         for item in dok_autory:
             if i == 1:
                 list_hesla = item.autor.vypis_cely

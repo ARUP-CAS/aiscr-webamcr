@@ -8,7 +8,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
-    EZ_STAV_ODESLANY,
+    D_STAV_ZAPSANY,
     EZ_STAV_ZAPSANY,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_AZ,
@@ -100,6 +100,9 @@ class ArcheologickyZaznam(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
+        for dc in self.casti_dokumentu.all():
+            if dc.dokument.stav == D_STAV_ZAPSANY:
+                dc.dokument.set_odeslany(user)
 
     def set_archivovany(self, user):
         self.stav = AZ_STAV_ARCHIVOVANY
@@ -338,7 +341,7 @@ class Akce(models.Model):
 
     CHOICES = ((TYP_AKCE_PROJEKTOVA, "Projektova"), (TYP_AKCE_SAMOSTATNA, "Samostatna"))
 
-    typ = models.CharField(max_length=1, blank=True, null=True, choices=CHOICES)
+    typ = models.CharField(max_length=1, choices=CHOICES)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,
@@ -442,11 +445,11 @@ class ExterniOdkaz(models.Model):
         db_table = "externi_odkaz"
 
 
-def get_akce_ident(region, temp=None):
+def get_akce_ident(region, temp=None, id=None):
     MAXIMAL: int = 999999
     # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
     if temp:
-        prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9")
+        return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + str(id) + "A")
     else:
         prefix = str(region + "-9")
     l = ArcheologickyZaznam.objects.filter(

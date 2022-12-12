@@ -67,7 +67,7 @@
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Organizace" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.organizace|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.organizace|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
@@ -93,7 +93,7 @@
           <div class="col-sm-2">
             <div class="form-group">
               <label>{% trans "Specifikace data" %}</label>
-              <input class="form-control" type="text" placeholder="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
+              <input class="form-control" type="text" value="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
@@ -267,6 +267,32 @@
         })
         new Modal(options, "arch_z-sam-akce-change");
       }
+
+      if (document.getElementById("main_cadastre_id")!==null) {
+              let xhr = new XMLHttpRequest();
+              xhr.open('POST', '/arch-z/akce-zjisti-katastr');
+              xhr.setRequestHeader('Content-type', 'application/json');
+              if (typeof global_csrftoken !== 'undefined') {
+                  xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
+              } else {
+                  console.log("neni X-CSRFToken token")
+              }
+              xhr.onload = function () {
+                  rs = JSON.parse(this.responseText)
+                  if(rs.lat>0){
+                    map.setView([rs.lat, rs.lng], rs.zoom)
+                  }
+                  if (rs.zoom == 17) {
+                      drawnItems.clearLayers();
+                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
+                  }
+              };
+              xhr.send(JSON.stringify(
+                  {
+                      'cadastre': document.getElementById("main_cadastre_id").value,
+                      'pian': "",
+                  }))
+          }
     });
   </script>
 {% endblock %}
