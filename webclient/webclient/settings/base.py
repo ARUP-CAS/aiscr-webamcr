@@ -19,20 +19,26 @@ file_path = (
 with open(file_path, "r") as f:
     secrets = json.load(f)
 
-file_mail_path = (
-    "/run/secrets/mail_conf"
-    if os.path.exists("/run/secrets/mail_conf")
-    # else path will be used in case a docker secret is not used during instantiation. 
-    # Doesn't catch case where docker secrets points to missing file on local disk.
-    else os.path.join(BASE_DIR,"webclient/settings/sample_secrets_mail_client.json")
-)
-
-with open(file_mail_path, "r") as f:
-    secrets_mail = json.load(f)
-
-def get_secret(setting, file=secrets):
+def get_secret(setting):
     try:
-        return file[setting]
+        return secrets[setting]
+    except KeyError:
+        error_msg = "Add {0} variable to secrets.json file".format(setting)
+        raise ImproperlyConfigured(error_msg)
+
+
+def get_mail_secret(setting):
+    file_mail_path = (
+        "/run/secrets/mail_conf"
+        if os.path.exists("/run/secrets/mail_conf")
+        # else path will be used in case a docker secret is not used during instantiation.
+        # Doesn't catch case where docker secrets points to missing file on local disk.
+        else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_mail_client.json")
+    )
+    with open(file_mail_path, "r") as file:
+        secrets_mail = json.load(file)
+    try:
+        return secrets_mail[setting]
     except KeyError:
         error_msg = "Add {0} variable to secrets.json file".format(setting)
         raise ImproperlyConfigured(error_msg)
@@ -324,10 +330,10 @@ STATICFILES_FINDERS = [
 ]
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = get_secret("EMAIL_HOST", file=secrets_mail)
-EMAIL_PORT = get_secret("EMAIL_PORT", file=secrets_mail)
-EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER", file=secrets_mail)
-EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD", file=secrets_mail)
+EMAIL_HOST = get_mail_secret("EMAIL_HOST")
+EMAIL_PORT = get_mail_secret("EMAIL_PORT")
+EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
