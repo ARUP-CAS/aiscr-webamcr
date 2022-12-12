@@ -6,6 +6,7 @@ ARG DB_BACKUP_FILE
 
 ENV VERSION=$VERSION_APP
 ENV TAG=$TAG_APP
+ENV DB_FLAG_ROLE aisce
 
 #RUN export POSTGRES_PASSWORD_FILE=$(cat /run/secrets/local_db_pass)
 
@@ -15,6 +16,9 @@ COPY ${USED_DB_BACKUP} /tmp/${USED_DB_BACKUP}
 COPY ./scripts/restore_database.sh /docker-entrypoint-initdb.d/restore_database.sh
 RUN sed -i 's/\r$//g' /docker-entrypoint-initdb.d/restore_database.sh
 RUN chmod 777 /docker-entrypoint-initdb.d/restore_database.sh
+WORKDIR /app
+COPY ./scripts/healthcheck.sh ./
+RUN chmod +x healthcheck.sh
 
 RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION},DB_BACKUP:${USED_DB_BACKUP}" > version.txt
 EXPOSE 5432

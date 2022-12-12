@@ -78,6 +78,8 @@ backup_file_db_v4.tar
 backup_file_db_v5.tar
 docker-compose-db-yml
 Dockerfile-DB
-scripts/restore_database.sh
 docker-compose-debug-yml
 docker-compose-db-prod-yml
+secrets.alternative.json
+secrets_mail_client.json
+secrets
