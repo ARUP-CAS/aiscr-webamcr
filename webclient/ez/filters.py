@@ -21,6 +21,7 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from dokument.filters import HistorieFilter
 from historie.models import Historie
+from core.forms import SelectMultipleSeparator
 from .models import ExterniZdroj
 from uzivatel.models import Organizace, Osoba, User
 
@@ -32,9 +33,7 @@ class ExterniZdrojFilter(HistorieFilter):
         choices=ExterniZdroj.STATES,
         field_name="stav",
         label=_("externiZdroj.filter.stav.label"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -55,9 +54,7 @@ class ExterniZdrojFilter(HistorieFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_EXTERNI_ZDROJ_TYP),
         label=_("externiZdroj.filter.typ.label"),
         field_name="sysno",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -91,9 +88,7 @@ class ExterniZdrojFilter(HistorieFilter):
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP),
         label=_("externiZdroj.filter.typDokumentu.label"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -146,9 +141,7 @@ class ExterniZdrojFilter(HistorieFilter):
         queryset=User.objects.select_related("organizace").all(),
         field_name="historie__historie__uzivatel",
         label="Vlastník",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
     )
 
     def filter_popisne_udaje(self, queryset, name, value):

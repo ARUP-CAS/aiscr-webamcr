@@ -7,7 +7,7 @@
 type={%if widget.name == "let"%}"button"{%else%}"text"{% endif%}
 {%if widget.name == "vedouci" %} 
 value="{{ widget.value|get_osoby_name }}" 
-{% elif widget.name == "autori" and name_id in widget.attrs %}
+{% elif widget.name == "autori" and "name_id" in widget.attrs %}
 value="{{ widget.value|get_osoby_name:widget.attrs.name_id }}" 
 {%else %}
     value="{% if widget.optgroups %}{{ widget.optgroups|ifinlist:widget.value }}{% elif widget.value %}{{ widget.value|get_katastr_name }}{% endif %}" 

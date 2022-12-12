@@ -381,11 +381,12 @@ class EditDokumentForm(forms.ModelForm):
                 "id", "heslo"
             )
         )
-        self.fields["typ_dokumentu"].choices = [("", "")] + list(
-            Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
-            .filter(id__in=ALLOWED_DOKUMENT_TYPES)
-            .values_list("id", "heslo")
-        )
+        if not readonly:
+            self.fields["typ_dokumentu"].choices = [("", "")] + list(
+                Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
+                .filter(id__in=ALLOWED_DOKUMENT_TYPES)
+                .values_list("id", "heslo")
+            )
         if create:
             self.fields["jazyky"].initial = [
                 Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, heslo="CS").pk

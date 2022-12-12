@@ -437,7 +437,6 @@ class AMCRTestRunner(BaseRunner):
             dokument_rada=rada_dokumentu_text,
             dokument_material=material_dokumentu_digi,
             dokument_typ=typ_dokumentu_plan,
-            validated=True,
         ).save()
 
         # Vlozit role do auth_user

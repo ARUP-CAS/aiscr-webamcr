@@ -68,10 +68,6 @@ class AutorColumn(tables.Column):
 
         return mark_safe(conditional_escape("; ").join(items))
 
-    def order(self, queryset, is_descending):
-        queryset = queryset.order_by(("-" if is_descending else "") + "main_autor")
-        return (queryset, True)
-
 
 class DokumentTable(ColumnShiftTableBootstrap4):
 
@@ -82,12 +78,12 @@ class DokumentTable(ColumnShiftTableBootstrap4):
     )
     popis = tables.columns.Column(default="")
     rok_vzniku = tables.columns.Column(default="")
-    autori = AutorColumn()
+    autori = AutorColumn(order_by="main_autor")
     popis = tables.columns.Column(default="")
     pristupnost = tables.columns.Column(default="")
     rada = tables.columns.Column(default="")
     let = tables.columns.Column(default="")
-    material_original = tables.columns.Column(default="")
+    material_originalu = tables.columns.Column(default="")
     poznamka = tables.columns.Column(default="")
     ulozeni_originalu = tables.columns.Column(default="")
     oznamceni_originalu = tables.columns.Column(default="")
@@ -109,7 +105,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
         if soubor is not None:
             soubor_url = reverse("core:download_file", args=(soubor.id,))
             return format_html(
-                '<img src="{}" class="image-nahled" >',
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
                 soubor_url,
             )
         return ""
@@ -124,13 +120,12 @@ class DokumentTable(ColumnShiftTableBootstrap4):
             columns_to_hide = (
                 "rada",
                 "let",
-                "material_original",
+                "material_originalu",
                 "poznamka",
                 "ulozeni_originalu",
                 "oznamceni_originalu",
                 "datum_zverejneni",
                 "licence",
-                "nahled",
             )
         for column in columns_to_hide:
             if column is not None and column in self.column_default_show:
@@ -141,6 +136,7 @@ class DokumentTable(ColumnShiftTableBootstrap4):
         model = Dokument
         # template_name = "projekt/bootstrap4.html"
         fields = (
+            "nahled",
             "ident_cely",
             "stav",
             "organizace__nazev_zkraceny",
@@ -151,13 +147,12 @@ class DokumentTable(ColumnShiftTableBootstrap4):
             "pristupnost",
             "rada",
             "let",
-            "material_original",
+            "material_originalu",
             "poznamka",
             "ulozeni_originalu",
             "oznamceni_originalu",
             "datum_zverejneni",
             "licence",
-            "nahled",
         )
 
     def __init__(self, *args, **kwargs):

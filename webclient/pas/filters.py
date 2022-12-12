@@ -40,6 +40,7 @@ from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
+from core.forms import SelectMultipleSeparator
 
 logger = logging.getLogger(__name__)
 
@@ -219,9 +220,7 @@ class SamostatnyNalezFilter(HistorieFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         label=_("Přístupnost"),
         field_name="pristupnost",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
     )
 
     class Meta:

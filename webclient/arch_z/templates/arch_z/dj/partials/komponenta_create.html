@@ -20,9 +20,12 @@
     </form>
   </div>
 </div>
+<script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         show_form(`create_komponenta_form`);
+        url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
+        get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
     });
 </script>
 

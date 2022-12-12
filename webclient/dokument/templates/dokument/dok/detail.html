@@ -106,6 +106,7 @@
               {% for dc in casti.all|dictsort:"pk" %}
                 <li class="list-group-item">
                   <div class="d-flex align-items-center" {% if dc.ident_cely == active_dc_ident %}style="background-color: rgba(36, 126, 75, 0.1)"{% endif %}>
+                    <div class="cast-dokumentu-part1">
                     <a href="{% url 'dokument:detail-cast' dokument.ident_cely dc.ident_cely %}" class="app-entity-color mr-1">
                       <strong>{{ dc.ident_cely|last_x_letters:4 }}  </strong>
                     </a>
@@ -123,11 +124,10 @@
                       <a href="{% url 'projekt:detail' dc.projekt.ident_cely %}">
                       ({{ dc.projekt.ident_cely }})
                       </a>
-                    {% elif dc.neident_akce %}
-                      <a href="#">
-                      ({{ dc.neident_akce.ident_cely }})
-                      </a>
-                      <span class="material-icons">no_accounts</span>
+                      {% endif %}
+                    </div>
+                    {% if dc.neident_akce %}
+                      <span class="material-icons">brush</span>
                     {% endif %}
                   </div>
                   {% if dc.komponenty.komponenty.all %}
