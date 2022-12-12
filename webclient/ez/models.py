@@ -75,7 +75,6 @@ class ExterniZdroj(models.Model):
         through="ExterniZdrojEditor",
         related_name="ez_editori",
         blank=True,
-        null=True,
     )
 
     class Meta:

@@ -69,7 +69,7 @@ class ArcheologickyZaznam(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     katastry = models.ManyToManyField(
-        RuianKatastr, through="ArcheologickyZaznamKatastr", blank=True, null=True
+        RuianKatastr, through="ArcheologickyZaznamKatastr", blank=True
     )
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,

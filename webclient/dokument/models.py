@@ -138,7 +138,6 @@ class Dokument(models.Model):
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
         blank=True,
-        null=True,
     )
     osoby = models.ManyToManyField(
         Osoba,
