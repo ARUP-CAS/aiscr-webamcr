@@ -323,9 +323,7 @@ EMAIL_HOST = get_secret("EMAIL_HOST", file=secrets_mail)
 EMAIL_PORT = get_secret("EMAIL_PORT", file=secrets_mail)
 EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER", file=secrets_mail)
 EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD", file=secrets_mail)
-EAMIL_USE_TLS = True
-EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
+# DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
 
