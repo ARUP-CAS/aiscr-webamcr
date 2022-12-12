@@ -773,8 +773,9 @@ def zapsat(request, projekt_ident_cely=None):
                     az.ident_cely = get_project_event_ident(projekt)
                     typ_akce = Akce.TYP_AKCE_PROJEKTOVA
                 else:
+                    az.save()
                     az.ident_cely = get_akce_ident(
-                        az.hlavni_katastr.okres.kraj.rada_id, True
+                        az.hlavni_katastr.okres.kraj.rada_id, True, az.id
                     )
                     typ_akce = Akce.TYP_AKCE_SAMOSTATNA
             except MaximalEventCount:
@@ -1469,7 +1470,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             az.set_akce_ident(get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id))
         else:
             az.set_akce_ident(
-                get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id, True)
+                get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id, True, az.id)
             )
         az.save()
         Historie(

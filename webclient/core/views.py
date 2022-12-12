@@ -539,7 +539,7 @@ def redirect_ident_view(request, ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
         logger.debug("regex match for archeologicka akce with ident %s", ident_cely)
         return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6}\D{1}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,7}\D{1}", ident_cely)):
         logger.debug("regex match for samostatna akce with ident %s", ident_cely)
         return redirect("arch_z:detail", ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7}", ident_cely)):
