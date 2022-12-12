@@ -97,7 +97,7 @@ while getopts "hdxr:est" option; do
          exit;;
       d) down_only="yes"
          echo_dec "Compose goes only down"
-         er "${cmd_docker_down}"
+         er "${cmd_docker_down}" && echo_dec "Compose goes down." || echo_dec "Compose down FAILED!.."
          ;;         
       x) down_cmd="yes"
          echo_dec "Compose goes down + image prune + container prune (all!!! stopped containers removed)"

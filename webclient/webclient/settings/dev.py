@@ -50,8 +50,8 @@ SHELL_PLUS = "plain"
 SHELL_PLUS_PRINT_SQL = True
 
 # Development keys
-# RECAPTCHA_PUBLIC_KEY ="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-# RECAPTCHA_PRIVATE_KEY = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+# RECAPTCHA_PUBLIC_KEY =""
+# RECAPTCHA_PRIVATE_KEY = ""
 
 # Send emails to FTP
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"

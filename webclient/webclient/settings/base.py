@@ -10,20 +10,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 file_path = (
     "/run/secrets/db_conf"
-    if os.path.exists(BASE_DIR / "/run/secrets/db_conf")
-    else "webclient/settings/secrets_test.json"
+    if os.path.exists("/run/secrets/db_conf")
+    # else path will be used in case a docker secret is not used during instantiation. 
+    # Doesn't catch case where docker secrets points to missing file on local disk.
+    else os.path.join(BASE_DIR,"webclient/settings/sample_secrets_db.json")
 )
-with open(BASE_DIR / file_path, "r") as f:
+
+with open(file_path, "r") as f:
     secrets = json.load(f)
 
 file_mail_path = (
     "/run/secrets/mail_conf"
-    if os.path.exists(BASE_DIR / "/run/secrets/mail_conf")
-    else "webclient/settings/secrets_mail_client.json"
+    if os.path.exists("/run/secrets/mail_conf")
+    # else path will be used in case a docker secret is not used during instantiation. 
+    # Doesn't catch case where docker secrets points to missing file on local disk.
+    else os.path.join(BASE_DIR,"webclient/settings/sample_secrets_mail_client.json")
 )
-with open(BASE_DIR / file_mail_path, "r") as f:
-    secrets_mail = json.load(f)
 
+with open(file_mail_path, "r") as f:
+    secrets_mail = json.load(f)
 
 def get_secret(setting, file=secrets):
     try:
