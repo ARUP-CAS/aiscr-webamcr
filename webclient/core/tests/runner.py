@@ -193,10 +193,10 @@ class AMCRTestRunner(BaseRunner):
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
         okres_praha = RuianOkres(
-            id=162, nazev="Praha", kraj=kraj_brno, spz="spz", kod=3
+            id=162, nazev="Praha", kraj=kraj_brno, spz="1", kod=3
         )
         okres_brno_venkov = RuianOkres(
-            id=163, nazev="Brno-venkov", kraj=kraj_brno, spz="spz", kod=4
+            id=163, nazev="Brno-venkov", kraj=kraj_brno, spz="2", kod=4
         )
         odrovice = RuianKatastr(
             id=KATASTR_ODROVICE_ID,
@@ -240,7 +240,7 @@ class AMCRTestRunner(BaseRunner):
                 "543910F6CCD42C40791DBCDD5B0B49401050ED8531D52C40B711E7EC920B49406E87F5C48AD5"
                 "2C40899F4641A90B4940ED2BF5120ED62C40E95C8F63BA0B4940"
             ),
-            pian=1,
+            pian=2,
         )
         logger.debug(praha.id)
         kraj_praha.save()
@@ -437,7 +437,6 @@ class AMCRTestRunner(BaseRunner):
             dokument_rada=rada_dokumentu_text,
             dokument_material=material_dokumentu_digi,
             dokument_typ=typ_dokumentu_plan,
-            validated=True,
         ).save()
 
         # Vlozit role do auth_user

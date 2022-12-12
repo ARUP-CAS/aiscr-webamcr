@@ -64,8 +64,8 @@ class ExterniZdroj(models.Model):
     ident_cely = models.TextField(unique=True, blank=True, null=False)
     # final_cj = models.BooleanField(blank=True, null=True) #Removed by #474
 
-    historie = models.ForeignKey(
-        HistorieVazby, unique=True, db_column="historie", blank=True, null=True
+    historie = models.OneToOneField(
+        HistorieVazby, on_delete=models.RESTRICT, db_column="historie", blank=True, null=True
     )
     autori = models.ManyToManyField(
         Osoba, through="ExterniZdrojAutor", related_name="ez_autori"

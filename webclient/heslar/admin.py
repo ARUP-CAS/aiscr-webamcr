@@ -64,11 +64,11 @@ class HeslarDataceAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarDokumentTypMaterialRada)
 class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
-    list_display = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    fields = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    search_fields = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
-    list_filter = ("dokument_rada", "dokument_typ", "dokument_material", "validated")
+    list_display = ("dokument_rada", "dokument_typ", "dokument_material")
+    readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -140,18 +140,17 @@ class HeslarRuianAdmin(admin.ModelAdmin):
 
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(HeslarRuianAdmin):
-    list_display = ("nazev", "kod", "rada_id", "definicni_bod", "aktualni")
-    fields = ("nazev", "kod", "rada_id", "definicni_bod", "aktualni")
+    list_display = ("nazev", "kod", "rada_id", "definicni_bod")
+    fields = ("nazev", "kod", "rada_id", "definicni_bod")
     search_fields = ("nazev", "kod", "rada_id")
-    list_filter = ("aktualni", )
 
 
 @admin.register(RuianOkres)
 class HeslarRuianOkresAdmin(HeslarRuianAdmin):
     list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
-    fields = ("nazev", "kraj", "spz", "kod", "nazev_en", "aktualni")
+    fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
     search_fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
-    list_filter = ("kraj", "aktualni")
+    list_filter = ("kraj",)
 
 
 @admin.register(RuianKatastr)
