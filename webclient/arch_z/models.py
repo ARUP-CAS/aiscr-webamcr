@@ -60,8 +60,10 @@ class ArcheologickyZaznam(models.Model):
         blank=False,
         null=True,
     )
-    ident_cely = models.TextField(unique=True)
-    historie = models.ForeignKey(
+    ident_cely = models.TextField(unique=True, null=False)
+    #stav_stary = models.SmallIntegerField(null=True) - #Removed #474
+
+    historie = models.OneToOneField(
         HistorieVazby, on_delete=models.CASCADE, db_column="historie"
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
@@ -393,7 +395,7 @@ class Akce(models.Model):
     )
     odlozena_nz = models.BooleanField(default=False)
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, on_delete=models.DO_NOTHING, db_column="organizace", blank=True, null=True
     )
 
     class Meta:
@@ -410,6 +412,8 @@ class AkceVedouci(models.Model):
     vedouci = models.ForeignKey(Osoba, on_delete=models.DO_NOTHING, db_column="vedouci")
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        #TODO: BUG FIX #474
+        # Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=False
     )
 
     class Meta:
@@ -424,7 +428,7 @@ class ExterniOdkaz(models.Model):
         models.DO_NOTHING,
         db_column="externi_zdroj",
         blank=True,
-        null=True,
+        null=False,
         related_name="externi_odkazy_zdroje",
     )
     paginace = models.TextField(blank=True, null=True)
@@ -433,7 +437,7 @@ class ExterniOdkaz(models.Model):
         on_delete=models.CASCADE,
         db_column="archeologicky_zaznam",
         blank=True,
-        null=True,
+        null=False,
         related_name="externi_odkazy",
     )
 
