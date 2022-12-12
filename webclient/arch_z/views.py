@@ -261,6 +261,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
             if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True
         self.get_vedouci(context)
+        context["next_url"] = zaznam.get_absolute_url()
         return context
 
 

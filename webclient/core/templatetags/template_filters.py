@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from uzivatel.models import Osoba
 from dokument.models import DokumentAutor
+from ez.models import ExterniZdrojAutor, ExterniZdrojEditor
 
 register = template.Library()
 
@@ -112,7 +113,24 @@ def true_false(value):
 
 @register.filter
 def get_osoby_name(value, args=""):
-    if "autori" in args:
+    list_hesla = ""
+    if "ez" in args:
+        if "autori" in args:
+            objekt = ExterniZdrojAutor
+        else:
+            objekt = ExterniZdrojEditor
+        arg_list = [arg.strip() for arg in args.split(";")]
+        i = 1
+        dok_autory = objekt.objects.filter(
+            externi_zdroj__ident_cely=arg_list[1]
+        ).order_by("poradi")
+        for item in dok_autory:
+            if i == 1:
+                list_hesla = item.get_osoba()
+            else:
+                list_hesla = list_hesla + "; " + item.get_osoba()
+            i = i + 1
+    elif "autori" in args:
         arg_list = [arg.strip() for arg in args.split(";")]
         i = 1
         dok_autory = DokumentAutor.objects.filter(

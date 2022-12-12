@@ -171,6 +171,9 @@ class ExterniZdrojAutor(models.Model):
     autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
     poradi = models.IntegerField(null=True)
 
+    def get_osoba(self):
+        return self.autor.vypis_cely
+
     class Meta:
         db_table = "externi_zdroj_autor"
         unique_together = (("externi_zdroj", "autor"),)
@@ -182,6 +185,9 @@ class ExterniZdrojEditor(models.Model):
     )
     editor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="editor")
     poradi = models.IntegerField(null=True)
+
+    def get_osoba(self):
+        return self.editor.vypis_cely
 
     class Meta:
         db_table = "externi_zdroj_editor"

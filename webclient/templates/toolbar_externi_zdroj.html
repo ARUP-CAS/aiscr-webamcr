@@ -3,10 +3,10 @@
 <div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="#"><span class="material-icons">library_books</span> {{name}}</a>
+      <a href="#"><span class="material-icons">library_books</span> {{toolbar_name}}</a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
-      {% if toolbar_label %}{{toolbar_label}}{%endif%}
+      {{zaznam.ident_cely}}
     </div>
   </div>
   {% if showcontrols %}

@@ -473,6 +473,16 @@
         new Modal(options, elements.item(i).id);
       }
     }
+    if (document.getElementsByClassName("ez-change-btn")){
+      elements = document.getElementsByClassName("ez-change-btn")
+      for (let i = 0; i < elements.length; i++){
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formID: "zmenit-eo-form",
+        modalFormID: "#zmenit-eo-form",
+        })
+        new Modal(options, elements.item(i).id);
+      }
+    }
   });
 </script>
 {% endblock %}

@@ -108,6 +108,7 @@ class LokalitaDetailView(DetailView, LoginRequiredMixin):
         context["app"] = "lokalita"
         context["page_title"] = _("lokalita.detal.pageTitle")
         context["detail_view"] = True
+        context["next_url"] = lokalita_obj.get_absolute_url()
         return context
 
 
@@ -132,7 +133,7 @@ class LokalitaCreateView(CreateView, LoginRequiredMixin):
             required_next=required_fields_next,
         )
         context["toolbar_name"] = _("lokalita.zapsat.toolbar.title")
-        context["toolbar_label"] = _("lokalita.zapsat.toolbar.label")
+        context["header"] = _("lokalita.create.formHeader.label")
         context["page_title"] = _("lokalita.zapsat.pageTitle")
         return context
 
@@ -196,9 +197,10 @@ class LokalitaEditView(UpdateView, LoginRequiredMixin):
             required_next=required_fields_next,
         )
         context["toolbar_name"] = _("lokalita.edit.toolbar.title")
-        context["toolbar_label"] = _("lokalita.edit.toolbar.label")
         context["edit_view"] = True
         context["page_title"] = _("lokalita.edit.pageTitle")
+        context["header"] = _("lokalita.edit.formHeader.label")
+        context["zaznam"] = self.object.archeologicky_zaznam
         return context
 
     def form_valid(self, form):

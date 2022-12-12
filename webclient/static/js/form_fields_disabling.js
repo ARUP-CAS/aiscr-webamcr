@@ -34,6 +34,9 @@ function disableField(id, fields) {
     }
     else {
         label = element.parentElement.parentElement.parentElement.getElementsByTagName("label")[0]
+        if (label == undefined) {
+            label = element.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("label")[0]
+        }
         select_id = "#" + id
         if (element.disabled == false) {
             fields.set(key, $(select_id).val());
@@ -41,7 +44,6 @@ function disableField(id, fields) {
         $(select_id).prop("disabled", true);
         $(select_id).selectpicker('deselectAll');
         $(select_id).selectpicker('refresh');
-        console.log(element)
         element.parentElement.classList.remove("required-next")
         if (label.getElementsByTagName("span").length > 0) {
             label.getElementsByTagName("span")[0].remove()
@@ -72,6 +74,9 @@ function enableField(id, checked_field, fields, required_field) {
     }
     else {
         label = element.parentElement.parentElement.parentElement.getElementsByTagName("label")[0]
+        if (label == undefined) {
+            label = element.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("label")[0]
+        }
         if (checked_field.required == true) {
             select_id = "#" + id
             if (element.disabled == true) {

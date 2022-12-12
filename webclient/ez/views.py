@@ -1,4 +1,5 @@
 import logging
+from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -14,6 +15,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django_filters.views import FilterView
 from django.template.loader import render_to_string
 from django_tables2 import SingleTableMixin
+from django.utils.http import is_safe_url
 from dal import autocomplete
 from core.constants import (
     AZ_STAV_ARCHIVOVANY,
@@ -127,7 +129,6 @@ class ExterniZdrojDetailView(DetailView, LoginRequiredMixin):
         context["app"] = "ext_zdroj"
         context["page_title"] = _("externiZdroj.detail.pageTitle")
         context["toolbar_name"] = _("externiZdroj.detail.toolbar.title")
-        context["toolbar_label"] = _("externiZdroj.detail.toolbar.label")
         context["history_dates"] = get_history_dates(zaznam.historie)
         context["show"] = get_detail_template_shows(zaznam)
         context["ez_akce"] = ez_akce
@@ -142,7 +143,6 @@ class ExterniZdrojCreateView(CreateView, LoginRequiredMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger_s.debug("context is called")
         required_fields = get_required_fields()
         context["form"] = ExterniZdrojForm(
             data=self.request.POST if self.request.POST else None,
@@ -150,7 +150,6 @@ class ExterniZdrojCreateView(CreateView, LoginRequiredMixin):
             required_next=required_fields,
         )
         context["toolbar_name"] = _("externiZdroj.zapsat.toolbar.title")
-        context["toolbar_label"] = _("externiZdroj.zapsat.toolbar.label")
         context["page_title"] = _("externiZdroj.zapsat.pageTitle")
         context["header"] = _("externiZdroj.zapsat.formHeader.label")
         return context
@@ -190,9 +189,8 @@ class ExterniZdrojEditView(UpdateView, LoginRequiredMixin):
             required=required_fields,
             required_next=required_fields,
         )
-
+        context["zaznam"] = self.object
         context["toolbar_name"] = _("externiZdroj.edit.toolbar.title")
-        context["toolbar_label"] = _("externiZdroj.edit.toolbar.label")
         context["page_title"] = _("externiZdroj.edit.pageTitle")
         context["header"] = _("externiZdroj.edit.formHeader.label")
         return context
@@ -424,9 +422,15 @@ class ExterniOdkazEditView(UpdateView, LoginRequiredMixin):
         return context
 
     def get_success_url(self):
-        context = self.get_context_data()
-        eo = context["object"]
-        return eo.externi_zdroj.get_absolute_url()
+        next_url = self.request.GET.get("next_url")
+        if next_url:
+            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+                response = next_url
+        else:
+            response = self.get_context_data()[
+                "object"
+            ].externi_zdroj.get_absolute_url()
+        return response
 
     def post(self, request, *args, **kwargs):
         super().post(request, *args, **kwargs)
