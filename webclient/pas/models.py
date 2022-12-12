@@ -122,9 +122,9 @@ class SamostatnyNalez(models.Model):
         blank=True,
         null=True,
     )
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
+    ident_cely = models.TextField(unique=True, blank=True, null=False)
     pocet = models.TextField(blank=True, null=True)
-    soubory = models.ForeignKey(
+    soubory = models.OneToOneField(
         SouborVazby,
         models.DO_NOTHING,
         db_column="soubory",
@@ -132,7 +132,7 @@ class SamostatnyNalez(models.Model):
         null=True,
         related_name="samostatny_nalez_souboru",
     )
-    historie = models.ForeignKey(
+    historie = models.OneToOneField(
         HistorieVazby,
         models.DO_NOTHING,
         db_column="historie",
@@ -243,7 +243,7 @@ class UzivatelSpoluprace(models.Model):
         related_name="spoluprace_archeologu",
     )
     stav = models.SmallIntegerField(choices=SPOLUPRACE_STATES)
-    historie = models.ForeignKey(
+    historie = models.OneToOneField(
         HistorieVazby,
         models.DO_NOTHING,
         db_column="historie",

@@ -140,18 +140,17 @@ class HeslarRuianAdmin(admin.ModelAdmin):
 
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(HeslarRuianAdmin):
-    list_display = ("nazev", "kod", "rada_id", "definicni_bod", "aktualni")
-    fields = ("nazev", "kod", "rada_id", "definicni_bod", "aktualni")
+    list_display = ("nazev", "kod", "rada_id", "definicni_bod")
+    fields = ("nazev", "kod", "rada_id", "definicni_bod")
     search_fields = ("nazev", "kod", "rada_id")
-    list_filter = ("aktualni", )
 
 
 @admin.register(RuianOkres)
 class HeslarRuianOkresAdmin(HeslarRuianAdmin):
     list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
-    fields = ("nazev", "kraj", "spz", "kod", "nazev_en", "aktualni")
+    fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
     search_fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
-    list_filter = ("kraj", "aktualni")
+    list_filter = ("kraj",)
 
 
 @admin.register(RuianKatastr)
