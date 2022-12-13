@@ -114,11 +114,10 @@ class HeslarHierarchie(models.Model):
         ('výchozí hodnota', _('HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
     ]
 
-    heslo_podrazene = models.OneToOneField(
+    heslo_podrazene = models.ForeignKey(
         Heslar,
         models.PROTECT,
         db_column="heslo_podrazene",
-        primary_key=True,
         related_name="hierarchie",
         verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
     )
@@ -170,11 +169,14 @@ class RuianKatastr(models.Model):
     hranice = pgmodels.GeometryField(null=False, verbose_name=_("heslar.models.RuianKatastr.hranice"))
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
     # poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.poznamka")) #Removed by #474
-    # pian = models.ForeignKey("Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"))
-    pian = models.IntegerField(unique = True, verbose_name=_("heslar.models.RuianKatastr.pian"))  # TODO
+    pian = models.OneToOneField("pian.Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"))
     soucasny = models.ForeignKey(
         "self", models.DO_NOTHING, db_column="soucasny", blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.soucasny")
     )
+
+    @property
+    def pian_ident_cely(self):
+        return self.pian.ident_cely
 
     class Meta:
         db_table = "ruian_katastr"
