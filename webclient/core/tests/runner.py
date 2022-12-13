@@ -218,7 +218,6 @@ class AMCRTestRunner(BaseRunner):
                 "C0813040542C604C13824840178B9F59228230409A127179028248409D0CB7BE598230403D43D"
                 "4B3EF8148406E6F8E0B8E84304091B2E4D544824840"
             ),
-            pian=1,
         )
         praha = RuianKatastr(
             id=KATASTR_PRAHA_ID,
@@ -240,7 +239,6 @@ class AMCRTestRunner(BaseRunner):
                 "543910F6CCD42C40791DBCDD5B0B49401050ED8531D52C40B711E7EC920B49406E87F5C48AD5"
                 "2C40899F4641A90B4940ED2BF5120ED62C40E95C8F63BA0B4940"
             ),
-            pian=2,
         )
         logger.debug(praha.id)
         kraj_praha.save()
