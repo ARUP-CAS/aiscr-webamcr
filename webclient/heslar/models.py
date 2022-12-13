@@ -169,7 +169,7 @@ class RuianKatastr(models.Model):
     hranice = pgmodels.GeometryField(null=False, verbose_name=_("heslar.models.RuianKatastr.hranice"))
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
     # poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.poznamka")) #Removed by #474
-    pian = models.OneToOneField("pian.Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"))
+    pian = models.OneToOneField("pian.Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True)
     soucasny = models.ForeignKey(
         "self", models.DO_NOTHING, db_column="soucasny", blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.soucasny")
     )
