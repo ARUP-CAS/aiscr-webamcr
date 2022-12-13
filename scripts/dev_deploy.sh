@@ -4,8 +4,24 @@
 #### PARAMS: See -h
 ###########
 
-#USAGE: local deployement for development purposes
+#USAGE: local deployment for development purposes
 #secrets from files, not managed by docker as in swarm mode
+
+db_pass="../secrets/local_db_pass"
+admin_pass="../secrets/pg_admin_pass"
+
+create_if_absent() {
+  FILE="$1"
+  if [ ! -f $FILE ]; then
+    if [ ! -d "../secrets" ]; then
+      mkdir "../secrets"
+    fi
+    touch $FILE
+    echo 'password' >$FILE
+  fi
+}
+create_if_absent $db_pass
+create_if_absent $admin_pass
 
 # Helper functions
 echo_dec ()

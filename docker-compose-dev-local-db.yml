@@ -1,7 +1,7 @@
 version: "3.8"
 # -----------------------------
-# DISCLAIMER : this file is for local dev. Cannot solve all local dev needs so it might be needed to slightly modify it, if current setup doesn't support desired scenario/setup. 
-# Nominal case for this file is that this docker-compose-dev-local-db.yml is triggered via 
+# DISCLAIMER : this file is for local dev. Cannot solve all local dev needs so it might be needed to slightly modify it, if current setup doesn't support desired scenario/setup.
+# Nominal case for this file is that this docker-compose-dev-local-db.yml is triggered via
 # ./scripts/dev_local.sh, use "./scripts/dev_deploy.sh -h" for help how to use this script
 # It is a wrapper script adding some additional parameters for building the docker images, e.g. file for local db restoration from a backup file, etc.
 # -----------------------------
@@ -12,17 +12,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    # > sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then web service must be restarted manually to work correctly
-    # !!!Please EACH DEV update sleep CONSTANT according to your needs, default time is safe constant 
-    # repsecting that restoration of db from file can take some time and web container needs to start 
-    # after db is fully restored. Otherwise this container needs to be restarted manually (just this container)
-    # if DB is not going to be restored during docker-compose up/start then this sleep constant can be removed completely
-    command: sh -c "sleep 100 && /scripts/entrypoint.dev.sh"
-    #  [
-    #    "sh",
-    #    "-c",
-    #    "pip install debugpy -t /tmp && python3 /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000",
-    #  ]
+    command: sh -c "/scripts/entrypoint.dev.sh"
     secrets:
       - db_conf
       - mail_conf
@@ -37,18 +27,14 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=webclient.settings.dev
     depends_on:
-      - db  
+      db:
+        condition: service_healthy
   
   livereload:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    # > sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then livereload service must be restarted manually to work correctly
-    # !!!Please EACH DEV update sleep CONSTANT according to your needs, default time is safe constant 
-    # repsecting that restoration of db from file can take some time and web container needs to start 
-    # after db is fully restored. Otherwise this container needs to be restarted manually (just this container)
-    # if DB is not going to be restored during docker-compose up/start then this sleep constant can be removed completely
-    command: sh -c "sleep 120 && python3 manage.py livereload --host=0.0.0.0 --port=35729"
+    command: sh -c "python3 manage.py livereload --host=0.0.0.0 --port=35729"
     volumes:
       - ./webclient:/code
     restart: on-failure
@@ -60,8 +46,11 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=webclient.settings.dev
     depends_on:
-      - web
-      - db
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
   db:
     build:
       context: .
@@ -69,24 +58,29 @@ services:
     ports:
       - "5432:5432"
     secrets:
-     - local_db_pass
+      - local_db_pass
     environment:
       - DBNAME=aiscrrestore
       - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
-    
+    healthcheck:
+      test: ./healthcheck.sh
+      retries: 30
+      interval: '10s'
+
   pgadmin:
     image: dpage/pgadmin4
     secrets:
       - pg_admin_pass
     ports:
-     - 88:80
+      - 88:80
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.net
       - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pg_admin_pass
     volumes:
       - pg_admin_vol:/var/lib/pgadmin/
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   memcached:
     image: memcached:latest
@@ -100,13 +94,13 @@ volumes:
 secrets:
   pg_admin_pass:
     # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password )
-   file: ./secrets/pg_admin_pass
+    file: ./secrets/pg_admin_pass
   local_db_pass:
     # PLEASE CHECK and UPDATE path accordingly to a secret setting DB password for local database, needs to match with db_conf secret if local db is used)
-    file : ./secrets/local_db_pass
+    file: ./secrets/local_db_pass
   db_conf:
     # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying DB connection (doesn't need to be repo root)
-     file: ./secrets.alternative.json
+    file: ./secrets.alternative.json
   mail_conf:
-  # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying mailtrap setting (doesn't need to be repo root)
-     file: ./secrets_mail_client.json
+    # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying mailtrap setting (doesn't need to be repo root)
+    file: ./secrets_mail_client.json
