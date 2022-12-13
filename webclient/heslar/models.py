@@ -176,7 +176,10 @@ class RuianKatastr(models.Model):
 
     @property
     def pian_ident_cely(self):
-        return self.pian.ident_cely
+        if self.pian is not None:
+            return self.pian.ident_cely
+        else:
+            return ""
 
     class Meta:
         db_table = "ruian_katastr"
