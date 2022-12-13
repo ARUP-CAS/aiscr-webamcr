@@ -112,7 +112,6 @@ class VyskovyBod(models.Model):
     #northing = models.FloatField() #Removed by #474
     #easting = models.FloatField()  #Removed by #474
     geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
-    poradi = models.IntegerField(default=0) # Removed by #474
 
     def save(self, *args, **kwargs):
         if self.adb and self.ident_cely == "":
