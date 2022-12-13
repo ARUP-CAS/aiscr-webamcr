@@ -1,6 +1,7 @@
 import structlog
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATION_TYPE
 from historie.models import Historie, HistorieVazby
@@ -107,4 +108,15 @@ class CustomUserAdmin(UserAdmin):
         return readonly_fields
 
 
+class CustomGroupAdmin(admin.ModelAdmin):
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None:
+            obj: Group
+            if obj.uzivatele.all().count() >= 1:
+                return False
+        return super().has_delete_permission(request)
+
+
 admin.site.register(User, CustomUserAdmin)
+admin.site.unregister(Group)
+admin.site.register(Group, CustomGroupAdmin)
