@@ -64,9 +64,35 @@
   </div>
 </div>
 
+<script src="{% static '/js/get_vychozi_hodnota_podrazeneho.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+      //show form
         show_form(`detail_komponenta_form_{{ k.ident_cely }}`)
+        // fill base on nadrazeni
+        url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
+        get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
+        ident_cely = '{{k.ident_cely}}'
+        div_komponenta = document.getElementById(`detail_komponenta_form_${ident_cely}`)
+        objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
+        for (let i = 0; i < objekty.length; i++) {
+          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_o-${i}-druh`,`#id_${ident_cely}_o-${i}-specifikace`,url);
+        }
+        predmety = div_komponenta.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
+        for (let i = 0; i < predmety.length; i++) {
+          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_p-${i}-druh`,`#id_${ident_cely}_p-${i}-specifikace`,url);
+        }
+        // smazat nalezy 
+        if (document.getElementsByClassName("objekt-smazat-btn")){
+          elements = document.getElementsByClassName("objekt-smazat-btn")
+          for (let i = 0; i < elements.length; i++){
+            var options = Object.assign(defaults, {modalID: "modal-form",
+            formID: "smazat-objekt-form",
+            modalFormID: "#smazat-objekt-form",
+            })
+            new Modal(options, elements.item(i).id);
+          }
+        }
     });
 </script>
 

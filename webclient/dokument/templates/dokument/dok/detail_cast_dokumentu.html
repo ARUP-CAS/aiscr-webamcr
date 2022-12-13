@@ -23,6 +23,7 @@
             <a class="dropdown-item" href="{% url 'dokument:create-komponenta' dokument.ident_cely cast.ident_cely %}">
               {% trans 'dokument.detail.pridatKomponentu.label' %}
             </a>
+            {% if show_pripojit %}
             <button id="button-pripojit-akci" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-az-cast' cast.ident_cely %}?type=akce">
             {% trans 'dokument.detail.pripojitAkci.label' %}
             </button>
@@ -32,9 +33,12 @@
             <button id="pripojit-projekt-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:pripojit-projekt-cast' cast.ident_cely %}">
               {% trans 'dokument.detail.pripojitProjekt.label' %}
             </button>
+            {% endif %}
+            {% if show_odpojit %}
             <button id="odpojit-cast-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:odpojit-cast' cast.ident_cely %}">
               {% trans 'dokument.detail.odpojitCast.label' %}
             </button>
+            {% endif %}
             <button id="smazat-cast-btn" class="dropdown-item" type="button" name="button" href="{% url 'dokument:smazat-cast' cast.ident_cely %}">
               {% trans 'dokument.detail.smazatCast.label' %}
             </button>
@@ -55,12 +59,12 @@
 <div class="card app-card-form">
     <div class="card-header">
       <div class="app-fx app-left">
-        {% trans "dokument.detail.neidentAkce.cardHeader" %}  {{ cast.neident_akce.ident_cely }}
+        {% trans "dokument.detail.neidentAkce.cardHeader" %}
       </div>
       <div class="app-fx app-right">
         {% if show.editovat %}
         <div class="btn-group" role="group">
-            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.neident_akce.ident_cely %}"
+            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.neident_akce.id %}"
             rel="tooltip" data-placement="top"
             title="{% trans 'dokument.detail.editNeidentAkci.tooltip' %}">
             <span class="material-icons">edit</span>
@@ -98,6 +102,7 @@
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
               })
+            {% if show_pripojit %}
               new Modal(options, "button-pripojit-akci");
               var options = Object.assign(defaults, {modalID: "modal-form",
                 formID: "pripojit-eo-form",
@@ -109,29 +114,33 @@
                 modalFormID: "#pripojit-projekt-form",
               })
               new Modal(options, "pripojit-projekt-btn");
+              {% endif %}
+              {% if show_odpojit %}
               var options = Object.assign(defaults, {modalID: "modal-form",
                 formID: "odpojit-cast-form",
                 modalFormID: "#odpojit-cast-form",
               })
+              {% endif %}
               new Modal(options, "odpojit-cast-btn");
               var options = Object.assign(defaults, {modalID: "modal-form",
                 formID: "smazat-cast-form",
                 modalFormID: "#smazat-cast-form",
               })
               new Modal(options, "smazat-cast-btn");
+              if ("{{cast.neident_akce}}" != ""){
+                var options = Object.assign(defaults, {modalID: "modal-form",
+                  formID: "edit-neident-form",
+                  modalFormID: "#edit-neident-form",
+                })
+                new Modal(options, "button-edit-neident");
+                var options = Object.assign(defaults, {modalID: "modal-form",
+                    formID: "smazat-neident-akce-form",
+                    modalFormID: "#smazat-neident-akce-form",
+                  })
+                  new Modal(options, "smazat-neident-akce-btn");
+              };
           };
-          if ("{{show.editovat}}" != "False" && "{{cast.neident_akce}}" != ""){
-            var options = Object.assign(defaults, {modalID: "modal-form",
-              formID: "edit-neident-form",
-              modalFormID: "#edit-neident-form",
-            })
-            new Modal(options, "button-edit-neident");
-            var options = Object.assign(defaults, {modalID: "modal-form",
-                formID: "smazat-neident-akce-form",
-                modalFormID: "#smazat-neident-akce-form",
-              })
-              new Modal(options, "smazat-neident-akce-btn");
-          };
+          
           if (document.getElementsByClassName("komponenta-smazat-btn")){
             elements = document.getElementsByClassName("komponenta-smazat-btn")
             for (let i = 0; i < elements.length; i++){

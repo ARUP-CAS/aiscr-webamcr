@@ -99,6 +99,7 @@
               disable_disallowed(this.value)
               $('#id_material_originalu').selectpicker('refresh');
           });
+          {% if samostatny %}
           document.addEventListener('DOMContentLoaded', function (event) {
             $("#modal-form-region").modal("show")
           });
@@ -106,6 +107,7 @@
             $('#id_region').selectpicker('val', $('#id-modal-region-div #id_region').val());
             $('#id_region').selectpicker('refresh');
           })
+          {% endif %}
   </script>
 
 {% endblock %}

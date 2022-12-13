@@ -10,9 +10,7 @@ from django_filters import (
     CharFilter,
     ModelMultipleChoiceFilter,
     MultipleChoiceFilter,
-    DateFromToRangeFilter,
 )
-from django_filters.widgets import DateRangeWidget
 
 from heslar.hesla import (
     HESLAR_DOKUMENT_TYP,
@@ -21,6 +19,8 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from dokument.filters import HistorieFilter
 from historie.models import Historie
+from core.forms import SelectMultipleSeparator
+from arch_z.models import ArcheologickyZaznam
 from .models import ExterniZdroj
 from uzivatel.models import Organizace, Osoba, User
 
@@ -32,9 +32,7 @@ class ExterniZdrojFilter(HistorieFilter):
         choices=ExterniZdroj.STATES,
         field_name="stav",
         label=_("externiZdroj.filter.stav.label"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -54,10 +52,8 @@ class ExterniZdrojFilter(HistorieFilter):
     typ = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_EXTERNI_ZDROJ_TYP),
         label=_("externiZdroj.filter.typ.label"),
-        field_name="sysno",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        field_name="typ",
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -72,8 +68,8 @@ class ExterniZdrojFilter(HistorieFilter):
     )
 
     editori = MultipleChoiceFilter(
-        field_name="externizdrojeditor__edito__id",
-        label=_("externiZdroj.filter.autori.label"),
+        field_name="externizdrojeditor__editor__id",
+        label=_("externiZdroj.filter.editori.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",
@@ -81,19 +77,10 @@ class ExterniZdrojFilter(HistorieFilter):
         distinct=True,
     )
 
-    rok_vydani_vzniku = DateFromToRangeFilter(
-        field_name="rok_vydani_vzniku",
-        label=_("externiZdroj.filter.rokVydaniVzniku.label"),
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
-        distinct=True,
-    )
-
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP),
         label=_("externiZdroj.filter.typDokumentu.label"),
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
@@ -115,7 +102,7 @@ class ExterniZdrojFilter(HistorieFilter):
     )
 
     historie_typ_zmeny = MultipleChoiceFilter(
-        choices=filter(lambda x: x[0].endswith("EXT_ZD"), Historie.CHOICES),
+        choices=filter(lambda x: x[0].startswith("EZ"), Historie.CHOICES),
         label=_("historie.filter.typZmeny.label"),
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
@@ -129,15 +116,13 @@ class ExterniZdrojFilter(HistorieFilter):
     )
 
     akce_ident = CharFilter(
-        field_name="externi_zdroj__externi_odkazy__archeologicky_zaznam__ident_cely",
-        lookup_expr="icontains",
+        method="filter_akce_ident",
         label=_("externiZdroj.filter.idAkce.label"),
         distinct=True,
     )
 
     lokalita_ident = CharFilter(
-        field_name="externi_zdroj__externi_odkazy__archeologicky_zaznam__ident_cely",
-        lookup_expr="icontains",
+        method="filter_lokalita_ident",
         label=_("externiZdroj.filter.idLokalita.label"),
         distinct=True,
     )
@@ -146,9 +131,7 @@ class ExterniZdrojFilter(HistorieFilter):
         queryset=User.objects.select_related("organizace").all(),
         field_name="historie__historie__uzivatel",
         label="Vlastník",
-        widget=SelectMultiple(
-            attrs={"class": "selectpicker", "data-live-search": "true"}
-        ),
+        widget=SelectMultipleSeparator(),
     )
 
     def filter_popisne_udaje(self, queryset, name, value):
@@ -160,6 +143,18 @@ class ExterniZdrojFilter(HistorieFilter):
             | Q(isbn__icontains=value)
             | Q(issn__icontains=value)
             | Q(poznamka__icontains=value)
+        )
+
+    def filter_akce_ident(self, queryset, name, value):
+        return queryset.filter(
+            externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
+            externi_odkazy_zdroje__archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,
+        )
+
+    def filter_lokalita_ident(self, queryset, name, value):
+        return queryset.filter(
+            externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
+            externi_odkazy_zdroje__archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
         )
 
     class Meta:
@@ -177,6 +172,7 @@ class ExterniZdrojFilter(HistorieFilter):
             "issn",
             "link",
             "datum_rd",
+            "rok_vydani_vzniku",
         )
 
     def __init__(self, *args, **kwargs):
@@ -199,12 +195,11 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("sysno", css_class="col-sm-2"),
                 Div("typ", css_class="col-sm-2"),
                 Div("stav", css_class="col-sm-2"),
-                Div(css_class="col-sm-4"),
                 Div("autori", css_class="col-sm-2"),
                 Div("editori", css_class="col-sm-2"),
-                Div("rok_vydani_vzniku", css_class="col-sm-4 app-daterangepicker"),
                 Div("typ_dokumentu", css_class="col-sm-2"),
                 Div("organizace", css_class="col-sm-2"),
+                Div("popisne_udaje", css_class="col-sm-8"),
                 css_class="row",
             ),
             Div(

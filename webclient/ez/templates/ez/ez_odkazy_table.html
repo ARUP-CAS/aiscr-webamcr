@@ -5,7 +5,6 @@
       <div class="app-fx app-left">
         {{tableLabel}}
       </div>
-      {% if show.editovat %}
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" id="eo-pripojit-{{card_type}}" type="button" type="button" rel="tooltip" data-placement="top" title="{{pridatLabel}}" name="button" href="{% url 'ez:pripojit_eo' zaznam.ident_cely %}?type={{ card_type | urlencode }}">
@@ -13,7 +12,6 @@
           </button>
         </div>
       </div>
-      {% endif %}
     </div>
         <div class="card-body">
     {% if zaznamy %}

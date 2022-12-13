@@ -101,7 +101,7 @@ class Projekt(models.Model):
     datum_ukonceni = models.DateField(
         blank=True, null=True, verbose_name=_("Datum ukončení")
     )
-    # planovane_zahajeni_text = models.TextField(blank=True, null=True) #Removed by #474
+    # planovane_zahajeni_text = models.TextField(blank=True, null=True) # Removed by #474
     kulturni_pamatka = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -113,7 +113,7 @@ class Projekt(models.Model):
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(
-        unique=True, blank=True, null=True, verbose_name=_("Identifikátor")
+        unique=True, blank=True, null=False, verbose_name=_("Identifikátor")
     )
     geom = pgmodels.PointField(blank=True, null=True)
     soubory = models.OneToOneField(

@@ -8,7 +8,7 @@ from core.constants import (
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
     D_STAV_ARCHIVOVANY,
-    EZ_STAV_ODESLANY,
+    D_STAV_ZAPSANY,
     EZ_STAV_ZAPSANY,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_AZ,
@@ -60,14 +60,16 @@ class ArcheologickyZaznam(models.Model):
         blank=False,
         null=True,
     )
-    ident_cely = models.TextField(unique=True)
-    historie = models.ForeignKey(
+    ident_cely = models.TextField(unique=True, null=False)
+    #stav_stary = models.SmallIntegerField(null=True) - #Removed #474
+
+    historie = models.OneToOneField(
         HistorieVazby, on_delete=models.CASCADE, db_column="historie"
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     katastry = models.ManyToManyField(
-        RuianKatastr, through="ArcheologickyZaznamKatastr", blank=True, null=True
+        RuianKatastr, through="ArcheologickyZaznamKatastr", blank=True
     )
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
@@ -98,6 +100,9 @@ class ArcheologickyZaznam(models.Model):
             vazba=self.historie,
         ).save()
         self.save()
+        for dc in self.casti_dokumentu.all():
+            if dc.dokument.stav == D_STAV_ZAPSANY:
+                dc.dokument.set_odeslany(user)
 
     def set_archivovany(self, user):
         self.stav = AZ_STAV_ARCHIVOVANY
@@ -390,7 +395,7 @@ class Akce(models.Model):
     )
     odlozena_nz = models.BooleanField(default=False)
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, on_delete=models.DO_NOTHING, db_column="organizace", blank=True, null=True
     )
 
     class Meta:
@@ -407,6 +412,8 @@ class AkceVedouci(models.Model):
     vedouci = models.ForeignKey(Osoba, on_delete=models.DO_NOTHING, db_column="vedouci")
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        #TODO: BUG FIX #474
+        # Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=False
     )
 
     class Meta:
@@ -421,7 +428,7 @@ class ExterniOdkaz(models.Model):
         models.DO_NOTHING,
         db_column="externi_zdroj",
         blank=True,
-        null=True,
+        null=False,
         related_name="externi_odkazy_zdroje",
     )
     paginace = models.TextField(blank=True, null=True)
@@ -430,7 +437,7 @@ class ExterniOdkaz(models.Model):
         on_delete=models.CASCADE,
         db_column="archeologicky_zaznam",
         blank=True,
-        null=True,
+        null=False,
         related_name="externi_odkazy",
     )
 
@@ -438,11 +445,11 @@ class ExterniOdkaz(models.Model):
         db_table = "externi_odkaz"
 
 
-def get_akce_ident(region, temp=None):
+def get_akce_ident(region, temp=None, id=None):
     MAXIMAL: int = 999999
     # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
     if temp:
-        prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9")
+        return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + str(id) + "A")
     else:
         prefix = str(region + "-9")
     l = ArcheologickyZaznam.objects.filter(

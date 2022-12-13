@@ -138,7 +138,6 @@ class Dokument(models.Model):
         through="DokumentPosudek",
         related_name="dokumenty_posudku",
         blank=True,
-        null=True,
     )
     osoby = models.ManyToManyField(
         Osoba,
@@ -443,6 +442,9 @@ class DokumentAutor(models.Model):
         unique_together = (("dokument", "autor"),)
         ordering = (["poradi"],)
 
+    class Meta:
+        db_table = "dokument_autor"
+        unique_together = (("dokument", "poradi"),)
 
 class DokumentJazyk(models.Model):
     dokument = models.ForeignKey(
@@ -557,7 +559,7 @@ class Let(models.Model):
     organizace = models.ForeignKey(
         Organizace, models.DO_NOTHING, db_column="organizace"
     )
-    ident_cely = models.TextField(unique=True)
+    ident_cely = models.TextField(unique=True, null=False)
 
     class Meta:
         db_table = "let"

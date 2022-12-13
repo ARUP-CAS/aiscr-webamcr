@@ -108,11 +108,10 @@ class VyskovyBod(models.Model):
         related_name="vyskove_body_typu",
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
-    niveleta = models.FloatField()
-    northing = models.FloatField()
-    easting = models.FloatField()
+    #niveleta = models.FloatField() #Removed by #474
+    #northing = models.FloatField() #Removed by #474
+    #easting = models.FloatField()  #Removed by #474
     geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
-    poradi = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if self.adb and self.ident_cely == "":
@@ -123,9 +122,9 @@ class VyskovyBod(models.Model):
                 y=fabs(self.easting),
                 z=fabs(self.niveleta),
             )
-            self.niveleta = 0.0
-            self.easting = 0.0
-            self.northing = 0.0
+            #self.niveleta = 0.0
+            #self.easting = 0.0
+            #self.northing = 0.0
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):

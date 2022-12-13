@@ -44,6 +44,7 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_post_ez_zapsat(self):
+        ez_last = ExterniZdroj.objects.all().order_by("pk").last()
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
             "typ": str(EZ_TYP),
@@ -53,14 +54,10 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(f"/ext-zdroj/zapsat", data, follow=True)
-        ez = ExterniZdroj.objects.filter(ident_cely="X-BIB-0000001").first()
-        ez.refresh_from_db()
+        ez = ExterniZdroj.objects.get(pk=ez_last.pk + 1)
         self.assertEqual(200, response.status_code)
         self.assertEqual(ez.typ.pk, EZ_TYP)
         self.assertEqual(ez.nazev, "nazev knihy")
-        self.assertTrue(
-            len(ExterniZdroj.objects.filter(ident_cely="X-BIB-0000001")) == 1
-        )
 
     def test_get_ez_editovat(self):
         self.client.force_login(self.existing_user)

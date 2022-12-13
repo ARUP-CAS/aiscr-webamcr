@@ -30,6 +30,7 @@ class Heslar(models.Model, ManyToManyRestrictedClassMixin):
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
     zkratka_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka_en"))
     razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
+    # puvodni_id = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.puvodni_id")) #Removed by #474
 
     ident_prefix = "HES"
 
@@ -95,7 +96,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
         verbose_name=_("heslar.models.HeslarDokumentTypMaterialRada.dokument_material"),
     )
-    validated = models.SmallIntegerField()
+    #validated = models.SmallIntegerField() #Remove by #474
 
     class Meta:
         db_table = "heslar_dokument_typ_material_rada"
@@ -113,11 +114,10 @@ class HeslarHierarchie(models.Model):
         ('výchozí hodnota', _('HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
     ]
 
-    heslo_podrazene = models.OneToOneField(
+    heslo_podrazene = models.ForeignKey(
         Heslar,
         models.PROTECT,
         db_column="heslo_podrazene",
-        primary_key=True,
         related_name="hierarchie",
         verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
     )
@@ -161,15 +161,22 @@ class RuianKatastr(models.Model):
     aktualni = models.BooleanField(verbose_name=_("heslar.models.RuianKatastr.aktualni"))
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"))
     kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"))
+    # TODO: BUG FIX #474 when ready #372
+    # nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKatastr.nazev"))
+    # kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKatastr.kod"))
+    # END of TODO
     definicni_bod = pgmodels.GeometryField(null=False, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"))
-    hranice = pgmodels.GeometryField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"))
+    hranice = pgmodels.GeometryField(null=False, verbose_name=_("heslar.models.RuianKatastr.hranice"))
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
-    poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.poznamka"))
-    # pian = models.ForeignKey("Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"))
-    pian = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.pian"))  # TODO
+    # poznamka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.poznamka")) #Removed by #474
+    pian = models.OneToOneField("pian.Pian", models.PROTECT, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True)
     soucasny = models.ForeignKey(
         "self", models.DO_NOTHING, db_column="soucasny", blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.soucasny")
     )
+
+    @property
+    def pian_ident_cely(self):
+        return self.pian.ident_cely
 
     class Meta:
         db_table = "ruian_katastr"
@@ -184,9 +191,13 @@ class RuianKraj(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
+    nazev_en = models.TextField(null=True)
     definicni_bod = pgmodels.PointField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.definicni_bod"))
-    # hranice = models.TextField(blank=True, null=True)  # This field type is a guess.
-    aktualni = models.BooleanField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.aktualni"))
+    # TODO: BUG FIX #474 when ready #372
+    # definicni_bod = pgmodels.PointField(blank=True, null=False, verbose_name=_("heslar.models.RuianKraj.definicni_bod"))
+    # hranice = models.TextField(blank=True, null=False)  # This field type is a guess.
+    # END of TODO
+    # aktualni = models.BooleanField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.aktualni")) #Removed by #474
 
     class Meta:
         db_table = "ruian_kraj"
@@ -198,14 +209,16 @@ class RuianKraj(models.Model):
 
 
 class RuianOkres(models.Model):
-    nazev = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev"))
+    nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
     kraj = models.ForeignKey(RuianKraj, models.PROTECT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
-    spz = models.CharField(max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
-    kod = models.IntegerField(verbose_name=_("heslar.models.RuianOkres.kod"))
-    nazev_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianOkres.nazev_en"))
-    # hranice = models.TextField(blank=True, null=True)  # This field type is a guess.
-    # definicni_bod = models.TextField(blank=True, null=True)  # This field type is a guess.
-    aktualni = models.BooleanField(blank=True, null=True, verbose_name=_("heslar.models.RuianOkres.aktualni"))
+    spz = models.CharField(unique=True, max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
+    kod = models.IntegerField(unique=True,verbose_name=_("heslar.models.RuianOkres.kod"))
+    nazev_en = models.TextField(blank=True, null=False, verbose_name=_("heslar.models.RuianOkres.nazev_en"))
+    # TODO: BUG FIX #474 when ready #372
+    # hranice = models.TextField(blank=True, null=False)  # This field type is a guess.
+    # definicni_bod = models.TextField(blank=True, null=False)  # This field type is a guess.
+    # END of TODO
+    # aktualni = models.BooleanField(blank=True, null=True, verbose_name=_("heslar.models.RuianOkres.aktualni")) #Removed by #474
 
     class Meta:
         db_table = "ruian_okres"

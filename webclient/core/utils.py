@@ -1,11 +1,11 @@
 import json
 import logging
 import mimetypes
-import structlog
 import zlib
 
 import core.message_constants as mc
 import requests
+import structlog
 from arch_z.models import ArcheologickyZaznam
 from core.message_constants import (
     VALIDATION_EMPTY,
@@ -21,6 +21,7 @@ from pian.models import Pian
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
+
 
 def get_mime_type(file_name):
     mime_type = mimetypes.guess_type(file_name)[0]
@@ -104,16 +105,18 @@ def get_centre_point(bod, geom):
 
 def get_all_pians_with_akce(ident_cely):
     query = (
-        " (SELECT pian.id,pian.ident_cely,"
-        " ST_AsText(CASE WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN pian.geom  "
+        " (SELECT A.id,A.ident_cely,ST_AsText(A.geom) as geometry, A.dj,katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        " FROM public.ruian_katastr katastr "
+        " JOIN ( SELECT pian.id,pian.ident_cely, "
+        "  CASE "
+        "  WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_centroid(pian.geom)  "
         "  WHEN ST_GeometryType(pian.geom) = 'ST_LineString' THEN st_lineinterpolatepoint(pian.geom,0.5)"
-        "  ELSE st_centroid(pian.geom) END) AS geometry,"
-        " dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
+        "  ELSE st_centroid(pian.geom) END AS geom,"
+        " dj.ident_cely as dj"
         " from public.pian pian "
         " join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely LIKE %s"
-        " join public.ruian_katastr katastr ON ST_Intersects(katastr.hranice,pian.geom)"
-        " WHERE dj.ident_cely IS NOT NULL "
-        " ORDER BY dj.ident_cely "
+        " WHERE dj.ident_cely IS NOT NULL ) AS A ON ST_Intersects(katastr.hranice,geom)"
+        " ORDER BY A.ident_cely "
         " LIMIT 1 )"
         " union all "
         "(select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj, katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
@@ -230,12 +233,14 @@ def get_centre_from_akce(katastr, pian):
     try:
         bod = RuianKatastr.objects.raw(query, [katastr])[0]
         geom = ""
+        presnost = 4
         bod.zoom = 14
         if len(pian) > 1:
             dj = DokumentacniJednotka.objects.get(ident_cely=pian)
             if dj.pian and dj.pian.geom:
                 [bod, geom] = get_centre_point(bod, dj.pian.geom)
-        return [bod, geom]
+                presnost = dj.pian.presnost.zkratka
+        return [bod, geom, presnost]
     except IndexError:
         logger.error("Could not find cadastre: " + str(katastr) + " with pian: " + pian)
         return None
@@ -243,6 +248,7 @@ def get_centre_from_akce(katastr, pian):
 
 def get_points_from_envelope(left, bottom, right, top):
     from projekt.models import Projekt
+
     query = (
         "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng "
         " from public.projekt where "
@@ -330,6 +336,7 @@ def get_num_projects_from_envelope(left, bottom, right, top):
 
 def get_projects_from_envelope(left, bottom, right, top):
     from projekt.models import Projekt
+
     query = (
         "select p.id,p.ident_cely,ST_AsText(p.geom) as geometry "
         "from public.projekt p "

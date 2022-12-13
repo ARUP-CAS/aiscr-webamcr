@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}Modely{% endblock %}
+{% block title %}Dokumenty{% endblock %}
 
 {% block content %}
   <div class="app-entity-dokument">
@@ -39,6 +39,16 @@
           </div>
         </a>
       </div>
+      <div class="col">
+        <a href="{% url 'dokument:list' %}?stav=2" class="card app-card-entity app-card-archivovat">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Archivovat" %}
+          </div>
+        </a>
+      </div>
     </div>
   </div>
 
@@ -65,6 +75,14 @@
       </div>
     </div>
   </div>
+  <div class="app-collapse-archivovat collapse">
+    <div class="p-3">
+      <h4>{% trans "Archivovat" %}</h4>
+      <hr />
+      {% trans "dokumenty.index.archivovat.text" %}
+    </div>
+  </div>
+</div>
 
   <script>
     // show / hide card description
@@ -85,6 +103,12 @@
     });
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
+    });
+    $(".app-card-archivovat").mouseleave(function(){
+      $(".app-collapse-archivovat").hide(100);
+    });
+    $(".app-card-archivovat").mouseover(function(){
+      $(".app-collapse-archivovat").show(100);
     });
 </script>
 {% endblock %}

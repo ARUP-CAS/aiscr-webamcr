@@ -15,6 +15,19 @@ logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
 
 
+class SelectMultipleSeparator(forms.SelectMultiple):
+    def __init__(
+        self,
+        attrs={
+            "class": "selectpicker",
+            "data-multiple-separator": "; ",
+            "data-live-search": "true",
+        },
+        choices=(),
+    ):
+        super().__init__(attrs, choices)
+
+
 class TwoLevelSelectField(forms.CharField):
     def to_python(self, selected_value):
         if selected_value:

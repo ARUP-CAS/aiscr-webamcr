@@ -411,6 +411,9 @@ form {
     .card-body {
       max-height: 300px;
       overflow-y: auto;
+      .cast-dokumentu-part1 {
+        flex: 1;
+      }
     }
   }
 }
@@ -659,6 +662,14 @@ form {
   }
 
   #soubor-nahled:hover {
+    opacity: 0.7;
+  }
+  .image-nahled {
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .image-nahled:hover {
     opacity: 0.7;
   }
 

@@ -1,17 +1,18 @@
 version: "3.8"
-
+# -----------------------------
+# DISCLAIMER : this file is for local dev. Cannot solve all local dev needs so it might be needed to slightly modify it, if current setup doesn't support desired scenario/setup.
+# Nominal case for this file is that this docker-compose-dev-local-db.yml is triggered via
+# ./scripts/dev_local.sh, use "./scripts/dev_deploy.sh -h" for help how to use this script
+# It is a wrapper script adding some additional parameters for building the docker images, e.g. file for local db restoration from a backup file, etc.
+# -----------------------------
+# !!! Check that secrets at bottom of this compose file are mapped to EXISTING secrets file if not, update path accrodingly !!!! Doesn't need to be in default location as mentioned below.
+#-------------------------------------------
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    #sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then web service must be restarted manually to work correctly
     command: sh -c "/scripts/entrypoint.dev.sh"
-    #  [
-    #    "sh",
-    #    "-c",
-    #    "pip install debugpy -t /tmp && python3 /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000",
-    #  ]
     secrets:
       - db_conf
       - mail_conf
@@ -33,7 +34,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DEV
-    #sleep at the beginning is due to waiting for DB restore that tooks time, if server is started earlier than DB restore is done then livereload service must be restarted manually to work correctly
     command: sh -c "python3 manage.py livereload --host=0.0.0.0 --port=35729"
     volumes:
       - ./webclient:/code
@@ -93,10 +93,14 @@ volumes:
 
 secrets:
   pg_admin_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password )
     file: ./secrets/pg_admin_pass
   local_db_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting DB password for local database, needs to match with db_conf secret if local db is used)
     file: ./secrets/local_db_pass
   db_conf:
+    # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying DB connection (doesn't need to be repo root)
     file: ./secrets.alternative.json
   mail_conf:
+    # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying mailtrap setting (doesn't need to be repo root)
     file: ./secrets_mail_client.json

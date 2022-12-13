@@ -23,6 +23,7 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("djMap").scrollIntoView();
       let xhr = new XMLHttpRequest();
               xhr.open('POST', '/arch-z/akce-zjisti-katastr');
               xhr.setRequestHeader('Content-type', 'application/json');
@@ -38,7 +39,7 @@
                   }
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom)
+                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom,rs.presnost==4)
                   }
               };
               xhr.send(JSON.stringify(

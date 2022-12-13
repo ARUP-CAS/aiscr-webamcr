@@ -5,12 +5,13 @@ from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_EXTERNI_ZDROJ_TYP
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
-from uzivatel.models import Osoba
+from uzivatel.models import Organizace, Osoba
 from core.constants import (
     EZ_STAV_ODESLANY,
     EZ_STAV_POTVRZENY,
     EZ_STAV_ZAPSANY,
     IDENTIFIKATOR_DOCASNY_PREFIX,
+    ODESLANI_EXT_ZD,
     POTVRZENI_EXT_ZD,
     VRACENI_EXT_ZD,
     ZAPSANI_EXT_ZD,
@@ -52,7 +53,9 @@ class ExterniZdroj(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
         related_name="externi_zroje_typu_dokumentu",
     )
-    organizace = models.TextField(blank=True, null=True)
+    organizace = models.ForeignKey(
+        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+    )
     rok_vydani_vzniku = models.TextField(blank=True, null=True)
     paginace_titulu = models.TextField(blank=True, null=True)
     isbn = models.TextField(blank=True, null=True)
@@ -61,9 +64,11 @@ class ExterniZdroj(models.Model):
     datum_rd = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
-    ident_cely = models.TextField(unique=True, blank=True, null=True)
-    historie = models.ForeignKey(
-        HistorieVazby, models.DO_NOTHING, db_column="historie", blank=True, null=True
+    ident_cely = models.TextField(unique=True, blank=True, null=False)
+    # final_cj = models.BooleanField(blank=True, null=True) #Removed by #474
+
+    historie = models.OneToOneField(
+        HistorieVazby, on_delete=models.RESTRICT, db_column="historie", blank=True, null=True
     )
     autori = models.ManyToManyField(
         Osoba, through="ExterniZdrojAutor", related_name="ez_autori"
@@ -73,7 +78,6 @@ class ExterniZdroj(models.Model):
         through="ExterniZdrojEditor",
         related_name="ez_editori",
         blank=True,
-        null=True,
     )
 
     class Meta:
@@ -94,7 +98,7 @@ class ExterniZdroj(models.Model):
     def set_odeslany(self, user):
         self.stav = EZ_STAV_ODESLANY
         Historie(
-            typ_zmeny=ZAPSANI_EXT_ZD,
+            typ_zmeny=ODESLANI_EXT_ZD,
             uzivatel=user,
             vazba=self.historie,
         ).save()
@@ -131,11 +135,13 @@ class ExterniZdroj(models.Model):
         self.save()
 
 
-def get_ez_ident(temp=False):
+def get_ez_ident(zaznam=None):
     MAXIMAL: int = 9999999
     # [BIB]-[pořadové číslo v sedmimístném formátu]
-    if temp:
-        prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + "BIB-")
+    prefix = "X-BIB-"
+    if zaznam is not None:
+        id_number = "{0}".format(str(zaznam.id)).zfill(7)
+        return prefix + id_number
     else:
         prefix = "BIB-"
     ez = ExterniZdroj.objects.filter(
@@ -171,9 +177,13 @@ class ExterniZdrojAutor(models.Model):
     autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
     poradi = models.IntegerField(null=True)
 
+    def get_osoba(self):
+        return self.autor.vypis_cely
+
     class Meta:
         db_table = "externi_zdroj_autor"
         unique_together = (("externi_zdroj", "autor"),)
+        unique_together = (("externi_zdroj", "poradi"),)
 
 
 class ExterniZdrojEditor(models.Model):
@@ -182,6 +192,9 @@ class ExterniZdrojEditor(models.Model):
     )
     editor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="editor")
     poradi = models.IntegerField(null=True)
+
+    def get_osoba(self):
+        return self.editor.vypis_cely
 
     class Meta:
         db_table = "externi_zdroj_editor"

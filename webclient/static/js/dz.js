@@ -41,7 +41,7 @@ window.onload = function () {
     } else if (currentLocation.includes("nahrat-soubor/dokument/")) {
         acceptFile = "image/*, " +
             "text/plain, " +
-            "application/pdf" +
+            "application/pdf, " +
             ".csv, " +
             ".CSV"
         RejectedFileMessage = reject_dict["rejected_dokument"]
@@ -64,7 +64,6 @@ window.onload = function () {
             "application/vnd.oasis.opendocument.spreadsheet "
         RejectedFileMessage = reject_dict["rejected_all"]
     }
-
     var dropzoneOptions = {
         dictDefaultMessage: get_description(),
         acceptedFiles: acceptFile,

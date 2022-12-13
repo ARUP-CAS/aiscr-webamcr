@@ -207,6 +207,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
     nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
     zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
+    ident_cely = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -226,6 +227,7 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
     rodne_prijmeni = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"))
+    ident_cely = models.CharField(max_length=20, null=True, blank=True)
 
     class Meta:
         db_table = "osoba"

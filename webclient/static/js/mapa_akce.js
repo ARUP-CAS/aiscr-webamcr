@@ -369,7 +369,7 @@ var getOtherPoi= ()=>{
 var addPointToPoiLayer = (lat, long, text,lai) => {
     if( global_map_can_edit){
         L.marker([lat, long], {icon: redIcon}).bindPopup(text).addTo(drawnItems);
-        console.log(lat+'  '+ long)
+        //console.log(lat+'  '+ long)
     }
 }
 var addPointOnLoad = (lat, long, text) => {
@@ -398,14 +398,14 @@ var addPointOnLoad = (lat, long, text) => {
 addPointOnLoad(50.28702571184197,14.830008745193483,"Uživatelem zadaná poloha záměru");
 
 map.on('zoomend', function() {
-    console.log(map.getZoom())
+    //console.log(map.getZoom())
     if (map.getZoom() > 5) {
         getOtherPoi();
     }
 });
 
 map.on('click', function (e) {
-        console.log("Your zoom is: "+map.getZoom())
+        //console.log("Your zoom is: "+map.getZoom())
         //var type = e.layerType;
         //console.log("Your type: "+type)
         //console.log(e)
