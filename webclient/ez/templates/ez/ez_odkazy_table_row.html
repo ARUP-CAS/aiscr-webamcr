@@ -21,7 +21,7 @@
       </button>
     </td>
     {% endif %}
-    {% if show.editovat %}
+    {% if show.odpojit %}
     <td>
       <button id="ez-odpojit-{{z.id}}" class="ez-odpojit-btn" type="button" name="button" href="{% url 'ez:odpojit_eo' zaznam.ident_cely z.id %}">
         <span class="material-icons app-color-danger">delete_forever</span>

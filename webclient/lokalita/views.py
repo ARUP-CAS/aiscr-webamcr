@@ -74,6 +74,7 @@ class LokalitaListView(
         context["hasOnlyArchive_header"] = _("lokalita.vyber.header.hasOnlyArchive")
         context["hasOnlyPotvrdit_header"] = _("lokalita.vyber.header.hasOnlyPotvrdit")
         context["default_header"] = _("lokalita.vyber.header.default")
+        context["toolbar_name"] = _("lokalita.template.toolbar.title")
         return context
 
     def get_queryset(self):
