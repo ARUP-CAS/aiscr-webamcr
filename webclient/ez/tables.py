@@ -2,15 +2,74 @@ import django_tables2 as tables
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from django_tables2.utils import A
 from django.utils.translation import gettext as _
+from django.utils.html import conditional_escape, mark_safe
+from django.utils.encoding import force_str
+from django.db.models import OuterRef, Subquery
+
+from uzivatel.models import Osoba
 
 from .models import ExterniZdroj
+
+
+class ExtZdrojAutoriColumn(tables.Column):
+    def render(self, record, value):
+        if value:
+            osoby = Osoba.objects.filter(
+                externizdrojautor__externi_zdroj__ident_cely=record
+            ).order_by("externizdrojautor__poradi")
+            items = []
+            for autor in osoby:
+                content = conditional_escape(force_str(autor))
+                items.append(content)
+
+            return mark_safe(conditional_escape("; ").join(items))
+        else:
+            return ""
+
+    def order(self, queryset, is_descending):
+        comments = (
+            Osoba.objects.filter(externizdrojautor__externi_zdroj=OuterRef("pk"))
+            .order_by("externizdrojautor__poradi")
+            .values("vypis_cely")
+        )
+        queryset = queryset.annotate(length=Subquery(comments[:1])).order_by(
+            ("-" if is_descending else "") + "length"
+        )
+        return (queryset, True)
+
+
+class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
+    def render(self, record, value):
+        if value:
+            osoby = Osoba.objects.filter(
+                externizdrojeditor__externi_zdroj__ident_cely=record
+            ).order_by("externizdrojeditor__poradi")
+            items = []
+            for autor in osoby:
+                content = conditional_escape(force_str(autor))
+                items.append(content)
+
+            return mark_safe(conditional_escape("; ").join(items))
+        else:
+            return ""
+
+    def order(self, queryset, is_descending):
+        comments = (
+            Osoba.objects.filter(externizdrojeditor__externi_zdroj=OuterRef("pk"))
+            .order_by("externizdrojeditor__poradi")
+            .values("vypis_cely")
+        )
+        queryset = queryset.annotate(length=Subquery(comments[:1])).order_by(
+            ("-" if is_descending else "") + "length"
+        )
+        return (queryset, True)
 
 
 class ExterniZdrojTable(ColumnShiftTableBootstrap4):
 
     ident_cely = tables.Column(linkify=True)
-    autor = tables.Column(accessor="externizdrojautor.autor", default="")
-    editor = tables.Column(accessor="externizdrojeditor.editor", default="")
+    autor = ExtZdrojAutoriColumn(default="", accessor="autori.all")
+    editor = ExtZdrojEditoriColumn(default="", accessor="editori.all")
     casopis_denik_nazev = tables.columns.Column(default="")
     casopis_rocnik = tables.columns.Column(default="")
     sbornik_nazev = tables.columns.Column(default="")

@@ -1,5 +1,6 @@
 import logging
-from django.http import HttpResponse, JsonResponse
+from django.conf import settings
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views import View
@@ -14,6 +15,7 @@ from django.views.generic.edit import CreateView, UpdateView
 from django_filters.views import FilterView
 from django.template.loader import render_to_string
 from django_tables2 import SingleTableMixin
+from django.utils.http import is_safe_url
 from dal import autocomplete
 from core.constants import (
     AZ_STAV_ARCHIVOVANY,
@@ -46,7 +48,7 @@ from core.utils import get_message
 from .filters import ExterniZdrojFilter
 
 # from .forms import LokalitaForm
-from .models import ExterniZdroj, get_ez_ident
+from .models import ExterniZdroj, ExterniZdrojAutor, ExterniZdrojEditor, get_ez_ident
 from .tables import ExterniZdrojTable
 from .forms import (
     ExterniOdkazForm,
@@ -90,6 +92,7 @@ class ExterniZdrojListView(
             "externiZdroj.vyber.header.hasOnlyPotvrdit"
         )
         context["default_header"] = _("externiZdroj.vyber.header.default")
+        context["toolbar_name"] = _("externiZdroj.template.toolbar.title")
         return context
 
     def get_queryset(self):
@@ -127,7 +130,6 @@ class ExterniZdrojDetailView(DetailView, LoginRequiredMixin):
         context["app"] = "ext_zdroj"
         context["page_title"] = _("externiZdroj.detail.pageTitle")
         context["toolbar_name"] = _("externiZdroj.detail.toolbar.title")
-        context["toolbar_label"] = _("externiZdroj.detail.toolbar.label")
         context["history_dates"] = get_history_dates(zaznam.historie)
         context["show"] = get_detail_template_shows(zaznam)
         context["ez_akce"] = ez_akce
@@ -140,34 +142,34 @@ class ExterniZdrojCreateView(CreateView, LoginRequiredMixin):
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        required_fields = get_required_fields()
+        kwargs.update({"required": required_fields, "required_next": required_fields})
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger_s.debug("context is called")
-        required_fields = get_required_fields()
-        context["form"] = ExterniZdrojForm(
-            data=self.request.POST if self.request.POST else None,
-            required=required_fields,
-            required_next=required_fields,
-        )
         context["toolbar_name"] = _("externiZdroj.zapsat.toolbar.title")
-        context["toolbar_label"] = _("externiZdroj.zapsat.toolbar.label")
         context["page_title"] = _("externiZdroj.zapsat.pageTitle")
         context["header"] = _("externiZdroj.zapsat.formHeader.label")
         return context
 
     def form_valid(self, form):
         ez = form.save(commit=False)
+        ez.stav = EZ_STAV_ZAPSANY
+        ez.save()
         try:
-            ez.ident_cely = get_ez_ident(temp=True)
+            ez.ident_cely = get_ez_ident(ez)
         except MaximalIdentNumberError as e:
             logger_s.debug("Maximum lokalit dosazeno")
             messages.add_message(self.request, messages.ERROR, e.message)
             return self.form_invalid(form)
-        ez.stav = EZ_STAV_ZAPSANY
         ez.save()
+        save_autor_editor(ez, form)
         ez.set_zapsany(self.request.user)
         messages.add_message(self.request, messages.SUCCESS, EZ_USPESNE_ZAPSAN)
-        return super().form_valid(form)
+        return HttpResponseRedirect(ez.get_absolute_url())
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
@@ -182,24 +184,28 @@ class ExterniZdrojEditView(UpdateView, LoginRequiredMixin):
     form_class = ExterniZdrojForm
     slug_field = "ident_cely"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        required_fields = get_required_fields()
+        kwargs.update({"required": required_fields, "required_next": required_fields})
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        required_fields = get_required_fields()
-        context["form"] = ExterniZdrojForm(
-            instance=self.object,
-            required=required_fields,
-            required_next=required_fields,
-        )
-
+        context["zaznam"] = self.object
         context["toolbar_name"] = _("externiZdroj.edit.toolbar.title")
-        context["toolbar_label"] = _("externiZdroj.edit.toolbar.label")
         context["page_title"] = _("externiZdroj.edit.pageTitle")
         context["header"] = _("externiZdroj.edit.formHeader.label")
         return context
 
     def form_valid(self, form):
+        super().form_valid(form)
+        self.object.autori.clear()
+        self.object.editori.clear()
+        self.object.save()
+        save_autor_editor(self.object, form)
         messages.add_message(self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-        return super().form_valid(form)
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
@@ -424,9 +430,15 @@ class ExterniOdkazEditView(UpdateView, LoginRequiredMixin):
         return context
 
     def get_success_url(self):
-        context = self.get_context_data()
-        eo = context["object"]
-        return eo.externi_zdroj.get_absolute_url()
+        next_url = self.request.GET.get("next_url")
+        if next_url:
+            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+                response = next_url
+        else:
+            response = self.get_context_data()[
+                "object"
+            ].externi_zdroj.get_absolute_url()
+        return response
 
     def post(self, request, *args, **kwargs):
         super().post(request, *args, **kwargs)
@@ -563,15 +575,17 @@ def get_detail_template_shows(zaznam):
     show_vratit = zaznam.stav > EZ_STAV_ZAPSANY
     show_odeslat = zaznam.stav == EZ_STAV_ZAPSANY
     show_potvrdit = zaznam.stav == EZ_STAV_ODESLANY
-    show_edit = zaznam.stav not in []
+    show_edit = zaznam.stav not in [EZ_STAV_POTVRZENY]
     show_arch_links = zaznam.stav == EZ_STAV_POTVRZENY
     show_ez_odkazy = True
     show_paginace = True
+    show_odpojit = True
     show = {
         "vratit_link": show_vratit,
         "odeslat_link": show_odeslat,
         "potvrdit_link": show_potvrdit,
         "editovat": show_edit,
+        "odpojit": show_odpojit,
         "arch_links": show_arch_links,
         "ez_odkazy": show_ez_odkazy,
         "paginace": show_paginace,
@@ -587,3 +601,21 @@ def get_required_fields():
         "nazev",
     ]
     return required_fields
+
+
+def save_autor_editor(zaznam, form):
+    i = 1
+    for autor in form.cleaned_data["autori"]:
+        ExterniZdrojAutor.objects.create(
+            externi_zdroj=zaznam,
+            autor=autor,
+            poradi=i,
+        )
+        i = i + 1
+    for editor in form.cleaned_data["editori"]:
+        ExterniZdrojEditor.objects.create(
+            externi_zdroj=zaznam,
+            editor=editor,
+            poradi=i,
+        )
+        i = i + 1

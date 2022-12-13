@@ -24,7 +24,12 @@
           {% crispy form %}
         </div>  
       </div>
-      <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+      <div class="mt-3">
+        <div class="form-group">
+          <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{% trans "Uložit" %}</button>
+          <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+        </div>
+      </div>
     </form>
   </div>
 {% endblock %}
@@ -34,7 +39,6 @@
   <script>
       window.addEventListener("DOMContentLoaded", function() {
         var checked_field = document.getElementById("id_typ");
-        console.log(checked_field)
         var fields = new Map()
         fields.set("id_editori", "")
         fields.set("id_casopis_denik_nazev", "")

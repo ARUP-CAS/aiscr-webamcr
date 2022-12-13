@@ -261,6 +261,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
             if zaznam.akce.typ == Akce.TYP_AKCE_PROJEKTOVA:
                 context["showbackdetail"] = True
         self.get_vedouci(context)
+        context["next_url"] = zaznam.get_absolute_url()
         return context
 
 
@@ -1405,6 +1406,7 @@ class AkceListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Filter
         context["hasOnlyArchive_header"] = _("akce.vyber.header.hasOnlyArchive")
         context["hasOnlyPotvrdit_header"] = _("akce.vyber.header.hasOnlyPotvrdit")
         context["default_header"] = _("akce.vyber.header.default")
+        context["toolbar_name"] = _("akce.template.toolbar.title")
         return context
 
     def get_queryset(self):

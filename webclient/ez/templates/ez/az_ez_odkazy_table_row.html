@@ -6,11 +6,17 @@
         {{ ez.ident_cely }}
       </a>
     </td>
-    <td>{{ ez.autori.all|katastry_to_list }}</td>
-    <td>{{ ez.rok|check_if_none }}</td>
+    <td>{{ ez.autori.all|osoby_to_list }}</td>
+    <td>{{ ez.rok_vydani_vzniku|check_if_none }}</td>
     <td>{{ ez.nazev|check_if_none }}</td>
     {% if hide_paginace != True %}
-    <td>{{ z.paginace|check_if_none }}</td>
+    <td>{{ z.paginace|check_if_none }}
+      {% if show.editovat %}
+      <button  id="ez-change-{{z.id}}" class="ez-change-btn" type="button" name="button" href="{% url 'ez:zmenit_eo' z.id %}?next_url={{next_url}}">
+        <span class="material-icons app-color-warning">edit</span>
+      </button>
+      {% endif %}
+    </td>
     {% endif %}
     {% if show.editovat %}
     <td>
