@@ -310,6 +310,8 @@ class Dokument(models.Model):
         new_month = new_date.month + self.organizace.mesicu_do_zverejneni
         year = new_date.year + (math.floor(new_month / 12))
         month = new_month % 12
+        if month == 0:
+            month = 12
         last_day_of_month = calendar.monthrange(new_date.year, month)[1]
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)

@@ -111,6 +111,7 @@ MAINTENANCE_AFTER_LOGOUT: Final = _("base_odstavka_afterlogout_text")
 UPLOADFILE_REJECTED_PAS: Final = _("core.message.uploadFile.rejectedPas.text")
 UPLOADFILE_REJECTED_DOKUMENT: Final = _("core.message.uploadFile.rejectedDokument.text")
 UPLOADFILE_REJECTED_ALL: Final = _("core.message.uploadFile.rejectedAll.text")
+UPLOADFILE_ERROR: Final = _("core.message.uploadFile.error.text")
 
 # Validation
 VALIDATION_NOT_VALID: Final = "Geometrie není validní."
