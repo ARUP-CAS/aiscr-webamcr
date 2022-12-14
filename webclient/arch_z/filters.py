@@ -2,7 +2,7 @@ import crispy_forms
 from dal import autocomplete
 from crispy_forms.layout import Div, Layout, HTML
 from django.db.models import Q
-from django.forms import SelectMultiple
+from django.forms import SelectMultiple, Select
 from django.utils.translation import gettext as _
 from django_filters import (
     CharFilter,
@@ -10,6 +10,7 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
+    ChoiceFilter,
 )
 from django_filters.widgets import DateRangeWidget
 
@@ -161,11 +162,10 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
 
     komponenta_jistota = MultipleChoiceFilter(
         label=_("lokalita.filter.komponentaJistota.label"),
-        method="filter_komponenta_jistota",
-        # field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota",
+        field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota",
         choices=[
-            ("True", _("lokalita.filter.komponentaJistota.ano.label")),
-            ("False", _("lokalita.filter.komponentaJistota.ne.label")),
+            (True, _("lokalita.filter.komponentaJistota.ano.label")),
+            (False, _("lokalita.filter.komponentaJistota.ne.label")),
         ],
         widget=SelectMultipleSeparator(),
         distinct=True,
@@ -285,18 +285,6 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
                 archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=True
             ).distinct()
 
-    def filter_komponenta_jistota(self, queryset, name, value):
-        if "True" in value and "False" in value:
-            return queryset.distinct()
-        elif "True" in value:
-            return queryset.filter(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota=True
-            ).distinct()
-        elif "False" in value:
-            return queryset.exclude(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__jistota=True
-            ).distinct()
-
     def filter_predmet_pozn_pocet(self, queryset, name, value):
         return queryset.filter(
             Q(
@@ -379,14 +367,15 @@ class AkceFilter(ArchZaznamFilter):
         distinct=True,
     )
 
-    zahrnout_projektove = MultipleChoiceFilter(
+    zahrnout_projektove = ChoiceFilter(
         choices=[("False", _("Ne")), ("True", _("Ano"))],
         label=_("akce.filter.zahrnoutProjektove.label"),
         method="filtr_zahrnout_projektove",
-        widget=SelectMultiple(
+        empty_label=None,
+        null_label=None,
+        widget=Select(
             attrs={
                 "class": "selectpicker",
-                "data-multiple-separator": "; ",
                 "data-live-search": "true",
             }
         ),
@@ -408,9 +397,9 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     je_nz = MultipleChoiceFilter(
-        choices=[("False", _("Ne")), ("True", _("Ano"))],
-        label=_("akce.filter.terenniZjisteni.label"),
-        method="filtr_je_nz",
+        choices=[(False, _("Ne")), (True, _("Ano"))],
+        label=_("akce.filter.zaaJakoNz.label"),
+        field_name="je_nz",
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -422,9 +411,9 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     odlozena_nz = MultipleChoiceFilter(
-        choices=[("False", _("Ne")), ("True", _("Ano"))],
+        choices=[(False, _("Ne")), (True, _("Ano"))],
         label=_("akce.filter.odlozenaNz.label"),
-        method="filtr_odlozena_nz",
+        field_name="odlozena_nz",
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -474,10 +463,15 @@ class AkceFilter(ArchZaznamFilter):
         distinct=True,
     )
 
-    adb_roky = DateFromToRangeFilter(
+    adb_roky = RangeFilter(
         label=_("akce.filter.adbRoky.label"),
         method="filter_adb_roky",
-        widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
+        widget=DateRangeWidget(
+            attrs={
+                "max": "2100-12-31",
+                "class": "textinput textInput dateinput form-control adb_roky",
+            }
+        ),
         distinct=True,
     )
 
@@ -529,24 +523,6 @@ class AkceFilter(ArchZaznamFilter):
         elif "False" in value:
             return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA).distinct()
 
-    def filtr_je_nz(self, queryset, name, value):
-        if "True" in value and "False" in value:
-            return queryset.filter(Q(je_nz=False) | Q(je_nz=True)).distinct()
-        elif "True" in value:
-            return queryset.filter(je_nz=True).distinct()
-        elif "False" in value:
-            return queryset.filter(je_nz=False).distinct()
-
-    def filtr_odlozena_nz(self, queryset, name, value):
-        if "True" in value and "False" in value:
-            return queryset.filter(
-                Q(odlozena_nz=False) | Q(odlozena_nz=True)
-            ).distinct()
-        elif "True" in value:
-            return queryset.filter(odlozena_nz=True).distinct()
-        elif "False" in value:
-            return queryset.filter(odlozena_nz=False).distinct()
-
     def filter_adb_popisne_udaje(self, queryset, name, value):
         return queryset.filter(
             Q(
@@ -577,28 +553,25 @@ class AkceFilter(ArchZaznamFilter):
         ).distinct()
 
     def filter_adb_roky(self, queryset, name, value):
-        if value.start and value.stop:
-            rng = (
-                value.start.year,
-                value.stop.year,
-            )
-        elif value.start and not value.stop:
-            rng = (
-                value.start.year,
-                2100,
-            )
-        elif value.stop and not value.start:
-            rng = (1900, value.stop.year)
-        else:
-            rng = (1900, 2100)
-        return queryset.filter(
-            Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_popisu__range=rng
-            )
-            | Q(
-                archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_revize__range=rng
-            )
-        ).distinct()
+        if value:
+            if value.start is not None and value.stop is not None:
+                self.lookup_expr = "range"
+                value = (value.start, value.stop)
+            elif value.start is not None:
+                self.lookup_expr = "gte"
+                value = value.start
+            elif value.stop is not None:
+                self.lookup_expr = "lte"
+                value = value.stop
+        lookup1 = "%s__%s" % (
+            "archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_popisu",
+            self.lookup_expr,
+        )
+        lookup2 = "%s__%s" % (
+            "archeologicky_zaznam__dokumentacni_jednotky_akce__adb__rok_revize",
+            self.lookup_expr,
+        )
+        return queryset.filter(Q(**{lookup1: value}) | Q(**{lookup2: value})).distinct()
 
     class Meta:
         model = Akce
@@ -607,12 +580,6 @@ class AkceFilter(ArchZaznamFilter):
     def __init__(self, *args, **kwargs):
         super(AkceFilter, self).__init__(*args, **kwargs)
         self.helper = AkceFilterFormHelper()
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        if not self.form.cleaned_data["zahrnout_projektove"]:
-            queryset = queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA)
-        return queryset
 
 
 class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
