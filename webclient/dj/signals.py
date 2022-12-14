@@ -52,7 +52,8 @@ def create_dokumentacni_jednotka(sender, instance, created, **kwargs):
                 geom = ruian_katastr.hranice
                 presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
                 typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
-                pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom)
+                pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom,
+                            geom_system="wgs84")
                 pian.set_permanent_ident_cely()
                 pian.save()
                 pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())
