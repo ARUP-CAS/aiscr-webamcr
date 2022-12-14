@@ -64,13 +64,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     telefon = models.TextField(
         blank=True, null=True, validators=[validate_phone_number]
     )
-    hlavni_role = models.ForeignKey(
-        Group,
-        models.DO_NOTHING,
-        db_column="hlavni_role",
-        related_name="uzivatele",
-        default=ROLE_BADATEL_ID,
-    )
     history = HistoricalRecords()
     notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user')
     notification_log = GenericRelation('NotificationsLog')
@@ -80,6 +73,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
+
+    @property
+    def hlavni_role(self) -> Group:
+        return self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).last()
 
     @cached_property
     def user_str(self):

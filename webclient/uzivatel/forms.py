@@ -95,7 +95,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
     class Meta:
         model = User
         fields = (
-            "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "hlavni_role", "groups")
+            "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
         help_texts = {
             "first_name": _("uzivatel.form.userChange.first_name.tooltip"),
             "last_name": _("uzivatel.form.userChange.last_name.tooltip"),
@@ -120,6 +120,8 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["hlavni_role"].widget.attrs["value"] \
+            = self.instance.hlavni_role.name
         self.fields["organizace"].widget.attrs["value"] \
             = self.instance.organizace.nazev if self.instance.organizace else ""
         self.fields["hlavni_role"].widget.attrs["value"] \

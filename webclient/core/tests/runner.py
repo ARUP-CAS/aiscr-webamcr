@@ -460,22 +460,22 @@ class AMCRTestRunner(BaseRunner):
             email="amcr@arup.cas.cz",
             password="foo1234!!!",
             organizace=o,
-            hlavni_role=admin_group,
             is_active=True,
         )
         user.created_from_admin_panel = True
         user.save()
+        user.groups.add(admin_group)
 
         user_archeolog = User.objects.create_user(
             email=USER_ARCHEOLOG_EMAIL,
             password="test123!",
             organizace=o,
-            hlavni_role=archeolog_group,
             is_active=True,
             id=USER_ARCHEOLOG_ID,
         )
         user_archeolog.created_from_admin_panel = True
         user_archeolog.save()
+        user.groups.add(archeolog_group)
 
         # PROJEKT
         p = Projekt(
