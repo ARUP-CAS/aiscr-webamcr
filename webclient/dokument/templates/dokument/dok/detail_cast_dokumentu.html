@@ -64,7 +64,7 @@
       <div class="app-fx app-right">
         {% if show.editovat %}
         <div class="btn-group" role="group">
-            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.neident_akce.id %}"
+            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.id %}"
             rel="tooltip" data-placement="top"
             title="{% trans 'dokument.detail.editNeidentAkci.tooltip' %}">
             <span class="material-icons">edit</span>
@@ -120,8 +120,8 @@
                 formID: "odpojit-cast-form",
                 modalFormID: "#odpojit-cast-form",
               })
-              {% endif %}
               new Modal(options, "odpojit-cast-btn");
+              {% endif %}
               var options = Object.assign(defaults, {modalID: "modal-form",
                 formID: "smazat-cast-form",
                 modalFormID: "#smazat-cast-form",

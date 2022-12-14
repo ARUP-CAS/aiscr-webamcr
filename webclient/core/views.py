@@ -255,7 +255,7 @@ def post_upload(request):
                 )
             else:
                 logger.warning(
-                    "File already exists on the server. Saving copy" + str(s)
+                    "File already exists on the server. Saving copy: " + str(s)
                 )
                 s.save()
                 if not request.user.is_authenticated:

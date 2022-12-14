@@ -308,6 +308,12 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
             context["neident_akce_form"] = NeidentAkceForm(
                 instance=neident_akce[0], readonly=True
             )
+        context["show_odpojit"] = False
+        context["show_pripojit"] = True
+        if cast.projekt or cast.archeologicky_zaznam:
+            logger.debug("we have something here")
+            context["show_odpojit"] = True
+            context["show_pripojit"] = False
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -432,11 +438,6 @@ class DokumentCastDetailView(RelatedContext):
         )
         self.get_cast(context, cast)
         context["active_dc_ident"] = cast.ident_cely
-        context["show_odpojit"] = False
-        context["show_pripojit"] = True
-        if cast.projekt or cast.archeologicky_zaznam:
-            context["show_odpojit"] = True
-            context["show_pripojit"] = False
         return context
 
 

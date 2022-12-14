@@ -39,9 +39,20 @@ window.onload = function () {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
     } else if (currentLocation.includes("nahrat-soubor/dokument/")) {
-        acceptFile = "image/*, " +
-            "text/plain, " +
-            "application/pdf, " +
+        acceptFile = ".jpeg, " +
+            ".JPEG, " +
+            ".jpg, " +
+            ".JPG, " +
+            ".png, " +
+            ".PNG, " +
+            ".tiff, " +
+            ".TIFF, " +
+            ".tif, " +
+            ".TIF, " +
+            ".txt, " +
+            ".TXT, " +
+            ".pdf, " +
+            ".PDF, " +
             ".csv, " +
             ".CSV"
         RejectedFileMessage = reject_dict["rejected_dokument"]
@@ -96,10 +107,16 @@ window.onload = function () {
             this.on("sending", function (file) {
                 file.previewElement.lastChild.style.display = "none"
             });
+
         },
         error: function (file, response) {
             console.log(response);
-            alert(response)
+            if (response.includes('reject')) {
+                alert(response)
+            }
+            else {
+                alert(upload_error)
+            }
             this.removeFile(file);
 
         },

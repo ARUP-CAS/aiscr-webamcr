@@ -120,11 +120,21 @@ class Soubor(models.Model):
         except self.DoesNotExist:
             super().save(*args, **kwargs)
         if self.path and self.path.path.lower().endswith("pdf"):
-            reader = PdfFileReader(self.path)
-            self.rozsah = len(reader.pages)
+            try:
+                reader = PdfFileReader(self.path)
+            except:
+                logger.debug("Error while reading pdf file to get rozsah. setting 1")
+                self.rozsah = 1
+            else:
+                self.rozsah = len(reader.pages)
         elif self.path and self.path.path.lower().endswith("tif"):
-            img = Image.open(self.path)
-            self.rozsah = img.n_frames
+            try:
+                img = Image.open(self.path)
+            except:
+                logger.debug("Error while reading tif file to get rozsah. setting 1")
+                self.rozsah = 1
+            else:
+                self.rozsah = img.n_frames
         else:
             self.rozsah = 1
         super().save(*args, **kwargs)
