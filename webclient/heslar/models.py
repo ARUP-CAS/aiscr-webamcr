@@ -194,7 +194,7 @@ class RuianKraj(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
-    # nazev_en = models.TextField(null=True)
+    nazev_en = models.TextField(null=True)
     definicni_bod = pgmodels.PointField(blank=True, null=True, verbose_name=_("heslar.models.RuianKraj.definicni_bod"))
     # TODO: BUG FIX #474 when ready #372
     # definicni_bod = pgmodels.PointField(blank=True, null=False, verbose_name=_("heslar.models.RuianKraj.definicni_bod"))
