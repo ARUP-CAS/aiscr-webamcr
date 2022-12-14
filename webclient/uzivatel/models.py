@@ -76,7 +76,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def hlavni_role(self) -> Group:
-        return self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).last()
+        roles = self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
+        if roles.count() == 0:
+            return Group.objects.get(pk=ROLE_BADATEL_ID)
+        return roles.last()
 
     @cached_property
     def user_str(self):
@@ -143,28 +146,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
 
     @property
-    def _old_role(self):
-        return User.objects.get(pk=self.pk).hlavni_role.pk
-
-    @property
     def is_archiver_or_more(self):
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
         logger_s.debug("User.save.start")
-        if not self._state.adding and ((self.hlavni_role.pk == ROLE_BADATEL_ID and self._old_role
-                                        in (ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)) or not self.is_active):
-            logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
-                           old_hlavni_role_id=self._old_role, is_active=self.is_active)
-            # local import to avoid circual import issue
-            from pas.models import UzivatelSpoluprace
-            spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
-            logger_s.debug("User.save.deactivate_spoluprace", spoluprace_count=spoluprace_query.count())
-            for spoluprace in spoluprace_query:
-                logger_s.debug("User.save.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
-                spoluprace.stav = SPOLUPRACE_NEAKTIVNI
-                spoluprace.save()
-        self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
+        try:
+            self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
+        except ValueError:
+            self.is_staff = self.is_superuser
         super().save(*args, **kwargs)
 
     class Meta:
