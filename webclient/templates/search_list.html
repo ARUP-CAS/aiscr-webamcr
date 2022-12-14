@@ -241,4 +241,17 @@
       type="text/javascript"
       src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
   </script>
+  <script>
+    $(document).ready(function () {
+      $(".adb_roky").datepicker('destroy')
+      $(".adb_roky").datepicker({
+        format: "yyyy",
+        viewMode: "years",
+          minViewMode: "years",
+        language: 'cs',
+        todayHighlight: true,
+        endDate: new Date(2100,12,31)
+    })
+  })
+</script>
 {% endblock %}

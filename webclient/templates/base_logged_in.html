@@ -139,8 +139,8 @@
               <li><a href="{% url 'arch_z:index' %}" title="">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "Zapsat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}" title="">{% trans "Moje Akce" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False" title="">{% trans "Moje Akce" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "Archivovat" %}</a></li>
             </ul>
           </div>
         </div>
