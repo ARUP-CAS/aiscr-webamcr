@@ -24,6 +24,7 @@ services:
     ports:
       - "8000:8000"
       - "5678:5678"
+      - "2525:2525"
     environment:
       - DJANGO_SETTINGS_MODULE=webclient.settings.dev
     depends_on:

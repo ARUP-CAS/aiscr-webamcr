@@ -155,8 +155,8 @@ msg_default_case="DISCLAIMER: DEFAULT CASE assumes that db data ALREADYY exists 
 # Detect missing secrets
 detect_secrets ${secret_local_db_pass}
 detect_secrets ${secret_pg_admin_pass}
-detect_secrets ${secret_db_conf}
-detect_secrets ${secret_mail_conf}
+check_file_exist ${secret_db_conf}
+check_file_exist ${secret_mail_conf}
 
 # GET git revision
 git_changes=$(git diff-index $(git write-tree) | wc -l)
