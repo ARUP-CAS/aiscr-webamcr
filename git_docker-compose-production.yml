@@ -16,6 +16,8 @@ services:
       - git-reverse-proxy
     expose:
       - "8000"
+    ports:
+      - "2525:2525"
 
   memcached:
     image: memcached:latest
