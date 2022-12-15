@@ -475,7 +475,7 @@ class AMCRTestRunner(BaseRunner):
         )
         user_archeolog.created_from_admin_panel = True
         user_archeolog.save()
-        user.groups.add(archeolog_group)
+        user_archeolog.groups.add(archeolog_group)
 
         # PROJEKT
         p = Projekt(

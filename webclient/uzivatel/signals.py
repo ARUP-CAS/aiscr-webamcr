@@ -1,8 +1,9 @@
 import logging
 import structlog
+from django.contrib.auth.models import Group
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, m2m_changed
 from django.dispatch import receiver
 
 from services.mailer import Mailer

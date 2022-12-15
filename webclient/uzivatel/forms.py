@@ -92,6 +92,8 @@ class AuthUserChangeForm(forms.ModelForm):
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
+    hlavni_role = forms.CharField(widget=forms.TextInput(attrs={"readonly": True}))
+
     class Meta:
         model = User
         fields = (
@@ -114,14 +116,11 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": forms.TextInput(attrs={"readonly": True}),
             "date_joined": forms.TextInput(attrs={"readonly": True}),
             "organizace": forms.TextInput(attrs={"readonly": True}),
-            "hlavni_role": forms.TextInput(attrs={"readonly": True}),
             "groups": forms.TextInput(attrs={"readonly": True}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["hlavni_role"].widget.attrs["value"] \
-            = self.instance.hlavni_role.name
         self.fields["organizace"].widget.attrs["value"] \
             = self.instance.organizace.nazev if self.instance.organizace else ""
         self.fields["hlavni_role"].widget.attrs["value"] \

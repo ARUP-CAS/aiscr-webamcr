@@ -77,21 +77,24 @@ class CustomUserAdmin(UserAdmin):
         user = request.user
         user.created_from_admin_panel = True
         logger_s.debug("uzivatel.admin.save_model.start", user=user.pk, obj_pk=obj.pk, change=change, form=form)
-        super().save_model(request, obj, form, change)
         user_db: User = User.objects.get(id=obj.pk)
-        if user_db.history_vazba is None:
-            historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
-            historie_vazba.save()
-            user_db.history_vazba = historie_vazba
-            user_db.save()
-        else:
-            historie_vazba = user_db.history_vazba
-        if user_db.hlavni_role != obj.hlavni_role:
+        super().save_model(request, obj, form, change)
+
+        form_groups = form.cleaned_data["groups"]
+        groups = form_groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
+        other_groups = form_groups.filter(~Q(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
+                                                      ROLE_ADMIN_ID])))
+        group_ids = groups.values_list('id', flat=True)
+        max_id = max(group_ids)
+
+        if user.groups.values_list('id', flat=True) != form_groups.values_list('id', flat=True):
+            logger_s.debug("uzivatel.admin.save_model.role_changed", old=obj.hlavni_role,
+                           new=user.groups.values_list('name', flat=True))
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
-                poznamka=obj.hlavni_role,
-                vazba=historie_vazba,
+                poznamka=user.groups.values_list('name', flat=True),
+                vazba=obj.history_vazba,
             ).save()
             Mailer.sendEU06(user=user)
         group_ids = [str(x) for x in obj.groups.all()]
@@ -99,7 +102,7 @@ class CustomUserAdmin(UserAdmin):
             typ_zmeny=ZMENA_UDAJU_ADMIN,
             uzivatel=user,
             poznamka=f"Role: {group_ids}",
-            vazba=historie_vazba,
+            vazba=obj.history_vazba,
         ).save()
 
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk,
@@ -108,12 +111,6 @@ class CustomUserAdmin(UserAdmin):
             logger_s("uzivatel.admin.save_model.manage_user_groups.deactivated", user=obj.pk)
             transaction.on_commit(lambda: obj.groups.set([], clear=True))
             return
-        form_groups = form.cleaned_data["groups"]
-        groups = form_groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
-        other_groups = form_groups.filter(~Q(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
-                                                      ROLE_ADMIN_ID])))
-        group_ids = groups.values_list('id', flat=True)
-        max_id = max(group_ids)
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk, group_count=groups.count())
         if groups.count() == 0:
             logger_s.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added", user=obj.pk)
@@ -126,19 +123,6 @@ class CustomUserAdmin(UserAdmin):
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups", user=obj.pk,
                        user_groups=obj.groups.values_list('id', flat=True))
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", max_id=max_id, hlavni_role_pk=obj.hlavni_role.pk)
-        if obj.pk is not None and \
-                ((max_id == ROLE_BADATEL_ID and obj.hlavni_role.pk
-                  in (ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)) or not obj.is_active):
-            logger_s.debug("uzivatel.admin.save_model.deactivate_spoluprace", max_id=max_id,
-                           obj_hlavni_role=obj.hlavni_role.pk)
-            # local import to avoid circual import issue
-            from pas.models import UzivatelSpoluprace
-            spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=obj)
-            logger_s.debug("uzivatel.admin.save_model.deactivate_spoluprace", spoluprace_count=spoluprace_query.count())
-            for spoluprace in spoluprace_query:
-                logger_s.debug("uzivatel.admin.save_model.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
-                spoluprace.stav = SPOLUPRACE_NEAKTIVNI
-                spoluprace.save()
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:

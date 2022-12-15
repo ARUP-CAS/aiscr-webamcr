@@ -1,3 +1,5 @@
+from typing import Union
+
 import structlog
 
 from distlib.util import cached_property
@@ -17,7 +19,7 @@ from core.constants import (
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
-    PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE,
+    PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE, UZIVATEL_RELATION_TYPE,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
@@ -75,10 +77,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     @property
-    def hlavni_role(self) -> Group:
+    def hlavni_role(self) -> Union[Group, None]:
         roles = self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         if roles.count() == 0:
-            return Group.objects.get(pk=ROLE_BADATEL_ID)
+            if self.is_active:
+                return Group.objects.get(pk=ROLE_BADATEL_ID)
+            else:
+                return None
         return roles.last()
 
     @cached_property
@@ -151,10 +156,28 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         logger_s.debug("User.save.start")
+        if not self._state.adding and (self.hlavni_role.pk == ROLE_BADATEL_ID or not self.is_active):
+            logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
+                           is_active=self.is_active)
+            # local import to avoid circual import issue
+            from pas.models import UzivatelSpoluprace
+            spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
+            logger_s.debug("User.save.deactivate_spoluprace", spoluprace_count=spoluprace_query.count())
+            for spoluprace in spoluprace_query:
+                logger_s.debug("User.save.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
+                spoluprace.stav = SPOLUPRACE_NEAKTIVNI
+                spoluprace.save()
+
         try:
             self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
         except ValueError:
             self.is_staff = self.is_superuser
+
+        if self.history_vazba is None:
+            from historie.models import HistorieVazby
+            historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
+            historie_vazba.save()
+            self.history_vazba = historie_vazba
         super().save(*args, **kwargs)
 
     class Meta:
