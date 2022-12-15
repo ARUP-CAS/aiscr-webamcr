@@ -232,13 +232,18 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         def __init__(self, *args, **kwargs):
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
             self.fields["ident_cely"].required = False
-            # self.fields["northing"].label = "X"
-            # self.fields["easting"].label = "Y"
-            if pian:
+
+            if self.instance.northing is not None and self.instance.easting is not None:
+                self.fields["northing"].initial = self.instance.northing
+                self.fields["easting"].initial = self.instance.easting
+            elif pian:
                 [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
                 self.fields["northing"].initial = -1 * round(x, 2)
                 self.fields["easting"].initial = -1 * round(y, 2)
-            if niveleta:
+
+            if self.instance.niveleta is not None:
+                self.fields["niveleta"].initial = self.instance.niveleta
+            elif niveleta:
                 self.fields["niveleta"].initial = niveleta
 
             for key in self.fields.keys():

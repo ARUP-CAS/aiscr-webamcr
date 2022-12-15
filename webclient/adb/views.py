@@ -1,4 +1,5 @@
 import logging
+import structlog
 
 from adb.forms import CreateADBForm, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -25,11 +26,13 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 
 logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
 
 
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
+    logger_s.debug("adb.views.zapsat.start", dj_ident_cely=dj_ident_cely)
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     dj: DokumentacniJednotka
     form = CreateADBForm(request.POST)
@@ -60,40 +63,6 @@ def zapsat(request, dj_ident_cely):
         max_age=1000,
     )
     return response
-
-
-@login_required
-@require_http_methods(["POST"])
-def zapsat_vyskove_body(request, adb_ident_cely):
-    adb = get_object_or_404(Adb, ident_cely=adb_ident_cely)
-    vyskovy_bod_formset = inlineformset_factory(
-        Adb,
-        VyskovyBod,
-        form=create_vyskovy_bod_form(),
-        extra=3,
-    )
-    formset = vyskovy_bod_formset(
-        request.POST, instance=adb, prefix=adb.ident_cely + "_vb"
-    )
-    if formset.is_valid():
-        logger.debug("Formset is valid")
-        instances = formset.save()
-        for vyskovy_bod in instances:
-            vyskovy_bod: VyskovyBod
-            vyskovy_bod.save()
-            # vyskovy_bod.set_ident()
-    if formset.is_valid():
-        logger.debug("Adb Form is valid3")
-        if (
-            formset.has_changed()
-        ):  # TODO tady to hazi porad ze se zmenila kvuli specifikaci a druhu
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
-    else:
-        logger.warning("Form is not valid")
-        logger.debug(formset.errors)
-        messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-
-    return redirect(request.META.get("HTTP_REFERER"))
 
 
 @login_required

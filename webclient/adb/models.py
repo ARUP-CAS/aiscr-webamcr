@@ -1,5 +1,6 @@
 import logging
 from math import fabs
+import structlog
 
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
@@ -12,6 +13,7 @@ from heslar.models import Heslar
 from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
 
 
 class Kladysm5(models.Model):
@@ -108,27 +110,29 @@ class VyskovyBod(models.Model):
         related_name="vyskove_body_typu",
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
-    #niveleta = models.FloatField() #Removed by #474
-    #northing = models.FloatField() #Removed by #474
-    #easting = models.FloatField()  #Removed by #474
     geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
+
+    def set_geom(self, northing, easting, niveleta):
+        logger_s.debug("adb.models.VyskovyBod.set_geom", northing=northing, easting=easting, nivelete=niveleta)
+        if northing != 0.0:
+            self.geom = Point(
+                x=fabs(northing),
+                y=fabs(easting),
+                z=fabs(niveleta),
+            )
+            logger_s.debug("adb.models.VyskovyBod.set_geom.point", point=self.geom)
+            self.save()
 
     def save(self, *args, **kwargs):
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
-        if self.northing != 0.0:
-            self.geom = Point(
-                x=fabs(self.northing),
-                y=fabs(self.easting),
-                z=fabs(self.niveleta),
-            )
-            #self.niveleta = 0.0
-            #self.easting = 0.0
-            #self.northing = 0.0
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
         super(VyskovyBod, self).__init__(*args, **kwargs)
+        self.northing = None
+        self.easting = None
+        self.niveleta = None
         if self.geom is not None:
             geom_length = len(self.geom)
             if geom_length > 1:
