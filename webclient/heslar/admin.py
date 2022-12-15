@@ -142,9 +142,9 @@ class HeslarRuianAdmin(admin.ModelAdmin):
 
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(HeslarRuianAdmin):
-    list_display = ("nazev", "kod", "rada_id", "nazev_en")
-    fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en")
-    search_fields = ("nazev", "kod", "rada_id", "nazev_en")
+    list_display = ("nazev", "kod", "rada_id")
+    fields = ("nazev", "kod", "rada_id", "definicni_bod")
+    search_fields = ("nazev", "kod", "rada_id")
 
 
 @admin.register(RuianOkres)

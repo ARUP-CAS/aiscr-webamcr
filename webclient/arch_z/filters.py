@@ -115,7 +115,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     )
 
     dj_zjisteni = MultipleChoiceFilter(
-        method="filter_has_positive_find",
+        method="filter_dj_zjisteni",
         label=_("lokalita.filter.djZjisteni.label"),
         choices=[("True", "pozitivní"), ("False", "negativní")],
         widget=SelectMultipleSeparator(),
@@ -266,7 +266,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             | Q(archeologicky_zaznam__katastry__okres__in=value)
         ).distinct()
 
-    def filter_has_positive_find(self, queryset, name, value):
+    def filter_dj_zjisteni(self, queryset, name, value):
         if "True" in value and "False" in value:
             return queryset.filter(
                 Q(
@@ -424,6 +424,20 @@ class AkceFilter(ArchZaznamFilter):
         distinct=True,
     )
 
+    has_positive_find = MultipleChoiceFilter(
+        method="filter_has_positive_find",
+        label=_("Terénní zjištění"),
+        choices=[("True", "pozitivní"), ("False", "negativní")],
+        widget=SelectMultiple(
+            attrs={
+                "class": "selectpicker",
+                "data-multiple-separator": "; ",
+                "data-live-search": "true",
+            }
+        ),
+        distinct=True,
+    )
+
     adb_ident_obsahuje = CharFilter(
         field_name="archeologicky_zaznam__dokumentacni_jednotky_akce__adb__ident_cely",
         lookup_expr="icontains",
@@ -523,6 +537,18 @@ class AkceFilter(ArchZaznamFilter):
         elif "False" in value:
             return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA).distinct()
 
+    def filter_has_positive_find(self, queryset, name, value):
+        if "True" in value and "False" in value:
+            return queryset
+        elif "True" in value:
+            return queryset.filter(
+                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+            ).distinct()
+        elif "False" in value:
+            return queryset.exclude(
+                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+            ).distinct()
+
     def filter_adb_popisne_udaje(self, queryset, name, value):
         return queryset.filter(
             Q(
@@ -615,6 +641,7 @@ class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("zahrnout_projektove", css_class="col-sm-2"),
                 Div("datum_zahajeni", css_class="col-sm-4 app-daterangepicker"),
                 Div("datum_ukonceni", css_class="col-sm-4 app-daterangepicker"),
+                Div("has_positive_find", css_class="col-sm-2"),
                 Div("je_nz", css_class="col-sm-2"),
                 Div("odlozena_nz", css_class="col-sm-2"),
                 css_class="row",

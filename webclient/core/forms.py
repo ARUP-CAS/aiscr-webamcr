@@ -154,12 +154,12 @@ class OdstavkaSystemuForm(forms.ModelForm):
         label=_("core.forms.odstavkaSystemu.errorTextOznamEn"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
-    text_en = forms.CharField(
-        label=_("base.odstavka.textEN.label"),
-        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
-    )
     text_cs = forms.CharField(
         label=_("base.odstavka.textCZ.label"),
+        widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
+    )
+    text_en = forms.CharField(
+        label=_("base.odstavka.textEN.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
 
