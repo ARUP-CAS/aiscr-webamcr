@@ -322,12 +322,20 @@
   <script>
       // Open sidebar based on the url i am viewing
       $(document).ready(function () {
-          if (window.location.href.indexOf("projekt") > -1) {
+          if ((window.location.href.indexOf("projekt") > -1) && (window.location.href.indexOf("projektove") <= -1)) {
               $('#collapseProjekty').collapse('show')
           } else if (window.location.href.indexOf("model") > -1) {
               $('#collapse3d').collapse('show')
           } else if (window.location.href.indexOf("pas") > -1) {
               $('#collapseSn').collapse('show')
+          } else if (window.location.href.indexOf("dokument") > -1) {
+            $('#collapseDokument').collapse('show')
+          } else if (window.location.href.indexOf("akce") > -1) {
+            $('#collapseAkce').collapse('show')
+          } else if (window.location.href.indexOf("lokalita") > -1) {
+            $('#collapseLokality').collapse('show')
+          } else if (window.location.href.indexOf("ext-zdroj") > -1) {
+            $('#collapseEz').collapse('show')
           }
       });
       const goBack = () => {
