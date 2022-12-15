@@ -9,21 +9,21 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "Dobrý den" %},
+{% trans "uzivatel.emails.ac.dobry_den" %},
 
-{% trans "pro tuto emailovou adresu byl registrován nový uživatelský účet do AMČR s následujícími údaji" %}:
+{% trans "uzivatel.emails.ac.pro_tuto_emailovou_adresu_byl_registrován_nový_uživatelský_účet_do_AMČR_s_následujícími_údaji" %}:
 <ul style="list-style: none">
     <li>ID: {{ id }}</li>
-    <li>{% trans "Jméno" %}: {{ name }}</li>
-    <li>{% trans "Příjmení" %}: {{ surname }}</li>
-    <li>{% trans "Organizace" %}: {{ organization }}</li>
-    <li>{% trans "Email" %}: {{ email }}</li>
-    <li>{% trans "Telefon" %}: {{ phone }}</li>
-    <li>{% trans "Heslo: vámi zvolené heslo" %}</li>
-    <li>{% trans "User role" %}: {{ role }}</li>
+    <li>{% trans "uzivatel.emails.ac.jméno" %}: {{ name }}</li>
+    <li>{% trans "uzivatel.emails.ac.příjmení" %}: {{ surname }}</li>
+    <li>{% trans "uzivatel.emails.ac.organizace" %}: {{ organization }}</li>
+    <li>{% trans "uzivatel.emails.ac.email" %}: {{ email }}</li>
+    <li>{% trans "uzivatel.emails.ac.telefon" %}: {{ phone }}</li>
+    <li>{% trans "uzivatel.emails.ac.heslo_vámi_zvolené_heslo" %}</li>
+    <li>{% trans "uzivatel.emails.ac.user_role" %}: {{ role }}</li>
 </ul>
 <p>
-    {% trans "UPOZORNĚNÍ: Registrace v AMČR uživatele neopravňuje k provádění archeologických výzkumů na území České republiky, a to vč. vyhledávání archeologických nálezů." %} {% trans "Tuto činnost mohu vykonávat pouze oprávněné archeologické organizace a jejich oficiální spolupracovníci." %} {% trans "K možnostem spolupráce více viz https://amcr-info.aiscr.cz/pas." %}
+    {% trans "uzivatel.emails.ac.upozornění_registrace_v_amčr_uživatele_neopravňuje_k_provádění_archeologických_výzkumů_na_území_české_republiky_a_to_vč_vyhledávání_archeologických_nálezů" %} {% trans "uzivatel.emails.ac.tuto_činnost_mohu_vykonávat_pouze_oprávněné_archeologické_organizace_a_jejich_oficiální_spolupracovníci" %} {% trans "uzivatel.emails.ac.k_možnostem_spolupráce_více_viz_https://amcr-info.aiscr.cz/pas." %}
 </p>
 </body>
 </html>

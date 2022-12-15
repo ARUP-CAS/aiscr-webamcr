@@ -6,16 +6,15 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Dobrý den' %},
-{% blocktrans %} v aplikaci IS AMČR byl právě zapsán nový projekt [ident_cely].
-Typ projektu: {{ project_type }}
-Katastr: {{ katastr}} ({{ okres}})
-Podnět: {{ podnet}}
-Lokalizace: {{ lokalita}}
-Plánované zahájení: {{ planned_start}}
-{% endblocktrans %}
+{% trans "project.emails.opwr.dobrý_den" %},
+{% trans "project.emails.opwr.v_aplikaci_is_amčr_byl_právě_zapsán_nový_projekt" %} {{ ident_cely }}.
+{% trans "project.emails.opwr.typ_projektu" %}: {{ project_type }}
+{% trans "project.emails.opwr.katastr" %}: {{ katastr }} ({{ okres }})
+{% trans "project.emails.opwr.podnět" %}: {{ podnet }}
+{% trans "project.emails.opwr.lokalizace" %}: {{ lokalita }}
+{% trans "project.emails.opwr.plánované zahájení" %}: {{ planned_start }}
 
-{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+{% trans "project.emails.opwr.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.
 
 </body>
 </html>

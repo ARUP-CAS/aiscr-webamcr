@@ -6,14 +6,14 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "Dobrý den" %},
+{% trans "project.emails.pic.dobrý_den" %},
 
-{% blocktrans %} projekt {{ ident_cely }} na katastru {{ katastr }} byl navržen k odhlášení oprávněnou organizací
-    {{ organizace }}. {% endblocktrans %}
+ {% trans "project.emails.pic.projekt" %} {{ ident_cely }} {% trans "project.emails.pic.na_katastru" %} {{ katastr }} {% trans "project.emails.pic.byl_navržen_k_odhlášení_oprávněnou_organizací" %}
+    {{ organizace }}.
 
-{% trans "Důvod" %}: {{ reason }}
+{% trans "project.emails.pic.důvod" %}: {{ reason }}
 
-{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+{% trans "project.emails.pic.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.
 
 </body>
 </html>
