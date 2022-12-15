@@ -3,6 +3,8 @@ import logging
 import structlog
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+
 from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -120,13 +122,16 @@ class Mailer():
     def sendEU06(cls, user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-U-06'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
-        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": notification_type.predmet,
-            "role": user.hlavni_role.name
-        })
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.send(notification_type.predmet, user.email, html)
+        try:
+            notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+            html = render_to_string(notification_type.cesta_sablony, {
+                "title": notification_type.predmet,
+                "role": user.hlavni_role.name
+            })
+            if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
+                cls.send(notification_type.predmet, user.email, html)
+        except ObjectDoesNotExist as err:
+            logger_s.debug("services.mailer.ObjectDoesNotExist", err=err)
 
     @classmethod
     def sendENZ01(cls):

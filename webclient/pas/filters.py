@@ -280,7 +280,7 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
             self.filters["vedouci"].extra.update(
                 {
                     "queryset": User.objects.select_related("organizace").filter(
-                        hlavni_role=Group.objects.get(id=ROLE_ARCHEOLOG_ID)
+                        groups__id=Group.objects.get(id=ROLE_ARCHEOLOG_ID).pk
                     )
                 }
             )

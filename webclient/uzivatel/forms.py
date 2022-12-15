@@ -92,10 +92,12 @@ class AuthUserChangeForm(forms.ModelForm):
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
+    hlavni_role = forms.CharField(widget=forms.TextInput(attrs={"readonly": True}))
+
     class Meta:
         model = User
         fields = (
-            "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "hlavni_role", "groups")
+            "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
         help_texts = {
             "first_name": _("uzivatel.form.userChange.first_name.tooltip"),
             "last_name": _("uzivatel.form.userChange.last_name.tooltip"),
@@ -114,7 +116,6 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "ident_cely": forms.TextInput(attrs={"readonly": True}),
             "date_joined": forms.TextInput(attrs={"readonly": True}),
             "organizace": forms.TextInput(attrs={"readonly": True}),
-            "hlavni_role": forms.TextInput(attrs={"readonly": True}),
             "groups": forms.TextInput(attrs={"readonly": True}),
         }
 
