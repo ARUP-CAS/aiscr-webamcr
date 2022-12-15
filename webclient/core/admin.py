@@ -38,6 +38,27 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
             self.file_handler(code, form)
         cache.delete("last_maintenance")
         cache.delete(make_template_fragment_key("maintenance"))
+        should_try_wsgi_reload = (
+            settings.ROSETTA_WSGI_AUTO_RELOAD
+            and "mod_wsgi.process_group" in request.environ
+            and request.environ.get("mod_wsgi.process_group", None)
+            and "SCRIPT_FILENAME" in request.environ
+            and int(request.environ.get("mod_wsgi.script_reloading", 0))
+        )
+        if should_try_wsgi_reload:
+            try:
+                os.utime(request.environ.get("SCRIPT_FILENAME"), None)
+            except OSError:
+                pass
+        # Try auto-reloading via uwsgi daemon reload mechanism
+        if settings.ROSETTA_UWSGI_AUTO_RELOAD:
+            try:
+                import uwsgi
+
+                uwsgi.reload()  # pretty easy right?
+            except Exception as e:
+                logger.debug(e)
+                pass  # we may not be running under uwsgi :P
         super().save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
@@ -62,6 +83,8 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         return super().has_view_permission(request, obj, *args)
 
     def has_add_permission(self, request, *args):
+        if OdstavkaSystemu.objects.count() > 0:
+            return False
         if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
             return False
         return super().has_add_permission(request, *args)
