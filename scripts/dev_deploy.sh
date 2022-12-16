@@ -7,6 +7,10 @@
 #USAGE: local deployment for development purposes
 #secrets from files, NOT managed by docker as in swarm mode
 
+# ------ !!!! ----------
+SKIP_ALL_CHECKS=1 #IF CHNAGED TO 1 then all MANUAL CHECKS, ie questions during script runtime are disabled!
+# ------ !!!! ----------
+
 ask_continue () {
     while true; do
         
@@ -81,7 +85,10 @@ run_default ()
 {  
    service_name="${1}"
    echo_dec "${msg_default_case}"
-   ask_continue "Do you want to continue with DEFAULT CASE? "
+   if [ ${SKIP_ALL_CHECKS} -eq 0 ]; then
+      ask_continue "Do you want to continue with DEFAULT CASE? "
+   fi
+
    echo_dec "Build and run without DB restore, selected or all services."
    er "${cmd_docker_build} ${service_name}" && er "${cmd_docker_up} ${service_name}" && echo_dec "${msg_success} project ${project_name} ${service_name}" || echo_dec "${msg_fail_build} ${service_name}"
 }

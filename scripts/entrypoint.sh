@@ -14,7 +14,7 @@ languages=( "cs" "en" )
 
 #Source of locale on persistent volume
 volume_locale="/vol/web/locale/"
-locale_file="LC_MESSAGES/django.po"
+locale_file="LC_MESSAGES/django.*"
 locale_cp_root="/code/locale"
 
 for lang_item in ${languages[@]}; do
