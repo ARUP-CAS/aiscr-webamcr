@@ -64,9 +64,10 @@ RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 RUN chown -R user:user /code
 RUN chmod -R 755 /code
-USER user
 
-RUN sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html
 RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
+RUN sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html
+
+USER user
 
 CMD ["entrypoint.sh"]
