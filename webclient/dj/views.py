@@ -145,7 +145,7 @@ def detail(request, ident_cely):
             instances = formset.save()
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
-                vyskovy_bod_form = formset.forms[i]
+                vyskovy_bod_form = list(filter(lambda x: x.instance == vyskovy_bod, formset.forms))[0]
                 vyskovy_bod: VyskovyBod
                 if isinstance(vyskovy_bod, VyskovyBod):
                     logger_s.debug("dj.views.detail.adb_zapsat_vyskove_body.save",
