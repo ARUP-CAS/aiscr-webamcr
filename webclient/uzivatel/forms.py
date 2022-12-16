@@ -9,6 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from django_registration.forms import RegistrationForm
 from django.core.exceptions import ValidationError
 
+from core.widgets import ForeignKeyReadOnlyTextInput
 from .models import Osoba, User
 
 
@@ -92,7 +93,7 @@ class AuthUserChangeForm(forms.ModelForm):
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
-    hlavni_role = forms.CharField(widget=forms.TextInput(attrs={"readonly": True}))
+    hlavni_role = forms.CharField(widget=ForeignKeyReadOnlyTextInput())
 
     class Meta:
         model = User
@@ -115,18 +116,15 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "email": forms.TextInput(attrs={"readonly": True}),
             "ident_cely": forms.TextInput(attrs={"readonly": True}),
             "date_joined": forms.TextInput(attrs={"readonly": True}),
-            "organizace": forms.TextInput(attrs={"readonly": True}),
-            "groups": forms.TextInput(attrs={"readonly": True}),
+            "organizace": ForeignKeyReadOnlyTextInput(),
+            "groups": ForeignKeyReadOnlyTextInput(),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["organizace"].widget.attrs["value"] \
-            = self.instance.organizace.nazev if self.instance.organizace else ""
-        self.fields["hlavni_role"].widget.attrs["value"] \
-            = str(self.instance.hlavni_role) if self.instance.hlavni_role else ""
-        self.fields["groups"].widget.attrs["value"] \
-            = ", ".join(self.instance.groups.values_list('name', flat=True))
+        self.fields["organizace"].widget.value = self.instance.organizace
+        self.fields["hlavni_role"].widget.value = self.instance.hlavni_role
+        self.fields["groups"].widget.value = ", ".join([str(group.name) for group in self.instance.groups.all()])
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(

@@ -165,7 +165,7 @@ class UserLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class UserAccountUpdateView(UpdateView, LoginRequiredMixin):
+class UserAccountUpdateView(LoginRequiredMixin, UpdateView):
     model = User
     form_class = AuthUserChangeForm
     template_name = "uzivatel/update_user.html"
