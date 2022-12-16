@@ -44,7 +44,7 @@
 {% endblock %}
 {% block script %}
 <script>
-  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "edit-neident-form"){
+  if ("{{ id_tag }}" == "pripojit-dokument-form" || "{{ id_tag }}" == "edit-neident-form" || "{{id_tag}}"=="zmenit-katastr-form"){
 window.addEventListener("modalLoaded", function () {
       window.django = window.django || {};
     if (!django.hasOwnProperty('jQuery') && jQuery !== 'undefined') {

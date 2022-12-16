@@ -1618,6 +1618,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         and show["editovat"],
         "show_approve_pian": show_approve_pian,
         "show_pripojit_pian": True,
+        "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR else False,
     }
     if has_adb and app != "lokalita":
         logger.debug(jednotka.ident_cely)

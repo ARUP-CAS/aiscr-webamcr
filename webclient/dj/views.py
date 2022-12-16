@@ -3,8 +3,8 @@ import structlog
 
 from adb.forms import CreateADBForm, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
-from arch_z.models import ArcheologickyZaznam
-from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
+from arch_z.models import ArcheologickyZaznam, get_akce_ident
+from core.constants import AZ_STAV_ARCHIVOVANY, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_dj_ident
 from core.message_constants import (
@@ -20,7 +20,7 @@ from core.utils import (
     update_all_katastr_within_akce_or_lokalita,
     update_main_katastr_within_ku,
 )
-from dj.forms import CreateDJForm
+from dj.forms import ChangeKatastrForm, CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -30,6 +30,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView
 from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
@@ -228,3 +230,56 @@ def smazat(request, ident_cely):
             "button": _("dj.modalForm.smazani.submit.button"),
         }
         return render(request, "core/transakce_modal.html", context)
+
+class ChangeKatastrView(LoginRequiredMixin, TemplateView):
+    template_name = "core/transakce_modal.html"
+    title = _("dj.modalForm.zmenitKatastr.title.text")
+    id_tag = "zmenit-katastr-form"
+    button = _("dj.modalForm.zmenitKatastr.submit.button")
+
+    def get_zaznam(self):
+        ident_cely = self.kwargs.get("ident_cely")
+        return get_object_or_404(
+            DokumentacniJednotka,
+            ident_cely=ident_cely,
+        )
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        form = ChangeKatastrForm(initial={"katastr":zaznam.archeologicky_zaznam.hlavni_katastr})
+        context = {
+            "object": zaznam,
+            "form": form,
+            "title": self.title,
+            "id_tag": self.id_tag,
+            "button": self.button,
+        }
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        zaznam = self.get_zaznam()
+        form = ChangeKatastrForm(data=request.POST)
+        if form.is_valid():
+            az = zaznam.archeologicky_zaznam
+            old_katastr = az.hlavni_katastr
+            az.hlavni_katastr = form.cleaned_data["katastr"]
+            az.save()
+            zaznam.pian = form.cleaned_data["katastr"].pian
+            zaznam.save()
+            if old_katastr.okres.kraj.rada_id != form.cleaned_data["katastr"].okres.kraj.rada_id:
+                if az.stav == AZ_STAV_ARCHIVOVANY:
+                    az.set_akce_ident(get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id))
+                else:
+                    az.set_akce_ident(
+                        get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id, True, az.id)
+                    )
+            zaznam.refresh_from_db()
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
+        else:
+            logger.debug(form.errors)
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
+        return JsonResponse({"redirect": zaznam.get_absolute_url()})
