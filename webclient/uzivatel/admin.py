@@ -9,7 +9,7 @@ from services.mailer import Mailer
 from .forms import AuthUserCreationForm
 from .models import User
 from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
-from django.db import transaction
+from django.db import transaction, ProgrammingError
 from django.db.models import Q
 from django.contrib.auth.models import Group
 
@@ -87,21 +87,21 @@ class CustomUserAdmin(UserAdmin):
         group_ids = groups.values_list('id', flat=True)
         max_id = max(group_ids)
 
-        if user.groups.values_list('id', flat=True) != form_groups.values_list('id', flat=True):
+        if set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)):
             logger_s.debug("uzivatel.admin.save_model.role_changed", old=obj.hlavni_role,
                            new=user.groups.values_list('name', flat=True))
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
-                poznamka=user.groups.values_list('name', flat=True),
+                poznamka="role: " + ", ".join(list(user.groups.values_list('name', flat=True))),
                 vazba=obj.history_vazba,
             ).save()
             Mailer.sendEU06(user=user)
-        group_ids = [str(x) for x in obj.groups.all()]
         Historie(
             typ_zmeny=ZMENA_UDAJU_ADMIN,
             uzivatel=user,
-            poznamka=f"Role: {group_ids}",
+            poznamka=", ".join([f"{fieldname}: {form.cleaned_data[fieldname]}" for fieldname in form.changed_data
+                                if fieldname != "groups"]),
             vazba=obj.history_vazba,
         ).save()
 
