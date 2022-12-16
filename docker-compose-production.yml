@@ -11,18 +11,22 @@ services:
       - locale_data:/vol/web/locale
       - nginx_data:/vol/web/nginx/data
     networks:
-      - reverse-proxy
-    expose:
-      - "8000"
+      - prod-net
     ports:
       - "2525:2525"
-
   memcached:
     image: memcached:latest
-    expose:
-      - "11211"
     networks:
-      - reverse-proxy
+      - prod-net
+  sidecar:
+    image: eeacms/rsync:latest
+    environment:
+      - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
+    volumes:
+      - $HOME/translations_backup:/backup
+      - locale_data:/vol/web/locale
+    command:  
+      - client
 
 volumes:
   static_data:
@@ -31,7 +35,7 @@ volumes:
 
 
 networks:
-  reverse-proxy:
+  prod-net:
     external: true
 
 secrets:
