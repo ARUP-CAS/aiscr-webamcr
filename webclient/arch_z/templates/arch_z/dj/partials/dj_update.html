@@ -72,6 +72,12 @@
             {% trans 'Připojit PIAN podle ID' %}
           </button>
           {% endif %}
+          {% if j.show_change_katastr %}
+          <button id="zmenit-katastr-{{j.ident_cely}}" class="dropdown-item zmenit-katastr-btn" type="button"
+                  name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}")>
+            {% trans 'dj.moreOptions.zmenitKatastr.label' %}
+          </button>
+          {% endif %}
         </div>
         <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
                 aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}"

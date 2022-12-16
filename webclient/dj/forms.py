@@ -9,7 +9,7 @@ from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKatastr
 
 logger = logging.getLogger(__name__)
 
@@ -211,3 +211,18 @@ class CreateDJForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         self.fields["pian_text"].disabled = True
+
+
+class ChangeKatastrForm(forms.Form):
+    katastr = forms.ModelChoiceField(
+        label=_("dj.form.katastrChange.label"),
+        widget=autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),
+        queryset=RuianKatastr.objects.all(),
+        help_text=_("dj.form.katastrChange.tooltip"),
+        required=True,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(ChangeKatastrForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_tag = False
