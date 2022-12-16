@@ -24,6 +24,7 @@ services:
     ports:
       - "8000:8000"
       - "5678:5678"
+      - "2525:2525"
     environment:
       - DJANGO_SETTINGS_MODULE=webclient.settings.dev
     depends_on:
@@ -62,6 +63,8 @@ services:
     environment:
       - DBNAME=aiscrrestore
       - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
+    volumes:
+     - db_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: ./healthcheck.sh
       retries: 30
@@ -90,6 +93,7 @@ services:
 volumes:
   locale_data:
   pg_admin_vol:
+  db_dev_data:
 
 secrets:
   pg_admin_pass:
