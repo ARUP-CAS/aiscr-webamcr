@@ -23,6 +23,15 @@ services:
       - "11211"
     networks:
       - git-reverse-proxy
+  sidecar:
+    image: eeacms/rsync:latest
+    environment:
+      - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
+    volumes:
+      - $HOME/translations_backup:/backup
+      - locale_data:/vol/web/locale
+    command:  
+      - client
 
 volumes:
   static_data:

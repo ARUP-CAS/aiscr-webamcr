@@ -9,12 +9,12 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - reverse-proxy
+      - prod-net
 
 volumes:
   static_data:
   locale_data:
   nginx_data:
 networks:
-  reverse-proxy:
-      name: reverse-proxy
+  prod-net:
+    external: true

@@ -67,6 +67,6 @@ RUN chmod -R 755 /code
 USER user
 
 RUN sed -i "s/1.0.0/${VERSION}/g" ./templates/base_logged_in.html
-RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > version.txt
+RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
 
 CMD ["entrypoint.sh"]
