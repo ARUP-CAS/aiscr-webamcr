@@ -1,4 +1,5 @@
 import structlog
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
@@ -7,7 +8,7 @@ from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATI
 from historie.models import Historie, HistorieVazby
 from services.mailer import Mailer
 from .forms import AuthUserCreationForm
-from .models import User
+from .models import User, UserNotificationType
 from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
 from django.db import transaction, ProgrammingError
 from django.db.models import Q
@@ -16,12 +17,36 @@ from django.contrib.auth.models import Group
 logger_s = structlog.get_logger(__name__)
 
 
+class UserNotificationTypeInlineForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
+        self.fields['usernotificationtype'].queryset = UserNotificationType.objects.filter(
+            ident_cely__in=["E-A-01", "E-A-02", "E-N-01", "E-N-02", "E-N-05", "E-K-01", "E-U-04"]
+        )
+
+
+class UserNotificationTypeInline(admin.TabularInline):
+    model = UserNotificationType.user.through
+    form = UserNotificationTypeInlineForm
+
+    def get_queryset(self, request):
+        queryset = super(UserNotificationTypeInline, self).get_queryset(request)
+        queryset = queryset.filter(
+            usernotificationtype__ident_cely__in=["E-A-01", "E-A-02", "E-N-01", "E-N-02", "E-N-05", "E-K-01", "E-U-04"]
+        )
+        return queryset
+
+    def __init__(self, parent_model, admin_site):
+        super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
+
+
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
     model = User
     list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
+    inlines = [UserNotificationTypeInline, ]
     fieldsets = (
         (
             None,
