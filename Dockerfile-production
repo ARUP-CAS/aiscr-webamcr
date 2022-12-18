@@ -15,7 +15,7 @@ RUN apt-get clean
 
 ENV TZ 'Europe/Prague'
 RUN echo $TZ > /etc/timezone
-RUN apt-get update && apt-get -qq -y install cron
+RUN apt-get update && apt-get -qq -y install cron && apt-get -y -qq install sudo
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Install GDAL dependencies
