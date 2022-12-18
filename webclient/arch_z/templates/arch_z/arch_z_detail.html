@@ -203,6 +203,9 @@
   </script>
   <script>
     var global_map_projekt_ident='{{zaznam.akce.projekt.ident_cely}}';
+    if(global_map_projekt_ident.length==0){
+      global_map_projekt_ident=document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0];
+    }
     //console.log("zaznam "+global_map_projekt_ident)
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
