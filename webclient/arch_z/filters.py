@@ -542,11 +542,11 @@ class AkceFilter(ArchZaznamFilter):
             return queryset
         elif "True" in value:
             return queryset.filter(
-                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
         elif "False" in value:
             return queryset.exclude(
-                akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
+                archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False
             ).distinct()
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
