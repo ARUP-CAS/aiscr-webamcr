@@ -60,6 +60,7 @@ RUN mkdir -p /vol/web/locale/en/LC_MESSAGES
 
 RUN adduser user
 RUN passwd -d user
+RUN usermod -aG sudo user
 RUN chown -R user:user /vol
 RUN chmod -R 755 /vol/web
 RUN chown -R user:user /code
