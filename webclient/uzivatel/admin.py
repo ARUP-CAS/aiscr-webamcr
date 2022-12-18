@@ -7,9 +7,13 @@ from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATI
 from historie.models import Historie, HistorieVazby
 from services.mailer import Mailer
 from .forms import AuthUserCreationForm
-from .models import User
+from .models import User, UserNotificationType
 
 logger_s = structlog.get_logger(__name__)
+
+
+class UserNotificationTypeInline(admin.TabularInline):
+    model = UserNotificationType.user.through
 
 
 class CustomUserAdmin(UserAdmin):
@@ -18,6 +22,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
+    inlines = [UserNotificationTypeInline, ]
     fieldsets = (
         (
             None,
@@ -31,8 +36,7 @@ class CustomUserAdmin(UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
-                    "groups",
-                    "notification_types"
+                    "groups"
                 )
             },
         ),
@@ -54,8 +58,7 @@ class CustomUserAdmin(UserAdmin):
                     "first_name",
                     "last_name",
                     "telefon",
-                    "groups",
-                    "notification_types"
+                    "groups"
                 ),
             },
         ),
