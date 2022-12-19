@@ -13,28 +13,24 @@ python3 manage.py collectstatic --noinput
 languages=( "cs" "en" )
 
 #Source of locale on persistent volume
-volume_locale="/vol/web/locale/"
-locale_file="LC_MESSAGES/django.*"
-locale_cp_root="/code/locale"
+volume_locale='/vol/web/locale/${lang_item}/LC_MESSAGES'
+code_locale='/code/locale/${lang_item}/LC_MESSAGES'
 
 for lang_item in ${languages[@]}; do
+   
+  echo "#make dirs $(eval echo ${code_locale})"
+  mkdir -p $(eval "echo ${code_locale}")
   
-  vol_locale="${volume_locale}/${lang_item}/${locale_file}"
-  cp_path_locale="${locale_cp_root}/${lang_item}/${locale_file}"
-  
-  echo "#make dirs $(dirname ${cp_path_locale})"
-  mkdir -p $(dirname ${cp_path_locale})
-  
-  test -e ${vol_locale} && cp ${vol_locale} ${cp_path_locale} || echo "${lang_item} locale file does not exist will create new one"
+  test -e $(eval "echo ${volume_locale}/django.po") && eval "cp  ${volume_locale}/*.* ${code_locale}/" || echo "${lang_item} locale file does not exist will create new one"
   
   echo "#makemessages ${lang_item}"
   python3 manage.py makemessages -l ${lang_item}
   
   echo "#copy ${lang_item} from tmp path back to persitent volume location"
-  cp ${cp_path_locale} ${vol_locale}
+  eval "cp ${code_locale}/* ${volume_locale}/"
 
   echo "#remove tmp locale ${lang_item}"
-  rm ${cp_path_locale}
+  eval "rm ${code_locale}/*"
 
 done
 

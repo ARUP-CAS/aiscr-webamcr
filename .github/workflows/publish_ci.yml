@@ -44,18 +44,18 @@ jobs:
       #---------------------
       # BUILD DEV
       #---------------------
-      - name: DEV - Build and push Docker image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: Dockerfile-DEV
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            VERSION_APP=${{ env.tag_version }}
-            TAG_APP=${{ github.ref }}
-      #---------------------
+      # - name: DEV - Build and push Docker image
+      #   uses: docker/build-push-action@v3
+      #   with:
+      #     context: .
+      #     file: Dockerfile-DEV
+      #     push: true
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     build-args: |
+      #       VERSION_APP=${{ env.tag_version }}
+      #       TAG_APP=${{ github.ref }}
+      # #---------------------
       # BUILD PROD
       #---------------------
       - name: Extract metadata (tags, labels) for Docker production image
