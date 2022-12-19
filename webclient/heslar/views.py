@@ -29,17 +29,17 @@ def merge_heslare(first, second):
     return data
 
 
-def heslar_12(druha, prvni_kat):
+def heslar_12(druha, prvni_kat,id=False):
     druha = (
         Heslar.objects.filter(nazev_heslare=druha)
         .order_by("razeni")
         .values("id", "hierarchie__heslo_nadrazene", "heslo")
     )
-    prvni = (
-        Heslar.objects.filter(nazev_heslare=prvni_kat)
-        .order_by("razeni")
-        .values("id", "heslo")
-    )
+    if id:
+        kategorie=Heslar.objects.filter(nazev_heslare=prvni_kat,id__in=id)
+    else:
+        kategorie=Heslar.objects.filter(nazev_heslare=prvni_kat)
+    prvni = kategorie.order_by("razeni").values("id", "heslo")
     return merge_heslare(prvni, druha)
 
 
@@ -61,6 +61,8 @@ def zjisti_katastr_souradnic(request):
 
 def zjisti_vychozi_hodnotu(request):
     nadrazene = request.GET.get("nadrazene", 0)
+    if request.GET.get("lokalita", False):
+        nadrazene = HeslarHierarchie.objects.get(heslo_podrazene=nadrazene, typ="podřízenost").heslo_nadrazene
     vychozi_hodnota = HeslarHierarchie.objects.filter(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
     if vychozi_hodnota.exists():
         queryset = vychozi_hodnota.values_list('heslo_podrazene', flat=True)
