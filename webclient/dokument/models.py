@@ -2,6 +2,9 @@ import calendar
 import datetime
 import logging
 import math
+import os
+import re
+from string import ascii_uppercase as letters
 
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
@@ -44,6 +47,7 @@ from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
+from core.utils import calculate_crc_32
 
 logger = logging.getLogger(__name__)
 
@@ -267,7 +271,7 @@ class Dokument(models.Model):
             0
         ]
         perm_ident_cely = (
-                rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
         )
         # Loop through all of the idents that have been imported
         while True:
@@ -280,16 +284,37 @@ class Dokument(models.Model):
                     + str(sequence.sekvence)
                 )
                 perm_ident_cely = (
-                        rada
-                        + "-"
-                        + str(current_year)
-                        + "{0}".format(sequence.sekvence).zfill(5)
+                    rada
+                    + "-"
+                    + str(current_year)
+                    + "{0}".format(sequence.sekvence).zfill(5)
                 )
             else:
                 break
         if sequence.sekvence >= MAXIMUM:
             raise MaximalIdentNumberError(MAXIMUM)
         self.ident_cely = perm_ident_cely
+        for file in (
+            self.soubory.soubory.all()
+            .filter(nazev_zkraceny__startswith="X")
+            .order_by("id")
+        ):
+            new_name = get_dokument_soubor_name(self, file.path.name, add_to_index=1)
+            try:
+                checksum = calculate_crc_32(file.path)
+                file.path.seek(0)
+                # After calculating checksum, must move pointer to the beginning
+                old_nazev = file.nazev
+                file.nazev = checksum + "_" + new_name
+                file.nazev_zkraceny = new_name
+                old_path = file.path.storage.path(file.path.name)
+                new_path = old_path.replace(old_nazev, file.nazev)
+                file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
+                os.rename(old_path, str(new_path))
+                file.save()
+            except FileNotFoundError as e:
+                logger.error(e)
+                raise FileNotFoundError()
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
@@ -448,6 +473,7 @@ class DokumentAutor(models.Model):
         db_table = "dokument_autor"
         unique_together = (("dokument", "poradi"),)
 
+
 class DokumentJazyk(models.Model):
     dokument = models.ForeignKey(
         Dokument,
@@ -569,3 +595,38 @@ class Let(models.Model):
 
     def __str__(self):
         return self.ident_cely
+
+
+def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
+    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    logger.debug(files)
+    if not files.exists():
+        return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
+    else:
+        filtered_files = files.filter(nazev_zkraceny__iregex=r"(([A-Z]\.\w+)$)")
+        if filtered_files.exists():
+            list_last_char = []
+            for file in filtered_files:
+                split_file = os.path.splitext(file.nazev)
+                list_last_char.append(split_file[0][-1])
+            last_char = max(list_last_char)
+            logger.debug(last_char)
+            if last_char != "Z" or add_to_index == 0:
+                return (
+                    dokument.ident_cely.replace("-", "")
+                    + letters[(letters.index(last_char) + add_to_index)]
+                    + os.path.splitext(filename)[1]
+                )
+            else:
+                logger.error(
+                    "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
+                )
+                return False
+
+        else:
+            return (
+                dokument.ident_cely.replace("-", "")
+                + "A"
+                + os.path.splitext(filename)[1]
+            )
