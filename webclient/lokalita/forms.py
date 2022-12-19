@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from core.forms import TwoLevelSelectField
 from heslar.hesla import HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT
 from heslar.views import heslar_12
+from heslar.models import HeslarHierarchie
 
 from .models import Lokalita
 
@@ -68,7 +69,13 @@ class LokalitaForm(forms.ModelForm):
         **kwargs
     ):
         super(LokalitaForm, self).__init__(*args, **kwargs)
-        choices = heslar_12(HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT)
+        if self.instance.pk is not None:
+            nadrazene = HeslarHierarchie.objects.filter(
+                heslo_podrazene=self.instance.typ_lokality, typ="výchozí hodnota"
+            ).values_list("heslo_nadrazene", flat=True)
+            choices = heslar_12(HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT, nadrazene)
+        else:
+            choices = heslar_12(HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT)
         self.fields["druh"] = TwoLevelSelectField(
             label=_("lokalita.forms.druh.label"),
             widget=forms.Select(
