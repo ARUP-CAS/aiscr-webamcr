@@ -103,6 +103,12 @@ class ArcheologickyZaznam(models.Model):
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav == D_STAV_ZAPSANY:
                 dc.dokument.set_odeslany(user)
+        # posun Zdroju do stavu ZAPSANY
+        externi_zdroje = ExterniZdroj.objects.filter(
+            stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
+        )
+        for ez in externi_zdroje:
+            ez.set_odeslany(user)
 
     def set_archivovany(self, user):
         self.stav = AZ_STAV_ARCHIVOVANY
@@ -117,12 +123,6 @@ class ArcheologickyZaznam(models.Model):
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
         ):
             self.set_akce_ident()
-        # posun Zdroju do stavu ZAPSANY
-        externi_zdroje = ExterniZdroj.objects.filter(
-            stav=EZ_STAV_ZAPSANY, externi_odkazy_zdroje__archeologicky_zaznam=self
-        )
-        for ez in externi_zdroje:
-            ez.set_odeslany(user)
 
     def set_vraceny(self, user, new_state, poznamka):
         self.stav = new_state
