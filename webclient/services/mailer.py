@@ -18,6 +18,43 @@ from .mlstripper import MLStripper
 
 logger_s = structlog.get_logger(__name__)
 
+groups = {
+    "E-A-01": "AMČR: archivace záznamů",
+    "E-A-02": "AMČR: archivace záznamů",
+    "E-N-01": "AMČR-PAS: nové nálezy k potvrzení",
+    "E-N-02": "AMČR-PAS: archivace záznamů",
+    "E-N-05": "AMČR-PAS: nová žádost o spolupráci",
+    "E-K-01": "AMČR - Knihovna 3D: archivace záznamů"
+}
+
+always_active = [
+    "E-P-02",
+    "E-U-01",
+    "E-U-02",
+    "E-U-03",
+    "E-U-04",
+    "E-U-05",
+    "E-U-06",
+    "E-N-03",
+    "E-N-04",
+    "E-NZ-01",
+    "E-NZ-02",
+    "E-V-01",
+    "E-O-01",
+    "E-O-02",
+    "E-P-01a",
+    "E-P-01b",
+    "E-P-03a",
+    "E-P-03b",
+    "E-P-07",
+    "E-P-04",
+    "E-P-05",
+    "E-P-06a",
+    "E-P-06b",
+    "E-N-06",
+    "E-K-02"
+]
+
 
 class Mailer():
     @classmethod
@@ -30,7 +67,14 @@ class Mailer():
     def notification_should_be_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
                                     user: 'uzivatel.models.User'):
         result = False
-        notificationIsEnabled = user.notification_types.filter(pk=notification_type.pk).first()
+        group_key = notification_type.pk
+        if notification_type.ident_cely in groups.keys():
+            group = uzivatel.models.UserNotificationType.objects.get(ident_cely=groups[notification_type.ident_cely])
+            group_key = group.pk
+        if (notification_type.ident_cely in always_active):
+            notificationIsEnabled = True
+        else:
+            notificationIsEnabled = user.notification_types.filter(pk=group_key).first()
         if notificationIsEnabled:
             if user.is_active is False and notification_type.zasilat_neaktivnim == True:
                 result = True

@@ -6,19 +6,17 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Vážená paní/Vážený pane' %},
+{% trans "project.emails.rmp.vážená_paní/vážený_pane" %},
 
-{% blocktrans %} oznámení stavební nebo jiné činnosti ({{ podnet }}) na území s archeologickými nálezy na
-    k.ú. {{ katastr }} ({{ okres }}), parcela {{ parcela }} ({{ lokalita }}) podle § 22 odst. 2 zákona č. 20/1987 Sb., o
-    státní památkové péči bylo schváleno a zaevidováno.{% endblocktrans %}
-{% trans 'V případě nutnosti provedení archeologického výzkumu Vás bude kontaktovat Archeologický ústav AV ČR nebo některá z organizací oprávněných provádět archeologické výzkumy, s nimiž je na základě §22 odst. 1 výše uvedeného zákona nutno uzavřít dohodu o podmínkách provedení archeologického výzkumu' %}.
+ {% trans "project.emails.rmp.oznámení_stavební_nebo_jiné_činnosti" %} ({{ podnet }}) {% trans "project.emails.rmp.na_území_s_archeologickými_nálezy_na_k.ú." %} {{ katastr }} ({{ okres }}),{% trans "project.emails.rmp.parcela" %} {{ parcela }} ({{ lokalita }}) {% trans "project.emails.rmp.podle_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči_bylo_schváleno_a_zaevidováno." %}
+{% trans "v_případě_nutnosti_provedení_archeologického_výzkumu_vás_bude_kontaktovat_archeologický_ústav_av_čr_nebo_některá_z_organizací_oprávněných_provádět_archeologické_výzkumy_s_nimiž_je_na_základě_22_odst._1_výše_uvedeného_zákona_nutno_uzavřít_dohodu_o_podmínkách_provedení_archeologického_výzkumu" %}.
 
-{% trans "S pozdravem" %}
+{% trans "project.emails.rmp.s_pozdravem" %}
 
-{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}
+{% trans "project.emails.rmp.archeologický_ústav_av_čr_praha_v._v._i."%}
 
-{% trans "Na tuto zprávu prosím neodpovídejte, je automaticky generována" %}.
-{% trans "Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. 257 014 310." %}
+{% trans "project.emails.rmp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
+{% trans "project.emails.rmp.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310." %}
 
 </body>
 </html>

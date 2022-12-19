@@ -7,14 +7,14 @@
 </head>
 <body>
 
-{% trans 'Dobrý den' %},
+{% trans "pas.emails.pwr.dobrý_den" %},
 
-{% blocktrans %} vámi odeslaný samostatný nález {{ ident_cely }} na katastru {{ katastr }} byl vrácen do stavu
-    {{ state }}. {% endblocktrans %}
+ {% trans "pas.emails.pwr.vámi odeslaný samostatný nález" %} {{ ident_cely }} {% trans "pas.emails.pwr.na_katastru" %} {{ katastr }} {% trans "pas.emails.pwr.byl_vrácen_do_stavu" %}
+    {{ state }}.
 
-{% trans "Důvod" %}: {{ reason }}
+{% trans "pas.emails.pwr.důvod" %}: {{ reason }}
 
-{% trans "Detaily zjistíte po přihlášení do AMČR-PAS" %}.
+{% trans "pas.emails.pwr.detaily_zjistíte_po_přihlášení_do_amčr-pas" %}.
 
 </body>
 </html>

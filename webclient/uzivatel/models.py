@@ -40,6 +40,9 @@ from django.contrib.contenttypes.models import ContentType
 logger_s = structlog.get_logger(__name__)
 
 
+def only_notification_groups():
+    return UserNotificationType.objects.filter(ident_cely__icontains='AMČR').all()
+
 class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
@@ -72,7 +75,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=ROLE_BADATEL_ID,
     )
     history = HistoricalRecords()
-    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user')
+    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
+                                                limit_choices_to={'ident_cely__icontains': 'AMČR'}, default=only_notification_groups)
     notification_log = GenericRelation('NotificationsLog')
     created_from_admin_panel = False
 

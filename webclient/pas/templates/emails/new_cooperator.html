@@ -7,19 +7,19 @@
 </head>
 <body>
 
-{% trans 'Dobrý den' %},
+{% trans 'pas.emails.nc.dobrý_den' %},
 
-{% trans "nový uživatel žádá o zařazení mezi spolupracovníky" %}:
+{% trans "pas.emails.nc.nový_uživatel_žádá_o_zařazení_mezi_spolupracovníky" %}:
 
-ID: {{ ident_cely }}
-Jméno: {{ name }}
-Příjmení: {{ surname }}
-Organizace: {{ organization }}
-Email (přihlašovací jméno): {{ email }}
-Telefon: {{ phone }}
-Zdůvodnění: {{ message }}
+{% trans "pas.emails.nc.id" %}: {{ ident_cely }}
+{% trans "pas.emails.nc.jméno" %}: {{ name }}
+{% trans "pas.emails.nc.příjmení" %}: {{ surname }}
+{% trans "pas.emails.nc.organizace" %}: {{ organization }}
+{% trans "pas.emails.nc.email_(přihlašovací_jméno)" %}: {{ email }}
+{% trans "pas.emails.nc.telefon" %}: {{ phone }}
+{% trans "pas.emails.nc.zdůvodnění" %}: {{ message }}
 
-{% trans "Spolupráci potvrdíte po přihlášení do AMČR-PAS, nebo kliknutím na tento odkaz" %}: {{ link }}
+{% trans "pas.emails.nc.spolupráci_potvrdíte_po_přihlášení_do_amčr-pas_nebo_kliknutím_na_tento_odkaz" %}: {{ link }}
 
 </body>
 </html>
