@@ -6,6 +6,7 @@ from django.conf import settings
 from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.core.exceptions import ObjectDoesNotExist
 
 import projekt.models
 import arch_z.models
@@ -69,8 +70,11 @@ class Mailer():
         result = False
         group_key = notification_type.pk
         if notification_type.ident_cely in groups.keys():
-            group = uzivatel.models.UserNotificationType.objects.get(ident_cely=groups[notification_type.ident_cely])
-            group_key = group.pk
+            try:
+                group = uzivatel.models.UserNotificationType.objects.get(ident_cely=groups[notification_type.ident_cely])
+                group_key = group.pk
+            except ObjectDoesNotExist:
+                logger_s.debug("group not found exception")
         if (notification_type.ident_cely in always_active):
             notificationIsEnabled = True
         else:
