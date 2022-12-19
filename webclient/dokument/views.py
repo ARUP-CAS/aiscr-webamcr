@@ -28,6 +28,7 @@ from core.message_constants import (
     DOKUMENT_JIZ_BYL_PRIPOJEN,
     DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA,
     DOKUMENT_NELZE_ARCHIVOVAT,
+    DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR,
     DOKUMENT_NELZE_ODESLAT,
     DOKUMENT_ODPOJ_ZADNE_RELACE,
     DOKUMENT_ODPOJ_ZADNE_RELACE_MEZI_DOK_A_ZAZNAM,
@@ -46,7 +47,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.views import ExportMixinDate, check_stav_changed, get_dokument_soubor_name
+from core.views import ExportMixinDate, check_stav_changed
 from dal import autocomplete
 from django.db.models.functions import Length
 from django.contrib import messages
@@ -1230,6 +1231,13 @@ def archivovat(request, ident_cely):
                 return JsonResponse(
                     {"redirect": get_detail_json_view(ident_cely)}, status=403
                 )
+            except FileNotFoundError as e:
+                messages.add_message(
+                    request, messages.ERROR, DOKUMENT_NELZE_ARCHIVOVAT_CHYBY_SOUBOR
+                )
+                return JsonResponse(
+                    {"redirect": get_detail_json_view(ident_cely)}, status=403
+                )
             else:
                 d.save()
                 logger.debug(
@@ -1238,29 +1246,6 @@ def archivovat(request, ident_cely):
                     + " a jeho castem byl prirazen permanentni identifikator "
                     + d.ident_cely
                 )
-                for file in (
-                    d.soubory.soubory.all()
-                    .filter(nazev_zkraceny__startswith="X")
-                    .order_by("id")
-                ):
-                    new_name = get_dokument_soubor_name(
-                        d, file.path.name, add_to_index=1
-                    )
-                    checksum = calculate_crc_32(file.path)
-                    # After calculating checksum, must move pointer to the beginning
-                    file.path.seek(0)
-                    old_nazev = file.nazev
-                    file.nazev = checksum + "_" + new_name
-                    file.nazev_zkraceny = new_name
-                    old_path = file.path.storage.path(file.path.name)
-                    new_path = old_path.replace(old_nazev, file.nazev)
-                    file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
-                    try:
-                        os.rename(old_path, str(new_path))
-                        file.save()
-                    except Exception as e:
-                        logger.debug(e)
-
         d.set_archivovany(request.user)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         Mailer.sendEK01(document=d)

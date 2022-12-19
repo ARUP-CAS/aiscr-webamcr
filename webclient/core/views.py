@@ -4,7 +4,6 @@ import mimetypes
 import os
 import re
 import unicodedata
-from string import ascii_uppercase as letters
 
 import structlog
 from django.conf import settings
@@ -46,7 +45,7 @@ from core.utils import (
     get_transform_towgs84,
     get_message,
 )
-from dokument.models import Dokument
+from dokument.models import Dokument, get_dokument_soubor_name
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
@@ -355,41 +354,6 @@ def post_upload(request):
         logger.warning("No file attached to the announcement form.")
 
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
-
-
-def get_dokument_soubor_name(dokument, filename, add_to_index=1):
-    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
-    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
-    logger.debug(files)
-    if not files.exists():
-        return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
-    else:
-        filtered_files = files.filter(nazev_zkraceny__iregex=r"(([A-Z]\.\w+)$)")
-        if filtered_files.exists():
-            list_last_char = []
-            for file in filtered_files:
-                split_file = os.path.splitext(file.nazev)
-                list_last_char.append(split_file[0][-1])
-            last_char = max(list_last_char)
-            logger.debug(last_char)
-            if last_char != "Z" or add_to_index == 0:
-                return (
-                    dokument.ident_cely.replace("-", "")
-                    + letters[(letters.index(last_char) + add_to_index)]
-                    + os.path.splitext(filename)[1]
-                )
-            else:
-                logger.error(
-                    "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
-                )
-                return False
-
-        else:
-            return (
-                dokument.ident_cely.replace("-", "")
-                + "A"
-                + os.path.splitext(filename)[1]
-            )
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
