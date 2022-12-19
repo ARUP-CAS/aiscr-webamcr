@@ -115,7 +115,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
             "last_name": forms.TextInput(attrs={"readonly": True}),
             "email": forms.TextInput(attrs={"readonly": True}),
             "ident_cely": forms.TextInput(attrs={"readonly": True}),
-            "date_joined": forms.TextInput(attrs={"readonly": True}),
+            "date_joined": ForeignKeyReadOnlyTextInput(),
             "organizace": ForeignKeyReadOnlyTextInput(),
             "groups": ForeignKeyReadOnlyTextInput(),
         }
@@ -124,6 +124,7 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["organizace"].widget.value = self.instance.organizace
         self.fields["hlavni_role"].widget.value = self.instance.hlavni_role
+        self.fields["date_joined"].widget.value = self.instance.date_joined.replace(microsecond=0).replace(tzinfo=None)
         self.fields["groups"].widget.value = ", ".join([str(group.name) for group in self.instance.groups.all()])
         self.helper = FormHelper(self)
         self.helper.form_tag = False

@@ -161,7 +161,7 @@ class CustomGroupAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
             obj: Group
-            user_count = User.objects.filter(pk=obj.pk).count()
+            user_count = User.objects.filter(groups__id__in=[obj.pk]).count()
             if user_count >= 1:
                 return False
         return super().has_delete_permission(request)

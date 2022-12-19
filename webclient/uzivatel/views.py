@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError
 from django.db.models import F, Value, CharField, IntegerField
 from django.db.models import Q
@@ -165,7 +166,7 @@ class UserLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class UserAccountUpdateView(LoginRequiredMixin, UpdateView):
+class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = User
     form_class = AuthUserChangeForm
     template_name = "uzivatel/update_user.html"
@@ -213,6 +214,8 @@ class UserAccountUpdateView(LoginRequiredMixin, UpdateView):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.save(update_fields=("telefon",))
+            messages.add_message(request, messages.SUCCESS,
+                                 _("uzivatel.UserAccountUpdateView.post.success"))
         else:
             messages.add_message(request, messages.ERROR,
                                  _("uzivatel.UserAccountUpdateView._change_password.fail"))
