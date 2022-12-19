@@ -27,13 +27,11 @@
 <script>
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
-    if ("{{show.editovat}}" != "False"){
       var options = Object.assign(defaults, {modalID: "modal-form",
         formID: "pripojit-eo-form",
         modalFormID: "#pripojit-eo-form",
       })
       dokument_pripojit_modal = new Modal(options, "eo-pripojit-{{card_type}}");
-    };
 });
 
 </script>

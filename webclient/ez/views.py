@@ -100,7 +100,7 @@ class ExterniZdrojListView(
         return qs
 
 
-class ExterniZdrojDetailView(DetailView, LoginRequiredMixin):
+class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
     model = ExterniZdroj
     template_name = "ez/detail.html"
     slug_field = "ident_cely"
@@ -137,7 +137,7 @@ class ExterniZdrojDetailView(DetailView, LoginRequiredMixin):
         return context
 
 
-class ExterniZdrojCreateView(CreateView, LoginRequiredMixin):
+class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     model = ExterniZdroj
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
@@ -178,7 +178,7 @@ class ExterniZdrojCreateView(CreateView, LoginRequiredMixin):
         return super().form_invalid(form)
 
 
-class ExterniZdrojEditView(UpdateView, LoginRequiredMixin):
+class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
     model = ExterniZdroj
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
