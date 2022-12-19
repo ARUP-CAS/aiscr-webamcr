@@ -35,7 +35,7 @@ from django.views.generic import TemplateView
 from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
-from pian.models import Pian
+from pian.models import Pian, vytvor_pian
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -268,8 +268,12 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
             old_katastr = az.hlavni_katastr
             az.hlavni_katastr = form.cleaned_data["katastr"]
             az.save()
-            zaznam.pian = form.cleaned_data["katastr"].pian
-            zaznam.save()
+            if form.cleaned_data["katastr"].pian is not None:
+                zaznam.pian = form.cleaned_data["katastr"].pian
+                zaznam.save()
+            else: 
+                zaznam.pian = vytvor_pian(form.cleaned_data["katastr"])
+                zaznam.save()
             if old_katastr.okres.kraj.rada_id != form.cleaned_data["katastr"].okres.kraj.rada_id:
                 if az.stav == AZ_STAV_ARCHIVOVANY:
                     az.set_akce_ident(get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id))
