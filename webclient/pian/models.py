@@ -1,15 +1,19 @@
 import logging
 from core.constants import (
+    KLADYZM10,
+    KLADYZM50,
     KLADYZM_KATEGORIE,
     PIAN_NEPOTVRZEN,
     PIAN_POTVRZEN,
+    PIAN_PRESNOST_KATASTR,
     ZAPSANI_PIAN,
     POTVRZENI_PIAN,
 )
 from django.contrib.gis.db import models as pgmodels
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
+from heslar.hesla import GEOMETRY_PLOCHA, HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
 from heslar.models import Heslar
 from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
@@ -148,3 +152,37 @@ class PianSekvence(models.Model):
 
     class Meta:
         db_table = "pian_sekvence"
+
+def vytvor_pian(katastr):
+    zm10s = (
+                Kladyzm.objects.filter(kategorie=KLADYZM10)
+                .filter(the_geom__contains=katastr.definicni_bod)
+            )
+    zm50s = (
+        Kladyzm.objects.filter(kategorie=KLADYZM50)
+        .filter(the_geom__contains=katastr.definicni_bod)
+    )
+    if len(zm10s) == 0:
+        logger.error("dj.signals.create_dokumentacni_jednotka.zm10s.not_found")
+        raise Exception("zm10s.not_found")
+    if len(zm50s) == 0:
+        logger.error("dj.signals.create_dokumentacni_jednotka.zm50s.not_found")
+        raise Exception("zm50s.not_found")
+    zm10s = zm10s.first()
+    zm50s = zm50s.first()
+    try:
+        geom = katastr.hranice
+        presnost = Heslar.objects.get(pk=PIAN_PRESNOST_KATASTR)
+        typ = Heslar.objects.get(pk=GEOMETRY_PLOCHA)
+        pian = Pian(stav=PIAN_POTVRZEN, zm10=zm10s, zm50=zm50s, typ=typ, presnost=presnost, geom=geom,
+                    geom_system="wgs84")
+        pian.set_permanent_ident_cely()
+        pian.save()
+        pian.zaznamenej_zapsani(User.objects.filter(email="amcr@arup.cas.cz").first())
+        katastr.pian = pian
+        katastr.save()
+        return pian
+    except ObjectDoesNotExist as err:
+        logger.error("dj.signals.create_dokumentacni_jednotka.ObjectDoesNotExist", err=err)
+        raise ObjectDoesNotExist()
+        
