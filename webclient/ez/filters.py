@@ -143,6 +143,7 @@ class ExterniZdrojFilter(HistorieFilter):
             | Q(isbn__icontains=value)
             | Q(issn__icontains=value)
             | Q(poznamka__icontains=value)
+            | Q(rok_vydani_vzniku__icontains=value)
         )
 
     def filter_akce_ident(self, queryset, name, value):
