@@ -6,17 +6,20 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Vážená paní/Vážený pane' %},
+{% trans "project.emails.pmictu.vážená_paní/vážený_pane" %},
 
-{% blocktrans %} projekt {{ ident_cely }} ({{ podnet}}), který byl evidován v souvislosti s Vaším oznámením o stavební
-    nebo jiné činností na území s archeologickými nálezy dle § 22, odst. 2 zák. č. 20/1987 na k.ú. {{ katastr }},
-    parcela {{ parcela }} ({{ lokalita }}) {% endblocktrans %}{% if datum_oznameni %}{% trans "ze dne" %} {{datum_oznameni}},{% endif %}{% trans 'byl zrušen' %}.
+{% trans "project.emails.pmictu.projekt" %} {{ ident_cely }}
+({{ podnet }}), {% trans "project.emails.pmictu.který_byl_evidován_v_souvislosti_s_vaším_oznámením_o_stavební" %}
+{% trans "project.emails.pmictu._nebo_jiné_činností_na_území_s_archeologickými_nálezy_dle_22,_odst._2_zák._č._20/1987_na_k.ú." %} {{ katastr }},
+{% trans "project.emails.pmictu.parcela" %} {{ parcela }} ({{ lokalita }})
+{% if datum_oznameni %}{% trans "project.emails.pmictu.ze_dne" %} {{ datum_oznameni }}
+    ,{% endif %}{% trans "project.emails.pmictu.byl_zrušen" %}.
 
-{% trans "Důvod zrušení" %}: {{ reason }}
+{% trans "project.emails.pmictu.důvod_zrušení" %}: {{ reason }}
 
-{% trans "Vaše případné dotazy pište na adresu oznameni@arub.cz nebo volejte na tel. +420 515 911 133 (Jihomoravský a Zlínský kraj), +420 515 911 121 (Vysočina a Olomoucký kraj), +420 553 821 603 (Moravskoslezský kraj)" %}.
-{% trans "S pozdravem" %}
-{% trans "Archeologický ústav AV ČR, Brno, v. v. i." %}
-{% trans "Na tuto zprávu prosím neodpovídejte, je automaticky generována" %}.
+{% trans "project.emails.pmictu.vaše_případné_dotazy_pište_na_adresu_oznameni@arub.cz_nebo_volejte_na_tel._+420_515_911_133_(jihomoravský_a_zlínský_kraj)_+420_515_911_121_(vysočina_a_olomoucký_kraj)_+420_553_821_603_(moravskoslezský kraj)" %}.
+{% trans "project.emails.pmictu.s_pozdravem" %}
+{% trans "project.emails.pmictu.archeologický_ústav_av_čr_brno_v._v._i" %}
+{% trans "project.emails.pmictu.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
 </body>
 </html>

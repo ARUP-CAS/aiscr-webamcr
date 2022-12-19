@@ -6,12 +6,11 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Dobrý den' %},
+{% trans 'project.emails.prdpd.dobrý_den' %},
 
-{% blocktrans %} v aplikaci IS AMČR vypršela lhůta pro odevzdání NZ u projektu {{ ident_cely }} na
-    katastru {{ katastr }}{% endblocktrans %}.
+{% trans "project.emails.prdpd.v_aplikaci_is_amčr_vypršela_lhůta_pro_odevzdání_nz_u_projektu" %} {{ ident_cely }} {% trans "project.emails.prdpd.na_katastru" %} {{ katastr }}{% endblocktrans %}.
 
-{% trans "Detaily projektu zjistíte po přihlášení do AMČR" %}.
+{% trans "project.emails.prdpd.detaily_projektu_zjistíte_po_přihlášení_do_amčr" %}.
 
 </body>
 </html>

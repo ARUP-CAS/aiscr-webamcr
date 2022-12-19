@@ -6,17 +6,17 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Dobrý den' %},
+{% trans 'project.emails.opwr.dobrý_den' %},
 {% for project in projects %}
-    {% trans 'v aplikaci IS AMČR byl právě zapsán nový projekt' %} {{ project.ident_cely }}.
-    {% trans 'Typ projektu' %}: {{ project.typ_projektu.heslo }}
-    {% trans 'Katastr' %}: {{ project.hlavni_katastr.nazev }} ({{ project.hlavni_katastr.okres.nazev }})
-    {% trans 'Podnět' %}: {{ project.podnet }}
-    {% trans 'Lokalizace' %}: {{ project.lokalizace }}
-    {% trans 'Plánované zahájení' %}: {{ project.planovane_zahajeni_text }}
+    {% trans 'project.emails.opwr.v_aplikaci_is_amčr_byl_právě_zapsán_nový_projekt' %} {{ project.ident_cely }}.
+    {% trans 'project.emails.opwr.typ_projektu' %}: {{ project.typ_projektu.heslo }}
+    {% trans 'project.emails.opwr.katastr' %}: {{ project.hlavni_katastr.nazev }} ({{ project.hlavni_katastr.okres.nazev }})
+    {% trans 'project.emails.opwr.podnět' %}: {{ project.podnet }}
+    {% trans 'project.emails.opwr.lokalizace' %}: {{ project.lokalizace }}
+    {% trans 'project.emails.opwr.plánované_zahájení' %}: {{ project.planovane_zahajeni_text }}
 {% endfor %}
 
-{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+{% trans "project.emails.opwr.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.
 
 </body>
 </html>

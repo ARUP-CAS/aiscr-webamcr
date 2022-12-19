@@ -6,21 +6,22 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Vážená paní/Vážený pane' %},
+{% trans "project.emails.pcictu.vážená_paní/vážený_pane" %},
 
-{% blocktrans %} projekt {{ ident_cely }} ({{ podnet}}), který byl evidován v souvislosti s Vaším oznámením o stavební
-    nebo jiné činností na území s archeologickými nálezy dle § 22, odst. 2 zák. č. 20/1987 na k.ú. {{ katastr }},
-    parcela {{ parcela }} ({{ lokalita }}) {% endblocktrans %}{% if datum_oznameni %}{% trans "ze dne" %} {{datum_oznameni}},{% endif %}{% trans 'byl zrušen' %}.
+{% trans "project.emails.pcictu.projekt" %} {{ ident_cely }}
+({{ podnet }}), {% trans "project.emails.pcictu.který_byl_evidován_v_souvislosti_s_vaším_oznámením_o_stavebn" %}
+{% trans "project.emails.pcictu.nebo_jiné_činností_na_území_s_archeologickými_nálezy_dle_22_odst._2_zák._č._20/1987_na_k.ú." %} {{ katastr }},
+{% trans "project.emails.pcictu.parcela" %} {{ parcela }} ({{ lokalita }}) {% if datum_oznameni %}{% trans "project.emails.pcictu.ze_dne" %} {{datum_oznameni}},{% endif %}{% trans "project.emails.pcictu_byl_zrušen" %}.
 
-{% trans "Důvod zrušení" %}: {{ reason }}
+{% trans "project.emails.pcictu.důvod_zrušení" %}: {{ reason }}
 
 
-{% trans "S pozdravem" %}
+{% trans "project.emails.pcictu.s_pozdravem" %}
 
-{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}
+{% trans "project.emails.pcictu.archeologický_ústav_av_čr_praha_v._v._i." %}
 
-{% trans "Na tuto zprávu prosím neodpovídejte, je automaticky generována" %}.
-{% trans "Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. 257 014 310." %}
+{% trans "project.emails.pcictu.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
+{% trans "project.emails.pcictu.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310." %}
 
 </body>
 </html>

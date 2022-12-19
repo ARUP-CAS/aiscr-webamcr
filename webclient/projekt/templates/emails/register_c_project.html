@@ -6,17 +6,21 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'Vážená paní/Vážený pane' %},
+{% trans "project.emails.rcp.vážená_paní/vážený_pane" %},
 
-{% blocktrans %} děkujeme za oznámení o stavební nebo jiné činnosti ({{ podnet }}) na území s archeologickými nálezy na k.ú. {{ katastr }} ({{ okres }}), parcela {{ parcela }} ({{ lokalita }}) podle § 22 odst. 2 zákona č. 20/1987 Sb. o státní památkové péči{% endblocktrans %}.
-{% blocktrans %} Ve věci uzavření dohody o provedení záchranného archeologického výzkumu vás bude kontaktovat organizace {{ organization }}, která je oprávněna provádět archeologické výzkumy.{% endblocktrans %}
+{% trans "project.emails.rcp.děkujeme_za_oznámení_o_stavební_nebo_jiné_činnosti" %}
+({{ podnet }}) {% trans "project.emails.rcp.na_území_s_archeologickými_nálezy_na_k.ú." %} {{ katastr }}
+({{ okres }}), {% trans "project.emails.rcp.parcela" %} {{ parcela }}
+({{ lokalita }}) {% trans "project.emails.rcp.podle_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči." %}
+Ve věci uzavření dohody o provedení záchranného archeologického výzkumu vás bude kontaktovat
+organizace {{ organization }}, která je oprávněna provádět archeologické výzkumy.
 
-{% trans "S pozdravem" %}
+{% trans "project.emails.rcp.s_pozdravem" %}
 
-{% trans "Archeologický ústav AV ČR, Praha, v. v. i." %}
+{% trans "project.emails.rcp.archeologický_ústav_av_čr_praha_v._v._i." %}
 
-{% trans "Na tuto zprávu prosím neodpovídejte, je automaticky generována" %}.
-{% trans "Vaše případné dotazy pište na adresu oznameni@arup.cas.cz nebo volejte na tel. 257 014 310." %}
+{% trans "project.emails.rcp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
+{% trans "project.emails.rcp.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310." %}
 
 </body>
 </html>

@@ -37,7 +37,12 @@ VALUES ('E-U-01', True, 'AMČR: potvrďte svůj email pro registraci', null),
 ('E-N-05', False, 'AMČR-PAS: nový spolupracovník', 'emails/new_cooperator.html'),
 ('E-N-06', False, 'AMČR-PAS: spolupráce potvrzena', 'emails/cooperation_confirmed.html'),
 ('E-K-01', False, 'AMČR - Knihovna 3D: dokument {ident_cely} byl archivován', 'emails/document_archived.html'),
-('E-K-02', False, 'AMČR - Knihovna 3D: dokument {ident_cely} byl vrácen k doplnění', 'emails/document_was_returned.html');
+('E-K-02', False, 'AMČR - Knihovna 3D: dokument {ident_cely} byl vrácen k doplnění', 'emails/document_was_returned.html'),
+('AMČR: archivace záznamů', False, '', ''),
+('AMČR-PAS: nové nálezy k potvrzení', False, '', ''),
+('AMČR-PAS: archivace záznamů', False, '', ''),
+('AMČR-PAS: nová žádost o spolupráci', False, '', ''),
+('AMČR - Knihovna 3D: archivace záznamů', False, '', '');
 
 CREATE TABLE IF NOT EXISTS auth_user_notification_types
 (

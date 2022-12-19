@@ -7,13 +7,13 @@
 </head>
 <body>
 
-{% trans 'Dobrý den' %},
+{% trans "dokument.emails.dwr.dobrý_den" %},
 
-{% blocktrans %} "vámi odeslaný dokument {{ ident_cely }} byl vrácen do stavu {{ state }}." {% endblocktrans %}
+ {% trans "dokument.emails.dwr.vámi_odeslaný_dokument" %} {{ ident_cely }} {% trans "dokument.emails.dwr.byl_vrácen_do_stavu" %} {{ state }}."
 
-{% trans "Důvod" %}: {{ reason }}
+{% trans "dokument.emails.dwr.důvod" %}: {{ reason }}
 
-{% trans "Detaily zjistíte po přihlášení do Knihovny 3D v AMČR" %}.
+{% trans "dokument.emails.dwr.detaily_zjistíte_po_přihlášení_do_knihovny_3d_v_amčr" %}.
 
 </body>
 </html>

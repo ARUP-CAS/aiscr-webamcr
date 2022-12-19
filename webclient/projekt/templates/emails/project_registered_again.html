@@ -6,12 +6,12 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "Dobrý den" %},
+{% trans "project.emails.pra.dobrý_den" %},
 
-{% blocktrans %} projekt {{ ident_cely }} na katastru {{ katastr }} vámi navržený ke zrušení byl převeden do stavu
-    {{ state }}. {% endblocktrans %}
+ {% trans "project.emails.pra.projekt" %} {{ ident_cely }} {% trans "project.emails.pra.na katastru" %} {{ katastr }} {% trans "project.emails.pra.vámi_navržený_ke_zrušení_byl_převeden_do_stavu" %}
+    {{ state }}.
 
-{% trans "Detaily o projektu zjistíte po přihlášení do AMČR" %}.
+{% trans "project.emails.pra.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.
 
 </body>
 </html>
