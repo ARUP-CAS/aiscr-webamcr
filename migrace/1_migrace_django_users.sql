@@ -15,7 +15,7 @@ insert into auth_user(password, is_superuser, username, first_name, last_name, e
 
 -- prirazeni skupiny na zaklade role
 -- 1 = Badatel, 2 = Archeolog, 3 = Archivar COMMNET: muze byt jinak
-insert into auth_group(id, name) values (1, 'Badatel'), (2, 'Archeolog'), (3, 'Archivar'),(4, 'Admin'));
+insert into auth_group(id, name) values (1, 'Badatel'), (2, 'Archeolog'), (3, 'Archivář'),(4, 'Administrátor'));
 
 -- vlozim si aut_level do auth_user tabulky
 update auth_user set auth_level = sel.lev from (select u.auth_level as lev, u.ident_cely as ident from uzivatel u join auth_user au on au.username = u.ident_cely) as sel where sel.ident = username;
