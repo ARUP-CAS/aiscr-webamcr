@@ -167,7 +167,7 @@ ALTER TABLE  organizace ALTER COLUMN nazev_zkraceny_en SET NOT NULL;
 CREATE SEQUENCE organizace_ident_cely_seq  START WITH 1 INCREMENT BY 1 MINVALUE  0 MAXVALUE  999999 ;
 ALTER TABLE organizace ADD COLUMN ident_cely text NOT NULL DEFAULT('ORG-'::text || right(concat('000000', nextval('organizace_ident_cely_seq')::text), 6));
 ALTER TABLE organizace ADD CONSTRAINT organizace_ident_cely UNIQUE(ident_cely);
-ALTER TABLE  organizace ALTER COLUMN nazev_zkraceny SET NOT NULL;
+ALTER TABLE organizace ADD CONSTRAINT organizace_nazev_zkraceny UNIQUE(nazev_zkraceny);
 
 
 CREATE SEQUENCE osoba_ident_cely_seq START WITH 1 INCREMENT BY 1  MINVALUE  0  MAXVALUE  999999 ;
@@ -207,8 +207,8 @@ ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_pian UNIQUE(pian);
 
 
 ALTER TABLE ruian_kraj DROP COLUMN aktualni;
-ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod  SET NOT NULL ;
 ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod SET NOT NULL ;
+ALTER TABLE ruian_kraj ALTER COLUMN hranice SET NOT NULL ;
 ALTER TABLE ruian_kraj ADD COLUMN nazev_en text NOT NULL;
 
 
@@ -216,7 +216,7 @@ ALTER TABLE ruian_okres DROP COLUMN aktualni;
 ALTER TABLE ruian_okres ALTER COLUMN nazev_en SET NOT NULL;
 ALTER TABLE ruian_okres ALTER COLUMN definicni_bod SET  NOT NULL;
 ALTER TABLE ruian_okres ALTER COLUMN hranice  SET NOT NULL;
-ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_hranice UNIQUE(hranice);
+ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_hranice UNIQUE(nazev);
 ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_kod UNIQUE(kod);
 ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_spz UNIQUE(spz);
 
