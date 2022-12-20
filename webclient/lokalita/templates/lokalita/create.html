@@ -52,8 +52,13 @@
           }
         }
         // get value for typ
-        url = '{% url "heslar:get-initial-value" %}' + "?lokalita=true&nadrazene="
+        url = '{% url "heslar:get-nadrazena-value" %}' + "?iterace=2&podrazene="
         get_vychozi_hodnota_podrazeneho("#id_druh","#id_typ_lokality",url)
     })
+    //add value from select typ to char field
+    $('#id_typ_lokality').on("changed.bs.select", 
+      function(e, clickedIndex, newValue, oldValue) {
+        $("#id_typ_lokality_disp").val($("#id_typ_lokality option:selected").text())
+      })
   </script>
 {% endblock %}

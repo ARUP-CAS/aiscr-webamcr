@@ -5,6 +5,7 @@ from .views import (
     DokumentTypAutocomplete,
     PristupnostAutocomplete,
     zjisti_katastr_souradnic,
+    zjisti_nadrazenou_hodnotu,
     zjisti_vychozi_hodnotu, DokumentFormatAutocomplete,
 )
 from uzivatel.views import create_osoba, OsobaAutocomplete, OsobaAutocompleteChoices
@@ -19,6 +20,7 @@ urlpatterns = [
         name="zjisti-katastr-souradnic",
     ),
     path("zjisti-vychozi-hodnotu/", zjisti_vychozi_hodnotu, name="get-initial-value"),
+    path("zjisti-nadrazenou-hodnotu/", zjisti_nadrazenou_hodnotu, name="get-nadrazena-value"),
     path("osoba/zapsat", create_osoba, name="create_osoba"),
     path("seznam-osoby/", OsobaAutocomplete.as_view(), name="osoba-autocomplete"),
     path("dokument-typ/", DokumentTypAutocomplete.as_view(), name="dokument-typ-autocomplete"),

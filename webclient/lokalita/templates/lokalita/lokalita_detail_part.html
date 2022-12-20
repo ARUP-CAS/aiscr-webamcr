@@ -44,8 +44,11 @@
           {{ arch_z_form.katastry_show|as_crispy_field }}
         </div>
         
-        <div class="col-sm-2" style="pointer-events: none">
+        <div class="col-sm-2" style="pointer-events: none; display: none">
           {{ form.typ_lokality|as_crispy_field }}
+        </div>
+        <div class="col-sm-2">
+          {{ form.typ_lokality_disp|as_crispy_field }}
         </div>
         <div class="col-sm-2">
           {{ form.druh|as_crispy_field }}
