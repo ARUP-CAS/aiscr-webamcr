@@ -17,16 +17,16 @@ ALTER TABLE projekt add constraint oznamovatel_ukey UNIQUE(id, oznamovatel);
 -- ERROR 152 nulovych odpovedna_osoba, oznamovatel_text (jen nezachranne projekty?)
 
 -- vygenerovat id pro oznamovatele zachrannych projektu
-update projekt set oznamovatel = nextval('oznamovatel_id_seq') where typ_projektu = 1135;
+update projekt set oznamovatel = nextval('oznamovatel_id_seq') where typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001136');
 
 insert into oznamovatel (id, email, adresa, odpovedna_osoba, oznamovatel, telefon) select oznamovatel, email, adresa, odpovedna_osoba, oznamovatel_text, telefon from projekt where oznamovatel is not null order by oznamovatel asc;
 
 ALTER TABLE projekt add constraint projekt_oznamovatel_fkey foreign key (oznamovatel) references oznamovatel(id) ON DELETE SET NULL;
 
 -- Check ze kazdy zachranny projekt ma oznamovatele
-ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_check CHECK (not (oznamovatel IS NULL and typ_projektu = 1135));
+ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_check CHECK (not (oznamovatel IS NULL and typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001136')));
 -- Nezachranny projekt nemuze mit oznamovatele
-ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_null_check CHECK (not ((typ_projektu = 1136 or typ_projektu = 1134) and oznamovatel IS NOT NULL));
+ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_null_check CHECK (not ((typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001137') or typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001138')) and oznamovatel IS NOT NULL));
 
 -- Zmena typu sloupce planovane_zahajeni z textu na daterange
 alter table projekt rename column planovane_zahajeni to planovane_zahajeni_text;

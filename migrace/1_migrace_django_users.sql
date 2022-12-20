@@ -11,7 +11,7 @@ alter table auth_user add column jazyk character varying(15);
 alter table auth_user add column sha_1 text;
 
 -- vloazeni dat TODO: date_joined je v historii a heslo je potreba zabalit do jine heshovaci funkce COMMENT: uzivatele budou mit nova id-cka
-insert into auth_user(password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, auth_level, email_potvrzen, notifikace_nalezu, jazyk, historie, sha_1) select heslo, false, ident_cely, jmeno, prijmeni, email, false, true, NOW(), auth_level, email_potvrzen, notifikace_nalezu, jazyk, historie, heslo from uzivatel;
+insert into auth_user(password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, auth_level, email_potvrzen, notifikace_nalezu, jazyk, historie, sha_1, osoba) select heslo, false, ident_cely, jmeno, prijmeni, email, false, true, NOW(), auth_level, email_potvrzen, notifikace_nalezu, jazyk, historie, heslo, osoba from uzivatel;
 
 -- prirazeni skupiny na zaklade role
 -- 1 = Badatel, 2 = Archeolog, 3 = Archivar COMMNET: muze byt jinak

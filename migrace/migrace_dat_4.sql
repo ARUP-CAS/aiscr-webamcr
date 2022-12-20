@@ -65,13 +65,14 @@ alter table heslar_letiste add column en text;
 update heslar_letiste set en = nazev;
 -- helsar_specifikace_data TODO doplnit preklad
 alter table heslar_specifikace_data add column en text;
-update heslar_specifikace_data set en = 'to be translared';
+update heslar_specifikace_data set en = 'translate: ' || ident_cely;
 -- heslar_typ_organizace TODO doplnit preklad
 alter table heslar_typ_organizace add column en text;
-update heslar_typ_organizace set en = 'to be translated';
+update heslar_typ_organizace set en = 'translate: ' || ident_cely;
 
 -- COMMENT: musim odebrat key "heslar_heslo_en_key", protoze napr. preklad 'hradba' a 'val' v heslar_objekt_druh je stejny
 -- stejny problem je v heslari heslar_specifikace_objektu_druha u sloupce heslo (stribro je tam 2x), to je mozna ale chyba dat
+-- DN: Toto by již mělo být ošetřeno, ale pro jistotu necháme a k navrácení constraints dojde dále v migraci.
 alter table heslar drop constraint heslar_heslo_en_key;
 alter table heslar drop constraint heslar_heslo_key;
 -- TODO pridat smazane constraints
@@ -224,10 +225,11 @@ insert into heslar_hierarchie(heslo_nadrazene, heslo_podrazene, typ) select h.id
 -- heslar_material_dokumentu (relace s heslar_typ_dokumentu)
 alter table heslar_material_dokumentu add column nove_id integer;
 update heslar_material_dokumentu set nove_id = sel.new_id from (select id as new_id, puvodni_id as old_id from heslar h where h.nazev_heslare = 12) as sel where sel.old_id = id;
+-- DN: pro jistotu navýšen counter na 50, aby byla rezerva
 CREATE OR REPLACE FUNCTION migrateUplatneniFromMaterialDokumentu() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..41
+    FOR counter IN 1..50
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN

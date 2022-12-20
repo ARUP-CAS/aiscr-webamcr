@@ -19,6 +19,8 @@ update projekt set odpovedny_pracovnik_archivace = null where odpovedny_pracovni
 ---- DN:
 update projekt set odpovedny_pracovnik_navrhu_zruseni = null where odpovedny_pracovnik_navrhu_zruseni is not null and datum_navrzeni_zruseni is null and stav < 7;
 -- DONE 6. Nelze pridat unique constraint do kladyzm.nazev je tam mnoho zaznamu ktere tam maji N_A.
+-- DN: Sloupec odstraníme, není k ničemu potřebný a obsahuje částečně poškozená data (chyba kódování textu).
+ALTER TABLE kladyzm drop column nazev;
 -- DONE 7. Nelze pridat not null pro auth_level protoze tam je 71 uzivatelu kteri to maji NULL. Tohle se uz resilo a mam pocit ze auth_level maji NULL kdyz jsou to neaktivni ucty ale nejsem si jisty.
 update user_storage set auth_level = 0 where auth_level is null;
 -- DONE 8. nelze pridat not null na uzivatel.heslo a email protoze uzivatel s ID -1 nema heslo ani email
@@ -47,3 +49,12 @@ update heslar_objekt_druh set en = 'defensive wall' where nazev = 'hradba';
 update samostatny_nalez set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace = -1;
 update samostatny_nalez set katastr = null where katastr = -1;
 
+-- DN: Pokud je v jednotka_dokument.vazba totéž co ve vazba_druha, nastavit vazba_druha na null.
+UPDATE jednotka_dokument SET vazba_druha = Null WHERE vazba = vazba_druha;
+
+-- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
+UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and email is null;
+UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and adresa is null;
+UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 2) and telefon is null;
+UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 2) and odpovedna_osoba is null;
+UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and objednatel is null;
