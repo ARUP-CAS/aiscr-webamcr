@@ -1,10 +1,10 @@
 insert into heslar_hierarchie
-values (1120, 133, 'výchozí hodnota'),
-    (1120, 134, 'výchozí hodnota'),
-    (1120, 135, 'výchozí hodnota'),
-    (1121, 132, 'výchozí hodnota'),
-    (1122, 136, 'výchozí hodnota'),
-    (1122, 137, 'výchozí hodnota'),
-    (1122, 138, 'výchozí hodnota'),
-    (1122, 139, 'výchozí hodnota'),
-    (1122, 140, 'výchozí hodnota');
+values (133, 1120, 'podřízenost'),
+    (134, 1120, 'podřízenost'),
+    (135, 1120, 'podřízenost'),
+    (132, 1121, 'podřízenost'),
+    (136, 1122, 'podřízenost'),
+    (137, 1122, 'podřízenost'),
+    (138, 1122, 'podřízenost'),
+    (139, 1122, 'podřízenost'),
+    (140, 1122, 'podřízenost');

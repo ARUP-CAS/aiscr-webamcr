@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.http import JsonResponse
 from django.db.models import Value, IntegerField
+from django.core.exceptions import ObjectDoesNotExist
 
 from heslar.hesla import HESLAR_DOKUMENT_TYP, MODEL_3D_DOKUMENT_TYPES, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
@@ -61,8 +62,6 @@ def zjisti_katastr_souradnic(request):
 
 def zjisti_vychozi_hodnotu(request):
     nadrazene = request.GET.get("nadrazene", 0)
-    if request.GET.get("lokalita", False):
-        nadrazene = HeslarHierarchie.objects.get(heslo_podrazene=nadrazene, typ="podřízenost").heslo_nadrazene
     vychozi_hodnota = HeslarHierarchie.objects.filter(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
     if vychozi_hodnota.exists():
         queryset = vychozi_hodnota.values_list('heslo_podrazene', flat=True)
@@ -78,6 +77,24 @@ def zjisti_vychozi_hodnotu(request):
         )
     else:
         return JsonResponse(data = {},status=400)
+
+def zjisti_nadrazenou_hodnotu(request):
+    podrazene = request.GET.get("podrazene", 0)
+    i=0
+    while i < int(request.GET.get("iterace", 1)):
+        try:
+            nadrazene = HeslarHierarchie.objects.get(heslo_podrazene=podrazene, typ="podřízenost").heslo_nadrazene
+            podrazene = nadrazene.id
+            i+=1
+        except ObjectDoesNotExist as err:
+            logger.debug(err)
+            return JsonResponse(data = {},status=400)
+    list = [{"id":nadrazene.id}]
+    return JsonResponse(
+        data = list,
+        status=200,
+        safe=False
+    )
 
 
 class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
