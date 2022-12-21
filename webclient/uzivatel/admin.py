@@ -60,7 +60,6 @@ class CustomUserAdmin(UserAdmin):
                     "last_name",
                     "telefon",
                     "groups",
-                    "notification_types"
                 )
             },
         ),
@@ -82,7 +81,6 @@ class CustomUserAdmin(UserAdmin):
                     "last_name",
                     "telefon",
                     "groups",
-                    "notification_types"
                 ),
             },
         ),
