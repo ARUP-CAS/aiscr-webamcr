@@ -14,6 +14,12 @@ logger_s = structlog.get_logger(__name__)
 
 
 class LokalitaForm(forms.ModelForm):
+    typ_lokality_disp = forms.CharField(
+        label=_("lokalita.forms.typLokality.label"),
+        help_text=_("lokalita.forms.typLokality.label"),
+        required=False,
+    )
+
     class Meta:
         model = Lokalita
         fields = (
@@ -71,9 +77,10 @@ class LokalitaForm(forms.ModelForm):
         super(LokalitaForm, self).__init__(*args, **kwargs)
         if self.instance.pk is not None:
             nadrazene = HeslarHierarchie.objects.filter(
-                heslo_podrazene=self.instance.typ_lokality, typ="výchozí hodnota"
-            ).values_list("heslo_nadrazene", flat=True)
+                heslo_nadrazene=self.instance.typ_lokality, typ="podřízenost"
+            ).values_list("heslo_podrazene", flat=True)
             choices = heslar_12(HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT, nadrazene)
+            self.fields["typ_lokality_disp"].initial = self.instance.typ_lokality
         else:
             choices = heslar_12(HESLAR_LOKALITA_DRUH, HESLAR_LOKALITA_KAT)
         self.fields["druh"] = TwoLevelSelectField(
@@ -109,3 +116,4 @@ class LokalitaForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+        self.fields["typ_lokality_disp"].disabled = True
