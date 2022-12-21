@@ -267,6 +267,10 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
         },
+        "cron": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
         "ez": {
             "handlers": ["console"],
             "level": "DEBUG",

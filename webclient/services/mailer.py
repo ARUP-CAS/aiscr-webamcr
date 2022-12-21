@@ -211,7 +211,7 @@ class Mailer():
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
-                                                         termin_odevzdani_nz_lt=today)
+                                                         termin_odevzdani_nz__lt=today)
         for project in projects:
             project_history = project.historie.get_last_transaction_date(PRIHLASENI_PROJ)
             user = project_history['uzivatel']

@@ -1,3 +1,5 @@
+import structlog
+
 from django.contrib.contenttypes.models import ContentType
 from django_cron import CronJobBase, Schedule
 from services.mailer import Mailer
@@ -12,16 +14,20 @@ from projekt.models import Projekt
 from django.db import connection
 
 
+logger_s = structlog.get_logger(__name__)
+
+
 class Notifications(CronJobBase):
     code = "cron.notifications.Notifications"  # a unique code
-    RUN_EVERY_MINS = 1440  # every 24H
+    RUN_EVERY_MINS = 1  # every 24H
 
     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
 
     def collect_projects_by_okres(self, okres: RuianOkres):
+        logger_s.debug("cron.Notifications.collect_projects_by_okres.start")
         katastry = RuianKatastr.objects.filter(okres=okres).values_list('id', flat=True)
         today = datetime.today()
-        yesterday = today - timedelta(days=1)
+        yesterday = today # - timedelta(days=1)
         yesterday_start = datetime(year=yesterday.year, month=yesterday.month, day=yesterday.day, hour=00, minute=00,
                                    second=00)
         yesterday_end = datetime(year=yesterday.year, month=yesterday.month,
@@ -34,6 +40,7 @@ class Notifications(CronJobBase):
             return [element for tupl in result for element in tupl]
 
     def collect_projects_by_kraj(self, kraj: RuianKraj):
+        logger_s.debug("cron.Notifications.collect_projects_by_kraj.start")
         result = []
         okresy = RuianOkres.objects.filter(kraj=kraj)
         for okres in okresy:
@@ -41,6 +48,7 @@ class Notifications(CronJobBase):
         return result
 
     def collect_watchdogs(self):
+        logger_s.debug("cron.Notifications.collect_watchdogs.start")
         watchdog_list = []
         emails_with_projects = {}
         content_type = ContentType.objects.get_for_model(RuianKraj)
@@ -70,6 +78,7 @@ class Notifications(CronJobBase):
         return emails_with_projects
 
     def collect_EN01_EN02(self, stav):
+        logger_s.debug("cron.Notifications.collect_EN01_EN02.start")
         yesterday = (datetime.today() - timedelta(days=1)).date()
         entries_with_sent_status = Historie.objects.filter(typ_zmeny=stav, datum_zmeny__date=yesterday).all()
         findings = {}
@@ -92,6 +101,7 @@ class Notifications(CronJobBase):
         return email_to
 
     def do(self):
+        logger_s.debug("cron.Notifications.do.start")
         Mailer.sendENZ01()
         Mailer.sendENZ02()
         dataEn01 = self.collect_EN01_EN02(stav=ODESLANI_SN)
