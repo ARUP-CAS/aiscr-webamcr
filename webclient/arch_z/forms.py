@@ -218,7 +218,7 @@ class CreateArchZForm(forms.ModelForm):
 class StartDateInput(forms.DateField):
     def to_python(self, value):
         if value:
-            if re.match(r"\d{4}", value):
+            if re.fullmatch(r"\d{4}", value):
                 return datetime.date(int(value), 1, 1)
         return super().to_python(value)
 
@@ -226,7 +226,7 @@ class StartDateInput(forms.DateField):
 class EndDateInput(forms.DateField):
     def to_python(self, value):
         if value:
-            if re.match(r"\d{4}", value):
+            if re.fullmatch(r"\d{4}", value):
                 return datetime.date(int(value), 12, 31)
         return super().to_python(value)
 
