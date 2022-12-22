@@ -45,16 +45,16 @@ def send_deactivation_email(sender, instance: User, **kwargs):
             kwargs['update_fields'].append('is_active')
     if kwargs['update_fields']:
         if 'is_active' in kwargs['update_fields'] and instance.is_active is False:
-            Mailer.sendEU03(user=instance)
+            Mailer.send_eu03(user=instance)
 
 
 @receiver(post_save, sender=User)
 def send_new_user_email_to_admin(sender, instance: User, **kwargs):
     if kwargs.get('created') is True and instance.created_from_admin_panel is False:
-        Mailer.sendEU04(user=instance)
+        Mailer.send_eu04(user=instance)
 
 
 @receiver(post_save, sender=User)
 def send_account_confirmed_email(sender, instance: User, **kwargs):
     if kwargs.get('created') is True and instance.created_from_admin_panel is True:
-        Mailer.sendEU02(user=instance)
+        Mailer.send_eu02(user=instance)

@@ -19,23 +19,23 @@ logger_s = structlog.get_logger(__name__)
 
 class Notifications(CronJobBase):
     code = "cron.notifications.Notifications"  # a unique code
-    RUN_EVERY_MINS = 1  # every 24H
-
-    schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
+    RUN_AT_TIMES = ["00:00", ]
+    schedule = Schedule(run_at_times=RUN_AT_TIMES)
 
     def collect_projects_by_okres(self, okres: RuianOkres):
         logger_s.debug("cron.Notifications.collect_projects_by_okres.start")
         katastry = RuianKatastr.objects.filter(okres=okres).values_list('id', flat=True)
-        today = datetime.today()
-        yesterday = today # - timedelta(days=1)
-        yesterday_start = datetime(year=yesterday.year, month=yesterday.month, day=yesterday.day, hour=00, minute=00,
-                                   second=00)
-        yesterday_end = datetime(year=yesterday.year, month=yesterday.month,
-                                 day=yesterday.day, hour=23, minute=59, second=59)
+        yesterday_start = str(datetime.today() - timedelta(days=1))
+        yesterday_end = str(datetime.today())
+        logger_s.debug("cron.Notifications.do.dates", yesterday_start=yesterday_start, yesterday_end=yesterday_end)
         with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT ident_cely FROM projekt LEFT OUTER JOIN historie ON projekt.historie=historie.vazba WHERE projekt.hlavni_katastr IN %s AND historie.typ_zmeny=%s AND historie.datum_zmeny >=%s AND historie.datum_zmeny <=%s",
-                [tuple(katastry), SCHVALENI_OZNAMENI_PROJ, yesterday_start, yesterday_end])
+            query = "SELECT ident_cely FROM projekt LEFT OUTER JOIN historie ON projekt.historie=historie.vazba " \
+                    f"WHERE projekt.hlavni_katastr IN {tuple(katastry)} " \
+                    f"AND historie.typ_zmeny={SCHVALENI_OZNAMENI_PROJ} " \
+                    f"AND historie.datum_zmeny >= {yesterday_start} " \
+                    f"AND historie.datum_zmeny <= {yesterday_end}"
+            logger_s.debug("cron.Notifications.do.dates", query=query)
+            cursor.execute(query)
             result = cursor.fetchall()
             return [element for tupl in result for element in tupl]
 
@@ -60,6 +60,7 @@ class Notifications(CronJobBase):
                 "email": watchdog.user.email,
                 "projects": self.collect_projects_by_kraj(kraj=kraj)
             })
+        logger_s.debug("cron.Notifications.collect_watchdogs.watchdog_list", watchdog_list=watchdog_list)
         # Collect Okres watchdogs and projects
         content_type = ContentType.objects.get_for_model(RuianOkres)
         watchdogs = Watchdog.objects.filter(content_type=content_type)
@@ -69,16 +70,18 @@ class Notifications(CronJobBase):
                 "email": watchdog.user.email,
                 "projects": self.collect_projects_by_okres(okres=okres)
             })
+        logger_s.debug("cron.Notifications.collect_watchdogs.watchdog_list", watchdog_list=watchdog_list)
         for watchdog in watchdog_list:
             if watchdog['email'] not in emails_with_projects.keys():
                 emails_with_projects[watchdog['email']] = watchdog['projects']
             else:
                 emails_with_projects[watchdog['email']] = list(
                     set(emails_with_projects[watchdog['email']] + watchdog['projects']))
+        logger_s.debug("cron.Notifications.collect_watchdogs.end")
         return emails_with_projects
 
-    def collect_EN01_EN02(self, stav):
-        logger_s.debug("cron.Notifications.collect_EN01_EN02.start")
+    def collect_en01_en02(self, stav):
+        logger_s.debug("cron.Notifications.collect_en01_en02.start")
         yesterday = (datetime.today() - timedelta(days=1)).date()
         entries_with_sent_status = Historie.objects.filter(typ_zmeny=stav, datum_zmeny__date=yesterday).all()
         findings = {}
@@ -98,15 +101,18 @@ class Notifications(CronJobBase):
                     email_to[user] = [key]
                 else:
                     email_to[user].append(key)
+        logger_s.debug("cron.Notifications.collect_en01_en02.email_to", email_to=email_to)
         return email_to
 
     def do(self):
         logger_s.debug("cron.Notifications.do.start")
-        Mailer.sendENZ01()
-        Mailer.sendENZ02()
-        dataEn01 = self.collect_EN01_EN02(stav=ODESLANI_SN)
+        Mailer.send_enz01()
+        logger_s.debug("cron.Notifications.do.send_enz_01.end")
+        Mailer.send_enz02()
+        logger_s.debug("cron.Notifications.do.send_enz_02.end")
+        dataEn01 = self.collect_en01_en02(stav=ODESLANI_SN)
         for email, ids in dataEn01.items():
-            Mailer.sendEN01(send_to=email, project_ids=ids)
-        dataEn02 = self.collect_EN01_EN02(stav=ARCHIVACE_SN)
+            Mailer.send_en01(send_to=email, project_ids=ids)
+        dataEn02 = self.collect_en01_en02(stav=ARCHIVACE_SN)
         for email, ids in dataEn02.items():
-            Mailer.sendEN02(send_to=email, project_ids=ids)
+            Mailer.send_en02(send_to=email, project_ids=ids)

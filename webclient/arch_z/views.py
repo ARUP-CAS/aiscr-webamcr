@@ -590,7 +590,7 @@ def archivovat(request, ident_cely):
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "USPESNE_ARCHIVOVANA")
         )
-        Mailer.sendEA02(arch_z=az)
+        Mailer.send_ea02(arch_z=az)
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
@@ -663,7 +663,7 @@ def vratit(request, ident_cely):
                     projekt.save()
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
-            Mailer.sendEV01(arch_z=az, reason=duvod)
+            Mailer.send_ev01(arch_z=az, reason=duvod)
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
             )
