@@ -271,7 +271,7 @@ class Projekt(models.Model):
 
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
-        Mailer.sendEA01(self)
+        Mailer.send_ea01(self)
         self.save()
 
     def set_navrzen_ke_zruseni(self, user, poznamka):

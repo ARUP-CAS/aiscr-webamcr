@@ -1,6 +1,10 @@
 import datetime
 import logging
+from itertools import repeat
+from typing import Union
+
 import structlog
+from concurrent.futures import ThreadPoolExecutor
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -67,8 +71,8 @@ class Mailer():
         return s.get_data()
 
     @classmethod
-    def notification_should_be_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
-                                    user: 'uzivatel.models.User'):
+    def _notification_should_be_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
+                                     user: 'uzivatel.models.User'):
         result = False
         group_key = notification_type.pk
         if notification_type.ident_cely in groups.keys():
@@ -77,33 +81,33 @@ class Mailer():
                 group_key = group.pk
             except ObjectDoesNotExist:
                 logger_s.debug("group not found exception")
-        if (notification_type.ident_cely in always_active):
-            notificationIsEnabled = True
+        if notification_type.ident_cely in always_active:
+            notification_is_enabled = True
         else:
-            notificationIsEnabled = user.notification_types.filter(pk=group_key).first()
-        if notificationIsEnabled:
-            if user.is_active is False and notification_type.zasilat_neaktivnim == True:
+            notification_is_enabled = user.notification_types.filter(pk=group_key).first()
+        if notification_is_enabled:
+            if user.is_active is False and notification_type.zasilat_neaktivnim is True:
                 result = True
             if user.is_active is True:
                 result = True
-        logger_s.debug("services.mailer.notification_should_be_sent", notification_type=notification_type,
+        logger_s.debug("services.mailer._notification_should_be_sent", notification_type=notification_type,
                        user=user, result=result)
         return result
 
     @classmethod
-    def notification_was_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
-                              user: 'uzivatel.models.User'):
+    def _notification_was_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
+                               user: 'uzivatel.models.User'):
         notification_log = user.notification_log.filter(notification_type=notification_type).first()
-        logger_s.debug("services.mailer.notification_was_sent", notification_type=notification_type, user=user)
+        logger_s.debug("services.mailer._notification_was_sent", notification_type=notification_type, user=user)
         if notification_log:
             return True
         return False
 
     @classmethod
-    def log_notification(cls, notification_type: 'uzivatel.models.UserNotificationType', receiver_object):
+    def _log_notification(cls, notification_type: 'uzivatel.models.UserNotificationType', receiver_object):
         log = uzivatel.models.NotificationsLog(notification_type=notification_type, content_object=receiver_object)
         log.save()
-        logger_s.debug("services.mailer.log_notification", notification_type=notification_type,
+        logger_s.debug("services.mailer._log_notification", notification_type=notification_type,
                        receiver_object=receiver_object)
 
     @classmethod
@@ -121,7 +125,7 @@ class Mailer():
             logger_s.error("services.mailer.send.error", from_email=from_email, to=to, subject=subject)
 
     @classmethod
-    def sendEU02(cls, user: 'uzivatel.models.User'):
+    def send_eu02(cls, user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-U-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -138,17 +142,17 @@ class Mailer():
         cls.send(notification_type.predmet, user.email, html)
 
     @classmethod
-    def sendEU03(cls, user: 'uzivatel.models.User'):
+    def send_eu03(cls, user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-U-03'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        if not cls.notification_was_sent(notification_type, user):
+        if not cls._notification_was_sent(notification_type, user):
             html = render_to_string(notification_type.cesta_sablony)
             cls.send(notification_type.predmet, user.email, html)
-            cls.log_notification(notification_type=notification_type, receiver_object=user)
+            cls._log_notification(notification_type=notification_type, receiver_object=user)
 
     @classmethod
-    def sendEU04(cls, user: 'uzivatel.models.User'):
+    def send_eu04(cls, user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-U-04'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -163,11 +167,11 @@ class Mailer():
         })
         superusers = uzivatel.models.User.objects.filter(is_superuser=True)
         for superuser in superusers:
-            if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
+            if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
                 cls.send(notification_type.predmet, superuser.email, html)
 
     @classmethod
-    def sendEU06(cls, user: 'uzivatel.models.User'):
+    def send_eu06(cls, user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-U-06'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         try:
@@ -176,13 +180,35 @@ class Mailer():
                 "title": notification_type.predmet,
                 "role": user.hlavni_role.name
             })
-            if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
+            if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
                 cls.send(notification_type.predmet, user.email, html)
         except ObjectDoesNotExist as err:
             logger_s.debug("services.mailer.ObjectDoesNotExist", err=err)
 
     @classmethod
-    def sendENZ01(cls):
+    def _send_notification_for_project(cls, project, notification_type):
+        project_history = project.historie.get_last_transaction_date(PRIHLASENI_PROJ)
+        user = project_history['uzivatel']
+        if cls._notification_should_be_sent(notification_type=notification_type, user=user):
+            if not cls._notification_was_sent(notification_type, user):
+                subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+                html = render_to_string(notification_type.cesta_sablony, {
+                    "title": subject,
+                    "ident_cely": project.ident_cely,
+                    "katastr": project.hlavni_katastr.nazev
+                })
+                cls.send(subject=subject, to=user.email, html_content=html)
+                cls._log_notification(notification_type=notification_type, receiver_object=user)
+
+    @classmethod
+    def _send_notification_for_projects(cls, projects, notification_type):
+        logger_s.debug("services.mailer._send_notification_for_projects", notification_type=notification_type,
+                       project_count=projects.count())
+        with ThreadPoolExecutor() as executor:
+            executor.map(Mailer._send_notification_for_project, projects, repeat(notification_type))
+
+    @classmethod
+    def send_enz01(cls):
         now = datetime.datetime.now()
         in_90_days = now + datetime.timedelta(days=90)
         IDENT_CELY = 'E-NZ-01'
@@ -190,44 +216,20 @@ class Mailer():
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
                                                          termin_odevzdani_nz=in_90_days)
-        for project in projects:
-            project_history = project.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-            user = project_history['uzivatel']
-            if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
-                if not cls.notification_was_sent(notification_type, user):
-                    subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-                    html = render_to_string(notification_type.cesta_sablony, {
-                        "title": subject,
-                        "ident_cely": project.ident_cely,
-                        "katastr": project.hlavni_katastr.nazev
-                    })
-                    cls.send(subject=subject, to=user.email, html_content=html)
-                    cls.log_notification(notification_type=notification_type, receiver_object=user)
+        cls._send_notification_for_projects(projects, notification_type)
 
     @classmethod
-    def sendENZ02(cls):
+    def send_enz02(cls):
         today = datetime.datetime.now().date()
         IDENT_CELY = 'E-NZ-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
                                                          termin_odevzdani_nz__lt=today)
-        for project in projects:
-            project_history = project.historie.get_last_transaction_date(PRIHLASENI_PROJ)
-            user = project_history['uzivatel']
-            if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
-                if not cls.notification_was_sent(notification_type, user):
-                    subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-                    html = render_to_string(notification_type.cesta_sablony, {
-                        "title": subject,
-                        "ident_cely": project.ident_cely,
-                        "katastr": project.hlavni_katastr.nazev
-                    })
-                    cls.send(subject=subject, to=user.email, html_content=html)
-                    cls.log_notification(notification_type=notification_type, receiver_object=user)
+        cls._send_notification_for_projects(projects, notification_type)
 
     @classmethod
-    def sendEV01(cls, arch_z: 'arch_z.models.ArcheologickyZaznam', reason):
+    def send_ev01(cls, arch_z: 'arch_z.models.ArcheologickyZaznam', reason):
         IDENT_CELY = 'E-V-01'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -240,62 +242,65 @@ class Mailer():
             "state": arch_z.STATES[arch_z.stav - 1][1]
         })
         first_log_entry = Historie.objects.filter(vazba=arch_z.historie).order_by('datum_zmeny').first()
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod
-    def sendEA01(cls, project: 'projekt.models.Projekt'):
+    def _send_a(cls, obj: Union[projekt.models.Projekt, arch_z.models.ArcheologickyZaznam], notification_type):
+        subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
+        html = render_to_string(notification_type.cesta_sablony, {
+            "title": subject,
+            "ident_cely": obj.ident_cely,
+            "katastr": obj.hlavni_katastr.nazev,
+            "state": obj.CHOICES[obj.stav - 1][1]
+        })
+        first_log_entry = Historie.objects.filter(vazba=obj.historie).order_by('datum_zmeny').first()
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+
+    @classmethod
+    def send_ea01(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-A-01'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": subject,
-            "ident_cely": project.ident_cely,
-            "katastr": project.hlavni_katastr.nazev,
-            "state": project.CHOICES[project.stav - 1][1]
-        })
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        cls._send_a(project, notification_type)
 
     @classmethod
-    def sendEA02(cls, arch_z: 'arch_z.models.ArcheologickyZaznam'):
+    def send_ea02(cls, arch_z: 'arch_z.models.ArcheologickyZaznam'):
         IDENT_CELY = 'E-A-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=arch_z.ident_cely)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": subject,
-            "ident_cely": arch_z.ident_cely,
-            "katastr": arch_z.hlavni_katastr.nazev,
-            "state": arch_z.STATES[arch_z.stav - 1][1]
-        })
-        first_log_entry = Historie.objects.filter(vazba=arch_z.historie).order_by('datum_zmeny').first()
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        cls._send_a(arch_z, notification_type)
 
     @classmethod
-    def sendEO01(cls, project: 'projekt.models.Projekt'):
+    def _send_e(cls, project, notification_type):
+        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+        html = render_to_string(notification_type.cesta_sablony, {
+            "title": subject,
+            "podnet": project.podnet,
+            "katastr": project.hlavni_katastr.nazev,
+            "okres": project.hlavni_katastr.okres,
+            "parcela": project.parcelni_cislo,
+            "lokalita": project.lokalizace
+        })
+        cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
+
+    @classmethod
+    def send_eo01(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-O-01'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": subject,
-            "podnet": project.podnet,
-            "katastr": project.hlavni_katastr.nazev,
-            "okres": project.hlavni_katastr.okres,
-            "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace
-        })
-        cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
+        cls._send_e(project, notification_type)
 
     @classmethod
-    def sendEO02(cls, project: 'projekt.models.Projekt'):
+    def send_eo02(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-O-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        cls._send_e(project, notification_type)
+
+    @classmethod
+    def _send_ep01(cls, project, notification_type):
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
@@ -305,56 +310,31 @@ class Mailer():
             "parcela": project.parcelni_cislo,
             "lokalita": project.lokalizace
         })
-        cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
+        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
+        project_file = projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
+                                                            nazev__icontains='oznameni').first()
+        attachment_path = None
+        if project_file:
+            attachment_path = project_file.path.name
+        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html,
+                 attachment_path=attachment_path)
 
     @classmethod
-    def sendEP01a(cls, project: 'projekt.models.Projekt'):
+    def send_ep01a(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-P-01a'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": subject,
-            "podnet": project.podnet,
-            "katastr": project.hlavni_katastr.nazev,
-            "okres": project.hlavni_katastr.okres,
-            "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace
-        })
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        project_file = projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
-                                                            nazev__icontains='oznameni').first()
-        attachment_path = None
-        if (project_file):
-            attachment_path = project_file.path.name
-        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html,
-                 attachment_path=attachment_path)
+        cls._send_ep01(project, notification_type)
 
     @classmethod
-    def sendEP01b(cls, project: 'projekt.models.Projekt'):
+    def send_ep01b(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-P-01b'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": subject,
-            "podnet": project.podnet,
-            "katastr": project.hlavni_katastr.nazev,
-            "okres": project.hlavni_katastr.okres,
-            "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace
-        })
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        project_file = projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
-                                                            nazev__icontains='oznameni').first()
-        attachment_path = None
-        if (project_file):
-            attachment_path = project_file.path.name
-        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html,
-                 attachment_path=attachment_path)
+        cls._send_ep01(project, notification_type)
 
     @classmethod
-    def sendEP02(cls, dict_of_projects):
+    def send_ep02(cls, dict_of_projects):
         IDENT_CELY = 'E-P-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -368,10 +348,7 @@ class Mailer():
             cls.send(subject=subject, to=email, html_content=html)
 
     @classmethod
-    def sendEP03a(cls, project: 'projekt.models.Projekt'):
-        IDENT_CELY = 'E-P-03a'
-        logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
-        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+    def _send_ep03(cls, project, notification_type):
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
@@ -384,27 +361,23 @@ class Mailer():
         })
         first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
         cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+
+    @classmethod
+    def send_ep03a(cls, project: 'projekt.models.Projekt'):
+        IDENT_CELY = 'E-P-03a'
+        logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
+        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+        cls._send_ep03(project, notification_type)
 
     @classmethod
     def sendEP03b(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-P-03b'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        html = render_to_string(notification_type.cesta_sablony, {
-            "title": subject,
-            "podnet": project.podnet,
-            "katastr": project.hlavni_katastr.nazev,
-            "okres": project.hlavni_katastr.okres,
-            "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace,
-            "organization": project.organizace.nazev
-        })
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        cls._send_ep03(project, notification_type)
 
     @classmethod
-    def sendEP07(cls, project: 'projekt.models.Projekt', reason):
+    def send_ep07(cls, project: 'projekt.models.Projekt', reason):
         IDENT_CELY = 'E-P-07'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -418,7 +391,7 @@ class Mailer():
         cls.send(subject=subject, to="info@amapa.cz", html_content=html)
 
     @classmethod
-    def sendEP04(cls, project: 'projekt.models.Projekt', user: 'uzivatel.models.User', reason):
+    def send_ep04(cls, project: 'projekt.models.Projekt', user: 'uzivatel.models.User', reason):
         IDENT_CELY = 'E-P-04'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -429,11 +402,11 @@ class Mailer():
             "reason": reason,
             "state": project.CHOICES[project.stav][1]
         })
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
 
     @classmethod
-    def sendEP05(cls, project: 'projekt.models.Projekt', user: 'uzivatel.models.User'):
+    def send_ep05(cls, project: 'projekt.models.Projekt', user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-P-05'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -443,83 +416,69 @@ class Mailer():
             "katastr": project.hlavni_katastr.nazev,
             "state": project.CHOICES[project.stav][1]
         })
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
 
     @classmethod
-    def sendEP06a(cls, project: 'projekt.models.Projekt', reason):
+    def _send_ep06(cls, project, notification_type, reason):
+        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+        context = {
+            "title": subject,
+            "podnet": project.podnet,
+            "katastr": project.hlavni_katastr.nazev,
+            "parcela": project.parcelni_cislo,
+            "lokalita": project.lokalizace,
+            "reason": reason,
+            "datum_oznameni": None
+        }
+        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
+        if first_log_entry.typ_zmeny == OZNAMENI_PROJ:
+            context['datum_oznameni'] = first_log_entry.datum_zmeny
+        html = render_to_string(notification_type.cesta_sablony, context)
+        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+
+    @classmethod
+    def send_ep06a(cls, project: 'projekt.models.Projekt', reason):
         IDENT_CELY = 'E-P-06a'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        context = {
-            "title": subject,
-            "podnet": project.podnet,
-            "katastr": project.hlavni_katastr.nazev,
-            "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace,
-            "reason": reason,
-            "datum_oznameni": None
-        }
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        if first_log_entry.typ_zmeny == OZNAMENI_PROJ:
-            context['datum_oznameni'] = first_log_entry.datum_zmeny
-        html = render_to_string(notification_type.cesta_sablony, context)
-        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        cls._send_ep06(project, notification_type, reason)
 
     @classmethod
-    def sendEP06b(cls, project: 'projekt.models.Projekt', reason):
+    def send_ep06b(cls, project: 'projekt.models.Projekt', reason):
         IDENT_CELY = 'E-P-06b'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        context = {
-            "title": subject,
-            "podnet": project.podnet,
-            "katastr": project.hlavni_katastr.nazev,
-            "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace,
-            "reason": reason,
-            "datum_oznameni": None
-        }
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        if first_log_entry.typ_zmeny == OZNAMENI_PROJ:
-            context['datum_oznameni'] = first_log_entry.datum_zmeny
-        html = render_to_string(notification_type.cesta_sablony, context)
-        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        cls._send_ep06(project, notification_type, reason)
 
     @classmethod
-    def sendEN01(cls, send_to, project_ids):
+    def _send_en01(cls, project_ids, notification_type, send_to):
+        subject = notification_type.predmet
+        context = {
+            "title": subject,
+            "ids": project_ids
+        }
+        html = render_to_string(notification_type.cesta_sablony, context)
+        user = uzivatel.models.User.objects.get(email=send_to)
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
+            cls.send(subject=subject, to=send_to, html_content=html)
+
+    @classmethod
+    def send_en01(cls, send_to, project_ids):
         IDENT_CELY = 'E-N-01'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet
-        context = {
-            "title": subject,
-            "ids": project_ids
-        }
-        html = render_to_string(notification_type.cesta_sablony, context)
-        user = uzivatel.models.User.objects.get(email=send_to)
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.send(subject=subject, to=send_to, html_content=html)
+        cls._send_en01(project_ids, notification_type, send_to)
 
     @classmethod
-    def sendEN02(cls, send_to, project_ids):
+    def send_en02(cls, send_to, project_ids):
         IDENT_CELY = 'E-N-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet
-        context = {
-            "title": subject,
-            "ids": project_ids
-        }
-        html = render_to_string(notification_type.cesta_sablony, context)
-        user = uzivatel.models.User.objects.get(email=send_to)
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
-            cls.send(subject=subject, to=send_to, html_content=html)
+        cls._send_en01(project_ids, notification_type, send_to)
 
     @classmethod
-    def sendEN03EN04(cls, project: 'pas.models.SamostatnyNalez', reason):
+    def send_en03_en04(cls, project: 'pas.models.SamostatnyNalez', reason):
         IDENT_CELY = 'E-N-03'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -531,11 +490,11 @@ class Mailer():
             "reason": reason,
             "state": project.PAS_STATES[project.stav][1]
         })
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod
-    def sendEN05(cls, email_to, reason, user: 'uzivatel.models.User'):
+    def send_en05(cls, email_to, reason, user: 'uzivatel.models.User'):
         IDENT_CELY = 'E-N-05'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -550,11 +509,11 @@ class Mailer():
             "message": reason
         })
         user = uzivatel.models.User.objects.get(email=email_to)
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=user):
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=email_to, html_content=html)
 
     @classmethod
-    def sendEN06(cls, cooperation: 'pas.models.UzivatelSpoluprace'):
+    def send_en06(cls, cooperation: 'pas.models.UzivatelSpoluprace'):
         IDENT_CELY = 'E-N-06'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -565,11 +524,11 @@ class Mailer():
             "surname": cooperation.spolupracovnik.last_name,
             "organization": cooperation.spolupracovnik.organizace.nazev
         })
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
             cls.send(subject=subject, to=cooperation.vedouci.email, html_content=html)
 
     @classmethod
-    def sendEK01(cls, document: "dokument.models.Dokument"):
+    def send_ek01(cls, document: "dokument.models.Dokument"):
         IDENT_CELY = 'E-K-01'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -579,11 +538,11 @@ class Mailer():
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
         if first_log_entry:
-            if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+            if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
                 cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod
-    def sendEK02(cls, document: "dokument.models.Dokument", reason):
+    def send_ek02(cls, document: "dokument.models.Dokument", reason):
         IDENT_CELY = 'E-K-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -594,5 +553,5 @@ class Mailer():
             "reason": reason
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
-        if Mailer.notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+        if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)

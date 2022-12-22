@@ -319,6 +319,10 @@ LOGGING = {
             "handlers": ["console"],
             "level": "DEBUG",
         },
+        "services": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
         "django_cron": {
             "handlers": ["console"],
             "level": "DEBUG",

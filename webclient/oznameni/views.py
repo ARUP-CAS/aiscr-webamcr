@@ -106,9 +106,9 @@ def index(request, test_run=False):
 
             context = {"confirm": confirmation}
             if p.ident_cely[2:3] == "C":
-                Mailer.sendEO01(project=p)
+                Mailer.send_eo01(project=p)
             else:
-                Mailer.sendEO02(project=p)
+                Mailer.send_eo02(project=p)
             response = render(request, "oznameni/index_2.html", context)
             response.set_cookie("project", hash(p.ident_cely), 3600)
             return response

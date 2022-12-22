@@ -119,7 +119,7 @@ class CustomUserAdmin(UserAdmin):
                 poznamka="role: " + ", ".join(list(user.groups.values_list('name', flat=True))),
                 vazba=obj.history_vazba,
             ).save()
-            Mailer.sendEU06(user=user)
+            Mailer.send_eu06(user=user)
         Historie(
             typ_zmeny=ZMENA_UDAJU_ADMIN,
             uzivatel=user,

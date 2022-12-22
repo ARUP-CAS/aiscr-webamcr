@@ -286,9 +286,9 @@ def create(request):
                     p.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 if(p.ident_cely[0:1] == 'C'):
-                    Mailer.sendEP01a(project=p)
+                    Mailer.send_ep01a(project=p)
                 else:
-                    Mailer.sendEP01b(project=p)
+                    Mailer.send_ep01b(project=p)
                 return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
             logger.debug("The form projekt is not valid!")
@@ -549,7 +549,7 @@ def prihlasit(request, ident_cely):
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
             if(projekt.ident_cely[0:1] == 'C'):
-                Mailer.sendEP03a(project=projekt)
+                Mailer.send_ep03a(project=projekt)
             else:
                 Mailer.sendEP03b(project=projekt)
             return JsonResponse(
@@ -906,7 +906,7 @@ def zrusit(request, ident_cely):
             projekt.set_zruseny(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
-            Mailer.sendEP04(project=projekt, user=request.user, reason=duvod)
+            Mailer.send_ep04(project=projekt, user=request.user, reason=duvod)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -969,7 +969,7 @@ def vratit(request, ident_cely):
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            Mailer.sendEP07(project=projekt, reason=duvod)
+            Mailer.send_ep07(project=projekt, reason=duvod)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -1018,7 +1018,7 @@ def vratit_navrh_zruseni(request, ident_cely):
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            Mailer.sendEP05(project=projekt, user=request.user)
+            Mailer.send_ep05(project=projekt, user=request.user)
             return JsonResponse(
                 {
                     "redirect": reverse(
