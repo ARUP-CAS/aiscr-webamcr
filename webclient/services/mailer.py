@@ -248,14 +248,20 @@ class Mailer():
     @classmethod
     def _send_a(cls, obj: Union[projekt.models.Projekt, arch_z.models.ArcheologickyZaznam], notification_type):
         subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
+        if isinstance(obj, projekt.models.Projekt):
+            state = obj.CHOICES[obj.stav - 1][1]
+        elif isinstance(obj, arch_z.models.ArcheologickyZaznam):
+            state = obj.STATES[obj.stav - 1][1]
+        else:
+            return
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "ident_cely": obj.ident_cely,
             "katastr": obj.hlavni_katastr.nazev,
-            "state": obj.CHOICES[obj.stav - 1][1]
+            "state": state
         })
         first_log_entry = Historie.objects.filter(vazba=obj.historie).order_by('datum_zmeny').first()
-        if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+        if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod

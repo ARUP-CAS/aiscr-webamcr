@@ -372,9 +372,10 @@ class Projekt(models.Model):
         if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
             result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
         for a in self.akce_set.all():
-            akce_warnings = a.check_pred_odeslanim()
-            if akce_warnings:
-                result[_("Akce ") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+            if hasattr(a, "check_pred_odeslanim"):
+                akce_warnings = a.check_pred_odeslanim()
+                if akce_warnings:
+                    result[_("Akce ") + a.archeologicky_zaznam.ident_cely] = akce_warnings
         return result
 
     def parse_ident_cely(self):
