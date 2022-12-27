@@ -41,7 +41,7 @@ delete from soubor s2
 where s2.vazba in (
                 select soubor_id
                 from navic_soubory
-        )
+        );
         
 --update razeni pri pristupnost heslare
 update heslar h
