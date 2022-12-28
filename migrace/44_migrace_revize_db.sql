@@ -166,25 +166,25 @@ CREATE SEQUENCE notifikace_projekt_id_seq;  ALTER TABLE notifikace_projekt ADD C
 ALTER TABLE  organizace ALTER COLUMN nazev_zkraceny_en SET NOT NULL;
 CREATE SEQUENCE organizace_ident_cely_seq  START WITH 1 INCREMENT BY 1 MINVALUE  0 MAXVALUE  999999 ;
 ALTER TABLE organizace ADD COLUMN ident_cely text NOT NULL DEFAULT('ORG-'::text || right(concat('000000', nextval('organizace_ident_cely_seq')::text), 6));
-ALTER TABLE organizace ADD CONSTRAINT organizace_ident_cely UNIQUE(ident_cely);
-ALTER TABLE organizace ADD CONSTRAINT organizace_nazev_zkraceny UNIQUE(nazev_zkraceny);
+ALTER TABLE organizace ADD CONSTRAINT organizace_ident_cely_key UNIQUE(ident_cely);
+ALTER TABLE organizace ADD CONSTRAINT organizace_nazev_zkraceny_key UNIQUE(nazev_zkraceny);
 
 
 CREATE SEQUENCE osoba_ident_cely_seq START WITH 1 INCREMENT BY 1  MINVALUE  0  MAXVALUE  999999 ;
 ALTER TABLE osoba ADD COLUMN ident_cely text NOT NULL DEFAULT('OS-'::text || right(concat('000000', nextval('osoba_ident_cely_seq')::text), 6));
-ALTER TABLE osoba ADD CONSTRAINT osoba_ident_cely UNIQUE(ident_cely);
+ALTER TABLE osoba ADD CONSTRAINT osoba_ident_cely_key UNIQUE(ident_cely);
 
 ALTER TABLE oznamovatel DROP COLUMN id; DROP SEQUENCE oznamovatel_id_seq;
 ALTER TABLE oznamovatel ADD CONSTRAINT oznamovatel_projekt_pkey PRIMARY KEY (projekt);   ALTER TABLE oznamovatel DROP CONSTRAINT oznamovatel_projekt_key;
 
-ALTER TABLE pian  ADD CONSTRAINT pian_historie UNIQUE(historie);
+ALTER TABLE pian  ADD CONSTRAINT pian_historie_key UNIQUE(historie);
 
 
 
 ALTER TABLE projekt DROP COLUMN planovane_zahajeni_text;
 ALTER TABLE projekt ALTER COLUMN ident_cely  SET NOT NULL ;
-ALTER TABLE projekt  ADD CONSTRAINT projekt_soubory UNIQUE(soubory);
-ALTER TABLE projekt  ADD CONSTRAINT projekt_historie UNIQUE(historie);
+ALTER TABLE projekt  ADD CONSTRAINT projekt_soubory_key UNIQUE(soubory);
+ALTER TABLE projekt  ADD CONSTRAINT projekt_historie_key UNIQUE(historie);
 
 
 ALTER TABLE projekt_katastr  DROP CONSTRAINT projekt_katastr_pkey;
@@ -197,9 +197,9 @@ ALTER TABLE projekt_sekvence ADD CONSTRAINT  projekt_sekvence_pkey PRIMARY KEY (
 
 ALTER TABLE ruian_katastr ALTER COLUMN hranice SET NOT NULL ;
 ALTER TABLE ruian_katastr DROP COLUMN poznamka ;
-ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_nazev UNIQUE(nazev);
-ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_kod UNIQUE(kod);
-ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_pian UNIQUE(pian);
+ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_nazev_key UNIQUE(nazev);
+ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_kod_key UNIQUE(kod);
+ALTER TABLE ruian_katastr  ADD CONSTRAINT ruian_katastr_pian_key UNIQUE(pian);
 
 
 
@@ -216,15 +216,15 @@ ALTER TABLE ruian_okres DROP COLUMN aktualni;
 ALTER TABLE ruian_okres ALTER COLUMN nazev_en SET NOT NULL;
 ALTER TABLE ruian_okres ALTER COLUMN definicni_bod SET  NOT NULL;
 ALTER TABLE ruian_okres ALTER COLUMN hranice  SET NOT NULL;
-ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_hranice UNIQUE(nazev);
-ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_kod UNIQUE(kod);
-ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_spz UNIQUE(spz);
+ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_nazev_key UNIQUE(nazev);
+ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_kod_key UNIQUE(kod);
+ALTER TABLE ruian_okres  ADD CONSTRAINT ruian_okres_spz_key UNIQUE(spz);
 
 
 
 ALTER TABLE samostatny_nalez ALTER COLUMN ident_cely SET NOT NULL;
-ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_soubory UNIQUE(soubory);
-ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_historie UNIQUE(historie);
+ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_soubory_key UNIQUE(soubory);
+ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_historie_key UNIQUE(historie);
 
 
 
@@ -242,7 +242,7 @@ CREATE SEQUENCE uzivatel_notifikace_id_seq;
 ALTER TABLE uzivatel_notifikace ADD COLUMN id integer NOT NULL  default nextval('uzivatel_notifikace_id_seq'::regclass) PRIMARY KEY;
 
 
-ALTER TABLE uzivatel_spoluprace ADD CONSTRAINT uzivatel_spoluprace_historie UNIQUE(historie);
+ALTER TABLE uzivatel_spoluprace ADD CONSTRAINT uzivatel_spoluprace_historie_key UNIQUE(historie);
 
 
 
