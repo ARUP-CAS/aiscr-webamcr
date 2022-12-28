@@ -287,7 +287,7 @@ alter table organizace add constraint organizace_soucast_fkey FOREIGN KEY (souca
 -- TODO: add not null after its filled
 alter table organizace add column nazev_en text;
 -- TODO: add not null after its filled
-alter table organizace add column zanikla boolean;
+alter table organizace add column zanikla boolean DEFAULT FALSE NOT NULL;
 -- 126. projekt.organizace (migrace vyplnit na zaklade organizace odpovedneho_pracovnika_prihlaseni)
 alter table projekt add column organizace integer;
 update projekt set organizace = sel.org from (select p.id as proj, u.organizace as org from projekt p join uzivatel u on u.id = p.odpovedny_pracovnik_prihlaseni) as sel where projekt.id = sel.proj;
