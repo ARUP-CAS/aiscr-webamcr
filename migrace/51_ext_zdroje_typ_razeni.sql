@@ -16,4 +16,4 @@ from (
         from heslar T2
         where T2.nazev_heslare = 36
     ) c
-where h.id = c.id
+where h.id = c.id;
