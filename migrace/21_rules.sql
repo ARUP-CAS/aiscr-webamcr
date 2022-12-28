@@ -9,7 +9,7 @@ DROP TRIGGER IF EXISTS delete_connected_documents_2 on archeologicky_zaznam;
 CREATE OR REPLACE FUNCTION prevent_project_deletion() RETURNS trigger LANGUAGE plpgsql AS $prevent_project_deletion$
         BEGIN
             IF EXISTS (SELECT FROM soubor_vazby AS sv inner join soubor AS s ON s.vazba = sv.id WHERE s.projekt = OLD.id) THEN
-                NEW := NULL;
+                RAISE EXCEPTION 'Nelze smazat projekt s projektovou dokumentací!';
             END IF;
             RETURN OLD;
         END;
