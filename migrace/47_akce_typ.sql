@@ -16,4 +16,4 @@ alter table akce
 alter column typ
 SET NOT NULL;
 --Nastaveni check
-alter table akce add check ((typ = 'N' and projekt is null) or (typ = 'R' and projekt is not null));
+ALTER TABLE akce ADD CONSTRAINT akce_typ_check CHECK ((typ = 'N' and projekt is null) or (typ = 'R' and projekt is not null));
