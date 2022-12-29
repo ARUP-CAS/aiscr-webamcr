@@ -18,3 +18,4 @@ ALTER TABLE soubor DROP COLUMN vytvoreno, vlastnik;
 
 -- Odstranění nepotřebných tabulek
 DROP TABLE projekt_oznameni_suffix;
+DROP TABLE systemove_promenne;
