@@ -79,6 +79,7 @@ delete from historie where id in (select his.id as hid from historie his join hi
 
 -- Jak vyresit username? Ted je username ident_cely a prihlasovani je udelano skrz email
 alter table auth_user rename column username to ident_cely;
+ALTER TABLE auth_user ADD DEFAULT ('U-'::text || "right"(concat('000000', (nextval('user_storage_user_id'::regclass))::text), 6)) FOR ident_cely;
 
 -- Akce a lokality ted maji spolecneho rodice (Archeologicky zaznam), nastaveni spravneho typu_vazby v historii
 -- Ukazkovy select pro relevantni zaznamy historie pro archeologicky_zaznam typu akce
