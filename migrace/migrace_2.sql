@@ -283,7 +283,7 @@ CREATE TABLE externi_zdroj_editor (
 
 --Pridat check:
 --1. check ze akce.typ vs akce.projekt (R->P and projekt not null, N->S and projek null)
-alter table akce add check ((typ = 'N' and projekt is null) or (typ = 'R' and projekt is not null));
+-- alter table akce add check ((typ = 'N' and projekt is null) or (typ = 'R' and projekt is not null));
 
 --Novy sloupec:
 --1. neident_akce.dokument_cast (not null, unique, foreign key na dokument_cast, migrace vazba z jednotka_dokument kde ukazuje na neident_akci)
