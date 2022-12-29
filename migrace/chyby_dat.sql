@@ -58,3 +58,6 @@ UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and adresa is null;
 UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 2) and telefon is null;
 UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 2) and odpovedna_osoba is null;
 UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and objednatel is null;
+
+-- Příprava pole autori v ext. zdrojích
+UPDATE externi_zdroj SET autori = REPLACE(autori, ' (ed.)', '') WHERE autori LIKE '% (ed.)%';
