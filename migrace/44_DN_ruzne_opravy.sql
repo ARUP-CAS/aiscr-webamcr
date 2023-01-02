@@ -139,3 +139,26 @@ WHERE akce IN (SELECT id FROM akce WHERE akce.organizace_ostatni IN (SELECT naze
 AND akce IN (SELECT akce FROM (SELECT akce, count(id) as cnt FROM akce_vedouci GROUP BY akce) pom WHERE pom.cnt = 1);
 UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.id = akce_vedouci.akce)
 WHERE akce IN (SELECT id FROM akce WHERE (akce.organizace_ostatni IS NULL OR akce.organizace_ostatni = ''));
+
+-- Oprava typů polí v návaznosti na #385 a #384 (aby nebyla moc velká v administraci)
+ALTER TABLE heslar ALTER COLUMN heslo TYPE varchar(255);
+ALTER TABLE heslar ALTER COLUMN heslo_en TYPE varchar(255);
+ALTER TABLE heslar ALTER COLUMN zkratka TYPE varchar(100);
+ALTER TABLE heslar ALTER COLUMN zkratka_en TYPE varchar(100);
+ALTER TABLE heslar_odkaz ALTER COLUMN zdroj TYPE varchar(255);
+ALTER TABLE heslar_odkaz ALTER COLUMN nazev_kodu TYPE varchar(100);
+ALTER TABLE heslar_odkaz ALTER COLUMN kod TYPE varchar(100);
+ALTER TABLE organizace ALTER COLUMN nazev TYPE varchar(255);
+ALTER TABLE organizace ALTER COLUMN nazev_zkraceny TYPE varchar(255);
+ALTER TABLE organizace ALTER COLUMN adresa TYPE varchar(255);
+ALTER TABLE organizace ALTER COLUMN nazev_en TYPE varchar(255);
+ALTER TABLE organizace ALTER COLUMN nazev_zkraceny_en TYPE varchar(255);
+ALTER TABLE organizace ALTER COLUMN email TYPE varchar(100);
+ALTER TABLE organizace ALTER COLUMN telefon TYPE varchar(100);
+ALTER TABLE organizace ALTER COLUMN ico TYPE varchar(100);
+ALTER TABLE osoba ALTER COLUMN jmeno TYPE varchar(100);
+ALTER TABLE osoba ALTER COLUMN prijmeni TYPE varchar(100);
+ALTER TABLE osoba ALTER COLUMN rodne_prijmeni TYPE varchar(100);
+ALTER TABLE osoba ALTER COLUMN vypis TYPE varchar(200);
+ALTER TABLE osoba ALTER COLUMN vypis_cely TYPE varchar(200);
+ALTER TABLE auth_user ALTER COLUMN telefon TYPE varchar(100);
