@@ -133,3 +133,9 @@ ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_specifikace_check C
 ALTER TABLE tvar ADD CONSTRAINT tvar_tvar_check CHECK (tvar IS NULL OR tvar IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'letfoto_tvar')));
 ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_typ_check CHECK (typ IS NULL OR typ IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'vyskovy_bod_typ')));
 
+-- Migrace akce.organizace_ostatni
+UPDATE akce_vedouci SET organizace = (SELECT id FROM organizace WHERE organizace.nazev_zkraceny = (SELECT organizace_ostatni FROM akce WHERE akce.id = akce_vedouci.akce))
+WHERE akce IN (SELECT id FROM akce WHERE akce.organizace_ostatni IN (SELECT nazev_zkraceny FROM organizace))
+AND akce IN (SELECT akce FROM (SELECT akce, count(id) as cnt FROM akce_vedouci GROUP BY akce) pom WHERE pom.cnt = 1);
+UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.id = akce_vedouci.akce)
+WHERE akce IN (SELECT id FROM akce WHERE (akce.organizace_ostatni IS NULL OR akce.organizace_ostatni = ''));
