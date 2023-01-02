@@ -39,7 +39,7 @@ UPDATE heslar_nazev SET povolit_zmeny = false WHERE nazev = 'datum_specifikace';
 UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'dohlednost';
 UPDATE heslar_nazev SET povolit_zmeny = false WHERE nazev = 'dok_jednotka_typ';
 UPDATE heslar_nazev SET povolit_zmeny = false WHERE nazev = 'dokument_format';
-UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'dokument_material';
+UPDATE heslar_nazev SET povolit_zmeny = false WHERE nazev = 'dokument_material';
 UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'dokument_nahrada';
 UPDATE heslar_nazev SET povolit_zmeny = false WHERE nazev = 'dokument_rada';
 UPDATE heslar_nazev SET povolit_zmeny = false WHERE nazev = 'dokument_typ';
