@@ -117,7 +117,8 @@ CREATE SEQUENCE osoba_ident_cely_seq START WITH 1 INCREMENT BY 1 MINVALUE 0 MAXV
 ALTER TABLE osoba ADD COLUMN ident_cely text NOT NULL DEFAULT('OS-'::text || right(concat('000000', nextval('osoba_ident_cely_seq')::text), 6));
 ALTER TABLE osoba ADD CONSTRAINT osoba_ident_cely_key UNIQUE(ident_cely);
 
-ALTER TABLE oznamovatel DROP COLUMN id; DROP SEQUENCE oznamovatel_id_seq;
+ALTER TABLE oznamovatel DROP COLUMN id;
+DROP SEQUENCE oznamovatel_id_seq;
 ALTER TABLE oznamovatel ADD CONSTRAINT oznamovatel_projekt_pkey PRIMARY KEY (projekt);
 ALTER TABLE oznamovatel DROP CONSTRAINT oznamovatel_projekt_key;
 
