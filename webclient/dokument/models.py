@@ -5,6 +5,7 @@ import math
 import os
 import re
 from string import ascii_uppercase as letters
+import xml.etree.ElementTree as ET
 
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
@@ -155,6 +156,18 @@ class Dokument(models.Model):
         Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
     main_autor = models.TextField(blank=True, null=True)
+    oai_pmh_metadata = models.TextField(blank=True, null=True)
+
+    def update_oai_pmh(self):
+        xml_attribute_mapping = {
+            "ident_cely": self.ident_cely,
+            "stav": self.stav
+        }
+        root = ET.Element("dokument")
+        for key, value in xml_attribute_mapping.items():
+            new_element = ET.SubElement(root, key)
+            new_element.text = str(value)
+        self.oai_pmh_metadata = ET.tostring(root).decode()
 
     class Meta:
         db_table = "dokument"

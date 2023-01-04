@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "watchdog",
     'django_select2',
+    "rest_framework",
 ]
 
 MIDDLEWARE = [

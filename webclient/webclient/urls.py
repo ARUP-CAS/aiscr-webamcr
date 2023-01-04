@@ -61,6 +61,7 @@ urlpatterns = [
     path("neident-akce/", include("neidentakce.urls")),
     path("watchdog/",  include("watchdog.urls")),
     path("select2/", include("django_select2.urls")),
+    path("dapro/", include("api.urls")),
 ]
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]

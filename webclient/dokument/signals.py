@@ -34,3 +34,9 @@ def create_main_autor(sender, instance, **kwargs):
         dokument = instance.dokument
         dokument.main_autor = instance.autor.prijmeni
         dokument.save()
+
+
+@receiver(pre_save, sender=Dokument)
+def update_dokument_oai_pmh(sender, instance, **kwargs):
+    instance: Dokument
+    instance.update_oai_pmh()
