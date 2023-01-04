@@ -147,7 +147,12 @@ class NotificationsForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('notification_types',)
-
+        help_texts = {
+            "notification_types": _("uzivatel.form.notifications_form.notification_types.tooltip"),
+        }
+        labels = {
+            "notification_types": _("uzivatel.form.notifications_form.notification_types.notification_types_label"),
+        }
 
 class UpdatePasswordSettings(forms.ModelForm):
     password1 = forms.CharField(required=False, widget=PasswordInput())

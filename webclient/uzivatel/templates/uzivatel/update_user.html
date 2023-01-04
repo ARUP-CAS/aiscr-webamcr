@@ -5,7 +5,7 @@
 {% load render_table from django_tables2 %}
 {% load export_url from django_tables2 %}
 
-{% block title %}{% trans "Úprava uživatelského účtu" %}{% endblock %}
+{% block title %}{% trans "uzivatel.uprava_uctu.uprava_uzivatelskeho_uctu" %}{% endblock %}
 {% block head %}{% endblock %}
 
 {% block content %}
@@ -14,42 +14,43 @@
               action="{% url 'uzivatel:update-uzivatel' %}">
             <div class="card-header">
                 <div class="app-fx app-left">
-                    {% trans "Nastavení uživatelského účtu" %}
+                    {% trans "uzivatel.uprava_uctu.nastaveni_uzivatelskeho_uctu" %}
                 </div>
             </div>
             <div class="card-body formset-table">
                 {% crispy form_read_only %}
                 {% crispy form %}
-                <h6>{% trans "Změna hesla" %}</h6>
+                <h6>{% trans "uzivatel.uprava_uctu.zmena_hesla" %}</h6>
                 <hr class="mt-0"/>
                 {% crispy form_password %}
-                <h6>{% trans "Historie přihlášení" %}</h6>
+                <h6>{% trans "uzivatel.uprava_uctu.historie_prihlaseni" %}</h6>
                 <hr class="mt-0"/>
                 <ul>
                     {% for item in sign_in_history %}
                         <li style="color: #6c757d;" class="small">{{ item.last_login }}</li>
                     {% endfor %}
                 </ul>
-                <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
-                <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">Historie
-                    uživatele</a>
+                <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{% trans "uzivatel.uprava_uctu.ulozit" %}</button>
+                <a class="btn btn-secondary mt-3" href="{% url 'historie:uzivatel' user.ident_cely %}">{% trans "uzivatel.uprava_uctu.historie_uzivatele" %}</a>
             </div>
         </form>
     </div>
     <div class="card app-card-form" id="user_notifications_settings_card">
         <div class="card-header">
             <div class="app-fx app-left">
-                {% trans "Nastavení notifikace" %}
-                <a href="{% url "watchdog:list" %}" class="ml-3">{% trans "Hlídací psi" %}</a>
+                {% trans "uzivatel.uprava_uctu.nastaveni_notifikace" %}
+                <a href="{% url "watchdog:list" %}" class="ml-3">{% trans "uzivatel.uprava_uctu.hlidaci_psi" %}</a>
             </div>
         </div>
         <div class="card-body">
-            <div class="col-md-3">
-                <form method="post" action="{% url 'uzivatel:update-notifications' %}">
-                    {% csrf_token %}
-                    {{ form_notifications|crispy }}
-                    <input type="submit" value="{% trans 'Uložit' %}" class="btn btn-primary mt-2">
-                </form>
+            <div class="row">
+                <div class="col-md-3">
+                    <form method="post" action="{% url 'uzivatel:update-notifications' %}">
+                        {% csrf_token %}
+                        {{ form_notifications|crispy }}
+                        <input type="submit" value="{% trans 'uzivatel.uprava_uctu.ulozit' %}" class="btn btn-primary mt-2">
+                    </form>
+                </div>
             </div>
         </div>
     </div>
