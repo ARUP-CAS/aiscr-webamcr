@@ -248,7 +248,6 @@ ALTER TABLE kladysm5 RENAME CONSTRAINT kladysm5_gid TO kladysm5_pkey;
 ALTER TABLE kladyzm RENAME CONSTRAINT kladyzm_gid TO kladyzm_pkey;
 ALTER TABLE let RENAME CONSTRAINT lety_pkey TO let_pkey;
 ALTER TABLE systemove_promenne RENAME CONSTRAINT megalit_info_pkey TO systemove_promenne_pkey;
-ALTER TABLE notifikace_projekt RENAME CONSTRAINT notifikace_projekt_key TO notifikace_projekt_uzivatel_katastr_key;
 ALTER TABLE oznamovatel RENAME CONSTRAINT oznamovatel_projekt_pkey TO oznamovatel_pkey;
 ALTER TABLE pian RENAME CONSTRAINT pian_id_pkey TO pian_pkey;
 ALTER TABLE ruian_okres RENAME CONSTRAINT spz_storage_pkey TO ruian_okres_pkey;
@@ -257,5 +256,11 @@ ALTER TABLE tvar RENAME CONSTRAINT tvar_key TO tvar_dokument_tvar_poznamka_key;
 ALTER TABLE uzivatel RENAME CONSTRAINT unique_user_email TO uzivatel_email_key;
 ALTER TABLE uzivatel RENAME CONSTRAINT user_storage_ident_cely_key TO uzivatel_ident_cely_key;
 ALTER TABLE uzivatel RENAME CONSTRAINT user_storage_pkey TO uzivatel_pkey;
-ALTER TABLE uzivatel_notifikace RENAME CONSTRAINT uzivatel_notifikace_key TO uzivatel_notifikace_uzivatel_notifikace_key;
 ALTER TABLE uzivatel_spoluprace RENAME CONSTRAINT vazba_spoluprace_pkey TO uzivatel_spoluprace_pkey;
+
+-- Migrace oprávnění ke správě uživatelů
+INSERT INTO auth_user_groups (user_id, group_id) SELECT id, 10 AS grp FROM auth_user WHERE auth_level & 8 = 8;
+-- Pokud bychom chtěli přenést oprávnění ke 3D, bude třeba doplnit něco jako (je třeba zaměnit ## za skutečné id skupiny):
+-- INSERT INTO auth_user_groups (user_id, group_id) SELECT id, ## AS grp FROM auth_user WHERE auth_level & 128 = 128;
+
+
