@@ -213,6 +213,7 @@ DROP SEQUENCE odkaz_id_seq;
 DROP SEQUENCE pian_is_id_seq;
 DROP SEQUENCE pian_nepotvrzene_seq;
 DROP SEQUENCE pian_potvrzene_seq;
+DROP SEQUENCE projekt_oznameni_suffix_id_seq;
 DROP SEQUENCE projekt_poradi_2013;
 DROP SEQUENCE projekt_poradi_2014;
 DROP SEQUENCE projekt_poradi_2015;
