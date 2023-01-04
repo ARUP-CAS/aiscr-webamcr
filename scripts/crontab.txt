@@ -1,1 +1,1 @@
-0 0 * * * python3 /code/webclient/manage.py runcrons "cron.notifications.Notifications" --settings=webclient.settings.dev > /code/cronjob.log
+0 0 * * * python3 /code/webclient/manage.py runcrons "cron.notifications.Notifications"   > /code/cronjob.log
