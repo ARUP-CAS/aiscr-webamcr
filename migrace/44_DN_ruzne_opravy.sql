@@ -304,3 +304,21 @@ WITH soubor_cesta AS
 )
 UPDATE soubor SET path = (SELECT cesta FROM soubor_cesta WHERE soubor.id = soubor_cesta.soubor_id);
 UPDATE soubor SET nazev_zkraceny = substr(split_part(path, '/', 6), strpos(split_part(path, '/', 6), '_') + 1), nazev = split_part(path, '/', 6);
+
+-- Nastavení správného EPSG pro geometrie
+-- 5514
+SELECT UpdateGeometrySRID('kladysm5','geom',5514);
+SELECT UpdateGeometrySRID('kladyzm','the_geom',5514);
+SELECT UpdateGeometrySRID('vyskovy_bod','geom',5514);
+SELECT UpdateGeometrySRID('pian','geom_sjtsk',5514);
+SELECT UpdateGeometrySRID('samostatny_nalez','geom_sjtsk',5514);
+-- 4326
+SELECT UpdateGeometrySRID('pian','geom',4326);
+SELECT UpdateGeometrySRID('projekt','geom',4326);
+SELECT UpdateGeometrySRID('ruian_katastr','definicni_bod',4326);
+SELECT UpdateGeometrySRID('ruian_katastr','hranice',4326);
+SELECT UpdateGeometrySRID('ruian_kraj','definicni_bod',4326);
+SELECT UpdateGeometrySRID('ruian_kraj','hranice',4326);
+SELECT UpdateGeometrySRID('ruian_okres','definicni_bod',4326);
+SELECT UpdateGeometrySRID('ruian_okres','hranice',4326);
+SELECT UpdateGeometrySRID('samostatny_nalez','geom',4326);
