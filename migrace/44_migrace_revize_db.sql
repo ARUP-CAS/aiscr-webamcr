@@ -101,6 +101,8 @@ ALTER TABLE historie DROP COLUMN typ_zmeny_old;
 
 ALTER TABLE komponenta ALTER COLUMN komponenta_vazby SET NOT NULL;
 
+ALTER TABLE komponenta_vazby ALTER COLUMN typ_vazby SET NOT NULL;
+
 ALTER TABLE komponenta_aktivita DROP CONSTRAINT komponenta_aktivita_pkey;
 ALTER TABLE komponenta_aktivita ADD CONSTRAINT komponenta_aktivita_pkey PRIMARY KEY (id);
 ALTER TABLE komponenta_aktivita ADD CONSTRAINT komponenta_aktivita_komponenta_aktivita_key UNIQUE (komponenta, aktivita);
