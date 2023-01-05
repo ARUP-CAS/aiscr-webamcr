@@ -19,6 +19,7 @@ ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_kat
 
 ALTER TABLE auth_user DROP COLUMN email_potvrzen;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_email_key UNIQUE (email);
+ALTER TABLE auth_user ADD CONSTRAINT auth_user_historie_key UNIQUE (historie);
 
 ALTER TABLE dokument ADD CONSTRAINT dokument_soubory_key UNIQUE (soubory);
 ALTER TABLE dokument ADD CONSTRAINT dokument_historie_key UNIQUE (historie);
