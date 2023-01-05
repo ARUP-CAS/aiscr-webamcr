@@ -44,7 +44,7 @@ COMMENT ON COLUMN dokument_extra_data.region IS NULL;
 COMMENT ON COLUMN dokument_extra_data.udalost_typ IS NULL;
 
 COMMENT ON COLUMN dokument_cast.archeologicky_zaznam IS NULL;
-
+ALTER TABLE dokument_cast ADD CONSTRAINT dokument_cast_vazba_check CHECK (NOT(archeologicky_zaznam IS NOT NULL AND projekt IS NOT NULL));
 ALTER TABLE dokument_jazyk ADD CONSTRAINT dokument_jazyk_dokument_jazyk_key UNIQUE (dokument, jazyk);
 
 ALTER TABLE dokument_osoba DROP CONSTRAINT dokument_osoba_pkey;
