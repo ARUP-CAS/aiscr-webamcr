@@ -141,7 +141,7 @@ alter table neident_akce_vedouci drop constraint neident_akce_vedouci_neident_ak
 alter table neident_akce add constraint neident_akce_dokument_cast_key unique(dokument_cast);
 -- COMMENT: Tohle by bylo potreba volat kdyby tabulka neident_akce_vedouci nebyla prazdna
 --update neident_akce_vedouci nav set neident_akce = sub.dc from (select nav.neident_akce as nakce, na.id as id, na.dokument_cast as dc from neident_akce_vedouci nav join neident_akce na on nav.neident_akce = na.id) sub where nav.neident_akce = sub.id;
-alter table neident_akce_vedouci add constraint neident_akce_vedouci_neident_akce_fk foreign key (neident_akce) references neident_akce(id);
+alter table neident_akce_vedouci add constraint neident_akce_vedouci_neident_akce_fk foreign key (neident_akce) references neident_akce(dokument_cast);
 
 -- Pridat primarni klic
 --1. adb.dokumentacni_jednotka
