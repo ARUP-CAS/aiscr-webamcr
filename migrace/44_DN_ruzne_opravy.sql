@@ -263,4 +263,44 @@ INSERT INTO auth_user_groups (user_id, group_id) SELECT id, 10 AS grp FROM auth_
 -- Pokud bychom chtěli přenést oprávnění ke 3D, bude třeba doplnit něco jako (je třeba zaměnit ## za skutečné id skupiny):
 -- INSERT INTO auth_user_groups (user_id, group_id) SELECT id, ## AS grp FROM auth_user WHERE auth_level & 128 = 128;
 
-
+-- Doplnění správných nových cest souborů a jejich přejmenování
+WITH soubor_cesta AS
+(
+	SELECT soubor.id as soubor_id,
+	CASE
+		-- AG - napojeno na projekt
+		WHEN soubor_vazby.typ_vazby = 'projekt'
+		THEN
+			CASE
+				WHEN nazev ~ '\d*_oznameni_[C,M]-\d{9}\.pdf'
+					OR nazev ~ '\d*_oznameni_[C,M]-\d{9}[A-Z]\.pdf'
+					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}\.pdf'
+					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}[A-Z]\.pdf'
+					OR nazev ~ '\d*_log_dokumentace.pdf'
+				THEN 'soubory/AG/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
+		-- PD - napojeno na 
+				ELSE 
+					CASE
+						WHEN position('.' in reverse(soubor.nazev)) = 0
+						THEN 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(soubor.nazev, 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g')
+						ELSE 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(substring(soubor.nazev from 1 for length(soubor.nazev) - position('.' in reverse(soubor.nazev))), 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g') || '.' || substring(soubor.nazev from '\.([^\.]*)$')
+					END
+			END
+		-- FN - vše co má vazbu na samostatný nález
+		WHEN soubor_vazby.typ_vazby = 'samostatny_nalez'
+		THEN 'soubory/FN/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || replace(regexp_replace(soubor.nazev, 'F([0-9])[^0-9]*(\.[a-zA-Z0-9]+)$', 'F0\1\2'), '-', '')
+		-- SD - vše co má vazbu na DT Dokument
+		WHEN soubor_vazby.typ_vazby = 'dokument'
+		THEN
+			CASE
+				WHEN heslar_typ_dokumetu.zkratka IN ('ZA', 'ZL') THEN '!DO NOT MIGRATE'
+				ELSE 'soubory/SD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
+			END
+	END AS cesta
+	FROM soubor
+	INNER JOIN soubor_vazby on soubor.vazba = soubor_vazby.id
+	LEFT OUTER JOIN dokument on dokument.soubory = soubor_vazby.id
+	LEFT OUTER JOIN heslar as heslar_typ_dokumetu on heslar_typ_dokumetu.id = dokument.rada
+)
+UPDATE soubor SET path = (SELECT cesta FROM soubor_cesta WHERE soubor.id = soubor_cesta.soubor_id);
+UPDATE soubor SET nazev_zkraceny = substr(split_part(path, '/', 6), strpos(split_part(path, '/', 6), '_') + 1), nazev = split_part(path, '/', 6);
