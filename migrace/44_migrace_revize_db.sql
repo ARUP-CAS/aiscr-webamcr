@@ -95,6 +95,7 @@ CREATE SEQUENCE heslar_hierarchie_id_seq;
 ALTER TABLE heslar_hierarchie drop constraint heslar_hierarchie_pkey;
 ALTER TABLE heslar_hierarchie ADD COLUMN id integer NOT NULL default nextval('heslar_hierarchie_id_seq'::regclass) PRIMARY KEY;
 ALTER TABLE heslar_hierarchie ADD CONSTRAINT heslar_hierarchie_heslo_podrazene_heslo_nadrazene_typ_key UNIQUE (heslo_podrazene, heslo_nadrazene, typ);
+ALTER TABLE heslar_hierarchie ADD CONSTRAINT heslar_hierarchie_typ_check CHECK (typ IN ('podřízenost', 'uplatnění', 'výchozí hodnota'));
 
 ALTER TABLE historie DROP COLUMN typ_zmeny_old;
 
