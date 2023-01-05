@@ -17,6 +17,7 @@ ALTER TABLE archeologicky_zaznam_katastr DROP CONSTRAINT archeologicky_zaznam_ka
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_pkey PRIMARY KEY (id);
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_key UNIQUE ( archeologicky_zaznam_id, katastr_id);
 
+ALTER TABLE auth_user DROP COLUMN email_potvrzen;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_email_key UNIQUE (email);
 
 ALTER TABLE dokument ADD CONSTRAINT dokument_soubory_key UNIQUE (soubory);
