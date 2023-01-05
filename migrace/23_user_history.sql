@@ -24,7 +24,7 @@ CREATE TABLE public.uzivatel_historicaluser
     jazyk character varying(15) COLLATE pg_catalog."default",
     sha_1 text COLLATE pg_catalog."default",
     telefon varying(100) COLLATE pg_catalog."default",
-    history_id integer NOT NULL DEFAULT nextval('uzivatel_historicaluser_history_id_seq'::regclass),
+    history_id integer NOT NULL DEFAULT nextval('uzivatel_historicaluser_history_id_seq'::regclass) PRIMARY KEY,
     history_date timestamp without time zone NOT NULL,
     history_type character varying(1) COLLATE pg_catalog."default" NOT NULL,
     history_user_id integer,
@@ -33,4 +33,4 @@ CREATE TABLE public.uzivatel_historicaluser
         REFERENCES public.auth_user (id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
-)
+);
