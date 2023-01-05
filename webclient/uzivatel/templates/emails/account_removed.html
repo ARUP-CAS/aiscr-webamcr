@@ -8,7 +8,14 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "uzivatel.emails.ar.dobrý_den" %},
-{% trans "uzivatel.emails.ar.váš_uživatelský_účet_pro_přístup_do_AMČR_byl_deaktivován_nebo_zrušen_pro_více_informací_se_obraťte_na_správce_systému" %}
+<p>{% trans "uzivatel.emails.ar.dobrý_den" %},</p>
+<p>{% trans "uzivatel.emails.ar.váš_uživatelský_účet_pro_přístup_do_AMČR_byl_deaktivován_nebo_zrušen_pro_více_informací_se_obraťte_na_správce_systému" %}</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "uzivatel.emails.ar.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "uzivatel.emails.ar.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

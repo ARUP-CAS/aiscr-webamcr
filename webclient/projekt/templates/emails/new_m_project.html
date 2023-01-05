@@ -6,17 +6,24 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "project.emails.nmp.vážená_paní/vážený_pane" %},
-
-{% trans "project.emails.nmp.děkujeme_za_oznámení_o_stavební_nebo_jiné_činnosti" %} ({{ podnet }}) {% trans "project.emails.nmp.na území s archeologickými nálezy na k.ú." %} {{ katastr }} ({{ okres }}), {% trans "project.emails.nmp.parcela" %} {{ parcela }} ({{ lokalita }}) {% trans "project.emails.nmp.podle_§_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči" %}.
- {% trans "project.emails.nmp.ve_věci_uzavření_dohody_o_provedení_záchranného_archeologického_výzkumu_vás_bude_kontaktovat_organizace" %} {{ organization }}, {% trans "project.emails.nmp.která_je_oprávněna_provádět_archeologické_výzkumy."%}
-
-{% trans "project.emails.nmp.s_pozdravem" %}
-
-{% trans "project.emails.nmp.archeologický_ústav_av_čr_praha_v._v._i." %}
-
-{% trans "project.emails.nmp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
+<p>{% trans "project.emails.nmp.vážená_paní/vážený_pane" %},</p>
+<p>{% trans "project.emails.nmp.děkujeme_za_oznámení_o_stavební_nebo_jiné_činnosti" %}
+    (<b>{{ podnet }}</b>) {% trans "project.emails.nmp.na území s archeologickými nálezy na k.ú." %} <b><b>{{ katastr }}</b></b>
+    (<b><b>{{ okres }}</b></b>), {% trans "project.emails.nmp.parcela" %}
+    <b><b>{{ parcela }}</b></b>
+    (<b><b>{{ lokalita }}</b></b>) {% trans "project.emails.nmp.podle_§_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči" %}.
+    {% trans "project.emails.nmp.ve_věci_uzavření_dohody_o_provedení_záchranného_archeologického_výzkumu_vás_bude_kontaktovat_organizace" %} {{ organization }}, {% trans "project.emails.nmp.která_je_oprávněna_provádět_archeologické_výzkumy." %}
+</p>
+<p>{% trans "project.emails.nmp.s_pozdravem" %}</p>
+<p>{% trans "project.emails.nmp.archeologický_ústav_av_čr_praha_v._v._i." %}</p>
+<p>{% trans "project.emails.nmp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.</p>
 {% trans "project.emails.nmp.vaše_případné_dotazy_pište_na_adresu_oznameni@arub.cz_nebo_volejte_na_tel._+420_515_911_133_(jihomoravský_a_zlínský_kraj)_+420_515_911_121_(vysočina_a_olomoucký_kraj)_+420_553_821_603_(moravskoslezský_kraj)" %}.
-
+<p>
+    ------------------------------
+    <br>
+    {% trans "project.emails.nmp.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "project.emails.nmp.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

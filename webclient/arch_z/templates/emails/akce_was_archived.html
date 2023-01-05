@@ -6,13 +6,21 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "arch_z.emails.awa.dobrý_den" %},
-
-{% trans "arch_z.emails.awa.vámi_odeslaná_akce" %} {{ ident_cely }} {% trans "arch_z.emails.awa.na_katastru" %} {{ katastr }} {% trans "arch_z.emails.awa.byla_převedena_do_stavu" %}
-{{ state }}.
-
-{% trans "arch_z.emails.awa.detaily_o_akci_zjistíte_po_přihlášení_do_amčr" %}.
-{% trans "arch_z.emails.awa.nejpozději_během_následujícího_dne_bude_záznam_zveřejněn_v_digitálním_archivu_amčr" %}.
-
+<p>{% trans "arch_z.emails.awa.dobrý_den" %},</p>
+<p>
+    {% trans "arch_z.emails.awa.vámi_odeslaná_akce" %}
+    <b>{{ ident_cely }}</b> {% trans "arch_z.emails.awa.na_katastru" %}<b>{{ katastr }}</b> {% trans "arch_z.emails.awa.byla_převedena_do_stavu" %}
+    <b>{{ state }}</b> {% endblocktrans %}.
+</p>
+<p>{% trans "arch_z.emails.awa.detaily_o_akci_zjistíte_po_přihlášení_do_amčr" %}.
+    {% trans "arch_z.emails.awa.nejpozději_během_následujícího_dne_bude_záznam_zveřejněn_v_digitálním_archivu_amčr" %}.
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "arch_z.emails.awa.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "arch_z.emails.awa.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

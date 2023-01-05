@@ -136,7 +136,8 @@ class Mailer():
             "organization": user.organizace.nazev,
             "email": user.email,
             "phone": user.telefon,
-            "role": user.hlavni_role.name
+            "role": user.hlavni_role.name,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         cls.send(notification_type.predmet, user.email, html)
 
@@ -146,7 +147,7 @@ class Mailer():
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         if not cls._notification_was_sent(notification_type, user):
-            html = render_to_string(notification_type.cesta_sablony)
+            html = render_to_string(notification_type.cesta_sablony, {"server_domain": settings.EMAIL_SERVER_DOMAIN_NAME})
             cls.send(notification_type.predmet, user.email, html)
             cls._log_notification(notification_type=notification_type, receiver_object=user)
 
@@ -162,7 +163,8 @@ class Mailer():
             "surname": user.last_name,
             "organization": user.organizace.nazev,
             "email": user.email,
-            "phone": user.telefon
+            "phone": user.telefon,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         superusers = uzivatel.models.User.objects.filter(is_superuser=True)
         for superuser in superusers:
@@ -177,7 +179,8 @@ class Mailer():
             notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
             html = render_to_string(notification_type.cesta_sablony, {
                 "title": notification_type.predmet,
-                "role": user.hlavni_role.name
+                "role": user.hlavni_role.name,
+                "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
             })
             if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
                 cls.send(notification_type.predmet, user.email, html)
@@ -194,7 +197,8 @@ class Mailer():
                 html = render_to_string(notification_type.cesta_sablony, {
                     "title": subject,
                     "ident_cely": project.ident_cely,
-                    "katastr": project.hlavni_katastr.nazev
+                    "katastr": project.hlavni_katastr.nazev,
+                    "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
                 })
                 cls.send(subject=subject, to=user.email, html_content=html)
                 cls._log_notification(notification_type=notification_type, receiver_object=user)
@@ -238,7 +242,8 @@ class Mailer():
             "ident_cely": arch_z.ident_cely,
             "katastr": arch_z.hlavni_katastr.nazev,
             "reason": reason,
-            "state": arch_z.STATES[arch_z.stav - 1][1]
+            "state": arch_z.STATES[arch_z.stav - 1][1],
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         first_log_entry = Historie.objects.filter(vazba=arch_z.historie).order_by('datum_zmeny').first()
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
@@ -257,7 +262,8 @@ class Mailer():
             "title": subject,
             "ident_cely": obj.ident_cely,
             "katastr": obj.hlavni_katastr.nazev,
-            "state": state
+            "state": state,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         first_log_entry = Historie.objects.filter(vazba=obj.historie).order_by('datum_zmeny').first()
         if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
@@ -286,7 +292,8 @@ class Mailer():
             "katastr": project.hlavni_katastr.nazev,
             "okres": project.hlavni_katastr.okres,
             "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace
+            "lokalita": project.lokalizace,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
 
@@ -313,7 +320,8 @@ class Mailer():
             "katastr": project.hlavni_katastr.nazev,
             "okres": project.hlavni_katastr.okres,
             "parcela": project.parcelni_cislo,
-            "lokalita": project.lokalizace
+            "lokalita": project.lokalizace,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
         project_file = projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
@@ -348,7 +356,8 @@ class Mailer():
             subject = notification_type.predmet.format(ident_cely=project_ids[0])
             html = render_to_string(notification_type.cesta_sablony, {
                 "title": subject,
-                "projects": projects
+                "projects": projects,
+                "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
             })
             cls.send(subject=subject, to=email, html_content=html)
 
@@ -362,7 +371,8 @@ class Mailer():
             "okres": project.hlavni_katastr.okres,
             "parcela": project.parcelni_cislo,
             "lokalita": project.lokalizace,
-            "organization": project.organizace.nazev
+            "organization": project.organizace.nazev,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
         cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
@@ -391,7 +401,8 @@ class Mailer():
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
             "organization": project.organizace.nazev,
-            "reason": reason
+            "reason": reason,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         cls.send(subject=subject, to="info@amapa.cz", html_content=html)
 
@@ -405,7 +416,8 @@ class Mailer():
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
             "reason": reason,
-            "state": project.CHOICES[project.stav][1]
+            "state": project.CHOICES[project.stav][1],
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
@@ -419,7 +431,8 @@ class Mailer():
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
-            "state": project.CHOICES[project.stav][1]
+            "state": project.CHOICES[project.stav][1],
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
@@ -434,7 +447,8 @@ class Mailer():
             "parcela": project.parcelni_cislo,
             "lokalita": project.lokalizace,
             "reason": reason,
-            "datum_oznameni": None
+            "datum_oznameni": None,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         }
         first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
         if first_log_entry.typ_zmeny == OZNAMENI_PROJ:
@@ -461,7 +475,8 @@ class Mailer():
         subject = notification_type.predmet
         context = {
             "title": subject,
-            "ids": project_ids
+            "ids": project_ids,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         }
         html = render_to_string(notification_type.cesta_sablony, context)
         user = uzivatel.models.User.objects.get(email=send_to)
@@ -493,7 +508,8 @@ class Mailer():
             "title": subject,
             "katastr": project.katastr.nazev,
             "reason": reason,
-            "state": project.PAS_STATES[project.stav][1]
+            "state": project.PAS_STATES[project.stav][1],
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
@@ -511,7 +527,8 @@ class Mailer():
             "organization": user.organizace.nazev,
             "email": user.email,
             "phone": user.telefon,
-            "message": reason
+            "message": reason,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         user = uzivatel.models.User.objects.get(email=email_to)
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
@@ -527,7 +544,8 @@ class Mailer():
             "ident_cely": cooperation.pk,
             "name": cooperation.spolupracovnik.first_name,
             "surname": cooperation.spolupracovnik.last_name,
-            "organization": cooperation.spolupracovnik.organizace.nazev
+            "organization": cooperation.spolupracovnik.organizace.nazev,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
             cls.send(subject=subject, to=cooperation.vedouci.email, html_content=html)
@@ -540,6 +558,7 @@ class Mailer():
         subject = notification_type.predmet.format(ident_cely=document.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "ident_cely": document.ident_cely,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
         if first_log_entry:
@@ -555,7 +574,8 @@ class Mailer():
         html = render_to_string(notification_type.cesta_sablony, {
             "ident_cely": document.ident_cely,
             "state": document.STATES[document.stav][1],
-            "reason": reason
+            "reason": reason,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
         if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
