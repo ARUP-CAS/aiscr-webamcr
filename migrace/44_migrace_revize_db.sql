@@ -94,18 +94,7 @@ ALTER TABLE nalez_objekt ADD CONSTRAINT nalez_objekt_pkey PRIMARY KEY (id);
 
 ALTER TABLE nalez_predmet ADD CONSTRAINT nalez_predmet_pkey PRIMARY KEY (id);
 
-ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_pkey;
-ALTER TABLE neident_akce DROP COLUMN puvodni_id;
-DROP SEQUENCE neident_akce_id_seq;
-ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
-ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_key;
-ALTER TABLE neident_akce ALTER COLUMN dokument_cast SET NOT NULL;
 ALTER TABLE neident_akce DROP COLUMN ident_cely;
-
-CREATE SEQUENCE neident_akce_vedouci_id_seq;
-ALTER TABLE neident_akce_vedouci drop constraint neident_akce_vedouci_pkey;
-ALTER TABLE neident_akce_vedouci ADD COLUMN id integer NOT NULL DEFAULT nextval('neident_akce_vedouci_id_seq'::regclass) PRIMARY KEY;
-ALTER TABLE neident_akce_vedouci ADD CONSTRAINT neident_akce_vedouci_neident_akce_vedouci_key UNIQUE (neident_akce, vedouci);
 
 CREATE SEQUENCE notifikace_projekt_id_seq;
 ALTER TABLE notifikace_projekt ADD COLUMN id integer NOT NULL DEFAULT nextval('notifikace_projekt_id_seq'::regclass) PRIMARY KEY;
