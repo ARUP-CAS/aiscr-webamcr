@@ -23,6 +23,12 @@ ALTER TABLE auth_user ADD CONSTRAINT auth_user_historie_key UNIQUE (historie);
 
 ALTER TABLE dokument ADD CONSTRAINT dokument_soubory_key UNIQUE (soubory);
 ALTER TABLE dokument ADD CONSTRAINT dokument_historie_key UNIQUE (historie);
+COMMENT ON COLUMN dokument.let IS NULL;
+COMMENT ON COLUMN dokument.rada IS NULL;
+COMMENT ON COLUMN dokument.typ_dokumentu IS NULL;
+COMMENT ON COLUMN dokument.rok_vzniku IS NULL;
+COMMENT ON COLUMN dokument.material_originalu IS NULL;
+COMMENT ON COLUMN dokument.ulozeni_originalu IS NULL;
 
 ALTER TABLE dokument_autor DROP CONSTRAINT dokument_autor_pkey;
 ALTER TABLE dokument_autor ADD CONSTRAINT dokument_autor_pkey PRIMARY KEY (id);
