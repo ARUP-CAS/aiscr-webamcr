@@ -295,7 +295,6 @@ ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_dokument_cast_fkey FOREIGN 
 
 --2. vyskovy_bod.geom
 ALTER TABLE vyskovy_bod ADD COLUMN geom geometry;
-SELECT UpdateGeometrySRID('vyskovy_bod','geom',5514);
 -- TODO MIGRACE a PRIDAT NOT NULL constraint
 
 --5. samostatny_nalez.soubory
