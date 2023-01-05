@@ -143,6 +143,7 @@ ALTER TABLE oznamovatel ADD CONSTRAINT oznamovatel_projekt_pkey PRIMARY KEY (pro
 ALTER TABLE oznamovatel DROP CONSTRAINT oznamovatel_projekt_key;
 
 ALTER TABLE pian ADD CONSTRAINT pian_historie_key UNIQUE(historie);
+COMMENT ON COLUMN ruian_katastr.id IS NULL;
 
 ALTER TABLE projekt DROP COLUMN planovane_zahajeni_text;
 ALTER TABLE projekt ALTER COLUMN ident_cely SET NOT NULL ;
