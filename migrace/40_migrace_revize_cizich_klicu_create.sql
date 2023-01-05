@@ -13,12 +13,12 @@ ALTER TABLE akce_vedouci ADD CONSTRAINT akce_vedouci_organizace_fkey FOREIGN KEY
 ALTER TABLE akce_vedouci ADD CONSTRAINT akce_vedouci_vedouci_fkey FOREIGN KEY (vedouci) REFERENCES osoba (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE adb ADD CONSTRAINT adb_autor_popisu_fkey FOREIGN KEY (autor_popisu) REFERENCES osoba (id) ON UPDATE CASCADE ON DELETE RESTRICT;
 ALTER TABLE adb ADD CONSTRAINT adb_autor_revize_fkey FOREIGN KEY (autor_revize) REFERENCES osoba (id) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE adb ADD CONSTRAINT adb_parent_fkey FOREIGN KEY (dokumentacni_jednotka) REFERENCES dokumentacni_jednotka (id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE adb ADD CONSTRAINT adb_dokumentacni_jednotka_fkey FOREIGN KEY (dokumentacni_jednotka) REFERENCES dokumentacni_jednotka (id) ON UPDATE CASCADE ON DELETE RESTRICT;
 ALTER TABLE adb_sekvence ADD CONSTRAINT adb_sekvence_kladysm5_id_fkey FOREIGN KEY (kladysm5_id) REFERENCES kladysm5 (gid) ON UPDATE CASCADE ON DELETE RESTRICT;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_historie_fkey FOREIGN KEY (historie) REFERENCES historie_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_hlavni_katastr_fkey FOREIGN KEY (hlavni_katastr) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE NO ACTION;
-ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_fkey FOREIGN KEY (archeologicky_zaznam_id) REFERENCES archeologicky_zaznam (id) ON UPDATE CASCADE ON DELETE CASCADE;
-ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_katastr_fkey FOREIGN KEY (katastr_id) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE NO ACTION;
+ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_id_fkey FOREIGN KEY (archeologicky_zaznam_id) REFERENCES archeologicky_zaznam (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_katastr_id_fkey FOREIGN KEY (katastr_id) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_pristupnost_fkey FOREIGN KEY (pristupnost) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE auth_group_permissions ADD CONSTRAINT auth_group_permissio_permission_id_84c5c92e_fk_auth_perm FOREIGN KEY (permission_id) REFERENCES auth_permission (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
 ALTER TABLE auth_group_permissions ADD CONSTRAINT auth_group_permissions_group_id_b120cbf9_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
@@ -143,8 +143,8 @@ ALTER TABLE pian ADD CONSTRAINT pian_zm50_fkey FOREIGN KEY (zm50) REFERENCES kla
 ALTER TABLE projekt_oznameni_suffix ADD CONSTRAINT projekt_oznameni_suffix_project_id_fkey FOREIGN KEY (project_id) REFERENCES projekt (id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE projekt ADD CONSTRAINT projekt_historie_fkey FOREIGN KEY (historie) REFERENCES historie_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE projekt ADD CONSTRAINT projekt_hlavni_katastr_fkey FOREIGN KEY (hlavni_katastr) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE NO ACTION;
-ALTER TABLE projekt_katastr ADD CONSTRAINT projekt_katastr_katastr_fkey FOREIGN KEY (katastr_id) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE projekt_katastr ADD CONSTRAINT projekt_katastr_projekt_fkey FOREIGN KEY (projekt_id) REFERENCES projekt (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE projekt_katastr ADD CONSTRAINT projekt_katastr_katastr_id_fkey FOREIGN KEY (katastr_id) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE RESTRICT;
+ALTER TABLE projekt_katastr ADD CONSTRAINT projekt_katastr_projekt_id_fkey FOREIGN KEY (projekt_id) REFERENCES projekt (id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE projekt ADD CONSTRAINT projekt_kulturni_pamatka_fkey FOREIGN KEY (kulturni_pamatka) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE projekt ADD CONSTRAINT projekt_organizace_fkey FOREIGN KEY (organizace) REFERENCES organizace (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE projekt ADD CONSTRAINT projekt_soubory_fkey FOREIGN KEY (soubory) REFERENCES soubor_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
