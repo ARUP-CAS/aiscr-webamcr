@@ -177,6 +177,7 @@ update historie set typ_zmeny_text = 'EZ23' where id in (select his.id from hist
 alter table historie rename column typ_zmeny to typ_zmeny_old;
 alter table historie rename column typ_zmeny_text to typ_zmeny;
 alter table historie alter typ_zmeny_old drop not null;
+alter table historie alter column typ_zmeny set not null;
 
 -- COMMENT: tenhle sloupec tam nemusi byt, je to jen pro migraci
 alter table archeologicky_zaznam alter column stav_stary drop not null;
