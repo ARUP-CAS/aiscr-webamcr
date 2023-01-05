@@ -77,10 +77,12 @@ create unique index on akce_vedouci (akce) where hlavni = true;
 -- MIGRACE (mapovani vedouci akce na jejich id z heslare jmen) MIGRACE_DAT_2.sql
 
 --6. neident_akce_vedouci (migrace vedouci do nove tabulky)
+CREATE SEQUENCE neident_akce_vedouci_id_seq;
 CREATE TABLE neident_akce_vedouci (
-    neident_akce integer not null,
-    vedouci integer not null,
-    PRIMARY KEY (neident_akce, vedouci),
+    neident_akce integer NOT NULL,
+    vedouci integer NOT NULL,
+    id integer NOT NULL DEFAULT nextval('neident_akce_vedouci_id_seq'::regclass) PRIMARY KEY,
+    CONSTRAINT neident_akce_vedouci_neident_akce_vedouci_key UNIQUE (neident_akce, vedouci),
     CONSTRAINT neident_akce_vedouci_neident_akce_fk FOREIGN KEY (neident_akce)
       REFERENCES neident_akce (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION,
@@ -283,7 +285,7 @@ CREATE TABLE externi_zdroj_editor (
 
 --Pridat check:
 --1. check ze akce.typ vs akce.projekt (R->P and projekt not null, N->S and projek null)
-alter table akce add check ((typ = 'N' and projekt is null) or (typ = 'R' and projekt is not null));
+-- alter table akce add check ((typ = 'N' and projekt is null) or (typ = 'R' and projekt is not null));
 
 --Novy sloupec:
 --1. neident_akce.dokument_cast (not null, unique, foreign key na dokument_cast, migrace vazba z jednotka_dokument kde ukazuje na neident_akci)

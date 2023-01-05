@@ -250,13 +250,11 @@ def create(request, dj_ident_cely):
             raise NeznamaGeometrieError()
         logger.debug("pian.views.create: GEOM: " + str(form.data["geom"]))
         zm10s = (
-            Kladyzm.objects.filter(kategorie=KLADYZM10)
-            .exclude(objectid=1094)
+            Kladyzm.objects.filter(kategorie=KLADYZM10)            
             .filter(the_geom__contains=point)
         )
         zm50s = (
             Kladyzm.objects.filter(kategorie=KLADYZM50)
-            .exclude(objectid=1094)
             .filter(the_geom__contains=point)
         )
         if zm10s.count() == 1 and zm50s.count() == 1:

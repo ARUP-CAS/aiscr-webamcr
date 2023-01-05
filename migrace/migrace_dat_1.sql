@@ -47,7 +47,7 @@ insert into akce_katastr(akce, katastr, hlavni) select id, katastr, true from ak
 CREATE OR REPLACE FUNCTION migrateCatastersFromAkce() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..71
+    FOR counter IN 1..100
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -66,6 +66,33 @@ drop function migrateCatastersFromAkce();
 
 -- 2. Migrace katastru z tabulky lokalita
 
+-- VALIDACE DAT
+-- nektere radky maji na konci ';' prikaz by je mel odebrat
+update lokalita set dalsi_katastry = substr(dalsi_katastry, 1, length(dalsi_katastry) - 1) where dalsi_katastry like '%;';
+-- odstraneni duplicit
+update lokalita set dalsi_katastry = sel.kat from (
+SELECT
+  id, STRING_AGG(DISTINCT katastru.naz, ';') AS kat
+FROM (
+  SELECT
+    id,
+    naz
+  FROM
+    lokalita v,
+    UNNEST(STRING_TO_ARRAY(v.dalsi_katastry, ';')) AS naz
+) AS katastru
+GROUP BY katastru.id
+) AS sel
+where lokalita.id = sel.id;
+
+-- Odstraneni duplicit kde hlavni katastr je taky ve sloupci dalsi_katastry
+update lokalita set dalsi_katastry = sel.trimmed from (
+select p.id as pid, p.katastr, r.nazev, p.dalsi_katastry, REPLACE(p.dalsi_katastry, r.nazev || ' (' || UPPER(o.nazev) || ')', '') as trimmed from lokalita p join ruian_katastr r on r.id = p.katastr join ruian_okres o on o.id = r.okres where p.dalsi_katastry like
+'%;' || r.nazev || ' (' || UPPER(o.nazev) || ')' || '%' or p.dalsi_katastry like r.nazev || ' (' || UPPER(o.nazev) || ')' || '%') as sel where sel.pid = lokalita.id;
+-- Uklidit oddelovace
+update lokalita set dalsi_katastry = REPLACE(dalsi_katastry, ';;', ';') where dalsi_katastry like '%;;%';
+update lokalita set dalsi_katastry = REPLACE(dalsi_katastry, ';', '') where dalsi_katastry like ';%';
+
 -- a) migrace dat
 
 insert into lokalita_katastr(lokalita, katastr, hlavni) select id, katastr, true from lokalita where katastr is not null;
@@ -73,7 +100,7 @@ insert into lokalita_katastr(lokalita, katastr, hlavni) select id, katastr, true
 CREATE OR REPLACE FUNCTION migrateCatastersFromLokalita() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..3
+    FOR counter IN 1..10
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -132,7 +159,7 @@ insert into projekt_katastr(projekt, katastr, hlavni) select id, katastr, true f
 CREATE OR REPLACE FUNCTION migrateCatastersFromProjekt() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..71
+    FOR counter IN 1..100
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN

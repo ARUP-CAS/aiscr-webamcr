@@ -3,3 +3,4 @@ SELECT au.id
 	FROM public.auth_user as au
 	INNER JOIN public.auth_user_groups aug on au.id = aug.user_id and au.hlavni_role = aug.group_id
 );
+ALTER TABLE auth_user DROP COLUMN hlavni_role;

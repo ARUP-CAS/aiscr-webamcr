@@ -172,4 +172,5 @@ DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
 DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
 
 
-PIAN_PRESNOST_KATASTR = 862
+PIAN_PRESNOST_KATASTR = 862 # HES-000864
+
