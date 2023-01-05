@@ -126,7 +126,7 @@ ALTER TABLE nalez_objekt ADD CONSTRAINT nalez_objekt_komponenta_fkey FOREIGN KEY
 ALTER TABLE nalez_objekt ADD CONSTRAINT nalez_objekt_specifikace_fkey FOREIGN KEY (specifikace) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_dokument_cast_fkey FOREIGN KEY (dokument_cast) REFERENCES dokument_cast (id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_katastr_fkey FOREIGN KEY (katastr) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE RESTRICT;
-ALTER TABLE neident_akce_vedouci ADD CONSTRAINT neident_akce_vedouci_neident_akce_fkey FOREIGN KEY (neident_akce) REFERENCES neident_akce (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE neident_akce_vedouci ADD CONSTRAINT neident_akce_vedouci_neident_akce_fkey FOREIGN KEY (neident_akce) REFERENCES neident_akce (dokument_cast) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE neident_akce_vedouci ADD CONSTRAINT neident_akce_vedouci_vedouci_fkey FOREIGN KEY (vedouci) REFERENCES osoba (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE notifikace_projekt ADD CONSTRAINT notifikace_projekt_katastr_fkey FOREIGN KEY (katastr) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE notifikace_projekt ADD CONSTRAINT notifikace_projekt_uzivatel_fkey FOREIGN KEY (uzivatel) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE NO ACTION;
