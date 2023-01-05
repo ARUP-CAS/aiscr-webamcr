@@ -56,29 +56,7 @@ drop function migrateVedouciOstatniFromAkce();
 -- TODO
 
 -- 2. migrace vedoucich z neident_akce do tabulky neident_akce_vedouci
-
--- a) Validace dat
--- b) Migrace dat
-
-CREATE OR REPLACE FUNCTION migrateVedouciFromNeidentAkce() RETURNS void AS $$
-DECLARE
-BEGIN
-    FOR counter IN 1..10
-    LOOP
-        RAISE NOTICE '%', counter;
-        BEGIN
-            insert into neident_akce_vedouci(neident_akce, vedouci) select distinct a.id, r.id from neident_akce a join osoba r on r.vypis_cely = split_part(vedouci, ';', counter) where split_part(a.vedouci, ';', counter) != '';
-        END;
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
-
-select migrateVedouciFromNeidentAkce();
-drop function migrateVedouciFromNeidentAkce();
-
--- c) Test migrace
-
--- TODO
+-- Přesunuto do migrace_dat_3.sql
 
 -- 3. migrace dokument_autor
 
