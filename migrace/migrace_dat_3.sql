@@ -159,9 +159,9 @@ update dokument_cast set vazba = null where vazba in (select id from neident_akc
 update dokument_cast set vazba_druha = null where vazba_druha in (select id from neident_akce);
 -- Převod PK na dokument_cast
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_pkey;
+ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
 ALTER TABLE neident_akce DROP COLUMN id;
 DROP SEQUENCE neident_akce_id_seq;
-ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_key;
 ALTER TABLE neident_akce ALTER COLUMN dokument_cast SET NOT NULL;
 
