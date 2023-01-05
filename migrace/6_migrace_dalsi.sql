@@ -1,5 +1,5 @@
 -- Adding path to the soubor table
-ALTER TABLE "soubor" ADD COLUMN "path" varchar(255) DEFAULT 'not specified yet' NOT NULL;
+ALTER TABLE soubor ADD COLUMN path text DEFAULT 'not specified yet' NOT NULL;
 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
 -- TODO nezapomenout kdyz se bude precislovavat
