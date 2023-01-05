@@ -157,6 +157,12 @@ update neident_akce d set dokument_cast = sub.id from (select vazba_druha, id fr
 -- smazu reference z vazby na neident_akci
 update dokument_cast set vazba = null where vazba in (select id from neident_akce);
 update dokument_cast set vazba_druha = null where vazba_druha in (select id from neident_akce);
+-- Převod PK na dokument_cast
+ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_pkey;
+DROP SEQUENCE neident_akce_id_seq;
+ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
+ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_key;
+ALTER TABLE neident_akce ALTER COLUMN dokument_cast SET NOT NULL;
 
 -- 8. migrace externi_zdroj.sbornik_editor
 
@@ -181,3 +187,29 @@ $$ LANGUAGE plpgsql;
 
 select migrateEditorFromExterniZdroj();
 drop function migrateEditorFromExterniZdroj();
+
+-- 9. migrace vedoucich z neident_akce do tabulky neident_akce_vedouci
+-- Přesunuto z migrace_dat_2.sql
+
+-- a) Validace dat
+-- b) Migrace dat
+
+CREATE OR REPLACE FUNCTION migrateVedouciFromNeidentAkce() RETURNS void AS $$
+DECLARE
+BEGIN
+    FOR counter IN 1..10
+    LOOP
+        RAISE NOTICE '%', counter;
+        BEGIN
+            insert into neident_akce_vedouci(neident_akce, vedouci) select distinct a.dokument_cast, r.id from neident_akce a join osoba r on r.vypis_cely = split_part(vedouci, ';', counter) where split_part(a.vedouci, ';', counter) != '';
+        END;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+select migrateVedouciFromNeidentAkce();
+drop function migrateVedouciFromNeidentAkce();
+
+-- c) Test migrace
+
+-- TODO
