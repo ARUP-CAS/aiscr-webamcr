@@ -1,4 +1,5 @@
 ALTER TABLE adb DROP CONSTRAINT adb_dokumentacni_jednotka_key;
+COMMENT ON COLUMN adb.dokumentacni_jednotka IS NULL;
 
 ALTER TABLE akce DROP CONSTRAINT akce_archeologicky_zaznam_key;
 ALTER TABLE akce ADD CONSTRAINT akce_organizace_fkey FOREIGN KEY (organizace) REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
@@ -35,6 +36,13 @@ ALTER TABLE dokument_autor ADD CONSTRAINT dokument_autor_pkey PRIMARY KEY (id);
 ALTER TABLE dokument_autor ADD CONSTRAINT dokument_autor_dokument_autor_key UNIQUE ( dokument, autor);
 ALTER TABLE dokument_autor ADD CONSTRAINT dokument_autor_dokument_poradi_key UNIQUE (dokument, poradi);
 
+COMMENT ON COLUMN dokument_extra_data.zachovalost IS NULL;
+COMMENT ON COLUMN dokument_extra_data.nahrada IS NULL;
+COMMENT ON COLUMN dokument_extra_data.format IS NULL;
+COMMENT ON COLUMN dokument_extra_data.zeme IS NULL;
+COMMENT ON COLUMN dokument_extra_data.region IS NULL;
+COMMENT ON COLUMN dokument_extra_data.udalost_typ IS NULL;
+
 COMMENT ON COLUMN dokument_cast.archeologicky_zaznam IS NULL;
 
 ALTER TABLE dokument_jazyk ADD CONSTRAINT dokument_jazyk_dokument_jazyk_key UNIQUE (dokument, jazyk);
@@ -52,10 +60,13 @@ ALTER TABLE dokumentacni_jednotka ALTER COLUMN ident_cely SET NOT NULL;
 
 ALTER TABLE externi_odkaz ALTER COLUMN externi_zdroj SET NOT NULL;
 ALTER TABLE externi_odkaz ALTER COLUMN archeologicky_zaznam SET NOT NULL;
+COMMENT ON COLUMN externi_odkaz.archeologicky_zaznam IS NULL;
 
 ALTER TABLE externi_zdroj DROP COLUMN final_cj;
 ALTER TABLE externi_zdroj ADD CONSTRAINT externi_zdroj_historie_key UNIQUE (historie);
 ALTER TABLE externi_zdroj ALTER COLUMN ident_cely SET NOT NULL;
+COMMENT ON COLUMN externi_zdroj.typ IS NULL;
+COMMENT ON COLUMN externi_zdroj.typ_dokumentu IS NULL;
 
 CREATE SEQUENCE externi_zdroj_autor_id_seq;
 ALTER TABLE externi_zdroj_autor ADD COLUMN id integer NOT NULL default nextval('externi_zdroj_autor_id_seq'::regclass) PRIMARY KEY;
@@ -94,6 +105,11 @@ ALTER TABLE komponenta_aktivita ADD CONSTRAINT komponenta_aktivita_pkey PRIMARY 
 ALTER TABLE komponenta_aktivita ADD CONSTRAINT komponenta_aktivita_komponenta_aktivita_key UNIQUE (komponenta, aktivita);
 
 ALTER TABLE let ALTER COLUMN ident_cely SET NOT NULL;
+COMMENT ON COLUMN let.pozorovatel IS NULL;
+COMMENT ON COLUMN let.letiste_start IS NULL;
+COMMENT ON COLUMN let.letiste_cil IS NULL;
+COMMENT ON COLUMN let.pocasi IS NULL;
+COMMENT ON COLUMN let.dohlednost IS NULL;
 
 ALTER TABLE lokalita DROP CONSTRAINT lokalita_archeologicky_zaznam_key;
 
@@ -102,6 +118,7 @@ ALTER TABLE nalez_objekt ADD CONSTRAINT nalez_objekt_pkey PRIMARY KEY (id);
 ALTER TABLE nalez_predmet ADD CONSTRAINT nalez_predmet_pkey PRIMARY KEY (id);
 
 ALTER TABLE neident_akce DROP COLUMN ident_cely;
+COMMENT ON COLUMN neident_akce.katastr IS NULL;
 
 CREATE SEQUENCE notifikace_projekt_id_seq;
 ALTER TABLE notifikace_projekt ADD COLUMN id integer NOT NULL DEFAULT nextval('notifikace_projekt_id_seq'::regclass) PRIMARY KEY;
@@ -111,6 +128,7 @@ CREATE SEQUENCE organizace_ident_cely_seq START WITH 1 INCREMENT BY 1 MINVALUE 0
 ALTER TABLE organizace ADD COLUMN ident_cely text NOT NULL DEFAULT('ORG-'::text || right(concat('000000', nextval('organizace_ident_cely_seq')::text), 6));
 ALTER TABLE organizace ADD CONSTRAINT organizace_ident_cely_key UNIQUE(ident_cely);
 ALTER TABLE organizace ADD CONSTRAINT organizace_nazev_zkraceny_key UNIQUE(nazev_zkraceny);
+COMMENT ON COLUMN organizace.typ_organizace IS NULL;
 
 CREATE SEQUENCE osoba_ident_cely_seq START WITH 1 INCREMENT BY 1 MINVALUE 0 MAXVALUE 999999 ;
 ALTER TABLE osoba ADD COLUMN ident_cely text NOT NULL DEFAULT('OS-'::text || right(concat('000000', nextval('osoba_ident_cely_seq')::text), 6));
@@ -158,6 +176,8 @@ ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_soubory_key UNIQUE(
 ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_historie_key UNIQUE(historie);
 
 DROP TABLE stats_login;
+
+COMMENT ON COLUMN tvar.tvar IS NULL;
 
 DROP TABLE uzivatel;
 
