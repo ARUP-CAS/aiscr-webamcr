@@ -124,7 +124,7 @@ ALTER TABLE nalez_predmet DROP CONSTRAINT nalez_predmet_komponenta_fkey;
 ALTER TABLE nalez_predmet DROP CONSTRAINT nalez_predmet_specifikace_fkey;
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_fkey;
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_katastr_fkey;
-ALTER TABLE neident_akce_vedouci DROP CONSTRAINT neident_akce_vedouci_neident_akce_fkey;
+ALTER TABLE neident_akce_vedouci DROP CONSTRAINT neident_akce_vedouci_neident_akce_fk;
 ALTER TABLE neident_akce_vedouci DROP CONSTRAINT neident_akce_vedouci_vedouci_fk;
 ALTER TABLE notifikace_projekt DROP CONSTRAINT notifikace_projekt_katastr_fkey;
 ALTER TABLE notifikace_projekt DROP CONSTRAINT notifikace_projekt_uzivatel_fkey;
