@@ -687,12 +687,14 @@ class DokumentFilter(Model3DFilter):
     )
 
     soubor_velikost_od = NumberFilter(
-        method="filter_soubory_velikost_od",
+        field_name="soubory__soubory__size_mb",
+        lookup_expr="gte",
         label=_("dokument.filter.souborVelikost.label"),
     )
 
     soubor_velikost_do = NumberFilter(
-        method="filter_soubory_velikost_do",
+        field_name="soubory__soubory__size_mb",
+        lookup_expr="lte",
         label="&nbsp;",
     )
 
@@ -846,20 +848,6 @@ class DokumentFilter(Model3DFilter):
             | Q(let__uzivatelske_oznaceni__icontains=value)
             | Q(let__ucel_letu__icontains=value)
         ).distinct()
-
-    def filter_soubory_velikost_od(self, queryset, name, value):
-        if value:
-            value = value * 1024 * 1024
-            return queryset.filter(soubory__soubory__size_bytes__gte=value)
-        else:
-            return queryset
-
-    def filter_soubory_velikost_do(self, queryset, name, value):
-        if value:
-            value = value * 1024 * 1024
-            return queryset.filter(soubory__soubory__size_bytes__lte=value)
-        else:
-            return queryset
 
     def filter_id_vazby(self, queryset, name, value):
         return queryset.filter(

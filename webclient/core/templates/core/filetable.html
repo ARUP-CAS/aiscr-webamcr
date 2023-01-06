@@ -28,7 +28,7 @@
       </td>
       <td>{{ soubor.nazev_zkraceny }}</td>
       <td>{{ soubor.mimetype }}</td>
-      <td>{{ soubor.size_bytes }}</td>
+      <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
       <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
       {% if show %}
         <td>

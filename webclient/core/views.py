@@ -238,7 +238,7 @@ def post_upload(request):
                 nazev_puvodni=old_name,
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(old_name),
-                size_bytes=soubor.size,
+                size_mb=soubor.size / 1024 / 1024,
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():
@@ -312,7 +312,7 @@ def post_upload(request):
             s.nazev = checksum + "_" + new_name
             s.nazev_zkraceny = new_name
             s.path = soubor
-            s.size_bytes = soubor.size
+            s.size_mb = soubor.size / 1024 / 1024
             s.mimetype = mimetype
             s.save()
             s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)

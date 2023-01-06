@@ -65,7 +65,6 @@ class Soubor(models.Model):
     vlastnik = models.ForeignKey(User, models.DO_NOTHING, db_column="vlastnik")
     nazev = models.TextField(unique=False)
     mimetype = models.TextField()
-    size_bytes = models.IntegerField()
     vytvoreno = models.DateField(auto_now_add=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
@@ -78,6 +77,7 @@ class Soubor(models.Model):
         null=True,
     )
     path = models.FileField(upload_to=get_upload_to, default="empty")
+    size_mb = models.DecimalField(decimal_places=10, max_digits=150)
 
     class Meta:
         db_table = "soubor"
