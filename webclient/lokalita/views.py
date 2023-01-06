@@ -84,7 +84,7 @@ class LokalitaListView(
         return qs
 
 
-class LokalitaDetailView(DetailView, LoginRequiredMixin):
+class LokalitaDetailView(LoginRequiredMixin, DetailView):
     model = Lokalita
     template_name = "lokalita/lokalita_detail.html"
     slug_field = "archeologicky_zaznam__ident_cely"
@@ -113,7 +113,7 @@ class LokalitaDetailView(DetailView, LoginRequiredMixin):
         return context
 
 
-class LokalitaCreateView(CreateView, LoginRequiredMixin):
+class LokalitaCreateView(LoginRequiredMixin, CreateView):
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
@@ -176,7 +176,7 @@ class LokalitaCreateView(CreateView, LoginRequiredMixin):
         return super().form_invalid(form)
 
 
-class LokalitaEditView(UpdateView, LoginRequiredMixin):
+class LokalitaEditView(LoginRequiredMixin, UpdateView):
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm

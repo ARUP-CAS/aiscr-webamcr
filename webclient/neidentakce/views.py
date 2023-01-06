@@ -15,7 +15,7 @@ from .models import NeidentAkce
 logger_s = structlog.get_logger(__name__)
 
 
-class NeidentAkceEditView(UpdateView, LoginRequiredMixin):
+class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
     title = _("neidentAkce.modalForm.edit.title.text")
