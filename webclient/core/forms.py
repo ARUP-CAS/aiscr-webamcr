@@ -1,5 +1,6 @@
 import logging
 import structlog
+from django.utils import formats
 
 from django import forms
 from crispy_forms.helper import FormHelper
@@ -97,12 +98,21 @@ class VratitForm(forms.Form):
         self.helper.form_tag = False
 
 
+class DecimalTextWideget(forms.widgets.TextInput):
+    def format_value(self, value):
+        if value == "" or value is None:
+            return None
+        if self.is_localized:
+            return formats.localize_input(value)
+        return str(round(value, 3))
+
+
 class SouborMetadataForm(forms.ModelForm):
     nazev_zkraceny = forms.CharField()
     nazev_puvodni = forms.CharField()
     nazev = forms.CharField()
     mimetype = forms.CharField()
-    size_bytes = forms.CharField()
+    size_mb = forms.CharField(widget=DecimalTextWideget())
 
     class Meta:
         model = Soubor
@@ -112,7 +122,7 @@ class SouborMetadataForm(forms.ModelForm):
             "rozsah",
             "nazev",
             "mimetype",
-            "size_bytes",
+            "size_mb",
         )
 
     def __init__(self, *args, **kwargs):
@@ -125,7 +135,7 @@ class SouborMetadataForm(forms.ModelForm):
                 Div("rozsah", css_class="col-sm-1"),
                 Div("nazev", css_class="col-sm-2"),
                 Div("mimetype", css_class="col-sm-2"),
-                Div("size_bytes", css_class="col-sm-2"),
+                Div("size_mb", css_class="col-sm-2"),
                 css_class="row mb-2",
             ),
         )
@@ -134,7 +144,7 @@ class SouborMetadataForm(forms.ModelForm):
         self.fields["rozsah"].widget.attrs["readonly"] = True
         self.fields["nazev"].widget.attrs["readonly"] = True
         self.fields["mimetype"].widget.attrs["readonly"] = True
-        self.fields["size_bytes"].widget.attrs["readonly"] = True
+        self.fields["size_mb"].widget.attrs["readonly"] = True
 
 
 class OdstavkaSystemuForm(forms.ModelForm):

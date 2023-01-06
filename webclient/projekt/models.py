@@ -257,7 +257,7 @@ class Projekt(models.Model):
                     nazev_puvodni=filename,
                     vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                     mimetype="text/plain",
-                    size_bytes=myfile.size,
+                    size_mb=myfile.size/1024/1024,
                 )
                 aktual_soubor.save()
                 aktual_soubor.path.save(name=new_filename, content=myfile)
@@ -455,7 +455,7 @@ class Projekt(models.Model):
                 nazev_puvodni=filename_without_path,
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(filename_without_path),
-                size_bytes=os.path.getsize(filename),
+                size_mb=os.path.getsize(filename)/1024/1024,
             )
             soubor.save()
             if user:

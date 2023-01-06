@@ -744,7 +744,7 @@ class AMCRTestRunner(BaseRunner):
             vlastnik=User.objects.first(),
             nazev="x",
             mimetype="x",
-            size_bytes=1,
+            size_mb=1,
             vazba=vazba_soubory,
             path="x",
             id=TESTOVACI_SOUBOR_ID,
