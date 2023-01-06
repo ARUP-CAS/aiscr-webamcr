@@ -201,7 +201,7 @@ def post_poi2kat(request):
         return JsonResponse({"cadastre": ""}, status=200)
 
 
-class OznamovatelCreateView(TemplateView, LoginRequiredMixin):
+class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):

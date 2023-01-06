@@ -442,7 +442,7 @@ class DokumentCastDetailView(RelatedContext):
         return context
 
 
-class DokumentCastEditView(UpdateView, LoginRequiredMixin):
+class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     model = DokumentCast
     template_name = "core/transakce_modal.html"
     title = _("dokumentCast.modalForm.zmenitPoznamku.title.text")

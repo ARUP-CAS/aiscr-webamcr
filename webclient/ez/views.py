@@ -404,7 +404,7 @@ class ExterniOdkazPripojitView(TransakceView):
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
-class ExterniOdkazEditView(UpdateView, LoginRequiredMixin):
+class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     model = ExterniOdkaz
     template_name = "core/transakce_modal.html"
     title = _("externiZdroj.modalForm.zmeniPaginaci.title.text")
