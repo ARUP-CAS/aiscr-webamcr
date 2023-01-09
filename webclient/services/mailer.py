@@ -26,12 +26,11 @@ from .mlstripper import MLStripper
 logger_s = structlog.get_logger(__name__)
 
 groups = {
-    "E-A-01": "AMČR: archivace záznamů",
-    "E-A-02": "AMČR: archivace záznamů",
-    "E-N-01": "AMČR-PAS: nové nálezy k potvrzení",
-    "E-N-02": "AMČR-PAS: archivace záznamů",
-    "E-N-05": "AMČR-PAS: nová žádost o spolupráci",
-    "E-K-01": "AMČR - Knihovna 3D: archivace záznamů"
+    "S-E-A-XX": "AMČR: archivace záznamů",
+    "S-E-N-01": "AMČR-PAS: nové nálezy k potvrzení",
+    "S-E-N-02": "AMČR-PAS: archivace záznamů",
+    "S-E-N-05": "AMČR-PAS: nová žádost o spolupráci",
+    "S-E-K-01": "AMČR - Knihovna 3D: archivace záznamů"
 }
 
 always_active = [
@@ -76,7 +75,8 @@ class Mailer():
         group_key = notification_type.pk
         if notification_type.ident_cely in groups.keys():
             try:
-                group = uzivatel.models.UserNotificationType.objects.get(ident_cely=groups[notification_type.ident_cely])
+                group = uzivatel.models.UserNotificationType.objects.get(
+                    ident_cely=groups[notification_type.ident_cely])
                 group_key = group.pk
             except ObjectDoesNotExist:
                 logger_s.debug("group not found exception")
@@ -147,7 +147,8 @@ class Mailer():
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         if not cls._notification_was_sent(notification_type, user):
-            html = render_to_string(notification_type.cesta_sablony, {"server_domain": settings.EMAIL_SERVER_DOMAIN_NAME})
+            html = render_to_string(notification_type.cesta_sablony,
+                                    {"server_domain": settings.EMAIL_SERVER_DOMAIN_NAME})
             cls.send(notification_type.predmet, user.email, html)
             cls._log_notification(notification_type=notification_type, receiver_object=user)
 

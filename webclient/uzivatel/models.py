@@ -43,7 +43,7 @@ logger_s = structlog.get_logger(__name__)
 
 
 def only_notification_groups():
-    return UserNotificationType.objects.filter(ident_cely__icontains='AMČR').all()
+    return UserNotificationType.objects.filter(ident_cely__icontains='S-E-').all()
 
 class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128)
@@ -70,8 +70,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True, null=True, validators=[validate_phone_number]
     )
     history = HistoricalRecords()
-    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
-                                                limit_choices_to={'ident_cely__icontains': 'AMČR'}, default=only_notification_groups)
+    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user', db_table='auth_user_notifikace_typ',
+                                                limit_choices_to={'ident_cely__icontains': 'S-E-'}, default=only_notification_groups)
     notification_log = GenericRelation('NotificationsLog')
     created_from_admin_panel = False
 
@@ -265,10 +265,10 @@ class UserNotificationType(models.Model):
     cesta_sablony = models.TextField(blank=True)
     notification_log = GenericRelation('NotificationsLog')
     class Meta:
-        db_table = "uzivatel_notifikace_typ"
+        db_table = "notifikace_typ"
 
     def __str__(self):
-        return self.ident_cely
+        return _(self.ident_cely)
 
 class NotificationsLog(models.Model):
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
@@ -278,7 +278,7 @@ class NotificationsLog(models.Model):
     created_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "notifications_log"
+        db_table = "notifikace_log"
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
