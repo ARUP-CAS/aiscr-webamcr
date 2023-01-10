@@ -5,7 +5,7 @@ where organizace = '-1'
 alter table externi_zdroj
 alter column organizace type INT using organizace::integer;
 alter table externi_zdroj
-add CONSTRAINT externi_zdroj_organizace_fkey FOREIGN KEY(organizace) REFERENCES organizace(id);
+add CONSTRAINT externi_zdroj_organizace_fkey FOREIGN KEY(organizace) REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
 update heslar h
 set razeni = c.rowNum
 from (
@@ -16,4 +16,4 @@ from (
         from heslar T2
         where T2.nazev_heslare = 36
     ) c
-where h.id = c.id
+where h.id = c.id;

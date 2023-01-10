@@ -27,7 +27,7 @@ update dokument set typ_dokumentu_posudek = substr(typ_dokumentu_posudek, 1, len
 CREATE OR REPLACE FUNCTION migratePosudkyFromDokument() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..10
+    FOR counter IN 1..20
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
@@ -150,23 +150,67 @@ alter table externi_odkaz add constraint externi_odkaz_vazba_fkey foreign key (v
 --alter table let add column pilot integer;
 --alter table let add constraint let_pilot_fkey foreign key (pilot) references osoba(id);
 
--- 7. migrace referenci na neident_akci z dokument_cast.vazba do neidnet_akce.dokument_cast
+-- 7. migrace referenci na neident_akci z dokument_cast.vazba a dokument_cast.vazba_druha do neidnet_akce.dokument_cast
 
 update neident_akce d set dokument_cast = sub.id from (select vazba, id from dokument_cast where vazba in (select id from neident_akce)) sub where d.id = sub.vazba;
+update neident_akce d set dokument_cast = sub.id from (select vazba_druha, id from dokument_cast where vazba_druha in (select id from neident_akce)) sub where d.id = sub.vazba_druha;
 -- smazu reference z vazby na neident_akci
 update dokument_cast set vazba = null where vazba in (select id from neident_akce);
+update dokument_cast set vazba_druha = null where vazba_druha in (select id from neident_akce);
+-- Převod PK na dokument_cast
+ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_pkey;
+ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
+ALTER TABLE neident_akce DROP COLUMN id;
+DROP SEQUENCE neident_akce_id_seq;
+ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_key;
+ALTER TABLE neident_akce ALTER COLUMN dokument_cast SET NOT NULL;
 
 -- 8. migrace externi_zdroj.sbornik_editor
-insert into externi_zdroj_editor(externi_zdroj, editor, poradi) values
-(920770,29277, 1),
-(778484,28785, 1),
-(778484,29256, 2),
-(778485,28785, 1),
-(778485,29256, 2),
-(734337,28771, 1),
-(809030,29810, 1),
-(700801,700800,1),
-(769546,29277, 1),
-(1030059,28950,1),
-(778488,28785, 1),
-(778488,29256, 2);
+
+-- a) Validace dat
+
+update externi_zdroj set sbornik_editor = substr(sbornik_editor, 1, length(sbornik_editor) - 1) where sbornik_editor like '%;';
+
+-- b) Migrace dat
+
+CREATE OR REPLACE FUNCTION migrateEditorFromExterniZdroj() RETURNS void AS $$
+DECLARE
+BEGIN
+    FOR counter IN 1..10
+    LOOP
+        RAISE NOTICE '%', counter;
+        BEGIN
+            insert into externi_zdroj_editor(externi_zdroj, editor, poradi) select distinct a.id, r.id, counter from externi_zdroj a join osoba r on r.vypis_cely = split_part(sbornik_editor, ';', counter) where split_part(a.sbornik_editor, ';', counter) != '';
+        END;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+select migrateEditorFromExterniZdroj();
+drop function migrateEditorFromExterniZdroj();
+
+-- 9. migrace vedoucich z neident_akce do tabulky neident_akce_vedouci
+-- Přesunuto z migrace_dat_2.sql
+
+-- a) Validace dat
+-- b) Migrace dat
+
+CREATE OR REPLACE FUNCTION migrateVedouciFromNeidentAkce() RETURNS void AS $$
+DECLARE
+BEGIN
+    FOR counter IN 1..10
+    LOOP
+        RAISE NOTICE '%', counter;
+        BEGIN
+            insert into neident_akce_vedouci(neident_akce, vedouci) select distinct a.dokument_cast, r.id from neident_akce a join osoba r on r.vypis_cely = split_part(vedouci, ';', counter) where split_part(a.vedouci, ';', counter) != '';
+        END;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+select migrateVedouciFromNeidentAkce();
+drop function migrateVedouciFromNeidentAkce();
+
+-- c) Test migrace
+
+-- TODO

@@ -1,11 +1,11 @@
 -- Adding path to the soubor table
-ALTER TABLE "soubor" ADD COLUMN "path" varchar(100) DEFAULT 'not specified yet' NOT NULL;
+ALTER TABLE "soubor" ADD COLUMN "path" text DEFAULT 'not specified yet' NOT NULL;
 
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 4 na 859)
 -- TODO nezapomenout kdyz se bude precislovavat
-ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
+-- ALTER TABLE "organizace" ALTER COLUMN "zverejneni_pristupnost" SET DEFAULT 859;
 -- Opravit defaultni prisutpnost u organizace aby ukazovala v heslari na archivare (z 1 na 857)
-ALTER TABLE "archeologicky_zaznam" ALTER COLUMN "pristupnost" SET DEFAULT 857;
+-- ALTER TABLE "archeologicky_zaznam" ALTER COLUMN "pristupnost" SET DEFAULT 857;
 
 ALTER TABLE projekt_katastr add column id serial;
 ALTER TABLE projekt_katastr rename column projekt to projekt_id;
@@ -70,7 +70,7 @@ update historie h set typ_zmeny = 2 from (select his.id as hid from historie his
 --ARCHIVACE = 3
 --VRACENI = 4
 -- TODO zmigrovat dokumenty ktere nejsou modely 3D ze stavu 2 na stav 1 POZOR: jenom ty dokumenty kterych akce (archeologicky_zaznam) jsou ve stavu 1
-update dokument set stav = 1 where id in (select d.id from dokument as d join dokument_cast as dc on dc.dokument = d.id join archeologicky_zaznam as az on az.id = dc.archeologicky_zaznam where d.rada !=863 and d.stav = 2 and az.stav=1);
+update dokument set stav = 1 where id in (select d.id from dokument as d join dokument_cast as dc on dc.dokument = d.id join archeologicky_zaznam as az on az.id = dc.archeologicky_zaznam where d.rada != (SELECT id FROM heslar WHERE ident_cely = 'HES-000870') and d.stav = 2 and az.stav=1);
 --Takze:
 -- 5 -> 4
 -- 6 a 7 smazat -> ANO
@@ -79,6 +79,7 @@ delete from historie where id in (select his.id as hid from historie his join hi
 
 -- Jak vyresit username? Ted je username ident_cely a prihlasovani je udelano skrz email
 alter table auth_user rename column username to ident_cely;
+ALTER TABLE auth_user ADD DEFAULT ('U-'::text || "right"(concat('000000', (nextval('user_storage_user_id'::regclass))::text), 6)) FOR ident_cely;
 
 -- Akce a lokality ted maji spolecneho rodice (Archeologicky zaznam), nastaveni spravneho typu_vazby v historii
 -- Ukazkovy select pro relevantni zaznamy historie pro archeologicky_zaznam typu akce
@@ -87,9 +88,11 @@ update historie_vazby set typ_vazby='archeologicky_zaznam' where typ_vazby='akce
 
 -- Jeste jsem zapomel domigrovat tranzakce akci 3 a 7 na 4
 -- TODO Issue 107
---update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111);
--- COMMENT: tahle query je nejaka pomala, nevim proc ... :(
---update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7);
+-- update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=111);
+UPDATE historie h SET typ_zmeny = 4 WHERE id IN (SELECT his.id AS hid FROM historie his WHERE his.vazba IN (SELECT hv.id FROM historie_vazby hv WHERE hv.typ_vazby='archeologicky_zaznam') AND his.typ_zmeny=111);
+-- COMMENT: tahle query je nejaka pomala, nevim proc ... :( DN: nahrazeno alternativou;
+-- update historie h set typ_zmeny = 4 where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='archeologicky_zaznam' and his.typ_zmeny=7);
+UPDATE historie h SET typ_zmeny = 4 WHERE id IN (SELECT his.id AS hid FROM historie his WHERE his.vazba IN (SELECT hv.id FROM historie_vazby hv WHERE hv.typ_vazby='archeologicky_zaznam') AND his.typ_zmeny=7);
 
 -- Odstraneni tranzakce AKTUALIZACE z historie samostatnych nalezu
 delete from historie where id in (select his.id as hid from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny = 8);
@@ -174,6 +177,7 @@ update historie set typ_zmeny_text = 'EZ23' where id in (select his.id from hist
 alter table historie rename column typ_zmeny to typ_zmeny_old;
 alter table historie rename column typ_zmeny_text to typ_zmeny;
 alter table historie alter typ_zmeny_old drop not null;
+alter table historie alter column typ_zmeny set not null;
 
 -- COMMENT: tenhle sloupec tam nemusi byt, je to jen pro migraci
 alter table archeologicky_zaznam alter column stav_stary drop not null;

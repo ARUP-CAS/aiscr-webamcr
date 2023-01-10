@@ -1,154 +1,79 @@
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='sídliště nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='hrazené sídliště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='osídlený skalní prostor';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='stanice/tábořiště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='samostatná usedlost';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='vesnice/městečko';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='výšinné sídliště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='sídliště specializované komunity';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='hradiště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='klášter';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='klášter';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='město';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='město';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='protourbánní aglomerace';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='protourbánní aglomerace';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='předměstí';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='předměstí';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='rondel/rondeloid';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='sídlo elity nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='dvorec/dvůr';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='dvorec/dvůr';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='hrad';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='hrad';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='městský palác';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='tvrz/hrádek';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='tvrz/hrádek';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='zámek/zámeček/vila';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='kultovní areál nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='kaple';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='kostel';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='kříž/boží muka';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='kultovní místo';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='synagoga';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='poh'and he.heslo ='pohřební areál nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='poh'and he.heslo ='izolovaný pohřeb';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='poh'and he.heslo ='pohřebiště/hřbitov';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kul'and he.heslo ='pohřebiště v sakrální stavbě';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='poh'and he.heslo ='pohřebiště v sakrální stavbě';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='areál nezemědělské výroby nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='mlýn';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='mlýn';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='dehtárna';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='milířiště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='pivovar';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='sklárna';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='železářský areál';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='těž'and he.heslo ='areál těžby nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='těž'and he.heslo ='důl';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='těž'and he.heslo ='lom';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='těž'and he.heslo ='rýžoviště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='areál zemědělské výroby nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='obora';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='pastvina/louka';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='pole';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='zahrada/sad';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='areál vojenských aktivit nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='bojiště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='pevnost';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='pevnost';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='polní opevnění';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='strážnice/předsunutá bašta';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='síd'and he.heslo ='vojenský tábor';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='boj'and he.heslo ='vojenský tábor';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kom'and he.heslo ='komunikace nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kom'and he.heslo ='cesta';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kom'and he.heslo ='most/brod';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='kom'and he.heslo ='železnice';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='dep'and he.heslo ='depot';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='vodní dílo nesp.';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='jez';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='kanál/náhon';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='přehrada';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='výr'and he.heslo ='rybník';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='jin'and he.heslo ='areál jiné aktivity';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='jin'and he.heslo ='místo sběru';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='jin'and he.heslo ='popraviště';
-INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ) 
-SELECT h.id, he.id, 'výchozí hodnota' FROM heslar h, heslar he where h.zkratka ='jin'and he.heslo ='park';
+INSERT INTO  heslar_hierarchie (heslo_podrazene,heslo_nadrazene,typ)
+VALUES
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000013'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000014'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000015'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000016'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000017'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000018'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000028'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000043'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000046'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000064'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000065'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000066'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000067'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000068'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000069'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000070'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000072'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000073'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000074'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000075'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000076'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000001'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000081'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000002'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000025'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000002'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000026'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000002'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000027'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000002'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000077'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000014'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000028'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000029'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000030'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000031'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000036'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000037'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000038'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000039'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000040'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000052'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000053'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000054'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000055'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000074'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000075'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000076'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000078'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000079'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000080'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000003'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000082'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000004'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000032'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000004'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000033'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000004'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000034'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000004'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000035'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000012'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000019'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000020'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000021'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000022'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000023'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000024'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000073'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000005'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000077'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000006'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000047'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000006'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000048'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000006'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000049'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000006'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000050'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000007'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000051'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000015'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000017'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000041'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000042'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000043'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000044'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000045'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000008'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000046'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000009'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000056'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000009'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000057'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000009'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000058'), 'výchozí hodnota'),
+((SELECT id FROM heslar WHERE ident_cely = 'HES-000009'), (SELECT id FROM heslar WHERE ident_cely = 'HES-000059'), 'výchozí hodnota');

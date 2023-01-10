@@ -124,7 +124,7 @@ ALTER TABLE nalez_predmet DROP CONSTRAINT nalez_predmet_komponenta_fkey;
 ALTER TABLE nalez_predmet DROP CONSTRAINT nalez_predmet_specifikace_fkey;
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_fkey;
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_katastr_fkey;
-ALTER TABLE neident_akce_vedouci DROP CONSTRAINT neident_akce_vedouci_neident_akce_fkey;
+ALTER TABLE neident_akce_vedouci DROP CONSTRAINT neident_akce_vedouci_neident_akce_fk;
 ALTER TABLE neident_akce_vedouci DROP CONSTRAINT neident_akce_vedouci_vedouci_fk;
 ALTER TABLE notifikace_projekt DROP CONSTRAINT notifikace_projekt_katastr_fkey;
 ALTER TABLE notifikace_projekt DROP CONSTRAINT notifikace_projekt_uzivatel_fkey;
@@ -173,3 +173,10 @@ ALTER TABLE uzivatel_spoluprace DROP CONSTRAINT uzivatel_spoluprace_vedouci_fkey
 ALTER TABLE uzivatel_spoluprace DROP CONSTRAINT vazba_spoluprace_historie_fkey;
 ALTER TABLE vyskovy_bod DROP CONSTRAINT vyskovy_bod_adb_fkey;
 ALTER TABLE vyskovy_bod DROP CONSTRAINT vyskovy_bod_typ_fkey;
+
+ALTER TABLE dokument_cast DROP CONSTRAINT dokument_cast_projekt_fkey;
+ALTER TABLE dokument_cast DROP CONSTRAINT dokument_cast_dokument_fkey;
+ALTER TABLE soubor DROP CONSTRAINT soubor_historie_fkey;
+ALTER TABLE soubor DROP CONSTRAINT soubor_projekt_fkey;
+ALTER TABLE stats_login DROP CONSTRAINT stats_login_uzivatel_fkey;
+ALTER TABLE uzivatel_historicaluser DROP CONSTRAINT uzivatel_historicaluser_history_user_id_fkey;

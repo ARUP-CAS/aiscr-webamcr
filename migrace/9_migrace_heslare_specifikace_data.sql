@@ -35,9 +35,9 @@ update akce set specifikace_data = sel.new_id from (select id as new_id from hes
 delete from heslar where (heslo = 'po roce' or heslo = 'kolem' or heslo = 'neznámo' or heslo = 'v letech') and nazev_heslare = 27;
 
 -- Uprava razeni
-update heslar set razeni  = 1 where heslo = 'přesně';
-update heslar set razeni  = 2 where heslo = 'přesně v letech';
-update heslar set razeni  = 3 where heslo = 'někdy v letech';
+update heslar set razeni  = 1 where (heslo = 'přesně' AND nazev_heslare = 27);
+update heslar set razeni  = 2 where (heslo = 'přesně v letech' AND nazev_heslare = 27);
+update heslar set razeni  = 3 where (heslo = 'někdy v letech' AND nazev_heslare = 27);
 
 -- Zmena 1000-01-01 na 1800-01-01
 update akce set datum_zahajeni = '1800-01-01' where datum_zahajeni  = '1000-01-01';

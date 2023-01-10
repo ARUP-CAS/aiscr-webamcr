@@ -1,10 +1,10 @@
-insert into heslar_hierarchie
-values (133, 1120, 'podřízenost'),
-    (134, 1120, 'podřízenost'),
-    (135, 1120, 'podřízenost'),
-    (132, 1121, 'podřízenost'),
-    (136, 1122, 'podřízenost'),
-    (137, 1122, 'podřízenost'),
-    (138, 1122, 'podřízenost'),
-    (139, 1122, 'podřízenost'),
-    (140, 1122, 'podřízenost');
+INSERT INTO heslar_hierarchie
+VALUES ((SELECT id FROM heslar WHERE ident_cely = 'HES-000133'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001122'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000134'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001122'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000135'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001122'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000132'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001123'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000136'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001124'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000137'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001124'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000138'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001124'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000139'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001124'), 'podřízenost'),
+    ((SELECT id FROM heslar WHERE ident_cely = 'HES-000140'), (SELECT id FROM heslar WHERE ident_cely = 'HES-001124'), 'podřízenost');
