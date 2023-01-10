@@ -40,7 +40,7 @@ ALTER TABLE auth_user_notifikace_typ
     DROP CONSTRAINT uzivatel_notifikace__usernotificationtype_fk_uzivatel_;
 
 ALTER TABLE auth_user_notifikace_typ
-    ADD CONSTRAINT uzivatel_notifikace__usernotificationtype_fk_uzivatel_
+    ADD CONSTRAINT notifikace_typ__usernotificationtype_fk_uzivatel_
         FOREIGN KEY (usernotificationtype_id)
             REFERENCES notifikace_typ (id)
             ON UPDATE CASCADE
@@ -50,7 +50,7 @@ ALTER TABLE auth_user_notifikace_typ
     DROP CONSTRAINT uzivatel_notifikace_typ_user_user_id_fk_auth_user_id;
 
 ALTER TABLE auth_user_notifikace_typ
-    ADD CONSTRAINT uzivatel_notifikace_typ_user_user_id_fk_auth_user_id
+    ADD CONSTRAINT notifikace_typ_user_user_id_fk_auth_user_id
         FOREIGN KEY (user_id)
             REFERENCES auth_user (id)
             ON UPDATE CASCADE
@@ -62,7 +62,7 @@ ALTER TABLE notifikace_log
     DROP CONSTRAINT notifications_log_content_type_id_0d88bca2_fk_django_content_ty;
 
 ALTER TABLE notifikace_log
-    ADD CONSTRAINT uzivatel_notifikace_typ_user_user_id_fk_auth_user_id
+    ADD CONSTRAINT notifikace_typ_user_user_id_fk_auth_user_id
         FOREIGN KEY (content_type_id)
             REFERENCES django_content_type (id)
             ON UPDATE CASCADE
@@ -72,7 +72,7 @@ ALTER TABLE notifikace_log
     DROP CONSTRAINT notifications_log_notification_type_id_2eefa8d4_fk_dump_notific;
 
 ALTER TABLE notifikace_log
-    ADD CONSTRAINT notifications_log_notification_type_id_2eefa8d4_fk_dump_notific
+    ADD CONSTRAINT notifikace_log_notifikace_typ_id_2eefa8d4_fk_dump_notific
         FOREIGN KEY (notification_type_id)
             REFERENCES notifikace_typ (id)
             ON UPDATE CASCADE
