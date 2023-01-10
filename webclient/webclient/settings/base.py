@@ -19,15 +19,19 @@ file_path = (
 with open(file_path, "r") as f:
     secrets = json.load(f)
 
-def get_secret(setting):
-    try:
-        return secrets[setting]
-    except KeyError:
-        error_msg = "Add {0} variable to secrets.json file".format(setting)
-        raise ImproperlyConfigured(error_msg)
+
+def get_secret(setting, default_value=None):
+    if default_value is None:
+        try:
+            return secrets[setting]
+        except KeyError:
+            error_msg = "Add {0} variable to secrets.json file".format(setting)
+            raise ImproperlyConfigured(error_msg)
+    else:
+        secrets.get(setting, default_value)
 
 
-def get_mail_secret(setting):
+def get_mail_secret(setting, default_value=None):
     file_mail_path = (
         "/run/secrets/mail_conf"
         if os.path.exists("/run/secrets/mail_conf")
@@ -37,11 +41,14 @@ def get_mail_secret(setting):
     )
     with open(file_mail_path, "r") as file:
         secrets_mail = json.load(file)
-    try:
-        return secrets_mail[setting]
-    except KeyError:
-        error_msg = "Add {0} variable to secrets.json file".format(setting)
-        raise ImproperlyConfigured(error_msg)
+    if default_value is None:
+        try:
+            return secrets_mail[setting]
+        except KeyError:
+            error_msg = "Add {0} variable to secrets.json file".format(setting)
+            raise ImproperlyConfigured(error_msg)
+    else:
+        secrets_mail.get(setting, default_value)
 
 
 SECRET_KEY = get_secret("SECRET_KEY")
@@ -342,7 +349,7 @@ EMAIL_HOST = get_mail_secret("EMAIL_HOST")
 EMAIL_PORT = get_mail_secret("EMAIL_PORT")
 EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
-EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME")
+EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
