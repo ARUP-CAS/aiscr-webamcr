@@ -6,14 +6,18 @@
     <title>{{ title }}</title>
 </head>
 <body>
-
-{% trans "dokument.emails.dwr.dobrý_den" %},
-
- {% trans "dokument.emails.dwr.vámi_odeslaný_dokument" %} {{ ident_cely }} {% trans "dokument.emails.dwr.byl_vrácen_do_stavu" %} {{ state }}."
-
-{% trans "dokument.emails.dwr.důvod" %}: {{ reason }}
-
-{% trans "dokument.emails.dwr.detaily_zjistíte_po_přihlášení_do_knihovny_3d_v_amčr" %}.
-
+<p>{% trans "dokument.emails.dwr.dobrý_den" %},</p>
+<p>
+    {% trans "dokument.emails.dwr.vámi_odeslaný_dokument" %} <b>{{ ident_cely }}</b> {% trans "dokument.emails.dwr.byl_vrácen_do_stavu" %} <b>{{ state }}</b>.
+</p>
+<p><b>{% trans "dokument.emails.dwr.důvod" %}:</b> {{ reason }}</p>
+<p>{% trans "dokument.emails.dwr.detaily_zjistíte_po_přihlášení_do_knihovny_3d_v_amčr" %}.</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "dokument.emails.dwr.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "dokument.emails.dwr.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

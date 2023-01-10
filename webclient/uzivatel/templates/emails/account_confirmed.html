@@ -1,6 +1,6 @@
 {% load i18n %}
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -9,21 +9,39 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "uzivatel.emails.ac.dobry_den" %},
-
-{% trans "uzivatel.emails.ac.pro_tuto_emailovou_adresu_byl_registrován_nový_uživatelský_účet_do_AMČR_s_následujícími_údaji" %}:
+<p>
+    {% trans "uzivatel.emails.ac.dobry_den" %},
+</p>
+<p>
+    {% trans
+    "uzivatel.emails.ac.pro_tuto_emailovou_adresu_byl_registrován_nový_uživatelský_účet_do_AMČR_s_následujícími_údaji"
+    %}:
+</p>
 <ul style="list-style: none">
-    <li>ID: {{ id }}</li>
-    <li>{% trans "uzivatel.emails.ac.jméno" %}: {{ name }}</li>
-    <li>{% trans "uzivatel.emails.ac.příjmení" %}: {{ surname }}</li>
-    <li>{% trans "uzivatel.emails.ac.organizace" %}: {{ organization }}</li>
-    <li>{% trans "uzivatel.emails.ac.email" %}: {{ email }}</li>
-    <li>{% trans "uzivatel.emails.ac.telefon" %}: {{ phone }}</li>
-    <li>{% trans "uzivatel.emails.ac.heslo_vámi_zvolené_heslo" %}</li>
-    <li>{% trans "uzivatel.emails.ac.user_role" %}: {{ role }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.id" %}:</b> {{ id }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.jméno" %}:</b> {{ name }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.příjmení" %}:</b> {{ surname }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.organizace" %}:</b> {{ organization }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.email" %}:</b> {{ email }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.telefon" %}:</b> {{ phone }}</li>
+    <li><b>{% trans "uzivatel.emails.ac.heslo"%}:</b> {% trans "uzivatel.emails.ac.heslo_vámi_zvolené_heslo" %}</li>
+    <li><b>{% trans "uzivatel.emails.ac.user_role" %}:</b> {{ role }}</li>
 </ul>
 <p>
-    {% trans "uzivatel.emails.ac.upozornění_registrace_v_amčr_uživatele_neopravňuje_k_provádění_archeologických_výzkumů_na_území_české_republiky_a_to_vč_vyhledávání_archeologických_nálezů" %} {% trans "uzivatel.emails.ac.tuto_činnost_mohu_vykonávat_pouze_oprávněné_archeologické_organizace_a_jejich_oficiální_spolupracovníci" %} {% trans "uzivatel.emails.ac.k_možnostem_spolupráce_více_viz_https://amcr-info.aiscr.cz/pas." %}
+    {% trans "uzivatel.emails.ac.vyčkejte_na_aktivaci_účtu_administrátorem_která_vám_bude_potvrzena_na_tento_email_obvykle_nejbližší_pracovní_den_v_běžné_pracovní_době." %}
+</p>
+<p>
+    {% trans "uzivatel.emails.ac.upozornění_registrace_v_amčr_uživatele_neopravňuje_k_provádění_archeologických_výzkumů_na_území_české_republiky_a_to_vč_vyhledávání_archeologických_nálezů" %}
+    {% trans "uzivatel.emails.ac.tuto_činnost_mohu_vykonávat_pouze_oprávněné_archeologické_organizace_a_jejich_oficiální_spolupracovníci" %} {% trans "uzivatel.emails.ac.k_možnostem_spolupráce_více_viz_https://amcr-info.aiscr.cz/pas." %}
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans
+    "uzivatel.emails.ac.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz"
+    %}
+    <br>
+    {% trans "uzivatel.emails.ac.odesláno_z" %} {{ server_domain }}
 </p>
 </body>
 </html>

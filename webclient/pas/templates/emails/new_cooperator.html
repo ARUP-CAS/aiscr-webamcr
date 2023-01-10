@@ -6,20 +6,26 @@
     <title>{{ title }}</title>
 </head>
 <body>
-
-{% trans 'pas.emails.nc.dobrý_den' %},
-
-{% trans "pas.emails.nc.nový_uživatel_žádá_o_zařazení_mezi_spolupracovníky" %}:
-
-{% trans "pas.emails.nc.id" %}: {{ ident_cely }}
-{% trans "pas.emails.nc.jméno" %}: {{ name }}
-{% trans "pas.emails.nc.příjmení" %}: {{ surname }}
-{% trans "pas.emails.nc.organizace" %}: {{ organization }}
-{% trans "pas.emails.nc.email_(přihlašovací_jméno)" %}: {{ email }}
-{% trans "pas.emails.nc.telefon" %}: {{ phone }}
-{% trans "pas.emails.nc.zdůvodnění" %}: {{ message }}
-
-{% trans "pas.emails.nc.spolupráci_potvrdíte_po_přihlášení_do_amčr-pas_nebo_kliknutím_na_tento_odkaz" %}: {{ link }}
-
+<p>{% trans "pas.emails.nc.dobrý_den" %},</p>
+<p>{% trans "pas.emails.nc.nový_uživatel_žádá_o_zařazení_mezi_spolupracovníky" %}:</p>
+<ul style="list-style: none">
+    <li><b>{% trans "pas.emails.nc.id" %}:</b> {{ ident_cely }}</li>
+    <li><b>{% trans "pas.emails.nc.jméno" %}:</b> {{ name }}</li>
+    <li><b>{% trans "pas.emails.nc.příjmení" %}:</b> {{ surname }}</li>
+    <li><b>{% trans "pas.emails.nc.organizace" %}:</b> {{ organization }}</li>
+    <li><b>{% trans "pas.emails.nc.email_(přihlašovací_jméno)" %}</b>: {{ email }}</li>
+    <li><b>{% trans "pas.emails.nc.telefon" %}:</b> {{ phone }}</li>
+    <li><b>{% trans "pas.emails.nc.zdůvodnění" %}:</b> {{ message }}</li>
+</ul>
+<p>
+    {% trans "pas.emails.nc.spolupráci_potvrdíte_po_přihlášení_do_amčr-pas_nebo_kliknutím_na_tento_odkaz" %}: {{ link }}
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "pas.emails.nc.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "pas.emails.nc.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

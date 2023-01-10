@@ -6,17 +6,21 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'pas.emails.pwa.dobrý_den' %},
+<p>{% trans 'pas.emails.pwa.dobrý_den' %},</p>
 
 {% trans "pas.emails.pwa.v_amčr-pas_byly_dnes_vaším_spolupracovníkem_odeslány_nové_nálezy_ke_schválení" %}:
-
 <ul style="list-style: none">
 {% for id in ids %}
     <li>{{ id }}</li>
 {% endfor %}
 </ul>
-
-{% trans "pas.emails.pwa.detaily_zjistíte_po_přihlášení_do amčr-pas" %}.
-
+<p>{% trans "pas.emails.pwa.detaily_zjistíte_po_přihlášení_do amčr-pas" %}.</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "pas.emails.pwa.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "pas.emails.pwa.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

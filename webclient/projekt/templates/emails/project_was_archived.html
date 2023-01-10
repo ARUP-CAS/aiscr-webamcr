@@ -6,13 +6,22 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "project.emails.pwa.dobrý_den" %},
-
-{% trans "project.emails.pwa.vámi_odeslaný_projekt" %} {{ ident_cely }} {% trans "project.emails.pwa.na_katastru" %} {{ katastr }} {% trans "project.emails.pwa.byl_převeden_do_stavu" %}
-{{ state }}.
-
-{% trans "project.emails.pwa.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.
-{% trans "project.emails.pwa.nejpozději_během_následujícího_dne_bude_záznam_zveřejněn_v_digitálním_archivu_amčr" %}.
-
+<p>{% trans "project.emails.pwa.dobrý_den" %},</p>
+<p>
+    {% trans "project.emails.pwa.vámi_odeslaný_projekt" %}
+    <b>{{ ident_cely }}</b> {% trans "project.emails.pwa.na_katastru" %}<b>{{ katastr }}</b> {% trans "project.emails.pwa.byl_převeden_do_stavu" %}
+    <b>{{ state }}</b>.
+</p>
+<p>
+    {% trans "project.emails.pwa.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.
+    {% trans "project.emails.pwa.nejpozději_během_následujícího_dne_bude_záznam_zveřejněn_v_digitálním_archivu_amčr" %}.
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "project.emails.pwa.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "project.emails.pwa.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

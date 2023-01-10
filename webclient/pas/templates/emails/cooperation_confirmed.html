@@ -6,12 +6,18 @@
     <title>{{ title }}</title>
 </head>
 <body>
-
-{% trans "pas.emails.cc.dobrý_den" %},
-
- {% trans "pas.emails.cc.vaše_spolupráce_s_uživatelem" %} {{ name }} {{ surname }} ({{ organization }}) {% trans "pas.emails.cc.byla_úspěšně_potvrzena." %}
-
-{% trans "pas.emails.cc.detaily_o_spolupráci_získáte_po_přihlášení_do_amčr-pas" %}.
-
+<p>{% trans "pas.emails.cc.dobrý_den" %},</p>
+<p>
+    {% trans "pas.emails.cc.vaše_spolupráce_s_uživatelem" %} <b>{{ name }}</b> <b>{{ surname }}</b>
+    (<b>{{ organization }}</b>) {% trans "pas.emails.cc.byla_úspěšně_potvrzena." %}
+</p>
+<p>{% trans "pas.emails.cc.detaily_o_spolupráci_získáte_po_přihlášení_do_amčr-pas" %}.</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "pas.emails.cc.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "pas.emails.cc.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

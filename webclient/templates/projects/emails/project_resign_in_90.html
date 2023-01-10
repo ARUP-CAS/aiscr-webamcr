@@ -6,11 +6,22 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans 'project.emails.pri9.dobrý_den' %},
-
- {% trans "project.emails.pri9.v_aplikaci_AMČR_za_90_dní_uplyne_lhůta_pro_odevzdání_nálezové_zprávy_u_projektu" %} {{ ident_cely }} {% trans "project.emails.pri9.na_katastru" %} {{ katastr }}.
-
-{% trans "project.emails.pri9.detaily_projektu_zjistíte_po_přihlášení_do_amčr" %}.
-
+<p>
+    {% trans 'project.emails.pri9.dobrý_den' %},
+</p>
+<p>
+    {% trans "project.emails.pri9.v_aplikaci_AMČR_za_90_dní_uplyne_lhůta_pro_odevzdání_nálezové_zprávy_u_projektu" %}
+    <b>{{ ident_cely }}</b> {% trans "project.emails.pri9.na_katastru" %} <b>{{ katastr }}</b>{% endblocktrans %}.
+</p>
+<p>
+    {% trans "project.emails.pri9.detaily_projektu_zjistíte_po_přihlášení_do_amčr" %}.
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "project.emails.pri9.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "project.emails.pri9.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

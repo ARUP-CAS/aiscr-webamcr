@@ -6,17 +6,26 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "project.emails.rmp.vážená_paní/vážený_pane" %},
-
- {% trans "project.emails.rmp.oznámení_stavební_nebo_jiné_činnosti" %} ({{ podnet }}) {% trans "project.emails.rmp.na_území_s_archeologickými_nálezy_na_k.ú." %} {{ katastr }} ({{ okres }}),{% trans "project.emails.rmp.parcela" %} {{ parcela }} ({{ lokalita }}) {% trans "project.emails.rmp.podle_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči_bylo_schváleno_a_zaevidováno." %}
-{% trans "v_případě_nutnosti_provedení_archeologického_výzkumu_vás_bude_kontaktovat_archeologický_ústav_av_čr_nebo_některá_z_organizací_oprávněných_provádět_archeologické_výzkumy_s_nimiž_je_na_základě_22_odst._1_výše_uvedeného_zákona_nutno_uzavřít_dohodu_o_podmínkách_provedení_archeologického_výzkumu" %}.
-
-{% trans "project.emails.rmp.s_pozdravem" %}
-
-{% trans "project.emails.rmp.archeologický_ústav_av_čr_praha_v._v._i."%}
-
-{% trans "project.emails.rmp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
-{% trans "project.emails.rmp.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310." %}
-
+<p>{% trans "project.emails.rmp.vážená_paní/vážený_pane" %},</p>
+<p>{% trans "project.emails.rmp.děkujeme_za_oznámení_o_stavební_nebo_jiné_činnosti" %}
+    (<b>{{ podnet }}</b>) {% trans "project.emails.rmp.na_území_s_archeologickými_nálezy_na_k.ú." %}<b>{{ katastr }}</b>
+    (<b>{{ okres }}</b>), {% trans "project.emails.rmp.parcela" %} <b>{{ parcela }}</b>
+    (<b>{{ lokalita }}</b>) {% trans "project.emails.rmp.podle_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči." %}
+    {% trans "project.emails.rmp.ve_věci_uzavření_dohody_o_provedení_záchranného_archeologického_výzkumu_vás_bude_kontaktovat
+    organizace" %}<b>{{ organization }}</b>, {% trans "project.emails.rmp.která_je_oprávněna_provádět_archeologické_výzkumy" %}
+</p>
+<p>{% trans "project.emails.rmp.s_pozdravem" %}</p>
+<p>{% trans "project.emails.rmp.archeologický_ústav_av_čr_brno_v_v_i" %}</p>
+<p>
+    {% trans "project.emails.rmp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
+    {% trans "project.emails.rmp.vaše_případné_dotazy_pište_na_adresu_oznameni@arub_cz_nebo_volejte_na_tel_420_515_911_133_jihomoravský_a_zlínský_kraj_420_515_911_121_vysočina_a_olomoucký_kraj_420_553_821_603_moravskoslezský_kraj" %}
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "project.emails.rmp.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "project.emails.rmp.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>

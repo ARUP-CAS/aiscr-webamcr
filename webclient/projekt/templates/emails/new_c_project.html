@@ -6,20 +6,25 @@
     <title>{{ title }}</title>
 </head>
 <body>
-{% trans "project.emails.ncp.vážená_paní/vážený_pane" %},
-
-{% trans "project.emails.ncp.oznámení_stavební_nebo_jiné_činnosti" %} ({{ podnet }}) {% trans "project.emails.ncp.na území s archeologickými nálezy
-na k.ú." %} {{ katastr }} ({{ okres }}), {% trans "project.emails.ncp.parcela" %} {{ parcela }}
-({{ lokalita }}) {% trans "project.emails.ncp.podle_§22_odst._2_zákona_č._20/1987_Sb.,_o" %}
-{% trans "project.emails.ncp.státní_památkové_péči_bylo_schváleno_a_zaevidováno." %}
-{% trans "project.emails.ncp.v_případě_nutnosti_provedení_archeologického_výzkumu_vás_bude_kontaktovat_archeologický_ústav_av_čr_nebo_některá_z_organizací_oprávněných_provádět_archeologické_výzkumy,_s_nimiž_je_na_základě_§22_odst._1_výše_uvedeného_zákona_nutno_uzavřít_dohodu_o_podmínkách_provedení_archeologického_výzkumu" %}.
-
-{% trans "project.emails.ncp.s_pozdravem" %}
-
-{% trans "project.emails.ncp.archeologický_ústav_av_čr,_praha,_v._v._i." %}
-
-{% trans "project.emails.ncp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
-{% trans "project.emails.ncp.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310." %}
-
+<p>{% trans "project.emails.ncp.vážená_paní/vážený_pane" %},</p>
+<p>{% trans "project.emails.ncp.oznámení_stavební_nebo_jiné_činnosti" %} (<b>{{ podnet }}</b>) {% trans "project.emails.ncp.na území s archeologickými nálezy
+na k.ú." %} <b>{{ katastr }}</b> (<b>{{ okres }}</b>), {% trans "project.emails.ncp.parcela" %} <b>{{ parcela }}</b>
+    (<b>{{ lokalita }}</b>) {% trans "project.emails.ncp.podle_§22_odst._2_zákona_č._20/1987_Sb.,_o" %}
+    {% trans "project.emails.ncp.státní_památkové_péči_bylo_schváleno_a_zaevidováno." %}
+    {% trans "project.emails.ncp.v_případě_nutnosti_provedení_archeologického_výzkumu_vás_bude_kontaktovat_archeologický_ústav_av_čr_nebo_některá_z_organizací_oprávněných_provádět_archeologické_výzkumy,_s_nimiž_je_na_základě_§22_odst._1_výše_uvedeného_zákona_nutno_uzavřít_dohodu_o_podmínkách_provedení_archeologického_výzkumu" %}.
+</p>
+<p>{% trans "project.emails.ncp.s_pozdravem" %}</p>
+<p>{% trans "project.emails.ncp.archeologický_ústav_av_čr,_praha,_v._v._i." %}</p>
+<p>
+    {% trans "project.emails.ncp.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
+    {% trans "project.emails.ncp.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310." %}
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "project.emails.ncp.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "project.emails.ncp.odesláno_z" %} {{ server_domain }}
+</p>
 </body>
 </html>
