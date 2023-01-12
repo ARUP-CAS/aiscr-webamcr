@@ -4,6 +4,10 @@ import mimetypes
 import os
 import re
 import unicodedata
+from django_tables2 import SingleTableMixin
+from django_filters.views import FilterView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
 
 import structlog
 from django.conf import settings
@@ -653,3 +657,69 @@ class ExportMixinDate(ExportMixin):
     def get_export_filename(self, export_format):
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         return "{}{}.{}".format(self.export_name, now, export_format)
+
+
+class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
+    """
+    View used in Search lists as base for all ListViews.
+    """
+    template_name = "search_list.html"
+    paginate_by = 100
+    allow_empty = True
+    export_formats = ["csv", "json", "xlsx"]
+    page_title = _("lokalita.vyber.pageTitle")
+    app = "lokalita"
+    toolbar = "toolbar_akce.html"
+    search_sum = _("lokalita.vyber.pocetVyhledanych")
+    pick_text = _("lokalita.vyber.pickText")
+    hasOnlyVybrat_header = _("lokalita.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("lokalita.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("lokalita.vyber.header.hasOnlyArchive")
+    hasOnlyPotvrdit_header = _("lokalita.vyber.header.hasOnlyPotvrdit")
+    default_header = _("lokalita.vyber.header.default")
+    toolbar_name = _("lokalita.template.toolbar.title")
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("per_page", self.paginate_by)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = self.export_formats
+        context["page_title"] = self.page_title
+        context["app"] = self.app
+        context["toolbar"] = self.toolbar
+        context["search_sum"] = self.search_sum
+        context["pick_text"] = self.pick_text
+        context["hasOnlyVybrat_header"] = self.hasOnlyVybrat_header
+        context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
+        context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
+        context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
+        context["default_header"] = self.default_header
+        context["toolbar_name"] = self.toolbar_name
+        return context
+
+
+class SearchListChangeColumnsView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        if "vychozi_skryte_sloupce" not in request.session:
+            request.session["vychozi_skryte_sloupce"] = {}
+        app = json.loads(request.body.decode("utf8"))["app"]
+        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
+        zmena = json.loads(request.body.decode("utf8"))["zmena"]
+        if app not in request.session["vychozi_skryte_sloupce"]:
+            request.session["vychozi_skryte_sloupce"][app] = []
+        skryte_sloupce = request.session["vychozi_skryte_sloupce"][app]
+        if zmena == "zobraz":
+            try:
+                skryte_sloupce.remove(sloupec)
+                request.session.modified = True
+                return HttpResponse("Odebrano ze skrytych %s" % sloupec)
+            except ValueError:
+                logger.error(
+                    f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
+                )
+                HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
+        else:
+            skryte_sloupce.append(sloupec)
+            request.session.modified = True
+        return HttpResponse("Pridano do skrytych %s" % sloupec)

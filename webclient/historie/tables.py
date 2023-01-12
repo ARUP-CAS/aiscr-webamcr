@@ -1,5 +1,4 @@
-from django_tables2 import tables, columns
-from simple_history.models import HistoricalRecords
+from django_tables2 import columns
 
 from historie.models import Historie
 from django_tables2_column_shifter.tables import (
@@ -14,8 +13,6 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     uzivatel = columns.Column(default="")
     class Meta:
         model = Historie
-        template_name = "projekt/bootstrap4.html"
-        # template_name = "django_tables2/bootstrap4.html"
         fields = (
             "typ_zmeny",
             "datum_zmeny",
@@ -36,8 +33,6 @@ class SimpleHistoryTable(ColumnShiftTableBootstrap4):
     history_date = columns.DateTimeColumn(format='Y-m-d, H:i', default="")
 
     class Meta:
-        template_name = "projekt/bootstrap4.html"
-        # template_name = "django_tables2/bootstrap4.html"
         fields = (
             "history_date",
         )

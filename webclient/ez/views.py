@@ -6,15 +6,13 @@ from django.urls import reverse
 from django.views import View
 
 import structlog
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import SearchListView, check_stav_changed
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, TemplateView
 from django.contrib import messages
 from django.views.generic.edit import CreateView, UpdateView
-from django_filters.views import FilterView
 from django.template.loader import render_to_string
-from django_tables2 import SingleTableMixin
 from django.utils.http import is_safe_url
 from dal import autocomplete
 from core.constants import (
@@ -65,39 +63,22 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
     template_name = "ez/index.html"
 
 
-class ExterniZdrojListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class ExterniZdrojListView(SearchListView):
     table_class = ExterniZdrojTable
     model = ExterniZdroj
-    template_name = "search_list.html"
     filterset_class = ExterniZdrojFilter
-    paginate_by = 100
     export_name = "export_externi-zdroje_"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
-        context["page_title"] = _("externiZdroj.vyber.pageTitle")
-        context["app"] = "ext_zdroj"
-        context["toolbar"] = "toolbar_externi_zdroj.html"
-        context["search_sum"] = _("externiZdroj.vyber.pocetVyhledanych")
-        context["pick_text"] = _("externiZdroj.vyber.pickText")
-        context["hasOnlyVybrat_header"] = _("externiZdroj.vyber.header.hasOnlyVybrat")
-        context["hasOnlyVlastnik_header"] = _(
-            "externiZdroj.vyber.header.hasOnlyVlastnik"
-        )
-        context["hasOnlyArchive_header"] = _("externiZdroj.vyber.header.hasOnlyArchive")
-        context["hasOnlyPotvrdit_header"] = _(
-            "externiZdroj.vyber.header.hasOnlyPotvrdit"
-        )
-        context["default_header"] = _("externiZdroj.vyber.header.default")
-        context["toolbar_name"] = _("externiZdroj.template.toolbar.title")
-        return context
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        return qs
+    page_title = _("externiZdroj.vyber.pageTitle")
+    app = "ext_zdroj"
+    toolbar = "toolbar_externi_zdroj.html"
+    search_sum = _("externiZdroj.vyber.pocetVyhledanych")
+    pick_text = _("externiZdroj.vyber.pickText")
+    hasOnlyVybrat_header = _("externiZdroj.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("externiZdroj.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("externiZdroj.vyber.header.hasOnlyPotvrdit")
+    hasOnlyPotvrdit_header = _("externiZdroj.vyber.header.hasOnlyPotvrdit")
+    default_header = _("externiZdroj.vyber.header.default")
+    toolbar_name = _("externiZdroj.template.toolbar.title")
 
 
 class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):

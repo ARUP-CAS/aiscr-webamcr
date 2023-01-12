@@ -41,4 +41,9 @@ urlpatterns = [
         views.tr_mwgs84,
         name="tr_mwgs84",
     ),
+    path(
+        "zmena-sloupcu-listu",
+        views.SearchListChangeColumnsView.as_view(),
+        name="zmena_sloupcu_listu",
+    ),
 ]

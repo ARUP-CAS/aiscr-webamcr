@@ -18,6 +18,7 @@ from dj.models import DokumentacniJednotka
 from django.db import connection
 from heslar.models import RuianKatastr
 from pian.models import Pian
+from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -581,3 +582,27 @@ def get_message(az, message):
             ),
         )
     )
+
+
+class SearchTable(ColumnShiftTableBootstrap4):
+    """
+    Base for table used in search. Added hiding and showinf columns
+    """
+    columns_to_hide = []
+    app = None
+
+    def get_column_default_show(self):
+        self.column_default_show = list(self.columns.columns.keys())
+        if "vychozi_skryte_sloupce" not in self.request.session:
+            self.request.session["vychozi_skryte_sloupce"] = {}
+        if self.app in self.request.session["vychozi_skryte_sloupce"]:
+            columns_to_hide = set(
+                self.request.session["vychozi_skryte_sloupce"][self.app]
+            )
+        else:
+            columns_to_hide = self.columns_to_hide
+            self.request.session["vychozi_skryte_sloupce"][self.app] = columns_to_hide
+        for column in columns_to_hide:
+            if column is not None and column in self.column_default_show:
+                self.column_default_show.remove(column)
+        return super(SearchTable, self).get_column_default_show()

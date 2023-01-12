@@ -47,7 +47,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import SearchListView, check_stav_changed
 from dal import autocomplete
 from django.db.models.functions import Length
 from django.contrib import messages
@@ -62,9 +62,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from django_filters.views import FilterView
-from django_tables2 import SingleTableMixin
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import TemplateView
 from django.views.generic.edit import UpdateView
 from dokument.filters import Model3DFilter, DokumentFilter
 from dokument.forms import (
@@ -117,7 +115,6 @@ from nalez.forms import (
 from nalez.models import NalezObjekt, NalezPredmet
 from urllib.parse import urlparse
 from projekt.models import Projekt
-from core.utils import calculate_crc_32
 from services.mailer import Mailer
 from neidentakce.forms import NeidentAkceForm
 from neidentakce.models import NeidentAkce
@@ -234,24 +231,26 @@ def detail_model_3D(request, ident_cely):
     return render(request, "dokument/detail_model_3D.html", context)
 
 
-class Model3DListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class Model3DListView(SearchListView):
     table_class = Model3DTable
     model = Dokument
-    template_name = "dokument/dokument_list.html"
     filterset_class = Model3DFilter
-    paginate_by = 100
     export_name = "export_modely_"
+    page_title = _("knihovna3d.vyber.pageTitle")
+    app = "knihovna_3d"
+    toolbar = "toolbar_dokument.html"
+    search_sum = _("knihovna3d.vyber.pocetVyhledanych")
+    pick_text = _("knihovna3d.vyber.pickText")
+    hasOnlyVybrat_header = _("knihovna3d.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("knihovna3d.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("knihovna3d.vyber.header.default")
+    hasOnlyPotvrdit_header = _("knihovna3d.vyber.header.default")
+    default_header = _("knihovna3d.vyber.header.default")
+    toolbar_name = _("knihovna3d.template.toolbar.title")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
         context["is_3d"] = True
-        context["header_vybrat"] = _("Vybrat modely 3D")
-        context["header_moje"] = _("Moje modely 3D")
-        context["header_podle_filtru"] = _("Modely podle filtru")
-        context["app_entity"] = "knihovna_3d"
         return context
 
     def get_queryset(self):
@@ -267,24 +266,26 @@ class DokumentIndexView(LoginRequiredMixin, TemplateView):
     template_name = "dokument/index_dokument.html"
 
 
-class DokumentListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class DokumentListView(SearchListView):
     table_class = DokumentTable
     model = Dokument
-    template_name = "dokument/dokument_list.html"
     filterset_class = DokumentFilter
-    paginate_by = 100
     export_name = "export_dokumenty_"
+    page_title = _("dokument.vyber.pageTitle")
+    app = "dokument"
+    toolbar = "toolbar_dokument.html"
+    search_sum = _("dokument.vyber.pocetVyhledanych")
+    pick_text = _("dokument.vyber.pickText")
+    hasOnlyVybrat_header = _("dokument.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("dokument.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("dokument.vyber.header.hasOnlyArchive")
+    hasOnlyPotvrdit_header = _("dokument.vyber.header.default")
+    default_header = _("dokument.vyber.header.default")
+    toolbar_name = _("dokument.template.toolbar.title")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
         context["is_3d"] = False
-        context["header_vybrat"] = _("Vybrat dokumenty")
-        context["header_moje"] = _("Moje dokumenty")
-        context["header_podle_filtru"] = _("Dokumenty podle filtru")
-        context["app_entity"] = "dokument"
         return context
 
     def get_queryset(self):
