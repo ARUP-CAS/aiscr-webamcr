@@ -86,12 +86,12 @@ class ExterniZdrojForm(forms.ModelForm):
                 }
             ),
             "rok_vydani_vzniku": forms.TextInput(),
-            "nazev": forms.Textarea(attrs={"rows": 1, "cols": 81}),
-            "casopis_denik_nazev": forms.Textarea(attrs={"rows": 1, "cols": 81}),
+            "nazev": forms.Textarea(attrs={"rows": 1}),
+            "casopis_denik_nazev": forms.Textarea(attrs={"rows": 1}),
             "casopis_rocnik": forms.TextInput(),
             "datum_rd": forms.TextInput(),
             "paginace_titulu": forms.TextInput(),
-            "sbornik_nazev": forms.Textarea(attrs={"rows": 1, "cols": 81}),
+            "sbornik_nazev": forms.Textarea(attrs={"rows": 1}),
             "edice_rada": forms.TextInput(),
             "misto": forms.TextInput(),
             "vydavatel": forms.TextInput(),
@@ -199,7 +199,7 @@ class ExterniZdrojForm(forms.ModelForm):
                     )
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
-                if self.fields[key].disabled == True:
+                if self.fields[key].disabled is True:
                     if key in ["autori", "editori"]:
                         logger_s.debug(key)
                         self.fields[key].widget = forms.widgets.Select()
@@ -209,7 +209,12 @@ class ExterniZdrojForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
-
+        for key in self.fields.keys():
+            logger_s.info(key=self.fields[key], widget=self.fields[key].widget)
+            if isinstance(self.fields[key].widget, forms.widgets.Textarea) \
+                    and hasattr(self.fields[key].widget.attrs, "class"):
+                self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) \
+                                                         + " disabled-text-area"
 
 class ExterniOdkazForm(forms.ModelForm):
     class Meta:

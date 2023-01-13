@@ -9,6 +9,7 @@ from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
+from django.utils import formats
 from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT, SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
 from heslar.views import heslar_12
@@ -215,20 +216,35 @@ class CreateArchZForm(forms.ModelForm):
                     )
 
 
-class StartDateInput(forms.DateField):
+class CustomDateInput(forms.DateField):
+    year_only_month = None
+    year_only_day = None
+
+    @classmethod
+    def year_only(cls, value):
+        return re.fullmatch(r"\d{4}", value)
+
+    def get_date_based_on_year(self, year):
+        return datetime.date(year, self.year_only_month, self.year_only_day)
+
     def to_python(self, value):
         if value:
-            if re.fullmatch(r"\d{4}", value):
-                return datetime.date(int(value), 1, 1)
+            if isinstance(value, str) and CustomDateInput.year_only(value):
+                return self.get_date_based_on_year(int(value))
+            logger_s.info("arch_z.forms.CustomDateInput.to_python",
+                          format=formats.get_format_lazy('DATE_INPUT_FORMATS'))
+            return super().to_python(value)  # return self.strptime(value, "%d.%m.%Y")
         return super().to_python(value)
 
 
-class EndDateInput(forms.DateField):
-    def to_python(self, value):
-        if value:
-            if re.fullmatch(r"\d{4}", value):
-                return datetime.date(int(value), 12, 31)
-        return super().to_python(value)
+class StartDateInput(CustomDateInput):
+    year_only_month = 1
+    year_only_day = 1
+
+
+class EndDateInput(CustomDateInput):
+    year_only_month = 12
+    year_only_day = 31
 
 
 class CreateAkceForm(forms.ModelForm):

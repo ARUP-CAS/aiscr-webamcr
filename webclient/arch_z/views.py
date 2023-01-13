@@ -32,7 +32,7 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     ZAPSANI_AZ,
-    ZMENA_AZ,
+    ZMENA_AZ, HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE, HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -498,6 +498,8 @@ def edit(request, ident_cely):
             "header": _("Archeologický záznam"),
             "button": _("Uložit změny"),
             "sam_akce": False if zaznam.akce.projekt else True,
+            "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+            "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
         },
     )
 

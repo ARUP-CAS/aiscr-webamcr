@@ -174,8 +174,12 @@ select.form-control {
   }
 }
 
-textarea.form-control {
+textarea.form-control:not(.disabled-text-area) {
   height: auto;
+}
+
+textarea.disabled-text-area {
+  height: 1.5rem !important;
 }
 
 // Form groups
