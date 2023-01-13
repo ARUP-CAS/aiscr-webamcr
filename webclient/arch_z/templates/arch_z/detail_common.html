@@ -300,7 +300,6 @@
     <script>
       document.addEventListener('DOMContentLoaded', function (event) {
           // Focus on detail set by the cookie and display it
-          get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
           let detail_to_show = getCookie("detail-id-shown")
           const show_form_cookie = getCookie("show-form");
           const set_active_cookie = getCookie("set-active");
@@ -335,17 +334,6 @@
           const el_li_komponenta
               = document.getElementById(`el_li_komponenta_${ident_cely_safe}`);
           change_active_element(el_li_komponenta);
-          div_komponenta = document.getElementById(`detail_komponenta_form_${ident_cely}`)
-          document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
-          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url);
-          objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
-          for (let i = 0; i < objekty.length; i++) {
-            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_o-${i}-druh`,`#id_${ident_cely}_o-${i}-specifikace`,url);
-          }
-          predmety = div_komponenta.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
-          for (let i = 0; i < predmety.length; i++) {
-            get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_p-${i}-druh`,`#id_${ident_cely}_p-${i}-specifikace`,url);
-          }
       }
 
       const div_dokumentacni_jednotka_click = (data) => {
@@ -366,7 +354,6 @@
           new_el.style.backgroundColor = "rgba(36, 126, 75, 0.1)";
       }
       let el_div_currently_selected = null;
-      const url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
   </script>
   <script>
     //modal scripts

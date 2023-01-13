@@ -71,13 +71,13 @@
         show_form(`detail_komponenta_form_{{ k.ident_cely }}`)
         // fill base on nadrazeni
         url = '{% url "heslar:get-initial-value" %}' + "?nadrazene="
-        get_vychozi_hodnota_podrazeneho("#id_areal","#id_aktivity",url)
         ident_cely = '{{k.ident_cely}}'
+        get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}-areal`,`#id_${ident_cely}-aktivity`,url)
         div_komponenta = document.getElementById(`detail_komponenta_form_${ident_cely}`)
-        objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
-        for (let i = 0; i < objekty.length; i++) {
-          get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_o-${i}-druh`,`#id_${ident_cely}_o-${i}-specifikace`,url);
-        }
+        //objekty = div_komponenta.querySelector('#objekt_table').querySelector('tbody').querySelectorAll('tr');
+        //for (let i = 0; i < objekty.length; i++) {
+        //  get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_o-${i}-druh`,`#id_${ident_cely}_o-${i}-specifikace`,url);
+        //} objekty not used
         predmety = div_komponenta.querySelector('#predmet_table').querySelector('tbody').querySelectorAll('tr');
         for (let i = 0; i < predmety.length; i++) {
           get_vychozi_hodnota_podrazeneho(`#id_${ident_cely}_p-${i}-druh`,`#id_${ident_cely}_p-${i}-specifikace`,url);
