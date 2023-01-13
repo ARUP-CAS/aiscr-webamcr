@@ -241,6 +241,8 @@ def update_notifications(request):
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
         user.notification_types.set(notifications)
+        messages.add_message(request, messages.SUCCESS,
+                             _("uzivatel.update_notifications.post.success"))
         return redirect("/upravit-uzivatele/")
 
 
