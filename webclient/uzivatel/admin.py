@@ -108,7 +108,10 @@ class CustomUserAdmin(UserAdmin):
         other_groups = form_groups.filter(~Q(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
                                                       ROLE_ADMIN_ID])))
         group_ids = groups.values_list('id', flat=True)
-        max_id = max(group_ids)
+        if group_ids.count() > 0:
+            max_id = max(group_ids)
+        else:
+            max_id = ROLE_BADATEL_ID
 
         if set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)):
             logger_s.debug("uzivatel.admin.save_model.role_changed", old=obj.hlavni_role,
@@ -131,7 +134,7 @@ class CustomUserAdmin(UserAdmin):
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk,
                        user_groups=user_db.groups.values_list('id', flat=True))
         if not obj.is_active:
-            logger_s("uzivatel.admin.save_model.manage_user_groups.deactivated", user=obj.pk)
+            logger_s.debug("uzivatel.admin.save_model.manage_user_groups.deactivated", user=obj.pk)
             transaction.on_commit(lambda: obj.groups.set([], clear=True))
             return
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk, group_count=groups.count())

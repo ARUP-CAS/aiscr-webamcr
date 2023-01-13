@@ -160,9 +160,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         logger_s.debug("User.save.start")
-        if not self._state.adding and (self.hlavni_role.pk == ROLE_BADATEL_ID or not self.is_active):
-            logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
-                           is_active=self.is_active)
+        if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
+            if self.is_active:
+                logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
+                               is_active=self.is_active)
+            else:
+                logger_s.debug("User.save.deactivate_spoluprace", is_active=self.is_active)
             # local import to avoid circual import issue
             from pas.models import UzivatelSpoluprace
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
@@ -172,10 +175,11 @@ class User(AbstractBaseUser, PermissionsMixin):
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
 
-        try:
-            self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
-        except ValueError:
-            self.is_staff = self.is_superuser
+        if self.is_active:
+            try:
+                self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
+            except ValueError:
+                self.is_staff = self.is_superuser
 
         if self.history_vazba is None:
             from historie.models import HistorieVazby
@@ -183,6 +187,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             historie_vazba.save()
             self.history_vazba = historie_vazba
         super().save(*args, **kwargs)
+        if self.is_active and \
+                self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
+            self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
 
     class Meta:
         db_table = "auth_user"
@@ -264,11 +271,13 @@ class UserNotificationType(models.Model):
     predmet = models.TextField()
     cesta_sablony = models.TextField(blank=True)
     notification_log = GenericRelation('NotificationsLog')
+
     class Meta:
         db_table = "notifikace_typ"
 
     def __str__(self):
         return _(self.ident_cely)
+
 
 class NotificationsLog(models.Model):
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
