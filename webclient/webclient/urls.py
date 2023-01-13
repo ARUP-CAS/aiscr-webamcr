@@ -16,9 +16,10 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
+from django.views.generic import TemplateView
 
 from oznameni import views as oznameni_views
-from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView
+from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -44,6 +45,14 @@ urlpatterns = [
         UserRegistrationView.as_view(),
         name="django_registration_register",
     ),
+    path(
+        "accounts/activate/complete/",
+        TemplateView.as_view(
+            template_name="django_registration/activation_complete.html"
+        ),
+        name="django_registration_activation_complete",
+    ),
+    path("accounts/activate/<str:activation_key>/", UserActivationView.as_view()),
     path("accounts/", include("django_registration.backends.activation.urls")),
     path(
         "accounts/login/",

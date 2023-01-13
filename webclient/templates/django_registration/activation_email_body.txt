@@ -1,6 +1,13 @@
-Děkujeme za registraci na stránce {{ site.domain }}.
-Pro potvrzení vašeho emailu prosím klikněte na následující odkaz:
+{% load i18n %}
+{% trans "E-U-01.dobrý_den" %}
 
-http://{{ site.domain }}{% url 'django_registration_activate' activation_key %}
+{% trans "E-U-01.tato_zpráva_slouží_k_ověření_vaší_emailové_adresy_což_je_nezbytný_krok_pro_získání_přístupu_do_amčr" %}.
 
-Tato stránka expiruje za {{ expiration_days }} dní{{ expiration_days|pluralize }}.
+{% trans "E-U-01.svoji_emailovou_adresu_ověříte_kliknutím_na_níže_uvedený_odkaz" %}:
+{{ scheme }}://{{ site.domain }}{% url 'django_registration_activate' activation_key %}
+
+{% trans "E-U-01.tento_odkaz_expiruje_za" %} {{ expiration_days }} {% trans "E-U-01.dní" %}.
+
+------------------------------
+{% trans "E-U-01.paticka.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+{% trans "E-U-01.paticka.odesláno_z" %} {{ scheme }}://{{ site.domain }}
