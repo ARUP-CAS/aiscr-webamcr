@@ -8,7 +8,7 @@ from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
+from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
 
 logger = logging.getLogger(__name__)
@@ -38,80 +38,49 @@ class CreateDJForm(forms.ModelForm):
         typ_akce=None,
     ):
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
-        logger.debug(jednotky)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
-            return queryset.filter(
-                Q(heslo__iexact="lokalita") | Q(heslo__iexact="Katastrální území")
-            )
+            return queryset.filter(id__in=[TYP_DJ_LOKALITA,TYP_DJ_KATASTR])
         if (
             instance is not None
             and jednotky is not None
             and hasattr(instance, "typ")
             and instance.typ is not None
-            and instance.typ.heslo.lower() == "část akce"
+            and instance.typ.id == TYP_DJ_CAST
         ):
-            queryset = queryset.filter(Q(heslo__iexact="část akce"))
+            queryset = queryset.filter(id=TYP_DJ_CAST)
         elif jednotky is not None:
-            if jednotky.filter(typ__heslo__iexact="sonda").count() > 0:
-                if instance.ident_cely is None:
-                    queryset = queryset.filter(heslo__iexact="sonda")
+            if jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 0:
+                if not instance.ident_cely:
+                    queryset = queryset.filter(id=TYP_DJ_SONDA_ID)
                 elif (
                     jednotky.filter(
-                        Q(typ__heslo__iexact="sonda")
+                        Q(typ__id=TYP_DJ_SONDA_ID)
                         & Q(ident_cely__lt=instance.ident_cely)
                     ).count()
                     > 0
                 ):
-                    queryset = queryset.filter(heslo__iexact="sonda")
-                elif jednotky.filter(typ__heslo__iexact="sonda").count() > 1:
-                    queryset = queryset.filter(
-                        Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
-                    )
+                    queryset = queryset.filter(id=TYP_DJ_SONDA_ID)
+                elif jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 1:
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
+                elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
                 else:
-                    queryset = queryset.filter(
-                        Q(heslo__iexact="sonda")
-                        | Q(heslo__iexact="celek akce")
-                        | Q(heslo__iexact="Katastrální území")
-                    )
-            elif hasattr(instance, "typ") and instance.typ.heslo == "Celek akce":
-                if jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
-                    queryset = queryset.filter(
-                        Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
-                    )
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
+            elif hasattr(instance, "typ") and instance.typ.id == TYP_DJ_CELEK:
+                if typ_akce == Akce.TYP_AKCE_SAMOSTATNA and jednotky.filter(typ__id=TYP_DJ_CAST).count() == 0:
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
                 else:
-                    queryset = queryset.filter(
-                        Q(heslo__iexact="sonda")
-                        | Q(heslo__iexact="celek akce")
-                        | Q(heslo__iexact="Katastrální území")
-                    )
+                    queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
             elif hasattr(instance, "typ") and instance.typ == Heslar.objects.get(
                 id=TYP_DJ_KATASTR
             ):
-                queryset = queryset.filter(
-                    Q(heslo__iexact="sonda")
-                    | Q(heslo__iexact="celek akce")
-                    | Q(heslo__iexact="Katastrální území")
-                )
-            elif jednotky.filter(typ__heslo__iexact="část akce").count() > 0:
-                if jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
-                    queryset = queryset.filter(heslo__iexact="část akce")
-                else:
-                    queryset = queryset.filter(
-                        Q(heslo__iexact="část akce") | Q(heslo__iexact="celek akce")
-                    )
-            elif jednotky.filter(typ__heslo__iexact="celek akce").count() > 0:
-                queryset = queryset.filter(heslo__iexact="část akce")
+                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
+            elif jednotky.filter(typ__id=TYP_DJ_CELEK).count() > 0:
+                queryset = queryset.filter(id=TYP_DJ_CAST)
             elif typ_akce == Akce.TYP_AKCE_SAMOSTATNA:
-                queryset = queryset.filter(
-                    Q(heslo__iexact="sonda")
-                    | Q(heslo__iexact="celek akce")
-                    | Q(heslo__iexact="Katastrální území")
-                )
+                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID,TYP_DJ_KATASTR])
             else:
-                queryset = queryset.filter(
-                    Q(heslo__iexact="sonda") | Q(heslo__iexact="celek akce")
-                )
-
+                queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
         return queryset
 
     class Meta:
@@ -164,6 +133,8 @@ class CreateDJForm(forms.ModelForm):
     ):
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
+        if self.instance.ident_cely and typ_akce is None:
+            typ_akce = self.instance.archeologicky_zaznam.akce.typ
         self.fields["typ"] = forms.ModelChoiceField(
             queryset=self.get_typ_queryset(
                 jednotky, self.instance, typ_arch_z, typ_akce

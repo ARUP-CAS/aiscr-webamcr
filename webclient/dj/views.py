@@ -32,7 +32,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR
+from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
@@ -64,7 +64,7 @@ def detail(request, ident_cely):
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         if dj.typ.heslo == "Celek akce":
             logger_s.debug("dj.views.detail.celek_akce")
-            typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="část akce")).first()
+            typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_CAST)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
                 & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
@@ -75,7 +75,7 @@ def detail(request, ident_cely):
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ.heslo == "Sonda":
             logger_s.debug("dj.views.detail.sonda")
-            typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="sonda")).first()
+            typ = Heslar.objects.filter(Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_SONDA_ID)).first()
             dokumentacni_jednotka_query = DokumentacniJednotka.objects.filter(
                 Q(archeologicky_zaznam=dj.archeologicky_zaznam)
                 & ~Q(ident_cely=dj.ident_cely) & ~Q(typ=typ)
@@ -95,12 +95,11 @@ def detail(request, ident_cely):
             # logger.debug(dj.ident_cely)
             for dokumentacni_jednotka in dokumentacni_jednotka_query:
                 dokumentacni_jednotka.typ = Heslar.objects.filter(
-                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(heslo__iexact="lokalita")
+                    Q(nazev_heslare=HESLAR_DJ_TYP) & Q(id=TYP_DJ_LOKALITA)
                 ).first()
                 dokumentacni_jednotka.save()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
         elif dj.typ == Heslar.objects.get(id=TYP_DJ_KATASTR):
-            logger.debug("katastralni uzemi")
             new_ku = form.cleaned_data["ku_change"]
             if dj.archeologicky_zaznam.hlavni_katastr.pian:
                 dj.pian = dj.archeologicky_zaznam.hlavni_katastr.pian
