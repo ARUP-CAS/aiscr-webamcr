@@ -134,7 +134,10 @@ class CreateDJForm(forms.ModelForm):
         jednotky = kwargs.pop("jednotky", None)
         super(CreateDJForm, self).__init__(*args, **kwargs)
         if self.instance.ident_cely and typ_akce is None:
-            typ_akce = self.instance.archeologicky_zaznam.akce.typ
+            try:
+                typ_akce = self.instance.archeologicky_zaznam.akce.typ
+            except Exception as e:
+                pass
         self.fields["typ"] = forms.ModelChoiceField(
             queryset=self.get_typ_queryset(
                 jednotky, self.instance, typ_arch_z, typ_akce
