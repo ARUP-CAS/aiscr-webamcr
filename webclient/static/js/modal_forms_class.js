@@ -37,8 +37,13 @@ class Modal {
 
     init(){
         this.event = new CustomEvent('modalLoaded')
-        this.button.addEventListener("click",this);
-        // console.log(this.button)
+        try {
+            this.button.addEventListener("click",this);
+        }
+        catch {
+            console.log("Modal Event not created for", this)
+        }
+        
     }
 
     clickEvent(e){
