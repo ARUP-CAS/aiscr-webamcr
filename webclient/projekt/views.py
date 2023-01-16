@@ -64,7 +64,7 @@ from core.utils import (
     get_num_projects_from_envelope,
     get_projects_from_envelope,
 )
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -77,8 +77,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from django_filters.views import FilterView
-from django_tables2 import SingleTableMixin
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
@@ -285,7 +283,7 @@ def create(request):
                 if p.should_generate_confirmation_document:
                     p.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                if(p.ident_cely[0:1] == 'C'):
+                if p.ident_cely[0:1] == "C":
                     Mailer.send_ep01a(project=p)
                 else:
                     Mailer.send_ep01b(project=p)
@@ -433,19 +431,37 @@ def odebrat_sloupec_z_vychozich(request):
     return HttpResponse("Odebráno")
 
 
-class ProjektListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class ProjektListView(SearchListView):
     table_class = ProjektTable
     model = Projekt
     template_name = "projekt/projekt_list.html"
     filterset_class = ProjektFilter
-    paginate_by = 100
     export_name = "export_projekty_"
+    page_title = _("projekt.vyber.pageTitle")
+    app = "projekt"
+    toolbar = "toolbar_projekt.html"
+    search_sum = _("projekt.vyber.pocetVyhledanych")
+    pick_text = _("projekt.vyber.pickText")
+    hasOnlyVybrat_header = _("projekt.vyber.header.hasOnlyVybrat")
+    hasOnlyArchive_header = _("projekt.vyber.header.hasOnlyArchive")
+    default_header = _("projekt.vyber.header.default")
+    toolbar_name = _("projekt.template.toolbar.title")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
+        context["hasSchvalitOznameni_header"] = _(
+            "projekt.vyber.header.hasSchvalitOznameni"
+        )
+        context["hasPrihlasit_header"] = _("projekt.vyber.header.hasPrihlasit")
+        context["hasPrihlasit_header"] = _("projekt.vyber.header.hasPrihlasit")
+        context["hasZahajitVyzkum_header"] = _("projekt.vyber.header.hasZahajitVyzkum")
+        context["hasUkoncitTeren_header"] = _("projekt.vyber.header.hasUkoncitTeren")
+        context["hasSpravovatAkce_header"] = _("projekt.vyber.header.hasSpravovatAkce")
+        context["hasUzavritProjekt_header"] = _(
+            "projekt.vyber.header.hasUzavritProjekt"
+        )
+        context["hasNaseProjekty_header"] = _("projekt.vyber.header.hasNaseProjekty")
+        context["has_header"] = _("projekt.vyber.header.hasNaseProjekty")
         return context
 
     def get_queryset(self):
@@ -548,7 +564,7 @@ def prihlasit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
-            if(projekt.ident_cely[0:1] == 'C'):
+            if projekt.ident_cely[0:1] == "C":
                 Mailer.send_ep03a(project=projekt)
             else:
                 Mailer.sendEP03b(project=projekt)

@@ -78,7 +78,7 @@
                 <label for="jump-page" class="col-sm-3 col-form-label">{% trans "core.table.pagination.jumpToPage.label" %}</label>
                 <div class="col-sm-6 input">
                     <div class="input-group lg-3 ">
-                        <input type="number" class="textinput textInput form-control" max="{{table.paginator.num_pages}}" min="1" id="jump-page"/>
+                        <input type="number" class="textinput textInput form-control" max="{{table.paginator.num_pages}}" value="{{table.page.number}}" min="1" id="jump-page"/>
                         <div class="input-group-append">
                             <input type="submit" class="btn btn-primary mt-0" value="{% trans 'core.table.pagination.jumpToPage.button' %}"/>
                         </div>
@@ -146,42 +146,49 @@
 
 {% block script %}
 <script type="text/javascript">
-    
-    document.getElementById('jump').onsubmit= function() {
-        var page=document.getElementById('jump-page').value; // value of input box
-        page=page*1; // ensures page is numeric only
-        url = window.location
-        var params = new URLSearchParams(url.search);
-        if (params.has("page") ){
-            params.delete('page')
-            params.append('page', page);
-            const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
-            location=new_url; // redirect to new url
-        }
-        else {
-            params.append('page', page);
-            const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
-            location=new_url; // redirect to new url
-        }
-        return false;
+    try {
+        document.getElementById('jump').onsubmit= function() {
+            var page=document.getElementById('jump-page').value; // value of input box
+            page=page*1; // ensures page is numeric only
+            url = window.location
+            var params = new URLSearchParams(url.search);
+            if (params.has("page") ){
+                params.delete('page')
+                params.append('page', page);
+                const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
+                location=new_url; // redirect to new url
+            }
+            else {
+                params.append('page', page);
+                const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
+                location=new_url; // redirect to new url
+            }
+            return false;
+        };
+    }
+    catch(err) {
     };
-    document.getElementById('per-page').onsubmit= function() {
-        var per_page=document.getElementById('per-page-num').value; // value of input box
-        per_page=per_page*1; // ensures page is numeric only
-        url = window.location
-        var params = new URLSearchParams(url.search);
-        if (params.has("per_page") ){
-            params.delete('per_page')
-            params.append('per_page', per_page);
-            const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
-            location=new_url; // redirect to new url
-        }
-        else {
-            params.append('per_page', per_page);
-            const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
-            location=new_url; // redirect to new url
-        }
-        return false;
+    try {
+        document.getElementById('per-page').onsubmit= function() {
+            var per_page=document.getElementById('per-page-num').value; // value of input box
+            per_page=per_page*1; // ensures page is numeric only
+            url = window.location
+            var params = new URLSearchParams(url.search);
+            if (params.has("per_page") ){
+                params.delete('per_page')
+                params.append('per_page', per_page);
+                const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
+                location=new_url; // redirect to new url
+            }
+            else {
+                params.append('per_page', per_page);
+                const new_url = new URL(`${url.origin}${url.pathname}?${params}`);
+                location=new_url; // redirect to new url
+            }
+            return false;
+        };
+    }
+    catch(err) {
     };
 </script>
 {% endblock script %}

@@ -2,20 +2,20 @@ import logging
 from django.urls import reverse
 
 import django_tables2 as tables
-from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from django.utils.translation import gettext as _
 from django.utils.html import conditional_escape, mark_safe
 from django.utils.encoding import force_str
 from django.utils.html import format_html
 
 from uzivatel.models import Osoba
+from core.utils import SearchTable
 
 from .models import Dokument
 
 logger = logging.getLogger(__name__)
 
 
-class Model3DTable(ColumnShiftTableBootstrap4):
+class Model3DTable(SearchTable):
 
     ident_cely = tables.Column(linkify=True)
     typ_dokumentu = tables.columns.Column(default="")
@@ -25,21 +25,11 @@ class Model3DTable(ColumnShiftTableBootstrap4):
     extra_data__format = tables.columns.Column(default="")
     extra_data__odkaz = tables.columns.Column(default="")
     extra_data__duveryhodnost = tables.columns.Column(default="")
-
-    def get_column_default_show(self):
-        self.column_default_show = list(self.columns.columns.keys())
-        if "projekt_vychozi_skryte_sloupce" in self.request.session:
-            columns_to_hide = set(
-                self.request.session["projekt_vychozi_skryte_sloupce"]
-            )
-            for column in columns_to_hide:
-                if column is not None and column in self.column_default_show:
-                    self.column_default_show.remove(column)
-        return super(Model3DTable, self).get_column_default_show()
+    app = "knihovna_3d"
+    first_columns = None
 
     class Meta:
         model = Dokument
-        # template_name = "projekt/bootstrap4.html"
         fields = (
             "ident_cely",
             "stav",
@@ -69,7 +59,7 @@ class AutorColumn(tables.Column):
         return mark_safe(conditional_escape("; ").join(items))
 
 
-class DokumentTable(ColumnShiftTableBootstrap4):
+class DokumentTable(SearchTable):
 
     ident_cely = tables.Column(linkify=True)
     typ_dokumentu = tables.columns.Column(default="")
@@ -94,11 +84,22 @@ class DokumentTable(ColumnShiftTableBootstrap4):
         accessor="soubory__soubory",
         attrs={
             "th": {"class": "white"},
-            # "td": {"class": "no-tooltip"},
         },
         orderable=False,
         verbose_name=_("dokument.list.soubory.label"),
     )
+    columns_to_hide = (
+        "rada",
+        "let",
+        "material_originalu",
+        "poznamka",
+        "ulozeni_originalu",
+        "oznamceni_originalu",
+        "datum_zverejneni",
+        "licence",
+    )
+    app = "dokument"
+    first_columns = None
 
     def render_nahled(self, value, record):
         soubor = record.soubory.soubory.filter(mimetype__startswith="image").first()
@@ -110,31 +111,8 @@ class DokumentTable(ColumnShiftTableBootstrap4):
             )
         return ""
 
-    def get_column_default_show(self):
-        self.column_default_show = list(self.columns.columns.keys())
-        if "dokument_vychozi_skryte_sloupce" in self.request.session:
-            columns_to_hide = set(
-                self.request.session["dokument_vychozi_skryte_sloupce"]
-            )
-        else:
-            columns_to_hide = (
-                "rada",
-                "let",
-                "material_originalu",
-                "poznamka",
-                "ulozeni_originalu",
-                "oznamceni_originalu",
-                "datum_zverejneni",
-                "licence",
-            )
-        for column in columns_to_hide:
-            if column is not None and column in self.column_default_show:
-                self.column_default_show.remove(column)
-        return super(DokumentTable, self).get_column_default_show()
-
     class Meta:
         model = Dokument
-        # template_name = "projekt/bootstrap4.html"
         fields = (
             "nahled",
             "ident_cely",

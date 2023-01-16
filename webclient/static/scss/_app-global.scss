@@ -480,6 +480,14 @@ form {
     }
   }
 
+  #filter {
+    .btn {
+      .material-icons {
+        color: $white;
+      }
+    }
+  }
+
   .app-card-form {
     .material-icons {
       @include setIcon($size: 18, $position: sub);
@@ -496,6 +504,12 @@ form {
       height: 100%;
       width: 100%;
       overflow: auto;
+
+      #UzivatelSpolupraceTable {
+        td {
+          max-width: 20%;
+        }
+      }
 
       .table-container {
         overflow: unset;

@@ -4,8 +4,6 @@ import structlog
 from arch_z.forms import CreateArchZForm
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import (
-    AkceRelatedRecordUpdateView,
-    DokumentacniJednotkaRelatedUpdateView,
     get_arch_z_context,
     get_areal_choices,
     get_detail_template_shows,
@@ -14,7 +12,6 @@ from arch_z.views import (
     get_obdobi_choices,
 )
 from core.constants import AZ_STAV_ZAPSANY
-from core.exceptions import MaximalIdentNumberError
 from core.ident_cely import get_temp_lokalita_ident
 from core.message_constants import (
     LOKALITA_USPESNE_ZAPSANA,
@@ -22,7 +19,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
 )
-from core.views import ExportMixinDate
+from core.views import SearchListView
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
@@ -31,8 +28,6 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, TemplateView
 from django.views.generic.edit import CreateView, UpdateView
-from django_filters.views import FilterView
-from django_tables2 import SingleTableMixin
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta
 from pian.forms import PianCreateForm
@@ -51,34 +46,24 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
     template_name = "lokalita/index.html"
 
 
-class LokalitaListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class LokalitaListView(SearchListView):
     table_class = LokalitaTable
     model = Lokalita
-    template_name = "search_list.html"
     filterset_class = LokalitaFilter
-    paginate_by = 100
     export_name = "export_lokalita_"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
-        context["page_title"] = _("lokalita.vyber.pageTitle")
-        context["app"] = "lokalita"
-        context["toolbar"] = "toolbar_akce.html"
-        context["search_sum"] = _("lokalita.vyber.pocetVyhledanych")
-        context["pick_text"] = _("lokalita.vyber.pickText")
-        context["hasOnlyVybrat_header"] = _("lokalita.vyber.header.hasOnlyVybrat")
-        context["hasOnlyVlastnik_header"] = _("lokalita.vyber.header.hasOnlyVlastnik")
-        context["hasOnlyArchive_header"] = _("lokalita.vyber.header.hasOnlyArchive")
-        context["hasOnlyPotvrdit_header"] = _("lokalita.vyber.header.hasOnlyPotvrdit")
-        context["default_header"] = _("lokalita.vyber.header.default")
-        context["toolbar_name"] = _("lokalita.template.toolbar.title")
-        return context
+    page_title = _("lokalita.vyber.pageTitle")
+    app = "lokalita"
+    toolbar = "toolbar_akce.html"
+    search_sum = _("lokalita.vyber.pocetVyhledanych")
+    pick_text = _("lokalita.vyber.pickText")
+    hasOnlyVybrat_header = _("lokalita.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("lokalita.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("lokalita.vyber.header.hasOnlyArchive")
+    hasOnlyPotvrdit_header = _("lokalita.vyber.header.hasOnlyPotvrdit")
+    default_header = _("lokalita.vyber.header.default")
+    toolbar_name = _("lokalita.template.toolbar.title")
 
     def get_queryset(self):
-        # Only allow to view 3D models
         qs = super().get_queryset()
         qs = qs.select_related("druh", "typ_lokality", "zachovalost", "jistota")
         return qs

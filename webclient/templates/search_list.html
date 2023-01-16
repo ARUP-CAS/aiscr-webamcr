@@ -9,19 +9,20 @@
 {% block head %}{% endblock %}
 
 {% block content %}
-  <div class="app-entity-{{app}} app-table-list-container">
+  <div class="app-entity-{% if app == "spoluprace" %}samostatny_nalez{%else%}{{app}}{%endif%} app-table-list-container">
     {% include toolbar with name=toolbar_name %}
 
     {% if filter %}
       <form method="get">
         <div class="mb-1 d-flex flex-row align-items-center justify-content-between">
           <div class="app-left">
+            {% if  app == "spoluprace" %} <a class="btn btn-primary mb-1 mt-1" href="{% url 'pas:spoluprace_zadost' %}">{% trans 'Nová žádost o spolupráci' %}</a> {% endif %}
             <button class="btn btn-primary collapsed mr-1 mt-1 mb-1" type="button" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="collapseExample">
               <span class="material-icons mr-1">filter_alt</span>{% trans "Filtr" %}<span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </div>
           <div class="app-middle text-muted">
-            {{search_sum}}<strong>{{ table.rows|length }}</strong>
+            {{search_sum}}: <strong>{{ table.rows|length }}</strong>
           </div>
           <div class="app-right">
             <div class="btn-group" role="group">
@@ -106,137 +107,21 @@
         </div>
       </form>
     {% endif %}
-    {% render_table table 'projekt/bootstrap4.html' %}
+    {% render_table table 'bootstrap4_table.html' %}
+    <div class="modal fade" id="soubor-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-content-xxl" role="document">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <img class="modal-content" id="nahled-image">
+          </div>
+      </div>
+    </div>
   </div>
 {% endblock %}
 
 {% block script %}
-  <script>
-      $(document).ready(function () {
-
-          const STAV_DVA = '2' //STAV_OZNAMENY a AZ_STAV_ODESLANY
-          const STAV_TRI = '3' //STAV_POTVRZEN a AZ_STAV_ARCHIVOVANY
-
-          setPageHeader();
-
-          $('[rel="tooltip"]').on('click', function () {
-              $(this).tooltip('hide')
-          });
-
-          function setHeader(header) {
-              document.getElementById('id-app-entity-item').innerHTML = header;
-          }
-
-          function listMatch(required, actual) {
-              if (actual.length === required.length && actual.every(function (value, index) {
-                  return value === required[index]
-              })) {
-                  return true;
-              } else {
-                  return false;
-              }
-          }
-
-          function hasOnlyVybrat(actualParams, actualValues) {
-              if (listMatch([], actualParams) && listMatch([], actualValues)) {
-                  setHeader("{{hasOnlyVybrat_header}}")
-                  return true
-              } else {
-                  return false
-              }
-          }
-
-          function hasOnlyVlastnik(actualParams, actualValues) {
-              if (listMatch(['vlastnik'], actualParams) && listMatch(['{{ user.id }}'], actualValues)) {
-                  setHeader("{{hasOnlyVlastnik_header}}")
-                  return true
-              } else {
-                  return false
-              }
-          }
-
-          function hasOnlyArchive(actualParams, actualValues) {
-              if (listMatch(['stav'], actualParams) && listMatch([STAV_POTVRZENY], actualValues)) {
-                  setHeader("{{hasOnlyArchive_header}}")
-                  return true
-              } else {
-                  return false
-              }
-          }
-
-          function hasOnlyPotvrdit(actualParams, actualValues) {
-              if (listMatch(['stav', 'predano_organizace'], actualParams) && listMatch([STAV_OZNAMENY], actualValues)) {
-                setHeader("{{hasOnlyPotvrdit_header}}")
-                  return true
-              } else {
-                  return false
-              }
-          }
-
-          function setPageHeader() {
-              const queryString = window.location.search;
-              const urlParams = new URLSearchParams(queryString);
-              const keys = Array.from(urlParams.keys());
-              const values = Array.from(urlParams.values());
-              if (!(hasOnlyVlastnik(keys, values) ||
-                    hasOnlyArchive(keys, values) ||
-                    hasOnlyPotvrdit(keys, [urlParams.get('stav')]) ||
-                    hasOnlyVybrat(keys, values)
-              )) {
-                  setHeader("{{default_header}}")
-              }
-          }
-
-          const getCookie = (name) => {
-              let cookieValue = null;
-              if (document.cookie && document.cookie !== '') {
-                  let cookies = document.cookie.split(';');
-                  for (let i = 0; i < cookies.length; i++) {
-                      let cookie = jQuery.trim(cookies[i]);
-                      // Does this cookie string begin with the name we want?
-                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                          break;
-                      }
-                  }
-              }
-              return cookieValue;
-          }
-
-          const zmen_status_sloupce = (sloupec, zmena) => {
-              {%with app_url="projekt"|add:":odebrat_sloupec_z_vychozich"%}
-              
-              fetch("{% url app_url %}", {
-                  method: 'POST',
-                  credentials: 'same-origin',
-                  headers: {
-                      "X-CSRFToken": getCookie("csrftoken"),
-                      "Accept": "application/json",
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                      "sloupec": sloupec,
-                      "zmena": zmena,
-                  })
-              });
-              {% endwith %}
-          };
-
-          const userSelection = document.getElementsByClassName('ico check');
-
-          for (let i = 0; i < userSelection.length; i++) {
-              const sloupec = userSelection[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
-              userSelection[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "skryj"));
-          }
-
-          const userSelection2 = document.getElementsByClassName('ico uncheck');
-
-          for (let i = 0; i < userSelection2.length; i++) {
-              const sloupec = userSelection2[i].id.replace("ico_check_", "").replace("ico_uncheck_", "")
-              userSelection2[i].addEventListener('click', () => zmen_status_sloupce(sloupec, "zobraz"));
-          }
-      });
-  </script>
   <script
       type="text/javascript"
       src="{% static "django_tables2_column_shifter/js/django_tables2_column_shifter.min.js" %}">
@@ -253,5 +138,151 @@
         endDate: new Date(2100,12,31)
     })
   })
+</script>
+<script>
+  $(document).ready(function(){
+    // don't send empty filter
+    $("form").submit(function(){
+        $("input").each(function(index, obj){
+            if($(obj).val() == "") {
+                $(obj).remove();
+            }
+        });
+    });
+    // don't show tooltip
+    $('[rel="tooltip"]').on('click', function () {
+      $(this).tooltip('hide')
+    });
+    // send change in columns shown
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          let cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              let cookie = jQuery.trim(cookies[i]);
+              // Does this cookie string begin with the name we want?
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+
+    const zmen_status_sloupce = (sloupec, stav_sloupce,target) => {
+      if (stav_sloupce == "off"){
+        zmena = "zobraz"
+        target.setAttribute("data-state","on")
+      }
+      else {
+        zmena = "skryj"
+        target.setAttribute("data-state","off")
+      }
+        fetch("{% url 'core:zmena_sloupcu_listu' %}", {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+                "Accept": "application/json",
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "sloupec": sloupec,
+                "zmena": zmena,
+                "app": "{{app}}"
+            })
+        });
+    };
+
+    const userSelection = document.getElementsByClassName('btn-shift-column dropdown-item');
+
+    for (let i = 0; i < userSelection.length; i++) {
+        const sloupec = userSelection[i].getAttribute("data-td-class")
+        userSelection[i].addEventListener('click', (e) => zmen_status_sloupce(sloupec, userSelection[i].getAttribute("data-state"),e.currentTarget));
+    }
+});
+// show image modal
+$('#soubor-modal').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget)
+  var modalImg = document.getElementById("nahled-image");
+  modalImg.src = button[0].src
+})
+</script>
+{% endblock %}
+{% block script2 %}
+<script>
+  $(document).ready(function () { 
+      const STAV_JEDEN = '1' //STAV_ZAPSANY_PROJEKT
+      const STAV_DVA = '2' //STAV_OZNAMENY a AZ_STAV_ODESLANY
+      setPageHeader();
+
+      function setHeader(header) {
+          document.getElementById('id-app-entity-item').innerHTML = header;
+      }
+
+      function listMatch(required, actual) {
+          if (actual.length === required.length && actual.every(function (value, index) {
+              return value === required[index]
+          })) {
+              return true;
+          } else {
+              return false;
+          }
+      }
+
+      function hasOnlyVybrat(actualParams, actualValues) {
+          if ((listMatch([], actualParams) && listMatch([], actualValues)) ||
+          (listMatch(["zahrnout_projektove"], actualParams) && listMatch(["False"], actualValues))) {
+              setHeader("{{hasOnlyVybrat_header}}")
+              return true
+          } else {
+              return false
+          }
+      }
+
+      function hasOnlyVlastnik(actualParams, actualValues) {
+          if ((listMatch(['vlastnik'], actualParams) && listMatch(['{{ user.id }}'], actualValues)) ||
+          (listMatch(['vlastnik',"zahrnout_projektove"], actualParams) && listMatch(['{{ user.id }}',"False"], actualValues))) {
+              setHeader("{{hasOnlyVlastnik_header}}")
+              return true
+          } else {
+              return false
+          }
+      }
+
+      function hasOnlyArchive(actualParams, actualValues) {
+          if ((listMatch(['stav'], actualParams) && listMatch([STAV_DVA], actualValues)) ||
+          (listMatch(['stav',"zahrnout_projektove"], actualParams) && listMatch([STAV_DVA,"False"], actualValues))) {
+              setHeader("{{hasOnlyArchive_header}}")
+              return true
+          } else {
+              return false
+          }
+      }
+
+      function hasOnlyPotvrdit(actualParams, actualValues) {
+          if (listMatch(['stav', 'predano_organizace'], actualParams) && listMatch([STAV_JEDEN], actualValues)) {
+            setHeader("{{hasOnlyPotvrdit_header}}")
+              return true
+          } else {
+              return false
+          }
+      }
+
+      function setPageHeader() {
+          const queryString = window.location.search;
+          const urlParams = new URLSearchParams(queryString);
+          const keys = Array.from(urlParams.keys());
+          const values = Array.from(urlParams.values());
+          if (!(hasOnlyVlastnik(keys, values) ||
+                hasOnlyArchive(keys, values) ||
+                hasOnlyPotvrdit(keys, [urlParams.get('stav')]) ||
+                hasOnlyVybrat(keys, values)
+          )) {
+              setHeader("{{default_header}}")
+          }
+      }
+  });
 </script>
 {% endblock %}
