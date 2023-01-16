@@ -20,16 +20,6 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False" class="card app-card-entity app-card-moje-akce">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "Moje Akce" %}
-          </div>
-        </a>
-      </div>
-      <div class="col">
         <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
@@ -39,7 +29,16 @@
           </div>
         </a>
       </div>
-      
+      <div class="col">
+        <a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False" class="card app-card-entity app-card-moje-akce">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "Moje Akce" %}
+          </div>
+        </a>
+      </div>
       <div class="col">
         <a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" class="card app-card-entity app-card-archivovat">
           <div class="card-body">

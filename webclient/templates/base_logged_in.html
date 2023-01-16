@@ -60,6 +60,74 @@
         <div class="card-header">
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                    data-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
+              <span class="material-icons">brush</span> {% trans "Samostatné akce" %}
+              <span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </h2>
+        </div>
+        <div id="collapseAkce" class="collapse" data-parent="#accordionSidebar">
+          <div class="card-body">
+            <ul>
+              <li><a href="{% url 'arch_z:index' %}" title="">{% trans "Domů" %}</a></li>
+              <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "Zapsat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False" title="">{% trans "Moje Akce" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "Archivovat" %}</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                    data-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
+              <span class="material-icons">tour</span> {% trans "Lokality" %}
+              <span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </h2>
+        </div>
+        <div id="collapseLokality" class="collapse" data-parent="#accordionSidebar">
+          <div class="card-body">
+            <ul>
+              <li><a href="{% url 'lokalita:index' %}" title="">{% trans "Domů" %}</a></li>
+              <li><a href="{% url 'lokalita:create' %}" title="">{% trans "Zapsat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?vlastnik={{ user.id }}" title="">{% trans "Moje lokality" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
+                    data-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
+              <span class="material-icons">location_on</span> {% trans "Samostatné nálezy" %}
+              <span class="material-icons app-icon-expand">expand_more</span>
+            </button>
+          </h2>
+        </div>
+        <div id="collapseSn" class="collapse" data-parent="#accordionSidebar">
+          <div class="card-body">
+            <ul>
+              <li><a href="{% url 'pas:index' %}" title="">{% trans "Domů" %}</a></li>
+              <li><a href="{% url 'pas:create' %}" title="">{% trans "Zapsat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" title="">{% trans "Moje nálezy" %}</a></li>
+              <li><a href="{% url 'pas:list' %}" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "Spolupráce" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "Potvrdit" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "Archivovat" %}</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapse3d" aria-expanded="true" aria-controls="collapse3d">
               <span class="material-icons">3d_rotation</span> {% trans "Knihovna 3D" %}
               <span class="material-icons app-icon-expand">expand_more</span>
@@ -103,74 +171,6 @@
         <div class="card-header">
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
-              <span class="material-icons">location_on</span> {% trans "Samostatné nálezy" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
-          </h2>
-        </div>
-        <div id="collapseSn" class="collapse" data-parent="#accordionSidebar">
-          <div class="card-body">
-            <ul>
-              <li><a href="{% url 'pas:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'pas:create' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" title="">{% trans "Moje nálezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "Spolupráce" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "Potvrdit" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "Archivovat" %}</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
-              <span class="material-icons">location_on</span> {% trans "Akce" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
-          </h2>
-        </div>
-        <div id="collapseAkce" class="collapse" data-parent="#accordionSidebar">
-          <div class="card-body">
-            <ul>
-              <li><a href="{% url 'arch_z:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False" title="">{% trans "Moje Akce" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "Archivovat" %}</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
-              <span class="material-icons">location_on</span> {% trans "Lokality" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
-            </button>
-          </h2>
-        </div>
-        <div id="collapseLokality" class="collapse" data-parent="#accordionSidebar">
-          <div class="card-body">
-            <ul>
-              <li><a href="{% url 'lokalita:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'lokalita:create' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?vlastnik={{ user.id }}" title="">{% trans "Moje lokality" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
               <span class="material-icons">library_books</span> {% trans "Externí zdroje" %}
               <span class="material-icons app-icon-expand">expand_more</span>
@@ -192,19 +192,10 @@
       <div class="card">
         <div class="card-header">
           <h2 class="mb-0">
-            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                    data-target="#collapseAdmin" aria-expanded="false" aria-controls="collapseAdmin">
-              <span class="material-icons">settings</span> {% trans "Administrace" %}
-              <span class="material-icons app-icon-expand">expand_more</span>
+            <button class="btn btn-link btn-block text-left .btn-link.collapsed" type="button">
+              <a href="/admin/uzivatel/user/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "Administrace" %}</a>
             </button>
           </h2>
-        </div>
-        <div id="collapseAdmin" class="collapse" data-parent="#accordionSidebar">
-          <div class="card-body">
-            <ul>
-              <li><a href="/admin/uzivatel/user/" title="">{% trans "Uživatelé" %}</a></li>
-            </ul>
-          </div>
         </div>
       </div>
     </div>
