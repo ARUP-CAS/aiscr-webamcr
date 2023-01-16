@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from dj.models import DokumentacniJednotka
 from heslar.models import RuianKatastr
 from pian.models import vytvor_pian
+from heslar.hesla import TYP_DJ_KATASTR
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -17,7 +18,7 @@ logger_s = structlog.get_logger(__name__)
 def create_dokumentacni_jednotka(sender, instance, created, **kwargs):
     logger_s.debug("dj.signals.create_dokumentacni_jednotka.start")
     instance: DokumentacniJednotka
-    if created and instance.pian is None:
+    if created and instance.typ.id == TYP_DJ_KATASTR and instance.pian is None:
         logger_s.debug("dj.signals.create_dokumentacni_jednotka.not_localized")
         ruian_katastr: RuianKatastr = instance.archeologicky_zaznam.hlavni_katastr
         if ruian_katastr.pian is not None:

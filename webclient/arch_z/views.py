@@ -1614,7 +1614,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_add_adb": show_adb_add,
         "show_add_komponenta": show_add_komponenta,
         "show_add_pian": (show_add_pian and show["editovat"]),
-        "show_remove_pian": (not show_add_pian and show["editovat"]),
+        "show_remove_pian": (not show_add_pian and show["editovat"] and jednotka.typ.id != TYP_DJ_KATASTR),
         "show_uprav_pian": jednotka.pian
         and jednotka.pian.stav == PIAN_NEPOTVRZEN
         and show["editovat"],
