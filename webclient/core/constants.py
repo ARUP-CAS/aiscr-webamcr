@@ -171,8 +171,3 @@ DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
 DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
 DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
 
-
-PIAN_PRESNOST_KATASTR = 862 # HES-000864
-
-HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE = 887 # HES-000889
-HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE = 884 # HES-000886

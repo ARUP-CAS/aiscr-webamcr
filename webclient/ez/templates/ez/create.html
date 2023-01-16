@@ -54,20 +54,20 @@
         fields.set("id_typ_dokumentu", "")
         fields.set("id_organizace", "")
         var required = new Map()
-        required.set("1115", ["id_misto"])
-        required.set("1116", ["id_editori","id_paginace_titulu","id_sbornik_nazev","id_misto"])
-        required.set("1117", ["id_casopis_denik_nazev", "id_casopis_rocnik","id_paginace_titulu"])
-        required.set("1118", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
-        required.set("1119", [])
+        required.set("{% get_value_from_heslar "externi_zdroj_typ" "kniha" %}", ["id_misto"])
+        required.set("{% get_value_from_heslar "externi_zdroj_typ" "cast_knihy" %}", ["id_editori","id_paginace_titulu","id_sbornik_nazev","id_misto"])
+        required.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_casopise" %}", ["id_casopis_denik_nazev", "id_casopis_rocnik","id_paginace_titulu"])
+        required.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_novinach" %}", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
+        required.set("{% get_value_from_heslar "externi_zdroj_typ" "nepublikovana_zprava" %}", [])
         var allowed = new Map()
-        allowed.set("1115", ["id_edice_rada", "id_vydavatel","id_isbn","id_misto"])
-        allowed.set("1116", ["id_editori", "id_misto","id_paginace_titulu","id_sbornik_nazev","id_edice_rada","id_vydavatel","id_isbn"])
-        allowed.set("1117", ["id_casopis_denik_nazev", "id_casopis_rocnik", "id_paginace_titulu","id_issn"])
-        allowed.set("1118", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
-        allowed.set("1119", ["id_typ_dokumentu", "id_organizace"])
+        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "kniha" %}", ["id_edice_rada", "id_vydavatel","id_isbn","id_misto"])
+        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "cast_nihy" %}", ["id_editori", "id_misto","id_paginace_titulu","id_sbornik_nazev","id_edice_rada","id_vydavatel","id_isbn"])
+        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_casopise" %}", ["id_casopis_denik_nazev", "id_casopis_rocnik", "id_paginace_titulu","id_issn"])
+        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_novinach" %}", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
+        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "nepublikovana_zprava" %}", ["id_typ_dokumentu", "id_organizace"])
 
-        ChangeFields(checked_field, fields,allowed,required);
-        checked_field.addEventListener("change", ChangeFields.bind(event, checked_field, fields,allowed,required));
+        changeFields(checked_field, fields,allowed,required);
+        checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,allowed,required));
       })
     </script>
     <script type="text/javascript" id="js-id-create-osoba">

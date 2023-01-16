@@ -8,7 +8,6 @@ map.on('click', function (e) {
         let [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
         if (global_map_can_edit) {
             if (!lock) {
-                //point_global_WGS84 = [Math.round(corX * 1000000) / 1000000, Math.round(corY * 1000000) / 1000000]
                 point_global_WGS84 = [corX, corY];
                 document.getElementById('id_coordinate_x').value = point_global_WGS84[0]
                 document.getElementById('id_coordinate_y').value = point_global_WGS84[1]
@@ -53,7 +52,6 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true,redIcon= false) => 
     if (corX && corY && zoom) {
         map.setView([corX, corY], 15);
     }
-    //point_global_WGS84 = [Math.round(lat * 1000000) / 1000000, Math.round(long * 1000000) / 1000000]
     point_global_WGS84 = [corX, corY];
 }
 
@@ -70,7 +68,6 @@ function showPosition(position) {
     map.setView(latlng, 16);
     addUniquePointToPoiLayer(latitude, longitude, '', false, true)
 
-    //point_global_WGS84 = [Math.round(latitude * 1000000) / 1000000, Math.round(longitude * 1000000) / 1000000]
     point_global_WGS84 = [latitude, longitude];
     document.getElementById('id_coordinate_x').value = point_global_WGS84[0]
     document.getElementById('id_coordinate_y').value = point_global_WGS84[1]
@@ -80,7 +77,7 @@ function showPosition(position) {
     L.marker(latlng).addTo(poi)
         .bindPopup("Vaše současná poloha")
         .openPopup();
-};
+}
 
 
 var replace_coor = () => {

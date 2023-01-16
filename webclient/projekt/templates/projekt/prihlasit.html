@@ -73,8 +73,8 @@
         required.set("180", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
         required.set("181", ["id_kulturni_pamatka_cislo", "id_kulturni_pamatka_popis"])
 
-        ChangeFields(checked_field, fields,required,required);
-        checked_field.addEventListener("change", ChangeFields.bind(event, checked_field, fields,required,required));
+        changeFields(checked_field, fields,required,required);
+        checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,required,required));
       })
     </script>
 {% endblock %}

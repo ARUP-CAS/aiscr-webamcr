@@ -32,7 +32,7 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     ZAPSANI_AZ,
-    ZMENA_AZ, HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE, HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
+    ZMENA_AZ
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -79,6 +79,8 @@ from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
+    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_OBJEKT_DRUH,
