@@ -401,7 +401,7 @@ class Mailer():
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
-            "organization": project.organizace.nazev,
+            "organization": project.organizace.nazev if project.organizace else None,
             "reason": reason,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })

@@ -966,10 +966,11 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            projekt_mail = projekt
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            Mailer.send_ep07(project=projekt, reason=duvod)
+            Mailer.send_ep07(project=projekt_mail, reason=duvod)
             return JsonResponse(
                 {
                     "redirect": reverse(
