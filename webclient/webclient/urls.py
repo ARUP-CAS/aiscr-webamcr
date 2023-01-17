@@ -19,7 +19,7 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
 from oznameni import views as oznameni_views
-from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView
+from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView, test
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -70,6 +70,7 @@ urlpatterns = [
     path("neident-akce/", include("neidentakce.urls")),
     path("watchdog/",  include("watchdog.urls")),
     path("select2/", include("django_select2.urls")),
+    path("test", test)
 ]
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]

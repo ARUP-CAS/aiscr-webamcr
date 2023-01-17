@@ -521,7 +521,7 @@ class Mailer():
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod
-    def send_en05(cls, email_to, reason, user: 'uzivatel.models.User'):
+    def send_en05(cls, email_to, reason, user: 'uzivatel.models.User', spoluprace_id):
         IDENT_CELY = 'E-N-05'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
@@ -534,7 +534,8 @@ class Mailer():
             "email": user.email,
             "phone": user.telefon,
             "message": reason,
-            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
+            "spoluprace_id": spoluprace_id
         })
         user = uzivatel.models.User.objects.get(email=email_to)
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
@@ -553,8 +554,8 @@ class Mailer():
             "organization": cooperation.spolupracovnik.organizace.nazev,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
-        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.vedouci):
-            cls.send(subject=subject, to=cooperation.vedouci.email, html_content=html)
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=cooperation.spolupracovnik):
+            cls.send(subject=subject, to=cooperation.spolupracovnik.email, html_content=html)
 
     @classmethod
     def send_ek01(cls, document: "dokument.models.Dokument"):

@@ -254,3 +254,8 @@ class UserActivationView(ActivationView):
         user.save()
         Mailer.send_eu02(user)
         return user
+
+def test(request):
+    from django.http import HttpResponse
+    from django.urls import reverse
+    return HttpResponse(reverse('pas:spoluprace_aktivace', args=('33',)))
