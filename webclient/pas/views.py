@@ -40,10 +40,9 @@ from core.message_constants import (
     ZAZNAM_USPESNE_VYTVOREN,
 )
 from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import SearchListView, check_stav_changed
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
@@ -51,8 +50,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
-from django_filters.views import FilterView
-from django_tables2 import SingleTableMixin
 from dokument.forms import CoordinatesDokumentForm
 from heslar.hesla import PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import Heslar
@@ -543,20 +540,23 @@ def archivovat(request, ident_cely):
     return render(request, "core/transakce_modal.html", context)
 
 
-class SamostatnyNalezListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class SamostatnyNalezListView(SearchListView):
     table_class = SamostatnyNalezTable
     model = SamostatnyNalez
     template_name = "pas/samostatny_nalez_list.html"
     filterset_class = SamostatnyNalezFilter
-    paginate_by = 100
     export_name = "export_samostatny-nalez_"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
-        return context
+    page_title = _("pas.vyber.pageTitle")
+    app = "samostatny_nalez"
+    toolbar = "toolbar_pas.html"
+    search_sum = _("pas.vyber.pocetVyhledanych")
+    pick_text = _("pas.vyber.pickText")
+    hasOnlyVybrat_header = _("pas.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("pas.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("pas.vyber.header.hasOnlyArchive")
+    hasOnlyPotvrdit_header = _("pas.vyber.header.hasOnlyPotvrdit")
+    default_header = _("pas.vyber.header.default")
+    toolbar_name = _("pas.template.toolbar.title")
 
     def get_queryset(self):
         # Only allow to view 3D models
@@ -671,7 +671,9 @@ def zadost(request):
                     hist_id=hist.pk,
                     message=ZADOST_O_SPOLUPRACI_VYTVORENA,
                 )
-                Mailer.send_en05(email_to=uzivatel_email, reason=uzivatel_text, user=request.user)
+                Mailer.send_en05(
+                    email_to=uzivatel_email, reason=uzivatel_text, user=request.user
+                )
                 return redirect("pas:spoluprace_list")
         else:
             print("Form is no valid")
@@ -687,20 +689,18 @@ def zadost(request):
     )
 
 
-class UzivatelSpolupraceListView(
-    ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView
-):
+class UzivatelSpolupraceListView(SearchListView):
     table_class = UzivatelSpolupraceTable
     model = UzivatelSpoluprace
     template_name = "pas/uzivatel_spoluprace_list.html"
     filterset_class = UzivatelSpolupraceFilter
-    paginate_by = 100
     export_name = "export_spoluprace_"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
-        return context
+    page_title = _("spoluprace.vyber.pageTitle")
+    app = "spoluprace"
+    toolbar = "toolbar_spoluprace.html"
+    search_sum = _("spoluprace.vyber.pocetVyhledanych")
+    pick_text = _("spoluprace.vyber.pickText")
+    toolbar_name = _("spoluprace.template.toolbar.title")
 
     def get_queryset(self):
         qs = super().get_queryset()

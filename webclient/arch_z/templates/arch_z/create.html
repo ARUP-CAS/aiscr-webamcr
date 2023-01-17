@@ -149,7 +149,7 @@
   create_osoba_modal = new Modal(options, "create-osoba");
   datum_zahajeni = document.getElementById("id_datum_zahajeni")
   datum_ukonceni = document.getElementById("id_datum_ukonceni")
-  if (specifikace.value == 884 || specifikace.value == 887){
+  if (specifikace.value == {{ heslar_specifikace_v_letech_presne }} || specifikace.value == {{ heslar_specifikace_v_letech_priblizne }}){
     $(".dateinput").datepicker('destroy')
     $(".dateinput").datepicker({
       format: "yyyy",
@@ -165,7 +165,7 @@
 
   var specifikace = document.getElementById("id_specifikace_data");
   specifikace.addEventListener('change', function (event) {
-    if (specifikace.value == 884 || specifikace.value == 887){
+    if (specifikace.value == {{ heslar_specifikace_v_letech_presne }} || specifikace.value == {{ heslar_specifikace_v_letech_priblizne }}){
       $(".dateinput").datepicker('destroy')
       $(".dateinput").datepicker({
         format: "yyyy",

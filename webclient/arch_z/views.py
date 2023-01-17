@@ -32,7 +32,7 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     ZAPSANI_AZ,
-    ZMENA_AZ,
+    ZMENA_AZ, HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE, HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -54,7 +54,7 @@ from core.utils import (
     get_num_pians_from_envelope,
     get_pians_from_envelope,
 )
-from core.views import ExportMixinDate, check_stav_changed
+from core.views import SearchListView, check_stav_changed
 from dal import autocomplete
 from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
@@ -74,8 +74,6 @@ from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
-from django_filters.views import FilterView
-from django_tables2 import SingleTableMixin
 from dokument.models import Dokument
 from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
@@ -498,6 +496,8 @@ def edit(request, ident_cely):
             "header": _("Archeologický záznam"),
             "button": _("Uložit změny"),
             "sam_akce": False if zaznam.akce.projekt else True,
+            "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+            "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
         },
     )
 
@@ -1385,35 +1385,22 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
     template_name = "arch_z/index.html"
 
 
-class AkceListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, FilterView):
+class AkceListView(SearchListView):
     table_class = AkceTable
     model = Akce
-    template_name = "search_list.html"
     filterset_class = AkceFilter
-    paginate_by = 100
     export_name = "export_akce_"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = ["csv", "json", "xlsx"]
-        context["page_title"] = _("akce.vyber.pageTitle")
-        context["app"] = "akce"
-        context["toolbar"] = "toolbar_akce.html"
-        context["search_sum"] = _("akce.vyber.pocetVyhledanych")
-        context["pick_text"] = _("akce.vyber.pickText")
-        context["hasOnlyVybrat_header"] = _("akce.vyber.header.hasOnlyVybrat")
-        context["hasOnlyVlastnik_header"] = _("akce.vyber.header.hasOnlyVlastnik")
-        context["hasOnlyArchive_header"] = _("akce.vyber.header.hasOnlyArchive")
-        context["hasOnlyPotvrdit_header"] = _("akce.vyber.header.hasOnlyPotvrdit")
-        context["default_header"] = _("akce.vyber.header.default")
-        context["toolbar_name"] = _("akce.template.toolbar.title")
-        return context
-
-    def get_queryset(self):
-        # Only allow to view 3D models
-        qs = super().get_queryset()
-        # qs = qs.select_related("druh", "typ_lokality", "zachovalost", "jistota")
-        return qs
+    page_title = _("akce.vyber.pageTitle")
+    app = "akce"
+    toolbar = "toolbar_akce.html"
+    search_sum = _("akce.vyber.pocetVyhledanych")
+    pick_text = _("akce.vyber.pickText")
+    hasOnlyVybrat_header = _("akce.vyber.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("akce.vyber.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("akce.vyber.header.hasOnlyArchive")
+    hasOnlyPotvrdit_header = _("akce.vyber.header.default")
+    default_header = _("akce.vyber.header.default")
+    toolbar_name = _("akce.template.toolbar.title")
 
 
 class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
@@ -1612,7 +1599,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_add_adb": show_adb_add,
         "show_add_komponenta": show_add_komponenta,
         "show_add_pian": (show_add_pian and show["editovat"]),
-        "show_remove_pian": (not show_add_pian and show["editovat"]),
+        "show_remove_pian": (not show_add_pian and show["editovat"] and jednotka.typ.id != TYP_DJ_KATASTR),
         "show_uprav_pian": jednotka.pian
         and jednotka.pian.stav == PIAN_NEPOTVRZEN
         and show["editovat"],

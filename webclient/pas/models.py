@@ -204,6 +204,8 @@ class SamostatnyNalez(models.Model):
             resp.append(_("Nález před odesláním musí mít vyplnen materiál"))
         if not self.druh_nalezu:
             resp.append(_("Nález před odesláním musí mít vyplnen druh nálezu"))
+        if not self.nalezce:
+            resp.append(_("Nález před odesláním musí mít vyplneneho nálezce"))
         if not self.geom:
             resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
         if not self.hloubka:
