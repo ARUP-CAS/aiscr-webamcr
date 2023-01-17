@@ -8,6 +8,7 @@ from django.db import utils
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
 from django.db.models import Value, IntegerField
+from crispy_forms.bootstrap import AppendedText
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let, Tvar
@@ -29,15 +30,17 @@ logger = logging.getLogger(__name__)
 class AutoriField(forms.models.ModelMultipleChoiceField):
     def clean(self, value):
         qs = super().clean(value)
-        i = 1
-        for item in value:
-            part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
-            if i ==1:
-                new_qs = part_qs
-            else:
-                new_qs = part_qs.union(new_qs)
-            i = i+1
-        qs = new_qs.order_by("qs_order")
+        if value:
+            i = 1
+            logger.debug(value)
+            for item in value:
+                part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
+                if i ==1:
+                    new_qs = part_qs
+                else:
+                    new_qs = part_qs.union(new_qs)
+                i = i+1
+            qs = new_qs.order_by("qs_order")
         return qs
 
 class CoordinatesDokumentForm(forms.Form):
@@ -69,13 +72,6 @@ class CoordinatesDokumentForm(forms.Form):
 
 class EditDokumentExtraDataForm(forms.ModelForm):
     rada = forms.CharField(label="Řada", required=False)
-    # dokument_osoba = forms.MultipleChoiceField(
-    #     label="Dokumentované osoby",
-    #     required=False,
-    #     widget=forms.SelectMultiple(
-    #         attrs={"class": "selectpicker", "data-live-search": "true"}
-    #     ),
-    # )
 
     class Meta:
         model = DokumentExtraData
@@ -174,9 +170,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 choices=Osoba.objects.all().values_list("id", "vypis_cely"),
                 label="Dokumentované osoby",
                 required=False,
-                widget=forms.SelectMultiple(
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-                ),
+                widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
                 help_text=_("dokument.form.dokumentExtraData.dokument_osoba.tooltip"),
             )
             self.fields["let"] = forms.ChoiceField(
@@ -195,9 +189,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 choices=tuple(("", "")),
                 label="Dokumentované osoby",
                 required=False,
-                widget=forms.SelectMultiple(
-                    attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-                ),
+                widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(("", "")),
@@ -206,6 +198,19 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
+            )
+        if readonly:
+            dok_osoby_div = Div(
+                "dokument_osoba",
+                css_class="col-sm-2",
+            )
+        else:
+            dok_osoby_div = Div(
+                AppendedText(
+                    "dokument_osoba",
+                    '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                ),
+                css_class="col-sm-2 input-osoba select2-input",
             )
         self.fields["meritko"].widget.attrs["rows"] = 1
         self.fields["cislo_objektu"].widget.attrs["rows"] = 1
@@ -235,7 +240,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 Div("rok_od", css_class="col-sm-2"),
                 Div("rok_do", css_class="col-sm-2"),
                 Div("duveryhodnost", css_class="col-sm-2"),
-                Div("dokument_osoba", css_class="col-sm-2"),
+                dok_osoby_div,
                 Div("odkaz", css_class="col-sm-8"),
                 css_class="row",
             ),
@@ -248,6 +253,8 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 if self.fields[key].disabled is True:
                     if key == "let":
                         self.fields[key].widget.url = "#"
+                    elif key == "dokument_osoba":
+                        self.fields[key].widget = forms.widgets.SelectMultiple()
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -267,7 +274,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 class EditDokumentForm(forms.ModelForm):
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
-            ),)
+            ),
+            help_text= _("dokument.form.createDokument.autori.tooltip"),
+            label = _("Autoři"),)
     region = forms.ChoiceField(choices=[("C-",_("dokument.create.regionCech.text")),("M-",_("dokument.create.regionMorava.text"))],
                 label=_("dokument.form.createDokument.region.label"),
                 required=False,
@@ -319,9 +328,6 @@ class EditDokumentForm(forms.ModelForm):
             "posudky": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
-            "autori": autocomplete.Select2Multiple(
-                url="heslar:osoba-autocomplete-choices",
-            ),
             "oznaceni_originalu": forms.TextInput(),
             "licence": forms.TextInput(),
             "popis": forms.TextInput(),
@@ -339,7 +345,6 @@ class EditDokumentForm(forms.ModelForm):
             "pristupnost": _("Přístupnost"),
             "datum_zverejneni": _("Datum zveřejnění"),
             "licence": _("Licence"),
-            "autori": _("Autoři"),
         }
         help_texts = {
             "organizace": _("dokument.form.createDokument.organizace.tooltip"),
@@ -361,7 +366,6 @@ class EditDokumentForm(forms.ModelForm):
                 "dokument.form.createDokument.datum_zverejneni.tooltip"
             ),
             "licence": _("dokument.form.createDokument.licence.tooltip"),
-            "autori": _("dokument.form.createDokument.autori.tooltip"),
             "jazyky": _("dokument.form.createDokument.jazyky.tooltip"),
             "posudky": _("dokument.form.createDokument.posudky.tooltip"),
         }
@@ -387,6 +391,18 @@ class EditDokumentForm(forms.ModelForm):
                 .filter(id__in=ALLOWED_DOKUMENT_TYPES)
                 .values_list("id", "heslo")
             )
+            autori_div = Div(
+                AppendedText(
+                    "autori",
+                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                ),
+                css_class="col-sm-2 input-osoba select2-input",
+            )
+        else:
+            autori_div = Div(
+                "autori",
+                css_class="col-sm-2",
+            )
         if create:
             self.fields["jazyky"].initial = [
                 Heslar.objects.get(nazev_heslare=HESLAR_JAZYK, heslo="CS").pk
@@ -401,7 +417,7 @@ class EditDokumentForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("autori", css_class="col-sm-2"),
+                autori_div,
                 Div("rok_vzniku", css_class="col-sm-2"),
                 Div("organizace", css_class="col-sm-2"),
                 Div("typ_dokumentu", css_class="col-sm-2"),
@@ -428,8 +444,10 @@ class EditDokumentForm(forms.ModelForm):
                     self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     if key == "autori":
-                        self.fields[key].widget = forms.widgets.Select()
-                        self.fields[key].widget.attrs.update({'name_id': "autori;"+ str(self.instance)})
+                        self.fields[key].widget = forms.widgets.SelectMultiple()
+                        self.fields[key].widget.attrs.update(
+                            {"name_id": str(key) + ";" + str(self.instance)}
+                        )
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -445,9 +463,15 @@ class EditDokumentForm(forms.ModelForm):
                         "required-next" if key in required_next else ""
                     )
         self.fields["datum_zverejneni"].disabled = True
+        self.fields["autori"].widget.choices = list(Osoba.objects.filter(
+            dokumentautor__dokument=self.instance
+        ).order_by("dokumentautor__poradi").values_list("id","vypis_cely"))
 
 
 class CreateModelDokumentForm(forms.ModelForm):
+    autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
+                url="heslar:osoba-autocomplete-choices",
+            ),)
     class Meta:
         model = Dokument
         fields = (
@@ -466,8 +490,8 @@ class CreateModelDokumentForm(forms.ModelForm):
             "organizace": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
-            "autori": forms.SelectMultiple(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
+            "autori": autocomplete.Select2Multiple(
+                url="heslar:osoba-autocomplete-choices",
             ),
             "oznaceni_originalu": forms.TextInput(),
             "popis": forms.TextInput(),
@@ -499,7 +523,6 @@ class CreateModelDokumentForm(forms.ModelForm):
     ):
         super(CreateModelDokumentForm, self).__init__(*args, **kwargs)
         self.fields["popis"].widget.attrs["rows"] = 1
-        # self.fields["popis"].required = True
         self.fields["poznamka"].widget.attrs["rows"] = 1
         self.fields["typ_dokumentu"].choices = [("", "")] + list(
             Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP)
@@ -507,13 +530,26 @@ class CreateModelDokumentForm(forms.ModelForm):
             .values_list("id", "heslo")
         )
         self.fields["rok_vzniku"].required = True
+        if readonly:
+            autori_div = Div(
+                "autori",
+                css_class="col-sm-6",
+            )
+        else:
+            autori_div = Div(
+                AppendedText(
+                    "autori",
+                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                ),
+                css_class="col-sm-6 input-osoba select2-input",
+            )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div("typ_dokumentu", css_class="col-sm-4"),
             Div("organizace", css_class="col-sm-4"),
             Div("rok_vzniku", css_class="col-sm-4"),
             Div("oznaceni_originalu", css_class="col-sm-6"),
-            Div("autori", css_class="col-sm-6"),
+            autori_div,
             Div("popis", css_class="col-sm-12"),
             Div("poznamka", css_class="col-sm-12"),
         )
@@ -526,6 +562,8 @@ class CreateModelDokumentForm(forms.ModelForm):
                 else:
                     self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
+                    if key == "autori":
+                        self.fields[key].widget = forms.widgets.Select()
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""

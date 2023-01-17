@@ -1,15 +1,13 @@
 {% load crispy_forms_field %}
 {% load template_filters %}
-{% with 'autori,editori' as list %}
+{% with 'autori,editori,dokument_osoba,nalezce,vedouci' as list %}
 {%if widget.name == "let"%}
 <a href="{{ widget.url }}">
     {% endif%}   
 <input {% include "django/forms/widgets/attrs.html" %} id="{{ widget.id}}" name="{{ widget.name}}" readonly="True" 
 type={%if widget.name == "let"%}"button"{%else%}"text"{% endif%}
-{%if widget.name == "vedouci" %} 
-value="{{ widget.value|get_osoby_name }}" 
-{% elif widget.name in list and "name_id" in widget.attrs %}
-value="{{ widget.value|get_osoby_name:widget.attrs.name_id }}" 
+{%if widget.name in list %} 
+value="{{ widget|get_osoby_name }}" 
 {%else %}
     value="{% if widget.optgroups %}{{ widget.optgroups|ifinlist:widget.value }}{% elif widget.value %}{{ widget.value|get_katastr_name }}{% endif %}" 
     {% endif%}

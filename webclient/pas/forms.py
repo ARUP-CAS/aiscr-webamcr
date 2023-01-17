@@ -1,9 +1,11 @@
 import structlog
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
-from core.forms import CheckStavNotChangedForm, TwoLevelSelectField
+from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
+from crispy_forms.bootstrap import AppendedText
+from dal import autocomplete
 from django import forms
 from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
@@ -160,9 +162,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka",
         )
         widgets = {
-            "nalezce": forms.Select(
-                attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
-            ),
+            "nalezce": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "okolnosti": forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
@@ -247,18 +247,29 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
         )
         self.fields["druh_nalezu"].required = False
         self.fields["obdobi"].required = False
+        if readonly:
+            nalezce_div = Div(
+                "nalezce",
+                css_class="col-sm-4",
+            )
+        else:
+            nalezce_div = Div(
+                AppendedText(
+                    "nalezce",
+                    '<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                ),
+                css_class="col-sm-4 input-osoba select2-input",
+            )
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
                 Div("projekt", css_class="col-sm-4"),
-                Div("nalezce", css_class="col-sm-4"),
+                nalezce_div,
                 Div("datum_nalezu", css_class="col-sm-4"),
                 Div("lokalizace", css_class="col-sm-8"),
                 Div("katastr", css_class="col-sm-4"),
                 Div("okolnosti", css_class="col-sm-6"),
                 Div("hloubka", css_class="col-sm-6"),
-                #                Div("latitude", css_class="hidden"),
-                #                Div("longitude", css_class="hidden"),
                 Div("obdobi", css_class="col-sm-4"),
                 Div("druh_nalezu", css_class="col-sm-4"),
                 Div("pocet", css_class="col-sm-4"),
@@ -274,6 +285,8 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             if isinstance(self.fields[key].widget, forms.widgets.Select):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
+                    if key == "nalezce":
+                        self.fields[key].widget = forms.widgets.Select()
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""

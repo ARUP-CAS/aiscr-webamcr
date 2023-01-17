@@ -791,3 +791,20 @@ form {
 span.badge-span .badge {
   flex: 0 0 auto;
 }
+
+.select2-input {
+  .input-group {
+    .select2-container{
+      grid-column: 2 / span 1;
+      };
+    display: grid;
+    grid-template-columns: 0 auto 15%;
+    .input-group-append{
+      position: relative;
+      grid-column: 3;
+      .btn {
+        height: 100% !important;
+      }
+    }
+  }
+}

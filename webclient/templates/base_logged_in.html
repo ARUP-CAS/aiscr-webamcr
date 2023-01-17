@@ -464,7 +464,27 @@
         });
     }
 
-    setTimeout(() => {
+    window.addEventListener("DOMContentLoaded", function() {
+      $('select.select2multiple').each(function() {
+        setTimeout(() => {
+          if ($(this).next()[0].classList.contains("select2-container")){
+            increase_ul_height($(this).next()[0]);
+            $(this).on('change', function (e) {
+              increase_ul_height(e.currentTarget.nextSibling);
+            });
+          }
+          else{
+            setTimeout(() => {
+              increase_ul_height($(this).next()[0]);
+              $(this).on('change', function (e) {
+                increase_ul_height(e.currentTarget.nextSibling);
+              });
+            }, 2000);
+          }
+        }, 1000);
+      })
+    })
+    /*setTimeout(() => {
         const span_selection_rendered_query = document.body.querySelectorAll("span.select2.select2-container");
         span_selection_rendered_query.forEach(item => {
             item.addEventListener("mouseover", () => {
@@ -477,7 +497,7 @@
                 field_click(item);
             });
         })
-    }, 5000);
+    }, 5000);*/
 
 </script>
 {% endblock %}

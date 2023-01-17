@@ -9,6 +9,8 @@ from crispy_forms.layout import Div, Layout
 from dal import autocomplete
 
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from dokument.forms import AutoriField
+from uzivatel.models import Osoba
 
 from .models import ExterniZdroj
 
@@ -16,6 +18,17 @@ logger_s = structlog.get_logger(__name__)
 
 
 class ExterniZdrojForm(forms.ModelForm):
+    autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
+                url="heslar:osoba-autocomplete-choices",
+            ),
+            label = _("externiZdroj.forms.autori.label"),
+            help_text = _("externiZdroj.forms.autori.tooltip"),
+            )
+    editori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
+                url="heslar:osoba-autocomplete-choices",
+            ),
+            label= _("externiZdroj.forms.editori.label"),
+            help_text = _("externiZdroj.forms.editori.tooltip"),)
     class Meta:
         model = ExterniZdroj
         fields = (
@@ -43,8 +56,6 @@ class ExterniZdrojForm(forms.ModelForm):
 
         labels = {
             "typ": _("externiZdroj.forms.typ.label"),
-            "autori": _("externiZdroj.forms.autori.label"),
-            "editori": _("externiZdroj.forms.editori.label"),
             "rok_vydani_vzniku": _("externiZdroj.forms.rokVydaniVzniku.label"),
             "nazev": _("externiZdroj.forms.nazev.label"),
             "casopis_denik_nazev": _("externiZdroj.forms.casopisNazev.label"),
@@ -71,20 +82,6 @@ class ExterniZdrojForm(forms.ModelForm):
             "typ_dokumentu": forms.Select(
                 attrs={"class": "selectpicker", "data-live-search": "true"}
             ),
-            "autori": forms.SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
-            "editori": forms.SelectMultiple(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
             "rok_vydani_vzniku": forms.TextInput(),
             "nazev": forms.Textarea(attrs={"rows": 1}),
             "casopis_denik_nazev": forms.Textarea(attrs={"rows": 1}),
@@ -107,8 +104,6 @@ class ExterniZdrojForm(forms.ModelForm):
 
         help_texts = {
             "typ": _("externiZdroj.forms.typ.tooltip"),
-            "autori": _("externiZdroj.forms.autori.tooltip"),
-            "editori": _("externiZdroj.forms.editori.tooltip"),
             "rok_vydani_vzniku": _("externiZdroj.forms.rokVydaniVzniku.tooltip"),
             "nazev": _("externiZdroj.forms.nazev.tooltip"),
             "casopis_denik_nazev": _("externiZdroj.forms.casopisNazev.tooltip"),
@@ -145,14 +140,14 @@ class ExterniZdrojForm(forms.ModelForm):
                     "autori",
                     '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
                 ),
-                css_class="col-sm-4 input-osoba",
+                css_class="col-sm-4 input-osoba select2-input",
             )
             editori = Div(
                 AppendedText(
                     "editori",
                     '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
                 ),
-                css_class="col-sm-4 input-osoba",
+                css_class="col-sm-4 input-osoba select2-input",
             )
 
         self.helper.layout = Layout(
@@ -184,7 +179,12 @@ class ExterniZdrojForm(forms.ModelForm):
             ),
         )
         self.helper.form_tag = False
-
+        self.fields["autori"].widget.choices = list(Osoba.objects.filter(
+            externizdrojautor__externi_zdroj=self.instance
+        ).order_by("externizdrojautor__poradi").values_list("id","vypis_cely"))
+        self.fields["editori"].widget.choices = list(Osoba.objects.filter(
+            externizdrojeditor__externi_zdroj=self.instance
+        ).order_by("externizdrojeditor__poradi").values_list("id","vypis_cely"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if required or required_next:
@@ -201,8 +201,7 @@ class ExterniZdrojForm(forms.ModelForm):
                 self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     if key in ["autori", "editori"]:
-                        logger_s.debug(key)
-                        self.fields[key].widget = forms.widgets.Select()
+                        self.fields[key].widget = forms.widgets.SelectMultiple()
                         self.fields[key].widget.attrs.update(
                             {"name_id": str(key) + ";" + str(self.instance) + ";ez"}
                         )
@@ -210,7 +209,7 @@ class ExterniZdrojForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         for key in self.fields.keys():
-            logger_s.info(key=self.fields[key], widget=self.fields[key].widget)
+            # logger_s.info(key=self.fields[key], widget=self.fields[key].widget)
             if isinstance(self.fields[key].widget, forms.widgets.Textarea) \
                     and hasattr(self.fields[key].widget.attrs, "class"):
                 self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) \

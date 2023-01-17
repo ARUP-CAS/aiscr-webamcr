@@ -223,7 +223,6 @@ def detail_model_3D(request, ident_cely):
     context["history_dates"] = get_history_dates(dokument.historie)
     context["show"] = show
     context["global_map_can_edit"] = False
-    logger.debug(context)
     if dokument.soubory:
         context["soubory"] = dokument.soubory.soubory.all()
     else:

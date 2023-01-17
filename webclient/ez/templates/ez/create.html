@@ -66,36 +66,37 @@
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_novinach" %}", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "nepublikovana_zprava" %}", ["id_typ_dokumentu", "id_organizace"])
 
-        changeFields(checked_field, fields,allowed,required);
+        setTimeout(() => {
+          //Delayed for 1 second. Give select2 chance to load and init
+          changeFields(checked_field, fields,allowed,required);
+        }, "1000")
+        
+        
         checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,allowed,required));
       })
     </script>
     <script type="text/javascript" id="js-id-create-osoba">
       //var create autor and editor
       var successFunctionAutor = function(settings, response) {
-        let dropdown = document.getElementById('id_autori');
-        let newOption = document.createElement('option');
-        newOption.text = response.text;
-        newOption.value = response.value;
-  
-        dropdown.add(newOption);
-        
-        $('#id_autori').selectpicker('refresh');
-        $('#id_autori').selectpicker('val', response.value);
-        dropdown.value = response.value;
-        $(settings.modalIDD).modal("hide");
+        var newOption = new Option(response.text, response.value, true, true);
+        $('#id_autori').append(newOption).trigger('change');
+        $('#id_autori').trigger({
+        type: 'select2:select',
+        params: {
+          data: [response.text, response.value, true, true]
+      }
+    })
+    $(settings.modalIDD).modal("hide");
       };
       var successFunctionEditor = function(settings, response) {
-        let dropdown = document.getElementById('id_editori');
-        let newOption = document.createElement('option');
-        newOption.text = response.text;
-        newOption.value = response.value;
-  
-        dropdown.add(newOption);
-        
-        $('#id_editori').selectpicker('refresh');
-        $('#id_editori').selectpicker('val', response.value);
-        dropdown.value = response.value;
+        var newOption = new Option(response.text, response.value, true, true);
+        $('#id_editori').append(newOption).trigger('change');
+        $('#id_editori').trigger({
+          type: 'select2:select',
+          params: {
+              data: [response.text, response.value, true, true]
+          }
+        });
         $(settings.modalIDD).modal("hide");
       };
       window.addEventListener("DOMContentLoaded", function() {

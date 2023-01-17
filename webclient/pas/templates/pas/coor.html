@@ -3,6 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 {% load template_filters %}
+{% load crispy_forms_field %}
 
 {% block head %}
 <!-- Map imports -->
@@ -26,6 +27,17 @@ crossorigin=""/>
 
 <link rel="stylesheet" href="{% static 'leaflet-search.css' %}"/>
 <script src="{% static 'leaflet-search.js' %}"></script>
+{% if readonly %}
+{% else %}
+<!-- Autocomplete media files -->
+<link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+<link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+<link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+<script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+<script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+<script src="/static/static/autocomplete_light/select2.js"></script>
+<script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -45,8 +57,13 @@ crossorigin=""/>
       <div class="form-group col-sm-6">
       {{ form.katastr|as_crispy_field }}
       </div>
+      {% if readonly %}
       <div class="form-group col-sm-6">
       {{ form.nalezce|as_crispy_field }}
+      {% else %}
+      <div class="form-group col-sm-6 input-osoba select2-input">
+        {% crispy_addon form.nalezce append='<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
+      {% endif %}
       </div>
       <div class="form-group col-sm-6">
       {{ form.datum_nalezu|as_crispy_field }}
@@ -211,4 +228,30 @@ crossorigin=""/>
             })
             ;
     </script>
+    <script type="text/javascript">
+      // create osoba scripts
+      var successFunction = function(settings, response) {
+        var newOption = new Option(response.text, response.value, true, true);
+        $('#id_nalezce').append(newOption).trigger('change');
+        $('#id_nalezce').trigger({
+          type: 'select2:select',
+          params: {
+              data: [response.text, response.value, true, true]
+          }
+        });
+        $(settings.modalIDD).modal("hide");
+      };
+    
+      document.addEventListener('DOMContentLoaded', function (event) {
+        var options = Object.assign(defaults, {modalID: "modal-form",
+        formURL: "{% url 'heslar:create_osoba' %}",
+        formID: "create-osoba-form",
+        modalFormID: "#create-osoba-form",
+        modalIDD : "#modal-form",
+        successFunc:successFunction,
+      })
+      new Modal(options, "create-nalezce-osoba"); 
+      
+    });
+      </script>
 {% endblock %}
