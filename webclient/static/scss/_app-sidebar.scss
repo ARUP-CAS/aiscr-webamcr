@@ -43,6 +43,10 @@
       color: $app-sidebar-accordion-color-active;
       padding: 0;
 
+      .menu-direct-link {
+        @include setLinkColor($app-sidebar-accordion-color, $colorH: $white);
+      }
+
       &.collapsed {
         @include setLinkColor($app-sidebar-accordion-color, $colorH: $white);
 

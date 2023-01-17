@@ -7,7 +7,7 @@
 {% block content %}
   <div class="row app-entity-cards mb-3">
     <div class="col">
-      <a href="/projekt" class="card app-card-entity app-entity-projekt">
+      <a href="{% url 'projekt:index' %}" class="card app-card-entity app-entity-projekt">
         <div class="card-body">
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
@@ -17,17 +17,27 @@
       </a>
     </div>
     <div class="col">
-      <a href="{% url 'dokument:index-model-3D' %}" class="card app-card-entity app-entity-knihovna_3d">
+      <a href="{% url 'arch_z:index' %}" class="card app-card-entity app-entity-akce">
         <div class="card-body">
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Knihovna 3D" %}
+          {% trans "Samostatné akce" %}
         </div>
       </a>
     </div>
     <div class="col">
-      <a href="{% url "pas:index" %}" class="card app-card-entity app-entity-samostatny_nalez">
+      <a href="{% url 'lokalita:index' %}" class="card app-card-entity app-entity-lokalita">
+        <div class="card-body">
+          <img src="{% static 'logo-am-mark.png' %}" />
+        </div>
+        <div class="card-footer">
+          {% trans "Lokality" %}
+        </div>
+      </a>
+    </div>
+    <div class="col">
+      <a href="{% url 'pas:index' %}" class="card app-card-entity app-entity-samostatny_nalez">
         <div class="card-body">
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
@@ -36,6 +46,36 @@
         </div>
       </a>
     </div>
+  <div class="col">
+    <a href="{% url 'dokument:index-model-3D' %}" class="card app-card-entity app-entity-knihovna_3d">
+      <div class="card-body">
+        <img src="{% static 'logo-am-mark.png' %}" />
+      </div>
+      <div class="card-footer">
+        {% trans "Knihovna 3D" %}
+      </div>
+    </a>
+  </div>
+  <div class="col">
+    <a href="{% url 'dokument:index' %}" class="card app-card-entity app-entity-dokument">
+      <div class="card-body">
+        <img src="{% static 'logo-am-mark.png' %}" />
+      </div>
+      <div class="card-footer">
+        {% trans "Dokumeny" %}
+      </div>
+    </a>
+  </div>
+  <div class="col">
+    <a href="{% url 'ez:index' %}" class="card app-card-entity app-entity-ext_zdroj">
+      <div class="card-body">
+        <img src="{% static 'logo-am-mark.png' %}" />
+      </div>
+      <div class="card-footer">
+        {% trans "Externí zdroje" %}
+      </div>
+    </a>
+  </div>
   </div>
 
   <div class="app-card-desc-wrapper">
