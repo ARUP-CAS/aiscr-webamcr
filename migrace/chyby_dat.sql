@@ -52,6 +52,16 @@ update samostatny_nalez set katastr = null where katastr = -1;
 -- DN: Pokud je v jednotka_dokument.vazba totéž co ve vazba_druha, nastavit vazba_druha na null.
 UPDATE jednotka_dokument SET vazba_druha = Null WHERE vazba = vazba_druha;
 
+-- DN: Pokud je odkaz na neident_akce ve vazba a ve vazba_druha je odkaz na akci/lokalitu, tyto hodnoty je třeba prohodit
+WITH prohodit AS
+(
+  SELECT id, vazba, vazba_druha FROM jednotka_dokument
+  WHERE ((vazba_druha IN (SELECT id FROM akce WHERE jednotka_dokument.vazba_druha = akce.id))
+    OR (vazba_druha IN (SELECT id FROM lokalita WHERE jednotka_dokument.vazba_druha = lokalita.id)))
+    AND vazba IN (SELECT id FROM neident_akce WHERE jednotka_dokument.vazba = neident_akce.id)
+)
+UPDATE jednotka_dokument SET vazba = (SELECT vazba_druha FROM prohodit WHERE jednotka_dokument.id = prohodit.id), vazba_druha = (SELECT vazba FROM prohodit WHERE jednotka_dokument.id = prohodit.id);
+
 -- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
 UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and email is null;
 UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and adresa is null;
