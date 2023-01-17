@@ -22,6 +22,7 @@ import pas.models
 from core.constants import PROJEKT_STAV_UKONCENY_V_TERENU, PRIHLASENI_PROJ
 from historie.models import Historie
 from .mlstripper import MLStripper
+from urllib.parse import urljoin
 
 logger_s = structlog.get_logger(__name__)
 
@@ -169,18 +170,22 @@ class Mailer():
         })
         superusers = uzivatel.models.User.objects.filter(is_superuser=True)
         for superuser in superusers:
-            if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
+            if Mailer._notification_should_be_sent(notification_type=notification_type, user=superuser):
                 cls.send(notification_type.predmet, superuser.email, html)
 
     @classmethod
-    def send_eu06(cls, user: 'uzivatel.models.User'):
+    def send_eu06(cls, user: 'uzivatel.models.User', groups):
         IDENT_CELY = 'E-U-06'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         try:
             notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
+            roles = ""
+            for group in groups:
+                roles += f"{group.name}, "
+            roles = roles.rstrip(', ')
             html = render_to_string(notification_type.cesta_sablony, {
                 "title": notification_type.predmet,
-                "role": user.hlavni_role.name,
+                "roles":  roles,
                 "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
             })
             if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
@@ -401,7 +406,7 @@ class Mailer():
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
-            "organization": project.organizace.nazev if project.organizace else None,
+            "organization": project.organizace.nazev,
             "reason": reason,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })

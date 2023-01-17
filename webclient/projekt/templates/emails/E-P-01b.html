@@ -1,0 +1,18 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>{% trans "E-P-01b.vážená_paní/vážený_pane" %},</p>
+    <p>
+        {% trans "E-P-01b.oznámení_stavební_nebo_jiné_činnosti" %}
+        (<b>{{ podnet }}</b>) {% trans "E-P-01b.na_území_s_archeologickými_nálezy_na_k_ú" %}
+        <b>{{ katastr }}</b>
+        (<b>{{ okres }}</b>), {% trans "E-P-01b.parcela" %} <b>{{ parcela }}</b>
+        (<b>{{ lokalita }}</b>) {% trans "E-P-01b.podle_§22_odst._2_zákona_č._20/1987_Sb_o_státní_památkové_péči_bylo_schváleno_a_zaevidováno." %}
+        {% trans "E-P-01b.v_případě_nutnosti_provedení_archeologického_výzkumu_vás_bude_kontaktovat_archeologický_ústav_av_čr_nebo_některá_z_organizací_oprávněných_provádět_archeologické_výzkumy_s_nimiž_je_na_základě_§22_odst_1_výše_uvedeného_zákona_nutno_uzavřít_dohodu_o_podmínkách_provedení_archeologického_výzkumu" %}
+    </p>
+    <p>{% trans "E-P-01b.s_pozdravem" %}</p>
+    <p>{% trans "E-P-01b.archeologický_ústav_av_čr_brno_v_v_i" %}</p>
+    <p>{% trans "E-P-01b.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}
+        {% trans "E-P-01b.vaše_případné_dotazy_pište_na_adresu_oznameni@arub.cz_nebo_volejte_na_tel_+420_515_911_133_(jihomoravský_a_zlínský_kraj)_+420_515_911_121_(vysočina_a_olomoucký_kraj)_+420_553_821_603_(moravskoslezský_kraj)" %}
+    </p>
+{% endblock %}

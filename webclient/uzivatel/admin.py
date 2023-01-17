@@ -122,7 +122,6 @@ class CustomUserAdmin(UserAdmin):
                 poznamka="role: " + ", ".join(list(user.groups.values_list('name', flat=True))),
                 vazba=obj.history_vazba,
             ).save()
-            Mailer.send_eu06(user=user)
         Historie(
             typ_zmeny=ZMENA_UDAJU_ADMIN,
             uzivatel=user,
@@ -143,9 +142,11 @@ class CustomUserAdmin(UserAdmin):
             group = Group.objects.get(pk=ROLE_BADATEL_ID)
             transaction.on_commit(lambda: obj.groups.set([group] + list(other_groups.values_list('id', flat=True)),
                                                               clear=True))
+            Mailer.send_eu06(user=obj, groups=[group] + list(other_groups))
         elif groups.count() > 1:
             transaction.on_commit(lambda: obj.groups.set([max_id] + list(other_groups.values_list('id', flat=True)),
                                                               clear=True))
+            Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups", user=obj.pk,
                        user_groups=obj.groups.values_list('id', flat=True))
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", max_id=max_id, hlavni_role_pk=obj.hlavni_role.pk)
