@@ -19,9 +19,7 @@ map.on('click', function (e) {
                     lock_sjtsk_low_precision=false;
                     var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lat, e.latlng.lng]);
                     jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY));
-                    //point_global_WGS84 = [Math.round(corX * 1000000) / 1000000, Math.round(corY * 1000000) / 1000000]
                     point_global_WGS84 = [corX, corY];
-                    //point_global_JTSK = [-Math.round(jtsk_coor[0] * 100) / 100, -Math.round(jtsk_coor[1] * 100) / 100]
                     point_global_JTSK = jtsk_coor
                     if (document.getElementById('detector_system_coordinates').value == 1) {
                         document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
@@ -140,13 +138,6 @@ var transformSinglePoint = async(y_plus,x_plus,push,addComa) => {
     xhr.send(JSON.stringify({"cy" : y_plus, "cx" : x_plus}))
 };
 
-    /*var ipoints=[]
-    ipoints.push([646760.290, 1060814.217])
-    ipoints.push([646860.290, 1050814.217])
-    ipoints.push([646960.290, 1040814.217])
-    ipoints.push([647960.290, 1040814.217])
-    transformMultiPoins(ipoints)*/
-
 var transformMultiPoins = async(ipoints) => {
     let xhr = new XMLHttpRequest();
     xhr.open('POST', '/transformace-multi-wgs84');
@@ -209,18 +200,11 @@ let set_numeric_coordinates = async (push=false,addComa=false) => {
             point_global_WGS84 = amcr_static_coordinate_precision_wgs84([corX, corY]);
             point_global_JTSK = amcr_static_coordinate_precision_jtsk(jtsk_coor, true);
             addUniquePointToPoiLayer(corX, corY);
-            //point_global_WGS84 = [Math.round(corX * 1000000) / 1000000, Math.round(corY * 1000000) / 1000000]
-            //point_global_JTSK = [-Math.round(jtsk_coor[0] * 100) / 100, -Math.round(jtsk_coor[1] * 100) / 100]
-            //addUniquePointToPoiLayer($("#detector_coordinates_x").val(), $("#detector_coordinates_y").val())
             fill_katastr();
             document.getElementById('id_coordinate_wgs84_x').value = point_global_WGS84[0]
             document.getElementById('id_coordinate_wgs84_y').value = point_global_WGS84[1]
             document.getElementById('id_coordinate_sjtsk_x').value = point_global_JTSK[0]
             document.getElementById('id_coordinate_sjtsk_y').value = point_global_JTSK[1]
-            /*if(push){
-                document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]+ (addComa==true ? ',':'');
-                document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]+ (addComa==true ? ',':'');
-            }*/
             return true;
         } else if (document.getElementById('detector_system_coordinates').value == 2) {
             point_global_JTSK = amcr_static_coordinate_precision_jtsk([corX, corY], false)
@@ -276,8 +260,6 @@ var addUniquePointToPoiLayer = (lat, long, text, zoom = true, redPin = false) =>
         jtsk_coor = amcr_static_coordinate_precision_jtsk(convertToJTSK(corX, corY),true);
         point_global_WGS84 = [corX, corY];
         point_global_JTSK = jtsk_coor;
-        //point_global_WGS84 = [Math.round(lat * 1000000) / 1000000, Math.round(long * 1000000) / 1000000]
-        //point_global_JTSK = [-Math.round(jtsk_coor[0] * 100) / 100, -Math.round(jtsk_coor[1] * 100) / 100]
 
     }
 };
@@ -296,7 +278,6 @@ function showPosition(position) {
 
     document.getElementById('detector_system_coordinates').value = 1
     point_global_WGS84 = [latitude, longitude];
-    //point_global_WGS84 = [Math.round(latitude * 1000000) / 1000000, Math.round(longitude * 1000000) / 1000000]
     document.getElementById('detector_coordinates_x').value = point_global_WGS84[0]
     document.getElementById('detector_coordinates_y').value = point_global_WGS84[1]
     replace_coor();

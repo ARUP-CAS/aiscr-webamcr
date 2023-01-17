@@ -320,29 +320,6 @@ if(global_map_can_edit){
 map.addLayer(poi_sugest);
 map.addLayer(poi_other);
 
-/*
-let points=[
-        [50.2866623899293,14.83060419559479,'Moc zajimave'],
-        [50.28723821959954,14.82906997203827,'1'],
-        [50.286528714187945,14.829558134078981,'2'],
-        [50.28633676887708,  14.825491905212404,'3'],
-        [50.285658098891645,14.833227396011354,'4'],
-        [50.287611819646955 ,14.832251071929933,'5']
-
-    ]
-
-for(i=1;i<=1000;i++){
-    var x1=49+(50.4-49)*Math.random();
-    var x2=13.+(18-13)*Math.random();
-    points.push([x1,x2,'Random:'+i]);
-}
-
-for(i=1;i<=100;i++){
-    var x1=50.28+(0.01)*Math.random();
-    var x2=14.82+(0.01)*Math.random();
-    points.push([x1,x2,'Random:'+i]);
-}*/
-
 
 //adding other points to layer
 var getOtherPoi= ()=>{
@@ -381,18 +358,6 @@ var addPointOnLoad = (lat, long, text) => {
 
     map.setView([lat, long], 18)
     getOtherPoi();
-
-  /*  var polyLayers = [];
-    var polygon2 = L.polygon([
-        [50.2866623899293,14.83060419559479,'Moc zajimave'],
-        [50.28723821959954,14.82906997203827,'1'],
-        [50.286528714187945,14.829558134078981,'2'],
-    ]);
-    polyLayers.push(polygon2)
-
-    for(layer of polyLayers) {
-        poi_sugest.addLayer(layer);
-    }*/
 }
 
 addPointOnLoad(50.28702571184197,14.830008745193483,"Uživatelem zadaná poloha záměru");

@@ -65,7 +65,6 @@ class ExterniZdroj(models.Model):
     stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
     ident_cely = models.TextField(unique=True, blank=True, null=False)
-    # final_cj = models.BooleanField(blank=True, null=True) #Removed by #474
 
     historie = models.OneToOneField(
         HistorieVazby, on_delete=models.RESTRICT, db_column="historie", blank=True, null=True

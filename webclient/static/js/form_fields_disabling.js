@@ -1,4 +1,4 @@
-function ChangeFields(checked_field, fields, allowed, required,) {
+function changeFields(checked_field, fields, allowed, required,) {
     var allowed_now = []
     if (typeof allowed.get(checked_field.value) != "undefined") {
         allowed_now = allowed.get(checked_field.value)

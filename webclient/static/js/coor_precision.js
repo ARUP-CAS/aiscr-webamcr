@@ -70,7 +70,6 @@ function amcr_static_geom_precision(in_text, in_precison) {
     }
     //console.log("---------------"+in_text)
     for (const x of in_text.toString()) {
-        //console.log(x+" "+"0123456789.".indexOf(x))
         if ("0123456789.".indexOf(x) > -1) {
             if (loc_p == -1) {
                 
