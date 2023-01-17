@@ -61,7 +61,7 @@
         required.set("{% get_value_from_heslar "externi_zdroj_typ" "nepublikovana_zprava" %}", [])
         var allowed = new Map()
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "kniha" %}", ["id_edice_rada", "id_vydavatel","id_isbn","id_misto"])
-        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "cast_nihy" %}", ["id_editori", "id_misto","id_paginace_titulu","id_sbornik_nazev","id_edice_rada","id_vydavatel","id_isbn"])
+        allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "cast_knihy" %}", ["id_editori", "id_misto","id_paginace_titulu","id_sbornik_nazev","id_edice_rada","id_vydavatel","id_isbn"])
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_casopise" %}", ["id_casopis_denik_nazev", "id_casopis_rocnik", "id_paginace_titulu","id_issn"])
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "clanek_v_novinach" %}", ["id_casopis_denik_nazev", "id_datum_rd", "id_paginace_titulu"])
         allowed.set("{% get_value_from_heslar "externi_zdroj_typ" "nepublikovana_zprava" %}", ["id_typ_dokumentu", "id_organizace"])
@@ -70,8 +70,6 @@
           //Delayed for 1 second. Give select2 chance to load and init
           changeFields(checked_field, fields,allowed,required);
         }, "1000")
-        
-        
         checked_field.addEventListener("change", changeFields.bind(event, checked_field, fields,allowed,required));
       })
     </script>

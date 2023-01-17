@@ -159,7 +159,7 @@ def get_osoby_name(widget):
 def get_value_from_heslar(nazev_heslare, hodnota):
     values = {
         ("externi_zdroj_typ", "kniha"): hesla.EXTERNI_ZDROJ_TYP_KNIHA,
-        ("externi_zdroj_typ", "cast_nihy"): hesla.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
+        ("externi_zdroj_typ", "cast_knihy"): hesla.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
         ("externi_zdroj_typ", "clanek_v_casopise"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
         ("externi_zdroj_typ", "clanek_v_novinach"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
         ("externi_zdroj_typ", "nepublikovana_zprava"): hesla.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
