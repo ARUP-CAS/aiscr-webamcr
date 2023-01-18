@@ -75,7 +75,7 @@ VRACENI_SN: Final = "SN-1"  # 5
 # Soubory
 NAHRANI_SBR: Final = "SBR0"  # 0
 # Uzivatel
-ZMENA_HLAVNI_ROLE: Final = "HR"  # 0
+ZMENA_HLAVNI_ROLE: Final = "HR"  # 0, 1
 ZMENA_UDAJU_ADMIN: Final = "ZUA"  # 0
 ADMIN_UPDATE: Final = "AU"  # 0
 
@@ -91,10 +91,9 @@ ROLE_NASTAVENI_ODSTAVKY = 7
 ZAPSANI_PIAN: Final = "PI01"
 POTVRZENI_PIAN: Final = "PI12"
 # Uzivatel_spoluprace
-# TODO domluvit jak se budou resit stavy spoluprace
-SPOLUPRACE_ZADOST: Final = "SP01"
-SPOLUPRACE_AKTIVACE: Final = "SP12"
-SPOLUPRACE_DEAKTIVACE: Final = "SP-1"
+SPOLUPRACE_ZADOST: Final = "SP01"  # 1
+SPOLUPRACE_AKTIVACE: Final = "SP12"  # 2, 4
+SPOLUPRACE_DEAKTIVACE: Final = "SP-1"  # 3
 
 # Externi_zdroj
 ZAPSANI_EXT_ZD: Final = "EZ01"  # 1
