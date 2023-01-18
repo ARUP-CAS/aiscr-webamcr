@@ -672,7 +672,7 @@ def zadost(request):
                     message=ZADOST_O_SPOLUPRACI_VYTVORENA,
                 )
                 Mailer.send_en05(
-                    email_to=uzivatel_email, reason=uzivatel_text, user=request.user
+                    email_to=uzivatel_email, reason=uzivatel_text, user=request.user, spoluprace_id=s.pk
                 )
                 return redirect("pas:spoluprace_list")
         else:

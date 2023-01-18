@@ -1,0 +1,14 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>
+        {% trans "E-U-06.dobrý_den" %},
+    </p>
+    {% trans "E-U-06.vašemu_účtu_byla_v_AMČR_změněna_uživatelská_role_či_upraveno_oprávnění." %}{% trans "E-U-06.platné_údaje" %}:
+    <ul style="list-style: none">
+        <li>{% trans "E-U-06.user_role" %}: {{ roles }}</li>
+    </ul>
+    <p>
+        {% trans "E-U-06.změny_se_projeví_po_přihlášení_do_systému." %}
+    </p>
+{% endblock %}

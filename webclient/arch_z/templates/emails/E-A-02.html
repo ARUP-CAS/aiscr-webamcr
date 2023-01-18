@@ -1,0 +1,13 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+<p>{% trans "E-A-02.dobrý_den" %},</p>
+<p>
+    {% trans "E-A-02.vámi_odeslaná_akce" %}
+    <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-A-02.na_katastru" %}<b>{{ katastr }}</b> {% trans "E-A-02.byla_převedena_do_stavu" %}
+    <b>{{ state }}</b> {% endblocktrans %}.
+</p>
+<p>{% trans "E-A-02.detaily_o_akci_zjistíte_po_přihlášení_do_amčr" %}.
+    {% trans "E-A-02.nejpozději_během_následujícího_dne_bude_záznam_zveřejněn_v_digitálním_archivu_amčr" %}.
+</p>
+{% endblock %}

@@ -19,6 +19,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
+from services.mailer import Mailer
+from django_registration.backends.activation.views import ActivationView
 
 from core.decorators import odstavka_in_progress
 from core.message_constants import (
@@ -239,4 +241,21 @@ def update_notifications(request):
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
         user.notification_types.set(notifications)
+        messages.add_message(request, messages.SUCCESS,
+                             _("uzivatel.update_notifications.post.success"))
         return redirect("/upravit-uzivatele/")
+
+
+class UserActivationView(ActivationView):
+    def activate(self, *args, **kwargs):
+        username = self.validate_key(kwargs.get("activation_key"))
+        user = self.get_user(username)
+        user.is_active = True
+        user.save()
+        Mailer.send_eu02(user)
+        return user
+
+def test(request):
+    from django.http import HttpResponse
+    from django.urls import reverse
+    return HttpResponse(reverse('pas:spoluprace_aktivace', args=('33',)))

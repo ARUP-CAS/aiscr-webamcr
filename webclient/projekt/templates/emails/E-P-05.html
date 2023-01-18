@@ -1,0 +1,10 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>{% trans "E-P-05.dobrý_den" %},</p>
+    <p>
+        {% trans "E-P-05.projekt" %} <b>{{ ident_cely }}</b> {% trans "E-P-05.na katastru" %}
+        <b>{{ katastr }}</b> {% trans "E-P-05.vámi_navržený_ke_zrušení_byl_převeden_do_stavu" %}
+        <b>{{ state }}</b>.</p>
+    <p>{% trans "E-P-05.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.</p>
+{% endblock %}

@@ -3,7 +3,7 @@ import structlog
 from django.contrib.auth.models import Group
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models.signals import pre_save, post_save, m2m_changed
+from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 
 from services.mailer import Mailer
@@ -58,3 +58,8 @@ def send_new_user_email_to_admin(sender, instance: User, **kwargs):
 def send_account_confirmed_email(sender, instance: User, **kwargs):
     if kwargs.get('created') is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
+
+
+@receiver(post_delete, sender=User)
+def delete_profile(sender, instance, *args, **kwargs):
+    Mailer.send_eu03(user=instance)

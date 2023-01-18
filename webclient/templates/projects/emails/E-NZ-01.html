@@ -1,0 +1,21 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+<p>
+    {% trans 'E-NZ-01.dobrý_den' %},
+</p>
+<p>
+    {% trans "E-NZ-01.v_aplikaci_AMČR_za_90_dní_uplyne_lhůta_pro_odevzdání_nálezové_zprávy_u_projektu" %}
+    <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-NZ-01.na_katastru" %} <b>{{ katastr }}</b>{% endblocktrans %}.
+</p>
+<p>
+    {% trans "E-NZ-01.detaily_projektu_zjistíte_po_přihlášení_do_amčr" %}.
+</p>
+<p>
+    ------------------------------
+    <br>
+    {% trans "E-NZ-01.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "E-NZ-01.odesláno_z" %} {{ server_domain }}
+</p>
+{% endblock %}

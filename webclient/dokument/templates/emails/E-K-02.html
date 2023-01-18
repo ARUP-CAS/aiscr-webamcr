@@ -1,0 +1,11 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>{% trans "E-K-02.dobrý_den" %},</p>
+    <p>
+        {% trans "E-K-02.vámi_odeslaný_dokument" %}
+        <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-K-02.byl_vrácen_do_stavu" %} <b>{{ state }}</b>.
+    </p>
+    <p><b>{% trans "E-K-02.důvod" %}:</b> {{ reason }}</p>
+    <p>{% trans "E-K-02.detaily_zjistíte_po_přihlášení_do_knihovny_3d_v_amčr" %}.</p>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% load i18n %}
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{{ title }}</title>
+</head>
+<body>{% block content %}{% endblock %}
+<p>
+    ------------------------------
+    <br>
+    {% trans "paticka.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
+    <br>
+    {% trans "paticka.odesláno_z" %} {{ server_domain }}
+</p>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>{% trans 'E-P-02.dobrý_den' %},</p>
+    {% for project in projects %}
+        <p>
+            {% trans 'E-P-02.v_aplikaci_is_amčr_byl_právě_zapsán_nový_projekt' %}<b>{{ project.ident_cely }}</b>.
+        </p>
+        <ul style="list-style: none">
+            <li><b>{% trans 'E-P-02.typ_projektu' %}:</b> {{ project.typ_projektu.heslo }}</li>
+            <li><b>{% trans 'E-P-02.katastr' %}:</b> {{ project.hlavni_katastr.nazev }}
+                ({{ project.hlavni_katastr.okres.nazev }}</li>
+            <li><b>{% trans 'E-P-02.podnět' %}:</b> {{ project.podnet }}</li>
+            <li><b>{% trans 'E-P-02.lokalizace' %}:</b> {{ project.lokalizace }}</li>
+            <li><b>{% trans 'E-P-02.plánované_zahájení' %}:</b> {{ project.planovane_zahajeni_text }}</li>
+        </ul>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'core/email.html' %}
+{% load i18n %}
+{% block content %}
+    <p>{% trans "E-O-02.vážená_paní/vážený_pane" %},</p>
+    <p>{% trans "E-O-02.děkujeme_za_oznámení_o_stavební_nebo_jiné_činnosti" %}
+        (<b>{{ podnet }}</b>) {% trans "E-O-02.na_území_s_archeologickými_nálezy_na_k_ú" %}
+        <b><b>{{ katastr }}</b></b>
+        (<b><b>{{ okres }}</b></b>), {% trans "E-O-02.parcela" %}
+        <b><b>{{ parcela }}</b></b>
+        (<b><b>{{ lokalita }}</b></b>) {% trans "E-O-02.podle_§_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči" %}.
+        {% trans "E-O-02.po_zpracování_oznámení_vás_budeme_dále_informovat" %}{% trans "E-O-02.potvrzení_o_oznámení_obdržíte_po_kontrole_vložených_údajů" %}
+    </p>
+    <p>{% trans "E-O-02.s_pozdravem" %}</p>
+    <p>{% trans "E-O-02.archeologický_ústav_av_čr_brno_v_v_i" %}</p>
+    <p>{% trans "E-O-02.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}
+        {% trans "E-O-02.vaše_případné_dotazy_pište_na_adresu_oznameni@arub.cz_nebo_volejte_na_tel_+420_515_911_133_(jihomoravský_a_zlínský_kraj)_+420_515_911_121_(vysočina_a_olomoucký_kraj)_+420_553_821_603_(moravskoslezský_kraj)" %}
+    </p>
+{% endblock %}

@@ -59,3 +59,4 @@ EMAIL_FILE_PATH = "/vol/web/media/emails/"
 
 # auto logout settings
 AUTO_LOGOUT = {}
+SITE_URL = 'http://localhost:8000'
