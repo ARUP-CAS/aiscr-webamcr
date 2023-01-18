@@ -82,14 +82,14 @@ SELECT jednotka_dokument.*
 FROM neident_akce RIGHT JOIN (lokalita RIGHT JOIN (akce RIGHT JOIN jednotka_dokument ON akce.id = jednotka_dokument.vazba) ON lokalita.id = jednotka_dokument.vazba) ON neident_akce.id = jednotka_dokument.vazba
 WHERE (((akce.id) Is Null) AND ((jednotka_dokument.vazba) Is Not Null) AND ((neident_akce.id) Is Null) AND ((lokalita.id) Is Null));
 )
-UPDATE dokument_cast SET vaba = null FROM del WHERE dokument_cast.id = del.id;
+UPDATE dokument_cast SET vazba = null FROM del WHERE dokument_cast.id = del.id;
 
 WITH del AS(
 SELECT jednotka_dokument.*
 FROM neident_akce RIGHT JOIN (lokalita RIGHT JOIN (akce RIGHT JOIN jednotka_dokument ON akce.id = jednotka_dokument.vazba_druha) ON lokalita.id = jednotka_dokument.vazba_druha) ON neident_akce.id = jednotka_dokument.vazba_druha
 WHERE (((akce.id) Is Null) AND ((jednotka_dokument.vazba_druha) Is Not Null) AND ((neident_akce.id) Is Null) AND ((lokalita.id) Is Null));
 )
-UPDATE dokument_cast SET vaba = null FROM del WHERE dokument_cast.id = del.id;
+UPDATE dokument_cast SET vazba = null FROM del WHERE dokument_cast.id = del.id;
 
 -- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
 UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and email is null;
@@ -101,8 +101,8 @@ UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and objednatel is n
 -- Příprava pole autori v ext. zdrojích
 UPDATE externi_zdroj SET autori = REPLACE(autori, ' (ed.)', '') WHERE autori LIKE '% (ed.)%';
 
-UPDATE komponenta_dokumentu SET obdobi = (SELECT id FROM heslar_obdobi_druha WHERE ident_cely = 'HES-000316')
+UPDATE komponenta_dokument SET obdobi = (SELECT id FROM heslar_obdobi_druha WHERE ident_cely = 'HES-000316')
 WHERE obdobi is null;
 
-UPDATE komponenta_dokumentu SET areal = (SELECT id FROM heslar_areal_druha WHERE ident_cely = 'HES-000060')
+UPDATE komponenta_dokument SET areal = (SELECT id FROM heslar_areal_druha WHERE ident_cely = 'HES-000060')
 WHERE areal is null;
