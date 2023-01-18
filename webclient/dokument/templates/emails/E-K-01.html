@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block content %}
     <p>{% trans 'E-K-01.dobrý_den' %},</p>
-    <p>{% trans "E-K-01.v_amčr_byl_archivován_vámi_vložený_3d_dokument" %} <b><a href="{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b>.</p>
+    <p>{% trans "E-K-01.v_amčr_byl_archivován_vámi_vložený_3d_dokument" %} <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b>.</p>
     <p>
         {% trans "E-K-01.detaily_zjistíte_po_přihlášení_do_do_knihovny_3d_v_amčr" %}.
         {% trans "E-K-01.nejpozději_během_následujícího_dne_bude_záznam_zveřejněn_v_digitálním_archivu_amčr" %}.

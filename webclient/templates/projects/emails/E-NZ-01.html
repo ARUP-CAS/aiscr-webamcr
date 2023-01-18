@@ -6,7 +6,7 @@
 </p>
 <p>
     {% trans "E-NZ-01.v_aplikaci_AMČR_za_90_dní_uplyne_lhůta_pro_odevzdání_nálezové_zprávy_u_projektu" %}
-    <b><a href="{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-NZ-01.na_katastru" %} <b>{{ katastr }}</b>{% endblocktrans %}.
+    <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-NZ-01.na_katastru" %} <b>{{ katastr }}</b>{% endblocktrans %}.
 </p>
 <p>
     {% trans "E-NZ-01.detaily_projektu_zjistíte_po_přihlášení_do_amčr" %}.

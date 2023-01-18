@@ -4,7 +4,7 @@
     <p>{% trans "E-N-05.dobrý_den" %},</p>
     <p>{% trans "E-N-05.nový_uživatel_žádá_o_zařazení_mezi_spolupracovníky" %}:</p>
     <ul style="list-style: none">
-        <li><b>{% trans "E-N-05.id" %}:</b> <a href="{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></li>
+        <li><b>{% trans "E-N-05.id" %}:</b> <a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></li>
         <li><b>{% trans "E-N-05.jméno" %}:</b> {{ name }}</li>
         <li><b>{% trans "E-N-05.příjmení" %}:</b> {{ surname }}</li>
         <li><b>{% trans "E-N-05.organizace" %}:</b> {{ organization }}</li>
