@@ -26,6 +26,7 @@ update user_storage set auth_level = 0 where auth_level is null;
 -- DONE 8. nelze pridat not null na uzivatel.heslo a email protoze uzivatel s ID -1 nema heslo ani email
 ---- COMMENT: existuje jedna akce ktera na neho ukazuje asi to je chyba, to same plati pro jeden externi zdroj a pian.potvrdil, 10 pripadu pian.vymezil, 7 pripadu projekt.odpovedny_pracovnik_zahajeni, 808 pripadu dokument.odpovedny_pracovnik_archivace, historie.uzivatel tam ma taky -1 (nastavim je na tebe, protoze tam chci ponechat not null constraint)
 update akce set odpovedny_pracovnik_archivace_zaa = null where odpovedny_pracovnik_archivace_zaa = -1;
+update akce set odpovedny_pracovnik_podani_nz = null where odpovedny_pracovnik_podani_nz = -1;
 update externi_zdroj set odpovedny_pracovnik_vlozeni = null where odpovedny_pracovnik_vlozeni = -1;
 update pian set potvrdil = null where potvrdil = -1;
 update pian set vymezil = null where vymezil = -1;
@@ -60,7 +61,35 @@ WITH prohodit AS
     OR (vazba_druha IN (SELECT id FROM lokalita WHERE jednotka_dokument.vazba_druha = lokalita.id)))
     AND vazba IN (SELECT id FROM neident_akce WHERE jednotka_dokument.vazba = neident_akce.id)
 )
-UPDATE jednotka_dokument SET vazba = (SELECT vazba_druha FROM prohodit WHERE jednotka_dokument.id = prohodit.id), vazba_druha = (SELECT vazba FROM prohodit WHERE jednotka_dokument.id = prohodit.id);
+UPDATE jednotka_dokument SET vazba = (SELECT vazba_druha FROM prohodit WHERE jednotka_dokument.id = prohodit.id), vazba_druha = (SELECT vazba FROM prohodit WHERE jednotka_dokument.id = prohodit.id)
+FROM prohodit WHERE jednotka_dokument.id = prohodit.id;
+
+WITH del AS(
+WITH pom AS
+(
+SELECT neident_akce.*
+FROM neident_akce LEFT JOIN jednotka_dokument ON neident_akce.id = jednotka_dokument.vazba
+WHERE (((jednotka_dokument.id) Is Null))
+)
+SELECT pom.id
+FROM pom LEFT JOIN jednotka_dokument ON pom.id = jednotka_dokument.vazba_druha
+WHERE (((jednotka_dokument.id) Is Null))
+)
+DELETE FROM neident_akce USING del WHERE del.id = neident_akce.id;
+
+WITH del AS(
+SELECT jednotka_dokument.*
+FROM neident_akce RIGHT JOIN (lokalita RIGHT JOIN (akce RIGHT JOIN jednotka_dokument ON akce.id = jednotka_dokument.vazba) ON lokalita.id = jednotka_dokument.vazba) ON neident_akce.id = jednotka_dokument.vazba
+WHERE (((akce.id) Is Null) AND ((jednotka_dokument.vazba) Is Not Null) AND ((neident_akce.id) Is Null) AND ((lokalita.id) Is Null));
+)
+UPDATE dokument_cast SET vaba = null FROM del WHERE dokument_cast.id = del.id;
+
+WITH del AS(
+SELECT jednotka_dokument.*
+FROM neident_akce RIGHT JOIN (lokalita RIGHT JOIN (akce RIGHT JOIN jednotka_dokument ON akce.id = jednotka_dokument.vazba_druha) ON lokalita.id = jednotka_dokument.vazba_druha) ON neident_akce.id = jednotka_dokument.vazba_druha
+WHERE (((akce.id) Is Null) AND ((jednotka_dokument.vazba_druha) Is Not Null) AND ((neident_akce.id) Is Null) AND ((lokalita.id) Is Null));
+)
+UPDATE dokument_cast SET vaba = null FROM del WHERE dokument_cast.id = del.id;
 
 -- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
 UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and email is null;
@@ -71,3 +100,9 @@ UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and objednatel is n
 
 -- Příprava pole autori v ext. zdrojích
 UPDATE externi_zdroj SET autori = REPLACE(autori, ' (ed.)', '') WHERE autori LIKE '% (ed.)%';
+
+UPDATE komponenta_dokumentu SET obdobi = (SELECT id FROM heslar_obdobi_druha WHERE ident_cely = 'HES-000316')
+WHERE obdobi is null;
+
+UPDATE komponenta_dokumentu SET areal = (SELECT id FROM heslar_areal_druha WHERE ident_cely = 'HES-000060')
+WHERE areal is null;

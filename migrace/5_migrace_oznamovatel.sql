@@ -24,9 +24,9 @@ insert into oznamovatel (id, email, adresa, odpovedna_osoba, oznamovatel, telefo
 ALTER TABLE projekt add constraint projekt_oznamovatel_fkey foreign key (oznamovatel) references oznamovatel(id) ON DELETE SET NULL;
 
 -- Check ze kazdy zachranny projekt ma oznamovatele
-ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_check CHECK (not (oznamovatel IS NULL and typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001136')));
+--ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_check CHECK (not (oznamovatel IS NULL and typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001136')));
 -- Nezachranny projekt nemuze mit oznamovatele
-ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_null_check CHECK (not ((typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001137') or typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001138')) and oznamovatel IS NOT NULL));
+--ALTER TABLE projekt ADD CONSTRAINT projekt_oznamovatel_null_check CHECK (not ((typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001137') or typ_projektu = (SELECT id FROM heslar WHERE ident_cely = 'HES-001138')) and oznamovatel IS NOT NULL));
 
 -- Zmena typu sloupce planovane_zahajeni z textu na daterange
 alter table projekt rename column planovane_zahajeni to planovane_zahajeni_text;

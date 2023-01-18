@@ -51,7 +51,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into akce_katastr(akce, katastr, hlavni) select distinct a.id, r.id, false from akce a join ruian_katastr r on r.nazev = SUBSTRING(split_part(dalsi_katastry, ';', counter), 1, POSITION('(' in split_part(a.dalsi_katastry, ';', counter)) - 2) where split_part(a.dalsi_katastry, ';', counter) != '';
+            insert into akce_katastr(akce, katastr, hlavni) select distinct a.id, r.id, false from akce a join ruian_katastr r on r.nazev = SUBSTRING(split_part(dalsi_katastry, ';', counter), 1, POSITION('(' in split_part(a.dalsi_katastry, ';', counter)) - 2) where split_part(a.dalsi_katastry, ';', counter) != '' AND NOT EXISTS (SELECT 1 FROM akce_katastr AS ak WHERE ak.akce = a.id AND ak.katastr = r.id);
         END;
     END LOOP;
 END;
@@ -104,7 +104,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into lokalita_katastr(lokalita, katastr, hlavni) select distinct a.id, r.id, false from lokalita a join ruian_katastr r on r.nazev = SUBSTRING(split_part(dalsi_katastry, ';', counter), 1, POSITION('(' in split_part(a.dalsi_katastry, ';', counter)) - 2) where split_part(a.dalsi_katastry, ';', counter) != '';
+            insert into lokalita_katastr(lokalita, katastr, hlavni) select distinct a.id, r.id, false from lokalita a join ruian_katastr r on r.nazev = SUBSTRING(split_part(dalsi_katastry, ';', counter), 1, POSITION('(' in split_part(a.dalsi_katastry, ';', counter)) - 2) where split_part(a.dalsi_katastry, ';', counter) != '' AND NOT EXISTS (SELECT 1 FROM lokalita_katastr AS ak WHERE ak.lokalita = a.id AND ak.katastr = r.id);
         END;
     END LOOP;
 END;
@@ -163,7 +163,7 @@ BEGIN
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
-            insert into projekt_katastr(projekt, katastr, hlavni) select distinct a.id, r.id, false from projekt a join ruian_katastr r on r.nazev = SUBSTRING(split_part(dalsi_katastry, ';', counter), 1, POSITION('(' in split_part(a.dalsi_katastry, ';', counter)) - 2) where split_part(a.dalsi_katastry, ';', counter) != '';
+            insert into projekt_katastr(projekt, katastr, hlavni) select distinct a.id, r.id, false from projekt a join ruian_katastr r on r.nazev = SUBSTRING(split_part(dalsi_katastry, ';', counter), 1, POSITION('(' in split_part(a.dalsi_katastry, ';', counter)) - 2) where split_part(a.dalsi_katastry, ';', counter) != '' AND NOT EXISTS (SELECT 1 FROM projekt_katastr AS ak WHERE ak.projekt = a.id AND ak.katastr = r.id);
         END;
     END LOOP;
 END;

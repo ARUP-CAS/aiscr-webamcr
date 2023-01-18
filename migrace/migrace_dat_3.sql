@@ -48,6 +48,7 @@ drop function migratePosudkyFromDokument();
 -- a) Validace dat
 -- b) Migrace dat
 ---- 1. seskupujici zaznamy na ktere se bude odkazovat (pro kazdou akci/lokalitu jeden)
+ALTER SEQUENCE public.dokument_cast_vazby_id_seq RESTART WITH 1;
 insert into dokument_cast_vazby(typ_vazby) select 'akce' from akce;
 insert into dokument_cast_vazby(typ_vazby) select 'lokalita' from lokalita;
 
@@ -68,7 +69,7 @@ update dokument_cast s set vazba = d.dokumenty_casti from (select id, dokumenty_
 
 ------ a) Validace dat
 ------ b) Migrace dat
-
+ALTER SEQUENCE public.komponenta_vazby_id_seq RESTART WITH 1;
 insert into komponenta_vazby(typ_vazby) select 'dokument_cast' from dokument_cast;
 insert into komponenta_vazby(typ_vazby) select 'dokumentacni_jednotka' from dokumentacni_jednotka;
 update dokument_cast d set komponenty = sub.rn from (select id, row_number() OVER (order by id) as rn from dokument_cast) sub where d.id = sub.id;
@@ -105,6 +106,7 @@ insert into komponenta_aktivita(komponenta, aktivita) select id, 10 from kompone
 -- b) Migrace dat
 
 ---- 1. seskupujici zaznamy na ktere se bude odkazovat (pro kazdou akci/lokalitu jeden)
+ALTER SEQUENCE public.dokumentacni_jednotka_vazby_id_seq RESTART WITH 1;
 insert into dokumentacni_jednotka_vazby(typ_vazby) select 'akce' from akce;
 insert into dokumentacni_jednotka_vazby(typ_vazby) select 'lokalita' from lokalita;
 
@@ -126,6 +128,7 @@ update dokumentacni_jednotka s set vazba = d.dokumentacni_jednotky from (select 
 -- b) Migrace dat
 
 ---- 1. seskupujici zaznamy na ktere se bude odkazovat (pro kazdou akci/lokalitu jeden)
+ALTER SEQUENCE public.externi_odkaz_vazby_id_seq RESTART WITH 1;
 insert into externi_odkaz_vazby(typ_vazby) select 'akce' from akce;
 insert into externi_odkaz_vazby(typ_vazby) select 'lokalita' from lokalita;
 
@@ -162,8 +165,9 @@ ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_pkey;
 ALTER TABLE neident_akce ADD CONSTRAINT neident_akce_pkey PRIMARY KEY (dokument_cast);
 ALTER TABLE neident_akce DROP COLUMN id;
 DROP SEQUENCE neident_akce_id_seq;
+alter table neident_akce_vedouci drop constraint neident_akce_vedouci_neident_akce_fk;
 ALTER TABLE neident_akce DROP CONSTRAINT neident_akce_dokument_cast_key;
-ALTER TABLE neident_akce ALTER COLUMN dokument_cast SET NOT NULL;
+alter table neident_akce_vedouci add constraint neident_akce_vedouci_neident_akce_fk foreign key (neident_akce) references neident_akce(dokument_cast);
 
 -- 8. migrace externi_zdroj.sbornik_editor
 
