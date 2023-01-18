@@ -60,16 +60,21 @@ update historie set typ_zmeny_text = 'SN34' where id in (select his.id from hist
 --VRACENI_SN: Final = "SN-1"  # 5
 update historie set typ_zmeny_text = 'SN-1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='samostatny_nalez' and his.typ_zmeny=5);
 
--- COMMENT: Jak resit stavy uzivatelu??? TEN NEMA SLOUPEC STAV!!!
 --# Uzivatel
---update historie set typ_zmeny_text = 'SN01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='uzivatel' and his.typ_zmeny=1);
+update historie set typ_zmeny_text = 'HR' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='uzivatel' and (his.typ_zmeny=1 or his.typ_zmeny=0));
+
 --# Pian
 --ZAPSANI_PIAN: Final = "PI01"
 update historie set typ_zmeny_text = 'PI01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='pian' and his.typ_zmeny=1);
 --POTVRZENI_PIAN: Final = "PI12"
 update historie set typ_zmeny_text = 'PI12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='pian' and his.typ_zmeny=2);
 -- COMMENT: Tady taky neni sloupcec STAV ale puze prechody. Chtelo by to tady se tomu taky venovat a predelat to na stavy.
+
 --# Uzivatel_spoluprace
+update historie set typ_zmeny_text = 'SP01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='uzivatel_spoluprace' and his.typ_zmeny=1);
+update historie set typ_zmeny_text = 'SP12' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='uzivatel_spoluprace' and (his.typ_zmeny=2 or his.typ_zmeny=4));
+update historie set typ_zmeny_text = 'SP-1' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='uzivatel_spoluprace' and his.typ_zmeny=3);
+
 --# Externi_zdroj
 --IMPORT_EXT_ZD: Final = "EZ01"  # 1
 update historie set typ_zmeny_text = 'EZ01' where id in (select his.id from historie his join historie_vazby as hv on hv.id=his.vazba where hv.typ_vazby='externi_zdroj' and his.typ_zmeny=1);
@@ -82,7 +87,7 @@ update historie set typ_zmeny_text = 'EZ23' where id in (select his.id from hist
 alter table historie rename column typ_zmeny to typ_zmeny_old;
 alter table historie rename column typ_zmeny_text to typ_zmeny;
 alter table historie alter typ_zmeny_old drop not null;
---alter table historie alter column typ_zmeny set not null;
+alter table historie alter column typ_zmeny set not null;
 
 -- COMMENT: tenhle sloupec tam nemusi byt, je to jen pro migraci
 alter table archeologicky_zaznam alter column stav_stary drop not null;
