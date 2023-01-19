@@ -27,11 +27,12 @@ from urllib.parse import urljoin
 logger_s = structlog.get_logger(__name__)
 
 groups = {
-    "S-E-A-XX": "AMČR: archivace záznamů",
-    "S-E-N-01": "AMČR-PAS: nové nálezy k potvrzení",
-    "S-E-N-02": "AMČR-PAS: archivace záznamů",
-    "S-E-N-05": "AMČR-PAS: nová žádost o spolupráci",
-    "S-E-K-01": "AMČR - Knihovna 3D: archivace záznamů"
+    "E-A-01": "S-E-A-XX",
+    "E-A-02": "S-E-A-XX",
+    "E-N-01": "S-E-N-01",
+    "E-N-02": "S-E-N-02",
+    "E-N-05": "S-E-N-05",
+    "E-K-01": "S-E-K-01"
 }
 
 always_active = [
@@ -186,7 +187,7 @@ class Mailer():
             roles = roles.rstrip(', ')
             html = render_to_string(notification_type.cesta_sablony, {
                 "title": notification_type.predmet,
-                "roles":  roles,
+                "roles": roles,
                 "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
             })
             if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):

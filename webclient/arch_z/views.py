@@ -663,9 +663,11 @@ def vratit(request, ident_cely):
                         request.user, projekt_stav - 2, "Automatické vrácení projektu"
                     )
                     projekt.save()
+            before_save_state = az.stav
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
-            Mailer.send_ev01(arch_z=az, reason=duvod)
+            if before_save_state == AZ_STAV_ODESLANY:
+                Mailer.send_ev01(arch_z=az, reason=duvod)
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
             )
