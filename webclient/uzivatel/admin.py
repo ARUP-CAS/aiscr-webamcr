@@ -1,8 +1,11 @@
+from typing import Union
+
 import structlog
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
+from django.core.exceptions import ObjectDoesNotExist
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATION_TYPE, SPOLUPRACE_NEAKTIVNI
 from historie.models import Historie, HistorieVazby
@@ -100,7 +103,11 @@ class CustomUserAdmin(UserAdmin):
         user = request.user
         user.created_from_admin_panel = True
         logger_s.debug("uzivatel.admin.save_model.start", user=user.pk, obj_pk=obj.pk, change=change, form=form)
-        user_db: User = User.objects.get(id=obj.pk)
+        try:
+            user_db = User.objects.get(id=obj.pk)
+        except ObjectDoesNotExist as err:
+            user_db = None
+        user_db: Union[User, None]
         super().save_model(request, obj, form, change)
 
         form_groups = form.cleaned_data["groups"]
@@ -130,8 +137,9 @@ class CustomUserAdmin(UserAdmin):
             vazba=obj.history_vazba,
         ).save()
 
-        logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk,
-                       user_groups=user_db.groups.values_list('id', flat=True))
+        if user_db is not None:
+            logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk,
+                           user_groups=user_db.groups.values_list('id', flat=True))
         if not obj.is_active:
             logger_s.debug("uzivatel.admin.save_model.manage_user_groups.deactivated", user=obj.pk)
             transaction.on_commit(lambda: obj.groups.set([], clear=True))
