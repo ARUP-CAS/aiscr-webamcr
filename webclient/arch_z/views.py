@@ -1281,7 +1281,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             and jednotka.pian.stav == PIAN_NEPOTVRZEN
             and show["editovat"],
             "show_approve_pian": show_approve_pian,
-            "show_pripojit_pian": True,
+            "show_pripojit_pian": True if jednotka.pian is None else False,
         }
         if has_adb:
             logger.debug(jednotka.ident_cely)
@@ -1606,7 +1606,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         and jednotka.pian.stav == PIAN_NEPOTVRZEN
         and show["editovat"],
         "show_approve_pian": show_approve_pian,
-        "show_pripojit_pian": True,
+        "show_pripojit_pian": True if jednotka.pian is None else False,
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR else False,
     }
     if has_adb and app != "lokalita":
