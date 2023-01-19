@@ -1,9 +1,11 @@
 <tr>
     <td class="app-ident-cely">
-      <a href="{% url 'dokument:detail' d.ident_cely %}">
-        <span class="material-icons">description</span>
-        {{ d.ident_cely }}
-      </a>
+      {% if d.ident_cely %}
+        <a href="{% url 'dokument:detail' d.ident_cely %}">
+          <span class="material-icons">description</span>
+          {{ d.ident_cely }}
+        </a>
+      {% endif %}
     </td>
     <td>
       <div class="container">
@@ -15,7 +17,7 @@
     <td>{{ d.typ_dokumentu }}</td>
     <td>{{ d.popis }}</td>
     <td>{{ d.soubory.soubory.all|length }}</td>
-    {% if show.editovat %}
+    {% if show.editovat and d.ident_cely %}
     <td>
       <button id="dokument-odpojit-{{d.ident_cely}}" class="dokument-odpojit-btn" type="button" name="button" href="{% url type|add:':odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
         <span class="material-icons app-color-danger">delete_forever</span>
