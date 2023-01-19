@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS uzivatel_notifikace_typ
 INSERT INTO uzivatel_notifikace_typ(ident_cely, zasilat_neaktivnim, predmet, cesta_sablony)
 VALUES ('E-U-01', True, 'AMČR: potvrďte svůj email pro registraci', null),
        ('E-U-02', True, 'AMČR: uživatelský účet zaregistrován', 'emails/account_confirmed.html'),
-       ('E-U-03', True, 'AMČR: uživatelský účet zaregistrován', 'emails/account_removed.html'),
+       ('E-U-03', True, 'AMČR: uživatelský účet deaktivován nebo zrušen', 'emails/account_removed.html'),
        ('E-U-04', False, 'AMČR: uživatelský účet čeká na aktivaci', 'emails/account_activation_request.html'),
        ('E-U-06', True, 'AMČR: nová uživatelská role či oprávnění', 'emails/account_was_updated.html'),
     ('E-NZ-01', False, 'AMČR: projekt {ident_cely} - blíží se lhůta pro odevzdání NZ', '../templates/projects/emails/project_resign_in_90.html'),
