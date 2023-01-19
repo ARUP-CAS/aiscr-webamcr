@@ -649,6 +649,7 @@ class PripojitDokumentForm(forms.Form):
                 url="dokument:dokument-autocomplete-bez-zapsanych"
             ),
         )
+        self.fields["dokument"].required = True
         self.helper = FormHelper(self)
         self.helper.form_tag = False
 
