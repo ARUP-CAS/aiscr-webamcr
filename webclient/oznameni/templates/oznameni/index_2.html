@@ -7,6 +7,9 @@
 {% block title %}Oznámení o stavebním či jiném záměru - Krok 2{% endblock %}
 
 {% block head %}
+  <script>var maxFiles = 999;</script>
+  <script>var object_id = "{{ ident_cely }}";</script>
+  <script>var addRemoveLinks = true;</script>
   <link rel="stylesheet" type="text/css" href="{% static 'dropzone.min.css' %}"/>
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}" />
 {% endblock %}
