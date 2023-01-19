@@ -396,7 +396,7 @@ class Mailer():
         cls._send_ep03(project, notification_type)
 
     @classmethod
-    def sendEP03b(cls, project: 'projekt.models.Projekt'):
+    def send_ep03b(cls, project: 'projekt.models.Projekt'):
         IDENT_CELY = 'E-P-03b'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)

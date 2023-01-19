@@ -283,10 +283,6 @@ def create(request):
                 if p.should_generate_confirmation_document:
                     p.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                if p.ident_cely[0:1] == "C":
-                    Mailer.send_ep01a(project=p)
-                else:
-                    Mailer.send_ep01b(project=p)
                 return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
             logger.debug("The form projekt is not valid!")
@@ -523,6 +519,10 @@ def schvalit(request, ident_cely):
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
+        if projekt.ident_cely[0:1] == "C":
+            Mailer.send_ep01a(project=projekt)
+        else:
+            Mailer.send_ep01b(project=projekt)
         return JsonResponse(
             {
                 "redirect": reverse(
@@ -567,7 +567,7 @@ def prihlasit(request, ident_cely):
             if projekt.ident_cely[0:1] == "C":
                 Mailer.send_ep03a(project=projekt)
             else:
-                Mailer.sendEP03b(project=projekt)
+                Mailer.send_ep03b(project=projekt)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -983,10 +983,10 @@ def vratit(request, ident_cely):
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             projekt_mail = projekt
+            Mailer.send_ep07(project=projekt_mail, reason=duvod)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            Mailer.send_ep07(project=projekt_mail, reason=duvod)
             return JsonResponse(
                 {
                     "redirect": reverse(
