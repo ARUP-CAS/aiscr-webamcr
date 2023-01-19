@@ -166,7 +166,8 @@ class Mailer():
             "organization": user.organizace.nazev,
             "email": user.email,
             "phone": user.telefon,
-            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
+            "admin_link": f"{settings.SITE_URL}/admin/uzivatel/user/{user.pk}/change/"
         })
         superusers = uzivatel.models.User.objects.filter(is_superuser=True)
         for superuser in superusers:

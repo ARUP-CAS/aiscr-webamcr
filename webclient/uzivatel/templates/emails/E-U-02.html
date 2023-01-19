@@ -8,13 +8,13 @@
         {% trans "E-U-02.pro_tuto_emailovou_adresu_byl_registrován_nový_uživatelský_účet_do_AMČR_s_následujícími_údaji" %}:
     </p>
     <ul style="list-style: none">
-        <li><b>{% trans "E-U-02.id" %}:</b> {{ id }}</li>
+        <li><b>{% trans "E-U-02.id" %}:</b> <a href="{{ site_url }}{% url 'core:redirect_ident' id %}">{{ id }}</a></li>
         <li><b>{% trans "E-U-02.jméno" %}:</b> {{ name }}</li>
         <li><b>{% trans "E-U-02.příjmení" %}:</b> {{ surname }}</li>
         <li><b>{% trans "E-U-02.organizace" %}:</b> {{ organization }}</li>
         <li><b>{% trans "E-U-02.email" %}:</b> {{ email }}</li>
         <li><b>{% trans "E-U-02.telefon" %}:</b> {{ phone }}</li>
-        <li><b>{% trans "E-U-02.heslo" %}:</b> {% trans "E-U-02.heslo_vámi_zvolené_heslo" %}
+        <li><b>{% trans "E-U-02.heslo" %}:</b> <i>{% trans "E-U-02.heslo_vámi_zvolené_heslo" %}</i>
         </li>
         <li><b>{% trans "E-U-02.user_role" %}:</b> {{ role }}</li>
     </ul>

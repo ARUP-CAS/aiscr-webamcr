@@ -146,7 +146,8 @@ class CustomUserAdmin(UserAdmin):
         elif groups.count() > 1:
             transaction.on_commit(lambda: obj.groups.set([max_id] + list(other_groups.values_list('id', flat=True)),
                                                               clear=True))
-            Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
+            # Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
+        Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups", user=obj.pk,
                        user_groups=obj.groups.values_list('id', flat=True))
         logger_s.debug("uzivatel.admin.save_model.manage_user_groups", max_id=max_id, hlavni_role_pk=obj.hlavni_role.pk)
