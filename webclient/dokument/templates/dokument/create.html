@@ -5,6 +5,14 @@
 
 {% block title %}{% trans "Nový dokument" %}{% endblock %}
 {% block head %}
+<!-- Autocomplete media files -->
+<link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+<link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+<link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+<script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+<script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+<script src="/static/static/autocomplete_light/select2.js"></script>
+<script src="/static/static/autocomplete_light/i18n/cs.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -31,9 +39,7 @@
       </div>
     </form>
   </div>
-{% endblock %}
 
-{% block modal-form %}
   <div class="modal fade app-modal-form" tabindex="-1" role="dialog" id="modal-form-region">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
       <div class="modal-content form" id="id-modal-region">
@@ -58,6 +64,8 @@
     </div>
   </div>
 {% endblock %}
+
+  
 
 {% block script %}
 
@@ -108,6 +116,29 @@
             $('#id_region').selectpicker('refresh');
           })
           {% endif %}
+          var successFunction = function(settings, response) {
+            var newOption = new Option(response.text, response.value, true, true);
+            $('#id_autori').append(newOption).trigger('change');
+            $('#id_autori').trigger({
+              type: 'select2:select',
+              params: {
+                  data: [response.text, response.value, true, true]
+              }
+            });
+            $(settings.modalIDD).modal("hide");
+          };
+
+          document.addEventListener('DOMContentLoaded', function (event) {
+            var options = Object.assign(defaults, {modalID: "modal-form",
+            formURL: "{% url 'heslar:create_osoba' %}",
+            formID: "create-osoba-form",
+            modalFormID: "#create-osoba-form",
+            modalIDD : "#modal-form",
+            successFunc:successFunction,
+          })
+          new Modal(options, "create-autor"); 
+          
+        });
   </script>
 
 {% endblock %}

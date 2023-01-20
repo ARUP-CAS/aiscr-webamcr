@@ -82,7 +82,46 @@
               disable_disallowed(this.value)
               $('#id_material_originalu').selectpicker('refresh');
           });
-
+          var successFunction = function(settings, response) {
+            var newOption = new Option(response.text, response.value, true, true);
+            $('#id_autori').append(newOption).trigger('change');
+            $('#id_autori').trigger({
+              type: 'select2:select',
+              params: {
+                  data: [response.text, response.value, true, true]
+              }
+            });
+            $(settings.modalIDD).modal("hide");
+          };
+          var successFunction2 = function(settings, response) {
+            var newOption = new Option(response.text, response.value, true, true);
+            $('#id_dokument_osoba').append(newOption).trigger('change');
+            $('#id_dokument_osoba').trigger({
+              type: 'select2:select',
+              params: {
+                  data: [response.text, response.value, true, true]
+              }
+            });
+            $(settings.modalIDD).modal("hide");
+          };
+          document.addEventListener('DOMContentLoaded', function (event) {
+            var options = Object.assign(defaults, {modalID: "modal-form",
+            formURL: "{% url 'heslar:create_osoba' %}",
+            formID: "create-osoba-form",
+            modalFormID: "#create-osoba-form",
+            modalIDD : "#modal-form",
+            successFunc:successFunction,
+          })
+          new Modal(options, "create-autor"); 
+            var options = Object.assign(defaults, {modalID: "modal-form",
+            formURL: "{% url 'heslar:create_osoba' %}",
+            formID: "create-osoba-form",
+            modalFormID: "#create-osoba-form",
+            modalIDD : "#modal-form",
+            successFunc:successFunction2,
+          })
+          new Modal(options, "create-dok-osoba"); 
+        });
   </script>
 
 {% endblock %}

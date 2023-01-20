@@ -7,6 +7,14 @@
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
+<!-- Autocomplete media files -->
+<link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+<link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+<link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+<script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+<script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+<script src="/static/static/autocomplete_light/select2.js"></script>
+<script src="/static/static/autocomplete_light/i18n/cs.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -22,8 +30,8 @@
         </div>
         <div class="card-body">
           <div class="row">
-          <div class="form-group col-sm-2 input-osoba">
-            {% crispy_addon formDokument.autori append='<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
+          <div class="form-group col-sm-2 input-osoba select2-input">
+            {% crispy_addon formDokument.autori append='<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>' %}
           </div>
           <div class="form-group col-sm-2">
             {{ formDokument.rok_vzniku|as_crispy_field }}
@@ -90,19 +98,17 @@
 <script type="text/javascript">
   // create osoba scripts
   var successFunction = function(settings, response) {
-    let dropdown = document.getElementById('id_autori');
-    let newOption = document.createElement('option');
-    newOption.text = response.text;
-    newOption.value = response.value;
-
-    dropdown.add(newOption);
-    
-    $('#id_autori').selectpicker('refresh');
-    $('#id_autori').selectpicker('val', response.value);
-    dropdown.value = response.value;
+    var newOption = new Option(response.text, response.value, true, true);
+    $('#id_autori').append(newOption).trigger('change');
+    $('#id_autori').trigger({
+      type: 'select2:select',
+      params: {
+          data: [response.text, response.value, true, true]
+      }
+    });
     $(settings.modalIDD).modal("hide");
   };
-  
+
   document.addEventListener('DOMContentLoaded', function (event) {
     var options = Object.assign(defaults, {modalID: "modal-form",
     formURL: "{% url 'heslar:create_osoba' %}",
@@ -111,7 +117,8 @@
     modalIDD : "#modal-form",
     successFunc:successFunction,
   })
-  create_osoba_modal = new Modal(options, "create-osoba"); 
-  });
+  new Modal(options, "create-autor"); 
+  
+});
   </script>
 {% endblock %}

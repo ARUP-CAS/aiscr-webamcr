@@ -115,40 +115,43 @@ def true_false(value):
 
 
 @register.filter
-def get_osoby_name(value, args=""):
+def get_osoby_name(widget):
     list_hesla = ""
-    if "ez" in args:
-        if "autori" in args:
-            objekt = ExterniZdrojAutor
-        else:
-            objekt = ExterniZdrojEditor
-        arg_list = [arg.strip() for arg in args.split(";")]
-        i = 1
-        dok_autory = objekt.objects.filter(
-            externi_zdroj__ident_cely=arg_list[1]
-        ).order_by("poradi")
-        for item in dok_autory:
-            if i == 1:
-                list_hesla = item.get_osoba()
+    if not widget["value"]:
+        return list_hesla
+    if "name_id" in widget["attrs"]:
+        if "ez" in widget["attrs"]["name_id"]:
+            if "autori" in widget["name"]:
+                objekt = ExterniZdrojAutor
             else:
-                list_hesla = list_hesla + "; " + item.get_osoba()
-            i = i + 1
-    elif "autori" in args:
-        arg_list = [arg.strip() for arg in args.split(";")]
-        i = 1
-        dok_autory = DokumentAutor.objects.filter(
-            dokument__ident_cely=arg_list[1]
-        ).order_by("poradi")
-        list_hesla = ""
-        for item in dok_autory:
-            if i == 1:
-                list_hesla = item.autor.vypis_cely
-            else:
-                list_hesla = list_hesla + "; " + item.autor.vypis_cely
-            i = i + 1
+                objekt = ExterniZdrojEditor
+            arg_list = [arg.strip() for arg in widget["attrs"]["name_id"].split(";")]
+            i = 1
+            dok_autory = objekt.objects.filter(
+                externi_zdroj__ident_cely=arg_list[1]
+            ).order_by("poradi")
+            for item in dok_autory:
+                if i == 1:
+                    list_hesla = item.get_osoba()
+                else:
+                    list_hesla = list_hesla + "; " + item.get_osoba()
+                i = i + 1
+        elif "autori" in widget["name"]:
+            arg_list = [arg.strip() for arg in widget["attrs"]["name_id"].split(";")]
+            i = 1
+            dok_autory = DokumentAutor.objects.filter(
+                dokument__ident_cely=arg_list[1]
+            ).order_by("poradi")
+            list_hesla = ""
+            for item in dok_autory:
+                if i == 1:
+                    list_hesla = item.autor.vypis_cely
+                else:
+                    list_hesla = list_hesla + "; " + item.autor.vypis_cely
+                i = i + 1
     else:
-        osoby = Osoba.objects.filter(pk__in=value)
-        list_hesla = "; ".join(osoby.values_list("vypis_cely", flat=True))
+        osoby = Osoba.objects.filter(pk__in=widget["value"])
+        list_hesla = "; ".join(osoby.values_list("vypis_cely",flat=True))
     return list_hesla
 
 
@@ -156,7 +159,7 @@ def get_osoby_name(value, args=""):
 def get_value_from_heslar(nazev_heslare, hodnota):
     values = {
         ("externi_zdroj_typ", "kniha"): hesla.EXTERNI_ZDROJ_TYP_KNIHA,
-        ("externi_zdroj_typ", "cast_nihy"): hesla.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
+        ("externi_zdroj_typ", "cast_knihy"): hesla.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
         ("externi_zdroj_typ", "clanek_v_casopise"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
         ("externi_zdroj_typ", "clanek_v_novinach"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
         ("externi_zdroj_typ", "nepublikovana_zprava"): hesla.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
