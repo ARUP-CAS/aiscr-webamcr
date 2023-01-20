@@ -519,7 +519,7 @@ def schvalit(request, ident_cely):
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        if projekt.ident_cely[0:1] == "C":
+        if projekt.ident_cely[0] == "C":
             Mailer.send_ep01a(project=projekt)
         else:
             Mailer.send_ep01b(project=projekt)
@@ -564,7 +564,7 @@ def prihlasit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
-            if projekt.ident_cely[0:1] == "C":
+            if projekt.ident_cely[0] == "C":
                 Mailer.send_ep03a(project=projekt)
             else:
                 Mailer.send_ep03b(project=projekt)
@@ -923,7 +923,7 @@ def zrusit(request, ident_cely):
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
             Mailer.send_ep04(project=projekt, reason=duvod)
-            if projekt.ident_cely[0:1] == "C":
+            if projekt.ident_cely[0] == "C":
                 Mailer.send_ep06a(project=projekt, reason=duvod)
             else:
                 Mailer.send_ep06b(project=projekt, reason=duvod)
@@ -987,7 +987,8 @@ def vratit(request, ident_cely):
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
             projekt_mail = projekt
-            Mailer.send_ep07(project=projekt_mail, reason=duvod)
+            if projekt.stav == PROJEKT_STAV_PRIHLASENY:
+                Mailer.send_ep07(project=projekt_mail, reason=duvod)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
