@@ -19,7 +19,7 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
 from oznameni import views as oznameni_views
-from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView, test
+from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
