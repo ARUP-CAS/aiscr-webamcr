@@ -922,7 +922,11 @@ def zrusit(request, ident_cely):
             projekt.set_zruseny(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
-            Mailer.send_ep04(project=projekt, user=request.user, reason=duvod)
+            Mailer.send_ep04(project=projekt, reason=duvod)
+            if projekt.ident_cely[0:1] == "C":
+                Mailer.send_ep06a(project=projekt, reason=duvod)
+            else:
+                Mailer.send_ep06b(project=projekt, reason=duvod)
             return JsonResponse(
                 {
                     "redirect": reverse(
@@ -1035,7 +1039,7 @@ def vratit_navrh_zruseni(request, ident_cely):
             projekt.set_znovu_zapsan(request.user, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
-            Mailer.send_ep05(project=projekt, user=request.user)
+            Mailer.send_ep05(project=projekt)
             return JsonResponse(
                 {
                     "redirect": reverse(
