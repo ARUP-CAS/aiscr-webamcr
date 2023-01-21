@@ -385,10 +385,10 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            Mailer.send_en03_en04(project=sn, reason=duvod)
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.save()
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
-            Mailer.send_en03_en04(project=sn, reason=duvod)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )

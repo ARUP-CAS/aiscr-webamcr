@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ
+from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, ARCHIVACE_SN, POTVRZENI_SN
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core.exceptions import ObjectDoesNotExist
@@ -520,7 +520,17 @@ class Mailer():
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
+        look_for_stav = ARCHIVACE_SN
+        if project.stav == POTVRZENI_SN:
+            look_for_stav = POTVRZENI_SN
+        if project.stav != ARCHIVACE_SN or project.stav != POTVRZENI_SN:
+            return
+        log = Historie.objects.filter(
+            vazba__sn_historie__ident_cely=project.ident_cely, typ_zmeny=look_for_stav
+        ).order_by('datum_zmeny').first()
+        if not log:
+            return
+        user = log.uzivatel.email
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.katastr.nazev,
@@ -528,8 +538,8 @@ class Mailer():
             "state": project.PAS_STATES[project.stav][1],
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
         })
-        if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
+            cls.send(subject=subject, to=user.email, html_content=html)
 
     @classmethod
     def send_en05(cls, email_to, reason, user: 'uzivatel.models.User', spoluprace_id):
@@ -561,9 +571,9 @@ class Mailer():
         subject = notification_type.predmet
         html = render_to_string(notification_type.cesta_sablony, {
             "ident_cely": cooperation.pk,
-            "name": cooperation.spolupracovnik.first_name,
-            "surname": cooperation.spolupracovnik.last_name,
-            "organization": cooperation.spolupracovnik.organizace.nazev,
+            "name": cooperation.vedouci.first_name,
+            "surname": cooperation.vedouci.last_name,
+            "organization": cooperation.vedouci.organizace.nazev,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
             "site_url": settings.SITE_URL
         })
@@ -593,7 +603,7 @@ class Mailer():
         subject = notification_type.predmet.format(ident_cely=document.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "ident_cely": document.ident_cely,
-            "state": document.STATES[document.stav][1],
+            "state": document.STATES[document.stav -2][1],
             "reason": reason,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
             "site_url": settings.SITE_URL

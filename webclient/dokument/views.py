@@ -1283,6 +1283,8 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
+            if d.stav == D_STAV_ODESLANY:
+                Mailer.send_ek02(document=d, reason=duvod)
             d.set_vraceny(request.user, d.stav - 1, duvod)
             messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_VRACEN)
             return JsonResponse({"redirect": get_detail_json_view(ident_cely)})
