@@ -78,6 +78,8 @@ UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'vyskovy_bod_typ';
 UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'zeme';
 
 -- Doplnění check na hesláře, aby nemohlo dojít k tomu, že bude použito heslo ze špatného hesláře
+/*
+Check nemůže obsahovat subquery...
 ALTER TABLE adb ADD CONSTRAINT adb_typ_sondy_check CHECK (typ_sondy IS NULL OR typ_sondy IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'adb_typ')));
 ALTER TABLE adb ADD CONSTRAINT adb_podnet_check CHECK (podnet IS NULL OR podnet IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'adb_podnet')));
 ALTER TABLE akce ADD CONSTRAINT akce_specifikace_data_check CHECK (specifikace_data IS NULL OR specifikace_data IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'datum_specifikace')));
@@ -132,6 +134,7 @@ ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_druh_nalezu_check C
 ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_specifikace_check CHECK (specifikace IS NULL OR specifikace IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'predmet_specifikace')));
 ALTER TABLE tvar ADD CONSTRAINT tvar_tvar_check CHECK (tvar IS NULL OR tvar IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'letfoto_tvar')));
 ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_typ_check CHECK (typ IS NULL OR typ IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'vyskovy_bod_typ')));
+*/
 
 -- Migrace akce.organizace_ostatni
 UPDATE akce_vedouci SET organizace = (SELECT id FROM organizace WHERE organizace.nazev_zkraceny = (SELECT organizace_ostatni FROM akce WHERE akce.id = akce_vedouci.akce))
