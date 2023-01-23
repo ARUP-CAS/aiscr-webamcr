@@ -90,7 +90,7 @@ n=1
 for item in "${migration_scripts[@]}"
 do
     echo "run [${n}] - migration with: ${item}"
-    psql -d $1 -f ${item} -l logs/${item}.log
+    psql -d $1 -f ${item} -L logs/${item}.log
     let n++
 done
 
