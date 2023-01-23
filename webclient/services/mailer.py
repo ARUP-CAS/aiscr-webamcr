@@ -520,14 +520,16 @@ class Mailer():
     @classmethod
     def send_en03_en04(cls, project: 'pas.models.SamostatnyNalez', reason):
         IDENT_CELY = 'E-N-03'
+        SUBMITTED_STATE = 3
+        ARCHIVED_STATE = 4
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
-        states = {3: POTVRZENI_SN, 4: ARCHIVACE_SN}
+        states = {SUBMITTED_STATE: POTVRZENI_SN, ARCHIVED_STATE: ARCHIVACE_SN}
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        look_for_stav = 4
-        if project.stav == 3:
-            look_for_stav = 3
-        if project.stav != 4 and project.stav != 3:
+        look_for_stav = ARCHIVED_STATE
+        if project.stav == SUBMITTED_STATE:
+            look_for_stav = SUBMITTED_STATE
+        if project.stav != ARCHIVED_STATE and project.stav != SUBMITTED_STATE:
             return
         log = Historie.objects.filter(
             vazba__sn_historie__ident_cely=project.ident_cely, typ_zmeny=states[look_for_stav]
@@ -535,11 +537,12 @@ class Mailer():
         if not log:
             return
         user = log.uzivatel
+        MOVED_TO_STATE = project.stav - 2
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.katastr.nazev,
             "reason": reason,
-            "state": project.PAS_STATES[project.stav - 2][1],
+            "state": project.PAS_STATES[MOVED_TO_STATE][1],
             "ident_cely": project.ident_cely,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
             "site_url": settings.SITE_URL
@@ -607,9 +610,10 @@ class Mailer():
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=document.ident_cely)
+        MOVED_TO_STATE = document.stav - 2
         html = render_to_string(notification_type.cesta_sablony, {
             "ident_cely": document.ident_cely,
-            "state": document.STATES[document.stav - 2][1],
+            "state": document.STATES[MOVED_TO_STATE][1],
             "reason": reason,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
             "site_url": settings.SITE_URL
