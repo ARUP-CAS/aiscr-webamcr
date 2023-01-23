@@ -3,7 +3,13 @@
 if [ -n "$1" ]; then
   echo "Database name is set as ${1}."
 else
-  echo "Database name has to be set as a parameter."
+  echo "Database name has to be set as a first parameter."
+fi
+
+if [ -n "$2" ]; then
+  echo "Username is set as ${2}."
+else
+  echo "Username has to be set as a second parameter."
 fi
 
 migration_scripts=("chyby_dat.sql"
@@ -90,7 +96,7 @@ n=1
 for item in "${migration_scripts[@]}"
 do
     echo "run [${n}] - migration with: ${item}"
-    psql -d $1 -f ${item} -L logs/${item}.log
+    psql -d $1 -U $2 -f ${item} -L logs/${item}.log
     let n++
 done
 
