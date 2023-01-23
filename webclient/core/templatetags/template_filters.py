@@ -117,7 +117,7 @@ def true_false(value):
 @register.filter
 def get_osoby_name(widget):
     list_hesla = ""
-    if not widget["value"]:
+    if not widget["value"] or widget["value"] == [""]:
         return list_hesla
     if "name_id" in widget["attrs"]:
         if "ez" in widget["attrs"]["name_id"]:
