@@ -67,35 +67,48 @@ CREATE OR REPLACE FUNCTION delete_connected_document_cast() RETURNS trigger LANG
     CREATE TRIGGER delete_connected_document_cast AFTER DELETE ON archeologicky_zaznam
         FOR EACH ROW EXECUTE PROCEDURE delete_connected_document_cast();
 
-ALTER TABLE public.archeologicky_zaznam
-	DROP CONSTRAINT archeologicky_zaznam_historie_fkey,
-    ADD CONSTRAINT archeologicky_zaznam_historie_fkey FOREIGN KEY (historie)
-    REFERENCES public.historie_vazby (id) MATCH SIMPLE
-    ON UPDATE CASCADE
-    ON DELETE CASCADE;
-
 -- Zaznamenání smazání záznamu do historie
 -- archeologicky_zaznam, auth_user, dokument, externi_zdroj, pian, projekt, samostatny_nalez
 CREATE OR REPLACE FUNCTION deleted_records_history() RETURNS trigger LANGUAGE plpgsql AS $deleted_records_history$
     BEGIN
-        INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT NOW(), (SELECT id FROM auth_user WHERE email = 'amcr@arup.cas.cz'), ident_cely, historie, 'DEL' FROM old;
+        INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT NOW(), (SELECT id FROM auth_user WHERE email = 'amcr@arup.cas.cz'), ident_cely, historie, 'DEL' FROM old_table;
         RETURN NEW;
     END;
     $deleted_records_history$; 
 
-    CREATE TRIGGER deleted_records_history AFTER DELETE ON archeologicky_zaznam, auth_user, dokument, externi_zdroj, pian, projekt, samostatny_nalez
-        FOR EACH ROW EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_archeologicky_zaznam AFTER DELETE ON archeologicky_zaznam
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_auth_user AFTER DELETE ON auth_user
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_dokument AFTER DELETE ON dokument
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_externi_zdroj AFTER DELETE ON externi_zdroj
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_pian AFTER DELETE ON pian
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_projekt AFTER DELETE ON projekt
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
+    CREATE TRIGGER deleted_records_history_samostatny_nalez AFTER DELETE ON samostatny_nalez
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_records_history();
 	
 -- soubor
 CREATE OR REPLACE FUNCTION deleted_soubor_history() RETURNS trigger LANGUAGE plpgsql AS $deleted_soubor_history$
     BEGIN
-        INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT NOW(), (SELECT id FROM auth_user WHERE email = 'amcr@arup.cas.cz'), nazev, historie, 'DEL' FROM old;
+        INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT NOW(), (SELECT id FROM auth_user WHERE email = 'amcr@arup.cas.cz'), nazev, historie, 'DEL' FROM old_table;
         RETURN NEW;
     END;
     $deleted_soubor_history$; 
 
     CREATE TRIGGER deleted_soubor_history AFTER DELETE ON soubor
-        FOR EACH ROW EXECUTE PROCEDURE deleted_soubor_history();
+        REFERENCING OLD TABLE AS old_table
+        FOR EACH STATEMENT EXECUTE PROCEDURE deleted_soubor_history();
 
 -- Triggery pro odstranění sirotků tam, kde mohou zůstávat kvůli otočené vazbě přes pomocnou tabulku (historie_vazby, komponenta_vazby, soubor_vazby)
 -- uzivatel_spoluprace
@@ -117,7 +130,9 @@ CREATE OR REPLACE FUNCTION delete_related_komponenta() RETURNS trigger LANGUAGE 
     END;
     $delete_related_komponenta$; 
 
-    CREATE TRIGGER delete_related_komponenta AFTER DELETE ON dokument_cast, dokumentacni_jednotka
+    CREATE TRIGGER delete_related_komponenta_dokument_cast AFTER DELETE ON dokument_cast
+        FOR EACH ROW EXECUTE PROCEDURE delete_related_komponenta();
+    CREATE TRIGGER delete_related_komponenta_dokumentacni_jednotka AFTER DELETE ON dokumentacni_jednotka
         FOR EACH ROW EXECUTE PROCEDURE delete_related_komponenta();
 	
 -- soubor_vazby
@@ -128,6 +143,10 @@ CREATE OR REPLACE FUNCTION delete_related_soubor() RETURNS trigger LANGUAGE plpg
     END;
     $delete_related_soubor$; 
 
-    CREATE TRIGGER delete_related_soubor AFTER DELETE ON dokument, projekt, samostatny_nalez
+    CREATE TRIGGER delete_related_soubor_dokument AFTER DELETE ON dokument
+        FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
+    CREATE TRIGGER delete_related_soubor_projekt AFTER DELETE ON projekt
+        FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
+    CREATE TRIGGER delete_related_soubor_samostatny_nalez AFTER DELETE ON samostatny_nalez
         FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
 	

@@ -105,7 +105,7 @@ ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_soucasny_fkey FOREIGN KEY
 ALTER TABLE komponenta_aktivita ADD CONSTRAINT komponenta_aktivita_aktivita_fkey FOREIGN KEY (aktivita) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE komponenta_aktivita ADD CONSTRAINT komponenta_aktivita_komponenta_fkey FOREIGN KEY (komponenta) REFERENCES komponenta (id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE komponenta ADD CONSTRAINT komponenta_areal_fkey FOREIGN KEY (areal) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
-ALTER TABLE komponenta ADD CONSTRAINT komponenta_komponenta_vazby_fkey FOREIGN KEY (komponenta_vazby) REFERENCES komponenta_vazby (id) ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE komponenta ADD CONSTRAINT komponenta_komponenta_vazby_fkey FOREIGN KEY (vazba) REFERENCES komponenta_vazby (id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE komponenta ADD CONSTRAINT komponenta_obdobi_fkey FOREIGN KEY (obdobi) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE let ADD CONSTRAINT let_dohlednost_fkey FOREIGN KEY (dohlednost) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE let ADD CONSTRAINT let_letiste_cil_fkey FOREIGN KEY (letiste_cil) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
@@ -173,7 +173,6 @@ ALTER TABLE uzivatel ADD CONSTRAINT uzivatel_osoba_fkey FOREIGN KEY (osoba) REFE
 ALTER TABLE uzivatel_spoluprace ADD CONSTRAINT uzivatel_spoluprace_spolupracovnik_fkey FOREIGN KEY (spolupracovnik) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE uzivatel_spoluprace ADD CONSTRAINT uzivatel_spoluprace_vedouci_fkey FOREIGN KEY (vedouci) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE uzivatel_spoluprace ADD CONSTRAINT uzivatel_spoluprace_historie_fkey FOREIGN KEY (historie) REFERENCES historie_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
-ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_adb_fkey FOREIGN KEY (adb) REFERENCES adb (dokumentacni_jednotka) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_typ_fkey FOREIGN KEY (typ) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 
 ALTER TABLE dokument_cast ADD CONSTRAINT dokument_cast_projekt_fkey FOREIGN KEY (projekt) REFERENCES projekt (id) ON UPDATE CASCADE ON DELETE SET NULL;

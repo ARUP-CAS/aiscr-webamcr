@@ -12,7 +12,8 @@ DELETE
 FROM soubor s2
 WHERE s2.vazba in
     (SELECT soubor_id
-     FROM navic_soubory) WITH navic_soubory AS
+     FROM navic_soubory);
+WITH navic_soubory AS
     (SELECT distinct(sv.id) AS soubor_id,
             sv.typ_vazby,
             d.id
@@ -24,7 +25,8 @@ WHERE s2.vazba in
   DELETE
   FROM soubor s2 WHERE s2.vazba in
     (SELECT soubor_id
-     FROM navic_soubory) WITH navic_soubory AS
+     FROM navic_soubory);
+WITH navic_soubory AS
     (SELECT distinct(sv.id) AS soubor_id,
             sv.typ_vazby,
             sn.id

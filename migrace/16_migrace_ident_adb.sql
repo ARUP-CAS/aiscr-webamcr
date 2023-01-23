@@ -28,5 +28,3 @@ $$;
 CALL migrateADBIdents();
 drop procedure migrateADBIdents();
 
-COMMIT;
-

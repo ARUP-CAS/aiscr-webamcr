@@ -1,14 +1,6 @@
 -- ************ V MIGRACI 1 *************
 
 --Mazani sloupcu:
-ALTER TABLE nalez drop column detektory_predmet;
-ALTER TABLE nalez drop column detektory_material;
-ALTER TABLE nalez drop column detektory;
-ALTER TABLE nalez drop column cislo_nalezu;
-ALTER TABLE nalez drop column crs;
-ALTER TABLE nalez drop column coordinate_x;
-ALTER TABLE nalez drop column coordinate_y;
-ALTER TABLE nalez drop column geom;
 ALTER TABLE samostatny_nalez drop column typ_nalezu;
 ALTER TABLE akce drop column n_id;
 ALTER TABLE dokument drop column poradi;
@@ -24,7 +16,6 @@ ALTER TABLE lokalita drop column is_id;
 ALTER TABLE projekt drop column id_rok;
 ALTER TABLE projekt drop column id_poradi;
 ALTER TABLE samostatny_nalez drop column poradi;
-ALTER TABLE vyskovy_bod drop column poradi;
 
 -- Mazani tabulek a sloupcu
 drop table dokument_soubor_fs;
@@ -84,8 +75,6 @@ alter table lokalita drop column okres;
 alter table lokalita drop column katastr;
 alter table lokalita drop column dalsi_katastry;
 alter table lokalita drop column puvodni_stav;
---9. nalez.kategorie
-alter table nalez drop column kategorie;
 --10. neident_akce.okres, vedouci
 alter table neident_akce drop column okres;
 alter table neident_akce drop column vedouci;
@@ -99,9 +88,6 @@ alter table projekt drop column katastr;
 alter table projekt drop column dalsi_katastry;
 --13. soubor.nahled
 alter table soubor drop column nahled;
---14. vyskovy_bod.northing, easting (migrace do vyskovy_bod.geom -> souradnicovy system bodu je 5514)
-alter table vyskovy_bod drop column northing;
-alter table vyskovy_bod drop column easting;
 --15. extra_data.northing, easting, pas, osoby, index
 alter table dokument_extra_data drop column northing;
 alter table dokument_extra_data drop column easting;
@@ -200,8 +186,6 @@ alter table uzivatel drop column news;
 -- alter table uzivatel drop column jmeno;
 -- alter table uzivatel drop column prijmeni;
 -- Mazani dalsich sloupcu bez migrace
--- 141. soubor_docasny.dokument
-alter table soubor_docasny drop column dokument;
 -- 142. akce.time_of_change
 alter table akce drop column time_of_change;
 -- 143. dokumentacni_jednotka.time_of_change
@@ -253,13 +237,6 @@ alter table dokument_extra_data drop column id;
 drop sequence extra_data_id_seq;
 
 -- Mazani sloupcu
---1. stats_login.data
-alter table stats_login drop column "data";
---2. nalez.typ_nalezu
--- Tohle dropnout az bude spravne napojen druh_nalezu a specifikace (idcka nejou unikatni a podle typu nalezu se zjistuje do ktereho heslare se divat)
-alter table nalez drop column typ_nalezu;
-alter table nalez drop column nalez_puvodni_id;
-
 -- Mazani tabulek
 --1. update_pian
 drop table update_pian;
@@ -342,10 +319,7 @@ drop sequence heslar_obdobi_prvni_id_seq;
 drop sequence heslar_pocasi_id_seq;
 drop sequence heslar_podnet_id_seq;
 --drop sequence heslar_posudek_id_seq; COMMENT: protze tabulka byla vlastnik tak uz neexistuje
-drop sequence heslar_predmet_druh_id_seq;
-drop sequence heslar_predmet_kategorie_id_seq;
 drop sequence heslar_presnost_id_seq;
-drop sequence heslar_pristupnost_id_seq;
 drop sequence heslar_pristupnost_akce_id_seq;
 drop sequence heslar_pristupnost_dokument_id_seq;
 drop sequence heslar_rada_id_seq;
@@ -382,3 +356,66 @@ alter table projekt drop column adresa;
 alter table projekt drop column email;
 alter table projekt drop column odpovedna_osoba;
 alter table projekt drop column telefon;
+
+-- Odstranění nepotřebných sekvencí
+DROP SEQUENCE akce_id_seq;
+DROP SEQUENCE akce_n_is_id_seq;
+DROP SEQUENCE atree_id_seq;
+DROP SEQUENCE dj_lh_seq;
+DROP SEQUENCE docasne_id;
+DROP SEQUENCE dokument_cast_vazby_id_seq;
+DROP SEQUENCE dokumentacni_jednotka_vazby_id_seq;
+DROP SEQUENCE externi_odkaz_vazby_id_seq;
+DROP SEQUENCE ft_delayed_id_seq;
+DROP SEQUENCE ft_documents_id_seq;
+DROP SEQUENCE ft_terms_id_seq;
+DROP SEQUENCE heslar_druh_lokality_druha_seq;
+DROP SEQUENCE heslar_druh_vyzkumu_id_seq;
+DROP SEQUENCE heslar_jmeno_id_seq;
+DROP SEQUENCE heslar_kultura_druha_id_seq;
+DROP SEQUENCE heslar_kultura_prvni_id_seq;
+DROP SEQUENCE heslar_lokalita_druh_druha_id_seq;
+DROP SEQUENCE heslar_lokalita_druh_id_seq;
+DROP SEQUENCE heslar_lokalita_typ_druha_id_seq;
+DROP SEQUENCE heslar_material_id_seq;
+DROP SEQUENCE heslar_nalez_druha_id_seq;
+DROP SEQUENCE heslar_nalez_prvni_id_seq;
+DROP SEQUENCE heslar_osoby_id_seq;
+DROP SEQUENCE heslar_pristupnost_dokuemnt_id_seq;
+DROP SEQUENCE heslar_puvod_pian_id_seq;
+DROP SEQUENCE heslar_specifikace_objekt_prvni_id_seq;
+DROP SEQUENCE heslar_typ_akce_id_seq;
+DROP SEQUENCE heslar_typ_akce_rozsah_do_seq;
+DROP SEQUENCE heslar_typ_komponenty_id_seq;
+DROP SEQUENCE heslar_ulozeni_nalezu_id_seq;
+DROP SEQUENCE historie_akce_seq;
+DROP SEQUENCE historie_dokumentu_seq;
+DROP SEQUENCE historie_samostatny_nalez_seq;
+DROP SEQUENCE historie_spoluprace_seq;
+DROP SEQUENCE historie_user_storage_seq;
+DROP SEQUENCE katastr_arup_id_seq;
+DROP SEQUENCE komponenta_dokument_id_seq;
+DROP SEQUENCE literatura_is_id_seq;
+DROP SEQUENCE log_id_seq;
+DROP SEQUENCE lokalita_id_seq;
+DROP SEQUENCE lokalita_is_id_seq;
+DROP SEQUENCE lokalita_poradi_seq;
+DROP SEQUENCE nalez_dokument_id_seq;
+DROP SEQUENCE nalez_id_seq;
+DROP SEQUENCE nivelacni_bod_id_seq;
+DROP SEQUENCE odkaz_id_seq;
+DROP SEQUENCE pian_is_id_seq;
+DROP SEQUENCE pian_nepotvrzene_seq;
+DROP SEQUENCE pian_potvrzene_seq;
+DROP SEQUENCE projekt_oznameni_suffix_id_seq;
+DROP SEQUENCE projekt_poradi_2013;
+DROP SEQUENCE projekt_poradi_2014;
+DROP SEQUENCE projekt_poradi_2015;
+DROP SEQUENCE projekt_poradi_2016;
+DROP SEQUENCE projekty_is_id_seq;
+DROP SEQUENCE soubor_fs_id_seq;
+DROP SEQUENCE vyskovy_bod_reorder;
+
+DROP TABLE uzivatel;
+DROP SEQUENCE uzivatel_id_seq;
+alter sequence user_storage_user_id rename to auth_user_ident_cely_seq;
