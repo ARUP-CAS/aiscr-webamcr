@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ -n "$1" ]; then
+  echo "Database name is set as ${1}."
+else
+  echo "Database name has to be set as a parameter."
+fi
+
 migration_scripts=("chyby_dat.sql"
 "migrace_1.sql"
 "migrace_2.sql"
@@ -17,11 +23,12 @@ migration_scripts=("chyby_dat.sql"
 "4_migrace_akce_stavy.sql"
 "5_migrace_oznamovatel.sql"
 "6_migrace_dalsi.sql"
+"6a_migrace_dalsi.sql"
+"6b_migrace_dalsi.sql"
+"6c_migrace_dalsi.sql"
 "7_migrace_hlavni_katastry.sql"
-"8_check_constraints.sql"
 "9_migrace_heslare_specifikace_data.sql"
 "11_migrace_dokument_many_to_many.sql"
-"12_migrace_fk_revision.sql"
 "13_migrace_rozdeleni_tabulky_nalez.sql"
 "14_migrace_nazvy_heslaru.sql"
 "15_migrace_aktivity_komponent_id_a_dalsi.sql"
@@ -43,16 +50,36 @@ migration_scripts=("chyby_dat.sql"
 "29_sjtsk_geometrie.sql"
 "30_geometry_migration_timestamp.sql"
 "31_heat_mapa.sql"
-"32_Triger_fixes.sql"
 "33_komponenta_boolean.sql"
 "33_typ_souboru.sql"
-"34_presnost_bodu.sql"
 "35_vyskovy_bod_geom.sql"
 "36_migrace-sam_nalez.sql"
 "37_odstavka_systemu.sql"
 "38_migrace_lokalita.sql"
 "39_migrace_revize_cizich_klicu_delete.sql"
 "40_migrace_revize_cizich_klicu_create.sql"
+"41_rosetta_role.sql"
+"41_watchdog.sql"
+"42_user_is_staff.sql"
+"44_katastry.sql"
+"44_migrace_dokument_autor.sql"
+"44_DN_ruzne_opravy.sql"
+"44_migrace_revize_db.sql"
+"44_notifications.sql"
+"46_role_odstavka.sql"
+"47_akce_typ.sql"
+"48_dokumenty_opravy.sql"
+"48_sekvence_user_groups.sql"
+"49_rename_pian_column.sql"
+"50_hlavni_role.sql"
+"51_ext_zdroje_typ_razeni.sql"
+"52_lokalita_typ_druh.sql"
+"54_rename_and_update_notifications.sql"
+"54_soubor_size.sql"
+"55_vymena_sablony_notifikace.sql"
+"99_migrace_notifikace_nove.sql"
+"99_set_DB_privileges.sql"
+"migrace_mazani.sql"
 )
 
 
@@ -63,7 +90,7 @@ n=1
 for item in "${migration_scripts[@]}"
 do
     echo "run [${n}] - migration with: ${item}"
-    psql -d prod_zaloha -f ${item} -l logs/${item}.log
+    psql -d $1 -f ${item} -l logs/${item}.log
     let n++
 done
 

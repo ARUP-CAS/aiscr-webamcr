@@ -1,20 +1,62 @@
+ALTER TABLE dokument_jazyk DROP CONSTRAINT dokument_jazyk_dokument_fk;
+
 -- Řešení pro chybějící či duplkicitní EN hesla.
 UPDATE heslar SET heslo_en = 'translate: ' || ident_cely WHERE (heslo_en Is Null);
 UPDATE heslar SET heslo_en = 'chain necklace' WHERE ident_cely = 'HES-000756';
 UPDATE heslar SET heslo_en = 'chopper' WHERE ident_cely = 'HES-000801';
 UPDATE organizace SET nazev_zkraceny_en = 'translate: ' || id WHERE (nazev_zkraceny_en Is Null);
 
--- Odstranění dokumentů ZA/ZL
-DELETE FROM dokument, soubor USING dokument
-INNER JOIN heslar ON dokument.rada = heslar.id
-INNER JOIN soubor ON soubor.vazba = dokument.soubory
-WHERE heslar.ident_cely = 'HES-000884' OR heslar.ident_cely = 'HES-000885';
+-- Doplnění správných nových cest souborů a jejich přejmenování
+WITH soubor_cesta AS
+(
+	SELECT soubor.id as soubor_id,
+	CASE
+		-- AG - napojeno na projekt
+		WHEN soubor_vazby.typ_vazby = 'projekt'
+		THEN
+			CASE
+				WHEN nazev ~ '\d*_oznameni_[C,M]-\d{9}\.pdf'
+					OR nazev ~ '\d*_oznameni_[C,M]-\d{9}[A-Z]\.pdf'
+					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}\.pdf'
+					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}[A-Z]\.pdf'
+					OR nazev ~ '\d*_log_dokumentace.pdf'
+				THEN 'soubory/AG/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
+		-- PD - napojeno na
+				ELSE
+					CASE
+						WHEN position('.' in reverse(soubor.nazev)) = 0
+						THEN 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(soubor.nazev, 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g')
+						ELSE 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(substring(soubor.nazev from 1 for length(soubor.nazev) - position('.' in reverse(soubor.nazev))), 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g') || '.' || substring(soubor.nazev from '\.([^\.]*)$')
+					END
+			END
+		-- FN - vše co má vazbu na samostatný nález
+		WHEN soubor_vazby.typ_vazby = 'samostatny_nalez'
+		THEN 'soubory/FN/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || replace(regexp_replace(soubor.nazev, 'F([0-9])[^0-9]*(\.[a-zA-Z0-9]+)$', 'F0\1\2'), '-', '')
+		-- SD - vše co má vazbu na DT Dokument
+		WHEN soubor_vazby.typ_vazby = 'dokument'
+		THEN
+			CASE
+				WHEN heslar_typ_dokumetu.zkratka IN ('ZA', 'ZL') THEN '!DO NOT MIGRATE'
+				ELSE 'soubory/SD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
+			END
+	END AS cesta
+	FROM soubor
+	INNER JOIN soubor_vazby on soubor.vazba = soubor_vazby.id
+	LEFT OUTER JOIN dokument on dokument.soubory = soubor_vazby.id
+	LEFT OUTER JOIN heslar as heslar_typ_dokumetu on heslar_typ_dokumetu.id = dokument.rada
+)
+UPDATE soubor SET path = soubor_cesta.cesta FROM soubor_cesta WHERE soubor.id = soubor_cesta.soubor_id;
+UPDATE soubor SET nazev_zkraceny = substr(split_part(path, '/', 6), strpos(split_part(path, '/', 6), '_') + 1), nazev = split_part(path, '/', 6);
 
 -- Migrace soubor.vlastnik a soubor.vytvoreno do historie
-UPDATE soubor SET historie = (INSERT INTO historie_vazby (typ_vazby) VALUES 'soubor' RETURNING id) WHERE soubor.historie IS NULL;
+INSERT INTO historie_vazby (typ_vazby) SELECT 'soubor' FROM soubor where soubor.historie IS null;
+update soubor s set historie = sub.rn from (select id, (select min(id) from historie_vazby where typ_vazby = 'soubor') - 1 + row_number() OVER (order by id) as rn from soubor) sub where s.id = sub.id
+and s.historie is null;
+
 ALTER TABLE soubor ADD CONSTRAINT soubor_historie_key UNIQUE (historie);
 INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT vytvoreno, vlastnik, nazev_puvodni, historie, 'SBR0' FROM soubor;
-ALTER TABLE soubor DROP COLUMN vytvoreno, vlastnik;
+ALTER TABLE soubor DROP COLUMN vytvoreno;
+ALTER TABLE soubor DROP COLUMN vlastnik;
 
 -- Smazat oznamovatele, pokud je všude „údaj odstraněn“
 DELETE FROM oznamovatel WHERE email = 'údaj odstraněn' AND adresa = 'údaj odstraněn' AND odpovedna_osoba = 'údaj odstraněn' AND oznamovatel = 'údaj odstraněn' AND telefon = 'údaj odstraněn';
@@ -78,6 +120,8 @@ UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'vyskovy_bod_typ';
 UPDATE heslar_nazev SET povolit_zmeny = true WHERE nazev = 'zeme';
 
 -- Doplnění check na hesláře, aby nemohlo dojít k tomu, že bude použito heslo ze špatného hesláře
+/*
+Check nemůže obsahovat subquery...
 ALTER TABLE adb ADD CONSTRAINT adb_typ_sondy_check CHECK (typ_sondy IS NULL OR typ_sondy IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'adb_typ')));
 ALTER TABLE adb ADD CONSTRAINT adb_podnet_check CHECK (podnet IS NULL OR podnet IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'adb_podnet')));
 ALTER TABLE akce ADD CONSTRAINT akce_specifikace_data_check CHECK (specifikace_data IS NULL OR specifikace_data IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'datum_specifikace')));
@@ -132,13 +176,14 @@ ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_druh_nalezu_check C
 ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_specifikace_check CHECK (specifikace IS NULL OR specifikace IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'predmet_specifikace')));
 ALTER TABLE tvar ADD CONSTRAINT tvar_tvar_check CHECK (tvar IS NULL OR tvar IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'letfoto_tvar')));
 ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_typ_check CHECK (typ IS NULL OR typ IN (SELECT id FROM heslar WHERE nazev_heslare = (SELECT id FROM heslar_nazev WHERE nazev = 'vyskovy_bod_typ')));
+*/
 
 -- Migrace akce.organizace_ostatni
-UPDATE akce_vedouci SET organizace = (SELECT id FROM organizace WHERE organizace.nazev_zkraceny = (SELECT organizace_ostatni FROM akce WHERE akce.id = akce_vedouci.akce))
-WHERE akce IN (SELECT id FROM akce WHERE akce.organizace_ostatni IN (SELECT nazev_zkraceny FROM organizace))
+UPDATE akce_vedouci SET organizace = (SELECT id FROM organizace WHERE organizace.nazev_zkraceny = (SELECT organizace_ostatni FROM akce WHERE akce.archeologicky_zaznam = akce_vedouci.akce))
+WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE akce.organizace_ostatni IN (SELECT nazev_zkraceny FROM organizace))
 AND akce IN (SELECT akce FROM (SELECT akce, count(id) as cnt FROM akce_vedouci GROUP BY akce) pom WHERE pom.cnt = 1);
-UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.id = akce_vedouci.akce)
-WHERE akce IN (SELECT id FROM akce WHERE (akce.organizace_ostatni IS NULL OR akce.organizace_ostatni = ''));
+UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.archeologicky_zaznam = akce_vedouci.akce)
+WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE (akce.organizace_ostatni IS NULL OR akce.organizace_ostatni = ''));
 
 -- Oprava typů polí v návaznosti na #385 a #384 (aby nebyla moc velká v administraci)
 ALTER TABLE heslar ALTER COLUMN heslo TYPE varchar(255);
@@ -163,72 +208,11 @@ ALTER TABLE osoba ALTER COLUMN vypis TYPE varchar(200);
 ALTER TABLE osoba ALTER COLUMN vypis_cely TYPE varchar(200);
 ALTER TABLE auth_user ALTER COLUMN telefon TYPE varchar(100);
 
--- Odstranění nepotřebných sekvencí
-DROP SEQUENCE akce_id_seq;
-DROP SEQUENCE akce_n_is_id_seq;
-DROP SEQUENCE atree_id_seq;
-DROP SEQUENCE dj_lh_seq;
-DROP SEQUENCE docasne_id;
-DROP SEQUENCE dokument_cast_vazby_id_seq;
-DROP SEQUENCE dokumentacni_jednotka_vazby_id_seq;
-DROP SEQUENCE externi_odkaz_vazby_id_seq;
-DROP SEQUENCE ft_delayed_id_seq;
-DROP SEQUENCE ft_documents_id_seq;
-DROP SEQUENCE ft_terms_id_seq;
-DROP SEQUENCE heslar_druh_lokality_druha_seq;
-DROP SEQUENCE heslar_druh_vyzkumu_id_seq;
-DROP SEQUENCE heslar_jmeno_id_seq;
-DROP SEQUENCE heslar_kultura_druha_id_seq;
-DROP SEQUENCE heslar_kultura_prvni_id_seq;
-DROP SEQUENCE heslar_lokalita_druh_druha_id_seq;
-DROP SEQUENCE heslar_lokalita_druh_id_seq;
-DROP SEQUENCE heslar_lokalita_typ_druha_id_seq;
-DROP SEQUENCE heslar_material_id_seq;
-DROP SEQUENCE heslar_nalez_druha_id_seq;
-DROP SEQUENCE heslar_nalez_prvni_id_seq;
-DROP SEQUENCE heslar_osoby_id_seq;
-DROP SEQUENCE heslar_pristupnost_dokuemnt_id_seq;
-DROP SEQUENCE heslar_puvod_pian_id_seq;
-DROP SEQUENCE heslar_specifikace_objekt_prvni_id_seq;
-DROP SEQUENCE heslar_typ_akce_id_seq;
-DROP SEQUENCE heslar_typ_akce_rozsah_do_seq;
-DROP SEQUENCE heslar_typ_komponenty_id_seq;
-DROP SEQUENCE heslar_ulozeni_nalezu_id_seq;
-DROP SEQUENCE historie_akce_seq;
-DROP SEQUENCE historie_dokumentu_seq;
-DROP SEQUENCE historie_samostatny_nalez_seq;
-DROP SEQUENCE historie_spoluprace_seq;
-DROP SEQUENCE historie_user_storage_seq;
-DROP SEQUENCE katastr_arup_id_seq;
-DROP SEQUENCE komponenta_dokument_id_seq;
-DROP SEQUENCE literatura_is_id_seq;
-DROP SEQUENCE log_id_seq;
-DROP SEQUENCE lokalita_id_seq;
-DROP SEQUENCE lokalita_is_id_seq;
-DROP SEQUENCE lokalita_poradi_seq;
-DROP SEQUENCE nalez_dokument_id_seq;
-DROP SEQUENCE nalez_id_seq;
-DROP SEQUENCE nivelacni_bod_id_seq;
-DROP SEQUENCE odkaz_id_seq;
-DROP SEQUENCE pian_is_id_seq;
-DROP SEQUENCE pian_nepotvrzene_seq;
-DROP SEQUENCE pian_potvrzene_seq;
-DROP SEQUENCE projekt_oznameni_suffix_id_seq;
-DROP SEQUENCE projekt_poradi_2013;
-DROP SEQUENCE projekt_poradi_2014;
-DROP SEQUENCE projekt_poradi_2015;
-DROP SEQUENCE projekt_poradi_2016;
-DROP SEQUENCE projekty_is_id_seq;
-DROP SEQUENCE soubor_fs_id_seq;
-DROP SEQUENCE user_storage_user_id;
-DROP SEQUENCE uzivatel_id_seq;
-DROP SEQUENCE vyskovy_bod_reorder;
 
 -- Úprava názvů unique a pkey constraints
 ALTER TABLE adb RENAME CONSTRAINT archeologicky_dokumentacni_bod_ident_cely_key TO adb_ident_cely_key;
 ALTER TABLE adb_sekvence RENAME CONSTRAINT archeologicky_dokumentacni_bod_sekvence_id TO adb_sekvence_pkey;
 ALTER TABLE adb_sekvence RENAME CONSTRAINT archeologicky_dokumentacni_bod_sekvence_kladysm5_id TO adb_sekvence_kladysm5_id_key;
-ALTER TABLE archeologicky_zaznam_katastr RENAME CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_key TO archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_id_key;
 ALTER TABLE auth_user RENAME CONSTRAINT auth_user_username_key TO auth_user_ident_cely_key;
 ALTER TABLE uzivatel_spoluprace RENAME CONSTRAINT badatel_archeolog_key TO uzivatel_spoluprace_vedouci_spolupracovnik_key;
 ALTER TABLE externi_zdroj_editor RENAME CONSTRAINT externi_zdroj_poradi_key TO externi_zdroj_editor_poradi_externi_zdroj_key;
@@ -247,8 +231,6 @@ ALTER TABLE ruian_katastr RENAME CONSTRAINT katastr_storage_pkey TO ruian_katast
 ALTER TABLE kladysm5 RENAME CONSTRAINT kladysm5_gid TO kladysm5_pkey;
 ALTER TABLE kladyzm RENAME CONSTRAINT kladyzm_gid TO kladyzm_pkey;
 ALTER TABLE let RENAME CONSTRAINT lety_pkey TO let_pkey;
-ALTER TABLE systemove_promenne RENAME CONSTRAINT megalit_info_pkey TO systemove_promenne_pkey;
-ALTER TABLE oznamovatel RENAME CONSTRAINT oznamovatel_projekt_pkey TO oznamovatel_pkey;
 ALTER TABLE pian RENAME CONSTRAINT pian_id_pkey TO pian_pkey;
 ALTER TABLE ruian_okres RENAME CONSTRAINT spz_storage_pkey TO ruian_okres_pkey;
 ALTER TABLE stats_login RENAME CONSTRAINT stats_login_id TO stats_login_pkey;
@@ -259,66 +241,23 @@ ALTER TABLE uzivatel RENAME CONSTRAINT user_storage_pkey TO uzivatel_pkey;
 ALTER TABLE uzivatel_spoluprace RENAME CONSTRAINT vazba_spoluprace_pkey TO uzivatel_spoluprace_pkey;
 
 -- Migrace oprávnění ke správě uživatelů
-INSERT INTO auth_user_groups (user_id, group_id) SELECT id, 10 AS grp FROM auth_user WHERE auth_level & 8 = 8;
+BEGIN;
+-- protect against concurrent inserts while you update the counter
+LOCK TABLE auth_group IN EXCLUSIVE MODE;
+-- Update the sequence
+SELECT setval(
+        'auth_group_id_seq',
+        COALESCE(
+            (
+                SELECT MAX(id) + 1
+                FROM auth_group
+            ),
+            1
+        ),
+        false
+    );
+COMMIT;
+insert into auth_group(name) values ('Správa uživatelů');
+INSERT INTO auth_user_groups (user_id, group_id) SELECT id, (select max(id) from auth_group) AS grp FROM auth_user WHERE auth_level & 8 = 8;
 -- Pokud bychom chtěli přenést oprávnění ke 3D, bude třeba doplnit něco jako (je třeba zaměnit ## za skutečné id skupiny):
 -- INSERT INTO auth_user_groups (user_id, group_id) SELECT id, ## AS grp FROM auth_user WHERE auth_level & 128 = 128;
-
--- Doplnění správných nových cest souborů a jejich přejmenování
-WITH soubor_cesta AS
-(
-	SELECT soubor.id as soubor_id,
-	CASE
-		-- AG - napojeno na projekt
-		WHEN soubor_vazby.typ_vazby = 'projekt'
-		THEN
-			CASE
-				WHEN nazev ~ '\d*_oznameni_[C,M]-\d{9}\.pdf'
-					OR nazev ~ '\d*_oznameni_[C,M]-\d{9}[A-Z]\.pdf'
-					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}\.pdf'
-					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}[A-Z]\.pdf'
-					OR nazev ~ '\d*_log_dokumentace.pdf'
-				THEN 'soubory/AG/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
-		-- PD - napojeno na 
-				ELSE 
-					CASE
-						WHEN position('.' in reverse(soubor.nazev)) = 0
-						THEN 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(soubor.nazev, 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g')
-						ELSE 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(substring(soubor.nazev from 1 for length(soubor.nazev) - position('.' in reverse(soubor.nazev))), 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g') || '.' || substring(soubor.nazev from '\.([^\.]*)$')
-					END
-			END
-		-- FN - vše co má vazbu na samostatný nález
-		WHEN soubor_vazby.typ_vazby = 'samostatny_nalez'
-		THEN 'soubory/FN/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || replace(regexp_replace(soubor.nazev, 'F([0-9])[^0-9]*(\.[a-zA-Z0-9]+)$', 'F0\1\2'), '-', '')
-		-- SD - vše co má vazbu na DT Dokument
-		WHEN soubor_vazby.typ_vazby = 'dokument'
-		THEN
-			CASE
-				WHEN heslar_typ_dokumetu.zkratka IN ('ZA', 'ZL') THEN '!DO NOT MIGRATE'
-				ELSE 'soubory/SD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
-			END
-	END AS cesta
-	FROM soubor
-	INNER JOIN soubor_vazby on soubor.vazba = soubor_vazby.id
-	LEFT OUTER JOIN dokument on dokument.soubory = soubor_vazby.id
-	LEFT OUTER JOIN heslar as heslar_typ_dokumetu on heslar_typ_dokumetu.id = dokument.rada
-)
-UPDATE soubor SET path = (SELECT cesta FROM soubor_cesta WHERE soubor.id = soubor_cesta.soubor_id);
-UPDATE soubor SET nazev_zkraceny = substr(split_part(path, '/', 6), strpos(split_part(path, '/', 6), '_') + 1), nazev = split_part(path, '/', 6);
-
--- Nastavení správného EPSG pro geometrie
--- 5514
-SELECT UpdateGeometrySRID('kladysm5','geom',5514);
-SELECT UpdateGeometrySRID('kladyzm','the_geom',5514);
-SELECT UpdateGeometrySRID('vyskovy_bod','geom',5514);
-SELECT UpdateGeometrySRID('pian','geom_sjtsk',5514);
-SELECT UpdateGeometrySRID('samostatny_nalez','geom_sjtsk',5514);
--- 4326
-SELECT UpdateGeometrySRID('pian','geom',4326);
-SELECT UpdateGeometrySRID('projekt','geom',4326);
-SELECT UpdateGeometrySRID('ruian_katastr','definicni_bod',4326);
-SELECT UpdateGeometrySRID('ruian_katastr','hranice',4326);
-SELECT UpdateGeometrySRID('ruian_kraj','definicni_bod',4326);
-SELECT UpdateGeometrySRID('ruian_kraj','hranice',4326);
-SELECT UpdateGeometrySRID('ruian_okres','definicni_bod',4326);
-SELECT UpdateGeometrySRID('ruian_okres','hranice',4326);
-SELECT UpdateGeometrySRID('samostatny_nalez','geom',4326);

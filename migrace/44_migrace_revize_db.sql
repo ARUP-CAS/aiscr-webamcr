@@ -1,4 +1,6 @@
+ALTER TABLE vyskovy_bod DROP CONSTRAINT vyskovy_bod_adb_fkey;
 ALTER TABLE adb DROP CONSTRAINT adb_dokumentacni_jednotka_key;
+ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_adb_fkey FOREIGN KEY (adb) REFERENCES adb (dokumentacni_jednotka) ON UPDATE CASCADE ON DELETE CASCADE;
 COMMENT ON COLUMN adb.dokumentacni_jednotka IS NULL;
 
 ALTER TABLE akce DROP CONSTRAINT akce_archeologicky_zaznam_key;
@@ -14,9 +16,11 @@ ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_ident_cely_
 ALTER TABLE archeologicky_zaznam DROP COLUMN stav_stary;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_historie_key UNIQUE (historie);
 
+ALTER TABLE akce_vedouci DROP CONSTRAINT akce_vedouci_akce_fkey;
 ALTER TABLE archeologicky_zaznam_katastr DROP CONSTRAINT archeologicky_zaznam_katastr_pkey;
+ALTER TABLE akce_vedouci ADD CONSTRAINT akce_vedouci_akce_fkey FOREIGN KEY (akce) REFERENCES akce (archeologicky_zaznam) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_pkey PRIMARY KEY (id);
-ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_key UNIQUE ( archeologicky_zaznam_id, katastr_id);
+ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_id_katastr_id_key UNIQUE ( archeologicky_zaznam_id, katastr_id);
 
 ALTER TABLE auth_user DROP COLUMN email_potvrzen;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_email_key UNIQUE (email);
@@ -68,6 +72,7 @@ ALTER TABLE externi_zdroj ALTER COLUMN ident_cely SET NOT NULL;
 COMMENT ON COLUMN externi_zdroj.typ IS NULL;
 COMMENT ON COLUMN externi_zdroj.typ_dokumentu IS NULL;
 
+ALTER TABLE externi_zdroj_autor DROP CONSTRAINT externi_zdroj_autor_pkey;
 CREATE SEQUENCE externi_zdroj_autor_id_seq;
 ALTER TABLE externi_zdroj_autor ADD COLUMN id integer NOT NULL default nextval('externi_zdroj_autor_id_seq'::regclass) PRIMARY KEY;
 ALTER TABLE externi_zdroj_autor ADD CONSTRAINT externi_zdroj_autor_externi_zdroj_autor_key UNIQUE (externi_zdroj, autor);
@@ -78,7 +83,7 @@ ALTER TABLE externi_zdroj_editor DROP constraint externi_zdroj_editor_pkey;
 ALTER TABLE externi_zdroj_editor ADD COLUMN id integer NOT NULL default nextval('externi_zdroj_editor_id_seq'::regclass) PRIMARY KEY;
 ALTER TABLE externi_zdroj_editor ADD CONSTRAINT externi_zdroj_editor_externi_zdroj_editor_key UNIQUE (externi_zdroj, editor);
 
-ALTER TABLE heslar ALTER COLUMN ident_cely NOT NULL DEFAULT ('HES-'::text || right(concat('000000', nextval('heslar_ident_cely_seq')::text), 6));
+ALTER TABLE heslar ALTER COLUMN ident_cely SET NOT NULL;
 ALTER TABLE heslar ALTER COLUMN heslo SET NOT NULL;
 ALTER TABLE heslar ALTER COLUMN heslo_en SET NOT NULL;
 ALTER TABLE heslar DROP COLUMN puvodni_id;
@@ -99,7 +104,7 @@ ALTER TABLE heslar_hierarchie ADD CONSTRAINT heslar_hierarchie_typ_check CHECK (
 
 ALTER TABLE historie DROP COLUMN typ_zmeny_old;
 
-ALTER TABLE komponenta ALTER COLUMN komponenta_vazby SET NOT NULL;
+ALTER TABLE komponenta ALTER COLUMN vazba SET NOT NULL;
 
 ALTER TABLE komponenta_vazby ALTER COLUMN typ_vazby SET NOT NULL;
 
@@ -138,8 +143,7 @@ ALTER TABLE osoba ADD COLUMN ident_cely text NOT NULL DEFAULT('OS-'::text || rig
 ALTER TABLE osoba ADD CONSTRAINT osoba_ident_cely_key UNIQUE(ident_cely);
 
 ALTER TABLE oznamovatel DROP COLUMN id;
-DROP SEQUENCE oznamovatel_id_seq;
-ALTER TABLE oznamovatel ADD CONSTRAINT oznamovatel_projekt_pkey PRIMARY KEY (projekt);
+ALTER TABLE oznamovatel ADD CONSTRAINT oznamovatel_pkey PRIMARY KEY (projekt);
 ALTER TABLE oznamovatel DROP CONSTRAINT oznamovatel_projekt_key;
 
 ALTER TABLE pian ADD CONSTRAINT pian_historie_key UNIQUE(historie);
@@ -158,19 +162,19 @@ ALTER TABLE projekt_sekvence ADD CONSTRAINT projekt_sekvence_pkey PRIMARY KEY (i
 
 ALTER TABLE ruian_katastr ALTER COLUMN hranice SET NOT NULL ;
 ALTER TABLE ruian_katastr DROP COLUMN poznamka ;
-ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_nazev_key UNIQUE(nazev);
-ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_kod_key UNIQUE(kod);
+--ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_nazev_key UNIQUE(nazev);
+--ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_kod_key UNIQUE(kod);
 ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_pian_key UNIQUE(pian);
 
 ALTER TABLE ruian_kraj DROP COLUMN aktualni;
-ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod SET NOT NULL ;
-ALTER TABLE ruian_kraj ALTER COLUMN hranice SET NOT NULL ;
-ALTER TABLE ruian_kraj ADD COLUMN nazev_en text NOT NULL;
+--ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod SET NOT NULL ;
+--ALTER TABLE ruian_kraj ALTER COLUMN hranice SET NOT NULL ;
+--ALTER TABLE ruian_kraj ADD COLUMN nazev_en text NOT NULL;
 
 ALTER TABLE ruian_okres DROP COLUMN aktualni;
 ALTER TABLE ruian_okres ALTER COLUMN nazev_en SET NOT NULL;
-ALTER TABLE ruian_okres ALTER COLUMN definicni_bod SET NOT NULL;
-ALTER TABLE ruian_okres ALTER COLUMN hranice SET NOT NULL;
+--ALTER TABLE ruian_okres ALTER COLUMN definicni_bod SET NOT NULL;
+--ALTER TABLE ruian_okres ALTER COLUMN hranice SET NOT NULL;
 ALTER TABLE ruian_okres ADD CONSTRAINT ruian_okres_nazev_key UNIQUE(nazev);
 ALTER TABLE ruian_okres ADD CONSTRAINT ruian_okres_kod_key UNIQUE(kod);
 ALTER TABLE ruian_okres ADD CONSTRAINT ruian_okres_spz_key UNIQUE(spz);
@@ -182,8 +186,6 @@ ALTER TABLE samostatny_nalez ADD CONSTRAINT samostatny_nalez_historie_key UNIQUE
 DROP TABLE stats_login;
 
 COMMENT ON COLUMN tvar.tvar IS NULL;
-
-DROP TABLE uzivatel;
 
 CREATE SEQUENCE uzivatel_notifikace_id_seq;
 ALTER TABLE uzivatel_notifikace ADD COLUMN id integer NOT NULL default nextval('uzivatel_notifikace_id_seq'::regclass) PRIMARY KEY;

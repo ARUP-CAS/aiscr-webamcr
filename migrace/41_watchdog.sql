@@ -1,4 +1,3 @@
-BEGIN;
 --
 -- Create model Watchdog
 --
@@ -14,4 +13,3 @@ CREATE INDEX "watchdog_watchdog_user_id_c1145180" ON "watchdog_watchdog" ("user_
 
 INSERT INTO "django_content_type" (app_label, model) VALUES ('heslar', 'ruiankraj');
 INSERT INTO "django_content_type" (app_label, model) VALUES ('heslar', 'ruianokres');
-COMMIT;

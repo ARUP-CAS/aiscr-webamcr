@@ -21,7 +21,6 @@ BEGIN
     	    new_cislo := 1;
     	end if;
     	update adb set ident_cely = concat(temp_adb.rada, '-' , to_char(new_cislo, 'fm000000')) where ident_cely = temp_adb.old_ident;
-    	COMMIT;
     END LOOP;
 END;
 $$;

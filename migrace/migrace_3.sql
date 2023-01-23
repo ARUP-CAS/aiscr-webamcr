@@ -148,7 +148,6 @@ alter table organizace alter column oao set not null;
 alter table kladyzm alter column objectid set not null;
 alter table kladyzm alter column kategorie set not null;
 alter table kladyzm alter column cislo set not null;
-alter table kladyzm alter column nazev set not null;
 alter table kladyzm alter column natoceni set not null;
 alter table kladyzm alter column shape_leng set not null;
 alter table kladyzm alter column shape_area set not null;

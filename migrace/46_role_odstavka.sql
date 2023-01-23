@@ -1,2 +1,2 @@
 INSERT INTO public.auth_group
-VALUES (7, 'Správa odstávek');
+(name) VALUES ('Správa odstávek');
