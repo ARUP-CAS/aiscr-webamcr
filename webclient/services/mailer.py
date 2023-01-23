@@ -256,7 +256,8 @@ class Mailer():
             cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
 
     @classmethod
-    def _send_a(cls, obj: Union[projekt.models.Projekt, arch_z.models.ArcheologickyZaznam], notification_type, user: 'uzivatel.models.User' = None):
+    def _send_a(cls, obj: Union[projekt.models.Projekt, arch_z.models.ArcheologickyZaznam], notification_type,
+                user: 'uzivatel.models.User' = None):
         subject = notification_type.predmet.format(ident_cely=obj.ident_cely)
         if isinstance(obj, projekt.models.Projekt):
             state = obj.CHOICES[obj.stav][1]
@@ -459,19 +460,21 @@ class Mailer():
             vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=OZNAMENI_PROJ).first()
         if oznameni:
             datum_oznameni = oznameni.datum_zmeny.strftime("%Y-%m-%d")
-            if project.has_oznamovatel():
-                context = {
-                    "title": subject,
-                    "podnet": project.podnet,
-                    "katastr": project.hlavni_katastr.nazev,
-                    "parcela": project.parcelni_cislo,
-                    "lokalita": project.lokalizace,
-                    "reason": reason,
-                    "datum_oznameni": datum_oznameni,
-                    "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
-                }
-                html = render_to_string(notification_type.cesta_sablony, context)
-                cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
+        else:
+            datum_oznameni = None
+        if project.has_oznamovatel():
+            context = {
+                "title": subject,
+                "podnet": project.podnet,
+                "katastr": project.hlavni_katastr.nazev,
+                "parcela": project.parcelni_cislo,
+                "lokalita": project.lokalizace,
+                "reason": reason,
+                "datum_oznameni": datum_oznameni,
+                "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
+            }
+            html = render_to_string(notification_type.cesta_sablony, context)
+            cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
 
     @classmethod
     def send_ep06a(cls, project: 'projekt.models.Projekt', reason):
@@ -518,25 +521,28 @@ class Mailer():
     def send_en03_en04(cls, project: 'pas.models.SamostatnyNalez', reason):
         IDENT_CELY = 'E-N-03'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
+        states = {3: POTVRZENI_SN, 4: ARCHIVACE_SN}
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        look_for_stav = ARCHIVACE_SN
-        if project.stav == POTVRZENI_SN:
-            look_for_stav = POTVRZENI_SN
-        if project.stav != ARCHIVACE_SN or project.stav != POTVRZENI_SN:
+        look_for_stav = 4
+        if project.stav == 3:
+            look_for_stav = 3
+        if project.stav != 4 and project.stav != 3:
             return
         log = Historie.objects.filter(
-            vazba__sn_historie__ident_cely=project.ident_cely, typ_zmeny=look_for_stav
+            vazba__sn_historie__ident_cely=project.ident_cely, typ_zmeny=states[look_for_stav]
         ).order_by('datum_zmeny').first()
         if not log:
             return
-        user = log.uzivatel.email
+        user = log.uzivatel
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.katastr.nazev,
             "reason": reason,
-            "state": project.PAS_STATES[project.stav][1],
-            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
+            "state": project.PAS_STATES[project.stav - 2][1],
+            "ident_cely": project.ident_cely,
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
+            "site_url": settings.SITE_URL
         })
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
@@ -603,7 +609,7 @@ class Mailer():
         subject = notification_type.predmet.format(ident_cely=document.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "ident_cely": document.ident_cely,
-            "state": document.STATES[document.stav -2][1],
+            "state": document.STATES[document.stav - 2][1],
             "reason": reason,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
             "site_url": settings.SITE_URL
