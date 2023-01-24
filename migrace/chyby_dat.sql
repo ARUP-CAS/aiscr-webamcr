@@ -50,6 +50,9 @@ update heslar_objekt_druh set en = 'defensive wall' where nazev = 'hradba';
 update samostatny_nalez set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace = -1;
 update samostatny_nalez set katastr = null where katastr = -1;
 
+-- DN: Pokud je vazba null a vazba druhá něco obsahuje, přesuň data do vazba
+UPDATE jednotka_dokument SET vazba = vazba_druha  WHERE vazba is null AND vazba_druha is not null;
+
 -- DN: Pokud je v jednotka_dokument.vazba totéž co ve vazba_druha, nastavit vazba_druha na null.
 UPDATE jednotka_dokument SET vazba_druha = Null WHERE vazba = vazba_druha;
 
@@ -63,7 +66,7 @@ WITH prohodit AS
 )
 UPDATE jednotka_dokument SET vazba = prohodit.vazba_druha, vazba_druha = prohodit.vazba FROM prohodit WHERE jednotka_dokument.id = prohodit.id;
 
--- Smazání sirotků v neident. akcích
+-- DN: Smazání sirotků v neident. akcích
 WITH del AS(
 WITH pom AS
 (
@@ -77,7 +80,7 @@ WHERE (((jednotka_dokument.id) Is Null))
 )
 DELETE FROM neident_akce USING del WHERE del.id = neident_akce.id;
 
--- Smazání neplatných vazeb
+-- DN: Smazání neplatných vazeb
 WITH del AS(
 SELECT jednotka_dokument.*
 FROM neident_akce RIGHT JOIN (lokalita RIGHT JOIN (akce RIGHT JOIN jednotka_dokument ON akce.id = jednotka_dokument.vazba) ON lokalita.id = jednotka_dokument.vazba) ON neident_akce.id = jednotka_dokument.vazba
