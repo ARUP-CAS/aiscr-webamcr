@@ -61,8 +61,7 @@ WITH prohodit AS
     OR (vazba_druha IN (SELECT id FROM lokalita WHERE jednotka_dokument.vazba_druha = lokalita.id)))
     AND vazba IN (SELECT id FROM neident_akce WHERE jednotka_dokument.vazba = neident_akce.id)
 )
-UPDATE jednotka_dokument SET vazba = (SELECT vazba_druha FROM prohodit WHERE jednotka_dokument.id = prohodit.id), vazba_druha = (SELECT vazba FROM prohodit WHERE jednotka_dokument.id = prohodit.id)
-FROM prohodit WHERE jednotka_dokument.id = prohodit.id;
+UPDATE jednotka_dokument SET vazba = prohodit.vazba_druha, vazba_druha = prohodit.vazba FROM prohodit WHERE jednotka_dokument.id = prohodit.id;
 
 -- Smazání sirotků v neident. akcích
 WITH del AS(
