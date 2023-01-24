@@ -9,7 +9,8 @@ from concurrent.futures import ThreadPoolExecutor
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, ARCHIVACE_SN, POTVRZENI_SN
+from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, ARCHIVACE_SN, \
+    POTVRZENI_SN, SN_ARCHIVOVANY, SN_POTVRZENY
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core.exceptions import ObjectDoesNotExist
@@ -518,32 +519,30 @@ class Mailer():
         cls._send_en01(project_ids, notification_type, send_to)
 
     @classmethod
-    def send_en03_en04(cls, project: 'pas.models.SamostatnyNalez', reason):
+    def send_en03_en04(cls, samostatnyNalez: 'pas.models.SamostatnyNalez', reason):
         IDENT_CELY = 'E-N-03'
-        SUBMITTED_STATE = 3
-        ARCHIVED_STATE = 4
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
-        states = {SUBMITTED_STATE: POTVRZENI_SN, ARCHIVED_STATE: ARCHIVACE_SN}
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=project.ident_cely)
-        look_for_stav = ARCHIVED_STATE
-        if project.stav == SUBMITTED_STATE:
-            look_for_stav = SUBMITTED_STATE
-        if project.stav != ARCHIVED_STATE and project.stav != SUBMITTED_STATE:
+        subject = notification_type.predmet.format(ident_cely=samostatnyNalez.ident_cely)
+        if samostatnyNalez.stav not in (SN_POTVRZENY, SN_ARCHIVOVANY):
             return
+        else:
+            look_for_stav = ARCHIVACE_SN
+        if samostatnyNalez.stav == SN_POTVRZENY:
+            look_for_stav = POTVRZENI_SN
         log = Historie.objects.filter(
-            vazba__sn_historie__ident_cely=project.ident_cely, typ_zmeny=states[look_for_stav]
+            vazba__sn_historie__ident_cely=samostatnyNalez.ident_cely, typ_zmeny=look_for_stav
         ).order_by('datum_zmeny').first()
         if not log:
             return
         user = log.uzivatel
-        MOVED_TO_STATE = project.stav - 2
+        MOVED_TO_STATE = samostatnyNalez.stav - 2
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
-            "katastr": project.katastr.nazev,
+            "katastr": samostatnyNalez.katastr.nazev,
             "reason": reason,
-            "state": project.PAS_STATES[MOVED_TO_STATE][1],
-            "ident_cely": project.ident_cely,
+            "state": samostatnyNalez.PAS_STATES[MOVED_TO_STATE][1],
+            "ident_cely": samostatnyNalez.ident_cely,
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
             "site_url": settings.SITE_URL
         })

@@ -1,1 +1,1 @@
-0 0 * * * python3 /code/webclient/manage.py runcrons "cron.notifications.Notifications"   > /code/cronjob.log
+* * * * * python3 /code/manage.py runcrons "cron.notifications.Notifications" --settings=webclient.settings.production
