@@ -3,7 +3,7 @@
 {% block content %}
     <p>{% trans "E-P-04.dobrý_den" %},</p>
     <p>
-        {% trans "E-P-04.projekt" %} <b>{{ ident_cely }}</b> {% trans "E-P-04.na_katastru" %}
+        {% trans "E-P-04.projekt" %} <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-P-04.na_katastru" %}
         <b>{{ katastr }}</b> {% trans "E-P-04.vámi_navržený_ke_zrušení_byl_převeden_do_stavu" %}
         <b>{{ state }}</b>.
     </p>
