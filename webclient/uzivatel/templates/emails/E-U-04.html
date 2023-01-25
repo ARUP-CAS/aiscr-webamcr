@@ -5,10 +5,10 @@
         {% trans "E-U-04.dobrý_den" %},
     </p>
     <p>
-        {% trans "E-U-04.nový_uživatel_žádá_o_přístup_do_AMČR." %}
+        {% trans "E-U-04.nový_uživatel_žádá_o_přístup_do_AMČR" %}.
     </p>
     <ul style="list-style: none">
-        <li><b>{% trans "E-U-04.id" %}:</b> <a href="{{ site_url }}{% url 'core:redirect_ident' id %}">{{ id }}</a></li>
+        <li><b>{% trans "E-U-04.id" %}:</b> {{ id }}</li>
         <li><b>{% trans "E-U-04.jméno" %}:</b> {{ name }}</li>
         <li><b>{% trans "E-U-04.příjmení" %}:</b> {{ surname }}</li>
         <li><b>{% trans "E-U-04.organizace" %}:</b> {{ organization }}</li>
