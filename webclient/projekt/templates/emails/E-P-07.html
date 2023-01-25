@@ -4,7 +4,7 @@
     <p>{% trans "E-P-07.dobrý_den" %},</p>
     <p>
         {% trans "E-P-07.projekt" %}
-        <b>{{ ident_cely }}</b> {% trans "E-P-07.na_katastru" %} <b>{{ katastr }}</b> {% trans "E-P-07.byl_navržen_k_odhlášení_oprávněnou_organizací" %}
+        <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-P-07.na_katastru" %} <b>{{ katastr }}</b> {% trans "E-P-07.byl_navržen_k_odhlášení_oprávněnou_organizací" %}
         <b>{{ organization }}</b>.
     </p>
     <p><b>{% trans "E-P-07.důvod" %}:</b> {{ reason }}</p>
