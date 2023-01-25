@@ -85,3 +85,9 @@ ALTER TABLE auth_user alter ident_cely set DEFAULT ('U-'::text || "right"(concat
 -- Ukazkovy select pro relevantni zaznamy historie pro archeologicky_zaznam typu akce
 -- select his.id from historie his join historie_vazby as hv on hv.id=his.vazba join archeologicky_zaznam as az on az.historie = hv.id where az.typ_zaznamu='A';
 update historie_vazby set typ_vazby='archeologicky_zaznam' where typ_vazby='akce' or typ_vazby='lokalita';
+
+UPDATE historie h SET typ_zmeny = 4
+FROM historie_vazby hv
+WHERE hv.typ_vazby='archeologicky_zaznam'
+AND h.vazba = hv.id
+AND (h.typ_zmeny = 111 OR h.typ_zmeny = 7);
