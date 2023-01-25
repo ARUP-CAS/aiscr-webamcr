@@ -78,7 +78,7 @@
     <div class="row mb-3">
       <div class="col-sm-4">
         <div class="card app-card-form app-card-dokumentacni-jednotka">
-          <div id="karta-dokumentacni-jednotky" class="card-header">
+          <div id="karta-dokumentacni-jednotky" class="card-header" id="dj_list_card_header">
             <div class="app-fx app-left">
               {% trans "Dokumentační jednotky" %}
             </div>
@@ -94,7 +94,7 @@
             </div>
             {% endif %}
           </div>
-          <div class="card-body p-0">
+          <div class="card-body p-0" id="dj_list_card_body">
             <ul class="list-group list-group-flush">
               {% for j in dokumentacni_jednotky %}
                 <li class="list-group-item">
@@ -326,6 +326,12 @@
               organizace_field = document.getElementById(`id_akcevedouci_set-${i}-organizace`);
               organizace_field.value = "{{ row.1 }}";
           {% endfor %}
+          const dj_element = document.getElementById("djMap");
+          if (dj_element) {
+              const dj_element_card_body = document.getElementById("dj_list_card_body");
+              const dj_element_card_header = document.getElementById("dj_list_card_header");
+              dj_element_card_body.style.height = `${dj_element.clientHeight  - dj_element_card_header.clientHeight}px`;
+          }
       })
 
       const div_komponenta_click = (data) => {
