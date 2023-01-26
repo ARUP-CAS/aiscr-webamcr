@@ -7,8 +7,8 @@
         (<b>{{ podnet }}</b>), {% trans "E-P-06b.který_byl_evidován_v_souvislosti_s_vaším_oznámením_o_stavební_nebo_jiné_činností_na_území_s_archeologickými_nálezy_dle_22,_odst._2_zák._č._20/1987_na_k.ú." %}
         <b>{{ katastr }}</b>,
         {% trans "E-P-06b.parcela" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
-        {% if datum_oznameni %}{% trans "E-P-06b.ze_dne" %} <b>{{ datum_oznameni }}</b>
-            ,{% endif %} {% trans "E-P-06b.byl_zrušen" %}.
+        {% if datum_oznameni %}{% trans "E-P-06b.ze_dne" %} <b>{{ datum_oznameni }}</b>,{% endif %}
+        {% trans "E-P-06b.byl_zrušen" %}.
     </p>
     <p><b>{% trans "E-P-06b.důvod_zrušení" %}:</b> {{ reason }}</p>
     <p>
