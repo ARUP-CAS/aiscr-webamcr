@@ -30,7 +30,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  
+      redis:
+        condition: service_started
+
   livereload:
     build:
       context: .
@@ -64,7 +66,7 @@ services:
       - DBNAME=aiscrrestore
       - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
     volumes:
-     - db_dev_data:/var/lib/postgresql/data
+      - db_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: ./healthcheck.sh
       retries: 30
@@ -90,10 +92,74 @@ services:
     ports:
       - "11211:11211"
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient worker -l INFO
+    secrets:
+      - db_conf
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient beat -l INFO
+    secrets:
+      - db_conf
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: sh -c "/scripts/entrypoint_flower.sh"
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    ports:
+      - 5557:5555
+    environment:
+      - CELERY_BROKER=redis://redis:6379
+    secrets:
+      - db_conf
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
 volumes:
   locale_data:
   pg_admin_vol:
   db_dev_data:
+
 
 secrets:
   pg_admin_pass:
