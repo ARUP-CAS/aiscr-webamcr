@@ -1,10 +1,11 @@
 {% extends "search_list.html" %}
+{% load template_filters %}
 
 {% block script2 %}
   <script>
       $(document).ready(function () {
-          const STAV_OZNAMENY = '2'
-          const STAV_POTVRZENY = '3'
+          const STAV_ODESLANY = '{% get_value_from_heslar "samostatny_nalez_stav" "odeslany" %}'
+          const STAV_POTVRZENY = '{% get_value_from_heslar "samostatny_nalez_stav" "potvrzeny" %}'
 
           setPageHeader();
 
@@ -50,7 +51,7 @@
           }
 
           function hasOnlyPotvrdit(actualParams, actualValues) {
-              if (listMatch(['stav', 'predano_organizace'], actualParams) && listMatch([STAV_OZNAMENY], actualValues)) {
+              if (listMatch(['stav', 'predano_organizace'], actualParams) && listMatch([STAV_ODESLANY], actualValues)) {
                 setHeader("{{hasOnlyPotvrdit_header}}")
                   return true
               } else {

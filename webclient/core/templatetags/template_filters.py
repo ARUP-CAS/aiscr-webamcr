@@ -4,6 +4,8 @@ import structlog
 
 from django import template
 from psycopg2._range import DateRange
+
+from core import constants
 from heslar.models import RuianKatastr
 from django.utils.translation import gettext_lazy as _
 
@@ -163,6 +165,15 @@ def get_value_from_heslar(nazev_heslare, hodnota):
         ("externi_zdroj_typ", "clanek_v_casopise"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
         ("externi_zdroj_typ", "clanek_v_novinach"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
         ("externi_zdroj_typ", "nepublikovana_zprava"): hesla.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
+        ("projekt_stav", "oznameny"): constants.PROJEKT_STAV_OZNAMENY,
+        ("projekt_stav", "zapsany"): constants.PROJEKT_STAV_ZAPSANY,
+        ("projekt_stav", "prihlaseny"): constants.PROJEKT_STAV_PRIHLASENY,
+        ("projekt_stav", "zahajeny_v_terenu"): constants.PROJEKT_STAV_ZAHAJENY_V_TERENU,
+        ("projekt_stav", "ukonceny_v_terenu"): constants.PROJEKT_STAV_UKONCENY_V_TERENU,
+        ("projekt_stav", "uzavreny"): constants.PROJEKT_STAV_UZAVRENY,
+        ("az_stav", "odeslany"): constants.AZ_STAV_ODESLANY,
+        ("samostatny_nalez_stav", "odeslany"): constants.SN_ODESLANY,
+        ("samostatny_nalez_stav", "potvrzeny"): constants.SN_POTVRZENY,
     }
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]

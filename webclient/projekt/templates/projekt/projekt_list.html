@@ -1,14 +1,15 @@
 {% extends "search_list.html" %}
+{% load template_filters %}
 
 {% block script2 %}
   <script>
     $(document).ready(function () {
-      const STAV_OZNAMENY = '0'
-      const STAV_ZAPSANY = '1'
-      const STAV_PRIHLASENY = '2'
-      const STAV_ZAHAJEN = '3'
-      const STAV_UKONCEN = '4'
-      const STAV_UZAVREN = '5'
+      const STAV_OZNAMENY = '{% get_value_from_heslar "projekt_stav" "oznameny" %}'
+      const STAV_ZAPSANY = '{% get_value_from_heslar "projekt_stav" "zapsany" %}'
+      const STAV_PRIHLASENY = '{% get_value_from_heslar "projekt_stav" "prihlaseny" %}'
+      const STAV_ZAHAJEN = '{% get_value_from_heslar "projekt_stav" "zahajeny_v_terenu" %}'
+      const STAV_UKONCEN = '{% get_value_from_heslar "projekt_stav" "ukonceny_v_terenu" %}'
+      const STAV_UZAVREN = '{% get_value_from_heslar "projekt_stav" "uzavreny" %}'
 
       setPageHeader();
 
