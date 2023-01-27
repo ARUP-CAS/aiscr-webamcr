@@ -188,7 +188,7 @@ class AMCRTestRunner(BaseRunner):
 
         UserNotificationType(ident_cely="E-U-04", zasilat_neaktivnim=False,
                              predmet="AMČR: uživatelský účet čeká na aktivaci",
-                             cesta_sablony="emails/account_activation_request.html").save()
+                             cesta_sablony="emails/E-U-04.html").save()
 
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)

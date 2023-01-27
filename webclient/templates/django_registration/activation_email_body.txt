@@ -1,5 +1,5 @@
 {% load i18n %}
-{% trans "E-U-01.dobrý_den" %}
+{% trans "E-U-01.dobrý_den" %},
 
 {% trans "E-U-01.tato_zpráva_slouží_k_ověření_vaší_emailové_adresy_což_je_nezbytný_krok_pro_získání_přístupu_do_amčr" %}.
 
@@ -9,5 +9,5 @@
 {% trans "E-U-01.tento_odkaz_expiruje_za" %} {{ expiration_days }} {% trans "E-U-01.dní" %}.
 
 ------------------------------
-{% trans "E-U-01.paticka.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}
-{% trans "E-U-01.paticka.odesláno_z" %} {{ scheme }}://{{ site.domain }}
+{% trans "E-U-01.paticka.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}.
+{% trans "E-U-01.paticka.odesláno_z" %}: {{ scheme }}://{{ site.domain }}
