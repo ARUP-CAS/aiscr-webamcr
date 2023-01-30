@@ -1,17 +1,22 @@
--- Nastavení správného EPSG pro geometrie
+-- Nastavení správného EPSG a typu pro geometrie
+
+-- Oprava na singlepart
+UPDATE kladyzm SET the_geom = ST_GeometryN(the_geom, 1);
+
 -- 5514
-SELECT UpdateGeometrySRID('kladysm5','geom',5514);
-SELECT UpdateGeometrySRID('kladyzm','the_geom',5514);
-SELECT UpdateGeometrySRID('vyskovy_bod','geom',5514);
-SELECT UpdateGeometrySRID('pian','geom_sjtsk',5514);
-SELECT UpdateGeometrySRID('samostatny_nalez','geom_sjtsk',5514);
+ALTER TABLE kladysm5 ALTER COLUMN geom TYPE geometry(POLYGON, 5514) USING ST_SetSRID(geom, 5514);
+ALTER TABLE kladyzm ALTER COLUMN the_geom TYPE geometry(POLYGON, 5514) USING ST_SetSRID(the_geom, 5514);
+ALTER TABLE pian ALTER COLUMN geom_sjtsk TYPE geometry(GEOMETRY, 5514) USING ST_SetSRID(geom_sjtsk, 5514);
+ALTER TABLE samostatny_nalez ALTER COLUMN geom_sjtsk TYPE geometry(GEOMETRY, 5514) USING ST_SetSRID(geom_sjtsk, 5514);
+ALTER TABLE vyskovy_bod ALTER COLUMN geom TYPE geometry(POINTZ, 5514) USING ST_SetSRID(geom, 5514);
+
 -- 4326
-SELECT UpdateGeometrySRID('pian','geom',4326);
-SELECT UpdateGeometrySRID('projekt','geom',4326);
-SELECT UpdateGeometrySRID('ruian_katastr','definicni_bod',4326);
-SELECT UpdateGeometrySRID('ruian_katastr','hranice',4326);
-SELECT UpdateGeometrySRID('ruian_kraj','definicni_bod',4326);
-SELECT UpdateGeometrySRID('ruian_kraj','hranice',4326);
-SELECT UpdateGeometrySRID('ruian_okres','definicni_bod',4326);
-SELECT UpdateGeometrySRID('ruian_okres','hranice',4326);
-SELECT UpdateGeometrySRID('samostatny_nalez','geom',4326);
+ALTER TABLE pian ALTER COLUMN geom TYPE geometry(GEOMETRY, 4326) USING ST_SetSRID(geom, 4326);
+ALTER TABLE projekt ALTER COLUMN geom TYPE geometry(GEOMETRY, 4326) USING ST_SetSRID(geom, 4326);
+ALTER TABLE ruian_katastr ALTER COLUMN definicni_bod TYPE geometry(POINT, 4326) USING ST_SetSRID(definicni_bod, 4326);
+ALTER TABLE ruian_katastr ALTER COLUMN hranice TYPE geometry(MULTIPOLYGON, 4326) USING ST_SetSRID(hranice, 4326);
+ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod TYPE geometry(POINT, 4326) USING ST_SetSRID(definicni_bod, 4326);
+ALTER TABLE ruian_kraj ALTER COLUMN hranice TYPE geometry(MULTIPOLYGON, 4326) USING ST_SetSRID(hranice, 4326);
+ALTER TABLE ruian_okres ALTER COLUMN definicni_bod TYPE geometry(POINT, 4326) USING ST_SetSRID(definicni_bod, 4326);
+ALTER TABLE ruian_okres ALTER COLUMN hranice TYPE geometry(MULTIPOLYGON, 4326) USING ST_SetSRID(hranice, 4326);
+ALTER TABLE samostatny_nalez ALTER COLUMN geom TYPE geometry(POINT, 4326) USING ST_SetSRID(geom, 4326);
