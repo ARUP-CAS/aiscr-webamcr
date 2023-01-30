@@ -162,19 +162,15 @@ ALTER TABLE projekt_sekvence ADD CONSTRAINT projekt_sekvence_pkey PRIMARY KEY (i
 
 ALTER TABLE ruian_katastr ALTER COLUMN hranice SET NOT NULL ;
 ALTER TABLE ruian_katastr DROP COLUMN poznamka ;
---ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_nazev_key UNIQUE(nazev);
---ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_kod_key UNIQUE(kod);
 ALTER TABLE ruian_katastr ADD CONSTRAINT ruian_katastr_pian_key UNIQUE(pian);
 
 ALTER TABLE ruian_kraj DROP COLUMN aktualni;
---ALTER TABLE ruian_kraj ALTER COLUMN definicni_bod SET NOT NULL ;
---ALTER TABLE ruian_kraj ALTER COLUMN hranice SET NOT NULL ;
---ALTER TABLE ruian_kraj ADD COLUMN nazev_en text NOT NULL;
+ALTER TABLE ruian_kraj ADD COLUMN nazev_en text;
+UPDATE ruian_kraj SET nazev_en = nazev;
+ALTER TABLE ruian_kraj ALTER COLUMN nazev_en SET NOT NULL;
 
 ALTER TABLE ruian_okres DROP COLUMN aktualni;
 ALTER TABLE ruian_okres ALTER COLUMN nazev_en SET NOT NULL;
---ALTER TABLE ruian_okres ALTER COLUMN definicni_bod SET NOT NULL;
---ALTER TABLE ruian_okres ALTER COLUMN hranice SET NOT NULL;
 ALTER TABLE ruian_okres ADD CONSTRAINT ruian_okres_nazev_key UNIQUE(nazev);
 ALTER TABLE ruian_okres ADD CONSTRAINT ruian_okres_kod_key UNIQUE(kod);
 ALTER TABLE ruian_okres ADD CONSTRAINT ruian_okres_spz_key UNIQUE(spz);
