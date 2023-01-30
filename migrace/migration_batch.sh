@@ -103,8 +103,5 @@ echo "*** MIGRATIONS DONE [${n}] ***"
 # hashovani hesel
 python3 encrypt_passwords.py
 
-#echo "Migrace mazani" TOHLE ZAVOLAT MANULANE
-#psql -d prod_zaloha -f migrace_mazani.sql
-
 #echo "This is only for development, comment out for production"
 #psql -d prod_zaloha -f import_testovacich_uctu.sql
