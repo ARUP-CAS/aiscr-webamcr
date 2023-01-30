@@ -1,5 +1,3 @@
-alter table dokument_autor alter column poradi drop not null;
-
 delete from heslar where ident_cely='HES-000869';
 
 ALTER TABLE dokument_autor add column id serial;
