@@ -104,7 +104,7 @@ ALTER TABLE heslar_hierarchie ADD CONSTRAINT heslar_hierarchie_typ_check CHECK (
 
 ALTER TABLE historie DROP COLUMN typ_zmeny_old;
 
-ALTER TABLE komponenta ALTER COLUMN vazba SET NOT NULL;
+ALTER TABLE komponenta ALTER COLUMN komponenta_vazby SET NOT NULL;
 
 ALTER TABLE komponenta_vazby ALTER COLUMN typ_vazby SET NOT NULL;
 
