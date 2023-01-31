@@ -608,7 +608,8 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
                     $('#id_'+global_map_can_grab_geom_from_map+'-pian').select2("trigger", "select",{data:data.results[0]})
                     }
                     map.spin(false);
-                    document.getElementById('id_'+global_map_can_grab_geom_from_map+'-pian' ).removeAttribute("disabled");
+                    set_pian_by_id(global_map_can_grab_geom_from_map)
+                    //document.getElementById('id_'+global_map_can_grab_geom_from_map+'-pian_text' ).removeAttribute("disabled");
                     //global_map_can_grab_geom_from_map=false;
 
                     },
@@ -655,21 +656,21 @@ var addPointToPoiLayerWithForce = (geom, layer, text, st_text, presnost4=false) 
     let coor = []
     if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
         //ToDo" 21.06.2022 pinIconYellow
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true },presnost4).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: pinIconYellowHW, zIndexOffset: 2000, changeIcon: true },!presnost4).bindPopup(text).addTo(layer));
         if (st_text.includes("POLYGON")) {
             st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]));
             })
-            mouseOverGeometry(L.polygon(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },presnost4).addTo(layer));
+            mouseOverGeometry(L.polygon(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },!presnost4).addTo(layer));
         } else if (st_text.includes("LINESTRING")) {
             st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
                 coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
             })
-            mouseOverGeometry(L.polyline(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },presnost4).addTo(layer));
+            mouseOverGeometry(L.polyline(coor, { color: 'gold' }).bindTooltip(text, { sticky: true },!presnost4).addTo(layer));
         }
     } else {
         //ToDo" 21.06.2022 pinIconYellowPoint
-        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: !presnost4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost4 },presnost4).bindPopup(text).addTo(layer));
+        mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84(geom), { icon: !presnost4 ? pinIconYellowPoint: pinIconYellowHW, zIndexOffset: 2000,changeIcon: presnost4 },!presnost4).bindPopup(text).addTo(layer));
     }
 
 }
@@ -703,17 +704,17 @@ var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false, pres
         st_text.split("((")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0].replace("(", "")]))
         })
-        mouseOverGeometry(L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer),presnost4);
+        mouseOverGeometry(L.polygon(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer),!presnost4);
     } else if (st_text.includes("LINESTRING")) {
         st_text.split("(")[1].split(")")[0].split(",").forEach(i => {
             coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         })
-        mouseOverGeometry(L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer),presnost4);
+        mouseOverGeometry(L.polyline(coor, myColor).bindTooltip(text, { sticky: true }).addTo(layer),!presnost4);
     } else if (st_text.includes("POINT")) {
         let i = st_text.split("(")[1].split(")")[0];
         coor.push(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]))
         if (layer === poi_other) {
-            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]), myIco).bindTooltip(text).addTo(layer),presnost4);
+            mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([i.split(" ")[1], i.split(" ")[0]]), myIco).bindTooltip(text).addTo(layer),!presnost4);
         }
 
     }
