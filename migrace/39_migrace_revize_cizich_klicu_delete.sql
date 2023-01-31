@@ -64,6 +64,7 @@ ALTER TABLE dokumentacni_jednotka DROP CONSTRAINT dokumentacni_jednotka_typ_fkey
 ALTER TABLE externi_odkaz DROP CONSTRAINT externi_odkaz_archeologicky_zaznam_fkey;
 ALTER TABLE externi_odkaz DROP CONSTRAINT externi_odkaz_externi_zdroj_fkey;
 ALTER TABLE externi_zdroj_editor DROP CONSTRAINT externi_zdroj_editor_editor_fk;
+ALTER TABLE externi_zdroj_editor DROP CONSTRAINT externi_zdroj_editor_externi_zdroj_fk;
 ALTER TABLE externi_zdroj DROP CONSTRAINT externi_zdroj_historie_fkey;
 ALTER TABLE externi_zdroj DROP CONSTRAINT externi_zdroj_typ_dokumentu_fkey;
 ALTER TABLE externi_zdroj DROP CONSTRAINT externi_zdroj_typ_fkey;
