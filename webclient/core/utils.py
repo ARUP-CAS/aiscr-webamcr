@@ -16,9 +16,9 @@ from core.message_constants import (
 )
 from dj.models import DokumentacniJednotka
 from django.db import connection
+from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
-from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -88,6 +88,14 @@ def get_centre_point(bod, geom):
                 [x0, x1, xlength] = [
                     x0 + geom[i][0],
                     x1 + geom[i][1],
+                    len(geom),
+                ]
+        elif isinstance(geom[0][0][0], tuple):
+            logger.info(len(geom[0][0]))
+            for i in range(0, len(geom)):
+                [x0, x1, xlength] = [
+                    x0 + geom[0][0][i][0],
+                    x1 + geom[0][0][i][1],
                     len(geom),
                 ]
         else:
@@ -588,6 +596,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
     """
     Base for table used in search. Added hiding and showinf columns
     """
+
     columns_to_hide = []
     app = None
 
