@@ -7,7 +7,7 @@ UPDATE kladyzm SET the_geom = ST_GeometryN(the_geom, 1);
 ALTER TABLE kladysm5 ALTER COLUMN geom TYPE geometry(POLYGON, 5514) USING ST_SetSRID(geom, 5514);
 ALTER TABLE kladyzm ALTER COLUMN the_geom TYPE geometry(POLYGON, 5514) USING ST_SetSRID(the_geom, 5514);
 ALTER TABLE pian ALTER COLUMN geom_sjtsk TYPE geometry(GEOMETRY, 5514) USING ST_SetSRID(geom_sjtsk, 5514);
-ALTER TABLE samostatny_nalez ALTER COLUMN geom_sjtsk TYPE geometry(GEOMETRY, 5514) USING ST_SetSRID(geom_sjtsk, 5514);
+ALTER TABLE samostatny_nalez ALTER COLUMN geom_sjtsk TYPE geometry(POINT, 5514) USING ST_SetSRID(geom_sjtsk, 5514);
 ALTER TABLE vyskovy_bod ALTER COLUMN geom TYPE geometry(POINTZ, 5514) USING ST_SetSRID(geom, 5514);
 
 -- 4326
