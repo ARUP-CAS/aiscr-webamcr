@@ -111,7 +111,8 @@ INSTALLED_APPS = [
     "bs4",
     "django_extensions",
     "watchdog",
-    'django_select2',
+    "django_select2",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -201,8 +202,8 @@ USE_L10N = False
 DATE_FORMAT = "%d.%m.%Y"
 DATE_INPUT_FORMATS = [
     "%d.%m.%Y",
-    '%d/%m/%Y',
-    '%Y-%m-%d'
+    "%d/%m/%Y",
+    "%Y-%m-%d"
 ]
 
 USE_TZ = True
@@ -408,3 +409,12 @@ AUTO_LOGOUT = {
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 COMPRESS_REBUILD_TIMEOUT = 3600
+
+# CELERY SETTINGS
+CELERY_REDIRECT_STDOUTS = False
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BROKER = "redis://redis:6379"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
