@@ -110,3 +110,14 @@ WHERE obdobi is null;
 
 UPDATE komponenta_dokument SET areal = (SELECT id FROM heslar_areal_druha WHERE ident_cely = 'HES-000060')
 WHERE areal is null;
+
+-- Odstranění dokumentů ZA/ZL
+WITH za_zl AS
+(
+	SELECT dokument.id FROM dokument INNER JOIN heslar_rada ON dokument.rada = heslar_rada.id
+	WHERE heslar_rada.ident_cely = 'HES-000884' OR heslar_rada.ident_cely = 'HES-000885'
+)
+DELETE FROM soubor USING dokument_soubor_fs WHERE soubor.id = dokument_soubor_fs.soubor_fs AND dokument_soubor_fs.dokument IN (SELECT id FROM za_zl)
+DELETE FROM dokument_soubor_fs USING za_zl WHERE za_zl.id = dokument_soubor_fs.dokument
+DELETE FROM jednotka_dokument USING za_zl WHERE za_zl.id = jednotka_dokument.dokument
+DELETE FROM dokument USING za_zl WHERE za_zl.id = dokument.id;

@@ -29,8 +29,8 @@ def create_dokument_vazby(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=DokumentAutor)
-def create_main_autor(sender, instance, **kwargs):
+def create_hlavni_autor(sender, instance, **kwargs):
     if instance.poradi == 1:
         dokument = instance.dokument
-        dokument.main_autor = instance.autor.prijmeni
+        dokument.hlavni_autor = instance.autor.prijmeni
         dokument.save()

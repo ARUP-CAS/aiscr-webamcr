@@ -207,6 +207,7 @@ alter table heslar_dokument_typ_material_rada rename column heslar_material_doku
 -- 3. organizace.months_to_publication -> mesicu_do_zverejneni, published_accessibility -> zverejneni_pristupnost
 alter table organizace rename column months_to_publication to mesicu_do_zverejneni;
 alter table organizace rename column published_accessibility to zverejneni_pristupnost;
+alter table organizace alter column zverejneni_pristupnost drop default;
 -- 4. projekt.lokalita -> lokalizace, nkp_cislo -> kulturni_pamatka_cislo, nkp_popis -> kulturni_pamatka_popis, objednatel -> oznamovatel
 alter table projekt rename column lokalita to lokalizace;
 alter table projekt rename column nkp_cislo to kulturni_pamatka_cislo;

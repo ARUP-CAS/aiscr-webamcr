@@ -68,7 +68,7 @@ class DokumentTable(SearchTable):
     )
     popis = tables.columns.Column(default="")
     rok_vzniku = tables.columns.Column(default="")
-    autori = AutorColumn(order_by="main_autor")
+    autori = AutorColumn(order_by="hlavni_autor")
     popis = tables.columns.Column(default="")
     pristupnost = tables.columns.Column(default="")
     rada = tables.columns.Column(default="")

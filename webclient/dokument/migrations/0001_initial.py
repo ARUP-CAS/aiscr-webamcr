@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('ident_cely', models.TextField(unique=True)),
                 ('datum_zverejneni', models.DateField(blank=True, null=True)),
                 ('licence', models.TextField(blank=True, null=True)),
-                ('main_autor', models.TextField(blank=True, null=True)),
+                ('hlavni_autor', models.TextField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'dokument',

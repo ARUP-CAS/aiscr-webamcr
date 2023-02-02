@@ -261,3 +261,6 @@ insert into auth_group(name) values ('Správa uživatelů');
 INSERT INTO auth_user_groups (user_id, group_id) SELECT id, (select max(id) from auth_group) AS grp FROM auth_user WHERE auth_level & 8 = 8;
 -- Pokud bychom chtěli přenést oprávnění ke 3D, bude třeba doplnit něco jako (je třeba zaměnit ## za skutečné id skupiny):
 -- INSERT INTO auth_user_groups (user_id, group_id) SELECT id, ## AS grp FROM auth_user WHERE auth_level & 128 = 128;
+
+-- Oprava názvu sloupce
+ALTER TABLE komponenta RENAME COLUMN vazba TO komponenta_vazby;

@@ -154,7 +154,7 @@ class Dokument(models.Model):
     tvary = models.ManyToManyField(
         Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
-    main_autor = models.TextField(blank=True, null=True)
+    hlavni_autor = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = "dokument"
