@@ -110,9 +110,9 @@ INSTALLED_APPS = [
     "lokalita",
     "bs4",
     "django_extensions",
-    "watchdog",
-    "django_select2",
     "django_celery_beat",
+    'django_select2',
+    "notifikace_projekty",
 ]
 
 MIDDLEWARE = [
