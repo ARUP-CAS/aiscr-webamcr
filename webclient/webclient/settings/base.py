@@ -49,6 +49,12 @@ def get_mail_secret(setting, default_value=None):
     else:
         secrets_mail.get(setting, default_value)
 
+def get_redis_pass(default_value=""):
+    if os.path.exists("/run/secrets/redis_pass"):
+        with open("/run/secrets/redis_pass", "r") as file:
+            return ":"+file.readline().rstrip()+"@"
+    else:
+        return default_value
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
@@ -113,6 +119,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     'django_select2',
     "notifikace_projekty",
+    "django_celery_results"
 ]
 
 MIDDLEWARE = [
@@ -415,6 +422,6 @@ CELERY_REDIRECT_STDOUTS = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BROKER = "redis://redis:6379"
+CELERY_BROKER_URL = "redis://"+get_redis_pass()+"redis:6379"
+CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

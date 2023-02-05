@@ -1,12 +1,13 @@
 from datetime import timedelta
 import logging
 
-from core.constants import PROJEKT_RELATION_TYPE
+from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 from projekt.models import Projekt
+from notifikace_projekty.tasks import check_hlidaci_pes
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 def projekt_pre_save(sender, instance, **kwargs):
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
+    if instance.pk is not None:
+        if instance.stav == PROJEKT_STAV_ZAPSANY:
+            instance.__original_stav = Projekt.objects.get(pk=instance.id).stav
 
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     try:
@@ -39,3 +43,9 @@ def create_projekt_vazby(sender, instance, **kwargs):
         sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         sv.save()
         instance.soubory = sv
+
+@receiver(post_save, sender=Projekt)
+def odosli_hlidaciho_psa(sender, instance, **kwargs):
+    if instance.stav == PROJEKT_STAV_ZAPSANY and instance.stav != instance.__original_stav:
+        logger.debug("Projekt change status to Zapsany, checking hlidaci pes.")
+        check_hlidaci_pes.delay(instance.pk)
