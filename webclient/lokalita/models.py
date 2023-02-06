@@ -25,8 +25,6 @@ class Lokalita(models.Model):
         db_column="druh",
         related_name="lokalita_druh",
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH},
-        blank=False,
-        null=False,
     )
     popis = models.TextField(blank=True, null=True)
     nazev = models.TextField(blank=False, null=False)
@@ -36,8 +34,6 @@ class Lokalita(models.Model):
         db_column="typ_lokality",
         related_name="lokalita_typ",
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},
-        blank=False,
-        null=False,
     )
     poznamka = models.TextField(blank=True, null=True)
     zachovalost = models.ForeignKey(

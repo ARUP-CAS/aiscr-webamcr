@@ -19,8 +19,8 @@ class DokumentacniJednotka(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
     )
     nazev = models.TextField(blank=True, null=True)
-    negativni_jednotka = models.BooleanField()
-    ident_cely = models.TextField(unique=True, blank=True, null=False)
+    negativni_jednotka = models.BooleanField(default=False)
+    ident_cely = models.TextField(unique=True)
     pian = models.ForeignKey(
         Pian,
         models.DO_NOTHING,
@@ -31,10 +31,8 @@ class DokumentacniJednotka(models.Model):
     )
     komponenty = models.OneToOneField(
         KomponentaVazby,
-        models.DO_NOTHING,
+        models.CASCADE,
         db_column="komponenty",
-        blank=True,
-        null=True,
         related_name="dokumentacni_jednotka",
     )
     archeologicky_zaznam = models.ForeignKey(

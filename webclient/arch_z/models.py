@@ -56,13 +56,9 @@ class ArcheologickyZaznam(models.Model):
         db_column="pristupnost",
         related_name="zaznamy_pristupnosti",
         default=PRISTUPNOST_ANONYM_ID,
-        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
-        blank=False,
-        null=True,
+        limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST}
     )
-    ident_cely = models.TextField(unique=True, null=False)
-    #stav_stary = models.SmallIntegerField(null=True) - #Removed #474
-
+    ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
         HistorieVazby, on_delete=models.CASCADE, db_column="historie"
     )
@@ -73,11 +69,9 @@ class ArcheologickyZaznam(models.Model):
     )
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="hlavni_katastr",
         related_name="zaznamy_hlavnich_katastru",
-        null=False,
-        blank=False,
     )
 
     class Meta:
@@ -349,8 +343,6 @@ class Akce(models.Model):
         db_column="specifikace_data",
         related_name="akce_specifikace_data",
         limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
-        blank=True,
-        null=True,
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
@@ -410,11 +402,7 @@ class Akce(models.Model):
 class AkceVedouci(models.Model):
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
     vedouci = models.ForeignKey(Osoba, on_delete=models.DO_NOTHING, db_column="vedouci")
-    organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
-        #TODO: BUG FIX #474
-        # Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=False
-    )
+    organizace = models.ForeignKey(Organizace, on_delete=models.DO_NOTHING, db_column="organizace")
 
     class Meta:
         db_table = "akce_vedouci"
@@ -427,17 +415,13 @@ class ExterniOdkaz(models.Model):
         ExterniZdroj,
         models.DO_NOTHING,
         db_column="externi_zdroj",
-        blank=True,
-        null=False,
         related_name="externi_odkazy_zdroje",
     )
-    paginace = models.TextField(blank=True, null=True)
+    paginace = models.TextField()
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,
         db_column="archeologicky_zaznam",
-        blank=True,
-        null=False,
         related_name="externi_odkazy",
     )
 

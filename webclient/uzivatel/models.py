@@ -202,10 +202,9 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
     typ_organizace = models.ForeignKey(
         Heslar,
-        models.PROTECT,
+        models.DO_NOTHING,
         db_column="typ_organizace",
         related_name="typy_organizaci",
-        null=True,
         verbose_name=_("uzivatel.models.Organizace.typ_organizace"),
         limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
     )
@@ -213,10 +212,9 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
-        models.PROTECT,
+        models.DO_NOTHING,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
-        null=True,
         verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
     )
@@ -228,7 +226,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
     nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
     zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
-    ident_cely = models.CharField(max_length=10, null=True, blank=True)
+    ident_cely = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -248,7 +246,7 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
     rodne_prijmeni = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"))
-    ident_cely = models.CharField(max_length=20, null=True, blank=True)
+    ident_cely = models.CharField(max_length=20, unique=True)
 
     class Meta:
         db_table = "osoba"

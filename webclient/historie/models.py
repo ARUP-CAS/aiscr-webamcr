@@ -100,7 +100,7 @@ class Historie(models.Model):
     datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))
     typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"))
     uzivatel = models.ForeignKey(
-        User, on_delete=models.PROTECT, db_column="uzivatel", verbose_name=_("Uživatel")
+        User, on_delete=models.DO_NOTHING, db_column="uzivatel", verbose_name=_("Uživatel")
     )
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("Poznámka"))
     vazba = models.ForeignKey(

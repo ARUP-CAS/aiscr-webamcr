@@ -64,10 +64,10 @@ class ExterniZdroj(models.Model):
     datum_rd = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
     poznamka = models.TextField(blank=True, null=True)
-    ident_cely = models.TextField(unique=True, blank=True, null=False)
+    ident_cely = models.TextField(unique=True)
 
     historie = models.OneToOneField(
-        HistorieVazby, on_delete=models.RESTRICT, db_column="historie", blank=True, null=True
+        HistorieVazby, on_delete=models.SET_NULL, db_column="historie", blank=True, null=True
     )
     autori = models.ManyToManyField(
         Osoba, through="ExterniZdrojAutor", related_name="ez_autori"
@@ -173,7 +173,7 @@ class ExterniZdrojAutor(models.Model):
     externi_zdroj = models.OneToOneField(
         ExterniZdroj, models.DO_NOTHING, db_column="externi_zdroj", primary_key=True
     )
-    autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
+    autor = models.ForeignKey(Osoba, models.CASCADE, db_column="autor")
     poradi = models.IntegerField(null=True)
 
     def get_osoba(self):
@@ -181,13 +181,12 @@ class ExterniZdrojAutor(models.Model):
 
     class Meta:
         db_table = "externi_zdroj_autor"
-        unique_together = (("externi_zdroj", "autor"),)
-        unique_together = (("externi_zdroj", "poradi"),)
+        unique_together = (("externi_zdroj", "autor"), ("externi_zdroj", "poradi"))
 
 
 class ExterniZdrojEditor(models.Model):
     externi_zdroj = models.OneToOneField(
-        ExterniZdroj, models.DO_NOTHING, db_column="externi_zdroj", primary_key=True
+        ExterniZdroj, models.CASCADE, db_column="externi_zdroj", primary_key=True
     )
     editor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="editor")
     poradi = models.IntegerField(null=True)

@@ -117,7 +117,7 @@ class Dokument(models.Model):
     datum_zverejneni = models.DateField(blank=True, null=True)
     soubory = models.OneToOneField(
         SouborVazby,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="soubory",
         blank=True,
         null=True,
@@ -125,7 +125,7 @@ class Dokument(models.Model):
     )
     historie = models.OneToOneField(
         HistorieVazby,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="historie",
         blank=True,
         null=True,
@@ -345,7 +345,7 @@ class Dokument(models.Model):
 class DokumentCast(models.Model):
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="archeologicky_zaznam",
         blank=True,
         null=True,
@@ -353,7 +353,7 @@ class DokumentCast(models.Model):
     )
     projekt = models.ForeignKey(
         Projekt,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="projekt",
         blank=True,
         null=True,
@@ -366,7 +366,7 @@ class DokumentCast(models.Model):
     ident_cely = models.TextField(unique=True)
     komponenty = models.OneToOneField(
         KomponentaVazby,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="komponenty",
         blank=True,
         null=True,
@@ -550,7 +550,7 @@ class Let(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     datum = models.DateTimeField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
-    pozorovatel = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="pozorovatel")
+    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, db_column="pozorovatel")
     ucel_letu = models.TextField(blank=True, null=True)
     typ_letounu = models.TextField(blank=True, null=True)
     letiste_start = models.ForeignKey(
@@ -559,6 +559,7 @@ class Let(models.Model):
         db_column="letiste_start",
         related_name="let_start",
         limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
+        null=True,
     )
     letiste_cil = models.ForeignKey(
         Heslar,
@@ -566,6 +567,7 @@ class Let(models.Model):
         db_column="letiste_cil",
         related_name="let_cil",
         limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
+        null=True,
     )
     hodina_zacatek = models.TextField(blank=True, null=True)
     hodina_konec = models.TextField(blank=True, null=True)
@@ -575,6 +577,7 @@ class Let(models.Model):
         db_column="pocasi",
         related_name="let_pocasi",
         limit_choices_to={"nazev_heslare": HESLAR_POCASI},
+        null=True,
     )
     dohlednost = models.ForeignKey(
         Heslar,
@@ -582,12 +585,13 @@ class Let(models.Model):
         db_column="dohlednost",
         related_name="let_dohlednost",
         limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST},
+        null=True,
     )
     fotoaparat = models.TextField(blank=True, null=True)
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace"
+        Organizace, models.DO_NOTHING, db_column="organizace", null=True,
     )
-    ident_cely = models.TextField(unique=True, null=False)
+    ident_cely = models.TextField(unique=True)
 
     class Meta:
         db_table = "let"

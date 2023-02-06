@@ -6,7 +6,7 @@ from uzivatel.models import Osoba
 
 class NeidentAkce(models.Model):
     katastr = models.ForeignKey(
-        RuianKatastr, models.DO_NOTHING, db_column="katastr", blank=True, null=True
+        RuianKatastr, models.RESTRICT, db_column="katastr", blank=True, null=True
     )
     lokalizace = models.TextField(blank=True, null=True)
     rok_zahajeni = models.IntegerField(blank=True, null=True)
@@ -14,14 +14,11 @@ class NeidentAkce(models.Model):
     pian = models.TextField(blank=True, null=True)
     popis = models.TextField(blank=True, null=True)
     poznamka = models.TextField(blank=True, null=True)
-    # ident_cely = models.TextField(unique=True) #Removed by #474
     dokument_cast = models.OneToOneField(
         DokumentCast,
         on_delete=models.CASCADE,
         db_column="dokument_cast",
         related_name="neident_akce",
-        blank=True,
-        null=False,
         primary_key=True,
     )
     vedouci = models.ManyToManyField(

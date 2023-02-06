@@ -89,7 +89,7 @@ class Projekt(models.Model):
     )
     vedouci_projektu = models.ForeignKey(
         Osoba,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="vedouci_projektu",
         blank=True,
         null=True,
@@ -101,7 +101,6 @@ class Projekt(models.Model):
     datum_ukonceni = models.DateField(
         blank=True, null=True, verbose_name=_("Datum ukončení")
     )
-    # planovane_zahajeni_text = models.TextField(blank=True, null=True) # Removed by #474
     kulturni_pamatka = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
@@ -113,9 +112,9 @@ class Projekt(models.Model):
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(
-        unique=True, blank=True, null=False, verbose_name=_("Identifikátor")
+        unique=True, verbose_name=_("Identifikátor")
     )
-    geom = pgmodels.PointField(blank=True, null=True)
+    geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     soubory = models.OneToOneField(
         SouborVazby,
         on_delete=models.DO_NOTHING,
@@ -488,7 +487,7 @@ class Projekt(models.Model):
 
 class ProjektKatastr(models.Model):
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
-    katastr = models.ForeignKey(RuianKatastr, on_delete=models.CASCADE)
+    katastr = models.ForeignKey(RuianKatastr, on_delete=models.RESTRICT)
 
     def __str__(self):
         return "P: " + str(self.projekt) + " - K: " + str(self.katastr)

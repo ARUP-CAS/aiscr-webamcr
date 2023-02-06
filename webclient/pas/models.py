@@ -47,7 +47,7 @@ class SamostatnyNalez(models.Model):
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(
         Projekt,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="projekt",
         related_name="samostatne_nalezy",
         limit_choices_to={"typ_projektu": TYP_PROJEKTU_PRUZKUM_ID},
@@ -72,13 +72,14 @@ class SamostatnyNalez(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
     )
     geom = pgmodels.PointField(blank=True, null=True)
-    geom_sjtsk = pgmodels.PointField(blank=True, null=True)
-    geom_system = models.TextField(blank=False, null=False,default='wgs84')
+    geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=4326)
+    geom_system = models.TextField(default='wgs84')
     pristupnost = models.ForeignKey(
         Heslar,
         models.DO_NOTHING,
         db_column="pristupnost",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
+
     )
     obdobi = models.ForeignKey(
         Heslar,
@@ -122,11 +123,11 @@ class SamostatnyNalez(models.Model):
         blank=True,
         null=True,
     )
-    ident_cely = models.TextField(unique=True, blank=True, null=False)
+    ident_cely = models.TextField(unique=True)
     pocet = models.TextField(blank=True, null=True)
     soubory = models.OneToOneField(
         SouborVazby,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="soubory",
         blank=True,
         null=True,
@@ -134,12 +135,14 @@ class SamostatnyNalez(models.Model):
     )
     historie = models.OneToOneField(
         HistorieVazby,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="historie",
         blank=True,
         null=True,
         related_name="sn_historie",
     )
+    geom_updated_at = models.DateField(null=True, blank=True)
+    geom_sjtsk_updated_at = models.DateField(null=True, blank=True)
 
     def set_zapsany(self, user):
         self.stav = SN_ZAPSANY
