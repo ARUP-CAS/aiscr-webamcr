@@ -203,6 +203,7 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
             "old_stav": str(EZ_STAV_ZAPSANY),
             "arch_z": str(az.id),
+            "paginace": "177-190",
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
@@ -286,6 +287,7 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
             "old_stav": str(az.stav),
             "ez": str(ez.id),
+            "paginace": "177-190",
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(

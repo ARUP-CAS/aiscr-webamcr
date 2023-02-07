@@ -723,6 +723,7 @@ class DokumentCastPripojitAkciView(TransakceView):
         type_arch = self.request.GET.get("type")
         form = PripojitArchZaznamForm(data=request.POST, type_arch=type_arch, dok=True)
         if form.is_valid():
+            logger_s.debug("dokument.views.DokumentCastPripojitAkciView.post.form_valid")
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
             cast.archeologicky_zaznam = arch_z
@@ -730,8 +731,7 @@ class DokumentCastPripojitAkciView(TransakceView):
             cast.save()
             messages.add_message(request, messages.SUCCESS, self.success_message)
         else:
-            logger.debug("not valid")
-            logger.debug(form.errors)
+            logger_s.debug("dokument.views.DokumentCastPripojitAkciView.post.form_invalid", form_errors=form.errors)
         return JsonResponse({"redirect": cast.get_absolute_url()})
 
 
