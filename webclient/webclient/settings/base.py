@@ -8,24 +8,23 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-file_path = (
-    "/run/secrets/db_conf"
-    if os.path.exists("/run/secrets/db_conf")
-    # else path will be used in case a docker secret is not used during instantiation. 
-    # Doesn't catch case where docker secrets points to missing file on local disk.
-    else os.path.join(BASE_DIR,"webclient/settings/sample_secrets_db.json")
-)
-
-with open(file_path, "r") as f:
-    secrets = json.load(f)
-
 
 def get_secret(setting, default_value=None):
+    file_path = (
+        "/run/secrets/db_conf"
+        if os.path.exists("/run/secrets/db_conf")
+        # else path will be used in case a docker secret is not used during instantiation.
+        # Doesn't catch case where docker secrets points to missing file on local disk.
+        else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_db.json")
+    )
+
+    with open(file_path, "r") as f:
+        secrets = json.load(f)
     if default_value is None:
         try:
             return secrets[setting]
         except KeyError:
-            error_msg = "Add {0} variable to secrets.json file".format(setting)
+            error_msg = error_msg = f"Add {setting} variable to {file_path} file"
             raise ImproperlyConfigured(error_msg)
     else:
         secrets.get(setting, default_value)
@@ -45,7 +44,7 @@ def get_mail_secret(setting, default_value=None):
         try:
             return secrets_mail[setting]
         except KeyError:
-            error_msg = "Add {0} variable to secrets.json file".format(setting)
+            error_msg = f"Add {setting} variable to {file_mail_path} file"
             raise ImproperlyConfigured(error_msg)
     else:
         secrets_mail.get(setting, default_value)
