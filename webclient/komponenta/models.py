@@ -44,14 +44,13 @@ class Komponenta(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_AREAL},
     )
     poznamka = models.TextField(blank=True, null=True)
-    jistota = models.BooleanField(default=True, blank=True, null=True)
+    jistota = models.BooleanField(blank=True, null=True)
     ident_cely = models.TextField(unique=True)
     komponenta_vazby = models.ForeignKey(
         KomponentaVazby,
         on_delete=models.CASCADE,
         db_column="komponenta_vazby",
         related_name="komponenty",
-        blank=True,
         null=False,
     )
     aktivity = models.ManyToManyField(Heslar, through="KomponentaAktivita")

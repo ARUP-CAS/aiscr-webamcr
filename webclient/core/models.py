@@ -62,8 +62,7 @@ class Soubor(models.Model):
     nazev_zkraceny = models.TextField()
     nazev_puvodni = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
-    vlastnik = models.ForeignKey(User, models.DO_NOTHING, db_column="vlastnik")
-    nazev = models.TextField(unique=False)
+    nazev = models.TextField()
     mimetype = models.TextField()
     vytvoreno = models.DateField(auto_now_add=True)
     vazba = models.ForeignKey(
@@ -71,7 +70,7 @@ class Soubor(models.Model):
     )
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         db_column="historie",
         related_name="soubor_historie",
         null=True,

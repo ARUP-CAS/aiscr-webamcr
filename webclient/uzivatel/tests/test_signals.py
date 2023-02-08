@@ -19,6 +19,7 @@ class TestProjektSignals(TestCase):
         )
         huld.save()
         tester = User(
+            id=2,
             password="pbkdf2_sha256$216000$8fyTVvI62PeB$p237Rd85fhMkW6wCjzJIZ1M9J0n1UrsWN+oSotdhPd0=",
             is_superuser=False,
             first_name="Juraj",
@@ -45,6 +46,7 @@ class TestProjektSignals(TestCase):
         tester2.save()
         self.assertEqual(tester2.ident_cely, "U-000009")
         tester3 = User(
+            pk=10,
             password="pbkdf2_sha256$216000$8fyTVvI62PeB$p237Rd85fhMkW6wCjzJIZ1M9J0n1UrsWN+oSotdhPd0=",
             is_superuser=False,
             first_name="Juraj",

@@ -62,6 +62,7 @@ DATABASES = {
         "HOST": get_secret("DB_HOST"),
         "PORT": get_secret("DB_PORT"),
         "ATOMIC_REQUESTS": True,
+        'DISABLE_SERVER_SIDE_CURSORS': True,
     },
 }
 

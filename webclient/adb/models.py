@@ -22,7 +22,7 @@ class Kladysm5(models.Model):
     mapname = models.TextField()
     mapno = models.TextField()
     podil = models.DecimalField(max_digits=1000, decimal_places=1000)
-    geom = pgmodels.GeometryField(srid=5514)
+    geom = pgmodels.PolygonField(srid=5514)
     cislo = models.TextField()
 
     class Meta:
@@ -32,7 +32,7 @@ class Kladysm5(models.Model):
 class Adb(models.Model):
     dokumentacni_jednotka = models.OneToOneField(
         DokumentacniJednotka,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokumentacni_jednotka",
         primary_key=True,
         related_name="adb",
@@ -44,22 +44,24 @@ class Adb(models.Model):
         db_column="typ_sondy",
         related_name="typy_sond_adb",
         limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
+        null=True,
     )
-    trat = models.TextField()
-    parcelni_cislo = models.TextField()
+    trat = models.TextField(null=True)
+    parcelni_cislo = models.TextField(null=True)
     podnet = models.ForeignKey(
         Heslar,
         on_delete=models.DO_NOTHING,
         limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET},
         db_column="podnet",
+        null=True,
     )
     uzivatelske_oznaceni_sondy = models.TextField(blank=True, null=True)
-    stratigraficke_jednotky = models.TextField()
+    stratigraficke_jednotky = models.TextField(null=True)
     poznamka = models.TextField(blank=True, null=True)
-    cislo_popisne = models.TextField()
+    cislo_popisne = models.TextField(null=True)
     autor_popisu = models.ForeignKey(
         Osoba,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="autor_popisu",
         related_name="adb_autori_popisu",
     )
@@ -67,7 +69,7 @@ class Adb(models.Model):
         validators=[MinValueValidator(1900), MaxValueValidator(2050)],
     )
     autor_revize = models.ForeignKey(
-        Osoba, models.DO_NOTHING, db_column="autor_revize", blank=True, null=True
+        Osoba, models.RESTRICT, db_column="autor_revize", blank=True, null=True
     )
     rok_revize = models.IntegerField(
         blank=True,
@@ -110,7 +112,7 @@ class VyskovyBod(models.Model):
         related_name="vyskove_body_typu",
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
     )
-    geom = pgmodels.GeometryField(srid=0, blank=True, null=True)  # Prazdny???
+    geom = pgmodels.PointField(srid=5514, dim=3)
 
     def set_geom(self, northing, easting, niveleta):
         logger_s.debug("adb.models.VyskovyBod.set_geom", northing=northing, easting=easting, nivelete=niveleta)

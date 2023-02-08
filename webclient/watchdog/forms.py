@@ -7,21 +7,12 @@ from django_select2.forms import Select2Widget
 
 
 class WatchdogCreateForm(forms.Form):
-    kraje = RuianKraj.objects.all()
     okresy_choices = [
         (0, '----')
     ]
     kraje_choices = [
         (0, '----'),
     ]
-    for kraj in kraje:
-        kraje_choices.append((kraj.id, kraj.nazev))
-        kraj_group = []
-        okresy = RuianOkres.objects.filter(kraj=kraj)
-        for okres in okresy:
-            kraj_group.append((okres.pk, okres.nazev))
-        kraj_group = (kraj.nazev, tuple(kraj_group))
-        okresy_choices.append(kraj_group)
     kraj = forms.ChoiceField(choices=kraje_choices, label=_('Kraj'), required=False, widget=Select2Widget, initial=0)
     okres = forms.ChoiceField(choices=okresy_choices, label=_('Okres'), required=False, widget=Select2Widget, initial=0)
 

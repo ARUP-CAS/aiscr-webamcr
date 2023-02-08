@@ -368,6 +368,7 @@ class ExterniOdkazPripojitView(TransakceView):
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
+            logger_s.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
             eo = ExterniOdkaz.objects.create(
@@ -380,8 +381,7 @@ class ExterniOdkazPripojitView(TransakceView):
                 request, messages.SUCCESS, get_message(arch_z, "EO_USPESNE_PRIPOJEN")
             )
         else:
-            logger.debug("not valid")
-            logger.debug(form.errors)
+            logger_s.debug("ez.views.ExterniOdkazPripojitView.post.form_error", form_errors=form.errors)
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 

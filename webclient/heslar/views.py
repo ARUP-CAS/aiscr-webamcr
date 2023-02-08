@@ -1,6 +1,7 @@
 from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
+from django.db import OperationalError, ProgrammingError
 from django.http import JsonResponse
 from django.db.models import Value, IntegerField
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,7 +9,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from heslar.hesla import HESLAR_DOKUMENT_TYP, MODEL_3D_DOKUMENT_TYPES, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
 import logging
+import structlog
+
 logger = logging.getLogger(__name__)
+logger_s = structlog.get_logger(__name__)
+
+
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = RuianKatastr.objects.all()
@@ -21,12 +27,15 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
 
 def merge_heslare(first, second):
     data = [("", "")]
-    for k in first:
-        druhy_kategorie = []
-        for druh in second:
-            if druh["hierarchie__heslo_nadrazene"] == k["id"]:
-                druhy_kategorie.append((druh["id"], druh["heslo"]))
-        data.append((k["heslo"], tuple(druhy_kategorie)))
+    try:
+        for k in first:
+            druhy_kategorie = []
+            for druh in second:
+                if druh["hierarchie__heslo_nadrazene"] == k["id"]:
+                    druhy_kategorie.append((druh["id"], druh["heslo"]))
+            data.append((k["heslo"], tuple(druhy_kategorie)))
+    except ProgrammingError as err:
+        logger_s.error("heslar.views.merge_heslare.error", err=err)
     return data
 
 

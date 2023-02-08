@@ -190,13 +190,41 @@ class AMCRTestRunner(BaseRunner):
                              predmet="AMČR: uživatelský účet čeká na aktivaci",
                              cesta_sablony="emails/E-U-04.html").save()
 
-        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1)
+        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, )
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
         okres_praha = RuianOkres(
-            id=162, nazev="Praha", kraj=kraj_brno, spz="1", kod=3
+            id=162, nazev="Praha", kraj=kraj_brno, spz="1", kod=3,
+            definicni_bod=GEOSGeometry(
+                "0101000020E610000042D35729E77F3040234F91EAF9804840"
+            ),
+            hranice=GEOSGeometry(
+                "0106000020E610000001000000010300000001000000130000006E6F8E0B8E84304091B2E4D54"
+                "48248401F1E93480586304064D23AA54D814840D3819AAF5E863040D2583431DC804840A29439"
+                "0E6F843040DAE2ADDC72804840862715C5D883304025CEA19C628048400FD982CE3D833040E86"
+                "8346F5E80484040B173420C7E304018B719A61B8048402B66119F397830409FD10A33C97F4840"
+                "92BAF062A4783040827C4FCB55804840FA5C963DC87A3040C3E02EA9E18048408C9A8056D17A3"
+                "040B9BFA41AE6804840BD35778B877C304027BB3E2B83814840B088D6301E813040901D47D721"
+                "8248409E2B3B911E813040566325BF258248401ED53C6D73813040739AD6F82F8248400816E571"
+                "C0813040542C604C13824840178B9F59228230409A127179028248409D0CB7BE598230403D43D"
+                "4B3EF8148406E6F8E0B8E84304091B2E4D544824840"
+            ),
         )
         okres_brno_venkov = RuianOkres(
-            id=163, nazev="Brno-venkov", kraj=kraj_brno, spz="2", kod=4
+            id=163, nazev="Brno-venkov", kraj=kraj_brno, spz="2", kod=4,
+            definicni_bod=GEOSGeometry(
+                "0101000020E610000042D35729E77F3040234F91EAF9804840"
+            ),
+            hranice=GEOSGeometry(
+                "0106000020E610000001000000010300000001000000130000006E6F8E0B8E84304091B2E4D54"
+                "48248401F1E93480586304064D23AA54D814840D3819AAF5E863040D2583431DC804840A29439"
+                "0E6F843040DAE2ADDC72804840862715C5D883304025CEA19C628048400FD982CE3D833040E86"
+                "8346F5E80484040B173420C7E304018B719A61B8048402B66119F397830409FD10A33C97F4840"
+                "92BAF062A4783040827C4FCB55804840FA5C963DC87A3040C3E02EA9E18048408C9A8056D17A3"
+                "040B9BFA41AE6804840BD35778B877C304027BB3E2B83814840B088D6301E813040901D47D721"
+                "8248409E2B3B911E813040566325BF258248401ED53C6D73813040739AD6F82F8248400816E571"
+                "C0813040542C604C13824840178B9F59228230409A127179028248409D0CB7BE598230403D43D"
+                "4B3EF8148406E6F8E0B8E84304091B2E4D544824840"
+            ),
         )
         odrovice = RuianKatastr(
             id=KATASTR_ODROVICE_ID,
@@ -306,33 +334,34 @@ class AMCRTestRunner(BaseRunner):
             n.save()
 
         Heslar(
-            id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="zachranny"
+            id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="zachranny", ident_cely="XXX1"
         ).save()
         Heslar(
-            id=hesla.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="pruzkumny"
+            id=hesla.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="pruzkumny", ident_cely="XXX2"
         ).save()
-        Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp, zkratka=1).save()
-        Heslar(id=GEOMETRY_PLOCHA, nazev_heslare=ha).save()
-        Heslar(id=GEOMETRY_BOD, nazev_heslare=ha).save()
-        Heslar(id=1120, heslo="ostatní", nazev_heslare=hto).save()
-        Heslar(id=SPECIFIKACE_DATA_PRESNE, heslo="presne", nazev_heslare=hsd).save()
-        Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta).save()
-        Heslar(id=ZACHOVALOST_30_80_ID, heslo="30 % az 80 %", nazev_heslare=hza).save()
-        Heslar(id=ARCHIV_ARUB, heslo="archiv ARÚB", nazev_heslare=hdu).save()
+        Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp, zkratka=1, ident_cely="XXX3").save()
+        Heslar(id=GEOMETRY_PLOCHA, nazev_heslare=ha, ident_cely="XXX4").save()
+        Heslar(id=GEOMETRY_BOD, nazev_heslare=ha, ident_cely="XXX5").save()
+        Heslar(id=1120, heslo="ostatní", nazev_heslare=hto, ident_cely="XXX6").save()
+        Heslar(id=SPECIFIKACE_DATA_PRESNE, heslo="presne", nazev_heslare=hsd, ident_cely="XXX7").save()
+        Heslar(id=HLAVNI_TYP_SONDA_ID, heslo="sonda", nazev_heslare=hta, ident_cely="XXX8").save()
+        Heslar(id=ZACHOVALOST_30_80_ID, heslo="30 % az 80 %", nazev_heslare=hza, ident_cely="XXX9").save()
+        Heslar(id=ARCHIV_ARUB, heslo="archiv ARÚB", nazev_heslare=hdu, ident_cely="XXX10").save()
         typ_dokumentu_plan = Heslar(
-            id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd
+            id=TYP_DOKUMENTU_PLAN_SONDY_ID, heslo="plan sondy", nazev_heslare=htd, ident_cely="XXX11"
         )
         typ_dokumentu_nalezova_zprava = Heslar(
-            id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA, heslo="nalezova_zprava", nazev_heslare=htd
+            id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA, heslo="nalezova_zprava", nazev_heslare=htd, ident_cely="XXX12"
         )
         typ_dokumentu_nalezova_zprava.save()
         material_dokumentu_digi = Heslar(
             id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
             heslo="digitalni soubor",
             nazev_heslare=hmd,
+            ident_cely = "XXX13"
         )
         rada_dokumentu_text = Heslar(
-            id=RADA_DOKUMENTU_TEXT_ID, heslo="textovy soubor", nazev_heslare=hdr
+            id=RADA_DOKUMENTU_TEXT_ID, heslo="textovy soubor", nazev_heslare=hdr, ident_cely="XXX14"
         )
         typ_dokumentu_plan.save()
         material_dokumentu_digi.save()
@@ -342,37 +371,40 @@ class AMCRTestRunner(BaseRunner):
             heslo="cesky",
             nazev_heslare=hjd,
             heslo_en="cesky",
+            ident_cely="XXX15",
         ).save()
-        Heslar(id=ULOZENI_ORIGINALU_ID, heslo="uloz+orig", nazev_heslare=hjd).save()
-        Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj).save()
-        Heslar(id=TYP_DJ_KATASTR_ID, heslo="katastr", nazev_heslare=hdj).save()
+        Heslar(id=ULOZENI_ORIGINALU_ID, heslo="uloz+orig", nazev_heslare=hjd, ident_cely="XXX16").save()
+        Heslar(id=TYP_DJ_CELEK_AKCE_ID, heslo="celek akce", nazev_heslare=hdj, ident_cely="XXX17").save()
+        Heslar(id=TYP_DJ_KATASTR_ID, heslo="katastr", nazev_heslare=hdj, ident_cely="XXX18").save()
         Heslar(
-            id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd
+            id=ARCHEOLOGICKY_POSUDEK_ID, heslo="archeologicky", nazev_heslare=hpd, ident_cely="XXX19"
         ).save()
         typ_muzeum = Heslar(
-            id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto
+            id=TYP_ORGANIZACE_MUZEUM_ID, heslo="Muzemum", nazev_heslare=hto, ident_cely="XXX20"
         )
         zp = Heslar(
-            id=PRISTUPNOST_ANONYM_ID, heslo="anonym pristupnost", nazev_heslare=hpr
+            id=PRISTUPNOST_ANONYM_ID, heslo="anonym pristupnost", nazev_heslare=hpr, ident_cely="XXX21"
         )
         Heslar(
             id=PRISTUPNOST_ARCHEOLOG_ID,
             heslo="archeolog pristupnost",
             nazev_heslare=hpr,
+            ident_cely="XXX22"
         ).save()
         Heslar(
             id=LETFOTO_TVAR_ID,
             heslo="tvar fotky 1",
             nazev_heslare=hlft,
+            ident_cely="XXX23"
         ).save()
         zp.save()
         typ_muzeum.save()
         hok_podrizene = Heslar(
-            id=OBDOBI_STREDNI_PALEOLIT_ID, heslo="Stredni paleolit", nazev_heslare=hok
+            id=OBDOBI_STREDNI_PALEOLIT_ID, heslo="Stredni paleolit", nazev_heslare=hok, ident_cely="XXX24"
         )
         hok_podrizene.save()
         hok_nadrizene = Heslar(
-            id=OBDOBI_NADRIZENE_ID, heslo="Stredni paleolit", nazev_heslare=hokkat
+            id=OBDOBI_NADRIZENE_ID, heslo="Stredni paleolit", nazev_heslare=hokkat, ident_cely="XXX99"
         )
         hok_nadrizene.save()
         HeslarHierarchie(
@@ -380,21 +412,21 @@ class AMCRTestRunner(BaseRunner):
             heslo_nadrazene=hok_nadrizene,
             typ="podřízenost",
         ).save()
-        Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak).save()
-        predmet = Heslar(id=PREDMET_ID, heslo="luk", nazev_heslare=hpdr)
+        Heslar(id=AREAL_HRADISTE_ID, heslo="Hradiste", nazev_heslare=hak, ident_cely="XXX25").save()
+        predmet = Heslar(id=PREDMET_ID, heslo="luk", nazev_heslare=hpdr, ident_cely="XXX26")
         predmet.save()
         specifikace = Heslar(
-            id=PREDMET_SPECIFIKACE_ID, heslo="drevo", nazev_heslare=hps
+            id=PREDMET_SPECIFIKACE_ID, heslo="drevo", nazev_heslare=hps, ident_cely="XXX27"
         )
         specifikace.save()
         HeslarHierarchie(
             heslo_podrazene=specifikace, heslo_nadrazene=predmet, typ="výchozí hodnota"
         ).save()
-        Heslar(id=LOKALITA_DRUH, nazev_heslare=hld, zkratka=1).save()
-        Heslar(id=LOKALITA_TYP, nazev_heslare=hlt, zkratka="L").save()
-        Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka="M").save()
-        Heslar(id=EZ_TYP, nazev_heslare=hezt, zkratka="K", heslo="kniha").save()
-        Heslar(id=EZ_TYP_NEW, nazev_heslare=hezt, zkratka="C", heslo="casopis").save()
+        Heslar(id=LOKALITA_DRUH, nazev_heslare=hld, zkratka=1, ident_cely="XXX28").save()
+        Heslar(id=LOKALITA_TYP, nazev_heslare=hlt, zkratka="L", ident_cely="XXX29").save()
+        Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka="M", ident_cely="XXX30").save()
+        Heslar(id=EZ_TYP, nazev_heslare=hezt, zkratka="K", heslo="kniha", ident_cely="XXX31").save()
+        Heslar(id=EZ_TYP_NEW, nazev_heslare=hezt, zkratka="C", heslo="casopis", ident_cely="XXX32").save()
 
         kl10 = Kladyzm(
             gid=2,
@@ -406,10 +438,8 @@ class AMCRTestRunner(BaseRunner):
             shape_leng=Decimal(341204.736390),
             shape_area=Decimal(7189599966.71),
             the_geom=GEOSGeometry(
-                "0106000020B38E01000100000001030000000100000005000000C0C9ED"
-                "A718E828C180504AA34C7E2EC1808369E65D0726C1003986AD3FE42EC1E00477941C5426C1C0FA78"
-                "B3849830C140CFBDB2203E29C1D04EA8B0E66430C1C0C9EDA718E828C180504AA34C7E2EC1",
-                srid=102067,
+                "01030000208A150000010000000500000040822DB0C55929C1E0569730EF022FC100F6C19EDF4E29C1A03D6ED284B92EC1C0F5F1A8D9F228C100806CBDBCC72EC1C05CFAA89AFD28C160EA92D62C112FC140822DB0C55929C1E0569730EF022FC1",
+                srid=5514,
             ),
         )
         kl10.save()
@@ -423,9 +453,8 @@ class AMCRTestRunner(BaseRunner):
             shape_leng=Decimal(341204.736390),
             shape_area=Decimal(7189599966.71),
             the_geom=GEOSGeometry(
-                "0106000020B38E01000100000001030000000100000005000000C0C9ED"
-                "A718E828C180504AA34C7E2EC1808369E65D0726C1003986AD3FE42EC1E00477941C5426C1C0FA78"
-                "B3849830C140CFBDB2203E29C1D04EA8B0E66430C1C0C9EDA718E828C180504AA34C7E2EC1"
+                "01030000208A150000010000000500000040822DB0C55929C1E0569730EF022FC100F6C19EDF4E29C1A03D6ED284B92EC1C0F5F1A8D9F228C100806CBDBCC72EC1C05CFAA89AFD28C160EA92D62C112FC140822DB0C55929C1E0569730EF022FC1",
+                srid=5514,
             ),
         )
         kl50.save()
@@ -741,7 +770,6 @@ class AMCRTestRunner(BaseRunner):
         soubor = Soubor(
             nazev_zkraceny="x",
             nazev_puvodni="x",
-            vlastnik=User.objects.first(),
             nazev="x",
             mimetype="x",
             size_mb=1,

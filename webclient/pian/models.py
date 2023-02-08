@@ -44,30 +44,28 @@ class Pian(models.Model):
         limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
-    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True,srid=5514)
-    geom_system = models.TextField(blank=False, null=False,max_length=6)
+    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
+    geom_system = models.TextField(max_length=6)
     zm10 = models.ForeignKey(
         "Kladyzm",
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zm10",
         related_name="pian_zm10",
-        null=False,
     )
     zm50 = models.ForeignKey(
         "Kladyzm",
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zm50",
         related_name="pian_zm50",
-        null=False,
     )
-    ident_cely = models.TextField(unique=True, null=False)
+    ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
         HistorieVazby,
         on_delete=models.DO_NOTHING,
         db_column="historie",
         related_name="pian_historie",
     )
-    stav = models.SmallIntegerField(null=False, choices=STATES, default=PIAN_NEPOTVRZEN)
+    stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
 
     class Meta:
         db_table = "pian"
@@ -136,7 +134,7 @@ class Kladyzm(models.Model):
     natoceni = models.DecimalField(max_digits=12, decimal_places=11)
     shape_leng = models.DecimalField(max_digits=12, decimal_places=6)
     shape_area = models.DecimalField(max_digits=12, decimal_places=2)
-    the_geom = pgmodels.GeometryField(srid=102067)
+    the_geom = pgmodels.PolygonField(srid=5514)
 
     class Meta:
         db_table = "kladyzm"

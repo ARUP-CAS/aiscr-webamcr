@@ -1,3 +1,5 @@
+import random
+import string
 from typing import Union
 
 import structlog
@@ -57,13 +59,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
     osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
-    auth_level = models.IntegerField(blank=True, null=True)
     organizace = models.ForeignKey(
         "Organizace", models.DO_NOTHING, db_column="organizace", null=True
     )
     history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie',
                                       on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
-    email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
     telefon = models.TextField(
@@ -160,6 +160,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         logger_s.debug("User.save.start")
+        # Random string is temporary before the id is assigned
+        if self._state.adding and not self.ident_cely:
+            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
                 logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
@@ -187,6 +190,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             historie_vazba.save()
             self.history_vazba = historie_vazba
         super().save(*args, **kwargs)
+        if self.ident_cely.startswith("TEMP"):
+            self.ident_cely = f"U-{str(self.pk).zfill(6)}"
+            super().save(*args, **kwargs)
         if self.is_active and \
                 self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
             self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
@@ -202,10 +208,9 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
     typ_organizace = models.ForeignKey(
         Heslar,
-        models.PROTECT,
+        models.DO_NOTHING,
         db_column="typ_organizace",
         related_name="typy_organizaci",
-        null=True,
         verbose_name=_("uzivatel.models.Organizace.typ_organizace"),
         limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
     )
@@ -213,10 +218,9 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
-        models.PROTECT,
+        models.DO_NOTHING,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
-        null=True,
         verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
     )
@@ -228,7 +232,17 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
     nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
     zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
-    ident_cely = models.CharField(max_length=10, null=True, blank=True)
+    ident_cely = models.CharField(max_length=10, unique=True)
+
+    def save(self, *args, **kwargs):
+        logger_s.debug("Organizace.save.start")
+        # Random string is temporary before the id is assigned
+        if self._state.adding and not self.ident_cely:
+            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
+        super().save(*args, **kwargs)
+        if self.ident_cely.startswith("TEMP"):
+            self.ident_cely = f"ORG-{str(self.pk).zfill(6)}"
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nazev_zkraceny
@@ -248,7 +262,17 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
     rodne_prijmeni = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"))
-    ident_cely = models.CharField(max_length=20, null=True, blank=True)
+    ident_cely = models.CharField(max_length=20, unique=True)
+
+    def save(self, *args, **kwargs):
+        logger_s.debug("Osoba.save.start")
+        # Random string is temporary before the id is assigned
+        if self._state.adding and not self.ident_cely:
+            self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
+        super().save(*args, **kwargs)
+        if self.ident_cely.startswith("TEMP"):
+            self.ident_cely = f"OS-{str(self.pk).zfill(6)}"
+            super().save(*args, **kwargs)
 
     class Meta:
         db_table = "osoba"
