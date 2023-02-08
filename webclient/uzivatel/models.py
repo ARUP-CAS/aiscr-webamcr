@@ -59,13 +59,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
     osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
-    auth_level = models.IntegerField(blank=True, null=True)
     organizace = models.ForeignKey(
         "Organizace", models.DO_NOTHING, db_column="organizace", null=True
     )
     history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie',
                                       on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
-    email_potvrzen = models.TextField(blank=True, null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
     telefon = models.TextField(
