@@ -417,7 +417,7 @@ class ExterniOdkaz(models.Model):
         db_column="externi_zdroj",
         related_name="externi_odkazy_zdroje",
     )
-    paginace = models.TextField()
+    paginace = models.TextField(null=True)
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,

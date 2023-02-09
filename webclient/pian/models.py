@@ -130,7 +130,6 @@ class Kladyzm(models.Model):
     objectid = models.IntegerField(unique=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
     cislo = models.CharField(unique=True, max_length=8)
-    nazev = models.CharField(max_length=100)
     natoceni = models.DecimalField(max_digits=12, decimal_places=11)
     shape_leng = models.DecimalField(max_digits=12, decimal_places=6)
     shape_area = models.DecimalField(max_digits=12, decimal_places=2)
