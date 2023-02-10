@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   web:
-    image: huldcz/aiscr_prod:latest
+    image: aiscr/webamcr:latest
     secrets:
       - db_conf
       - mail_conf
@@ -32,7 +32,6 @@ volumes:
   static_data:
   locale_data:
   nginx_data:
-
 
 networks:
   prod-net:

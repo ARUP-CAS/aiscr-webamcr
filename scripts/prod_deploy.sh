@@ -139,11 +139,11 @@ script_name=$(basename ${0})
 passed_args="$@"
 
 #INPUTS
-dockerhub_account="huldcz"
-prod_image_name="${dockerhub_account}/aiscr_prod"
-proxy_image_name="${dockerhub_account}/aiscr_proxy"
+dockerhub_account="aiscr"
+prod_image_name="${dockerhub_account}/webamcr"
+proxy_image_name="${dockerhub_account}/webamcr-proxy"
 
-stack_name="swarm_aiscr"
+stack_name="swarm_webamcr"
 network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
 
 compose_proxy="docker-compose-production-proxy.yml"
