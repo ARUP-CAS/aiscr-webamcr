@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   proxy:
-    image: huldcz/aiscr_proxy
+    image: aiscr/webamcr-proxy
     volumes:
       - static_data:/vol/static
       - nginx_data:/vol/nginx/data
