@@ -80,7 +80,13 @@ run_default ()
 
    # Check network exists
    check_create_network
+
+   #Update images
    er "${cmd_pull_images}"
+   if [ $? -gt 0 ]; then
+	echo_dec "${msg_pull_fail} with TAG: ${IMAGE_TAG} => EXITING"
+	exit
+   fi
 
    er "${cmd_deploy_base} ${compose_proxy} ${stack_name} && \
    ${cmd_deploy_base} ${compose_prod} ${stack_name}" && \
@@ -91,7 +97,7 @@ Help ()
 {
     cat <<EOF
     !!!MUST BE RUN from REPOSIOTRY root like =>
-    usage: ./scrips/${script_name} [-x|b|u], 
+    usage: ./scrips/${script_name} [-x|b|u|t <tag_name>], 
     ---
        PURPOSE: manage deployment/run of production docker images build from GIT repository for AIS CR project in SWARM mode
     ----
@@ -112,12 +118,18 @@ Help ()
     3) Update all services with new images
        
        $./scripts/${script_name} -u
+
+    4) Provide docker image tag (insted of default "latest")
+       
+       $./scripts/${script_name} -t <tag_name>
+
     -----
     Summnary:
     -h help
     -x remove docker stack (all services)
     -b (re)deploy all services in swarm mode (DEFAULT CASE)
     -u update all services using rolling approach 
+    -t provide docker image tag name <tag_name>
 EOF
 }
 
@@ -137,11 +149,27 @@ do_manual_checks ()
 
 script_name=$(basename ${0})
 passed_args="$@"
+export IMAGE_TAG="latest"
+
+while getopts ":t:" option; do
+    
+   case ${option} in
+        t)  #Overriding of default latest image by providing specific tag
+            export IMAGE_TAG="${OPTARG}"
+            tag_passed="yes"
+            echo "OPTION: -t with ${IMAGE_TAG}"
+            ;;
+	 *)
+            ;;
+    esac
+done
+
+echo "IMAGE TAG FOR DOCKER IMAGES IS >>>> ${IMAGE_TAG}"
 
 #INPUTS
 dockerhub_account="aiscr"
-prod_image_name="${dockerhub_account}/webamcr"
-proxy_image_name="${dockerhub_account}/webamcr-proxy"
+prod_image_name="${dockerhub_account}/webamcr:${IMAGE_TAG}"
+proxy_image_name="${dockerhub_account}/webamcr-proxy:${IMAGE_TAG}"
 
 stack_name="swarm_webamcr"
 network_name="prod-net" #MUST MATCH WITH COMPOSE FILES!!!
@@ -165,8 +193,10 @@ start_time=$(date +%Y-%m-%d_%H.%M.%S)
 log_file="${start_time}_prod-deployment_${passed_args}.log"
 mkdir -p ${log_dir}
 
+OPTIND=1
+
 #REDIRECT to log
-exec > >(tee -i ${log_dir}/${log_file})
+exec > >(tee "${log_dir}/${log_file}" )
 exec 2>&1
 
 echo_dec "# DEPLOYMENT in SWARM MODE (i.e. host has to be joined or initiated as SWARM NODE) @${start_time}"
@@ -185,7 +215,7 @@ cmd_stack_rm="docker stack rm ${stack_name}"
 cmd_pull_images="docker pull ${proxy_image_name} && docker pull ${prod_image_name}"
 cmd_deploy_base="docker stack deploy --compose-file"
 
-while getopts "hxbu" option; do
+while getopts "hxbut:" option; do
    option_passed="yes"
    case ${option} in
       h) # display Help
@@ -219,6 +249,8 @@ while getopts "hxbu" option; do
             echo_dec "SERVICE CANNOT BE UPDATED because stack doesn't exist !!!"
         fi
         ;;
+      t)
+	;;
      \?) # Invalid option
          echo_dec "OPTION: INVALID"
          echo "Error: Invalid option ${option}"
