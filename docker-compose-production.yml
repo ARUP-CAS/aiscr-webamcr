@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   web:
-    image: aiscr/webamcr:latest
+    image: aiscr/webamcr:${IMAGE_TAG}
     secrets:
       - db_conf
       - mail_conf
