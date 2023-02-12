@@ -19,7 +19,7 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
 from oznameni import views as oznameni_views
-from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView
+from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView, UserPasswordResetView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -65,6 +65,7 @@ urlpatterns = [
         name="logout",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("accounts/password_reset", UserPasswordResetView.as_view(), name="password_reset"),
     path("arch-z/lokalita/", include("lokalita.urls")),
     path("ext-zdroj/", include("ez.urls")),
     path("neident-akce/", include("neidentakce.urls")),
