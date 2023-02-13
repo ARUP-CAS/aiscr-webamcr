@@ -46,7 +46,7 @@
       if (document.getElementsByClassName("pes-smazat-btn")){
         elements = document.getElementsByClassName("pes-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          const options = Object.assign(defaults, {modalID: "modal-form",
           formID: "smazat-pes-form",
           modalFormID: "#smazat-pes-form",
           })
