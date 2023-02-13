@@ -115,6 +115,7 @@ class ArcheologickyZaznam(models.Model):
         if (
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
+            and self.ident_cely.startswith("X-")
         ):
             self.set_akce_ident()
 

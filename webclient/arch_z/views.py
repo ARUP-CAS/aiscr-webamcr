@@ -24,6 +24,7 @@ from core.constants import (
     AZ_STAV_ARCHIVOVANY,
     AZ_STAV_ODESLANY,
     AZ_STAV_ZAPSANY,
+    IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_AZ,
     PIAN_NEPOTVRZEN,
     PROJEKT_STAV_ARCHIVOVANY,
@@ -580,7 +581,7 @@ def archivovat(request, ident_cely):
     if request.method == "POST":
         # TODO BR-A-5
         az.set_archivovany(request.user)
-        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
+        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and az.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             az.set_lokalita_permanent_ident_cely()
         az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
