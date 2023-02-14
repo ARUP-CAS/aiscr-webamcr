@@ -47,4 +47,28 @@ class Migration(migrations.Migration):
             name='zasilat_neaktivnim',
             value=False
         ),
+        migrations.RunSQL(
+            sql="""
+            ALTER TABLE IF EXISTS osoba
+            ALTER COLUMN ident_cely SET DEFAULT('OS-'::text || "right"(
+            concat('000000', (currval('osoba_id_seq'::regclass))::text), 6));
+            """,
+            reverse_sql="",
+        ),
+        migrations.RunSQL(
+            sql="""
+            ALTER TABLE IF EXISTS organizace
+            ALTER COLUMN ident_cely SET DEFAULT('ORG-'::text || "right"(
+            concat('000000', (currval('organizace_id_seq'::regclass))::text), 6));
+            """,
+            reverse_sql="",
+        ),
+        migrations.RunSQL(
+            sql="""
+            ALTER TABLE IF EXISTS auth_user
+            ALTER COLUMN ident_cely SET DEFAULT('U-'::text || "right"(
+            concat('000000', (currval('auth_user_id_seq'::regclass))::text), 6));
+            """,
+            reverse_sql="",
+        ),
     ]
