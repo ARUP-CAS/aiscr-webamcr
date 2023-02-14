@@ -13,7 +13,7 @@ class DokumentacniJednotka(models.Model):
 
     typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ",
         related_name="dokumentacni_jednotka_typy",
         limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
@@ -23,7 +23,7 @@ class DokumentacniJednotka(models.Model):
     ident_cely = models.TextField(unique=True)
     pian = models.ForeignKey(
         Pian,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pian",
         blank=True,
         null=True,

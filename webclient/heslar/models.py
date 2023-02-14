@@ -21,7 +21,7 @@ class Heslar(models.Model, ManyToManyRestrictedClassMixin):
     # TextFields should be changed to CharField if no long text is expected to be written in
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
-        "HeslarNazev", models.DO_NOTHING, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
+        "HeslarNazev", models.RESTRICT, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
     )
     heslo = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.heslo"))
     popis = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis"))
@@ -73,7 +73,7 @@ class HeslarDatace(models.Model):
 class HeslarDokumentTypMaterialRada(models.Model):
     dokument_rada = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokument_rada",
         related_name="rada",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
@@ -81,7 +81,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
     )
     dokument_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokument_typ",
         related_name="typ",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
@@ -89,7 +89,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
     )
     dokument_material = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokument_material",
         related_name="material",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
@@ -119,7 +119,7 @@ class HeslarHierarchie(models.Model):
         verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
     )
     heslo_nadrazene = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
+        Heslar, models.RESTRICT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
 
@@ -210,7 +210,7 @@ class RuianKraj(models.Model):
 
 class RuianOkres(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
-    kraj = models.ForeignKey(RuianKraj, models.DO_NOTHING, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
+    kraj = models.ForeignKey(RuianKraj, models.RESTRICT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
     spz = models.CharField(unique=True, max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianOkres.kod"))
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))

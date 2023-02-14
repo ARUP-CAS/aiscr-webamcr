@@ -73,7 +73,7 @@ class Projekt(models.Model):
     )
     typ_projektu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
@@ -103,7 +103,7 @@ class Projekt(models.Model):
     )
     kulturni_pamatka = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="kulturni_pamatka",
         blank=True,
         null=True,
@@ -117,7 +117,7 @@ class Projekt(models.Model):
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     soubory = models.OneToOneField(
         SouborVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="soubory",
         blank=True,
         null=True,
@@ -125,12 +125,12 @@ class Projekt(models.Model):
     )
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="historie",
         related_name="projekt_historie",
     )
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True
     )
     oznaceni_stavby = models.TextField(
         blank=True, null=True, verbose_name=_("Označení stavby")
@@ -141,7 +141,7 @@ class Projekt(models.Model):
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
         verbose_name=_("Hlavní katastr"),

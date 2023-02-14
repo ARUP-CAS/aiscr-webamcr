@@ -32,7 +32,7 @@ class ExterniZdroj(models.Model):
     sysno = models.TextField(blank=True, null=True)
     typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ",
         limit_choices_to={"nazev_heslare": HESLAR_EXTERNI_ZDROJ_TYP},
         related_name="externi_zroje_typu",
@@ -46,7 +46,7 @@ class ExterniZdroj(models.Model):
     vydavatel = models.TextField(blank=True, null=True)
     typ_dokumentu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_dokumentu",
         blank=True,
         null=True,
@@ -54,7 +54,7 @@ class ExterniZdroj(models.Model):
         related_name="externi_zroje_typu_dokumentu",
     )
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True
     )
     rok_vydani_vzniku = models.TextField(blank=True, null=True)
     paginace_titulu = models.TextField(blank=True, null=True)
@@ -171,7 +171,7 @@ def get_ez_ident(zaznam=None):
 
 class ExterniZdrojAutor(models.Model):
     externi_zdroj = models.OneToOneField(
-        ExterniZdroj, models.DO_NOTHING, db_column="externi_zdroj", primary_key=True
+        ExterniZdroj, models.RESTRICT, db_column="externi_zdroj", primary_key=True
     )
     autor = models.ForeignKey(Osoba, models.CASCADE, db_column="autor")
     poradi = models.IntegerField(null=True)
@@ -188,7 +188,7 @@ class ExterniZdrojEditor(models.Model):
     externi_zdroj = models.OneToOneField(
         ExterniZdroj, models.CASCADE, db_column="externi_zdroj", primary_key=True
     )
-    editor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="editor")
+    editor = models.ForeignKey(Osoba, models.RESTRICT, db_column="editor")
     poradi = models.IntegerField(null=True)
 
     def get_osoba(self):

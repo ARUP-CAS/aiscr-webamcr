@@ -31,14 +31,14 @@ class Pian(models.Model):
 
     presnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="presnost",
         related_name="piany_presnosti",
         limit_choices_to=Q(nazev_heslare=HESLAR_PIAN_PRESNOST) & Q(zkratka__lt="4"),
     )
     typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ",
         related_name="piany_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
@@ -61,7 +61,7 @@ class Pian(models.Model):
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="historie",
         related_name="pian_historie",
     )
@@ -142,7 +142,7 @@ class Kladyzm(models.Model):
 
 class PianSekvence(models.Model):
     kladyzm50 = models.OneToOneField(
-        "Kladyzm", models.DO_NOTHING, db_column="kladyzm_id", null=False,
+        "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
     )
     sekvence = models.IntegerField()
     katastr = models.BooleanField()
