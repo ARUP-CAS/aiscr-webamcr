@@ -6,6 +6,7 @@ services:
     secrets:
       - db_conf
       - mail_conf
+      - redis_pass
     volumes:
       - static_data:/vol/web
       - locale_data:/vol/web/locale
@@ -28,6 +29,61 @@ services:
     command:  
       - client
 
+  redis:
+    build: ./redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    secrets:
+      - redis_pass
+    command: sh -c 'redis-server /home/redis/redis.conf'
+    networks:
+      - prod-net
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient worker -l INFO
+    secrets:
+      - db_conf
+      - mail_conf
+      - redis_pass
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    networks:
+      - prod-net
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient beat -l INFO
+    secrets:
+      - db_conf
+      - mail_conf
+      - redis_pass
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    networks:
+      - prod-net
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
 volumes:
   static_data:
   locale_data:
@@ -42,3 +98,5 @@ secrets:
    external: true
   mail_conf:
    external: true
+  redis_pass:
+    external: true

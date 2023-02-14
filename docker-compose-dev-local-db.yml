@@ -16,6 +16,7 @@ services:
     secrets:
       - db_conf
       - mail_conf
+      - redis_pass
     restart: on-failure
     volumes:
       - ./webclient:/code
@@ -93,9 +94,13 @@ services:
       - "11211:11211"
 
   redis:
-    image: redis:7-alpine
+    build: ./redis
+    image: redis:7
     ports:
       - "6379:6379"
+    secrets:
+      - redis_pass
+    command: sh -c 'redis-server /home/redis/redis.conf'
 
   celery_worker:
     build:
@@ -104,6 +109,7 @@ services:
     command: celery -A webclient worker -l INFO
     secrets:
       - db_conf
+      - redis_pass
     volumes:
       - ./webclient:/code
       - ./vol/web:/vol/web
@@ -122,31 +128,10 @@ services:
     command: celery -A webclient beat -l INFO
     secrets:
       - db_conf
+      - redis_pass
     volumes:
       - ./webclient:/code
       - ./vol/web:/vol/web
-    depends_on:
-      redis:
-        condition: service_started
-      db:
-        condition: service_healthy
-      web:
-        condition: service_started
-
-  flower:
-    build:
-      context: .
-      dockerfile: Dockerfile-DEV
-    command: sh -c "/scripts/entrypoint_flower.sh"
-    volumes:
-      - ./webclient:/code
-      - ./vol/web:/vol/web
-    ports:
-      - 5557:5555
-    environment:
-      - CELERY_BROKER=redis://redis:6379
-    secrets:
-      - db_conf
     depends_on:
       redis:
         condition: service_started
@@ -174,3 +159,8 @@ secrets:
   mail_conf:
     # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying mailtrap setting (doesn't need to be repo root)
     file: ./secrets_mail_client.json
+  redis_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password ) - local dev machine
+    file: ./secrets/redis_pass.txt
+    # production environment
+    # external: true
