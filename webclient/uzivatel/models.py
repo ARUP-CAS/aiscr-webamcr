@@ -58,9 +58,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
+    osoba = models.ForeignKey('Osoba', models.RESTRICT, db_column='osoba', blank=True, null=True)
     organizace = models.ForeignKey(
-        "Organizace", models.DO_NOTHING, db_column="organizace", null=True
+        "Organizace", models.RESTRICT, db_column="organizace", null=True
     )
     history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie',
                                       on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
@@ -208,7 +208,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
     typ_organizace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_organizace",
         related_name="typy_organizaci",
         verbose_name=_("uzivatel.models.Organizace.typ_organizace"),
@@ -218,7 +218,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
         verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
@@ -229,7 +229,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     telefon = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"))
     adresa = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"))
     ico = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"))
-    soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
+    soucast = models.ForeignKey('self', models.RESTRICT, db_column='soucast', blank=True, null=True)
     nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
     zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
     ident_cely = models.CharField(max_length=10, unique=True)

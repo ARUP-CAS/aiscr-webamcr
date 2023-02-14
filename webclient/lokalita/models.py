@@ -21,7 +21,7 @@ class Lokalita(models.Model):
 
     druh = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="druh",
         related_name="lokalita_druh",
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH},
@@ -30,7 +30,7 @@ class Lokalita(models.Model):
     nazev = models.TextField(blank=False, null=False)
     typ_lokality = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_lokality",
         related_name="lokalita_typ",
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},
@@ -38,7 +38,7 @@ class Lokalita(models.Model):
     poznamka = models.TextField(blank=True, null=True)
     zachovalost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zachovalost",
         related_name="lokalita_zachovalost",
         limit_choices_to={"nazev_heslare": HESLAR_STAV_DOCHOVANI},
@@ -47,7 +47,7 @@ class Lokalita(models.Model):
     )
     jistota = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="jistota",
         related_name="lokalita_jistota",
         limit_choices_to={"nazev_heslare": HESLAR_JISTOTA_URCENI},
@@ -56,7 +56,7 @@ class Lokalita(models.Model):
     )
     archeologicky_zaznam = models.OneToOneField(
         ArcheologickyZaznam,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="archeologicky_zaznam",
         primary_key=True,
     )

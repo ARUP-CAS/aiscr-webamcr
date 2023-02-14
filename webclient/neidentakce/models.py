@@ -39,7 +39,7 @@ class NeidentAkceVedouci(models.Model):
         db_column="neident_akce",
         primary_key=True,
     )
-    vedouci = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="vedouci")
+    vedouci = models.ForeignKey(Osoba, models.RESTRICT, db_column="vedouci")
 
     class Meta:
         db_table = "neident_akce_vedouci"

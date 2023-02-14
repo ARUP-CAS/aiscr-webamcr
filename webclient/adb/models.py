@@ -40,7 +40,7 @@ class Adb(models.Model):
     ident_cely = models.TextField(unique=True)
     typ_sondy = models.ForeignKey(
         Heslar,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="typ_sondy",
         related_name="typy_sond_adb",
         limit_choices_to={"nazev_heslare": HESLAR_ADB_TYP},
@@ -50,7 +50,7 @@ class Adb(models.Model):
     parcelni_cislo = models.TextField(null=True)
     podnet = models.ForeignKey(
         Heslar,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         limit_choices_to={"nazev_heslare": HESLAR_ADB_PODNET},
         db_column="podnet",
         null=True,
@@ -76,7 +76,7 @@ class Adb(models.Model):
         null=True,
         validators=[MinValueValidator(1900), MaxValueValidator(2050)],
     )
-    sm5 = models.ForeignKey(Kladysm5, models.DO_NOTHING, db_column="sm5")
+    sm5 = models.ForeignKey(Kladysm5, models.RESTRICT, db_column="sm5")
 
     class Meta:
         db_table = "adb"
@@ -107,7 +107,7 @@ class VyskovyBod(models.Model):
     ident_cely = models.TextField(unique=True)
     typ = models.ForeignKey(
         Heslar,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="typ",
         related_name="vyskove_body_typu",
         limit_choices_to={"nazev_heslare": HESLAR_VYSKOVY_BOD_TYP},
@@ -150,7 +150,7 @@ class VyskovyBod(models.Model):
 class AdbSekvence(models.Model):
     kladysm5 = models.OneToOneField(
         "Kladysm5",
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="kladysm5_id",
         null=False,
     )

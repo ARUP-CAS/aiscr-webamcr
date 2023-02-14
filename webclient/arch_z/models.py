@@ -52,7 +52,7 @@ class ArcheologickyZaznam(models.Model):
     typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
     pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pristupnost",
         related_name="zaznamy_pristupnosti",
         default=PRISTUPNOST_ANONYM_ID,
@@ -340,14 +340,14 @@ class Akce(models.Model):
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="specifikace_data",
         related_name="akce_specifikace_data",
         limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="hlavni_typ",
         blank=True,
         null=True,
@@ -356,7 +356,7 @@ class Akce(models.Model):
     )
     vedlejsi_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="vedlejsi_typ",
         blank=True,
         null=True,
@@ -365,7 +365,7 @@ class Akce(models.Model):
     )
     hlavni_vedouci = models.ForeignKey(
         Osoba,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="hlavni_vedouci",
         blank=True,
         null=True,
@@ -376,7 +376,7 @@ class Akce(models.Model):
     datum_ukonceni = models.DateField(blank=True, null=True)
     je_nz = models.BooleanField(default=False)
     projekt = models.ForeignKey(
-        "projekt.Projekt", models.DO_NOTHING, db_column="projekt", blank=True, null=True
+        "projekt.Projekt", models.RESTRICT, db_column="projekt", blank=True, null=True
     )
     ulozeni_dokumentace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.OneToOneField(
@@ -388,7 +388,7 @@ class Akce(models.Model):
     )
     odlozena_nz = models.BooleanField(default=False)
     organizace = models.ForeignKey(
-        Organizace, on_delete=models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True
     )
 
     class Meta:
@@ -402,8 +402,8 @@ class Akce(models.Model):
 
 class AkceVedouci(models.Model):
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
-    vedouci = models.ForeignKey(Osoba, on_delete=models.DO_NOTHING, db_column="vedouci")
-    organizace = models.ForeignKey(Organizace, on_delete=models.DO_NOTHING, db_column="organizace")
+    vedouci = models.ForeignKey(Osoba, on_delete=models.RESTRICT, db_column="vedouci")
+    organizace = models.ForeignKey(Organizace, on_delete=models.RESTRICT, db_column="organizace")
 
     class Meta:
         db_table = "akce_vedouci"
@@ -414,7 +414,7 @@ class AkceVedouci(models.Model):
 class ExterniOdkaz(models.Model):
     externi_zdroj = models.ForeignKey(
         ExterniZdroj,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="externi_zdroj",
         related_name="externi_odkazy_zdroje",
     )
