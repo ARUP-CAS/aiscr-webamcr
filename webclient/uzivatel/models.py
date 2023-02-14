@@ -22,6 +22,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE, UZIVATEL_RELATION_TYPE,
+    ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
@@ -215,7 +216,8 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
         limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
     )
     oao = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.oao"))
-    mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
+    mesicu_do_zverejneni = models.IntegerField(default=ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
+                                               verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -231,7 +233,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     ico = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"))
     soucast = models.ForeignKey('self', models.RESTRICT, db_column='soucast', blank=True, null=True)
     nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
-    zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
+    zanikla = models.BooleanField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.zanikla"))
     ident_cely = models.CharField(max_length=10, unique=True)
 
     def save(self, *args, **kwargs):

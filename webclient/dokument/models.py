@@ -462,7 +462,7 @@ class DokumentExtraData(models.Model):
 class DokumentAutor(models.Model):
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
-    poradi = models.IntegerField(null=True)
+    poradi = models.IntegerField()
 
     class Meta:
         db_table = "dokument_autor"
