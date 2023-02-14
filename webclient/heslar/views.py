@@ -35,7 +35,8 @@ def merge_heslare(first, second):
                     druhy_kategorie.append((druh["id"], druh["heslo"]))
             data.append((k["heslo"], tuple(druhy_kategorie)))
     except ProgrammingError as err:
-        logger_s.error("heslar.views.merge_heslare.error", err=err)
+        # This error will always be shown before
+        logger_s.debug("heslar.views.merge_heslare.error", err=err)
     return data
 
 

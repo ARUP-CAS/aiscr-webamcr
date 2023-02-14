@@ -170,3 +170,4 @@ DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
 DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
 DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
 
+ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT = 36
