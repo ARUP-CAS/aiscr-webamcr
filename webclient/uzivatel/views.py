@@ -250,7 +250,6 @@ class UserActivationView(ActivationView):
     def activate(self, *args, **kwargs):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
-        user.is_active = True
         user.save()
         Mailer.send_eu02(user)
         return user
