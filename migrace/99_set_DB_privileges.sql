@@ -72,7 +72,7 @@ REVOKE ALL ON uzivatel_historicaluser FROM cz_archeologickamapa_api, cz_archeolo
 REVOKE ALL ON notifikace_typ FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 REVOKE ALL ON uzivatel_spoluprace FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 REVOKE ALL ON vyskovy_bod FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
-REVOKE ALL ON watchdog_watchdog FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
+REVOKE ALL ON notifikace_projekty_pes FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 
 -- Přidělení SELECT oprávnění pro cz_archeologickamapa_api_view
 GRANT SELECT ON adb TO cz_archeologickamapa_api_view;
@@ -148,7 +148,7 @@ GRANT SELECT ON uzivatel_historicaluser TO cz_archeologickamapa_api_view;
 GRANT SELECT ON notifikace_typ TO cz_archeologickamapa_api_view;
 GRANT SELECT ON uzivatel_spoluprace TO cz_archeologickamapa_api_view;
 GRANT SELECT ON vyskovy_bod TO cz_archeologickamapa_api_view;
-GRANT SELECT ON watchdog_watchdog TO cz_archeologickamapa_api_view;
+GRANT SELECT ON notifikace_projekty_pes TO cz_archeologickamapa_api_view;
 
 -- Přidělení všech oprávnění pro cz_archeologickamapa_api
 GRANT ALL ON adb TO cz_archeologickamapa_api;
@@ -224,4 +224,4 @@ GRANT ALL ON uzivatel_historicaluser TO cz_archeologickamapa_api;
 GRANT ALL ON notifikace_typ TO cz_archeologickamapa_api;
 GRANT ALL ON uzivatel_spoluprace TO cz_archeologickamapa_api;
 GRANT ALL ON vyskovy_bod TO cz_archeologickamapa_api;
-GRANT ALL ON watchdog_watchdog TO cz_archeologickamapa_api;
+GRANT ALL ON notifikace_projekty_pes TO cz_archeologickamapa_api;
