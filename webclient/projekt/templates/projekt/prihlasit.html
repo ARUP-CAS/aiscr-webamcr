@@ -42,7 +42,7 @@
       $(settings.modalIDD).modal("hide");
     };
     window.addEventListener("modalLoaded", function() {
-      var options = Object.assign(defaults, {
+      var options = Object.assign(Object.create(defaults), {
         modalID: "modal-osoba-form",
         formURL: "{% url 'heslar:create_osoba' %}",
         formID: "create-osoba-form",

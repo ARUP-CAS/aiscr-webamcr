@@ -196,7 +196,7 @@
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
     if ("{{show.odeslat_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'dokument:odeslat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
       formID: "odeslat-dokument-form",
       modalFormID: "#odeslat-dokument-form",
@@ -204,7 +204,7 @@
     odeslat_akci_modal = new Modal(options, "dokument-odeslat");
     };
     if ("{{show.vratit_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'dokument:vratit' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
       formID: "vratit-dokument-form",
       modalFormID: "#vratit-dokument-form",
@@ -212,14 +212,14 @@
     vratit_akci_modal = new Modal(options, "dokument-vratit");
     }
     if ("{{show.archivovat_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'dokument:archivovat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
         formID: "archivovat-dokument-form",
         modalFormID: "#archivovat-dokument-form",
       })
     archivovat_akci_modal = new Modal(options, "dokument-archivovat");
     }
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'dokument:smazat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
       formID: "smazat-dokument-form",
       modalFormID: "#smazat-dokument-form",
@@ -228,7 +228,7 @@
     if (document.getElementsByClassName("tvar-smazat-btn")){
       elements = document.getElementsByClassName("tvar-smazat-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "smazat-tvar-form",
         modalFormID: "#smazat-tvar-form",
         })
@@ -236,7 +236,7 @@
       }
     }
     if ("{{show.editovat}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "vytvor-cast-form",
         modalFormID: "#vytvor-cast-form",
       })

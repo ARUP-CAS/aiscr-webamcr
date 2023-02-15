@@ -86,7 +86,7 @@
         if (document.getElementsByClassName("objekt-smazat-btn")){
           elements = document.getElementsByClassName("objekt-smazat-btn")
           for (let i = 0; i < elements.length; i++){
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formID: "smazat-objekt-form",
             modalFormID: "#smazat-objekt-form",
             })
