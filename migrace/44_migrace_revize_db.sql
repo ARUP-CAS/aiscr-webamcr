@@ -15,6 +15,7 @@ ALTER TABLE archeologicky_zaznam ALTER COLUMN ident_cely SET NOT NULL;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_ident_cely_key UNIQUE (ident_cely);
 ALTER TABLE archeologicky_zaznam DROP COLUMN stav_stary;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_historie_key UNIQUE (historie);
+ALTER TABLE archeologicky_zaznam ALTER COLUMN hlavni_katastr SET NOT NULL;
 
 ALTER TABLE akce_vedouci DROP CONSTRAINT akce_vedouci_akce_fkey;
 ALTER TABLE archeologicky_zaznam_katastr DROP CONSTRAINT archeologicky_zaznam_katastr_pkey;
@@ -118,6 +119,7 @@ COMMENT ON COLUMN let.letiste_start IS NULL;
 COMMENT ON COLUMN let.letiste_cil IS NULL;
 COMMENT ON COLUMN let.pocasi IS NULL;
 COMMENT ON COLUMN let.dohlednost IS NULL;
+ALTER TABLE let ALTER COLUMN datum TYPE date USING DATE(datum);
 
 ALTER TABLE lokalita DROP CONSTRAINT lokalita_archeologicky_zaznam_key;
 
@@ -130,6 +132,8 @@ COMMENT ON COLUMN neident_akce.katastr IS NULL;
 
 CREATE SEQUENCE notifikace_projekt_id_seq;
 ALTER TABLE notifikace_projekt ADD COLUMN id integer NOT NULL DEFAULT nextval('notifikace_projekt_id_seq'::regclass) PRIMARY KEY;
+
+ALTER TABLE odstavky_systemu ADD CONSTRAINT odstavky_systemu_pkey PRIMARY KEY (id);
 
 ALTER TABLE organizace ALTER COLUMN nazev_zkraceny_en SET NOT NULL;
 CREATE SEQUENCE organizace_ident_cely_seq START WITH 1 INCREMENT BY 1 MINVALUE 0 MAXVALUE 999999 ;
