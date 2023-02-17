@@ -105,7 +105,7 @@
             $(settings.modalIDD).modal("hide");
           };
           document.addEventListener('DOMContentLoaded', function (event) {
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formURL: "{% url 'heslar:create_osoba' %}",
             formID: "create-osoba-form",
             modalFormID: "#create-osoba-form",
@@ -113,7 +113,7 @@
             successFunc:successFunction,
           })
           new Modal(options, "create-autor"); 
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formURL: "{% url 'heslar:create_osoba' %}",
             formID: "create-osoba-form",
             modalFormID: "#create-osoba-form",

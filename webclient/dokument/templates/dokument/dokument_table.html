@@ -57,7 +57,7 @@
     if (document.getElementsByClassName("dokument-odpojit-btn")){
       elements = document.getElementsByClassName("dokument-odpojit-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "odpojit-dokument-form",
         modalFormID: "#odpojit-dokument-form",
         })
@@ -65,14 +65,14 @@
       }
     }
     if ("{{show.editovat}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })
       dokument_pripojit_modal = new Modal(options, "dokument-pripojit");
     };
     if ("{{show.editovat}}" != "False" && "{{app}}" != "lokalita"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "pripojit-dokument-form",
         modalFormID: "#pripojit-dokument-form",
       })

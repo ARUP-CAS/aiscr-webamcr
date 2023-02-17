@@ -367,7 +367,7 @@
       if (document.getElementsByClassName("adb-smazat-btn")){
         elements = document.getElementsByClassName("adb-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "smazat-adb-form",
           modalFormID: "#smazat-adb-form",
           })
@@ -377,7 +377,7 @@
       if (document.getElementsByClassName("dj-smazat-btn")){
         elements = document.getElementsByClassName("dj-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "smazat-dj-form",
           modalFormID: "#smazat-dj-form",
           })
@@ -387,7 +387,7 @@
       if (document.getElementsByClassName("komponenta-smazat-btn")){
         elements = document.getElementsByClassName("komponenta-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "smazat-komponenta-form",
           modalFormID: "#smazat-komponenta-form",
           })
@@ -397,7 +397,7 @@
       if (document.getElementsByClassName("pian-odpojit-btn")){
         elements = document.getElementsByClassName("pian-odpojit-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "odpojit-pian-form",
           modalFormID: "#odpojit-pian-form",
           })
@@ -407,7 +407,7 @@
       if (document.getElementsByClassName("pian-potvrdit-btn")){
         elements = document.getElementsByClassName("pian-potvrdit-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "potvrdit-pian-form",
           modalFormID: "#potvrdit-pian-form",
           })
@@ -417,7 +417,7 @@
       if (document.getElementsByClassName("objekt-smazat-btn")){
         elements = document.getElementsByClassName("objekt-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "smazat-objekt-form",
           modalFormID: "#smazat-objekt-form",
           })
@@ -427,14 +427,14 @@
       if (document.getElementsByClassName("vb-smazat-btn")){
         elements = document.getElementsByClassName("vb-smazat-btn")
         for (let i = 0; i < elements.length; i++){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formID: "smazat-vb-form",
           modalFormID: "#smazat-vb-form",
           })
           new Modal(options, elements.item(i).id);
         }
       }
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
@@ -445,7 +445,7 @@
     } catch (e) {
       console.log(e);
     }
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
@@ -459,7 +459,7 @@
     if (document.getElementsByClassName("ez-odpojit-btn")){
       elements = document.getElementsByClassName("ez-odpojit-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "odpojit-az-form",
         modalFormID: "#odpojit-az-form",
         })
@@ -469,7 +469,7 @@
     if (document.getElementsByClassName("ez-change-btn")){
       elements = document.getElementsByClassName("ez-change-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "zmenit-eo-form",
         modalFormID: "#zmenit-eo-form",
         })
@@ -479,7 +479,7 @@
     if (document.getElementsByClassName("zmenit-katastr-btn")){
       elements = document.getElementsByClassName("zmenit-katastr-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "zmenit-katastr-form",
         modalFormID: "#zmenit-katastr-form",
         })
