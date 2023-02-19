@@ -93,47 +93,47 @@
         //modal scripts
         document.addEventListener('DOMContentLoaded', function (event) {
           if ("{{show.editovat}}" != "False"){
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "edit-cast-form",
               modalFormID: "#edit-cast-form",
             })
             new Modal(options, "button-edit-cast");
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
               })
             {% if show_pripojit %}
               new Modal(options, "button-pripojit-akci");
-              var options = Object.assign(defaults, {modalID: "modal-form",
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-eo-form",
                 modalFormID: "#pripojit-eo-form",
               })
               new Modal(options, "button-pripojit-lokalitu");
-              var options = Object.assign(defaults, {modalID: "modal-form",
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "pripojit-projekt-form",
                 modalFormID: "#pripojit-projekt-form",
               })
               new Modal(options, "pripojit-projekt-btn");
               {% endif %}
               {% if show_odpojit %}
-              var options = Object.assign(defaults, {modalID: "modal-form",
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "odpojit-cast-form",
                 modalFormID: "#odpojit-cast-form",
               })
               new Modal(options, "odpojit-cast-btn");
               {% endif %}
-              var options = Object.assign(defaults, {modalID: "modal-form",
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                 formID: "smazat-cast-form",
                 modalFormID: "#smazat-cast-form",
               })
               new Modal(options, "smazat-cast-btn");
               if ("{{cast.neident_akce}}" != ""){
-                var options = Object.assign(defaults, {modalID: "modal-form",
+                var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                   formID: "edit-neident-form",
                   modalFormID: "#edit-neident-form",
                 })
                 new Modal(options, "button-edit-neident");
-                var options = Object.assign(defaults, {modalID: "modal-form",
+                var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
                     formID: "smazat-neident-akce-form",
                     modalFormID: "#smazat-neident-akce-form",
                   })
@@ -144,7 +144,7 @@
           if (document.getElementsByClassName("komponenta-smazat-btn")){
             elements = document.getElementsByClassName("komponenta-smazat-btn")
             for (let i = 0; i < elements.length; i++){
-              var options = Object.assign(defaults, {modalID: "modal-form",
+              var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
               formID: "smazat-komponenta-form",
               modalFormID: "#smazat-komponenta-form",
               })

@@ -66,7 +66,7 @@
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
     if ("{{show.odeslat_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'ez:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
       formID: "odeslat-ez-form",
       modalFormID: "#odeslat-ez-form",
@@ -74,7 +74,7 @@
     new Modal(options, "ez-odeslat");
     };
     if ("{{show.vratit_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'ez:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
       formID: "vratit-ez-form",
       modalFormID: "#vratit-ez-form",
@@ -82,7 +82,7 @@
     new Modal(options, "ez-vratit");
     }
     if ("{{show.potvrdit_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'ez:potvrdit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "potvrdit-ez-form",
         modalFormID: "#potvrdit-ez-form",
@@ -90,7 +90,7 @@
       new Modal(options, "ez-potvrdit");
     }
     if ("{{show.smazat}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'ez:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
       formID: "smazat-ez-form",
       modalFormID: "#smazat-ez-form",
@@ -100,7 +100,7 @@
     if (document.getElementsByClassName("ez-odpojit-btn")){
       elements = document.getElementsByClassName("ez-odpojit-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "odpojit-az-form",
         modalFormID: "#odpojit-az-form",
         })
@@ -110,7 +110,7 @@
     if (document.getElementsByClassName("ez-change-btn")){
       elements = document.getElementsByClassName("ez-change-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "zmenit-eo-form",
         modalFormID: "#zmenit-eo-form",
         })
