@@ -636,10 +636,21 @@
       var vratit_navrh_zruseni_modal = new Modal(options, "projekt-vratit-navrh-zruseni");
       }
       if ("{{show.navrhnout_zruseni_link}}" != "False") {
+        var errorFormFunc = function(settings, response) {
+          $('#div_id_reason_text').hide();
+          $('#div_id_projekt_id').hide();
+          if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option1') {
+            $('#div_id_projekt_id').show();
+            };
+          if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option6') {
+            $('#div_id_reason_text').show();
+            };
+        };
         var options = Object.assign(defaults, {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_navrhnout_ke_zruseni' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "navrh-zruseni-form",
         modalFormID: "#navrh-zruseni-form",
+        formErrorFunc: errorFormFunc,
       })
       var navrh_zruseni_modal = new Modal(options, "projekt-navrh-zruseni");
       }//ok
