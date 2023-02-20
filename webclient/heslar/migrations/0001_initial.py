@@ -19,12 +19,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('ident_cely', models.TextField(unique=True, verbose_name='heslar.models.Heslar.ident_cely')),
-                ('heslo', models.TextField(blank=True, null=True, verbose_name='heslar.models.Heslar.heslo')),
+                ('heslo', models.CharField(max_length=255, verbose_name='heslar.models.Heslar.heslo')),
                 ('popis', models.TextField(blank=True, null=True, verbose_name='heslar.models.Heslar.popis')),
-                ('zkratka', models.TextField(blank=True, null=True, verbose_name='heslar.models.Heslar.zkratka')),
-                ('heslo_en', models.TextField(verbose_name='heslar.models.Heslar.heslo_en')),
+                ('zkratka', models.CharField(blank=True, max_length=100, null=True, verbose_name='heslar.models.Heslar.zkratka')),
+                ('heslo_en', models.CharField(max_length=255, verbose_name='heslar.models.Heslar.heslo_en')),
                 ('popis_en', models.TextField(blank=True, null=True, verbose_name='heslar.models.Heslar.popis_en')),
-                ('zkratka_en', models.TextField(blank=True, null=True, verbose_name='heslar.models.Heslar.zkratka_en')),
+                ('zkratka_en', models.CharField(max_length=100, blank=True, null=True, verbose_name='heslar.models.Heslar.zkratka_en')),
                 ('razeni', models.IntegerField(blank=True, null=True, verbose_name='heslar.models.Heslar.razeni')),
             ],
             options={
@@ -71,10 +71,10 @@ class Migration(migrations.Migration):
             name='HeslarOdkaz',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('zdroj', models.TextField(verbose_name='heslar.models.HeslarOdkaz.zdroj')),
-                ('nazev_kodu', models.TextField(verbose_name='heslar.models.HeslarOdkaz.nazev_kodu')),
-                ('kod', models.TextField(verbose_name='heslar.models.HeslarOdkaz.kod')),
-                ('uri', models.TextField(blank=True, null=True, verbose_name='heslar.models.HeslarOdkaz.uri')),
+                ('zdroj', models.CharField(max_length=255, verbose_name='heslar.models.HeslarOdkaz.zdroj')),
+                ('nazev_kodu', models.CharField(max_length=100, verbose_name='heslar.models.HeslarOdkaz.nazev_kodu')),
+                ('kod', models.CharField(max_length=100, verbose_name='heslar.models.HeslarOdkaz.kod')),
+                ('uri', models.CharField(max_length=255, blank=True, null=True, verbose_name='heslar.models.HeslarOdkaz.uri')),
             ],
             options={
                 'verbose_name_plural': 'Heslář odkaz',
@@ -85,10 +85,10 @@ class Migration(migrations.Migration):
             name='RuianKraj',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nazev', models.TextField(unique=True, verbose_name='heslar.models.RuianKraj.nazev')),
+                ('nazev', models.CharField(unique=True, max_length=100, verbose_name='heslar.models.RuianKraj.nazev')),
                 ('kod', models.IntegerField(unique=True, verbose_name='heslar.models.RuianKraj.kod')),
                 ('rada_id', models.CharField(max_length=1, verbose_name='heslar.models.RuianKraj.rada_id')),
-                ('nazev_en', models.TextField(null=True)),
+                ('nazev_en', models.CharField(unique=True, max_length=100)),
                 ('definicni_bod', django.contrib.gis.db.models.fields.PointField(null=True, srid=4326, verbose_name='heslar.models.RuianKatastr.definicni_bod')),
                 ('hranice', django.contrib.gis.db.models.fields.MultiPolygonField(null=True, srid=4326, verbose_name='heslar.models.RuianKatastr.hranice')),
             ],
@@ -148,5 +148,11 @@ class Migration(migrations.Migration):
                 'db_table': 'ruian_katastr',
                 'ordering': ['nazev'],
             },
+        ),
+        migrations.AddConstraint(
+            model_name='heslarhierarchie',
+            constraint=models.CheckConstraint(
+                check=models.Q(('typ__in', ['podřízenost', 'uplatnění', 'výchozí hodnota'])),
+                name='heslar_hierarchie_typ_check'),
         ),
     ]

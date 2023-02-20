@@ -17,7 +17,7 @@ from heslar.models import Heslar
 from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
 from uzivatel.models import User
-from django.db.models import Q
+from django.db.models import Q, CheckConstraint
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +66,19 @@ class Pian(models.Model):
         related_name="pian_historie",
     )
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
+    geom_updated_at = models.DateTimeField(blank=True, null=True)
+    geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "pian"
+        constraints = [
+            CheckConstraint(
+                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
+                name='pian_geom_check',
+            ),
+        ]
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
@@ -130,7 +140,6 @@ class Kladyzm(models.Model):
     objectid = models.IntegerField(unique=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
     cislo = models.CharField(unique=True, max_length=8)
-    nazev = models.CharField(max_length=100)
     natoceni = models.DecimalField(max_digits=12, decimal_places=11)
     shape_leng = models.DecimalField(max_digits=12, decimal_places=6)
     shape_area = models.DecimalField(max_digits=12, decimal_places=2)

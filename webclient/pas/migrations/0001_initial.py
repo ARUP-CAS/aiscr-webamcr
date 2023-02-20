@@ -31,8 +31,8 @@ class Migration(migrations.Migration):
                 ('predano', models.BooleanField(blank=True, choices=[(True, 'Ano'), (False, 'Ne')], default=False, null=True)),
                 ('ident_cely', models.TextField(unique=True)),
                 ('pocet', models.TextField(blank=True, null=True)),
-                ('geom_updated_at', models.DateField(blank=True, null=True)),
-                ('geom_sjtsk_updated_at', models.DateField(blank=True, null=True)),
+                ('geom_updated_at', models.DateTimeField(blank=True, null=True)),
+                ('geom_sjtsk_updated_at', models.DateTimeField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'samostatny_nalez',
@@ -48,5 +48,13 @@ class Migration(migrations.Migration):
             options={
                 'db_table': 'uzivatel_spoluprace',
             },
+        ),
+        migrations.AddConstraint(
+            model_name='samostatnynalez',
+            constraint=models.CheckConstraint(
+                check=models.Q(models.Q(('geom_system', 'sjtsk'), ('geom_sjtsk__isnull', False)),
+                               models.Q(('geom_system', 'wgs84'), ('geom__isnull', False)),
+                               models.Q(('geom_sjtsk__isnull', True), ('geom__isnull', True)), _connector='OR'),
+                name='samostatny_nalez_geom_check'),
         ),
     ]

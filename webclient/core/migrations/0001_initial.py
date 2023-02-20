@@ -81,11 +81,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nazev_zkraceny', models.TextField()),
-                ('nazev_puvodni', models.TextField()),
                 ('rozsah', models.IntegerField(blank=True, null=True)),
                 ('nazev', models.TextField()),
                 ('mimetype', models.TextField()),
-                ('vytvoreno', models.DateField(auto_now_add=True)),
                 ('path', models.FileField(upload_to=core.models.get_upload_to)),
                 ('size_mb', models.DecimalField(decimal_places=10, max_digits=150)),
             ],

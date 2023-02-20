@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import CheckConstraint, Q
 from django.shortcuts import redirect
 
 from core.constants import (
@@ -49,7 +50,7 @@ class ArcheologickyZaznam(models.Model):
         (AZ_STAV_ARCHIVOVANY, "A3 - Archivována"),
     )
 
-    typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
+    typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)
     pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -76,6 +77,12 @@ class ArcheologickyZaznam(models.Model):
 
     class Meta:
         db_table = "archeologicky_zaznam"
+        constraints = [
+            CheckConstraint(
+                check=(Q(typ_zaznamu="L") | Q(typ_zaznamu="A")),
+                name='archeologicky_zaznam_typ_zaznamu_check',
+            ),
+        ]
 
     def set_zapsany(self, user):
         self.stav = AZ_STAV_ZAPSANY
@@ -392,6 +399,12 @@ class Akce(models.Model):
 
     class Meta:
         db_table = "akce"
+        constraints = [
+            CheckConstraint(
+                check=((Q(typ="N") & Q(projekt__isnull=True)) | (Q(typ="R") & Q(projekt__isnull=False))),
+                name='akce_typ_check',
+            ),
+        ]
 
     def get_absolute_url(self):
         return reverse(
@@ -417,7 +430,7 @@ class ExterniOdkaz(models.Model):
         db_column="externi_zdroj",
         related_name="externi_odkazy_zdroje",
     )
-    paginace = models.TextField()
+    paginace = models.TextField(null=True)
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,

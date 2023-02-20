@@ -14,10 +14,21 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
-            ALTER TABLE IF EXISTS heslar
-            ALTER COLUMN ident_cely SET DEFAULT('HES-'::text || "right"(
-            concat('000000', (currval('heslar_id_seq'::regclass))::text), 6));
+            CREATE SEQUENCE heslar_ident_cely_seq START 1;
             """,
             reverse_sql="",
         ),
+        migrations.RunSQL(
+            sql="""
+            ALTER TABLE IF EXISTS heslar
+            ALTER COLUMN ident_cely SET DEFAULT('HES-'::text || "right"(
+            concat('000000', (nextval('heslar_ident_cely_seq'::regclass))::text), 6));
+            """,
+            reverse_sql="",
+        ),
+        AddDefaultValue(
+            model_name='HeslarNazev',
+            name='povolit_zmeny',
+            value=True
+        )
     ]

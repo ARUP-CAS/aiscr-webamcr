@@ -10,6 +10,7 @@ import django.db.models.functions.comparison
 import django.utils.timezone
 import simple_history.models
 import uzivatel.models
+import django.core.validators
 
 
 class Migration(migrations.Migration):
@@ -40,7 +41,7 @@ class Migration(migrations.Migration):
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now)),
                 ('jazyk', models.CharField(choices=[('cs', 'Česky'), ('en', 'Anglicky')], default='cs', max_length=15)),
                 ('sha_1', models.TextField(blank=True, null=True)),
-                ('telefon', models.TextField(blank=True, null=True, validators=[core.validators.validate_phone_number])),
+                ('telefon', models.CharField(max_length=100, blank=True, null=True, validators=[core.validators.validate_phone_number])),
             ],
             options={
                 'verbose_name': 'Uživatel',
@@ -64,7 +65,7 @@ class Migration(migrations.Migration):
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now)),
                 ('jazyk', models.CharField(choices=[('cs', 'Česky'), ('en', 'Anglicky')], default='cs', max_length=15)),
                 ('sha_1', models.TextField(blank=True, null=True)),
-                ('telefon', models.TextField(blank=True, null=True, validators=[core.validators.validate_phone_number])),
+                ('telefon', models.CharField(blank=True, max_length=100, null=True, validators=[core.validators.validate_phone_number])),
                 ('history_id', models.AutoField(primary_key=True, serialize=False)),
                 ('history_date', models.DateTimeField()),
                 ('history_change_reason', models.CharField(max_length=100, null=True)),
@@ -92,17 +93,17 @@ class Migration(migrations.Migration):
             name='Organizace',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nazev', models.TextField(verbose_name='uzivatel.models.Organizace.nazev')),
-                ('nazev_zkraceny', models.TextField(verbose_name='uzivatel.models.Organizace.nazev_zkraceny')),
+                ('nazev', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev')),
+                ('nazev_zkraceny', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev_zkraceny')),
                 ('oao', models.BooleanField(default=False, verbose_name='uzivatel.models.Organizace.oao')),
-                ('mesicu_do_zverejneni', models.IntegerField(default=36, verbose_name='uzivatel.models.Organizace.mesicu_do_zverejneni')),
-                ('nazev_zkraceny_en', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.nazev_zkraceny_en')),
-                ('email', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.email')),
-                ('telefon', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.telefon')),
-                ('adresa', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.adresa')),
-                ('ico', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.ico')),
-                ('nazev_en', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.nazev_en')),
-                ('zanikla', models.BooleanField(blank=True, null=True, verbose_name='uzivatel.models.Organizace.zanikla')),
+                ('mesicu_do_zverejneni', models.PositiveIntegerField(default=36, validators=[django.core.validators.MaxValueValidator(1200)], verbose_name='uzivatel.models.Organizace.mesicu_do_zverejneni')),
+                ('nazev_zkraceny_en', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev_zkraceny_en')),
+                ('email', models.CharField(blank=True, max_length=100, null=True, verbose_name='uzivatel.models.Organizace.email')),
+                ('telefon', models.CharField(blank=True, max_length=100, null=True, verbose_name='uzivatel.models.Organizace.telefon')),
+                ('adresa', models.CharField(blank=True, max_length=255, null=True, verbose_name='uzivatel.models.Organizace.adresa')),
+                ('ico', models.CharField(blank=True, max_length=100, null=True, verbose_name='uzivatel.models.Organizace.ico')),
+                ('nazev_en', models.CharField(blank=True, max_length=255, null=True, verbose_name='uzivatel.models.Organizace.nazev_en')),
+                ('zanikla', models.BooleanField(default=False, verbose_name='uzivatel.models.Organizace.zanikla')),
                 ('ident_cely', models.CharField(max_length=10, unique=True)),
             ],
             options={
@@ -117,13 +118,13 @@ class Migration(migrations.Migration):
             name='Osoba',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('jmeno', models.TextField(verbose_name='uzivatel.models.Osoba.jmeno')),
-                ('prijmeni', models.TextField(verbose_name='uzivatel.models.Osoba.prijmeni')),
-                ('vypis', models.TextField(verbose_name='uzivatel.models.Osoba.vypis')),
-                ('vypis_cely', models.TextField(verbose_name='uzivatel.models.Osoba.vypis_cely')),
+                ('jmeno', models.CharField(max_length=100, verbose_name='uzivatel.models.Osoba.jmeno')),
+                ('prijmeni', models.CharField(max_length=100, verbose_name='uzivatel.models.Osoba.prijmeni')),
+                ('vypis', models.CharField(max_length=200, verbose_name='uzivatel.models.Osoba.vypis')),
+                ('vypis_cely', models.CharField(max_length=200, verbose_name='uzivatel.models.Osoba.vypis_cely')),
                 ('rok_narozeni', models.IntegerField(blank=True, null=True, verbose_name='uzivatel.models.Osoba.rok_narozeni')),
                 ('rok_umrti', models.IntegerField(blank=True, null=True, verbose_name='uzivatel.models.Osoba.rok_umrti')),
-                ('rodne_prijmeni', models.TextField(blank=True, null=True, verbose_name='uzivatel.models.Osoba.rodne_prijmeni')),
+                ('rodne_prijmeni', models.CharField(blank=True, max_length=100, null=True, verbose_name='uzivatel.models.Osoba.rodne_prijmeni')),
                 ('ident_cely', models.CharField(max_length=20, unique=True)),
             ],
             options={
@@ -189,7 +190,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='historicaluser',
             name='organizace',
-            field=models.ForeignKey(blank=True, db_column='organizace', db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='uzivatel.organizace'),
+            field=models.ForeignKey(blank=True, db_column='organizace', db_constraint=False, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='uzivatel.organizace'),
         ),
         migrations.AddField(
             model_name='historicaluser',
@@ -204,7 +205,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='history_vazba',
-            field=models.ForeignKey(db_column='historie', null=True, on_delete=django.db.models.fields.related.ForeignKey, related_name='uzivatelhistorievazba', to='historie.historievazby'),
+            field=models.OneToOneField(db_column='historie', null=True, on_delete=django.db.models.fields.related.ForeignKey, related_name='uzivatelhistorievazba', to='historie.historievazby'),
         ),
         migrations.AddField(
             model_name='user',
@@ -214,7 +215,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='organizace',
-            field=models.ForeignKey(db_column='organizace', null=True, on_delete=django.db.models.deletion.RESTRICT, to='uzivatel.organizace'),
+            field=models.ForeignKey(db_column='organizace', on_delete=django.db.models.deletion.RESTRICT, to='uzivatel.organizace'),
         ),
         migrations.AddField(
             model_name='user',

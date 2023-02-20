@@ -41,6 +41,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'dokument_autor',
+                'ordering': ['poradi'],
             },
         ),
         migrations.CreateModel(
@@ -127,7 +128,7 @@ class Migration(migrations.Migration):
                 ('udalost', models.TextField(blank=True, null=True)),
                 ('rok_od', models.PositiveIntegerField(blank=True, null=True)),
                 ('rok_do', models.PositiveIntegerField(blank=True, null=True)),
-                ('duveryhodnost', models.PositiveIntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)])),
+                ('duveryhodnost', models.PositiveIntegerField(blank=True, null=True, validators=[django.core.validators.MaxValueValidator(100)])),
                 ('geom', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326)),
             ],
             options={
@@ -144,5 +145,11 @@ class Migration(migrations.Migration):
             options={
                 'db_table': 'tvar',
             },
+        ),
+        migrations.AddConstraint(
+            model_name='dokumentcast',
+            constraint=models.CheckConstraint(
+                check=models.Q(('archeologicky_zaznam__isnull', False), ('projekt__isnull', False), _connector='OR'),
+                name='dokument_cast_vazba_check'),
         ),
     ]
