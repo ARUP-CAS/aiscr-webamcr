@@ -210,4 +210,10 @@ class Migration(migrations.Migration):
             name='dokumentautor',
             unique_together={('dokument', 'autor'), ('dokument', 'poradi')},
         ),
+        migrations.AddConstraint(
+            model_name='dokumentcast',
+            constraint=models.CheckConstraint(
+                check=models.Q(('archeologicky_zaznam__isnull', False), ('projekt__isnull', False), _connector='OR'),
+                name='dokument_cast_vazba_check'),
+        ),
     ]

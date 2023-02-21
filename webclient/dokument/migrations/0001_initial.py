@@ -146,10 +146,4 @@ class Migration(migrations.Migration):
                 'db_table': 'tvar',
             },
         ),
-        migrations.AddConstraint(
-            model_name='dokumentcast',
-            constraint=models.CheckConstraint(
-                check=models.Q(('archeologicky_zaznam__isnull', False), ('projekt__isnull', False), _connector='OR'),
-                name='dokument_cast_vazba_check'),
-        ),
     ]
