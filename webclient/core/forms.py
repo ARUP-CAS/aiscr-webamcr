@@ -139,12 +139,9 @@ class SouborMetadataForm(forms.ModelForm):
                 css_class="row mb-2",
             ),
         )
-        self.fields["nazev_zkraceny"].widget.attrs["readonly"] = True
-        self.fields["nazev_puvodni"].widget.attrs["readonly"] = True
-        self.fields["rozsah"].widget.attrs["readonly"] = True
-        self.fields["nazev"].widget.attrs["readonly"] = True
-        self.fields["mimetype"].widget.attrs["readonly"] = True
-        self.fields["size_mb"].widget.attrs["readonly"] = True
+        for field in self.fields:
+            self.fields[field].widget.attrs["readonly"] = True
+            self.fields[field].required = False
 
 
 class OdstavkaSystemuForm(forms.ModelForm):
