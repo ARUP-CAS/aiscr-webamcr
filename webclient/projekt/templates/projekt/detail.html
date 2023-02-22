@@ -639,6 +639,8 @@
         var errorFormFunc = function(settings, response) {
           $('#div_id_reason_text').hide();
           $('#div_id_projekt_id').hide();
+          $('<span class="asteriskField">*</span>').insertAfter('#div_id_projekt_id label')
+          $('<span class="asteriskField">*</span>').insertAfter('#div_id_reason_text label')
           if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option1') {
             $('#div_id_projekt_id').show();
             };
