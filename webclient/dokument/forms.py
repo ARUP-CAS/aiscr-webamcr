@@ -71,7 +71,7 @@ class CoordinatesDokumentForm(forms.Form):
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
-    rada = forms.CharField(label="Řada", required=False)
+    rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.form.dokumentExtraData.rada.tooltip"),)
 
     class Meta:
         model = DokumentExtraData
@@ -686,6 +686,7 @@ class PripojitDokumentForm(forms.Form):
             widget=autocomplete.Select2Multiple(
                 url="dokument:dokument-autocomplete-bez-zapsanych"
             ),
+            help_text=_("dokument.form.pripojitDokument.tooltip")
         )
         self.fields["dokument"].required = True
         self.helper = FormHelper(self)

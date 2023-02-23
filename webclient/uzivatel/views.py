@@ -5,7 +5,7 @@ from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import IntegrityError
 from django.db.models import F, Value, CharField, IntegerField
@@ -30,7 +30,7 @@ from core.message_constants import (
     AUTOLOGOUT_AFTER_LOGOUT,
 )
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
-    UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm
+    UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User
 
 logger = logging.getLogger(__name__)
@@ -253,3 +253,6 @@ class UserActivationView(ActivationView):
         user.save()
         Mailer.send_eu02(user)
         return user
+
+class UserPasswordResetView(PasswordResetView):
+    form_class = UserPasswordResetForm
