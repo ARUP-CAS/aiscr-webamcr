@@ -1,5 +1,7 @@
 -- Nastavení správného EPSG a typu pro geometrie
 
+DROP VIEW IF EXISTS public.view_novy_stary_katastr;
+
 -- Oprava na singlepart
 UPDATE kladyzm SET the_geom = ST_GeometryN(the_geom, 1);
 

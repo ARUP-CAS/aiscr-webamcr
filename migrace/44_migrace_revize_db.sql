@@ -4,6 +4,7 @@ ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_adb_fkey FOREIGN KEY (adb) RE
 COMMENT ON COLUMN adb.dokumentacni_jednotka IS NULL;
 
 ALTER TABLE akce_vedouci DROP CONSTRAINT akce_vedouci_akce_fkey;
+ALTER TABLE akce DROP CONSTRAINT akce_organizace_fkey;
 ALTER TABLE akce DROP CONSTRAINT akce_archeologicky_zaznam_key;
 ALTER TABLE akce ADD CONSTRAINT akce_organizace_fkey FOREIGN KEY (organizace) REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
 
