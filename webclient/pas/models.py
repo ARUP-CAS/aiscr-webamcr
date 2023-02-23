@@ -211,7 +211,7 @@ class SamostatnyNalez(models.Model):
             resp.append(_("Nález před odesláním musí mít vyplneneho nálezce"))
         if not self.geom:
             resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
-        if not self.hloubka:
+        if self.hloubka is None:
             resp.append(_("pas.formCheckOdeslani.missingHloubka.text"))
         if not self.katastr:
             resp.append(_("pas.formCheckOdeslani.missingKatastr.text"))
