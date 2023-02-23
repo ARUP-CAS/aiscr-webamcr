@@ -33,11 +33,14 @@ def get_mime_type(file_name):
 
 
 def calculate_crc_32(file):
+    """
+    Calculates crc32 of the file (int32) transforms it to string and fills string with 0 for 13 characters.
+    """
     prev = 0
     for eachLine in file:
         prev = zlib.crc32(eachLine, prev)
     checksum = "%d" % (prev & 0xFFFFFFFF)
-    return checksum
+    return checksum.zfill(13)
 
 
 def get_cadastre_from_point(point):
