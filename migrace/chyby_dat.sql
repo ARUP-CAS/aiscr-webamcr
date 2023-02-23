@@ -145,8 +145,6 @@ CREATE INDEX IF NOT EXISTS jednotka_dokument_dokument
     ON public.jednotka_dokument USING btree
     (dokument ASC NULLS LAST)
     TABLESPACE pg_default;
-WITH za_zl AS;
-
 CREATE INDEX IF NOT EXISTS komponenta_dokument_dokument_idx
     ON public.komponenta_dokument USING btree
     (jednotka_dokument ASC NULLS LAST)
