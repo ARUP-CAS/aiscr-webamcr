@@ -13,6 +13,7 @@ var defaults = {
     firstModalID: false,
     secondModal: false,
     modalFormID: "#create-osoba-form",
+    formErrorFunc: false,
 };
 
 class Modal {
@@ -32,6 +33,7 @@ class Modal {
         this.secondModal = settings.secondModal,
         this.modalFormID = settings.modalFormID,
         this.hidden = false,
+        this.formErrorFunc= settings.formErrorFunc,
         this.init()
     }
 
@@ -124,6 +126,7 @@ class Modal {
                     // Reinstantiate handlers
                     settings.addEventHandlers(settings);
                     settings.resetScripts();
+                    settings.formErrorFunction(settings,response);
                 } else if ($(response).find(".alert-block").length > 0) {
                     // Form is not valid, update it with errors
                     $(settings.modalIDD).find(settings.modalContent).html(response);
@@ -131,6 +134,7 @@ class Modal {
                     // Reinstantiate handlers
                     settings.addEventHandlers(settings);
                     settings.resetScripts();
+                    settings.formErrorFunction(settings,response);
                 }
                  else {
                      // Form is valid
@@ -176,6 +180,11 @@ class Modal {
          }
         else{
             settings.errorFunc(settings, response)
+        }
+    };
+    formErrorFunction (settings, response) {
+        if (settings.formErrorFunc) {
+            settings.formErrorFunc(settings, response)
         }
     };
 
