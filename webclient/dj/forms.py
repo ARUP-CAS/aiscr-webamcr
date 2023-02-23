@@ -58,7 +58,7 @@ class CreateDJForm(forms.ModelForm):
                         & Q(ident_cely__lt=instance.ident_cely)
                     ).count()
                     > 0
-                ):
+                ) or jednotky.exclude(adb__isnull=True).count() > 0:
                     queryset = queryset.filter(id=TYP_DJ_SONDA_ID)
                 elif jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 1:
                     queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
