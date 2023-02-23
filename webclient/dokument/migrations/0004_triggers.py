@@ -66,5 +66,15 @@ class Migration(migrations.Migration):
                 EXECUTE FUNCTION delete_related_komponenta();
             """,
             reverse_sql="DROP TRIGGER public.delete_related_komponenta;",
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE TRIGGER delete_related_komponenta_dokumentacni_jednotka
+                AFTER DELETE
+                ON dokumentacni_jednotka
+                FOR EACH ROW
+                EXECUTE FUNCTION delete_related_komponenta();
+            """,
+            reverse_sql="DROP TRIGGER public.delete_related_komponenta_dokumentacni_jednotka;",
         )
     ]

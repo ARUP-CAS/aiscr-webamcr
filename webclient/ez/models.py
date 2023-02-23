@@ -171,10 +171,9 @@ def get_ez_ident(zaznam=None):
 
 class ExterniZdrojAutor(models.Model):
     externi_zdroj = models.OneToOneField(
-        ExterniZdroj, models.RESTRICT, db_column="externi_zdroj", primary_key=True
-    )
+        ExterniZdroj, models.RESTRICT, db_column="externi_zdroj")
     autor = models.ForeignKey(Osoba, models.CASCADE, db_column="autor")
-    poradi = models.IntegerField(null=True)
+    poradi = models.IntegerField()
 
     def get_osoba(self):
         return self.autor.vypis_cely
@@ -186,10 +185,10 @@ class ExterniZdrojAutor(models.Model):
 
 class ExterniZdrojEditor(models.Model):
     externi_zdroj = models.OneToOneField(
-        ExterniZdroj, models.CASCADE, db_column="externi_zdroj", primary_key=True
+        ExterniZdroj, models.CASCADE, db_column="externi_zdroj"
     )
     editor = models.ForeignKey(Osoba, models.RESTRICT, db_column="editor")
-    poradi = models.IntegerField(null=True)
+    poradi = models.IntegerField()
 
     def get_osoba(self):
         return self.editor.vypis_cely

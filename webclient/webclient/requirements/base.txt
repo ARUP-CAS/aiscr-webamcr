@@ -35,4 +35,3 @@ redis==4.4.2
 flower==1.2.0
 django-celery-beat==2.4.0
 django-add-default-value==0.10.0
-django-celery-results==2.4.0

@@ -69,4 +69,16 @@ class Migration(migrations.Migration):
             name='akcevedouci',
             unique_together={('akce', 'vedouci')},
         ),
+        migrations.AddConstraint(
+            model_name='akce',
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('typ', 'N'), ('projekt__isnull', True)),
+                                                             models.Q(('typ', 'R'), ('projekt__isnull', False)),
+                                                             _connector='OR'), name='akce_typ_check'),
+        ),
+        migrations.AddConstraint(
+            model_name='archeologickyzaznam',
+            constraint=models.CheckConstraint(
+                check=models.Q(('typ_zaznamu', 'L'), ('typ_zaznamu', 'A'), _connector='OR'),
+                name='archeologicky_zaznam_typ_zaznamu_check'),
+        ),
     ]

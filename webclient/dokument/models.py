@@ -10,6 +10,7 @@ from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
@@ -375,6 +376,12 @@ class DokumentCast(models.Model):
 
     class Meta:
         db_table = "dokument_cast"
+        constraints = [
+            CheckConstraint(
+                check=(Q(archeologicky_zaznam__isnull=False) | Q(projekt__isnull=False)),
+                name='dokument_cast_vazba_check',
+            ),
+        ]
 
     def get_absolute_url(self):
         return reverse(
@@ -451,7 +458,7 @@ class DokumentExtraData(models.Model):
     rok_od = models.PositiveIntegerField(blank=True, null=True)
     rok_do = models.PositiveIntegerField(blank=True, null=True)
     duveryhodnost = models.PositiveIntegerField(
-        blank=True, null=True, validators=[MinValueValidator(1), MaxValueValidator(100)]
+        blank=True, null=True, validators=[MaxValueValidator(100)]
     )
     geom = PointField(blank=True, null=True, srid=4326)
 
@@ -466,12 +473,8 @@ class DokumentAutor(models.Model):
 
     class Meta:
         db_table = "dokument_autor"
-        unique_together = (("dokument", "autor"),)
+        unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = (["poradi"],)
-
-    class Meta:
-        db_table = "dokument_autor"
-        unique_together = (("dokument", "poradi"),)
 
 
 class DokumentJazyk(models.Model):
@@ -550,7 +553,7 @@ class Let(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     datum = models.DateTimeField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
-    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, db_column="pozorovatel")
+    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, null=True, blank=True, db_column="pozorovatel")
     ucel_letu = models.TextField(blank=True, null=True)
     typ_letounu = models.TextField(blank=True, null=True)
     letiste_start = models.ForeignKey(

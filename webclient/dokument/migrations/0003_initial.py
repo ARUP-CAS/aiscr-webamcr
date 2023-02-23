@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='let',
             name='pozorovatel',
-            field=models.ForeignKey(db_column='pozorovatel', on_delete=django.db.models.deletion.RESTRICT, to='uzivatel.osoba'),
+            field=models.ForeignKey(blank=True, db_column='pozorovatel', null=True, on_delete=django.db.models.deletion.RESTRICT, to='uzivatel.osoba'),
         ),
         migrations.AddField(
             model_name='dokumentposudek',
@@ -208,6 +208,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='dokumentautor',
-            unique_together={('dokument', 'poradi')},
+            unique_together={('dokument', 'autor'), ('dokument', 'poradi')},
+        ),
+        migrations.AddConstraint(
+            model_name='dokumentcast',
+            constraint=models.CheckConstraint(
+                check=models.Q(('archeologicky_zaznam__isnull', False), ('projekt__isnull', False), _connector='OR'),
+                name='dokument_cast_vazba_check'),
         ),
     ]

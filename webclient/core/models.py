@@ -61,11 +61,9 @@ class SouborVazby(models.Model):
 
 class Soubor(models.Model):
     nazev_zkraceny = models.TextField()
-    nazev_puvodni = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
     mimetype = models.TextField()
-    vytvoreno = models.DateField(auto_now_add=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )

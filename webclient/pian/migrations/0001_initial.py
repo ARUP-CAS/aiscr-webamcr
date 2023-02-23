@@ -22,7 +22,6 @@ class Migration(migrations.Migration):
                 ('objectid', models.IntegerField(unique=True)),
                 ('kategorie', models.IntegerField(choices=[(1, '1:10 000'), (2, '1:25 000'), (3, '1:50 000'), (4, '1:100 000'), (5, '1:200 000')])),
                 ('cislo', models.CharField(max_length=8, unique=True)),
-                ('nazev', models.CharField(max_length=100)),
                 ('natoceni', models.DecimalField(decimal_places=11, max_digits=12)),
                 ('shape_leng', models.DecimalField(decimal_places=6, max_digits=12)),
                 ('shape_area', models.DecimalField(decimal_places=2, max_digits=12)),
@@ -58,9 +57,19 @@ class Migration(migrations.Migration):
                 ('typ', models.ForeignKey(db_column='typ', limit_choices_to={'nazev_heslare': 40}, on_delete=django.db.models.deletion.RESTRICT, related_name='piany_typu', to='heslar.heslar')),
                 ('zm10', models.ForeignKey(db_column='zm10', on_delete=django.db.models.deletion.RESTRICT, related_name='pian_zm10', to='pian.kladyzm')),
                 ('zm50', models.ForeignKey(db_column='zm50', on_delete=django.db.models.deletion.RESTRICT, related_name='pian_zm50', to='pian.kladyzm')),
+                ('geom_updated_at', models.DateTimeField(blank=True, null=True)),
+                ('geom_sjtsk_updated_at', models.DateTimeField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'pian',
             },
+        ),
+        migrations.AddConstraint(
+            model_name='pian',
+            constraint=models.CheckConstraint(
+                check=models.Q(models.Q(('geom_system', 'sjtsk'), ('geom_sjtsk__isnull', False)),
+                               models.Q(('geom_system', 'wgs84'), ('geom__isnull', False)),
+                               models.Q(('geom_sjtsk__isnull', True), ('geom__isnull', True)), _connector='OR'),
+                name='pian_geom_check'),
         ),
     ]

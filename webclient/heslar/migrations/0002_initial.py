@@ -69,6 +69,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='heslar',
-            unique_together={('nazev_heslare', 'zkratka_en'), ('nazev_heslare', 'zkratka')},
+            unique_together={('nazev_heslare', 'zkratka_en'), ('nazev_heslare', 'zkratka'), ("nazev_heslare", "heslo"), ("nazev_heslare", "heslo_en")},
         ),
     ]

@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='ArcheologickyZaznam',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('typ_zaznamu', models.TextField(choices=[('L', 'Lokalita'), ('A', 'Akce')], max_length=1)),
+                ('typ_zaznamu', models.CharField(choices=[('L', 'Lokalita'), ('A', 'Akce')], max_length=1)),
                 ('ident_cely', models.TextField(unique=True)),
                 ('uzivatelske_oznaceni', models.TextField(blank=True, null=True)),
                 ('stav', models.SmallIntegerField(choices=[(1, 'A1 - Zapsána'), (2, 'A2 - Odeslána'), (3, 'A3 - Archivována')])),
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
             name='ExterniOdkaz',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('paginace', models.TextField()),
+                ('paginace', models.TextField(null=True)),
                 ('archeologicky_zaznam', models.ForeignKey(db_column='archeologicky_zaznam', on_delete=django.db.models.deletion.CASCADE, related_name='externi_odkazy', to='arch_z.archeologickyzaznam')),
             ],
             options={

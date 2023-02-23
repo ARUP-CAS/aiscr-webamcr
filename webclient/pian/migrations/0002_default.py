@@ -17,4 +17,9 @@ class Migration(migrations.Migration):
             name='stav',
             value=PIAN_NEPOTVRZEN
         ),
+        AddDefaultValue(
+            model_name='Pian',
+            name='geom_system',
+            value='wgs84'
+        ),
     ]

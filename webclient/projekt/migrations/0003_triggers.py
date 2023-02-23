@@ -77,4 +77,14 @@ class Migration(migrations.Migration):
             """,
             reverse_sql="DROP TRIGGER public.delete_related_soubor_samostatny_nalez;",
         ),
+        migrations.RunSQL(
+            sql="""
+            CREATE TRIGGER delete_related_soubor_dokument
+                AFTER DELETE
+                ON dokument
+                FOR EACH ROW
+                EXECUTE FUNCTION delete_related_soubor();
+            """,
+            reverse_sql="DROP TRIGGER public.delete_related_soubor_dokument;",
+        ),
     ]

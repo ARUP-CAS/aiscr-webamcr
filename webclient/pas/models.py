@@ -1,3 +1,5 @@
+from django.db.models import CheckConstraint, Q
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -141,8 +143,8 @@ class SamostatnyNalez(models.Model):
         null=True,
         related_name="sn_historie",
     )
-    geom_updated_at = models.DateField(null=True, blank=True)
-    geom_sjtsk_updated_at = models.DateField(null=True, blank=True)
+    geom_updated_at = models.DateTimeField(null=True, blank=True)
+    geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
 
     def set_zapsany(self, user):
         self.stav = SN_ZAPSANY
@@ -221,6 +223,14 @@ class SamostatnyNalez(models.Model):
 
     class Meta:
         db_table = "samostatny_nalez"
+        constraints = [
+            CheckConstraint(
+                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
+                name='samostatny_nalez_geom_check',
+            ),
+        ]
 
     def __str__(self):
         if self.ident_cely:
