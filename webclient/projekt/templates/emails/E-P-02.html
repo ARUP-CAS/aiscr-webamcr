@@ -1,9 +1,10 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
+{% load template_tags %}
 {% block content %}
     <p>{% trans 'E-P-02.dobrý_den' %},</p>
         <p>
-            {% trans 'E-P-02.v_aplikaci_is_amčr_byl_právě_zapsán_nový_projekt' %}<b><a href="{{ site_url }}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b>.
+            {% trans 'E-P-02.v_aplikaci_is_amčr_byl_právě_zapsán_nový_projekt' %}<b><a href="{% get_site_url %}{% url 'core:redirect_ident' project.ident_cely %}">{{ project.ident_cely }}</a></b>.
         </p>
         <ul style="list-style: none">
             <li><b>{% trans 'E-P-02.typ_projektu' %}:</b> {{ project.typ_projektu.heslo }}</li>
