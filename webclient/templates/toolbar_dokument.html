@@ -10,7 +10,11 @@
       {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
+      {% if d.ident_cely %}
       {{ d.ident_cely }}{% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
+      {% else %}
+      {% if is_3d %}{% trans "model3d.entity.tootlbar.Zapsat.label" %}{% else %}{% trans "dokument.entity.tootlbar.Zapsat.label" %}{% endif %}
+      {% endif %}
     </div>
   </div>
   {% if showcontrols %}
