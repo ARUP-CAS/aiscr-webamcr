@@ -418,3 +418,6 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BROKER = "redis://redis:6379"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+TEST_USER_EMAIL = get_secret("TEST_USER_EMAIL")
+TEST_USER_PASSWORD = get_secret("TEST_USER_PASSWORD")
