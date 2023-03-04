@@ -235,8 +235,6 @@ alter table ruian_kraj rename column id_c_m to rada_id;
 alter table ruian_okres rename column full_name to nazev;
 -- 14. soubor.uzivatelske_oznaceni -> nazev_puvodni
 alter table soubor rename column uzivatelske_oznaceni to nazev_puvodni;
--- 15. soubor.nazev -> nazev_zkraceny
-alter table soubor rename column nazev to nazev_zkraceny;
 -- 16. drop soubor.filepath
 alter table soubor drop column filepath;
 -- 17. uzivatel_spoluprace.badatel -> spolupracovnik
