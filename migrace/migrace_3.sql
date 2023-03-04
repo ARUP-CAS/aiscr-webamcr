@@ -241,6 +241,11 @@ alter table soubor drop column filepath;
 alter table uzivatel_spoluprace rename column badatel to spolupracovnik;
 -- 18. uzivatel_spoluprace.archeolog -> vedouci
 alter table uzivatel_spoluprace rename column archeolog to vedouci;
+-- 19. soubor.nahled to text
+ALTER TABLE soubor ALTER COLUMN nahled TYPE text;
+UPDATE soubor SET nahled = null;
+-- 20. soubor.sha_512
+ALTER TABLE soubor ADD COLUMN sha_512 text;
 
 -- Pridat not null
 -- 109. uzivatel.role COMMENT: tohle se zatim jmenuje auth_level
