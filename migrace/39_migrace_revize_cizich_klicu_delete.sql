@@ -163,4 +163,3 @@ ALTER TABLE dokument_cast DROP CONSTRAINT dokument_cast_projekt_fkey;
 ALTER TABLE soubor DROP CONSTRAINT soubor_historie_fkey;
 ALTER TABLE soubor DROP CONSTRAINT soubor_projekt_fkey;
 ALTER TABLE stats_login DROP CONSTRAINT stats_login_uzivatel_fkey;
-ALTER TABLE uzivatel_historicaluser DROP CONSTRAINT uzivatel_historicaluser_history_user_id_fkey;
