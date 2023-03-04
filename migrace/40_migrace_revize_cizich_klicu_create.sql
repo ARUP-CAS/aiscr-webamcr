@@ -178,4 +178,3 @@ ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_typ_fkey FOREIGN KEY (typ) RE
 ALTER TABLE dokument_cast ADD CONSTRAINT dokument_cast_projekt_fkey FOREIGN KEY (projekt) REFERENCES projekt (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE soubor ADD CONSTRAINT soubor_historie_fkey FOREIGN KEY (historie) REFERENCES historie_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE stats_login ADD CONSTRAINT stats_login_uzivatel_fkey FOREIGN KEY (uzivatel) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE CASCADE;
-ALTER TABLE uzivatel_historicaluser ADD CONSTRAINT uzivatel_historicaluser_history_user_id_fkey FOREIGN KEY (history_user_id) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE CASCADE;
