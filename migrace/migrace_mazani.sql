@@ -209,6 +209,8 @@ alter table soubor drop column projekt;
 alter table soubor drop column samostatny_nalez;
 -- 161. komponenta.komponenta_dokument_id PUVODNI ID KOMPONENTY PRED MIGRACI
 alter table komponenta drop column komponenta_dokument_id;
+-- soubor.filepath
+alter table soubor drop column filepath;
 
 -- Mazani tabulek sloucene historie
 drop table historie_user_storage;
