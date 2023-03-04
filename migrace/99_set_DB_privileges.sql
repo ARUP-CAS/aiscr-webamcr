@@ -79,7 +79,6 @@ REVOKE ALL ON soubor FROM cz_archeologickamapa_api, cz_archeologickamapa_api_vie
 REVOKE ALL ON soubor_vazby FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 REVOKE ALL ON spatial_ref_sys FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 REVOKE ALL ON tvar FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
-REVOKE ALL ON uzivatel_historicaluser FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 REVOKE ALL ON uzivatel_spoluprace FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 REVOKE ALL ON vyskovy_bod FROM cz_archeologickamapa_api, cz_archeologickamapa_api_view;
 
@@ -164,7 +163,6 @@ GRANT SELECT ON soubor TO cz_archeologickamapa_api_view;
 GRANT SELECT ON soubor_vazby TO cz_archeologickamapa_api_view;
 GRANT SELECT ON spatial_ref_sys TO cz_archeologickamapa_api_view;
 GRANT SELECT ON tvar TO cz_archeologickamapa_api_view;
-GRANT SELECT ON uzivatel_historicaluser TO cz_archeologickamapa_api_view;
 GRANT SELECT ON uzivatel_spoluprace TO cz_archeologickamapa_api_view;
 GRANT SELECT ON vyskovy_bod TO cz_archeologickamapa_api_view;
 
@@ -249,6 +247,5 @@ GRANT ALL ON soubor TO cz_archeologickamapa_api;
 GRANT ALL ON soubor_vazby TO cz_archeologickamapa_api;
 GRANT ALL ON spatial_ref_sys TO cz_archeologickamapa_api;
 GRANT ALL ON tvar TO cz_archeologickamapa_api;
-GRANT ALL ON uzivatel_historicaluser TO cz_archeologickamapa_api;
 GRANT ALL ON uzivatel_spoluprace TO cz_archeologickamapa_api;
 GRANT ALL ON vyskovy_bod TO cz_archeologickamapa_api;
