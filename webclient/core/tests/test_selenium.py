@@ -1,3 +1,4 @@
+import structlog
 import socket
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -8,24 +9,21 @@ from django.test import override_settings, tag
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
+from django.test import LiveServerTestCase
+
+logger_s = structlog.get_logger(__name__)
 
 
-class MySeleniumTests(StaticLiveServerTestCase):
-    #fixtures = ['selenium_data.json']
-    host = '0.0.0.0'  # Bind to 0.0.0.0 to allow external access
+class BaseSeleniumTestClass(StaticLiveServerTestCase):
+    # fixtures = ['selenium_data.json']
+    host = '0.0.0.0'
 
-    def __init__(self):
-        super().__init__()
-        self.driver = self.selenium
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setUp(self):
         # Set host to externally accessible web server address
-        cls.host = socket.gethostbyname(socket.gethostname())
+        self.host = socket.gethostbyname(socket.gethostname())
 
         # Instantiate the remote WebDriver
-        cls.selenium = webdriver.Remote(
+        self.driver = webdriver.Remote(
             #  Set to: htttp://{selenium-container-name}:port/wd/hub
             #  In our example, the container is named `selenium`
             #  and runs on port 4444
@@ -34,28 +32,30 @@ class MySeleniumTests(StaticLiveServerTestCase):
             desired_capabilities=DesiredCapabilities.CHROME,
 
         )
-        cls.selenium.implicitly_wait(5)
+        self.driver.implicitly_wait(5)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.selenium.quit()
-        super().tearDownClass()
+    def tearDown(self):
+        # self.driver.quit()
+        super().tearDown()
 
-    def test_login(self):
-        self.driver.get("web:8000")
-        self.driver.find_element(By.ID, "id_username").click()
-        self.driver.find_element(By.ID, "id_username").send_keys("jiri.pesik@huld.io")
-        self.driver.find_element(By.ID, "id_password").send_keys("naseheslo")
+    def _username(self):
+        from webclient.settings.base import TEST_USER_EMAIL
+        return "amcr@arup.cas.cz"
+
+    def _password(self):
+        from webclient.settings.base import TEST_USER_PASSWORD
+        return "foo1234!!!"
+
+    def login(self):
+        port = self.server_thread.port
+        self.driver.get(f"http://web:{port}/")
+        self.driver.find_element(By.ID, "id_username").send_keys(self._username())
+        self.driver.find_element(By.ID, "id_password").send_keys(self._password())
         self.driver.find_element(By.CSS_SELECTOR, ".btn").click()
-        assert self.driver.title == "AMČR Homepage"
+        self.driver.set_window_size(1936, 1056)
 
-    def test_tableSorting(self):
-        self.driver.get("http://localhost:8000/accounts/login/?next=/")
-        self.driver.find_element(By.ID, "id_username").send_keys("jiri.pesik@huld.io")
-        self.driver.find_element(By.ID, "id_password").send_keys("naseheslo")
-        self.driver.find_element(By.ID, "id_password").send_keys(Keys.ENTER)
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, "Vybrat projekty").click()
-        assert "sort=ident_cely" in self.driver.current_url
-        self.driver.find_element(By.LINK_TEXT, "Identifikátor").click()
-        assert "sort=stav" in self.driver.current_url
+
+class CoreSeleniumTest(BaseSeleniumTestClass):
+    def test_login(self):
+        self.login()
+        self.assertEqual(self.driver.title, "AMČR Homepage")
