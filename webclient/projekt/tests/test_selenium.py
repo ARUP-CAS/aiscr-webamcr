@@ -30,7 +30,7 @@ class CoreSeleniumTest(BaseSeleniumTestClass):
         columns = self._get_table_columns(table)
         self.assertIn(column_header_text, columns)
 
-    def test_table_sorting(self):
+    def test_projekt_001(self):
         self.login()
 
         # Go to projects
@@ -77,7 +77,7 @@ class CoreSeleniumTest(BaseSeleniumTestClass):
             self._check_column_hiding(item[0], item[1])
             self.driver.refresh()
 
-    def test_project_creation(self):
+    def test_projekt_002(self):
         logger_s.debug("CoreSeleniumTest.test_project_creation.start")
         project_count_old = Projekt.objects.count()
 

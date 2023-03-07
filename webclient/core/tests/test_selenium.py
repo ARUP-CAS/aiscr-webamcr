@@ -11,6 +11,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 from django.test import LiveServerTestCase
 
+from core.tests.runner import TEST_USER_USERNAME, TEST_USER_PASSWORD
+
 logger_s = structlog.get_logger(__name__)
 
 
@@ -39,12 +41,10 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
         super().tearDown()
 
     def _username(self):
-        from webclient.settings.base import TEST_USER_EMAIL
-        return "amcr@arup.cas.cz"
+        return TEST_USER_USERNAME
 
     def _password(self):
-        from webclient.settings.base import TEST_USER_PASSWORD
-        return "foo1234!!!"
+        return TEST_USER_PASSWORD
 
     def login(self):
         port = self.server_thread.port
@@ -56,6 +56,6 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
 
 
 class CoreSeleniumTest(BaseSeleniumTestClass):
-    def test_login(self):
+    def test_core_001(self):
         self.login()
         self.assertEqual(self.driver.title, "AMČR Homepage")

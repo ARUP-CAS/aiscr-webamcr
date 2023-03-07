@@ -162,6 +162,9 @@ EZ_TYP_NEW = 2036
 
 LETFOTO_TVAR_ID = 3036
 
+TEST_USER_USERNAME = "amcr@arup.cas.cz"
+TEST_USER_PASSWORD = "foo1234!!!"
+
 
 def add_middleware_to_request(request, middleware_class):
     middleware = middleware_class()
@@ -452,8 +455,8 @@ class AMCRTestRunner(BaseRunner):
         o.save()
 
         user = User.objects.create_user(
-            email="amcr@arup.cas.cz",
-            password="foo1234!!!",
+            email=TEST_USER_USERNAME,
+            password=TEST_USER_PASSWORD,
             organizace=o,
             is_active=True,
         )

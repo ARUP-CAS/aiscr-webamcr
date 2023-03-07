@@ -45,7 +45,8 @@ def get_mail_secret(setting, default_value=None):
             return secrets_mail[setting]
         except KeyError:
             error_msg = f"Add {setting} variable to {file_mail_path} file"
-            raise ImproperlyConfigured(error_msg)
+            if not DEBUG:
+                raise ImproperlyConfigured(error_msg)
     else:
         secrets_mail.get(setting, default_value)
 
@@ -418,6 +419,3 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BROKER = "redis://redis:6379"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-TEST_USER_EMAIL = get_secret("TEST_USER_EMAIL")
-TEST_USER_PASSWORD = get_secret("TEST_USER_PASSWORD")
