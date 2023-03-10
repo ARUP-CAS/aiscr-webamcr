@@ -102,4 +102,4 @@ secrets:
   mail_conf:
    file : secrets_mail_client.json
   redis_pass:
-    external: true
+    file : redis_pass.txt
