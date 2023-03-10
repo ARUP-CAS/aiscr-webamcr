@@ -1,6 +1,8 @@
 import time
+import unittest
 
 import structlog
+from django.conf import settings
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -11,6 +13,7 @@ from projekt.models import Projekt
 logger_s = structlog.get_logger(__name__)
 
 
+@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class CoreSeleniumTest(BaseSeleniumTestClass):
     def _get_table_columns(self, table):
         elements = table.find_elements(By.TAG_NAME, "th")

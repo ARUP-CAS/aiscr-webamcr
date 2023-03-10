@@ -70,7 +70,7 @@ class UrlTests(TestCase):
     def test_post_editovat(self):
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "hlavni_katastr": "149",
+            "hlavni_katastr": KATASTR_PRAHA_ID,
             "typ_lokality": str(LOKALITA_TYP_NEW),
             "druh": str(LOKALITA_DRUH),
             "uzivatelske_oznaceni": "",

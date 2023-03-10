@@ -1,6 +1,9 @@
+import unittest
+
 import structlog
 import socket
 
+from django.conf import settings
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.webdriver import WebDriver
@@ -16,6 +19,7 @@ from core.tests.runner import TEST_USER_USERNAME, TEST_USER_PASSWORD
 logger_s = structlog.get_logger(__name__)
 
 
+@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
 class BaseSeleniumTestClass(StaticLiveServerTestCase):
     # fixtures = ['selenium_data.json']
     host = '0.0.0.0'
