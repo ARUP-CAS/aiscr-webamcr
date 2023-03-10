@@ -57,6 +57,7 @@ ALTER TABLE soubor ADD CONSTRAINT soubor_historie_key UNIQUE (historie);
 INSERT INTO historie (datum_zmeny, uzivatel, poznamka, vazba, typ_zmeny) SELECT vytvoreno, vlastnik, nazev_puvodni, historie, 'SBR0' FROM soubor;
 ALTER TABLE soubor DROP COLUMN vytvoreno;
 ALTER TABLE soubor DROP COLUMN vlastnik;
+ALTER TABLE soubor DROP COLUMN nazev_puvodni;
 
 -- Smazat oznamovatele, pokud je všude „údaj odstraněn“
 DELETE FROM oznamovatel WHERE email = 'údaj odstraněn' AND adresa = 'údaj odstraněn' AND odpovedna_osoba = 'údaj odstraněn' AND oznamovatel = 'údaj odstraněn' AND telefon = 'údaj odstraněn';

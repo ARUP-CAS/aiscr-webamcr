@@ -190,7 +190,7 @@ class RuianKraj(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
-    nazev_en = models.TextField(null=True)
+    nazev_en = models.TextField(null=True, verbose_name=_("heslar.models.RuianKraj.nazevEn"))
     definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
                                         srid=4326)
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)

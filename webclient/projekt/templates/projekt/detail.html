@@ -580,7 +580,7 @@
     var modal
     $(document).ready(function() {
       if ("{{show.prihlasit_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_prihlasit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "prihlasit-form",
         modalFormID: "#prihlasit-form",
@@ -588,7 +588,7 @@
       modal = new Modal(options, "projekt-prihlasit");
       }
       else if ("{{show.zahajit_teren_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_zahajit_v_terenu' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "zahajit-v-terenu-form",
         modalFormID: "#zahajit-v-terenu-form",
@@ -596,7 +596,7 @@
       modal = new Modal(options, "projekt-zahajit-v-terenu");
       }
       else if ("{{show.ukoncit_teren_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_ukoncit_v_terenu' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "ukoncit-v-terenu-form",
         modalFormID: "#ukoncit-v-terenu-form",
@@ -604,7 +604,7 @@
       modal = new Modal(options, "projekt-ukoncit-v-terenu");
       }
       else if ("{{show.uzavrit_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_uzavrit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "uzavrit-form",
         modalFormID: "#uzavrit-form",
@@ -612,7 +612,7 @@
       modal = new Modal(options, "projekt-uzavrit");
       }
       else if ("{{show.archivovat_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_archivovat' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "archivovat-form",
         modalFormID: "#archivovat-form",
@@ -620,7 +620,7 @@
       modal = new Modal(options, "projekt-archivovat");
       }
       if ("{{show.vratit_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_vratit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "vratit-form",
         modalFormID: "#vratit-form",
@@ -628,7 +628,7 @@
       var vratit_modal = new Modal(options, "projekt-vratit");
       }//otestovat odtial
       if ("{{show.znovu_zapsat_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_vratit_navrh_zruseni' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "vratit-navrh-form",
         modalFormID: "#vratit-navrh-form",
@@ -636,15 +636,28 @@
       var vratit_navrh_zruseni_modal = new Modal(options, "projekt-vratit-navrh-zruseni");
       }
       if ("{{show.navrhnout_zruseni_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var errorFormFunc = function(settings, response) {
+          $('#div_id_reason_text').hide();
+          $('#div_id_projekt_id').hide();
+          $('<span class="asteriskField">*</span>').insertAfter('#div_id_projekt_id label')
+          $('<span class="asteriskField">*</span>').insertAfter('#div_id_reason_text label')
+          if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option1') {
+            $('#div_id_projekt_id').show();
+            };
+          if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option6') {
+            $('#div_id_reason_text').show();
+            };
+        };
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_navrhnout_ke_zruseni' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "navrh-zruseni-form",
         modalFormID: "#navrh-zruseni-form",
+        formErrorFunc: errorFormFunc,
       })
       var navrh_zruseni_modal = new Modal(options, "projekt-navrh-zruseni");
       }//ok
       if ("{{show.zrusit_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_zrusit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "zrusit-form",
         modalFormID: "#zrusit-form",
@@ -652,21 +665,21 @@
       var zrusit_modal = new Modal(options, "projekt-zrusit");
       }
       if ("{{show.schvalit_link}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:projekt_schvalit' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "schvalit-form",
         modalFormID: "#schvalit-form",
       })
       var schvalit_modal = new Modal(options, "projekt-schvalit");
       }
-      options = Object.assign(defaults, {modalID: "modal-form",
+      options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:smazat' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "smazat-form",
         modalFormID: "#smazat-form",
       })
       var smazat_modal = new Modal(options, "projekt-smazat");
       if ("{{show.pridat_oznamovatele}}" != "False") {
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'projekt:pridat-oznamovatele' projekt.ident_cely %}?sent_stav={{projekt.stav}}",
         formID: "pridat-oznamovatele-form",
         modalFormID: "#pridat-oznamovatele-form",

@@ -390,12 +390,15 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         help_text=_("projekt.form.navrhzruseni.duvod.tooltip"),
     )
     projekt_id = forms.CharField(
-        label=_("projekt.form.navrhzruseni.projektId.label"), required=False
+        label=_("projekt.form.navrhzruseni.projektId.label"),
+        required=False,
+        help_text=_("projekt.form.navrhZruseniProj.projektId.tooltip"),
     )
     reason_text = forms.CharField(
         label=_("projekt.form.navrhzruseni.vlastniduvod.label"),
         required=False,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+        help_text=_("projekt.form.navrhZruseniProj.reasonText.tooltip"),
     )
     enable_submit = True
 
@@ -597,6 +600,7 @@ class ZruseniProjektForm(forms.Form):
         label=_("projekt.form.zruseni.duvod.label"),
         required=True,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+        help_text=_("projekt.form.zruseni.duvod.tooltip"),
     )
 
     def __init__(self, *args, **kwargs):

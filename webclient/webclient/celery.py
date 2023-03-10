@@ -6,7 +6,8 @@ import os
 from celery import Celery
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.dev")
+if os.getenv("DJANGO_SETTINGS_MODULE") is None:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.production")
 
 app = Celery("webclient")
 

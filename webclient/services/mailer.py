@@ -123,8 +123,8 @@ class Mailer():
             email.attach_file(attachment_path)
         try:
             email.send()
-        except:
-            logger_s.error("services.mailer.send.error", from_email=from_email, to=to, subject=subject)
+        except Exception as e:
+            logger_s.error("services.mailer.send.error", from_email=from_email, to=to, subject=subject, exception=e)
 
     @classmethod
     def send_eu02(cls, user: 'uzivatel.models.User'):
@@ -358,19 +358,18 @@ class Mailer():
         cls._send_ep01(project, notification_type)
 
     @classmethod
-    def send_ep02(cls, dict_of_projects):
+    def send_ep02(cls, psi, project):
         IDENT_CELY = 'E-P-02'
         logger_s.debug("services.mailer.send", ident_cely=IDENT_CELY)
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        for email, project_ids in dict_of_projects.items():
-            projects = projekt.models.Projekt.objects.filter(ident_cely__in=project_ids).all()
-            subject = notification_type.predmet.format(ident_cely=project_ids[0])
+        for pes in psi:
+            subject = notification_type.predmet.format(ident_cely=project.ident_cely)
             html = render_to_string(notification_type.cesta_sablony, {
                 "title": subject,
-                "projects": projects,
+                "project": project,
                 "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
             })
-            cls.send(subject=subject, to=email, html_content=html)
+            cls.send(subject=subject, to=pes.user.email, html_content=html)
 
     @classmethod
     def _send_ep03(cls, project, notification_type):

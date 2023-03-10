@@ -7,13 +7,15 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN, UZIVATEL_RELATION_TYPE, SPOLUPRACE_NEAKTIVNI
-from historie.models import Historie, HistorieVazby
+from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
+from historie.models import Historie
 from services.mailer import Mailer
+from notifikace_projekty.models import Pes
+from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, create_pes_form
 from .forms import AuthUserCreationForm
 from .models import User, UserNotificationType
 from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID
-from django.db import transaction, ProgrammingError
+from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import Group
 
@@ -42,6 +44,31 @@ class UserNotificationTypeInline(admin.TabularInline):
     def __init__(self, parent_model, admin_site):
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
+class PesNotificationTypeInline(admin.TabularInline):
+    model_type = None
+    model = Pes
+    form = create_pes_form(model_typ=model_type)
+    
+    def get_queryset(self, request):
+        queryset = super(PesNotificationTypeInline, self).get_queryset(request)
+        queryset = queryset.filter(
+            content_type__model=self.model_type
+        )
+        return queryset
+
+class PesKrajNotificationTypeInline(PesNotificationTypeInline):
+    model_type = KRAJ_CONTENT_TYPE
+    form = create_pes_form(model_typ=model_type)
+
+class PesOkresNotificationTypeInline(PesNotificationTypeInline):
+    model_type = OKRES_CONTENT_TYPE
+    form = create_pes_form(model_typ=model_type)
+    verbose_name = "Okres"
+    verbose_name_plural = "Okresy"
+    
+class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
+    model_type = KATASTR_CONTENT_TYPE
+    form = create_pes_form(model_typ=model_type)
 
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
@@ -49,7 +76,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
-    inlines = [UserNotificationTypeInline, ]
+    inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
     fieldsets = (
         (
             None,

@@ -146,5 +146,7 @@ AKCE_EO_USPESNE_ODPOJEN: Final = _("arch_z.message.uspesneOdpojenEO.text")
 LOKALITA_EO_USPESNE_ODPOJEN: Final = _("arch_z.message.uspesneOdpojenEO.text")
 
 # Watchdog
-WATCHDOG_CREATED_SUCCESSFULLY: Final = _("Hlídací pes byl úspěšně vytvořen")
-WATCHDOG_DELETED_SUCCESSFULLY: Final = _("Hlídací pes byl úspěšně smazan")
+HLIDACI_PES_USPESNE_VYTVOREN: Final = _("notifikaceProjekty.message.uspesneVytvoren.text")
+HLIDACI_PES_USPESNE_SMAZAN: Final = _("notifikaceProjekty.message.uspesneSmazan.text")
+HLIDACI_PES_NEUSPESNE_VYTVOREN: Final = _("notifikaceProjekty.message.neUspesneVytvoren.text")
+HLIDACI_PES_NEUSPESNE_SMAZAN: Final = _("notifikaceProjekty.message.neUspesneSmazan.text")

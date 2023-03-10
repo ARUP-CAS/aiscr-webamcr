@@ -50,6 +50,15 @@ def get_mail_secret(setting, default_value=None):
     else:
         secrets_mail.get(setting, default_value)
 
+#REDIS SETTINGS
+def get_redis_pass(default_value=""):
+    if os.path.exists("/run/secrets/redis_pass"):
+        with open("/run/secrets/redis_pass", "r") as file:
+            return ":"+file.readline().rstrip()+"@"
+    else:
+        return default_value
+
+redis_url = os.getenv("REDIS_URL","redis:6379")
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
@@ -111,9 +120,10 @@ INSTALLED_APPS = [
     "lokalita",
     "bs4",
     "django_extensions",
-    "watchdog",
-    "django_select2",
     "django_celery_beat",
+    'django_select2',
+    "notifikace_projekty",
+    "django_celery_results"
 ]
 
 MIDDLEWARE = [
@@ -211,7 +221,7 @@ USE_TZ = True
 
 LOCALE_PATHS = ["/vol/web/locale"]
 
-ROSETTA_SHOW_AT_ADMIN_PANEL = True
+ROSETTA_SHOW_AT_ADMIN_PANEL = False
 ROSETTA_WSGI_AUTO_RELOAD = True
 ROSETTA_UWSGI_AUTO_RELOAD = True
 
@@ -416,8 +426,9 @@ CELERY_REDIRECT_STDOUTS = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BROKER = "redis://redis:6379"
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
 SKIP_SELENIUM_TESTS = False
+
+CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
