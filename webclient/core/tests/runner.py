@@ -769,7 +769,6 @@ class AMCRTestRunner(BaseRunner):
         vazba_soubory.save()
         soubor = Soubor(
             nazev_zkraceny="x",
-            nazev_puvodni="x",
             nazev="x",
             mimetype="x",
             size_mb=1,
