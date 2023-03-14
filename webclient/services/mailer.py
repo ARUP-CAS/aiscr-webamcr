@@ -409,6 +409,7 @@ class Mailer():
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
+            "ident_cely": project.ident_cely,
             "katastr": project.hlavni_katastr.nazev,
             "organization": project.organizace.nazev,
             "reason": reason,
