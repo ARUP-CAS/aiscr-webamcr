@@ -1,5 +1,7 @@
 import unittest
 
+import time
+
 import structlog
 import socket
 
@@ -14,7 +16,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 from django.test import LiveServerTestCase
 
-from core.tests.runner import TEST_USER_USERNAME, TEST_USER_PASSWORD
+from core.tests.runner import TEST_USER_USERNAME, TEST_USER_PASSWORD, AMCRSeleniumTestRunner
 
 logger_s = structlog.get_logger(__name__)
 
@@ -39,6 +41,9 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
 
         )
         self.driver.implicitly_wait(5)
+        AMCRSeleniumTestRunner.save_geographical_data()
+        AMCRSeleniumTestRunner.create_common_test_records()
+
 
     def tearDown(self):
         # self.driver.quit()
@@ -49,6 +54,34 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
 
     def _password(self):
         return TEST_USER_PASSWORD
+
+    def _select_value_select_picker(self, field_id, selected_value):
+        dropdown = self.driver.find_element(By.ID, field_id)
+        dropdown.find_element(By.XPATH, f"//option[. = '{selected_value}']").click()
+
+    def _fill_text_field(self, field_id, field_value):
+        self.driver.find_element(By.ID, field_id).click()
+        self.driver.find_element(By.ID, field_id).send_keys(field_value)
+
+    def _select_map_point(self, field_id, click_count):
+        for _ in range(click_count):
+            self.driver.find_element(By.ID, field_id).click()
+            time.sleep(5)
+
+    def _fill_form_fields(self, test_data):
+        for item, value in test_data.items():
+            field_type = value["field_type"]
+            logger_s.debug("BaseSeleniumTestClass._fill_form_fields.start", filed=item, content=value,
+                           field_type=field_type)
+            if field_type == "text_field":
+                self._fill_text_field(value.get("field_id"), value.get("value"))
+            elif field_type == "select_picker":
+                self._select_value_select_picker(value["field_id"], value["value"])
+            elif field_type == "map":
+                self._select_map_point(value["field_id"], value["click_count"])
+            else:
+                logger_s.error("BaseSeleniumTestClass._fill_form_fields.unknown_field_type",
+                               field_type=field_type, value=value)
 
     def login(self):
         port = self.server_thread.port

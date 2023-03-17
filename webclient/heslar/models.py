@@ -214,7 +214,7 @@ class RuianOkres(models.Model):
     spz = models.CharField(unique=True, max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianOkres.kod"))
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))
-    definicni_bod = pgmodels.PointField(null=False, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
+    definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
                                         srid=4326)
     hranice = pgmodels.MultiPolygonField(null=False, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
 

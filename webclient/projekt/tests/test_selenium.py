@@ -1,5 +1,7 @@
 import time
+import datetime
 import unittest
+from types import MappingProxyType
 
 import structlog
 from django.conf import settings
@@ -14,7 +16,7 @@ logger_s = structlog.get_logger(__name__)
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
-class CoreSeleniumTest(BaseSeleniumTestClass):
+class ProjektSeleniumTest(BaseSeleniumTestClass):
     def _get_table_columns(self, table):
         elements = table.find_elements(By.TAG_NAME, "th")
         return [e.find_element(By.TAG_NAME, "a").text for e in elements]
@@ -80,62 +82,99 @@ class CoreSeleniumTest(BaseSeleniumTestClass):
             self._check_column_hiding(item[0], item[1])
             self.driver.refresh()
 
-    def test_projekt_002(self):
+
+@unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
+class ProjektZapsatBaseSeleniumTest(BaseSeleniumTestClass):
+    @classmethod
+    def get_base_test_data(cls):
+        return {
+            "typ_projektu": {
+                "field_type": "select_picker",
+                "field_id": "id_typ_projektu",
+                "value": "záchranný",
+            },
+            "hlavni_katastr": {
+                "field_type": "map",
+                "field_id": "projectMap",
+                "click_count": 5
+            },
+            "podnet": {
+                "field_type": "text_field",
+                "field_id": "id_podnet",
+                "value": "test"
+            },
+            "iokalizace": {
+                "field_type": "text_field",
+                "field_id": "id_lokalizace",
+                "value": "test"
+            },
+            "parcelni_cislo": {
+                "field_type": "text_field",
+                "field_id": "id_parcelni_cislo",
+                "value": "test"
+            },
+            "planovane_zahajeni": {
+                "field_type": "text_field",
+                "field_id": "id_planovane_zahajeni",
+                "value":
+                    (datetime.datetime.today() + datetime.timedelta(days=2)).strftime('%d.%m.%Y') + " - " + (
+                                datetime.datetime.today() + datetime.timedelta(days=5)).strftime('%d.%m.%Y')
+            },
+            "oznamovatel": {
+                "field_type": "text_field",
+                "field_id": "id_oznamovatel",
+                "value": "test"
+            },
+            "odpovedna_osoba": {
+                "field_type": "text_field",
+                "field_id": "id_odpovedna_osoba",
+                "value": "test"
+            },
+            "adresa": {
+                "field_type": "text_field",
+                "field_id": "id_adresa",
+                "value": "test"
+            },
+            "telefon": {
+                "field_type": "text_field",
+                "field_id": "id_telefon",
+                "value": "+420734456789"
+            },
+            "email": {
+                "field_type": "text_field",
+                "field_id": "id_email",
+                "value": "test@example.com"
+            },
+        }
+
+
+class ProjektZapsatSeleniumTest(ProjektZapsatBaseSeleniumTest):
+    def go_to_form(self):
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
+        self.driver.find_element(By.LINK_TEXT, "Zapsat").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".filter-option-inner-inner").click()
+        self.driver.find_element(By.ID, "bs-select-1-1").click()
+
+    def test_projekt_zapsat_p_001(self):
         logger_s.debug("CoreSeleniumTest.test_project_creation.start")
         project_count_old = Projekt.objects.count()
 
         self.login()
+        self.go_to_form()
 
-        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
-        self.driver.find_element(By.LINK_TEXT, "Zapsat").click()
+        test_data = ProjektZapsatSeleniumTest.get_base_test_data()
+        self._fill_form_fields(test_data)
 
-        self.driver.find_element(By.CSS_SELECTOR, ".filter-option-inner-inner").click()
-        self.driver.find_element(By.ID, "bs-select-1-1").click()
-        dropdown = self.driver.find_element(By.ID, "id_typ_projektu")
-        dropdown.find_element(By.XPATH, "//option[. = 'záchranný']").click()
-        self.driver.find_element(By.ID, "projectMap").click()
-        self.driver.implicitly_wait(1)
-        self.driver.find_element(By.ID, "projectMap").click()
-
-        self.driver.find_element(By.ID, "projectMap").click()
-        time.sleep(5)
-        self.driver.find_element(By.ID, "projectMap").click()
-        time.sleep(5)
-        self.driver.find_element(By.ID, "projectMap").click()
-        time.sleep(5)
-        self.driver.find_element(By.ID, "projectMap").click()
-        time.sleep(5)
-        self.driver.find_element(By.ID, "projectMap").click()
-        self.driver.find_element(By.ID, "id_podnet").click()
-        self.driver.find_element(By.ID, "id_podnet").send_keys("test")
-        self.driver.find_element(By.ID, "id_lokalizace").click()
-        self.driver.find_element(By.ID, "id_lokalizace").send_keys("test")
-        self.driver.find_element(By.ID, "id_parcelni_cislo").click()
-        self.driver.find_element(By.ID, "id_parcelni_cislo").send_keys("test")
-        self.driver.find_element(By.ID, "id_planovane_zahajeni").click()
-        self.driver.find_element(By.ID, "id_planovane_zahajeni").send_keys("04.03.2023 - 11.03.2023")
-        self.driver.find_element(By.ID, "id_oznamovatel").click()
-        self.driver.find_element(By.CSS_SELECTOR, "#div_id_oznamovatel > div").click()
         element = self.driver.find_element(By.ID, "id_oznamovatel")
         assert element.is_enabled() is True
-        self.driver.find_element(By.ID, "id_oznamovatel").click()
-        self.driver.find_element(By.ID, "id_oznamovatel").send_keys("test")
         element = self.driver.find_element(By.ID, "id_odpovedna_osoba")
         assert element.is_enabled() is True
-        self.driver.find_element(By.ID, "id_odpovedna_osoba").click()
-        self.driver.find_element(By.ID, "id_odpovedna_osoba").send_keys("test")
         element = self.driver.find_element(By.ID, "id_adresa")
         assert element.is_enabled() is True
-        self.driver.find_element(By.ID, "id_adresa").click()
-        self.driver.find_element(By.ID, "id_adresa").send_keys("test")
         element = self.driver.find_element(By.ID, "id_telefon")
         assert element.is_enabled() is True
-        self.driver.find_element(By.ID, "id_telefon").click()
-        self.driver.find_element(By.ID, "id_telefon").send_keys("+420123456789")
         element = self.driver.find_element(By.ID, "id_email")
         assert element.is_enabled() is True
-        self.driver.find_element(By.ID, "id_email").click()
-        self.driver.find_element(By.ID, "id_email").send_keys("test@example.com")
         self.driver.find_element(By.ID, "actionSubmitBtn").click()
 
         project_count_new = Projekt.objects.count()
@@ -143,3 +182,66 @@ class CoreSeleniumTest(BaseSeleniumTestClass):
 
         logger_s.debug("CoreSeleniumTest.test_project_creation.end")
 
+    def test_projekt_zapsat_n_001(self):
+        logger_s.debug("CoreSeleniumTest.test_project_creation.start")
+        project_count_old = Projekt.objects.count()
+
+        self.login()
+        self.go_to_form()
+
+        test_data = ProjektZapsatSeleniumTest.get_base_test_data()
+        test_data["telefon"] = {
+            "field_type": "text_field",
+            "field_id": "id_planovane_zahajeni",
+            "value":
+                (datetime.datetime.today() + datetime.timedelta(days=-9)).strftime('%d.%m.%Y') + " - "
+                + (datetime.datetime.today() + datetime.timedelta(days=-5)).strftime('%d.%m.%Y')
+        }
+        self._fill_form_fields(test_data)
+
+        self.driver.find_element(By.ID, "actionSubmitBtn").click()
+        project_count_new = Projekt.objects.count()
+        self.assertEqual(project_count_old, project_count_new)
+        logger_s.debug("CoreSeleniumTest.test_project_creation.end")
+
+    def test_projekt_zapsat_n_002(self):
+        logger_s.debug("CoreSeleniumTest.test_project_creation.start")
+        project_count_old = Projekt.objects.count()
+
+        self.login()
+        self.go_to_form()
+
+        test_data = ProjektZapsatSeleniumTest.get_base_test_data()
+        test_data["planovane_zahajeni"] = {
+            "field_type": "text_field",
+            "field_id": "id_telefon",
+            "value": "XXX"
+        }
+        self._fill_form_fields(test_data)
+
+        self.driver.find_element(By.ID, "actionSubmitBtn").click()
+        project_count_new = Projekt.objects.count()
+        self.assertEqual(project_count_old, project_count_new)
+        logger_s.debug("CoreSeleniumTest.test_project_creation.end")
+
+    def test_projekt_zapsat_n_003(self):
+        logger_s.debug("CoreSeleniumTest.test_project_creation.start")
+        project_count_old = Projekt.objects.count()
+
+        self.login()
+        self.go_to_form()
+
+        test_data = ProjektZapsatSeleniumTest.get_base_test_data()
+        test_data["telefon"] = {
+            "field_type": "text_field",
+            "field_id": "id_planovane_zahajeni",
+            "value":
+                (datetime.datetime.today() + datetime.timedelta(days=600)).strftime('%d.%m.%Y') + " - "
+                + (datetime.datetime.today() + datetime.timedelta(days=620)).strftime('%d.%m.%Y')
+        }
+        self._fill_form_fields(test_data)
+
+        self.driver.find_element(By.ID, "actionSubmitBtn").click()
+        project_count_new = Projekt.objects.count()
+        self.assertEqual(project_count_old, project_count_new)
+        logger_s.debug("CoreSeleniumTest.test_project_creation.end")

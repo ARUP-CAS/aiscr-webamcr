@@ -188,7 +188,8 @@ class AMCRBaseTestRunner(BaseRunner):
         self.create_common_test_records()
         return temp_return
 
-    def create_common_test_records(self, *args, **kwargs):
+    @staticmethod
+    def create_common_test_records():
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
         projektove_sekvence = []
         for rok in sekvence_roku:
@@ -817,7 +818,12 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
 
 
 class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
-    def save_geographical_data(self):
+    def setup_databases(self, *args, **kwargs):
+        temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
+        return temp_return
+
+    @staticmethod
+    def save_geographical_data():
         def item_to_str(item):
             if item is None:
                 return "null"

@@ -63,7 +63,7 @@ Implementováno
 
 ## Projekt
 
-### PROJEKT-001
+#### PROJEKT-001
 
 Testuje tabulku s projekty. Ověřuje, zda funguje řazení podle jednotlivých sloupců a zobrazení/skrývání 
 sloupců.
@@ -94,9 +94,9 @@ Využívá metodu `_check_column_hiding`.
 
 Implementován
 
-### PROJEKT-002
+### Zapsání projektu
 
-Test vytvoření projektu.
+Test zapsání projektu na stránce `/projekt/zapsat`.
 
 #### Předpoklady
 
@@ -122,20 +122,24 @@ Test vytvoření projektu.
 * id_telefon = +420123456789
 * id_email = test@example.com
 
-#### Očekávané výsledky
+#### PROJEKT-ZAPSAT-P-001
+
+Test simuluje zadání validních data měl by končit zapsáním projektu do databáze.
+
+##### Očekávané výsledky
 
 * Pole id_oznamovatel, id_odpovedna_osoba, id_adresa, id_telefon a id_material
 * Po kliknutí na tlačítko Uložit je v databázi o 1 projekt více
 
-#### Stav testu
+##### Stav testu
 
 Implementován
 
 ## Nadpisy
 
-### ID scénáře
-#### Předpoklady
-#### Uživatelské kroky
-#### Testovací data
-#### Očekávané výsledky
-#### Stav testu
+#### ID scénáře
+##### Předpoklady
+##### Uživatelské kroky
+##### Testovací data
+##### Očekávané výsledky
+##### Stav testu
