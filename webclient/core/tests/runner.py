@@ -19,7 +19,9 @@ from core.constants import (
     ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
     ROLE_BADATEL_ID,
-    PIAN_RELATION_TYPE,
+    PIAN_RELATION_TYPE, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_PRIHLASENY,
+    PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+    PROJEKT_STAV_ZRUSENY,
 )
 from core.models import ProjektSekvence, Soubor, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -131,6 +133,7 @@ ARCHEOLOGICKY_POSUDEK_ID = 1111
 EXISTING_PROJECT_IDENT = "C-202000001"
 EXISTING_PROJECT_IDENT_ZACHRANNY = "C-202000002"
 EXISTING_PROJECT_IDENT_PRUZKUMNY = "C-202000003"
+EXISTING_PROJECT_IDENT_STATUS = "C-202000YYX"
 EXISTING_EVENT_IDENT = "C-202000001A"
 EXISTING_EVENT_IDENT2 = "C-202000001C"
 EXISTING_LOKALITA_IDENT = "X-C-L0000004"
@@ -469,12 +472,69 @@ class AMCRBaseTestRunner(BaseRunner):
         # Osoba
         osoba = Osoba(
             id=EL_CHEFE_ID,
-            jmeno="Jakub",
-            prijmeni="Škvarla",
-            vypis="J. Škvarla",
-            vypis_cely="Jakub El Chefe Škvarla",
+            jmeno="Amadeus",
+            prijmeni="Shooblegrueber",
+            vypis="Amadeus Shooblegrueber",
+            vypis_cely="Amadeus Shooblegrueber",
         )
         osoba.save()
+
+        project_statuses = (
+            PROJEKT_STAV_OZNAMENY,
+            PROJEKT_STAV_ZAPSANY,
+            PROJEKT_STAV_PRIHLASENY,
+            PROJEKT_STAV_ZAHAJENY_V_TERENU,
+            PROJEKT_STAV_UKONCENY_V_TERENU,
+            PROJEKT_STAV_UZAVRENY,
+            PROJEKT_STAV_ARCHIVOVANY,
+            PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+            PROJEKT_STAV_ZRUSENY
+        )
+
+        for stav in project_statuses:
+            projekt_ident = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", "01")
+            pi = Projekt(
+                typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
+                ident_cely=projekt_ident,
+                stav=stav,
+                hlavni_katastr=praha,
+            )
+            pi.save()
+            if stav >= PROJEKT_STAV_ZAHAJENY_V_TERENU:
+                pi.datum_zahajeni = datetime.datetime.today() + datetime.timedelta(days=-30)
+                pi.save()
+            if stav == PROJEKT_STAV_UKONCENY_V_TERENU:
+                projekt_ident_negative = \
+                    EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", "02")
+                pi_negative = Projekt(
+                    typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
+                    ident_cely=projekt_ident_negative,
+                    stav=stav,
+                    hlavni_katastr=praha,
+                )
+                pi_negative.save()
+            if stav >= PROJEKT_STAV_UKONCENY_V_TERENU:
+                azi = ArcheologickyZaznam(
+                    typ_zaznamu="A",
+                    hlavni_katastr=praha,
+                    ident_cely=f"{projekt_ident}A",
+                    stav=AZ_STAV_ZAPSANY,
+                    pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
+                )
+                azi.save()
+                ai = Akce(
+                    typ=Akce.TYP_AKCE_PROJEKTOVA,
+                    archeologicky_zaznam=azi,
+                    specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
+                    datum_zahajeni=datetime.datetime.today(),
+                    datum_ukonceni=datetime.datetime.today() + datetime.timedelta(days=1),
+                    lokalizace_okolnosti="test",
+                    hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
+                    hlavni_vedouci=Osoba.objects.first(),
+                    organizace=o,
+                )
+                ai.projekt = pi
+                ai.save()
 
         # INCOMPLETE EVENT
         az_incoplete = ArcheologickyZaznam(

@@ -26,6 +26,13 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     # fixtures = ['selenium_data.json']
     host = '0.0.0.0'
 
+    @classmethod
+    def get_base_test_data(cls):
+        pass
+
+    def go_to_form(self):
+        pass
+
     def setUp(self):
         # Set host to externally accessible web server address
         self.host = socket.gethostbyname(socket.gethostname())
