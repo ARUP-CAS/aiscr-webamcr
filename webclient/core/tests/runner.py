@@ -21,7 +21,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     PIAN_RELATION_TYPE, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_PRIHLASENY,
     PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-    PROJEKT_STAV_ZRUSENY,
+    PROJEKT_STAV_ZRUSENY, AZ_STAV_ARCHIVOVANY, PROJEKT_RELATION_TYPE,
 )
 from core.models import ProjektSekvence, Soubor, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -200,9 +200,42 @@ class AMCRBaseTestRunner(BaseRunner):
             projektove_sekvence.append(ProjektSekvence(rada="M", rok=rok, sekvence=1))
         ProjektSekvence.objects.bulk_create(projektove_sekvence)
 
-        UserNotificationType(ident_cely="E-U-04", zasilat_neaktivnim=False,
-                             predmet="AMČR: uživatelský účet čeká na aktivaci",
-                             cesta_sablony="emails/E-U-04.html").save()
+        user_notifications = (
+            ("E-U-02", "emails/E-U-02.html"),
+            ("E-U-03", "emails/E-U-03.html"),
+            ("E-U-04", "emails/E-U-04.html"),
+            ("E-U-06", "emails/E-U-06.html"),
+            ("E-NZ-01", "../templates/projects/emails/E-NZ-01.html"),
+            ("E-NZ-02", "../templates/projects/emails/E-NZ-02.html"),
+            ("E-V-01", "emails/E-V-01.html"),
+            ("E-A-01", "emails/E-A-01.html"),
+            ("E-A-02", "emails/E-A-02.html"),
+            ("E-O-01", "emails/E-O-01.html"),
+            ("E-O-02", "emails/E-O-02.html"),
+            ("E-P-01a", "emails/E-P-01a.html"),
+            ("E-P-01b", "emails/E-P-01b.html"),
+            ("E-P-02", "../templates/projects/emails/E-P-02.html"),
+            ("E-P-03a", "emails/E-P-03a.html"),
+            ("E-P-03b", "emails/E-P-03b.html"),
+            ("E-P-07", "emails/E-P-07.html"),
+            ("E-P-04", "emails/E-P-04.html"),
+            ("E-P-05", "emails/E-P-05.html"),
+            ("E-P-06a", "emails/E-P-06a.html"),
+            ("E-P-06b", "emails/E-P-06b.html"),
+            ("E-N-01", "../templates/pas/emails/E-N-01.html"),
+            ("E-N-02", "../templates/pas/emails/E-N-02.html"),
+            ("E-N-03", "emails/E-N-04.html"),
+            ("E-N-04", "emails/E-N-04.html"),
+            ("E-N-05", "emails/E-N-05.html"),
+            ("E-N-06", "emails/E-N-06.html"),
+            ("E-K-01", "emails/E-K-01.html"),
+            ("E-K-02", "emails/E-K-02.html")
+        )
+
+        for ident, template in user_notifications:
+            UserNotificationType(ident_cely=ident, zasilat_neaktivnim=False,
+                                 predmet=f"Selenium test {ident}",
+                                 cesta_sablony=template).save()
 
         hn = HeslarNazev(id=HESLAR_PROJEKT_TYP, nazev="heslar_typ_projektu")
         hp = HeslarNazev(id=HESLAR_PIAN_PRESNOST, nazev="heslar_presnost")
@@ -491,50 +524,65 @@ class AMCRBaseTestRunner(BaseRunner):
             PROJEKT_STAV_ZRUSENY
         )
 
-        for stav in project_statuses:
-            projekt_ident = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", "01")
+        def create_projekt(x_replacement: str, y_replacement: str):
+            ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", x_replacement).replace("YY", y_replacement)
             pi = Projekt(
                 typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
-                ident_cely=projekt_ident,
+                ident_cely=ident_cely,
                 stav=stav,
                 hlavni_katastr=praha,
             )
             pi.save()
+            return pi
+
+        for stav in project_statuses:
+            pi = create_projekt(str(stav), "01")
+            pi_ret = create_projekt(str(stav), "03")
+            create_projekt(str(stav), "04")
+            create_projekt(str(stav), "05")
+            create_projekt(str(stav), "06")
             if stav >= PROJEKT_STAV_ZAHAJENY_V_TERENU:
                 pi.datum_zahajeni = datetime.datetime.today() + datetime.timedelta(days=-30)
                 pi.save()
-            if stav == PROJEKT_STAV_UKONCENY_V_TERENU:
-                projekt_ident_negative = \
-                    EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", "02")
-                pi_negative = Projekt(
-                    typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
-                    ident_cely=projekt_ident_negative,
-                    stav=stav,
-                    hlavni_katastr=praha,
-                )
+            if stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
+                pi.set_navrzen_ke_zruseni(user, "test")
+            if PROJEKT_STAV_NAVRZEN_KE_ZRUSENI > stav >= PROJEKT_STAV_UKONCENY_V_TERENU:
+                pi_negative = create_projekt(str(stav), "02")
                 pi_negative.save()
-            if stav >= PROJEKT_STAV_UKONCENY_V_TERENU:
-                azi = ArcheologickyZaznam(
-                    typ_zaznamu="A",
-                    hlavni_katastr=praha,
-                    ident_cely=f"{projekt_ident}A",
-                    stav=AZ_STAV_ZAPSANY,
-                    pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
-                )
-                azi.save()
-                ai = Akce(
-                    typ=Akce.TYP_AKCE_PROJEKTOVA,
-                    archeologicky_zaznam=azi,
-                    specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
-                    datum_zahajeni=datetime.datetime.today(),
-                    datum_ukonceni=datetime.datetime.today() + datetime.timedelta(days=1),
-                    lokalizace_okolnosti="test",
-                    hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
-                    hlavni_vedouci=Osoba.objects.first(),
-                    organizace=o,
-                )
-                ai.projekt = pi
-                ai.save()
+                if stav == PROJEKT_STAV_UKONCENY_V_TERENU:
+                    azi_stavy = (
+                        (AZ_STAV_ZAPSANY, pi),
+                        (AZ_STAV_ZAPSANY, pi_ret),
+                    )
+                else:
+                    azi_stavy = (
+                        (AZ_STAV_ARCHIVOVANY, pi),
+                        (AZ_STAV_ZAPSANY, pi_negative),
+                        (AZ_STAV_ARCHIVOVANY, pi_ret),
+                    )
+                for azi_stav, azi_projekt in azi_stavy:
+                    projekt_ident = azi_projekt.ident_cely
+                    azi = ArcheologickyZaznam(
+                        typ_zaznamu="A",
+                        hlavni_katastr=praha,
+                        ident_cely=f"{projekt_ident}A",
+                        stav=azi_stav,
+                        pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
+                    )
+                    azi.save()
+                    ai = Akce(
+                        typ=Akce.TYP_AKCE_PROJEKTOVA,
+                        archeologicky_zaznam=azi,
+                        specifikace_data=Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE),
+                        datum_zahajeni=datetime.datetime.today(),
+                        datum_ukonceni=datetime.datetime.today() + datetime.timedelta(days=1),
+                        lokalizace_okolnosti="test",
+                        hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
+                        hlavni_vedouci=Osoba.objects.first(),
+                        organizace=o,
+                    )
+                    ai.projekt = azi_projekt
+                    ai.save()
 
         # INCOMPLETE EVENT
         az_incoplete = ArcheologickyZaznam(
@@ -660,7 +708,7 @@ class AMCRBaseTestRunner(BaseRunner):
         )
         eo.save()
 
-        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=1047)
         vazba_pian.save()
 
         pian = Pian(
@@ -690,7 +738,7 @@ class AMCRBaseTestRunner(BaseRunner):
 
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()
-        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=1047)
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
@@ -749,7 +797,7 @@ class AMCRBaseTestRunner(BaseRunner):
 
         vazba = HistorieVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba.save()
-        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=47)
+        vazba_pian = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE, id=1047)
         vazba_pian.save()
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()

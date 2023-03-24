@@ -75,6 +75,9 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             self.driver.find_element(By.ID, field_id).click()
             time.sleep(5)
 
+    def _select_radion_group_item(self, item_order=1):
+        self.driver.find_element(By.CSS_SELECTOR, f".custom-radio:nth-child({item_order}) > .custom-control-label").click()
+
     def _fill_form_fields(self, test_data):
         for item, value in test_data.items():
             field_type = value["field_type"]
@@ -86,6 +89,8 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
                 self._select_value_select_picker(value["field_id"], value["value"])
             elif field_type == "map":
                 self._select_map_point(value["field_id"], value["click_count"])
+            elif field_type == "radio_button":
+                self._select_radion_group_item(value["item_order"])
             else:
                 logger_s.error("BaseSeleniumTestClass._fill_form_fields.unknown_field_type",
                                field_type=field_type, value=value)

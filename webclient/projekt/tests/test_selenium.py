@@ -10,7 +10,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 from core.constants import PROJEKT_STAV_PRIHLASENY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_UKONCENY_V_TERENU, \
-    PROJEKT_STAV_UZAVRENY
+    PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, \
+    PROJEKT_STAV_ZRUSENY
 from core.tests.runner import EXISTING_PROJECT_IDENT_ZACHRANNY, EXISTING_PROJECT_IDENT_STATUS
 from core.tests.test_selenium import BaseSeleniumTestClass
 from projekt.models import Projekt
@@ -353,7 +354,7 @@ class ProjektUzavritSeleniumTest(ProjektZmenaStavuSeleniumTest):
     stav_projektu = PROJEKT_STAV_UKONCENY_V_TERENU
     next_stav_projektu = PROJEKT_STAV_UZAVRENY
 
-    def go_to_form(self, y_fill="01"):
+    def go_to_form(self, y_fill="01", positive_test=True):
         super(ProjektUzavritSeleniumTest, self).go_to_form(y_fill)
         self.driver.find_element(By.ID, "projekt-uzavrit").click()
         time.sleep(2)
@@ -381,8 +382,220 @@ class ProjektUzavritSeleniumTest(ProjektZmenaStavuSeleniumTest):
 
         self.login()
         self.go_to_form("02")
-        alert_info = self.driver.find_element(By.CLASS_NAME, "alert alert-info")
+        alert_info = self.driver.find_element(By.CLASS_NAME, "alert-info")
         self.assertIn("Projekt musí mít alespoň jednu projektovou akci.", alert_info.text)
         self.assertEqual(self.get_project().stav, self.stav_projektu)
 
         logger_s.debug("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.end")
+
+
+class ProjektArchivovatSeleniumTest(ProjektZmenaStavuSeleniumTest):
+    stav_projektu = PROJEKT_STAV_UZAVRENY
+    next_stav_projektu = PROJEKT_STAV_ARCHIVOVANY
+
+    def go_to_form(self, y_fill="01", positive_test=True):
+        super(ProjektArchivovatSeleniumTest, self).go_to_form(y_fill)
+        self.driver.find_element(By.ID, "projekt-archivovat").click()
+        time.sleep(2)
+
+    @classmethod
+    def get_base_test_data(cls):
+        return {}
+
+    def test_projekt_archivovat_p_001(self):
+        logger_s.debug("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
+
+        self.login()
+        self.go_to_form()
+
+        test_data = self.get_base_test_data()
+        self._fill_form_fields(test_data)
+        self.driver.find_element(By.ID, "submit-btn").click()
+
+        self.assertEqual(self.get_project().stav, self.next_stav_projektu)
+
+        logger_s.debug("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_p_001.end")
+
+    def test_projekt_uzavrit_n_001(self):
+        logger_s.debug("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
+
+        self.login()
+        self.go_to_form("02")
+        alert_info = self.driver.find_element(By.CLASS_NAME, "alert-info")
+        self.assertIn("Akce musí být archivovaná", alert_info.text)
+        self.assertEqual(self.get_project().stav, self.stav_projektu)
+
+        logger_s.debug("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_n_001.end")
+
+
+class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
+    stav_projektu = None
+    next_stav_projektu = None
+
+    @classmethod
+    def get_base_test_data(cls):
+        return {
+            "reason": {
+                "field_type": "text_field",
+                "field_id": "id_reason",
+                "value": "test",
+            },
+        }
+
+    def go_to_form(self, y_fill="03"):
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
+        self.driver.find_element(By.LINK_TEXT, "Vybrat projekty").click()
+        self.driver.find_element(By.LINK_TEXT, self.get_project(y_fill).ident_cely).click()
+        self.driver.find_element(By.ID, "projekt-vratit").click()
+
+    @classmethod
+    def get_project(cls, y_fill="03") -> Projekt:
+        ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(cls.stav_projektu)).replace("YY", y_fill)
+        return Projekt.objects.get(ident_cely=ident_cely)
+
+    def test_projekt_vratit_p_001(self):
+        logger_s.debug("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.start")
+
+        self.login()
+        self.go_to_form()
+
+        test_data = self.get_base_test_data()
+        self._fill_form_fields(test_data)
+        self.driver.find_element(By.ID, "submit-btn").click()
+
+        self.assertEqual(self.get_project().stav, self.next_stav_projektu)
+
+        logger_s.debug("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.end")
+
+
+class ProjektVratitArchivovanySeleniumTest(ProjektVratitSeleniumTest):
+    stav_projektu = PROJEKT_STAV_ARCHIVOVANY
+    next_stav_projektu = PROJEKT_STAV_UZAVRENY
+
+
+class ProjektVratitUzavrenySeleniumTest(ProjektVratitSeleniumTest):
+    stav_projektu = PROJEKT_STAV_UZAVRENY
+    next_stav_projektu = PROJEKT_STAV_UKONCENY_V_TERENU
+
+
+class ProjektVratitUkoncenySeleniumTest(ProjektVratitSeleniumTest):
+    stav_projektu = PROJEKT_STAV_UKONCENY_V_TERENU
+    next_stav_projektu = PROJEKT_STAV_ZAHAJENY_V_TERENU
+
+
+class ProjektVratitZahajenySeleniumTest(ProjektVratitSeleniumTest):
+    stav_projektu = PROJEKT_STAV_ZAHAJENY_V_TERENU
+    next_stav_projektu = PROJEKT_STAV_PRIHLASENY
+
+
+class ProjektVratitPrihlasenySeleniumTest(ProjektVratitSeleniumTest):
+    stav_projektu = PROJEKT_STAV_PRIHLASENY
+    next_stav_projektu = PROJEKT_STAV_ZAPSANY
+
+
+class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
+    @classmethod
+    def get_base_test_data(cls):
+        return {
+            "reason": {
+                "field_type": "radio_button",
+                "item_order": 2,
+            },
+        }
+
+    def go_to_form(self, stav: int = 2, y_fill: str = "04"):
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
+        self.driver.find_element(By.LINK_TEXT, "Vybrat projekty").click()
+        self.driver.find_element(By.LINK_TEXT, self.get_project(stav=stav, y_fill=y_fill).ident_cely).click()
+        self.driver.find_element(By.ID, "projekt-navrh-zruseni").click()
+
+    @classmethod
+    def get_project(cls, stav: int = 2, y_fill: str = "04") -> Projekt:
+        ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", y_fill)
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.get_project", ident_cely=ident_cely)
+        return Projekt.objects.get(ident_cely=ident_cely)
+
+    def test_projekt_zrusit_p_001(self):
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
+
+        self.login()
+        self.go_to_form(y_fill="04")
+
+        test_data = self.get_base_test_data()
+        self._fill_form_fields(test_data)
+        self.driver.find_element(By.CLASS_NAME, "btn-primary").click()
+        self.assertEqual(self.get_project(y_fill="04").stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
+
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
+
+    def test_projekt_zrusit_p_002(self):
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.start")
+
+        self.login()
+        self.go_to_form(y_fill="05")
+
+        test_data = self.get_base_test_data()
+        test_data["reason"]["item_order"] = 1
+        test_data["projekt_id"] = {
+            "field_type": "text_field",
+            "field_id": "id_projekt_id",
+            "value": "test",
+        }
+        self._fill_form_fields(test_data)
+        self.driver.find_element(By.CLASS_NAME, "btn-primary").click()
+        self.assertEqual(self.get_project(y_fill="05").stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
+
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.end")
+
+    def test_projekt_zrusit_n_001(self):
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.start")
+        stav_projektu = self.get_project(stav=PROJEKT_STAV_UKONCENY_V_TERENU, y_fill="01").stav
+
+        self.login()
+        self.go_to_form(stav=PROJEKT_STAV_UKONCENY_V_TERENU, y_fill="01")
+
+        alert_info = self.driver.find_element(By.CLASS_NAME, "alert-info")
+        self.assertIn("Projekt před zrušením nesmí mít projektové akce.", alert_info.text)
+        self.assertEqual(self.get_project(stav=PROJEKT_STAV_UKONCENY_V_TERENU, y_fill="01").stav, stav_projektu)
+
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.end")
+
+
+class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
+    @classmethod
+    def get_base_test_data(cls):
+        return {
+            "reason": {
+                "field_type": "text_field",
+                "field_id": "id_reason_text",
+                "value": "test",
+            },
+        }
+
+    def go_to_form(self, y_fill="01"):
+        self.driver.find_element(By.CSS_SELECTOR, ".card:nth-child(1) .btn").click()
+        self.driver.find_element(By.LINK_TEXT, "Vybrat projekty").click()
+        self.driver.find_element(By.LINK_TEXT, self.get_project(y_fill=y_fill).ident_cely).click()
+        self.driver.find_element(By.ID, "projekt-zrusit").click()
+        time.sleep(3)
+
+    @classmethod
+    def get_project(cls, y_fill="01") -> Projekt:
+        ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(PROJEKT_STAV_NAVRZEN_KE_ZRUSENI))\
+            .replace("YY", y_fill)
+        logger_s.debug("ProjektZrusitSeleniumTest.get_project", ident_cely=ident_cely)
+        return Projekt.objects.get(ident_cely=ident_cely)
+
+    def test_projekt_zrusit_p_001(self):
+        logger_s.debug("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
+
+        self.login()
+        self.go_to_form()
+
+        test_data = self.get_base_test_data()
+        self._fill_form_fields(test_data)
+        self.driver.find_element(By.ID, "submit-btn").click()
+        self.assertEqual(self.get_project().stav, PROJEKT_STAV_ZRUSENY)
+
+        logger_s.debug("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
+
