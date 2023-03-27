@@ -45,7 +45,8 @@ def get_mail_secret(setting, default_value=None):
             return secrets_mail[setting]
         except KeyError:
             error_msg = f"Add {setting} variable to {file_mail_path} file"
-            raise ImproperlyConfigured(error_msg)
+            if not DEBUG:
+                raise ImproperlyConfigured(error_msg)
     else:
         secrets_mail.get(setting, default_value)
 
@@ -366,7 +367,7 @@ EMAIL_HOST = get_mail_secret("EMAIL_HOST")
 EMAIL_PORT = get_mail_secret("EMAIL_PORT")
 EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
-EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME")
+EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "mailtrap.io")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
@@ -425,6 +426,9 @@ CELERY_REDIRECT_STDOUTS = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+SKIP_SELENIUM_TESTS = False
+
 CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

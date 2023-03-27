@@ -121,8 +121,8 @@ class Migration(migrations.Migration):
                 ('spz', models.CharField(max_length=3, unique=True, verbose_name='heslar.models.RuianOkres.spz')),
                 ('kod', models.IntegerField(unique=True, verbose_name='heslar.models.RuianOkres.kod')),
                 ('nazev_en', models.TextField(verbose_name='heslar.models.RuianOkres.nazev_en')),
-                ('definicni_bod', django.contrib.gis.db.models.fields.PointField(srid=4326, verbose_name='heslar.models.RuianKatastr.definicni_bod')),
-                ('hranice', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326, verbose_name='heslar.models.RuianKatastr.hranice')),
+                ('definicni_bod', django.contrib.gis.db.models.fields.PointField(srid=4326, null=True, verbose_name='heslar.models.RuianKatastr.definicni_bod')),
+                ('hranice', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326, null=True, verbose_name='heslar.models.RuianKatastr.hranice')),
                 ('kraj', models.ForeignKey(db_column='kraj', on_delete=django.db.models.deletion.DO_NOTHING, to='heslar.ruiankraj', verbose_name='heslar.models.RuianOkres.kraj')),
             ],
             options={

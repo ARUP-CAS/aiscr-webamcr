@@ -39,7 +39,7 @@ CRISPY_FAIL_SILENTLY = not DEBUG
 
 SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
 
-TEST_RUNNER = "core.tests.runner.AMCRTestRunner"
+TEST_RUNNER = "core.tests.runner.AMCRSeleniumTestRunner"
 
 INSTALLED_APPS.insert(0, "livereload")
 MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
