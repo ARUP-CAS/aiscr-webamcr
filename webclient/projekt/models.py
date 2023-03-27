@@ -450,7 +450,6 @@ class Projekt(models.Model):
                 vazba=self.soubory,
                 nazev=filename_without_path,
                 nazev_zkraceny=filename_without_checksum,
-                nazev_puvodni=filename_without_path,
                 mimetype=get_mime_type(filename_without_path),
                 size_mb=os.path.getsize(filename)/1024/1024,
             )

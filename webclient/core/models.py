@@ -60,7 +60,6 @@ class SouborVazby(models.Model):
 
 class Soubor(models.Model):
     nazev_zkraceny = models.TextField()
-    nazev_puvodni = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
     mimetype = models.TextField()

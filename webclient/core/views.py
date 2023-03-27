@@ -239,7 +239,6 @@ def post_upload(request):
                 nazev=checksum + "_" + new_name,
                 # Short name is new name without checksum
                 nazev_zkraceny=new_name,
-                nazev_puvodni=old_name,
                 vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(old_name),
                 size_mb=soubor.size / 1024 / 1024,
