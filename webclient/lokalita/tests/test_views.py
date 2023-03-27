@@ -1,3 +1,7 @@
+import re
+
+from django.template.response import TemplateResponse
+
 from arch_z.models import ArcheologickyZaznam
 from core.tests.runner import (
     EXISTING_LOKALITA_IDENT,
@@ -53,14 +57,15 @@ class UrlTests(TestCase):
             "poznamka": "",
         }
         self.client.force_login(self.existing_user)
-        response = self.client.post(f"/arch-z/lokalita/zapsat", data, follow=True)
-        az = ArcheologickyZaznam.objects.filter(ident_cely="X-C-M0000006").first()
+        response = self.client.post("/arch-z/lokalita/zapsat", data, follow=True)
+        response_text = str(response.rendered_content)
+        regex = re.compile(r"\w-\w-\w{8}")
+        ident_cely = regex.findall(response_text)[0]
+        az = ArcheologickyZaznam.objects.filter(ident_cely=ident_cely).first()
         self.assertEqual(200, response.status_code)
         self.assertEqual(az.lokalita.typ_lokality.pk, LOKALITA_TYP_NEW)
         self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ANONYM_ID)
-        self.assertTrue(
-            len(ArcheologickyZaznam.objects.filter(ident_cely="X-C-M0000006")) == 1
-        )
+        self.assertEqual(len(ArcheologickyZaznam.objects.filter(ident_cely=ident_cely)), 1)
 
     def test_get_editovat(self):
         self.client.force_login(self.existing_user)
