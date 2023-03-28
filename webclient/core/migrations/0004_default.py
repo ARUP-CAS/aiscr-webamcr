@@ -1,6 +1,6 @@
 from django.db import migrations, models
 import django.db.models.deletion
-from django_add_default_value import AddDefaultValue
+from django_add_default_value import AddDefaultValue, NOW
 
 
 class Migration(migrations.Migration):
@@ -45,5 +45,20 @@ class Migration(migrations.Migration):
             model_name='GeomMigrationJob',
             name='count_error_sjtsk',
             value=0
+        ),
+        AddDefaultValue(
+            model_name='GeomMigrationJob',
+            name='count_error_wgs84',
+            value=0
+        ),
+        AddDefaultValue(
+            model_name='GeomMigrationJob',
+            name='created_at',
+            value=NOW
+        ),
+        AddDefaultValue(
+            model_name='OdstavkaSystemu',
+            name='status',
+            value=True
         ),
     ]

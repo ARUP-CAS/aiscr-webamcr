@@ -18,11 +18,6 @@ class Migration(migrations.Migration):
 
     operations = [
         AddDefaultValue(
-            model_name='ArcheologickyZaznam',
-            name='pristupnost',
-            value=PRISTUPNOST_ANONYM_ID
-        ),
-        AddDefaultValue(
             model_name='Akce',
             name='je_nz',
             value=False

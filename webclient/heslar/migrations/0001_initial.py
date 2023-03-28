@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 ('zdroj', models.CharField(max_length=255, verbose_name='heslar.models.HeslarOdkaz.zdroj')),
                 ('nazev_kodu', models.CharField(max_length=100, verbose_name='heslar.models.HeslarOdkaz.nazev_kodu')),
                 ('kod', models.CharField(max_length=100, verbose_name='heslar.models.HeslarOdkaz.kod')),
-                ('uri', models.CharField(max_length=255, blank=True, null=True, verbose_name='heslar.models.HeslarOdkaz.uri')),
+                ('uri', models.TextField(blank=True, null=True, verbose_name='heslar.models.HeslarOdkaz.uri')),
             ],
             options={
                 'verbose_name_plural': 'Heslář odkaz',

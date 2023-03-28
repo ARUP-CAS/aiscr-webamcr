@@ -26,7 +26,6 @@ class Migration(migrations.Migration):
                 ('ident_cely', models.TextField(unique=True)),
                 ('datum_zverejneni', models.DateField(blank=True, null=True)),
                 ('licence', models.TextField(blank=True, null=True)),
-                ('hlavni_autor', models.TextField(blank=True, null=True)),
             ],
             options={
                 'db_table': 'dokument',
@@ -99,7 +98,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('uzivatelske_oznaceni', models.TextField(blank=True, null=True)),
-                ('datum', models.DateTimeField(blank=True, null=True)),
+                ('datum', models.DateField(blank=True, null=True)),
                 ('pilot', models.TextField(blank=True, null=True)),
                 ('ucel_letu', models.TextField(blank=True, null=True)),
                 ('typ_letounu', models.TextField(blank=True, null=True)),

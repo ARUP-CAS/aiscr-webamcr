@@ -41,7 +41,9 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ExterniZdrojAutor',
             fields=[
-                ('externi_zdroj', models.OneToOneField(db_column='externi_zdroj', on_delete=django.db.models.deletion.RESTRICT, to='ez.externizdroj')),
+                ('externi_zdroj', models.ForeignKey(db_column='externi_zdroj',
+                                                    on_delete=django.db.models.deletion.RESTRICT,
+                                                    to='ez.externizdroj')),
                 ('poradi', models.IntegerField()),
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'))
             ],
@@ -52,9 +54,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ExterniZdrojEditor',
             fields=[
-                ('externi_zdroj', models.OneToOneField(db_column='externi_zdroj', on_delete=django.db.models.deletion.CASCADE, serialize=False, to='ez.externizdroj')),
+                ('externi_zdroj', models.ForeignKey(db_column='externi_zdroj',
+                                                    on_delete=django.db.models.deletion.CASCADE,
+                                                    to='ez.externizdroj')),
                 ('poradi', models.IntegerField()),
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'))
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
             ],
             options={
                 'db_table': 'externi_zdroj_editor',

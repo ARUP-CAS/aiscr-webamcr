@@ -18,7 +18,8 @@ class NeidentAkce(models.Model):
         DokumentCast,
         on_delete=models.CASCADE,
         db_column="dokument_cast",
-        related_name="neident_akce"
+        related_name="neident_akce",
+        primary_key=True
     )
     vedouci = models.ManyToManyField(
         Osoba,
@@ -32,7 +33,7 @@ class NeidentAkce(models.Model):
 
 
 class NeidentAkceVedouci(models.Model):
-    neident_akce = models.OneToOneField(
+    neident_akce = models.ForeignKey(
         NeidentAkce,
         on_delete=models.CASCADE,
         db_column="neident_akce"

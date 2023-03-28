@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='archeologickyzaznam',
             name='historie',
-            field=models.OneToOneField(db_column='historie', on_delete=django.db.models.deletion.CASCADE, to='historie.historievazby'),
+            field=models.OneToOneField(null=True, db_column='historie', on_delete=django.db.models.deletion.CASCADE, to='historie.historievazby'),
         ),
         migrations.AddField(
             model_name='archeologickyzaznam',

@@ -31,7 +31,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import DEFERRED
+from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -211,7 +211,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255)
-    nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255)
+    nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255,
+                                      unique=True)
     typ_organizace = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -264,6 +265,13 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
         verbose_name = "Organizace"
         verbose_name_plural = "Organizace"
+        constraints = [
+            CheckConstraint(
+                check=(Q(mesicu_do_zverejneni__geq=0) & Q(mesicu_do_zverejneni__leq=1200)),
+                name='organizace_mesicu_do_zverejneni_check',
+            ),
+        ]
+
 
 
 class Osoba(models.Model, ManyToManyRestrictedClassMixin):

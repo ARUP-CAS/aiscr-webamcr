@@ -253,7 +253,6 @@ class Projekt(models.Model):
                     vazba=self.soubory,
                     nazev=new_filename,
                     nazev_zkraceny=filename,
-                    nazev_puvodni=filename,
                     mimetype="text/plain",
                     size_mb=myfile.size/1024/1024,
                 )

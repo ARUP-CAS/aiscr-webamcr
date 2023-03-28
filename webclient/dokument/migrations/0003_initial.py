@@ -212,8 +212,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='dokumentcast',
-            constraint=models.CheckConstraint(
-                check=models.Q(('archeologicky_zaznam__isnull', False), ('projekt__isnull', False), _connector='OR'),
-                name='dokument_cast_vazba_check'),
+            constraint=models.CheckConstraint(check=models.Q(('archeologicky_zaznam__isnull', False), ('projekt__isnull', False), _negated=True), name='dokument_cast_vazba_check'),
+        ),
+        migrations.AddConstraint(
+            model_name='dokumentextradata',
+            constraint=models.CheckConstraint(check=models.Q(('duveryhodnost__gte', 0), ('duveryhodnost__lte', 100)),
+                                              name='duveryhodnost_check'),
         ),
     ]

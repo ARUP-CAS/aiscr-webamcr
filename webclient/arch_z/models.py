@@ -61,7 +61,7 @@ class ArcheologickyZaznam(models.Model):
     )
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
-        HistorieVazby, on_delete=models.CASCADE, db_column="historie"
+        HistorieVazby, on_delete=models.CASCADE, db_column="historie", null=True
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)

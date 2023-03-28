@@ -95,7 +95,7 @@ class Soubor(models.Model):
         Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.nazev_puvodni,
+            poznamka=self.nazev,
             vazba=self.historie,
         ).save()
 
@@ -179,7 +179,7 @@ class GeomMigrationJobError(models.Model):
 
 
 class GeomMigrationJobSJTSKError(GeomMigrationJobError):
-    pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
+    pian = models.ForeignKey(Pian, on_delete=models.RESTRICT)
 
     class Meta:
         db_table = "amcr_geom_migrations_jobs_sjtsk_errors"

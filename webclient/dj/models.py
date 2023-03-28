@@ -34,6 +34,7 @@ class DokumentacniJednotka(models.Model):
         models.CASCADE,
         db_column="komponenty",
         related_name="dokumentacni_jednotka",
+        null=True
     )
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,

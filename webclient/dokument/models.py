@@ -377,7 +377,7 @@ class DokumentCast(models.Model):
         db_table = "dokument_cast"
         constraints = [
             CheckConstraint(
-                check=(Q(archeologicky_zaznam__isnull=False) | Q(projekt__isnull=False)),
+                check=(~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False))),
                 name='dokument_cast_vazba_check',
             ),
         ]
@@ -463,6 +463,12 @@ class DokumentExtraData(models.Model):
 
     class Meta:
         db_table = "dokument_extra_data"
+        constraints = [
+            CheckConstraint(
+                check=Q(duveryhodnost__gte=0) & Q(duveryhodnost__lte=100),
+                name='duveryhodnost_check',
+            ),
+        ]
 
 
 class DokumentAutor(models.Model):
@@ -550,7 +556,7 @@ class DokumentSekvence(models.Model):
 
 class Let(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    datum = models.DateTimeField(blank=True, null=True)
+    datum = models.DateField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
     pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, null=True, blank=True, db_column="pozorovatel")
     ucel_letu = models.TextField(blank=True, null=True)

@@ -94,7 +94,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nazev', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev')),
-                ('nazev_zkraceny', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev_zkraceny')),
+                ('nazev_zkraceny', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev_zkraceny', unique=True)),
                 ('oao', models.BooleanField(default=False, verbose_name='uzivatel.models.Organizace.oao')),
                 ('mesicu_do_zverejneni', models.PositiveIntegerField(default=36, validators=[django.core.validators.MaxValueValidator(1200)], verbose_name='uzivatel.models.Organizace.mesicu_do_zverejneni')),
                 ('nazev_zkraceny_en', models.CharField(max_length=255, verbose_name='uzivatel.models.Organizace.nazev_zkraceny_en')),
@@ -230,5 +230,11 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='notificationslog',
             index=models.Index(fields=['content_type', 'object_id'], name='notifikace__content_009350_idx'),
+        ),
+        migrations.AddConstraint(
+            model_name='organizace',
+            constraint=models.CheckConstraint(
+                check=models.Q(('mesicu_do_zverejneni__geq', 0), ('mesicu_do_zverejneni__leq', 1200)),
+                name='organizace_mesicu_do_zverejneni_check'),
         ),
     ]

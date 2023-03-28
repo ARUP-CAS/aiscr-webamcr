@@ -155,7 +155,7 @@ class HeslarOdkaz(models.Model):
     zdroj = models.CharField(max_length=255, verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
     nazev_kodu = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
     kod = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.kod"))
-    uri = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("heslar.models.HeslarOdkaz.uri"))
+    uri = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarOdkaz.uri"))
 
     class Meta:
         db_table = "heslar_odkaz"
