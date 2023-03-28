@@ -237,6 +237,7 @@ def post_upload(request):
                 path=soubor,
                 vazba=objekt.soubory,
                 nazev=checksum + "_" + new_name,
+                nazev_puvodni=filename,
                 # Short name is new name without checksum
                 nazev_zkraceny=new_name,
                 mimetype=get_mime_type(old_name),
