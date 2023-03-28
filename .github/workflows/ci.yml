@@ -49,20 +49,20 @@ jobs:
       run: |
         sudo mkdir -p /vol/web/media
         sudo chmod -R 777 /vol/web
-        python manage.py migrate heslar --skip-checks --settings=webclient.settings.dev
+        python manage.py migrate heslar --skip-checks --settings=webclient.settings.github_ci
     - name: Run Migrations for auth
       working-directory: ./webclient
       run: |
         sudo mkdir -p /vol/web/media
         sudo chmod -R 777 /vol/web
-        python manage.py migrate auth --settings=webclient.settings.dev
+        python manage.py migrate auth --settings=webclient.settings.github_ci
     - name: Run Migrations
       working-directory: ./webclient
       run: |
-        python manage.py migrate --settings=webclient.settings.dev
+        python manage.py migrate --settings=webclient.settings.github_ci
     - name: Django Testing
       working-directory: ./webclient
       run: |
-        python manage.py test --settings=webclient.settings.dev
+        python manage.py test --settings=webclient.settings.github_ci
       env:
         REDIS_URL: "localhost:6379"

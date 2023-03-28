@@ -46,6 +46,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Projekt)
 def odosli_hlidaciho_psa(sender, instance, **kwargs):
-    if instance.stav == PROJEKT_STAV_ZAPSANY and instance.stav != instance.__original_stav:
+    if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
+            and instance.stav != instance.__original_stav:
         logger.debug("Projekt change status to Zapsany, checking hlidaci pes.")
         check_hlidaci_pes.delay(instance.pk)

@@ -19,7 +19,6 @@ from uzivatel.models import User, UserNotificationType
 class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        UserNotificationType(ident_cely='E-P-01a', predmet="Test", cesta_sablony="emails/E-P-01a.html").save()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
         self.lokace_zahradky = Point(50.40, 15.70)
         self.projekt = Projekt(

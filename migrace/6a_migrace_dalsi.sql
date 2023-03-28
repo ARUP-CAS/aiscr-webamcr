@@ -1,3 +1,23 @@
+CREATE INDEX IF NOT EXISTS historie_vazby_id
+    ON public.historie_vazby USING btree
+    (id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS historie_vazby_id_typ_vazby
+    ON public.historie_vazby USING btree
+    (id ASC NULLS LAST, typ_vazby COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS historie_vazby_typ_vazby
+    ON public.historie_vazby USING btree
+    (typ_vazby COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS historie_typ_zmeny_idx
+    ON public.historie USING btree
+    (typ_zmeny)
+    TABLESPACE pg_default;
+
 -- Adding path to the soubor table
 ALTER TABLE "soubor" ADD COLUMN "path" text DEFAULT 'not specified yet' NOT NULL;
 

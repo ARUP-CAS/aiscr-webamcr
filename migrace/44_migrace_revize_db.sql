@@ -3,6 +3,8 @@ ALTER TABLE adb DROP CONSTRAINT adb_dokumentacni_jednotka_key;
 ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_adb_fkey FOREIGN KEY (adb) REFERENCES adb (dokumentacni_jednotka) ON UPDATE CASCADE ON DELETE CASCADE;
 COMMENT ON COLUMN adb.dokumentacni_jednotka IS NULL;
 
+ALTER TABLE akce_vedouci DROP CONSTRAINT akce_vedouci_akce_fkey;
+ALTER TABLE akce DROP CONSTRAINT akce_organizace_fkey;
 ALTER TABLE akce DROP CONSTRAINT akce_archeologicky_zaznam_key;
 ALTER TABLE akce ADD CONSTRAINT akce_organizace_fkey FOREIGN KEY (organizace) REFERENCES organizace(id) ON UPDATE CASCADE ON DELETE NO ACTION;
 
@@ -17,7 +19,6 @@ ALTER TABLE archeologicky_zaznam DROP COLUMN stav_stary;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_historie_key UNIQUE (historie);
 ALTER TABLE archeologicky_zaznam ALTER COLUMN hlavni_katastr SET NOT NULL;
 
-ALTER TABLE akce_vedouci DROP CONSTRAINT akce_vedouci_akce_fkey;
 ALTER TABLE archeologicky_zaznam_katastr DROP CONSTRAINT archeologicky_zaznam_katastr_pkey;
 ALTER TABLE akce_vedouci ADD CONSTRAINT akce_vedouci_akce_fkey FOREIGN KEY (akce) REFERENCES akce (archeologicky_zaznam) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_pkey PRIMARY KEY (id);

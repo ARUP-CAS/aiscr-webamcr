@@ -254,7 +254,6 @@ class Projekt(models.Model):
                     nazev=new_filename,
                     nazev_zkraceny=filename,
                     nazev_puvodni=filename,
-                    vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                     mimetype="text/plain",
                     size_mb=myfile.size/1024/1024,
                 )
@@ -273,7 +272,7 @@ class Projekt(models.Model):
         Mailer.send_ea01(project=self, user=user)
         self.save()
 
-    def set_navrzen_ke_zruseni(self, user, poznamka):
+    def set_navrzen_ke_zruseni(self, user: User, poznamka: str):
         self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
         Historie(
             typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ,
@@ -451,7 +450,6 @@ class Projekt(models.Model):
                 vazba=self.soubory,
                 nazev=filename_without_path,
                 nazev_zkraceny=filename_without_checksum,
-                nazev_puvodni=filename_without_path,
                 mimetype=get_mime_type(filename_without_path),
                 size_mb=os.path.getsize(filename)/1024/1024,
             )

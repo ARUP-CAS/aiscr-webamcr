@@ -409,6 +409,7 @@ class Mailer():
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
+            "ident_cely": project.ident_cely,
             "katastr": project.hlavni_katastr.nazev,
             "organization": project.organizace.nazev,
             "reason": reason,
@@ -425,6 +426,7 @@ class Mailer():
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
+            "ident_cely": project.ident_cely,
             "reason": reason,
             "state": project.CHOICES[project.stav][1],
             "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
@@ -445,7 +447,8 @@ class Mailer():
             "title": subject,
             "katastr": project.hlavni_katastr.nazev,
             "state": project.CHOICES[project.stav][1],
-            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME
+            "server_domain": settings.EMAIL_SERVER_DOMAIN_NAME,
+            "ident_cely": project.ident_cely,
         })
         history_log = Historie.objects.filter(
             vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ).first()
