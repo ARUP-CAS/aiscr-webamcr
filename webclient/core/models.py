@@ -8,7 +8,7 @@ from django.forms import ValidationError
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from uzivatel.models import User
-from pypdf import PdfFileReader
+from pypdf import PdfReader
 from PIL import Image
 from django.utils.translation import gettext as _
 
@@ -118,7 +118,7 @@ class Soubor(models.Model):
             super().save(*args, **kwargs)
         if self.path and self.path.path.lower().endswith("pdf"):
             try:
-                reader = PdfFileReader(self.path)
+                reader = PdfReader(self.path)
             except:
                 logger.debug("Error while reading pdf file to get rozsah. setting 1")
                 self.rozsah = 1

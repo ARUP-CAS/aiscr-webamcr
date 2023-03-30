@@ -11,6 +11,7 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import ModelChoiceField
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
@@ -256,7 +257,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             nalezce_div = Div(
                 AppendedText(
                     "nalezce",
-                    '<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )

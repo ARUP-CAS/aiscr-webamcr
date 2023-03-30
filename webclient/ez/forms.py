@@ -3,6 +3,7 @@ import structlog
 
 from django import forms
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.layout import Div, Layout
@@ -138,14 +139,14 @@ class ExterniZdrojForm(forms.ModelForm):
             autori = Div(
                 AppendedText(
                     "autori",
-                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
             editori = Div(
                 AppendedText(
                     "editori",
-                    '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
