@@ -709,11 +709,6 @@ class DokumentFilter(Model3DFilter):
         label="&nbsp;",
         lookup_expr="lte",
     )
-    soubor_puvodni_nazev = CharFilter(
-        field_name="soubory__soubory__nazev_puvodni",
-        label=_("dokument.filter.souborPuvodniNazev.label"),
-        distinct=True,
-    )
     id_vazby = CharFilter(
         method="filter_id_vazby",
         label=_("dokument.filter.vazbyId.label"),

@@ -10,6 +10,7 @@ from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
@@ -60,24 +61,24 @@ class Dokument(models.Model):
     )
 
     let = models.ForeignKey(
-        "Let", models.DO_NOTHING, db_column="let", blank=True, null=True
+        "Let", models.RESTRICT, db_column="let", blank=True, null=True
     )
     rada = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="rada",
         related_name="dokumenty_rady",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
     )
     typ_dokumentu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_dokumentu",
         related_name="dokumenty_typu_dokumentu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
     )
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace"
+        Organizace, models.RESTRICT, db_column="organizace"
     )
     rok_vzniku = models.PositiveIntegerField(
         blank=True,
@@ -86,7 +87,7 @@ class Dokument(models.Model):
     )
     pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
@@ -95,7 +96,7 @@ class Dokument(models.Model):
     )
     material_originalu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="material_originalu",
         related_name="dokumenty_materialu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
@@ -104,7 +105,7 @@ class Dokument(models.Model):
     poznamka = models.TextField(blank=True, null=True)
     ulozeni_originalu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="ulozeni_originalu",
         blank=True,
         null=True,
@@ -374,6 +375,12 @@ class DokumentCast(models.Model):
 
     class Meta:
         db_table = "dokument_cast"
+        constraints = [
+            CheckConstraint(
+                check=(~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False))),
+                name='dokument_cast_vazba_check',
+            ),
+        ]
 
     def get_absolute_url(self):
         return reverse(
@@ -396,7 +403,7 @@ class DokumentExtraData(models.Model):
     datum_vzniku = models.DateField(blank=True, null=True)
     zachovalost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zachovalost",
         blank=True,
         null=True,
@@ -405,7 +412,7 @@ class DokumentExtraData(models.Model):
     )
     nahrada = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="nahrada",
         blank=True,
         null=True,
@@ -416,7 +423,7 @@ class DokumentExtraData(models.Model):
     odkaz = models.TextField(blank=True, null=True)
     format = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="format",
         blank=True,
         null=True,
@@ -429,7 +436,7 @@ class DokumentExtraData(models.Model):
     cislo_objektu = models.TextField(blank=True, null=True)
     zeme = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zeme",
         blank=True,
         null=True,
@@ -440,7 +447,7 @@ class DokumentExtraData(models.Model):
     udalost = models.TextField(blank=True, null=True)
     udalost_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="udalost_typ",
         blank=True,
         null=True,
@@ -450,27 +457,29 @@ class DokumentExtraData(models.Model):
     rok_od = models.PositiveIntegerField(blank=True, null=True)
     rok_do = models.PositiveIntegerField(blank=True, null=True)
     duveryhodnost = models.PositiveIntegerField(
-        blank=True, null=True, validators=[MinValueValidator(1), MaxValueValidator(100)]
+        blank=True, null=True, validators=[MaxValueValidator(100)]
     )
     geom = PointField(blank=True, null=True, srid=4326)
 
     class Meta:
         db_table = "dokument_extra_data"
+        constraints = [
+            CheckConstraint(
+                check=Q(duveryhodnost__gte=0) & Q(duveryhodnost__lte=100),
+                name='duveryhodnost_check',
+            ),
+        ]
 
 
 class DokumentAutor(models.Model):
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
-    autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
-    poradi = models.IntegerField(null=True)
+    autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
+    poradi = models.IntegerField()
 
     class Meta:
         db_table = "dokument_autor"
-        unique_together = (("dokument", "autor"),)
+        unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = (["poradi"],)
-
-    class Meta:
-        db_table = "dokument_autor"
-        unique_together = (("dokument", "poradi"),)
 
 
 class DokumentJazyk(models.Model):
@@ -481,7 +490,7 @@ class DokumentJazyk(models.Model):
     )
     jazyk = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="jazyk",
         limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
     )
@@ -496,7 +505,7 @@ class DokumentJazyk(models.Model):
 
 class DokumentOsoba(models.Model):
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
-    osoba = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="osoba")
+    osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
     class Meta:
         db_table = "dokument_osoba"
@@ -511,7 +520,7 @@ class DokumentPosudek(models.Model):
     )
     posudek = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="posudek",
         limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
     )
@@ -528,7 +537,7 @@ class Tvar(models.Model):
     dokument = models.ForeignKey(
         Dokument, on_delete=models.CASCADE, db_column="dokument"
     )
-    tvar = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="tvar")
+    tvar = models.ForeignKey(Heslar, models.RESTRICT, db_column="tvar")
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -547,14 +556,14 @@ class DokumentSekvence(models.Model):
 
 class Let(models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    datum = models.DateTimeField(blank=True, null=True)
+    datum = models.DateField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
-    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, db_column="pozorovatel")
+    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, null=True, blank=True, db_column="pozorovatel")
     ucel_letu = models.TextField(blank=True, null=True)
     typ_letounu = models.TextField(blank=True, null=True)
     letiste_start = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="letiste_start",
         related_name="let_start",
         limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
@@ -562,7 +571,7 @@ class Let(models.Model):
     )
     letiste_cil = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="letiste_cil",
         related_name="let_cil",
         limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
@@ -572,7 +581,7 @@ class Let(models.Model):
     hodina_konec = models.TextField(blank=True, null=True)
     pocasi = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pocasi",
         related_name="let_pocasi",
         limit_choices_to={"nazev_heslare": HESLAR_POCASI},
@@ -580,7 +589,7 @@ class Let(models.Model):
     )
     dohlednost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dohlednost",
         related_name="let_dohlednost",
         limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST},
@@ -588,7 +597,7 @@ class Let(models.Model):
     )
     fotoaparat = models.TextField(blank=True, null=True)
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", null=True,
+        Organizace, models.RESTRICT, db_column="organizace", null=True,
     )
     ident_cely = models.TextField(unique=True)
 

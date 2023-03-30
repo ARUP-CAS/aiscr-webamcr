@@ -1,3 +1,5 @@
+from django.db.models import CheckConstraint, Q
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -54,7 +56,7 @@ class SamostatnyNalez(models.Model):
     )
     katastr = models.ForeignKey(
         RuianKatastr,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="katastr",
         blank=True,
         null=True,
@@ -64,7 +66,7 @@ class SamostatnyNalez(models.Model):
     hloubka = models.PositiveIntegerField(blank=True, null=True)
     okolnosti = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="okolnosti",
         blank=True,
         null=True,
@@ -76,14 +78,14 @@ class SamostatnyNalez(models.Model):
     geom_system = models.TextField(default='wgs84')
     pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pristupnost",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
 
     )
     obdobi = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="obdobi",
         blank=True,
         null=True,
@@ -93,7 +95,7 @@ class SamostatnyNalez(models.Model):
     presna_datace = models.TextField(blank=True, null=True)
     druh_nalezu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="druh_nalezu",
         blank=True,
         null=True,
@@ -102,7 +104,7 @@ class SamostatnyNalez(models.Model):
     )
     specifikace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="specifikace",
         blank=True,
         null=True,
@@ -111,14 +113,14 @@ class SamostatnyNalez(models.Model):
     )
     poznamka = models.TextField(blank=True, null=True)
     nalezce = models.ForeignKey(
-        Osoba, models.DO_NOTHING, db_column="nalezce", blank=True, null=True
+        Osoba, models.RESTRICT, db_column="nalezce", blank=True, null=True
     )
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
     predano = models.BooleanField(blank=True, null=True, default=False, choices=PREDANO_BOOLEAN)
     predano_organizace = models.ForeignKey(
         Organizace,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="predano_organizace",
         blank=True,
         null=True,
@@ -141,8 +143,8 @@ class SamostatnyNalez(models.Model):
         null=True,
         related_name="sn_historie",
     )
-    geom_updated_at = models.DateField(null=True, blank=True)
-    geom_sjtsk_updated_at = models.DateField(null=True, blank=True)
+    geom_updated_at = models.DateTimeField(null=True, blank=True)
+    geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
 
     def set_zapsany(self, user):
         self.stav = SN_ZAPSANY
@@ -221,6 +223,14 @@ class SamostatnyNalez(models.Model):
 
     class Meta:
         db_table = "samostatny_nalez"
+        constraints = [
+            CheckConstraint(
+                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
+                name='samostatny_nalez_geom_check',
+            ),
+        ]
 
     def __str__(self):
         if self.ident_cely:
@@ -237,20 +247,20 @@ class UzivatelSpoluprace(models.Model):
 
     spolupracovnik = models.ForeignKey(
         User,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="spolupracovnik",
         related_name="spoluprace_badatelu",
     )
     vedouci = models.ForeignKey(
         User,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="vedouci",
         related_name="spoluprace_archeologu",
     )
     stav = models.SmallIntegerField(choices=SPOLUPRACE_STATES)
     historie = models.OneToOneField(
         HistorieVazby,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="historie",
         blank=True,
         null=True,

@@ -4,6 +4,7 @@ import structlog
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
+from django.db.models import CheckConstraint, Q
 from django.utils.translation import gettext as _
 
 from core.mixins import ManyToManyRestrictedClassMixin
@@ -21,14 +22,14 @@ class Heslar(models.Model, ManyToManyRestrictedClassMixin):
     # TextFields should be changed to CharField if no long text is expected to be written in
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
-        "HeslarNazev", models.DO_NOTHING, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
+        "HeslarNazev", models.RESTRICT, db_column="nazev_heslare", verbose_name=_("heslar.models.Heslar.nazev_heslare")
     )
-    heslo = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.heslo"))
+    heslo = models.CharField(max_length=255, verbose_name=_("heslar.models.Heslar.heslo"))
     popis = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis"))
-    zkratka = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka"))
-    heslo_en = models.TextField(verbose_name=_("heslar.models.Heslar.heslo_en"))
+    zkratka = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka"))
+    heslo_en = models.CharField(max_length=255, verbose_name=_("heslar.models.Heslar.heslo_en"))
     popis_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.popis_en"))
-    zkratka_en = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka_en"))
+    zkratka_en = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("heslar.models.Heslar.zkratka_en"))
     razeni = models.IntegerField(blank=True, null=True, verbose_name=_("heslar.models.Heslar.razeni"))
 
     ident_prefix = "HES"
@@ -38,6 +39,8 @@ class Heslar(models.Model, ManyToManyRestrictedClassMixin):
         unique_together = (
             ("nazev_heslare", "zkratka"),
             ("nazev_heslare", "zkratka_en"),
+            ("nazev_heslare", "heslo"),
+            ("nazev_heslare", "heslo_en"),
         )
         ordering = ["razeni"]
         verbose_name_plural = "Heslář"
@@ -73,7 +76,7 @@ class HeslarDatace(models.Model):
 class HeslarDokumentTypMaterialRada(models.Model):
     dokument_rada = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokument_rada",
         related_name="rada",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
@@ -81,7 +84,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
     )
     dokument_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokument_typ",
         related_name="typ",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
@@ -89,7 +92,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
     )
     dokument_material = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dokument_material",
         related_name="material",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
@@ -119,7 +122,7 @@ class HeslarHierarchie(models.Model):
         verbose_name=_("heslar.models.HeslarHierarchie.heslo_podrazene")
     )
     heslo_nadrazene = models.ForeignKey(
-        Heslar, models.DO_NOTHING, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
+        Heslar, models.RESTRICT, db_column="heslo_nadrazene", related_name="nadrazene", verbose_name=_("heslar.models.HeslarHierarchie.heslo_nadrazene")
     )
     typ = models.TextField(verbose_name=_("heslar.models.HeslarHierarchie.typ"), choices=TYP_CHOICES)
 
@@ -127,6 +130,12 @@ class HeslarHierarchie(models.Model):
         db_table = "heslar_hierarchie"
         unique_together = (("heslo_podrazene", "heslo_nadrazene", "typ"),)
         verbose_name_plural = "Heslář hierarchie"
+        constraints = [
+            CheckConstraint(
+                check=(Q(typ__in=["podřízenost", "uplatnění", "výchozí hodnota"])),
+                name='heslar_hierarchie_typ_check',
+            ),
+        ]
 
 
 class HeslarNazev(models.Model):
@@ -143,9 +152,9 @@ class HeslarNazev(models.Model):
 
 class HeslarOdkaz(models.Model):
     heslo = models.ForeignKey(Heslar, models.CASCADE, db_column="heslo", verbose_name=_("heslar.models.HeslarOdkaz.heslo"))
-    zdroj = models.TextField(verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
-    nazev_kodu = models.TextField(verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
-    kod = models.TextField(verbose_name=_("heslar.models.HeslarOdkaz.kod"))
+    zdroj = models.CharField(max_length=255, verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
+    nazev_kodu = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
+    kod = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.kod"))
     uri = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarOdkaz.uri"))
 
     class Meta:
@@ -187,10 +196,10 @@ class RuianKatastr(models.Model):
 
 
 class RuianKraj(models.Model):
-    nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKraj.nazev"))
+    nazev = models.CharField(unique=True, max_length=100, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
-    nazev_en = models.TextField(null=True, verbose_name=_("heslar.models.RuianKraj.nazevEn"))
+    nazev_en = models.CharField(unique=True, max_length=100)
     definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
                                         srid=4326)
     hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
@@ -210,7 +219,7 @@ class RuianKraj(models.Model):
 
 class RuianOkres(models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
-    kraj = models.ForeignKey(RuianKraj, models.DO_NOTHING, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
+    kraj = models.ForeignKey(RuianKraj, models.RESTRICT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
     spz = models.CharField(unique=True, max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianOkres.kod"))
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))

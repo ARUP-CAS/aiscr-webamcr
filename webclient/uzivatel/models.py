@@ -5,6 +5,7 @@ from typing import Union
 import structlog
 
 from distlib.util import cached_property
+from django.core.validators import MaxValueValidator
 
 from core.constants import (
     CESKY,
@@ -22,6 +23,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE, UZIVATEL_RELATION_TYPE,
+    ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
@@ -29,7 +31,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import DEFERRED
+from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -47,6 +49,7 @@ logger_s = structlog.get_logger(__name__)
 def only_notification_groups():
     return UserNotificationType.objects.filter(ident_cely__icontains='S-E-').all()
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
@@ -58,20 +61,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
+    osoba = models.ForeignKey('Osoba', models.RESTRICT, db_column='osoba', blank=True, null=True)
     organizace = models.ForeignKey(
-        "Organizace", models.DO_NOTHING, db_column="organizace", null=True
+        "Organizace", models.RESTRICT, db_column="organizace"
     )
-    history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie',
+    history_vazba = models.OneToOneField('historie.HistorieVazby', db_column='historie',
                                       on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
-    telefon = models.TextField(
-        blank=True, null=True, validators=[validate_phone_number]
+    telefon = models.CharField(
+        max_length=100, blank=True, null=True, validators=[validate_phone_number]
     )
     history = HistoricalRecords()
-    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user', db_table='auth_user_notifikace_typ',
-                                                limit_choices_to={'ident_cely__icontains': 'S-E-'}, default=only_notification_groups)
+    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
+                                                db_table='auth_user_notifikace_typ',
+                                                limit_choices_to={'ident_cely__icontains': 'S-E-'},
+                                                default=only_notification_groups)
     notification_log = GenericRelation('NotificationsLog')
     created_from_admin_panel = False
 
@@ -194,7 +199,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.ident_cely = f"U-{str(self.pk).zfill(6)}"
             super().save(*args, **kwargs)
         if self.is_active and \
-                self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
+                self.groups.filter(
+                    id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
             self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
 
     class Meta:
@@ -204,34 +210,41 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Organizace(models.Model, ManyToManyRestrictedClassMixin):
-    nazev = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev"))
-    nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
+    nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255)
+    nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255,
+                                      unique=True)
     typ_organizace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_organizace",
         related_name="typy_organizaci",
         verbose_name=_("uzivatel.models.Organizace.typ_organizace"),
         limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
     )
     oao = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.oao"))
-    mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
+    mesicu_do_zverejneni = models.PositiveIntegerField(default=ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
+                                                       verbose_name=_(
+                                                           "uzivatel.models.Organizace.mesicu_do_zverejneni"),
+                                                       validators=[MaxValueValidator(1200)])
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
         verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
     )
-    nazev_zkraceny_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny_en"))
-    email = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.email"))
-    telefon = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"))
-    adresa = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"))
-    ico = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"))
-    soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
-    nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
-    zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
+    nazev_zkraceny_en = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny_en"), max_length=255)
+    email = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.email"), max_length=100)
+    telefon = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"),
+                               max_length=100)
+    adresa = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"),
+                              max_length=255)
+    ico = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"), max_length=100)
+    soucast = models.ForeignKey('self', models.RESTRICT, db_column='soucast', blank=True, null=True)
+    nazev_en = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"),
+                                max_length=255)
+    zanikla = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.zanikla"))
     ident_cely = models.CharField(max_length=10, unique=True)
 
     def save(self, *args, **kwargs):
@@ -252,16 +265,24 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
         verbose_name = "Organizace"
         verbose_name_plural = "Organizace"
+        constraints = [
+            CheckConstraint(
+                check=(Q(mesicu_do_zverejneni__geq=0) & Q(mesicu_do_zverejneni__leq=1200)),
+                name='organizace_mesicu_do_zverejneni_check',
+            ),
+        ]
+
 
 
 class Osoba(models.Model, ManyToManyRestrictedClassMixin):
-    jmeno = models.TextField(verbose_name=_("uzivatel.models.Osoba.jmeno"))
-    prijmeni = models.TextField(verbose_name=_("uzivatel.models.Osoba.prijmeni"))
-    vypis = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis"))
-    vypis_cely = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"))
+    jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
+    prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)
+    vypis = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis"), max_length=200)
+    vypis_cely = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"), max_length=200)
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
-    rodne_prijmeni = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"))
+    rodne_prijmeni = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"),
+                                      max_length=100)
     ident_cely = models.CharField(max_length=20, unique=True)
 
     def save(self, *args, **kwargs):

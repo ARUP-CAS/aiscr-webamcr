@@ -6,6 +6,7 @@ import re
 from django.db import models
 from django.forms import ValidationError
 from historie.models import Historie, HistorieVazby
+from pian.models import Pian
 from uzivatel.models import User
 from PyPDF2 import PdfFileReader
 from PIL import Image
@@ -63,7 +64,6 @@ class Soubor(models.Model):
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
     mimetype = models.TextField()
-    vytvoreno = models.DateField(auto_now_add=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
@@ -74,7 +74,7 @@ class Soubor(models.Model):
         related_name="soubor_historie",
         null=True,
     )
-    path = models.FileField(upload_to=get_upload_to, default="empty")
+    path = models.FileField(upload_to=get_upload_to)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
 
     class Meta:
@@ -95,7 +95,7 @@ class Soubor(models.Model):
         Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
-            poznamka=self.nazev_puvodni,
+            poznamka=self.nazev,
             vazba=self.historie,
         ).save()
 
@@ -169,3 +169,41 @@ class OdstavkaSystemu(models.Model):
 
     def __str__(self) -> str:
         return "{}: {} {}".format(_("Odstavka"), self.datum_odstavky, self.cas_odstavky)
+
+
+class GeomMigrationJobError(models.Model):
+    pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class GeomMigrationJobSJTSKError(GeomMigrationJobError):
+    pian = models.ForeignKey(Pian, on_delete=models.RESTRICT)
+
+    class Meta:
+        db_table = "amcr_geom_migrations_jobs_sjtsk_errors"
+        abstract = False
+
+
+class GeomMigrationJobWGS84Error(GeomMigrationJobError):
+    pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
+    abstract = False
+
+    class Meta:
+        db_table = "amcr_geom_migrations_jobs_wgs84_errors"
+
+
+class GeomMigrationJob(models.Model):
+    typ = models.TextField()
+    count_selected_wgs84 = models.IntegerField(default=0)
+    count_selected_sjtsk = models.IntegerField(default=0)
+    count_updated_wgs84 = models.IntegerField(default=0)
+    count_updated_sjtsk = models.IntegerField(default=0)
+    count_error_wgs84 = models.IntegerField(default=0)
+    count_error_sjtsk = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    detail = models.TextField(null=True)
+
+    class Meta:
+        db_table = "amcr_geom_migrations_jobs"

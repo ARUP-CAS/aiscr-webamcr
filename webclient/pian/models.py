@@ -17,7 +17,7 @@ from heslar.models import Heslar
 from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
 from uzivatel.models import User
-from django.db.models import Q
+from django.db.models import Q, CheckConstraint
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +31,14 @@ class Pian(models.Model):
 
     presnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="presnost",
         related_name="piany_presnosti",
         limit_choices_to=Q(nazev_heslare=HESLAR_PIAN_PRESNOST) & Q(zkratka__lt="4"),
     )
     typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ",
         related_name="piany_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
@@ -61,14 +61,24 @@ class Pian(models.Model):
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="historie",
         related_name="pian_historie",
     )
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
+    geom_updated_at = models.DateTimeField(blank=True, null=True)
+    geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "pian"
+        constraints = [
+            CheckConstraint(
+                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
+                name='pian_geom_check',
+            ),
+        ]
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
@@ -130,7 +140,6 @@ class Kladyzm(models.Model):
     objectid = models.IntegerField(unique=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
     cislo = models.CharField(unique=True, max_length=8)
-    nazev = models.CharField(max_length=100)
     natoceni = models.DecimalField(max_digits=12, decimal_places=11)
     shape_leng = models.DecimalField(max_digits=12, decimal_places=6)
     shape_area = models.DecimalField(max_digits=12, decimal_places=2)
@@ -142,7 +151,7 @@ class Kladyzm(models.Model):
 
 class PianSekvence(models.Model):
     kladyzm50 = models.OneToOneField(
-        "Kladyzm", models.DO_NOTHING, db_column="kladyzm_id", null=False,
+        "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
     )
     sekvence = models.IntegerField()
     katastr = models.BooleanField()
