@@ -267,7 +267,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
         verbose_name_plural = "Organizace"
         constraints = [
             CheckConstraint(
-                check=(Q(mesicu_do_zverejneni__geq=0) & Q(mesicu_do_zverejneni__leq=1200)),
+                check=(Q(mesicu_do_zverejneni__gte=0) & Q(mesicu_do_zverejneni__lte=1200)),
                 name='organizace_mesicu_do_zverejneni_check',
             ),
         ]

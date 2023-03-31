@@ -234,7 +234,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='organizace',
             constraint=models.CheckConstraint(
-                check=models.Q(('mesicu_do_zverejneni__geq', 0), ('mesicu_do_zverejneni__leq', 1200)),
+                check=models.Q(('mesicu_do_zverejneni__gte', 0), ('mesicu_do_zverejneni__lte', 1200)),
                 name='organizace_mesicu_do_zverejneni_check'),
         ),
     ]

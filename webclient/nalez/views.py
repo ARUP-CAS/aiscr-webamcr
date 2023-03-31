@@ -13,7 +13,7 @@ from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import (
@@ -57,7 +57,7 @@ def smazat_nalez(request, typ, ident_cely):
         resp = zaznam.delete()
         next_url = request.POST.get("next")
         if next_url:
-            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
                 logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")

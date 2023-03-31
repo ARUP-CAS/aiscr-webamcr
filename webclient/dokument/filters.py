@@ -1123,7 +1123,6 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("soubor_velikost_do", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_od", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_do", css_class="col-sm-2"),
-                Div("soubor_puvodni_nazev", css_class="col-sm-2"),
                 id="souboryCollapse",
                 css_class="collapse row",
             ),

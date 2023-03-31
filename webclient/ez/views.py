@@ -13,7 +13,7 @@ from django.views.generic import DetailView, TemplateView
 from django.contrib import messages
 from django.views.generic.edit import CreateView, UpdateView
 from django.template.loader import render_to_string
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from dal import autocomplete
 from core.constants import (
     AZ_STAV_ARCHIVOVANY,
@@ -413,7 +413,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         next_url = self.request.GET.get("next_url")
         if next_url:
-            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
         else:
             response = self.get_context_data()[
