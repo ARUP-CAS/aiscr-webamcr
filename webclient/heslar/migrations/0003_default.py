@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('heslar', '0002_initial'),
+        ('heslar', '0003_auto_20230327_1318'),
     ]
 
     operations = [
