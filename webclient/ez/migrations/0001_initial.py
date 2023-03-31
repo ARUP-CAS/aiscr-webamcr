@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
             name='ExterniZdrojAutor',
             fields=[
                 ('externi_zdroj', models.ForeignKey(db_column='externi_zdroj',
-                                                    on_delete=django.db.models.deletion.RESTRICT,
+                                                    on_delete=django.db.models.deletion.CASCADE,
                                                     to='ez.externizdroj')),
                 ('poradi', models.IntegerField()),
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'))

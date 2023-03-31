@@ -260,7 +260,7 @@ class UzivatelSpoluprace(models.Model):
     stav = models.SmallIntegerField(choices=SPOLUPRACE_STATES)
     historie = models.OneToOneField(
         HistorieVazby,
-        models.RESTRICT,
+        models.SET_NULL,
         db_column="historie",
         blank=True,
         null=True,

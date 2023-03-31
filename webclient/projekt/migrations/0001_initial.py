@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('geom', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326)),
                 ('oznaceni_stavby', models.TextField(blank=True, null=True, verbose_name='Označení stavby')),
                 ('planovane_zahajeni', django.contrib.postgres.fields.ranges.DateRangeField(blank=True, null=True, verbose_name='Plánované zahájení')),
-                ('historie', models.OneToOneField(db_column='historie', on_delete=django.db.models.deletion.RESTRICT, related_name='projekt_historie', to='historie.historievazby')),
+                ('historie', models.OneToOneField(null=True, db_column='historie', on_delete=django.db.models.deletion.SET_NULL, related_name='projekt_historie', to='historie.historievazby')),
                 ('hlavni_katastr', models.ForeignKey(db_column='hlavni_katastr', on_delete=django.db.models.deletion.RESTRICT, related_name='projekty_hlavnich_katastru', to='heslar.ruiankatastr', verbose_name='Hlavní katastr')),
             ],
             options={

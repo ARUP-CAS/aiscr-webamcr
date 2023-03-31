@@ -45,7 +45,7 @@ class Pian(models.Model):
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
     geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
-    geom_system = models.TextField(max_length=6)
+    geom_system = models.TextField(max_length=6, default="wgs84")
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
@@ -61,9 +61,10 @@ class Pian(models.Model):
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.RESTRICT,
+        on_delete=models.SET_NULL,
         db_column="historie",
         related_name="pian_historie",
+        null=True,
     )
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
     geom_updated_at = models.DateTimeField(blank=True, null=True)
@@ -150,7 +151,7 @@ class Kladyzm(models.Model):
 
 
 class PianSekvence(models.Model):
-    kladyzm50 = models.OneToOneField(
+    kladyzm50 = models.ForeignKey(
         "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
     )
     sekvence = models.IntegerField()

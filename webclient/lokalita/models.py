@@ -56,7 +56,7 @@ class Lokalita(models.Model):
     )
     archeologicky_zaznam = models.OneToOneField(
         ArcheologickyZaznam,
-        models.RESTRICT,
+        models.CASCADE,
         db_column="archeologicky_zaznam",
         primary_key=True,
     )

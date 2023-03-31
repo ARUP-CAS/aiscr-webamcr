@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='archeologickyzaznam',
             name='historie',
-            field=models.OneToOneField(null=True, db_column='historie', on_delete=django.db.models.deletion.CASCADE, to='historie.historievazby'),
+            field=models.OneToOneField(null=True, db_column='historie', on_delete=django.db.models.deletion.SET_NULL, to='historie.historievazby'),
         ),
         migrations.AddField(
             model_name='archeologickyzaznam',
@@ -33,6 +33,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='archeologickyzaznam',
             name='pristupnost',
-            field=models.ForeignKey(db_column='pristupnost', default=863, limit_choices_to={'nazev_heslare': 25}, on_delete=django.db.models.deletion.RESTRICT, related_name='zaznamy_pristupnosti', to='heslar.heslar'),
+            field=models.ForeignKey(db_column='pristupnost', limit_choices_to={'nazev_heslare': 25}, on_delete=django.db.models.deletion.RESTRICT, related_name='zaznamy_pristupnosti', to='heslar.heslar'),
         ),
     ]

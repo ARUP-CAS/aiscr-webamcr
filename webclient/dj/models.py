@@ -31,7 +31,7 @@ class DokumentacniJednotka(models.Model):
     )
     komponenty = models.OneToOneField(
         KomponentaVazby,
-        models.CASCADE,
+        models.SET_NULL,
         db_column="komponenty",
         related_name="dokumentacni_jednotka",
         null=True
