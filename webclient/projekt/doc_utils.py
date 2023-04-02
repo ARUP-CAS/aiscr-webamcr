@@ -24,9 +24,13 @@ BASE_MARGIN = 20 * mm
 HEADER_HEIGHT = 10 * mm
 HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png")
 
-pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
-registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+#Try except because of failing sphinx-build
+try:
+    pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
+    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+except:
+    pass
 
 
 Title = "Hello world"
