@@ -1,4 +1,3 @@
-import logging
 from math import fabs
 import structlog
 
@@ -12,11 +11,13 @@ from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_T
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 
-logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
 
 
 class Kladysm5(models.Model):
+    """
+    Class pro model kladysm5
+    """
     gid = models.IntegerField(primary_key=True)
     id = models.DecimalField(max_digits=1000, decimal_places=1000)
     mapname = models.TextField()
@@ -30,6 +31,10 @@ class Kladysm5(models.Model):
 
 
 class Adb(models.Model):
+    """
+    Class pre db model ADB.
+    Obsahuje vazbu na dokumentacni jednotku
+    """
     dokumentacni_jednotka = models.OneToOneField(
         DokumentacniJednotka,
         models.RESTRICT,
@@ -83,6 +88,9 @@ class Adb(models.Model):
 
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
+    """
+    metoda na vypocet ident cely pro vyskovy bod
+    """
     MAXIMAL_VYSKOVY_BOD: int = 9999
     last_digit_count = 4
     max_count = 0
@@ -96,11 +104,15 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
         nejvyssi_postfix = str(nejvyssi_postfix).zfill(last_digit_count)
         return f"{adb.ident_cely}-V{nejvyssi_postfix}"
     else:
-        logger.error("Maximal number of Výškový bod is " + str(MAXIMAL_VYSKOVY_BOD))
+        logger_s.error("Maximal number of Výškový bod is " + str(MAXIMAL_VYSKOVY_BOD))
         raise MaximalIdentNumberError(max_count)
 
 
 class VyskovyBod(models.Model):
+    """
+    Class pre db model vyskovy bod.
+    Obsahuje vazbu na ADB.
+    """
     adb = models.ForeignKey(
         Adb, on_delete=models.CASCADE, db_column="adb", related_name="vyskove_body"
     )
@@ -115,6 +127,9 @@ class VyskovyBod(models.Model):
     geom = pgmodels.PointField(srid=5514, dim=3)
 
     def set_geom(self, northing, easting, niveleta):
+        """
+        Metoda na nastaveni geomu (suradnic)
+        """
         logger_s.debug("adb.models.VyskovyBod.set_geom", northing=northing, easting=easting, nivelete=niveleta)
         if northing != 0.0:
             self.geom = Point(
@@ -126,11 +141,17 @@ class VyskovyBod(models.Model):
             self.save()
 
     def save(self, *args, **kwargs):
+        """
+        Override save metody na nastaveni ident cely pokud je prazdny
+        """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
         super(VyskovyBod, self).save(*args, **kwargs)
 
     def __init__(self, *args, **kwargs):
+        """
+        Override init metody pro upravu suradnic
+        """
         super(VyskovyBod, self).__init__(*args, **kwargs)
         self.northing = None
         self.easting = None
@@ -148,6 +169,9 @@ class VyskovyBod(models.Model):
 
 
 class AdbSekvence(models.Model):
+    """
+    Class pro sekvenci ADB pole db modelu kladysm5
+    """
     kladysm5 = models.OneToOneField(
         "Kladysm5",
         models.RESTRICT,
