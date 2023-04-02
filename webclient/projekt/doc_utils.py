@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
 import os
+import structlog
 
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT
@@ -19,6 +20,8 @@ from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
 from heslar.models import RuianKraj
 
+logger_s = structlog.get_logger(__name__)
+
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
 HEADER_HEIGHT = 10 * mm
@@ -29,8 +32,8 @@ try:
     pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
     pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
     registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
-except:
-    pass
+except Exception as e:
+    logger_s.error(module="doc_utils", exception=e)
 
 
 Title = "Hello world"
