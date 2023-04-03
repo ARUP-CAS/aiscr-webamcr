@@ -231,10 +231,4 @@ class Migration(migrations.Migration):
             model_name='notificationslog',
             index=models.Index(fields=['content_type', 'object_id'], name='notifikace__content_009350_idx'),
         ),
-        migrations.AddConstraint(
-            model_name='organizace',
-            constraint=models.CheckConstraint(
-                check=models.Q(('mesicu_do_zverejneni__gte', 0), ('mesicu_do_zverejneni__lte', 1200)),
-                name='organizace_mesicu_do_zverejneni_check'),
-        ),
     ]

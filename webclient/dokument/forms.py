@@ -28,6 +28,7 @@ from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
+
 class AutoriField(forms.models.ModelMultipleChoiceField):
     def clean(self, value):
         qs = super().clean(value)
@@ -43,6 +44,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
                 i = i+1
             qs = new_qs.order_by("qs_order")
         return qs
+
 
 class CoordinatesDokumentForm(forms.Form):
     detector_system_coordinates = forms.ChoiceField(

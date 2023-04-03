@@ -22,14 +22,14 @@ class ExterniZdrojForm(forms.ModelForm):
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            label = _("externiZdroj.forms.autori.label"),
-            help_text = _("externiZdroj.forms.autori.tooltip"),
+            label=_("externiZdroj.forms.autori.label"),
+            help_text=_("externiZdroj.forms.autori.tooltip"),
             )
     editori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            label= _("externiZdroj.forms.editori.label"),
-            help_text = _("externiZdroj.forms.editori.tooltip"),)
+            label=_("externiZdroj.forms.editori.label"),
+            help_text=_("externiZdroj.forms.editori.tooltip"),)
     class Meta:
         model = ExterniZdroj
         fields = (
@@ -182,10 +182,10 @@ class ExterniZdrojForm(forms.ModelForm):
         self.helper.form_tag = False
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             externizdrojautor__externi_zdroj=self.instance
-        ).order_by("externizdrojautor__poradi").values_list("id","vypis_cely"))
+        ).order_by("externizdrojautor__poradi").values_list("id", "vypis_cely"))
         self.fields["editori"].widget.choices = list(Osoba.objects.filter(
             externizdrojeditor__externi_zdroj=self.instance
-        ).order_by("externizdrojeditor__poradi").values_list("id","vypis_cely"))
+        ).order_by("externizdrojeditor__poradi").values_list("id", "vypis_cely"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if required or required_next:

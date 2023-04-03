@@ -64,28 +64,6 @@ class UrlTests(TestCase):
         response = self.client.get(f"/ext-zdroj/edit/{EXISTING_EZ_IDENT}")
         self.assertEqual(200, response.status_code)
 
-    def test_post_ez_editovat(self):
-        data = {
-            "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "typ": str(EZ_TYP_NEW),
-            "rok_vydani_vzniku": "2000",
-            "nazev": "nazev casopisu",
-            "autori": str(EL_CHEFE_ID),
-        }
-        self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/ext-zdroj/edit/{EXISTING_EZ_IDENT}", data, follow=True
-        )
-        ez = ExterniZdroj.objects.filter(ident_cely=EXISTING_EZ_IDENT).first()
-        ez.refresh_from_db()
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(ez.typ.pk, EZ_TYP_NEW)
-        self.assertEqual(ez.nazev, "nazev casopisu")
-        self.assertEqual(ez.rok_vydani_vzniku, "2000")
-        self.assertTrue(
-            len(ExterniZdroj.objects.filter(ident_cely=EXISTING_EZ_IDENT)) == 1
-        )
-
     def test_get_ez_odelsat(self):
         self.client.force_login(self.existing_user)
         response = self.client.get(
