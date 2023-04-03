@@ -29,7 +29,5 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-    - method: pip
-      path: webclient/webclient/requirements/production.txt
-      extra_requirements:
-        - gdal
+  - requirements: docs/requirements.txt
+  - requirements: webclient/webclient/requirements/production.txt
