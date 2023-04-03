@@ -17,10 +17,14 @@ build:
       - export CPLUS_INCLUDE_PATH=/usr/include/gdal
       - export C_INCLUDE_PATH=/usr/include/gdal
       - gdal-config --version
+    post_build:
+      - echo "build done"
+    post_install:
+      - python -m pip install --exists-action=w --no-cache-dir GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
-  configuration: webclient/docs/conf.py
+  configuration: docs/source/conf.py
 
 # If using Sphinx, optionally build your docs in additional formats such as PDF
 #formats:
@@ -29,5 +33,5 @@ sphinx:
 # Optionally declare the Python requirements required to build your docs
 python:
   install:
-  - requirements: docs/requirements.txt
+  #- requirements: docs/requirements.txt
   - requirements: webclient/webclient/requirements/production.txt
