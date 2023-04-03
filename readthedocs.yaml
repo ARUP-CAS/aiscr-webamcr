@@ -10,9 +10,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
-  apt_packages:
-    - libgdal-dev
   commands:
+    - apt-get update
+    - apt-get install -y libgdal-dev
     - gdal-config --version
     - pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 
