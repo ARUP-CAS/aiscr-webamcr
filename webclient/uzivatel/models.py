@@ -265,12 +265,6 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
         verbose_name = "Organizace"
         verbose_name_plural = "Organizace"
-        constraints = [
-            CheckConstraint(
-                check=(Q(mesicu_do_zverejneni__gte=0) & Q(mesicu_do_zverejneni__lte=1200)),
-                name='organizace_mesicu_do_zverejneni_check',
-            ),
-        ]
 
 
 
