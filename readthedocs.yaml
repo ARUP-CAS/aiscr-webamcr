@@ -11,9 +11,7 @@ build:
   tools:
     python: "3.10"
   commands:
-    - apt-get -y -qq install sudo
-    - sudo apt-get update
-    - sudo apt-get install -y libgdal-dev
+    - apt-get install -y libgdal-dev
     - gdal-config --version
     - pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 
