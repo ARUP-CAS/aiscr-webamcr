@@ -10,10 +10,14 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
-  commands:
-    - apt-get install -y libgdal-dev
-    - gdal-config --version
-    - pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+  apt_package:
+    - libgdal-dev
+  jobs:
+    post_system_dependencies:
+      - export CPLUS_INCLUDE_PATH=/usr/include/gdal
+      - export C_INCLUDE_PATH=/usr/include/gdal
+      - gdal-config --version
+      - pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
