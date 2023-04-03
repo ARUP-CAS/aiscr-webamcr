@@ -32,4 +32,4 @@ python:
     - method: pip
       path: webclient/webclient/requirements/production.txt
       extra_requirements:
-        - gdal==3.6.3
+        - gdal
