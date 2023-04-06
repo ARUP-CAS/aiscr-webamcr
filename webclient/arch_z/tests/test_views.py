@@ -15,7 +15,6 @@ from core.tests.runner import (
     D_STAV_ZAPSANY,
     EXISTING_EVENT_IDENT_INCOMPLETE,
     AMCR_TESTOVACI_ORGANIZACE_ID,
-    add_middleware_to_request,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -43,12 +42,8 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_zapsat(self):
-        request = self.factory.get("/arch-z/zapsat/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = zapsat(request, self.existing_projekt_ident)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("arch_z:zapsat-akci"))
         self.assertEqual(200, response.status_code)
 
     def test_post_zapsat(self):
@@ -82,13 +77,6 @@ class UrlTests(TestCase):
             "_osv-1-id": "",
             "_osv-1-akce": "",
         }
-        # request = self.factory.post("/arch-z/zapsat/", data)
-        # request.user = self.existing_user
-        # request = add_middleware_to_request(request, SessionMiddleware)
-        # request = add_middleware_to_request(request, MessageMiddleware)
-        # request.session.save()
-
-        # response = zapsat(request, self.existing_projekt_ident)
         self.client.force_login(self.existing_user)
         response = self.client.post(
             reverse(
@@ -107,25 +95,21 @@ class UrlTests(TestCase):
         )
 
     def test_get_odeslat_s_chybami(self):
-        request = self.factory.get("/arch-z/odeslat/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("arch_z:odeslat", args=[EXISTING_EVENT_IDENT_INCOMPLETE, ]))
 
-        response = odeslat(request, EXISTING_EVENT_IDENT_INCOMPLETE)
         self.assertTrue(
-            _("Datum zahájení není vyplněn.") in request.session["temp_data"]
+            _("Datum zahájení není vyplněn.") in self.client.session["temp_data"]
         )
         self.assertTrue(
-            _("Datum ukončení není vyplněn.") in request.session["temp_data"]
+            _("Datum ukončení není vyplněn.") in self.client.session["temp_data"]
         )
         self.assertTrue(
-            _("Lokalizace okolností není vyplněna.") in request.session["temp_data"]
+            _("Lokalizace okolností není vyplněna.") in self.client.session["temp_data"]
         )
-        self.assertTrue(_("Hlavní typ není vyplněn.") in request.session["temp_data"])
+        self.assertTrue(_("Hlavní typ není vyplněn.") in self.client.session["temp_data"])
         self.assertTrue(
-            _("Hlavní vedoucí není vyplněn.") in request.session["temp_data"]
+            _("Hlavní vedoucí není vyplněn.") in self.client.session["temp_data"]
         )
         self.assertEqual(403, response.status_code)
 
@@ -141,21 +125,15 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_vratit(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/arch-z/vratit/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = vratit(request, EXISTING_EVENT_IDENT)
         self.assertEqual(403, response.status_code)
 
     def test_get_pripojit_dokument(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/arch-z/pripojit/dokument/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = pripojit_dokument(request, arch_z_ident_cely=EXISTING_EVENT_IDENT)
         self.assertEqual(200, response.status_code)
@@ -165,11 +143,9 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "27ZVK57GOldButY8IAxsDdqBlpUtsWBcpykJT7DgTENfOsy7uqkfoSoYWkbXmcu2",
             "dokument": str(EXISTING_DOCUMENT_ID),
         }
+        self.client.force_login(self.existing_user)
+        response = self.client.post(reverse("arch_z:pripojit_dokument"))
         request = self.factory.post("/arch-z/pripojit/dokument/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         documents_before = Dokument.objects.filter(
             casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT

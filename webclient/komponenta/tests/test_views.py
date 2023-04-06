@@ -4,7 +4,6 @@ from core.tests.runner import (
     AREAL_HRADISTE_ID,
     EXISTING_EVENT_IDENT,
     OBDOBI_STREDNI_PALEOLIT_ID,
-    add_middleware_to_request,
 )
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -30,10 +29,8 @@ class UrlTests(TestCase):
             "areal": str(AREAL_HRADISTE_ID),
         }
 
+        self.client.force_login(self.existing_user)
         request = self.factory.post("/komponenta/zapsat/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
         request.META["HTTP_REFERER"] = "/dj/detail/C-202000001A-D01"
         request.session.save()
 
@@ -45,11 +42,8 @@ class UrlTests(TestCase):
         )
 
         # Testing that I can delete the component
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/komponenta/smazat/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
         response = smazat(request, ident_cely="C-202000001A-K001")
         self.assertEqual(200, response.status_code)
 
@@ -59,10 +53,6 @@ class UrlTests(TestCase):
                 "csrfmiddlewaretoken": "EnxpCIUt1PwHXwqP7FOtsaMGqlZJFQsIFy0fdKAjiBdInnJNBt2Fluk0Rl9DnC9t"
             },
         )
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
         response = smazat(request, ident_cely="C-202000001A-K001")
         self.assertEqual(200, response.status_code)
         self.assertEqual(

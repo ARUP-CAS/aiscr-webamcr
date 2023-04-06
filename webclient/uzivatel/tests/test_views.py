@@ -1,6 +1,6 @@
 from unittest import mock
 
-from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID, add_middleware_to_request
+from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
@@ -13,10 +13,8 @@ class TestUzivatel(TestCase):
         self.factory = RequestFactory()
 
     def test_get_create_osoba(self):
+        self.client.force_login(User.objects.get(email="amcr@arup.cas.cz"))
         request = self.factory.get("/uzivatel/osoba/create/")
-        request.user = User.objects.get(email="amcr@arup.cas.cz")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = create_osoba(request)
         self.assertEqual(200, response.status_code)
@@ -27,10 +25,8 @@ class TestUzivatel(TestCase):
             "jmeno": "Tester",
             "prijmeni": "Testovaci",
         }
+        self.client.force_login(User.objects.get(email="amcr@arup.cas.cz"))
         request = self.factory.post("/uzivatel/osoba/create/", data)
-        request.user = User.objects.get(email="amcr@arup.cas.cz")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = create_osoba(request)
         self.assertEqual(200, response.status_code)
@@ -47,9 +43,6 @@ class TestUzivatel(TestCase):
             "password2 ": "mojesupertajneheslo",
         }
         request = self.factory.post("/accounts/register", data)
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.user = AnonymousUser()
-        request.session.save()
 
         user_count_before = User.objects.all().count()
         response = UserRegistrationView.as_view()(request)

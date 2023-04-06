@@ -1,7 +1,7 @@
 from core.constants import SN_ZAPSANY
 from core.models import Soubor
 from core.message_constants import PROJEKT_NELZE_SMAZAT
-from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
+from core.tests.runner import KATASTR_ODROVICE_ID
 from django.contrib.gis.geos import Point
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -40,28 +40,22 @@ class UrlTests(TestCase):
         self.oznamovatel.save()
 
     def test_get_detail_not_found(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/projekt/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         with self.assertRaises(Http404, msg="No Projekt matches the given query."):
             detail(request, ident_cely="not_existing_project_ident")
 
     def test_get_detail_found(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/projekt/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = detail(request, ident_cely=self.projekt.ident_cely)
         self.assertEqual(200, response.status_code)
 
     def test_edit_get_success(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/projekt/edit/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = edit(request, ident_cely=self.projekt.ident_cely)
         self.assertEqual(200, response.status_code)
@@ -85,11 +79,8 @@ class UrlTests(TestCase):
             "save": "Upravit",
         }
 
+        self.client.force_login(self.existing_user)
         request = self.factory.post("/projekt/edit/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = edit(request, self.projekt.ident_cely)
         projekt = Projekt.objects.get(ident_cely=self.projekt.ident_cely)
@@ -99,11 +90,8 @@ class UrlTests(TestCase):
         self.assertTrue(projekt.geom.coords != self.lokace_zahradky.coords)
 
     def test_get_smazat_check(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/projekt/smazat/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = smazat(request, ident_cely=self.projekt.ident_cely)
         self.assertEqual(200, response.status_code)
@@ -137,11 +125,8 @@ class UrlTests(TestCase):
             "email": "tester@tester.tester",
             "old_stav": 0,
         }
+        self.client.force_login(self.existing_user)
         request = self.factory.post("/projekt/create/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         projects_before = Projekt.objects.all().count()
         response = create(request)
@@ -151,11 +136,8 @@ class UrlTests(TestCase):
         self.assertTrue(projects_before < projects_after)
 
     def test_get_create_success(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/projekt/create")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = create(request)
         self.assertEqual(200, response.status_code)

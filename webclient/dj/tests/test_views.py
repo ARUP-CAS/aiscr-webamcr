@@ -1,4 +1,4 @@
-from core.tests.runner import TYP_DJ_CELEK_AKCE_ID, add_middleware_to_request
+from core.tests.runner import TYP_DJ_CELEK_AKCE_ID
 from dj.models import DokumentacniJednotka
 from dj.views import zapsat
 from django.contrib.messages.middleware import MessageMiddleware
@@ -24,11 +24,8 @@ class UrlTests(TestCase):
             "pian": self.pian.pk,
         }
 
+        self.client.force_login(self.existing_user)
         request = self.factory.post("/dj/zapsat/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = zapsat(request, arch_z_ident_cely=self.existing_event)
         self.assertEqual(302, response.status_code)

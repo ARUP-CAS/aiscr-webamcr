@@ -6,7 +6,6 @@ from core.tests.runner import (
     TESTOVACI_DOKUMENT_IDENT,
     TESTOVACI_SOUBOR_ID,
     EXISTING_LOKALITA_IDENT,
-    add_middleware_to_request,
 )
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
@@ -27,10 +26,8 @@ class HistorieTests(TestCase):
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_projekt_historie(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/historie/projekt")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = ProjektHistorieListView.as_view()(
             request, ident_cely=EXISTING_PROJECT_IDENT
@@ -38,21 +35,16 @@ class HistorieTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_akce_historie(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/historie/arch_z")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
         response = AkceHistorieListView.as_view()(
             request, ident_cely=EXISTING_EVENT_IDENT
         )
         self.assertEqual(200, response.status_code)
 
     def test_get_dokument_historie(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/historie/dokument")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = DokumentHistorieListView.as_view()(
             request, ident_cely=TESTOVACI_DOKUMENT_IDENT
@@ -67,10 +59,8 @@ class HistorieTests(TestCase):
         self.assertTrue("metadata_form" in response.context)
 
     def test_get_lokalita_historie(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/historie/lokalita")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = LokalitaHistorieListView.as_view()(
             request, ident_cely=EXISTING_LOKALITA_IDENT

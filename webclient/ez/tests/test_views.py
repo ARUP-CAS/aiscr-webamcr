@@ -8,7 +8,6 @@ from core.tests.runner import (
     EXISTING_EZ_ODESLANY,
     EZ_TYP,
     EZ_TYP_NEW,
-    add_middleware_to_request,
 )
 from django.test import RequestFactory, TestCase
 from django.utils.translation import gettext as _
@@ -25,10 +24,8 @@ class UrlTests(TestCase):
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_ez_detail(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/ext-zdroj/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = ExterniZdrojDetailView.as_view()(request, slug=EXISTING_EZ_IDENT)
         self.assertEqual(200, response.status_code)

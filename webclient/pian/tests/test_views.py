@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from core.tests.runner import PRESNOST_DESITKY_METRU_ID, add_middleware_to_request
+from core.tests.runner import PRESNOST_DESITKY_METRU_ID
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.db import transaction

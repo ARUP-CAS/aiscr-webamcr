@@ -18,7 +18,6 @@ from core.tests.runner import (
     OBDOBI_STREDNI_PALEOLIT_ID,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
     ZACHOVALOST_30_80_ID,
-    add_middleware_to_request,
     EL_CHEFE_ID,
     ARCHIV_ARUB,
     TESTOVACI_DOKUMENT_IDENT,
@@ -311,39 +310,27 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_create_model3D(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/dokument/create/model")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = create_model_3D(request)
         self.assertEqual(200, response.status_code)
 
     def test_get_edit(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/dokument/edit/")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.user = self.existing_user
-        request.session.save()
 
         response = edit(request, ident_cely=self.existing_dokument)
         self.assertEqual(200, response.status_code)
 
     def test_get_change_states(self):
+        self.client.force_login(self.existing_user)
         requestA = self.factory.get("/dokument/archivovat/")
-        requestA = add_middleware_to_request(requestA, SessionMiddleware)
-        requestA = add_middleware_to_request(requestA, MessageMiddleware)
-        requestA.user = self.existing_user
-        requestA.session.save()
         # Dokument je ve spatnem stavu
         response = archivovat(requestA, ident_cely=self.existing_dokument)
         self.assertEqual(403, response.status_code)
 
         request = self.factory.get("/dokument/odeslat/")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.user = self.existing_user
-        request.session.save()
         # Dokument lze odeslat
         response = odeslat(request, ident_cely=self.dokument_with_soubor)
         self.assertEqual(200, response.status_code)
@@ -353,10 +340,6 @@ class UrlTests(TestCase):
             "old_stav": 1,
         }
         request = self.factory.post("/dokument/odeslat/", data)
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.user = self.existing_user
-        request.session.save()
         # Stav se zmeni na odeslany
         response = odeslat(request, ident_cely=self.existing_dokument)
         self.assertEqual(200, response.status_code)
@@ -386,11 +369,8 @@ class UrlTests(TestCase):
             "ulozeni_originalu": str(ARCHIV_ARUB),
             "autori": str(EL_CHEFE_ID),
         }
+        self.client.force_login(self.existing_user)
         request = self.factory.post("/dokument/edit/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
 
         response = edit(request, self.existing_dokument)
         self.assertEqual(302, response.status_code)
@@ -406,10 +386,8 @@ class UrlTests(TestCase):
         data = {
             "id": EXISTING_DOCUMENT_ID,
         }
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/dokument/dokument-radek-tabulky", data)
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.user = self.existing_user
-        request.session.save()
 
         response = get_dokument_table_row(request)
         self.assertContains(response, TESTOVACI_DOKUMENT_IDENT)

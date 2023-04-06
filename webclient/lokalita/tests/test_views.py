@@ -8,7 +8,6 @@ from core.tests.runner import (
     KATASTR_PRAHA_ID,
     LOKALITA_DRUH,
     LOKALITA_TYP_NEW,
-    add_middleware_to_request,
 )
 from django.test import RequestFactory, TestCase
 from django.utils.translation import gettext as _
@@ -24,10 +23,8 @@ class UrlTests(TestCase):
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_lokalita_detail(self):
+        self.client.force_login(self.existing_user)
         request = self.factory.get("/arch_z/lokalita/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
 
         response = LokalitaDetailView.as_view()(request, slug=EXISTING_LOKALITA_IDENT)
         self.assertEqual(200, response.status_code)
