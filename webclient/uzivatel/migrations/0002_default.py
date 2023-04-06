@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
             sql="""
             ALTER TABLE IF EXISTS osoba
             ALTER COLUMN ident_cely SET DEFAULT('OS-'::text || "right"(
-            concat('000000', (nextval('osoba_id_seq'::regclass))::text), 6));
+            concat('000000', (nextval('osoba_ident_seq'::regclass))::text), 6));
             """,
             reverse_sql="",
         ),

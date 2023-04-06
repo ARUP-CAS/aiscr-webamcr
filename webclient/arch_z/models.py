@@ -61,7 +61,7 @@ class ArcheologickyZaznam(models.Model):
     )
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
-        HistorieVazby, on_delete=models.CASCADE, db_column="historie", null=True
+        HistorieVazby, on_delete=models.SET_NULL, db_column="historie", null=True
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
@@ -328,7 +328,7 @@ class ArcheologickyZaznamKatastr(models.Model):
         db_column="archeologicky_zaznam_id",
     )
     katastr = models.ForeignKey(
-        RuianKatastr, on_delete=models.CASCADE, db_column="katastr_id"
+        RuianKatastr, on_delete=models.RESTRICT, db_column="katastr_id"
     )
 
     class Meta:

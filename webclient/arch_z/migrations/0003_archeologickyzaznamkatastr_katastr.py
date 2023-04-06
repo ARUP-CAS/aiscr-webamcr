@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='archeologickyzaznamkatastr',
             name='katastr',
-            field=models.ForeignKey(db_column='katastr_id', on_delete=django.db.models.deletion.CASCADE, to='heslar.ruiankatastr'),
+            field=models.ForeignKey(db_column='katastr_id', on_delete=django.db.models.deletion.RESTRICT, to='heslar.ruiankatastr'),
         ),
     ]

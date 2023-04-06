@@ -66,7 +66,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         "Organizace", models.RESTRICT, db_column="organizace"
     )
     history_vazba = models.OneToOneField('historie.HistorieVazby', db_column='historie',
-                                      on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
+                                      on_delete=models.SET_NULL, related_name="uzivatelhistorievazba", null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
     telefon = models.CharField(
@@ -294,7 +294,7 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
         ordering = ["vypis_cely"]
         constraints = [
             models.UniqueConstraint(
-                fields=["jmeno", "prijmeni"], name="unique jmeno a prijmeni"
+                fields=["jmeno", "prijmeni"], name="osoba_jmeno_prijmeni_key"
             )
         ]
         verbose_name = "Osoba"

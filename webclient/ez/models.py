@@ -171,8 +171,8 @@ def get_ez_ident(zaznam=None):
 
 class ExterniZdrojAutor(models.Model):
     externi_zdroj = models.ForeignKey(
-        ExterniZdroj, models.RESTRICT, db_column="externi_zdroj")
-    autor = models.ForeignKey(Osoba, models.CASCADE, db_column="autor")
+        ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
+    autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField()
 
     def get_osoba(self):

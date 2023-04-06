@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='externizdrojautor',
             name='autor',
-            field=models.ForeignKey(db_column='autor', on_delete=django.db.models.deletion.CASCADE, to='uzivatel.osoba'),
+            field=models.ForeignKey(db_column='autor', on_delete=django.db.models.deletion.RESTRICT, to='uzivatel.osoba'),
         ),
         migrations.AddField(
             model_name='externizdroj',

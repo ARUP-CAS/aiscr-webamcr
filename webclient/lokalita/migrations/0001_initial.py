@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('popis', models.TextField(blank=True, null=True)),
                 ('nazev', models.TextField()),
                 ('poznamka', models.TextField(blank=True, null=True)),
-                ('archeologicky_zaznam', models.OneToOneField(db_column='archeologicky_zaznam', on_delete=django.db.models.deletion.RESTRICT, primary_key=True, serialize=False, to='arch_z.archeologickyzaznam')),
+                ('archeologicky_zaznam', models.OneToOneField(db_column='archeologicky_zaznam', on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='arch_z.archeologickyzaznam')),
                 ('druh', models.ForeignKey(db_column='druh', limit_choices_to={'nazev_heslare': 6}, on_delete=django.db.models.deletion.RESTRICT, related_name='lokalita_druh', to='heslar.heslar')),
                 ('jistota', models.ForeignKey(blank=True, db_column='jistota', limit_choices_to={'nazev_heslare': 48}, null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='lokalita_jistota', to='heslar.heslar')),
                 ('typ_lokality', models.ForeignKey(db_column='typ_lokality', limit_choices_to={'nazev_heslare': 37}, on_delete=django.db.models.deletion.RESTRICT, related_name='lokalita_typ', to='heslar.heslar')),

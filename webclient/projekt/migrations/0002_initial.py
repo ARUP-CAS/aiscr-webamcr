@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projekt',
             name='soubory',
-            field=models.OneToOneField(blank=True, db_column='soubory', null=True, on_delete=django.db.models.deletion.RESTRICT, related_name='projekt_souboru', to='core.souborvazby'),
+            field=models.OneToOneField(blank=True, db_column='soubory', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='projekt_souboru', to='core.souborvazby'),
         ),
         migrations.AddField(
             model_name='projekt',

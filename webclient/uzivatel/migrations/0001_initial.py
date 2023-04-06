@@ -150,7 +150,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='osoba',
-            constraint=models.UniqueConstraint(fields=('jmeno', 'prijmeni'), name='unique jmeno a prijmeni'),
+            constraint=models.UniqueConstraint(fields=('jmeno', 'prijmeni'), name='osoba_jmeno_prijmeni_key'),
         ),
         migrations.AddField(
             model_name='organizace',
@@ -185,7 +185,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='historicaluser',
             name='history_vazba',
-            field=models.ForeignKey(blank=True, db_column='historie', db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='historie.historievazby'),
+            field=models.ForeignKey(blank=True, db_column='historie', db_constraint=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='historie.historievazby'),
         ),
         migrations.AddField(
             model_name='historicaluser',

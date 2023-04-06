@@ -117,7 +117,7 @@ class Projekt(models.Model):
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     soubory = models.OneToOneField(
         SouborVazby,
-        on_delete=models.RESTRICT,
+        on_delete=models.SET_NULL,
         db_column="soubory",
         blank=True,
         null=True,
@@ -125,9 +125,10 @@ class Projekt(models.Model):
     )
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.RESTRICT,
+        on_delete=models.SET_NULL,
         db_column="historie",
         related_name="projekt_historie",
+        null=True,
     )
     organizace = models.ForeignKey(
         Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True

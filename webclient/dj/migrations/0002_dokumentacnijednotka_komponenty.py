@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dokumentacnijednotka',
             name='komponenty',
-            field=models.OneToOneField(db_column='komponenty', on_delete=django.db.models.deletion.CASCADE, related_name='dokumentacni_jednotka', to='komponenta.komponentavazby', null=True),
+            field=models.OneToOneField(db_column='komponenty', on_delete=django.db.models.deletion.SET_NULL, related_name='dokumentacni_jednotka', to='komponenta.komponentavazby', null=True),
         ),
     ]
