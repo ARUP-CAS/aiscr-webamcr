@@ -8,6 +8,7 @@ import core.message_constants as mc
 from django import template
 from django.utils.safestring import mark_safe
 from django.template import Node, TemplateSyntaxError
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.html import escape
 from django.utils.http import urlencode
@@ -156,3 +157,13 @@ def get_maintenance_login():
         ):
             return True
     return False
+
+
+@register.simple_tag
+def get_server_domain():
+    return settings.EMAIL_SERVER_DOMAIN_NAME
+
+
+@register.simple_tag
+def get_site_url():
+    return settings.SITE_URL
