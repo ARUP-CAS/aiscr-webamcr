@@ -73,7 +73,7 @@ class Projekt(models.Model):
     )
     typ_projektu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
@@ -103,7 +103,7 @@ class Projekt(models.Model):
     )
     kulturni_pamatka = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="kulturni_pamatka",
         blank=True,
         null=True,
@@ -117,7 +117,7 @@ class Projekt(models.Model):
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     soubory = models.OneToOneField(
         SouborVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="soubory",
         blank=True,
         null=True,
@@ -125,12 +125,12 @@ class Projekt(models.Model):
     )
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="historie",
         related_name="projekt_historie",
     )
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True
     )
     oznaceni_stavby = models.TextField(
         blank=True, null=True, verbose_name=_("Označení stavby")
@@ -141,7 +141,7 @@ class Projekt(models.Model):
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
     hlavni_katastr = models.ForeignKey(
         RuianKatastr,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
         verbose_name=_("Hlavní katastr"),
@@ -253,8 +253,6 @@ class Projekt(models.Model):
                     vazba=self.soubory,
                     nazev=new_filename,
                     nazev_zkraceny=filename,
-                    nazev_puvodni=filename,
-                    vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                     mimetype="text/plain",
                     size_mb=myfile.size/1024/1024,
                 )
@@ -273,7 +271,7 @@ class Projekt(models.Model):
         Mailer.send_ea01(project=self, user=user)
         self.save()
 
-    def set_navrzen_ke_zruseni(self, user, poznamka):
+    def set_navrzen_ke_zruseni(self, user: User, poznamka: str):
         self.stav = PROJEKT_STAV_NAVRZEN_KE_ZRUSENI
         Historie(
             typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ,
@@ -451,7 +449,6 @@ class Projekt(models.Model):
                 vazba=self.soubory,
                 nazev=filename_without_path,
                 nazev_zkraceny=filename_without_checksum,
-                nazev_puvodni=filename_without_path,
                 mimetype=get_mime_type(filename_without_path),
                 size_mb=os.path.getsize(filename)/1024/1024,
             )

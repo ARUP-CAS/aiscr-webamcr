@@ -66,10 +66,9 @@ class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
 
 
 class ExterniZdrojTable(SearchTable):
-
     ident_cely = tables.Column(linkify=True)
-    autor = ExtZdrojAutoriColumn(default="", accessor="autori.all")
-    editor = ExtZdrojEditoriColumn(default="", accessor="editori.all")
+    autor = ExtZdrojAutoriColumn(default="", accessor="autori__all")
+    editor = ExtZdrojEditoriColumn(default="", accessor="editori__all")
     casopis_denik_nazev = tables.columns.Column(default="")
     casopis_rocnik = tables.columns.Column(default="")
     sbornik_nazev = tables.columns.Column(default="")

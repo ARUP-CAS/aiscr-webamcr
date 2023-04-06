@@ -14,8 +14,6 @@ class UrlTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
-        UserNotificationType(ident_cely='E-N-05', predmet="Test", cesta_sablony="emails/E-N-05.html.html").save()
-        UserNotificationType(ident_cely='E-O-01', predmet="Test", cesta_sablony="emails/E-O-01.html.html").save()
 
     def test_get_index(self):
         request = self.factory.get("/oznameni/")

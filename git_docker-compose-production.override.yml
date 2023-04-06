@@ -5,9 +5,12 @@ services:
     secrets:
       - db_conf
       - mail_conf
+      - redis_pass
 
 secrets:
   db_conf:
    file : secrets.alternative.json
   mail_conf:
    file : secrets_mail_client.json
+  redis_pass:
+    file: redis_pass.txt

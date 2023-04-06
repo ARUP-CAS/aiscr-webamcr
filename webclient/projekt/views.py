@@ -127,8 +127,6 @@ def detail(request, ident_cely):
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
         ).all()
-    else:
-        logger.debug("Projekt neni typu zachranny ani pruzkum " + str(typ_projektu))
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"

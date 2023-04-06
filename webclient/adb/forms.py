@@ -7,6 +7,7 @@ from crispy_forms.layout import Div, Layout
 from cron.convertToSJTSK import convertToJTSK
 from django import forms
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 
 
 logger_s = structlog.get_logger(__name__)
@@ -126,7 +127,7 @@ class CreateADBForm(forms.ModelForm):
                     Div(
                         AppendedText(
                             "autor_popisu",
-                            '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                            mark_safe('<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                         ),
                         css_class="col-sm-2 input-osoba",
                     ),
@@ -135,7 +136,7 @@ class CreateADBForm(forms.ModelForm):
                     Div(
                         AppendedText(
                             "autor_revize",
-                            '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                            mark_safe('<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                         ),
                         css_class="col-sm-2 input-osoba",
                     ),

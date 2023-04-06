@@ -36,7 +36,9 @@ def get_mail_secret(setting, default_value=None):
         if os.path.exists("/run/secrets/mail_conf")
         # else path will be used in case a docker secret is not used during instantiation.
         # Doesn't catch case where docker secrets points to missing file on local disk.
-        else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_mail_client.json")
+        else os.path.join(
+            BASE_DIR, "webclient/settings/sample_secrets_mail_client.json"
+        )
     )
     with open(file_mail_path, "r") as file:
         secrets_mail = json.load(file)
@@ -45,19 +47,22 @@ def get_mail_secret(setting, default_value=None):
             return secrets_mail[setting]
         except KeyError:
             error_msg = f"Add {setting} variable to {file_mail_path} file"
-            raise ImproperlyConfigured(error_msg)
+            if not DEBUG:
+                raise ImproperlyConfigured(error_msg)
     else:
         secrets_mail.get(setting, default_value)
 
-#REDIS SETTINGS
+
+# REDIS SETTINGS
 def get_redis_pass(default_value=""):
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
-            return ":"+file.readline().rstrip()+"@"
+            return ":" + file.readline().rstrip() + "@"
     else:
         return default_value
 
-redis_url = os.getenv("REDIS_URL","redis:6379")
+
+redis_url = os.getenv("REDIS_URL", "redis:6379")
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
@@ -70,7 +75,7 @@ DATABASES = {
         "HOST": get_secret("DB_HOST"),
         "PORT": get_secret("DB_PORT"),
         "ATOMIC_REQUESTS": True,
-        'DISABLE_SERVER_SIDE_CURSORS': True,
+        "DISABLE_SERVER_SIDE_CURSORS": True,
     },
 }
 
@@ -79,8 +84,6 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "dal",
-    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -89,13 +92,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.sessions.backends.signed_cookies",
-    "django_filters",
-    "django_tables2",
-    "django_tables2_column_shifter",
-    "crispy_forms",
-    "django_registration",
-    "compressor",
-    "captcha",
     "core.apps.CoreConfig",
     "uzivatel.apps.UzivatelConfig",
     "ez",
@@ -112,17 +108,26 @@ INSTALLED_APPS = [
     "pas.apps.PasConfig",
     "komponenta",
     "dj",
+    "lokalita",
+    "notifikace_projekty",
+    "dal",
+    "dal_select2",
+    "django_filters",
+    "django_tables2",
+    "django_tables2_column_shifter",
+    "crispy_forms",
+    "crispy_bootstrap4",
+    "django_registration",
+    "compressor",
+    "captcha",
     "simple_history",
     "widget_tweaks",
     "rosetta",
     "django_cron",
-    "lokalita",
     "bs4",
     "django_extensions",
     "django_celery_beat",
-    'django_select2',
-    "notifikace_projekty",
-    "django_celery_results"
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
@@ -210,11 +215,7 @@ USE_I18N = True
 
 USE_L10N = False
 DATE_FORMAT = "%d.%m.%Y"
-DATE_INPUT_FORMATS = [
-    "%d.%m.%Y",
-    "%d/%m/%Y",
-    "%Y-%m-%d"
-]
+DATE_INPUT_FORMATS = ["%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d"]
 
 USE_TZ = True
 
@@ -227,6 +228,7 @@ ROSETTA_UWSGI_AUTO_RELOAD = True
 
 def rosetta_translation_rights(user):
     from core.constants import ROLE_UPRAVA_TEXTU
+
     return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0
 
 
@@ -239,6 +241,7 @@ MEDIA_URL = "/static/media/"
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 AUTH_USER_MODEL = "uzivatel.User"
 
@@ -254,6 +257,14 @@ LOGGING = {
         "json_formatter": {
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.processors.JSONRenderer(),
+            "foreign_pre_chain": [
+                structlog.contextvars.merge_contextvars,  # <---- add this
+                # django_structlog.processors.inject_context_dict, # <---- remove this
+                structlog.processors.TimeStamper(fmt="iso"),
+                structlog.stdlib.add_logger_name,
+                structlog.stdlib.add_log_level,
+                structlog.stdlib.PositionalArgumentsFormatter(),
+            ],
         },
         "timestamp": {
             "format": "{asctime} {levelname} {message}",
@@ -366,7 +377,7 @@ EMAIL_HOST = get_mail_secret("EMAIL_HOST")
 EMAIL_PORT = get_mail_secret("EMAIL_PORT")
 EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
-EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME")
+EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "mailtrap.io")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
@@ -375,8 +386,8 @@ AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
-        "LOCATION": "memcached:11211",
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://" + get_redis_pass() + redis_url,
     }
 }
 
@@ -392,6 +403,7 @@ DIGI_LINKS = {
 
 structlog.configure(
     processors=[
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.add_logger_name,
@@ -402,7 +414,7 @@ structlog.configure(
         structlog.processors.UnicodeDecoder(),
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
     ],
-    context_class=structlog.threadlocal.wrap_dict(dict),
+    # context_class=structlog.threadlocal.wrap_dict(dict), upgrade structlog
     logger_factory=structlog.stdlib.LoggerFactory(),
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
@@ -425,6 +437,9 @@ CELERY_REDIRECT_STDOUTS = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+SKIP_SELENIUM_TESTS = False
+
 CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"

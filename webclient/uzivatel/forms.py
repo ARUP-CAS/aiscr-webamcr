@@ -8,6 +8,7 @@ from django.forms import PasswordInput
 from django.utils.translation import gettext_lazy as _
 from django_registration.forms import RegistrationForm
 from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
 
 from core.widgets import ForeignKeyReadOnlyTextInput
 from .models import Osoba, User, UserNotificationType
@@ -202,7 +203,7 @@ class AuthUserLoginForm(AuthenticationForm):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("username"),
-            AppendedText('password', '<i class="bi bi-eye-slash" id="togglePassword"></i>'),
+            AppendedText("password", mark_safe('<i class="bi bi-eye-slash" id="togglePassword"> </i>'),input_size="input-group-sm"),
         )
 
     def get_invalid_login_error(self):
