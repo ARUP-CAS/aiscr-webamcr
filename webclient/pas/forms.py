@@ -133,6 +133,7 @@ class PotvrditNalezForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+                self.fields[key].required = False
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):

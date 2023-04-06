@@ -111,7 +111,7 @@ crossorigin=""/>
         <div class="form-group">
             <label for="detector_coordinates_x">{{ formCoor.detector_coordinates_x.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float" id="detector_coordinates_x" %}
+            {% render_field formCoor.detector_coordinates_x class="form-control form-control-sm float required-next" id="detector_coordinates_x" %}
             <small class="form-text text-muted" id="hint_id_detector_coordinates_x">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_x.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_coordinates_x|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_x" lang="cs-CZ" %}
@@ -123,7 +123,7 @@ crossorigin=""/>
         <div class="form-group">
             <label for="detector_coordinates_y">{{ formCoor.detector_coordinates_y.label }}</label>
             {% if global_map_can_edit %}
-            {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float"  id="detector_coordinates_y" %}
+            {% render_field formCoor.detector_coordinates_y class="form-control form-control-sm float required-next"  id="detector_coordinates_y" %}
             <small class="form-text text-muted" id="hint_id_detector_coordinates_z">{% trans "pas.form.createSamostatnyNalez.detector_coordinates_y.tooltip" %}</small>
             {% else %}
             {% render_field formCoor.detector_coordinates_y|append_attr:"readonly:readonly" class="form-control form-control-sm float" id="detector_coordinates_y" %}

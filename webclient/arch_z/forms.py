@@ -133,7 +133,7 @@ class CreateArchZForm(forms.ModelForm):
     def __init__(
         self,
         *args,
-        required=None,
+        required=[],
         required_next=None,
         readonly=False,
         **kwargs,
