@@ -19,7 +19,7 @@ class NeidentAkce(models.Model):
         on_delete=models.CASCADE,
         db_column="dokument_cast",
         related_name="neident_akce",
-        primary_key=True,
+        primary_key=True
     )
     vedouci = models.ManyToManyField(
         Osoba,
@@ -33,13 +33,12 @@ class NeidentAkce(models.Model):
 
 
 class NeidentAkceVedouci(models.Model):
-    neident_akce = models.OneToOneField(
+    neident_akce = models.ForeignKey(
         NeidentAkce,
         on_delete=models.CASCADE,
-        db_column="neident_akce",
-        primary_key=True,
+        db_column="neident_akce"
     )
-    vedouci = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="vedouci")
+    vedouci = models.ForeignKey(Osoba, models.RESTRICT, db_column="vedouci")
 
     class Meta:
         db_table = "neident_akce_vedouci"

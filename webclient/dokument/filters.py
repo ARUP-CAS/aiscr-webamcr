@@ -709,11 +709,6 @@ class DokumentFilter(Model3DFilter):
         label="&nbsp;",
         lookup_expr="lte",
     )
-    soubor_puvodni_nazev = CharFilter(
-        field_name="soubory__soubory__nazev_puvodni",
-        label=_("dokument.filter.souborPuvodniNazev.label"),
-        distinct=True,
-    )
     id_vazby = CharFilter(
         method="filter_id_vazby",
         label=_("dokument.filter.vazbyId.label"),
@@ -1128,7 +1123,6 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("soubor_velikost_do", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_od", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_do", css_class="col-sm-2"),
-                Div("soubor_puvodni_nazev", css_class="col-sm-2"),
                 id="souboryCollapse",
                 css_class="collapse row",
             ),

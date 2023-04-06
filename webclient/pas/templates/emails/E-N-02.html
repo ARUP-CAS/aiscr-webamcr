@@ -1,11 +1,12 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
+{% load template_tags %}
 {% block content %}
     <p>{% trans 'E-N-02.dobrý_den' %},</p>
     {% trans "E-N-02.v_amčr-pas_byly_dnes_archivovány_vámi_vložené_nálezy" %}:
     <ul style="list-style: none">
         {% for id in ids %}
-            <li><a href="{{ site_url }}{% url 'core:redirect_ident' id %}">{{ id }}</a></li>
+            <li><a href="{% get_site_url %}{% url 'core:redirect_ident' id %}">{{ id }}</a></li>
         {% endfor %}
     </ul>
     <p>{% trans "E-N-02.detaily_zjistíte_po_přihlášení_do_amčr-pas" %}. {% trans "E-N-02.nejpozději_během_následujícího_dne_budou_informace_o_nálezech_zveřejněny_v_digitálním_archivu_amčr" %}.</p>

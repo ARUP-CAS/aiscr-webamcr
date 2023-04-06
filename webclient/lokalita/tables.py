@@ -40,14 +40,15 @@ class DalsiKatastryColumn(tables.Column):
 
 
 class LokalitaTable(SearchTable):
-
-    ident_cely = tables.Column(linkify=True, accessor="archeologicky_zaznam.ident_cely")
+    ident_cely = tables.Column(
+        linkify=True, accessor="archeologicky_zaznam__ident_cely"
+    )
     katastr = tables.Column(
         verbose_name=_("Katastrální území"),
         default="",
-        accessor="archeologicky_zaznam.hlavni_katastr",
+        accessor="archeologicky_zaznam__hlavni_katastr",
     )
-    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam.stav")
+    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam__stav")
     druh = tables.columns.Column(default="", order_by="druh__nazev_zkraceny")
     nazev = tables.columns.Column(default="")
     typ_lokality = tables.columns.Column(
@@ -60,17 +61,17 @@ class LokalitaTable(SearchTable):
     uzivatelske_oznaceni = tables.Column(
         verbose_name=_("Uživatelské označení"),
         default="",
-        accessor="archeologicky_zaznam.uzivatelske_oznaceni",
+        accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
     dalsi_katastry = DalsiKatastryColumn(
         verbose_name=_("Další katastry"),
         default="",
-        accessor="archeologicky_zaznam.katastry.all",
+        accessor="archeologicky_zaznam__katastry__all",
     )
     pristupnost = tables.Column(
         verbose_name=_("Pristupnost"),
         default="",
-        accessor="archeologicky_zaznam.pristupnost",
+        accessor="archeologicky_zaznam__pristupnost",
     )
 
     columns_to_hide = ("uzivatelske_oznaceni", "dalsi_katastry")

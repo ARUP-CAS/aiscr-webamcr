@@ -41,9 +41,7 @@ services:
       - prod-net
 
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile-DEV
+    image: aiscr/webamcr:${IMAGE_TAG}
     command: celery -A webclient worker -l INFO
     secrets:
       - db_conf
@@ -57,15 +55,11 @@ services:
     depends_on:
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
       web:
         condition: service_started
 
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile-DEV
+    image: aiscr/webamcr:${IMAGE_TAG}
     command: celery -A webclient beat -l INFO
     secrets:
       - db_conf
@@ -79,8 +73,6 @@ services:
     depends_on:
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
       web:
         condition: service_started
 

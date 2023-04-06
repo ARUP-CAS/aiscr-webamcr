@@ -8,6 +8,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 
 from arch_z import validators
 from oznameni.forms import DateRangeField, DateRangeWidget
@@ -307,7 +308,7 @@ class EditProjektForm(forms.ModelForm):
                             css_class="col-sm-12",
                         ),
                         Div(
-                            AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                            AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
                             css_class="col-sm-4 input-osoba",
                         ),
                         Div("organizace", css_class="col-sm-4"),
@@ -498,7 +499,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
                     css_class="col-sm-4 input-osoba",
                     ),
                 Div("organizace", css_class="col-sm-4"),

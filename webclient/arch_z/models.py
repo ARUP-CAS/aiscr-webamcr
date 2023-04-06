@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import CheckConstraint, Q
 from django.shortcuts import redirect
 
 from core.constants import (
@@ -49,10 +50,10 @@ class ArcheologickyZaznam(models.Model):
         (AZ_STAV_ARCHIVOVANY, "A3 - Archivována"),
     )
 
-    typ_zaznamu = models.TextField(max_length=1, choices=CHOICES)
+    typ_zaznamu = models.CharField(max_length=1, choices=CHOICES)
     pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pristupnost",
         related_name="zaznamy_pristupnosti",
         default=PRISTUPNOST_ANONYM_ID,
@@ -60,7 +61,7 @@ class ArcheologickyZaznam(models.Model):
     )
     ident_cely = models.TextField(unique=True)
     historie = models.OneToOneField(
-        HistorieVazby, on_delete=models.CASCADE, db_column="historie"
+        HistorieVazby, on_delete=models.CASCADE, db_column="historie", null=True
     )
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=STATES)
@@ -76,6 +77,12 @@ class ArcheologickyZaznam(models.Model):
 
     class Meta:
         db_table = "archeologicky_zaznam"
+        constraints = [
+            CheckConstraint(
+                check=(Q(typ_zaznamu="L") | Q(typ_zaznamu="A")),
+                name='archeologicky_zaznam_typ_zaznamu_check',
+            ),
+        ]
 
     def set_zapsany(self, user):
         self.stav = AZ_STAV_ZAPSANY
@@ -340,14 +347,14 @@ class Akce(models.Model):
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="specifikace_data",
         related_name="akce_specifikace_data",
         limit_choices_to={"nazev_heslare": HESLAR_DATUM_SPECIFIKACE},
     )
     hlavni_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="hlavni_typ",
         blank=True,
         null=True,
@@ -356,7 +363,7 @@ class Akce(models.Model):
     )
     vedlejsi_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="vedlejsi_typ",
         blank=True,
         null=True,
@@ -365,7 +372,7 @@ class Akce(models.Model):
     )
     hlavni_vedouci = models.ForeignKey(
         Osoba,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.RESTRICT,
         db_column="hlavni_vedouci",
         blank=True,
         null=True,
@@ -376,7 +383,7 @@ class Akce(models.Model):
     datum_ukonceni = models.DateField(blank=True, null=True)
     je_nz = models.BooleanField(default=False)
     projekt = models.ForeignKey(
-        "projekt.Projekt", models.DO_NOTHING, db_column="projekt", blank=True, null=True
+        "projekt.Projekt", models.RESTRICT, db_column="projekt", blank=True, null=True
     )
     ulozeni_dokumentace = models.TextField(blank=True, null=True)
     archeologicky_zaznam = models.OneToOneField(
@@ -388,11 +395,17 @@ class Akce(models.Model):
     )
     odlozena_nz = models.BooleanField(default=False)
     organizace = models.ForeignKey(
-        Organizace, on_delete=models.DO_NOTHING, db_column="organizace", blank=True, null=True
+        Organizace, on_delete=models.RESTRICT, db_column="organizace", blank=True, null=True
     )
 
     class Meta:
         db_table = "akce"
+        constraints = [
+            CheckConstraint(
+                check=((Q(typ="N") & Q(projekt__isnull=True)) | (Q(typ="R") & Q(projekt__isnull=False))),
+                name='akce_typ_check',
+            ),
+        ]
 
     def get_absolute_url(self):
         return reverse(
@@ -402,8 +415,8 @@ class Akce(models.Model):
 
 class AkceVedouci(models.Model):
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
-    vedouci = models.ForeignKey(Osoba, on_delete=models.DO_NOTHING, db_column="vedouci")
-    organizace = models.ForeignKey(Organizace, on_delete=models.DO_NOTHING, db_column="organizace")
+    vedouci = models.ForeignKey(Osoba, on_delete=models.RESTRICT, db_column="vedouci")
+    organizace = models.ForeignKey(Organizace, on_delete=models.RESTRICT, db_column="organizace")
 
     class Meta:
         db_table = "akce_vedouci"
@@ -414,11 +427,11 @@ class AkceVedouci(models.Model):
 class ExterniOdkaz(models.Model):
     externi_zdroj = models.ForeignKey(
         ExterniZdroj,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="externi_zdroj",
         related_name="externi_odkazy_zdroje",
     )
-    paginace = models.TextField()
+    paginace = models.TextField(null=True)
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,

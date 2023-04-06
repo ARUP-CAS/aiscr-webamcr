@@ -26,7 +26,7 @@ class KomponentaVazby(models.Model):
 class Komponenta(models.Model):
     obdobi = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="obdobi",
         blank=True,
         null=True,
@@ -36,7 +36,7 @@ class Komponenta(models.Model):
     presna_datace = models.TextField(blank=True, null=True)
     areal = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="areal",
         blank=True,
         null=True,
@@ -72,7 +72,7 @@ class KomponentaAktivita(models.Model):
     komponenta = models.ForeignKey(Komponenta, models.CASCADE, db_column="komponenta")
     aktivita = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="aktivita",
         limit_choices_to={"nazev_heslare": HESLAR_AKTIVITA},
     )

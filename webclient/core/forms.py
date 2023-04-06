@@ -109,7 +109,6 @@ class DecimalTextWideget(forms.widgets.TextInput):
 
 class SouborMetadataForm(forms.ModelForm):
     nazev_zkraceny = forms.CharField()
-    nazev_puvodni = forms.CharField()
     nazev = forms.CharField()
     mimetype = forms.CharField()
     size_mb = forms.CharField(widget=DecimalTextWideget())
@@ -118,7 +117,6 @@ class SouborMetadataForm(forms.ModelForm):
         model = Soubor
         fields = (
             "nazev_zkraceny",
-            "nazev_puvodni",
             "rozsah",
             "nazev",
             "mimetype",
@@ -131,7 +129,6 @@ class SouborMetadataForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div("nazev_zkraceny", css_class="col-sm-2"),
-                Div("nazev_puvodni", css_class="col-sm-3"),
                 Div("rozsah", css_class="col-sm-1"),
                 Div("nazev", css_class="col-sm-2"),
                 Div("mimetype", css_class="col-sm-2"),
@@ -142,7 +139,6 @@ class SouborMetadataForm(forms.ModelForm):
         for field in self.fields:
             self.fields[field].widget.attrs["readonly"] = True
             self.fields[field].required = False
-
 
 class OdstavkaSystemuForm(forms.ModelForm):
     error_text_cs = forms.CharField(

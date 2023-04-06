@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
 import os
+import structlog
 
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT
@@ -19,14 +20,20 @@ from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
 from heslar.models import RuianKraj
 
+logger_s = structlog.get_logger(__name__)
+
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
 HEADER_HEIGHT = 10 * mm
 HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png")
 
-pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
-registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+#Try except because of failing sphinx-build
+try:
+    pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
+    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+except Exception as e:
+    logger_s.error(module="doc_utils", exception=e)
 
 
 Title = "Hello world"
@@ -73,8 +80,8 @@ class OznameniPDFCreator(DocumentCreator):
         Potvrzujeme, že <strong>{self.oznamovatel.oznamovatel}</strong> ({self.oznamovatel.adresa}; tel: {self.oznamovatel.telefon}; 
         email: {self.oznamovatel.email}), jehož zastupuje {self.oznamovatel.odpovedna_osoba}, 
         ohlásil záměr <strong>{self.projekt.podnet}</strong> (označení stavby: {self.projekt.oznaceni_stavby}; 
-        plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ')} - 
-        {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ')} na 
+        plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} - 
+        {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} na 
         k. ú. <strong>{str(self.projekt.hlavni_katastr).replace("(", "(okr. ")}</strong>, parc. č. 
         {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU[dok_index]}. 
         Oznámení provedl <strong>{datum_zmeny.strftime('%d. %m. %Y').replace(' 0', ' ')}</strong> pod evidenčním číslem 

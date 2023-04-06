@@ -127,8 +127,6 @@ def detail(request, ident_cely):
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
         ).all()
-    else:
-        logger.debug("Projekt neni typu zachranny ani pruzkum " + str(typ_projektu))
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
@@ -1081,6 +1079,10 @@ def pripojit_dokument(request, proj_ident_cely):
 def generovat_oznameni(request, ident_cely):
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     projekt.create_confirmation_document(additional=True, user=request.user)
+    if projekt.ident_cely[0] == "C":
+        Mailer.send_ep01a(project=projekt)
+    else:
+        Mailer.send_ep01b(project=projekt)
     return redirect("projekt:detail", ident_cely=ident_cely)
 
 

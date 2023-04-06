@@ -1,10 +1,11 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
+{% load template_tags %}
 {% block content %}
     <p>{% trans "E-N-03.dobrý_den" %},</p>
     <p>
         {% trans "E-N-03.vámi_odeslaný_samostatný_nález" %}
-        <b><a href="{{ site_url }}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-N-03.na_katastru" %}
+        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-N-03.na_katastru" %}
         <b>{{ katastr }}</b> {% trans "E-N-03.byl_vrácen_do_stavu" %}
         <b>{{ state }}</b>.</p>
     <p><b>{% trans "E-N-03.důvod" %}:</b> {{ reason }}</p>

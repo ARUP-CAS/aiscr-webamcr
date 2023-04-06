@@ -7,6 +7,7 @@ from django import forms
 from django.db import utils
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
 from crispy_forms.bootstrap import AppendedText
 
@@ -27,6 +28,7 @@ from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
+
 class AutoriField(forms.models.ModelMultipleChoiceField):
     def clean(self, value):
         qs = super().clean(value)
@@ -42,6 +44,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
                 i = i+1
             qs = new_qs.order_by("qs_order")
         return qs
+
 
 class CoordinatesDokumentForm(forms.Form):
     detector_system_coordinates = forms.ChoiceField(
@@ -208,7 +211,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             dok_osoby_div = Div(
                 AppendedText(
                     "dokument_osoba",
-                    '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-2 input-osoba select2-input",
             )
@@ -394,7 +397,7 @@ class EditDokumentForm(forms.ModelForm):
             autori_div = Div(
                 AppendedText(
                     "autori",
-                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-2 input-osoba select2-input",
             )
@@ -539,7 +542,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             autori_div = Div(
                 AppendedText(
                     "autori",
-                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-6 input-osoba select2-input",
             )

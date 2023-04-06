@@ -18,7 +18,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django_auto_logout.utils import now, seconds_until_idle_time_end
@@ -94,7 +94,7 @@ def delete_file(request, pk):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")
         if next_url:
-            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
                 logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
@@ -239,8 +239,6 @@ def post_upload(request):
                 nazev=checksum + "_" + new_name,
                 # Short name is new name without checksum
                 nazev_zkraceny=new_name,
-                nazev_puvodni=old_name,
-                vlastnik=get_object_or_404(User, email="amcr@arup.cas.cz"),
                 mimetype=get_mime_type(old_name),
                 size_mb=soubor.size / 1024 / 1024,
             )

@@ -84,6 +84,7 @@
     });
   </script>
   <script>
+    window.addEventListener("DOMContentLoaded", function() {
     const togglePassword = document.querySelector("#togglePassword");
     const password = document.querySelector("#id_password");
 
@@ -95,5 +96,6 @@
         // toggle the icon
         this.classList.toggle("bi-eye");
     });
+  });
   </script>
 {% endblock %}

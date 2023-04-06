@@ -7,28 +7,28 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS += [
-    # "debug_toolbar",
+    "debug_toolbar",
 ]
 
 MIDDLEWARE += [
-    # "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 DEBUG_TOOLBAR_PANELS = [
-    # "debug_toolbar.panels.history.HistoryPanel",
-    # "debug_toolbar.panels.versions.VersionsPanel",
-    # "debug_toolbar.panels.timer.TimerPanel",
-    # "debug_toolbar.panels.settings.SettingsPanel",
-    # "debug_toolbar.panels.headers.HeadersPanel",
-    # "debug_toolbar.panels.request.RequestPanel",
-    # "debug_toolbar.panels.sql.SQLPanel",
-    # "debug_toolbar.panels.staticfiles.StaticFilesPanel",
-    # "debug_toolbar.panels.templates.TemplatesPanel",
-    # "debug_toolbar.panels.cache.CachePanel",
-    # "debug_toolbar.panels.signals.SignalsPanel",
-    # "debug_toolbar.panels.logging.LoggingPanel",
-    # "debug_toolbar.panels.redirects.RedirectsPanel",
-    # "debug_toolbar.panels.profiling.ProfilingPanel",
+    "debug_toolbar.panels.history.HistoryPanel",
+    "debug_toolbar.panels.versions.VersionsPanel",
+    "debug_toolbar.panels.timer.TimerPanel",
+    "debug_toolbar.panels.settings.SettingsPanel",
+    "debug_toolbar.panels.headers.HeadersPanel",
+    "debug_toolbar.panels.request.RequestPanel",
+    "debug_toolbar.panels.sql.SQLPanel",
+    "debug_toolbar.panels.staticfiles.StaticFilesPanel",
+    "debug_toolbar.panels.templates.TemplatesPanel",
+    "debug_toolbar.panels.cache.CachePanel",
+    "debug_toolbar.panels.signals.SignalsPanel",
+    "debug_toolbar.panels.logging.LoggingPanel",
+    "debug_toolbar.panels.redirects.RedirectsPanel",
+    "debug_toolbar.panels.profiling.ProfilingPanel",
 ]
 
 # This is only so that debug toolbar is shown when developing in docker
@@ -39,7 +39,7 @@ CRISPY_FAIL_SILENTLY = not DEBUG
 
 SILENCED_SYSTEM_CHECKS = ["captcha.recaptcha_test_key_error"]
 
-TEST_RUNNER = "core.tests.runner.AMCRTestRunner"
+TEST_RUNNER = "core.tests.runner.AMCRSeleniumTestRunner"
 
 INSTALLED_APPS.insert(0, "livereload")
 MIDDLEWARE.append("livereload.middleware.LiveReloadScript")
