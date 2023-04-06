@@ -59,7 +59,6 @@
   $(document).ready(function () {
         {% if coordinate_x is not None %}
         let [corX, corY] = amcr_static_coordinate_precision_wgs84([{{ coordinate_x }}, {{ coordinate_y }}]);
-        document.getElementById("id-app-entity-item").innerHTML = "Zapsat nový model 3D"
 
         document.getElementById('id_vyska').value = corY;
         document.getElementById('id_sirka').value = corX;
