@@ -169,18 +169,6 @@ TEST_USER_USERNAME = "amcr@arup.cas.cz"
 TEST_USER_PASSWORD = "foo1234!!!"
 
 
-def add_middleware_to_request(request, middleware_class):
-    middleware = middleware_class()
-    middleware.process_request(request)
-    return request
-
-
-def add_middleware_to_response(request, middleware_class):
-    middleware = middleware_class()
-    middleware.process_response(request)
-    return request
-
-
 class AMCRBaseTestRunner(BaseRunner):
     def save_geographical_data(self):
         pass

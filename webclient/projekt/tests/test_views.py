@@ -1,7 +1,9 @@
+from django.urls import reverse
+
 from core.constants import SN_ZAPSANY
 from core.models import Soubor
 from core.message_constants import PROJEKT_NELZE_SMAZAT
-from core.tests.runner import KATASTR_ODROVICE_ID, add_middleware_to_request
+from core.tests.runner import KATASTR_ODROVICE_ID
 from django.contrib.gis.geos import Point
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -18,7 +20,6 @@ from uzivatel.models import User, UserNotificationType
 
 class UrlTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
         self.lokace_zahradky = Point(50.40, 15.70)
         self.projekt = Projekt(
@@ -40,30 +41,18 @@ class UrlTests(TestCase):
         self.oznamovatel.save()
 
     def test_get_detail_not_found(self):
-        request = self.factory.get("/projekt/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        with self.assertRaises(Http404, msg="No Projekt matches the given query."):
-            detail(request, ident_cely="not_existing_project_ident")
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("projekt:detail", kwargs={"ident_cely": "XXXXX"}))
+        self.assertEqual(404, response.status_code)
 
     def test_get_detail_found(self):
-        request = self.factory.get("/projekt/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = detail(request, ident_cely=self.projekt.ident_cely)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("projekt:detail", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(200, response.status_code)
 
     def test_edit_get_success(self):
-        request = self.factory.get("/projekt/edit/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = edit(request, ident_cely=self.projekt.ident_cely)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("projekt:edit", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(200, response.status_code)
 
     def test_edit_post_success(self):
@@ -85,13 +74,8 @@ class UrlTests(TestCase):
             "save": "Upravit",
         }
 
-        request = self.factory.post("/projekt/edit/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
-
-        response = edit(request, self.projekt.ident_cely)
+        self.client.force_login(self.existing_user)
+        response = self.client.post(reverse("projekt:edit", kwargs={"ident_cely": self.projekt.ident_cely}), data)
         projekt = Projekt.objects.get(ident_cely=self.projekt.ident_cely)
         self.assertEqual(302, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
@@ -99,15 +83,11 @@ class UrlTests(TestCase):
         self.assertTrue(projekt.geom.coords != self.lokace_zahradky.coords)
 
     def test_get_smazat_check(self):
-        request = self.factory.get("/projekt/smazat/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
-
-        response = smazat(request, ident_cely=self.projekt.ident_cely)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("projekt:smazat", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(200, response.status_code)
 
+    def test_get_smazat_samostatny_nalez_check(self):
         # Add samostatny nalez
         nalez = SamostatnyNalez(
             projekt=self.projekt,
@@ -118,7 +98,7 @@ class UrlTests(TestCase):
 
         # Client is used there to follow redirect
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/projekt/smazat/{self.projekt.ident_cely}", follow=True)
+        response = self.client.get(reverse("projekt:smazat", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(403, response.status_code)
 
     def test_post_create_success(self):
@@ -137,27 +117,18 @@ class UrlTests(TestCase):
             "email": "tester@tester.tester",
             "old_stav": 0,
         }
-        request = self.factory.post("/projekt/create/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
+        self.client.force_login(self.existing_user)
 
         projects_before = Projekt.objects.all().count()
-        response = create(request)
+        response = self.client.post(reverse("projekt:create"), data)
         projects_after = Projekt.objects.all().count()
         self.assertEqual(302, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
         self.assertTrue(projects_before < projects_after)
 
     def test_get_create_success(self):
-        request = self.factory.get("/projekt/create")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
-
-        response = create(request)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("projekt:create"))
         self.assertEqual(200, response.status_code)
 
 

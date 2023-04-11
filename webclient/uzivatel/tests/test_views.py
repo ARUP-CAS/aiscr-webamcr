@@ -1,6 +1,8 @@
 from unittest import mock
 
-from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID, add_middleware_to_request
+from django.urls import reverse
+
+from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
@@ -13,12 +15,8 @@ class TestUzivatel(TestCase):
         self.factory = RequestFactory()
 
     def test_get_create_osoba(self):
-        request = self.factory.get("/uzivatel/osoba/create/")
-        request.user = User.objects.get(email="amcr@arup.cas.cz")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = create_osoba(request)
+        self.client.force_login(User.objects.get(email="amcr@arup.cas.cz"))
+        response = self.client.get(reverse("heslar:create_osoba"))
         self.assertEqual(200, response.status_code)
 
     @mock.patch("uzivatel.views.messages.add_message", return_value=None)
@@ -27,12 +25,8 @@ class TestUzivatel(TestCase):
             "jmeno": "Tester",
             "prijmeni": "Testovaci",
         }
-        request = self.factory.post("/uzivatel/osoba/create/", data)
-        request.user = User.objects.get(email="amcr@arup.cas.cz")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = create_osoba(request)
+        self.client.force_login(User.objects.get(email="amcr@arup.cas.cz"))
+        response = self.client.post(reverse("heslar:create_osoba"), data)
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
 
@@ -40,19 +34,16 @@ class TestUzivatel(TestCase):
         data = {
             "csrfmiddlewaretoken": "4NS9fHO417U5EKpG84rdhfvXNhm3fMdtz0WWmkOMwwpxtsZkClhzm6VCXjEDjGm1",
             "first_name": "Jarko",
-            "last_name ": "Mrkvicka",
-            "organizace ": str(AMCR_TESTOVACI_ORGANIZACE_ID),
+            "last_name": "Mrkvicka",
+            "telefon": "",
+            "organizace": str(AMCR_TESTOVACI_ORGANIZACE_ID),
             "email": "mrkvicka@neaktivni.com",
-            "password1 ": "mojesupertajneheslo",
-            "password2 ": "mojesupertajneheslo",
+            "password1": "mojesupertajneheslo",
+            "password2": "mojesupertajneheslo",
         }
-        request = self.factory.post("/accounts/register", data)
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.user = AnonymousUser()
-        request.session.save()
 
         user_count_before = User.objects.all().count()
-        response = UserRegistrationView.as_view()(request)
+        response = self.client.post("/accounts/register/", data, follow=True)
         user_count_after = User.objects.all().count()
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertTrue(user_count_after > user_count_before)
