@@ -1,5 +1,8 @@
+from django.test import TestCase
 from django.urls import reverse
-from ez.models import ExterniZdroj
+
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.constants import EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY
 from core.tests.runner import (
     EL_CHEFE_ID,
     EXISTIN_EO_ID,
@@ -7,27 +10,18 @@ from core.tests.runner import (
     EXISTING_EZ_IDENT,
     EXISTING_EZ_ODESLANY,
     EZ_TYP,
-    EZ_TYP_NEW,
 )
-from django.test import RequestFactory, TestCase
-from django.utils.translation import gettext as _
+from ez.models import ExterniZdroj
 from uzivatel.models import User
-from django.contrib.sessions.middleware import SessionMiddleware
-from ez.views import ExterniZdrojDetailView
-from core.constants import EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 
 
 class UrlTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_ez_detail(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/ext-zdroj/detail/")
-
-        response = ExterniZdrojDetailView.as_view()(request, slug=EXISTING_EZ_IDENT)
+        response = self.client.get(reverse("ez:detail", kwargs={"slug": EXISTING_EZ_IDENT}))
         self.assertEqual(200, response.status_code)
 
     def test_get_ez_vyber(self):

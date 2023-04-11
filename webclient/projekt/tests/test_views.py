@@ -1,3 +1,5 @@
+from django.urls import reverse
+
 from core.constants import SN_ZAPSANY
 from core.models import Soubor
 from core.message_constants import PROJEKT_NELZE_SMAZAT
@@ -18,7 +20,6 @@ from uzivatel.models import User, UserNotificationType
 
 class UrlTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
         self.lokace_zahradky = Point(50.40, 15.70)
         self.projekt = Projekt(
@@ -41,23 +42,17 @@ class UrlTests(TestCase):
 
     def test_get_detail_not_found(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/projekt/detail/")
-
-        with self.assertRaises(Http404, msg="No Projekt matches the given query."):
-            detail(request, ident_cely="not_existing_project_ident")
+        response = self.client.get(reverse("projekt:detail", kwargs={"ident_cely": "XXXXX"}))
+        self.assertEqual(404, response.status_code)
 
     def test_get_detail_found(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/projekt/detail/")
-
-        response = detail(request, ident_cely=self.projekt.ident_cely)
+        response = self.client.get(reverse("projekt:detail", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(200, response.status_code)
 
     def test_edit_get_success(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/projekt/edit/")
-
-        response = edit(request, ident_cely=self.projekt.ident_cely)
+        response = self.client.get(reverse("projekt:edit", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(200, response.status_code)
 
     def test_edit_post_success(self):
@@ -80,9 +75,7 @@ class UrlTests(TestCase):
         }
 
         self.client.force_login(self.existing_user)
-        request = self.factory.post("/projekt/edit/", data)
-
-        response = edit(request, self.projekt.ident_cely)
+        response = self.client.post(reverse("projekt:edit", kwargs={"ident_cely": self.projekt.ident_cely}), data)
         projekt = Projekt.objects.get(ident_cely=self.projekt.ident_cely)
         self.assertEqual(302, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
@@ -91,11 +84,10 @@ class UrlTests(TestCase):
 
     def test_get_smazat_check(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/projekt/smazat/")
-
-        response = smazat(request, ident_cely=self.projekt.ident_cely)
+        response = self.client.get(reverse("projekt:smazat", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(200, response.status_code)
 
+    def test_get_smazat_samostatny_nalez_check(self):
         # Add samostatny nalez
         nalez = SamostatnyNalez(
             projekt=self.projekt,
@@ -106,7 +98,7 @@ class UrlTests(TestCase):
 
         # Client is used there to follow redirect
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/projekt/smazat/{self.projekt.ident_cely}", follow=True)
+        response = self.client.get(reverse("projekt:smazat", kwargs={"ident_cely": self.projekt.ident_cely}))
         self.assertEqual(403, response.status_code)
 
     def test_post_create_success(self):
@@ -126,10 +118,9 @@ class UrlTests(TestCase):
             "old_stav": 0,
         }
         self.client.force_login(self.existing_user)
-        request = self.factory.post("/projekt/create/", data)
 
         projects_before = Projekt.objects.all().count()
-        response = create(request)
+        response = self.client.post(reverse("projekt:create"), data)
         projects_after = Projekt.objects.all().count()
         self.assertEqual(302, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
@@ -137,9 +128,7 @@ class UrlTests(TestCase):
 
     def test_get_create_success(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/projekt/create")
-
-        response = create(request)
+        response = self.client.get(reverse("projekt:create"))
         self.assertEqual(200, response.status_code)
 
 

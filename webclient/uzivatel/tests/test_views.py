@@ -1,5 +1,7 @@
 from unittest import mock
 
+from django.urls import reverse
+
 from core.tests.runner import AMCR_TESTOVACI_ORGANIZACE_ID
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -14,9 +16,7 @@ class TestUzivatel(TestCase):
 
     def test_get_create_osoba(self):
         self.client.force_login(User.objects.get(email="amcr@arup.cas.cz"))
-        request = self.factory.get("/uzivatel/osoba/create/")
-
-        response = create_osoba(request)
+        response = self.client.get(reverse("heslar:create_osoba"))
         self.assertEqual(200, response.status_code)
 
     @mock.patch("uzivatel.views.messages.add_message", return_value=None)
@@ -26,9 +26,7 @@ class TestUzivatel(TestCase):
             "prijmeni": "Testovaci",
         }
         self.client.force_login(User.objects.get(email="amcr@arup.cas.cz"))
-        request = self.factory.post("/uzivatel/osoba/create/", data)
-
-        response = create_osoba(request)
+        response = self.client.post(reverse("heslar:create_osoba"), data)
         self.assertEqual(200, response.status_code)
         self.assertTrue("error" not in response.content.decode("utf-8"))
 
@@ -36,16 +34,16 @@ class TestUzivatel(TestCase):
         data = {
             "csrfmiddlewaretoken": "4NS9fHO417U5EKpG84rdhfvXNhm3fMdtz0WWmkOMwwpxtsZkClhzm6VCXjEDjGm1",
             "first_name": "Jarko",
-            "last_name ": "Mrkvicka",
-            "organizace ": str(AMCR_TESTOVACI_ORGANIZACE_ID),
+            "last_name": "Mrkvicka",
+            "telefon": "",
+            "organizace": str(AMCR_TESTOVACI_ORGANIZACE_ID),
             "email": "mrkvicka@neaktivni.com",
-            "password1 ": "mojesupertajneheslo",
-            "password2 ": "mojesupertajneheslo",
+            "password1": "mojesupertajneheslo",
+            "password2": "mojesupertajneheslo",
         }
-        request = self.factory.post("/accounts/register", data)
 
         user_count_before = User.objects.all().count()
-        response = UserRegistrationView.as_view()(request)
+        response = self.client.post("/accounts/register/", data, follow=True)
         user_count_after = User.objects.all().count()
-        self.assertEqual(302, response.status_code)
+        self.assertEqual(200, response.status_code)
         self.assertTrue(user_count_after > user_count_before)

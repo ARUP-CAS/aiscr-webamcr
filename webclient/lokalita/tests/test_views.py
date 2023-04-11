@@ -1,6 +1,7 @@
 import re
 
-from django.template.response import TemplateResponse
+from django.test import TestCase
+from django.urls import reverse
 
 from arch_z.models import ArcheologickyZaznam
 from core.tests.runner import (
@@ -9,24 +10,17 @@ from core.tests.runner import (
     LOKALITA_DRUH,
     LOKALITA_TYP_NEW,
 )
-from django.test import RequestFactory, TestCase
-from django.utils.translation import gettext as _
 from heslar.hesla import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID
 from uzivatel.models import User
-from django.contrib.sessions.middleware import SessionMiddleware
-from lokalita.views import LokalitaDetailView
 
 
 class UrlTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_lokalita_detail(self):
         self.client.force_login(self.existing_user)
-        request = self.factory.get("/arch_z/lokalita/detail/")
-
-        response = LokalitaDetailView.as_view()(request, slug=EXISTING_LOKALITA_IDENT)
+        response = self.client.get(reverse("lokalita:detail", kwargs={"slug": EXISTING_LOKALITA_IDENT}))
         self.assertEqual(200, response.status_code)
 
     def test_get_lokalita_vyber(self):

@@ -60,3 +60,6 @@ EMAIL_FILE_PATH = "/vol/web/media/emails/"
 # auto logout settings
 AUTO_LOGOUT = {}
 SITE_URL = 'http://localhost:8000'
+
+# Fake key
+RECAPTCHA_PRIVATE_KEY = "OtKcTKoJwtIyCm0XFEf0EA5kVMV4hHaDaJfmyr"
