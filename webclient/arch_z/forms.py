@@ -21,6 +21,9 @@ logger_s = structlog.get_logger(__name__)
 
 
 class AkceVedouciFormSetHelper(FormHelper):
+    """
+    Form helper pro správne vykreslení formuláře vedoucích.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset_vedouci.html"
@@ -28,6 +31,15 @@ class AkceVedouciFormSetHelper(FormHelper):
 
 
 def create_akce_vedouci_objekt_form(readonly=True):
+    """
+    Funkce která vrací formulář VB pro formset.
+
+    Args:     
+        readonly (boolean): nastavuje formulář na readonly.
+    
+    Returns:
+        CreateAkceVedouciObjektForm: django model formulář AkceVedouci
+    """
     class CreateAkceVedouciObjektForm(forms.ModelForm):
         def clean(self):
             cleaned_data = super().clean()
@@ -92,6 +104,9 @@ def create_akce_vedouci_objekt_form(readonly=True):
 
 
 class CreateArchZForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení Archeologického záznamu.
+    """
     class Meta:
         model = ArcheologickyZaznam
         fields = (
@@ -138,6 +153,9 @@ class CreateArchZForm(forms.ModelForm):
         readonly=False,
         **kwargs,
     ):
+        """
+        Prepis init metódy pro vyplnení init hodnot, nastanvení readonly.
+        """
         projekt = kwargs.pop("projekt", None)
         projekt: Projekt
         super(CreateArchZForm, self).__init__(*args, **kwargs)
@@ -217,6 +235,9 @@ class CreateArchZForm(forms.ModelForm):
 
 
 class CustomDateInput(forms.DateField):
+    """
+    Custom class pro zadávaní počátečního a konečního datumu v roce zadaním jen roku.
+    """
     year_only_month = None
     year_only_day = None
 
@@ -228,6 +249,9 @@ class CustomDateInput(forms.DateField):
         return datetime.date(year, self.year_only_month, self.year_only_day)
 
     def to_python(self, value):
+        """
+        Prepis kvůli jinému objektu CustomDateInput.
+        """
         if value:
             if isinstance(value, str) and CustomDateInput.year_only(value):
                 return self.get_date_based_on_year(int(value))
@@ -238,16 +262,25 @@ class CustomDateInput(forms.DateField):
 
 
 class StartDateInput(CustomDateInput):
+    """
+    Class pro input prvního dne v roce.
+    """
     year_only_month = 1
     year_only_day = 1
 
 
 class EndDateInput(CustomDateInput):
+    """
+    Class pro input posledního dne v roce.
+    """
     year_only_month = 12
     year_only_day = 31
 
 
 class CreateAkceForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení akce.
+    """
     datum_zahajeni = StartDateInput(
         help_text=_("arch_z.form.datum_zahajeni.tooltip"),
     )
@@ -257,6 +290,9 @@ class CreateAkceForm(forms.ModelForm):
     )
 
     def clean(self):
+        """
+        Přepis clean metódy s custom oveřením datumu ukončení a zahájení.
+        """
         cleaned_data = super().clean()
         if (
             cleaned_data.get("datum_ukonceni") is not None
@@ -370,6 +406,9 @@ class CreateAkceForm(forms.ModelForm):
         self.fields["specifikace_data"].choices = list(
             self.fields["specifikace_data"].choices
         )[1:]
+        """
+        Prepis init metódy pro vyplnení init hodnot, nastanvení readonly.
+        """
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
             label=_("Hlavní typ"),
@@ -461,6 +500,9 @@ class CreateAkceForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean_odlozena_nz(self):
+        """
+        Custom clean metóda pro ověření že je_nz a odlozena_nz nejsou oba True.
+        """
         je_nz = self.cleaned_data["je_nz"]
         odlozena_nz = self.cleaned_data["odlozena_nz"]
         if odlozena_nz and je_nz:
@@ -468,6 +510,13 @@ class CreateAkceForm(forms.ModelForm):
         return odlozena_nz
 
     def clean_datum_zahajeni(self):
+        """
+        Custom clean metóda pro ověření:
+
+            ak je specifikace_data=přesně tak datum_zahájení nesmí být prázdne
+
+            datum zahájení není dále něž mesíc v budoucnu
+        """
         if (
             self.cleaned_data["specifikace_data"]
             == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)
@@ -479,6 +528,13 @@ class CreateAkceForm(forms.ModelForm):
         return self.cleaned_data["datum_zahajeni"]
 
     def clean_datum_ukonceni(self):
+        """
+        Custom clean metóda pro ověření:
+
+            ak je specifikace_data=přesně tak datum_ukončení nesmí být prázdne
+
+            datum ukončení není dále něž mesíc v budoucnu
+        """
         if (
             self.cleaned_data["specifikace_data"]
             == Heslar.objects.get(id=SPECIFIKACE_DATA_PRESNE)

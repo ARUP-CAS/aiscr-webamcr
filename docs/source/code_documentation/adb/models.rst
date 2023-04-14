@@ -1,7 +1,7 @@
 ADB modely
 ===========
 
-Definice modelov v databaze
+Definice modelů.
 
 .. automodule:: adb.models
     :members:

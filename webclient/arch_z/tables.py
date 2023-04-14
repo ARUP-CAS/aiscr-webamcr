@@ -8,6 +8,9 @@ from .models import Akce
 
 
 class AkceTable(SearchTable):
+    """
+        Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
+    """
     ident_cely = tables.Column(
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )

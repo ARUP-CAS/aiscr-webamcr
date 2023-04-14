@@ -16,8 +16,9 @@ logger_s = structlog.get_logger(__name__)
 
 class Kladysm5(models.Model):
     """
-    Class pro model kladysm5
+    Class pro db model kladysm5.
     """
+
     gid = models.IntegerField(primary_key=True)
     id = models.DecimalField(max_digits=1000, decimal_places=1000)
     mapname = models.TextField()
@@ -33,8 +34,9 @@ class Kladysm5(models.Model):
 class Adb(models.Model):
     """
     Class pre db model ADB.
-    Obsahuje vazbu na dokumentacni jednotku
+    Obsahuje vazbu na dokumentační jednotku.
     """
+
     dokumentacni_jednotka = models.OneToOneField(
         DokumentacniJednotka,
         models.RESTRICT,
@@ -89,7 +91,16 @@ class Adb(models.Model):
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     """
-    metoda na vypocet ident cely pro vyskovy bod
+    Funkce pro výpočet ident celý pro VB.
+    Obsahuje test na pretečení hodnot.
+
+    Args:
+        adb (adb): adb objekt pro získaní základu identu.
+
+        offset (int): offset k pripočtení k poslednímu VB
+        
+    Returns:
+        string: nový ident celý
     """
     MAXIMAL_VYSKOVY_BOD: int = 9999
     last_digit_count = 4
@@ -110,9 +121,10 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
 
 class VyskovyBod(models.Model):
     """
-    Class pre db model vyskovy bod.
+    Class pre db model vyškový bod.
     Obsahuje vazbu na ADB.
     """
+
     adb = models.ForeignKey(
         Adb, on_delete=models.CASCADE, db_column="adb", related_name="vyskove_body"
     )
@@ -128,9 +140,14 @@ class VyskovyBod(models.Model):
 
     def set_geom(self, northing, easting, niveleta):
         """
-        Metoda na nastaveni geomu (suradnic)
+        Metóda na nastavení geomu (súradnic).
         """
-        logger_s.debug("adb.models.VyskovyBod.set_geom", northing=northing, easting=easting, nivelete=niveleta)
+        logger_s.debug(
+            "adb.models.VyskovyBod.set_geom",
+            northing=northing,
+            easting=easting,
+            nivelete=niveleta,
+        )
         if northing != 0.0:
             self.geom = Point(
                 x=fabs(northing),
@@ -142,7 +159,7 @@ class VyskovyBod(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        Override save metody na nastaveni ident cely pokud je prazdny
+        Override save metódy na nastavení ident celý pokud je prázdny.
         """
         if self.adb and self.ident_cely == "":
             self.ident_cely = get_vyskovy_bod(self.adb)
@@ -150,7 +167,7 @@ class VyskovyBod(models.Model):
 
     def __init__(self, *args, **kwargs):
         """
-        Override init metody pro upravu suradnic
+        Override init metody pro úpravu súradnic.
         """
         super(VyskovyBod, self).__init__(*args, **kwargs)
         self.northing = None
@@ -170,8 +187,9 @@ class VyskovyBod(models.Model):
 
 class AdbSekvence(models.Model):
     """
-    Class pro sekvenci ADB pole db modelu kladysm5
+    Class pro sekvenci ADB pole db modelu kladysm5.
     """
+
     kladysm5 = models.OneToOneField(
         "Kladysm5",
         models.RESTRICT,
