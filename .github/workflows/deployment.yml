@@ -39,9 +39,9 @@ jobs:
 
       - name: Wait for a VPN connection
         timeout-minutes: 2
-        run: until dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_1 }} A +time=1; do sleep 2; done
+        run: until dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_DEV }} A +time=1; do sleep 2; done
 
-      - name: SSH connection DEPLOYMENT_SERVER_1
+      - name: SSH connection DEPLOYMENT_SERVER_DEV
         run: |
           eval $(ssh-agent -s)
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_1 }}" | tr -d '\r' | ssh-add -
@@ -50,8 +50,8 @@ jobs:
           echo "${{ secrets.SSH_KNOWN_HOSTS_1 }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           sleep 10
-          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_1 }}
-          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_1 }} << EOF
+          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
             sudo su - root << AOF
             cd ${{ env.server_deploy_root }}
             echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> GITHUB_ENV
