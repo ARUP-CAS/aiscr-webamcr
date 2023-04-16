@@ -59,7 +59,7 @@ jobs:
             git checkout ${{ env.branch }}
             git pull
             chmod +x ${{ env.dep_script_test }}
-            sudo su - root -c "./${{ env.dep_script_test }} ${{ env.tag_version }}"
+            sudo su - root -c "./${{ env.dep_script_test }} ${{ env.tag_version }} ${{ env.server_deploy_root }} ${{ env.branch }}"
           
           EOF
 
