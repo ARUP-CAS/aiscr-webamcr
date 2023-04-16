@@ -52,11 +52,6 @@ services:
       - ./vol/web:/vol/web
     networks:
       - prod-net
-    depends_on:
-      redis:
-        condition: service_started
-      web:
-        condition: service_started
 
   celery_beat:
     image: aiscr/webamcr:${IMAGE_TAG}
@@ -70,11 +65,6 @@ services:
       - ./vol/web:/vol/web
     networks:
       - prod-net
-    depends_on:
-      redis:
-        condition: service_started
-      web:
-        condition: service_started
 
 volumes:
   static_data:
