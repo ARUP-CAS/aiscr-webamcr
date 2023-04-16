@@ -7,12 +7,15 @@ print_d1 () {
 
 }
 
-deployment_root="/home/amcr/aiscr-webamcr"
+
 
 current_deployment_tag=${1}
+deployment_root=${2}
+branch=${3}
+
 
 d_stamp="$(date +%Y%m%dT%H%M%S)"
-logpath="${deployment_root}/log"
+logpath="${deployment_root}/logs"
 scriptpath="${deployment_root}/scripts"
 logfile="deployment_${d_stamp}.log"
 logfilepath="${logpath}/${logfile}"
@@ -23,7 +26,7 @@ last_deployment_tag=$(cat ${path_last_tag})
 
 #Repo update
 git stash push -m "CI_autostash_${current_deployment_tag}_${d_stamp}"
-git checkout dev
+git checkout ${branch}
 git pull
 
 
