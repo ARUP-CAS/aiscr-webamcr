@@ -47,20 +47,20 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_1 }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KNOWN_HOSTS_1 }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           sleep 10
           ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_1 }}
           ssh amcr@${{ secrets.DEPLOYMENT_SERVER_1 }} << EOF
-            
+            sudo su - root << AOF
             cd ${{ env.server_deploy_root }}
             echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> GITHUB_ENV
             git stash push -m "CI_autostash_${{ env.tag_version }}_${{ env.date_stamp }}"
             git checkout ${{ env.branch }}
             git pull
             chmod +x ${{ env.dep_script_test }}
-            sudo su - root -c "./${{ env.dep_script_test }} ${{ env.tag_version }} ${{ env.server_deploy_root }} ${{ env.branch }}"
-          
+            ./${{ env.dep_script_test }} ${{ env.tag_version }} ${{ env.server_deploy_root }} ${{ env.branch }}"
+            AOF
           EOF
 
       - name: disconnect VPN
