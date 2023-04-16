@@ -1,10 +1,11 @@
 #!/bin/bash
 
-print_d1()
+print_d1 () {
     echo "----------------"
     echo "${1}" | tee -a ${logfile}
     echo "----------------"
 
+}
 
 deployment_root="/home/amcr/aiscr-webamcr"
 
