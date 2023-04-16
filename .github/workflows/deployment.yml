@@ -1,0 +1,77 @@
+name: Deployment to selected environment
+
+on:
+  workflow_dispatch :
+    inputs:
+      tags:
+       description: 'Tag describing manual trigger'
+       type: string
+       required: false
+
+
+env:
+  log_name: deployment_vpn.log
+  branch: dev
+  server_deploy_root: /home/amcr/aiscr-webamcr
+  dep_script_test: scripts/ci_deployment/deploy_server_1.sh
+
+jobs:
+  deployment:
+    name: Connect to VPN, do deployment actions, Kill VPN
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get tag
+        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get --assume-yes --no-install-recommends install openvpn iputils-ping dnsutils          
+
+      - name: Setup VPN config
+        run: |
+          echo "${{ secrets.VPN_CA_CRT }}" > ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > user.key
+          echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
+
+      - name: Connect VPN
+        run: sudo openvpn --config ".github/vpn/AMCR_config_github_ci.ovpn" --log "${{ env.log_name }}" --daemon --askpass secret.txt
+
+      - name: Wait for a VPN connection
+        timeout-minutes: 2
+        run: until dig ${{ secrets.DNS_RESOLVER }} ${{ secrets.DEPLOYMENT_SERVER_1 }} A +time=1; do sleep 2; done
+
+      - name: SSH connection DEPLOYMENT_SERVER_1
+        run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_1 }}" | tr -d '\r' | ssh-add -
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          sleep 10
+          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_1 }}
+          ssh amcr@${{ secrets.DEPLOYMENT_SERVER_1 }} << EOF
+            
+            cd ${{ env.server_deploy_root }}
+            echo "date_stamp=$(date +%Y%m%dT%H%M%S)" >> GITHUB_ENV
+            git stash push -m "CI_autostash_${{ env.tag_version }}_${{ env.date_stamp }}"
+            git checkout ${{ env.branch }}
+            git pull
+            chmod +x ${{ env.dep_script_test }}
+            sudo su - root -c "./${{ env.dep_script_test }} ${{ env.tag_version }}"
+          
+          EOF
+
+      - name: disconnect VPN
+        if: always()
+        run: |
+          sudo chmod 777 ${{ env.log_name }}
+          sudo killall openvpn    
+
+      - name: Upload VPN logs
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: VPN logs
+          path: ${{ env.log_name  }}
