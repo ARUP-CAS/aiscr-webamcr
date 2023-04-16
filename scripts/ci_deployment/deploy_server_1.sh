@@ -7,7 +7,7 @@ print_d1 () {
 
 }
 
-
+stack_name="swarm_webamcr"
 
 current_deployment_tag=${1}
 deployment_root=${2}
@@ -47,7 +47,7 @@ ${scriptpath}/prod_deploy.sh
 
 #Status check
 print_d1 "STATUS CHECK"
-test $(sudo docker stack ps --filter "desired-state=running" swarm_aiscr | wc -l) -eq 5 && true || false
+test $(sudo docker stack ps --filter "desired-state=running" ${stack_name} | wc -l) -eq 5 && true || false
 check_state="$?"
 
 if [ ${check_state} -eq 0 ]; then
