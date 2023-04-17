@@ -19,7 +19,10 @@ from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import Group
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class UserNotificationTypeInlineForm(forms.ModelForm):

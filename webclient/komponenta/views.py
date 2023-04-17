@@ -43,7 +43,7 @@ from nalez.models import NalezObjekt, NalezPredmet
 from core.constants import DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from dokument.models import DokumentCast
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required

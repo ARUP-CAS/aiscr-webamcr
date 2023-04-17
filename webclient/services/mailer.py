@@ -25,7 +25,10 @@ from historie.models import Historie
 from .mlstripper import MLStripper
 from urllib.parse import urljoin
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 groups = {
     "E-A-01": "S-E-A-XX",

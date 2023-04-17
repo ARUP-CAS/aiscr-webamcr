@@ -6,15 +6,14 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @receiver(pre_save, sender=ArcheologickyZaznam)
 def create_arch_z_vazby(sender, instance, **kwargs):
     if instance.pk is None:
         logger.debug(
-            "Creating history records for archaeological record " + str(instance)
-        )
+            "arch_z.create_arch_z_vazby", extra={"instance": str(instance)})
         hv = HistorieVazby(typ_vazby=ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE)
         hv.save()
         instance.historie = hv

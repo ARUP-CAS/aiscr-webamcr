@@ -61,8 +61,11 @@ from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from uzivatel.models import Organizace, User
 from services.mailer import Mailer
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 def get_detail_context(sn, request):
@@ -73,7 +76,7 @@ def get_detail_context(sn, request):
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
     context["history_dates"] = get_history_dates(sn.historie)
     context["show"] = get_detail_template_shows(sn)
-    logger.debug(context)
+    logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
         context["soubory"] = sn.soubory.soubory.all()
     else:

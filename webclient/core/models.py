@@ -20,7 +20,7 @@ from .constants import (
     SOUBOR_RELATION_TYPE,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def get_upload_to(instance, filename):
@@ -83,7 +83,7 @@ class Soubor(models.Model):
         return self.nazev
 
     def create_soubor_vazby(self):
-        logger.debug("Creating history records for soubor ")
+        logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
         hv.save()
         self.historie = hv
@@ -120,7 +120,7 @@ class Soubor(models.Model):
             try:
                 reader = PdfReader(self.path)
             except:
-                logger.debug("Error while reading pdf file to get rozsah. setting 1")
+                logger.debug("core.models.Soubor.save_error_reading_pdf")
                 self.rozsah = 1
             else:
                 self.rozsah = len(reader.pages)
@@ -128,7 +128,7 @@ class Soubor(models.Model):
             try:
                 img = Image.open(self.path)
             except:
-                logger.debug("Error while reading tif file to get rozsah. setting 1")
+                logger.debug("core.models.Soubor.save_error_reading_tif")
                 self.rozsah = 1
             else:
                 self.rozsah = img.n_frames

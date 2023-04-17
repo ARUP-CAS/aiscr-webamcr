@@ -11,8 +11,11 @@ from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
 import logging
 import structlog
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):

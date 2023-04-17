@@ -18,7 +18,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class ExterniZdroj(models.Model):

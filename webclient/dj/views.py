@@ -37,8 +37,11 @@ from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 @login_required
 @require_http_methods(["POST"])

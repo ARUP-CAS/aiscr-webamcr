@@ -31,7 +31,7 @@ from komponenta.models import Komponenta
 from nalez.forms import create_nalez_objekt_form, create_nalez_predmet_form
 from nalez.models import NalezObjekt, NalezPredmet
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required

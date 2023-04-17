@@ -24,7 +24,10 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 def validate_uzivatel_email(email):
@@ -38,8 +41,7 @@ def validate_uzivatel_email(email):
     ):
         logger_s.debug(
             "validate_uzivatel_email.ValidationError",
-            email=email,
-            hlavni_role_id=user[0].hlavni_role.pk,
+            extra={"email": email, "hlavni_role_id": user[0].hlavni_role.pk},
         )
         raise ValidationError(
             _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),

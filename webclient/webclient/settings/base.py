@@ -7,7 +7,7 @@ from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
+LOG_PATH = "/run/logs/"
 
 def get_secret(setting, default_value=None):
     file_path = (
@@ -20,14 +20,17 @@ def get_secret(setting, default_value=None):
 
     with open(file_path, "r") as f:
         secrets = json.load(f)
-    if default_value is None:
-        try:
-            return secrets[setting]
-        except KeyError:
-            error_msg = error_msg = f"Add {setting} variable to {file_path} file"
-            raise ImproperlyConfigured(error_msg)
+    if setting != "RECAPTCHA_PRIVATE_KEY":
+        if default_value is None:
+            try:
+                return secrets[setting]
+            except KeyError:
+                error_msg = error_msg = f"Add {setting} variable to {file_path} file"
+                raise ImproperlyConfigured(error_msg)
+        else:
+            secrets.get(setting, default_value)
     else:
-        secrets.get(setting, default_value)
+        return secrets.get(setting, "X")
 
 
 def get_mail_secret(setting, default_value=None):
@@ -68,7 +71,7 @@ SECRET_KEY = get_secret("SECRET_KEY")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "ENGINE": "django_prometheus.db.backends.postgis",
         "NAME": get_secret("DB_NAME"),
         "USER": get_secret("DB_USER"),
         "PASSWORD": get_secret("DB_PASS"),
@@ -128,9 +131,11 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_beat",
     "django_celery_results",
+    'django_prometheus',
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -142,6 +147,7 @@ MIDDLEWARE = [
     "django_structlog.middlewares.RequestMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 CRON_CLASSES = [
@@ -250,116 +256,106 @@ LOGOUT_REDIRECT_URL = "/"
 
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "formatters": {
-        "json_formatter": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.JSONRenderer(),
-            "foreign_pre_chain": [
-                structlog.contextvars.merge_contextvars,  # <---- add this
-                # django_structlog.processors.inject_context_dict, # <---- remove this
-                structlog.processors.TimeStamper(fmt="iso"),
-                structlog.stdlib.add_logger_name,
-                structlog.stdlib.add_log_level,
-                structlog.stdlib.PositionalArgumentsFormatter(),
-            ],
-        },
-        "timestamp": {
-            "format": "{asctime} {levelname} {message}",
-            "style": "{",
-        },
-    },
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "timestamp",
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.TCPLogstashHandler',
+            'host': 'logstash',
+            'port': 5959,
+            'version': 1,
+            'message_type': 'logstash',
+            'fqdn': False,
+            'tags': ['myapp'],
         },
     },
     "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "propagate": True,
+        'django': {
+            'handlers': ['logstash'],
+            'level': 'INFO',
+            'propagate': True,
         },
         "historie": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "oznameni": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "projekt": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "heslar": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "core": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "cron": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "ez": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "pian": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "uzivatel": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "arch_z": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "dokument": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "dj": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "komponenta": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "nalez": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "adb": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "pas": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "lokalita": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "neidentakce": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "services": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
         "django_cron": {
-            "handlers": ["console"],
+            "handlers": ["logstash"],
             "level": "DEBUG",
         },
     },
@@ -403,9 +399,7 @@ DIGI_LINKS = {
 
 structlog.configure(
     processors=[
-        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
-        structlog.processors.TimeStamper(fmt="iso"),
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
         structlog.stdlib.PositionalArgumentsFormatter(),
@@ -414,7 +408,6 @@ structlog.configure(
         structlog.processors.UnicodeDecoder(),
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
     ],
-    # context_class=structlog.threadlocal.wrap_dict(dict), upgrade structlog
     logger_factory=structlog.stdlib.LoggerFactory(),
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,

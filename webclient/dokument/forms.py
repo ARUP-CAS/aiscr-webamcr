@@ -26,7 +26,7 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class AutoriField(forms.models.ModelMultipleChoiceField):

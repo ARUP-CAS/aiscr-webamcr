@@ -22,6 +22,7 @@ services:
       - ./webclient:/code
       - ./vol/web:/vol/web
       - locale_data:/vol/web/locale
+      - logs_volume:/run/logs
     ports:
       - "8000:8000"
       - "5678:5678"
@@ -59,6 +60,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DB
+      args:
+        DB_BACKUP_FILE: backup_file_db_v4.tar
     ports:
       - "5432:5432"
     secrets:
@@ -101,6 +104,13 @@ services:
     secrets:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
 
   celery_worker:
     build:
@@ -145,11 +155,41 @@ services:
       - 4444:4444
       - 5900:5900
     shm_size: '1gb'
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    depends_on:
+      - elasticsearch
+    volumes:
+      - logs_volume:/logs:ro
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+    ports:
+      - 9200:9200
+    volumes:
+      - elasticsearch_volume:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    restart: always
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
 volumes:
   locale_data:
   pg_admin_vol:
   db_dev_data:
-
+  logs_volume:
+  elasticsearch_volume:
 
 secrets:
   pg_admin_pass:

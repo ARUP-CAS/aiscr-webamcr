@@ -28,7 +28,7 @@ from django.utils.translation import gettext_lazy as _
 from django.forms import inlineformset_factory
 from .forms import CONTENT_TYPES
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 ALLOWED_ROLES = ["admin", "archeolog", "archivar"]

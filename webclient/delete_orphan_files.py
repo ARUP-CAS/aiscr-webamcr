@@ -3,7 +3,10 @@ from core.models import Soubor
 from webclient.settings.base import MEDIA_ROOT
 import structlog
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 def list_files_in_db():

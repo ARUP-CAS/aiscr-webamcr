@@ -12,7 +12,10 @@ from .forms import NeidentAkceForm
 
 from .models import NeidentAkce
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class NeidentAkceEditView(LoginRequiredMixin, UpdateView):

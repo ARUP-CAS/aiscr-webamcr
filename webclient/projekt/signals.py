@@ -9,7 +9,7 @@ from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @receiver(pre_save, sender=Projekt)

@@ -12,8 +12,11 @@ from bs4 import BeautifulSoup
 from polib import pofile
 from django.conf import settings
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class SelectMultipleSeparator(forms.SelectMultiple):

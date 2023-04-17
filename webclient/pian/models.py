@@ -19,7 +19,7 @@ from core.exceptions import MaximalIdentNumberError
 from uzivatel.models import User
 from django.db.models import Q, CheckConstraint
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class Pian(models.Model):

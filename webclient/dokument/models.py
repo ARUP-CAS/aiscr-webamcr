@@ -50,7 +50,7 @@ from komponenta.models import KomponentaVazby
 from uzivatel.models import Organizace, Osoba
 from core.utils import calculate_crc_32
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class Dokument(models.Model):

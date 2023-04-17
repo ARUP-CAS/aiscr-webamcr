@@ -11,7 +11,7 @@ from django.core.cache import cache
 from core.constants import ROLE_NASTAVENI_ODSTAVKY
 from django.core.cache.utils import make_template_fragment_key
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class OdstavkaSystemuAdmin(admin.ModelAdmin):

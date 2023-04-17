@@ -99,8 +99,11 @@ from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger = logging.getLogger('python-logstash-logger')
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 @login_required

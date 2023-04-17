@@ -61,7 +61,7 @@ from nalez.models import NalezObjekt
 from core.models import Soubor
 from core.forms import SelectMultipleSeparator
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class SouborTypFilter(MultipleChoiceFilter):

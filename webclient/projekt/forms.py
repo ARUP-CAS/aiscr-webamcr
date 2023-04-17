@@ -16,7 +16,10 @@ from projekt.models import Projekt
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 class CreateProjektForm(forms.ModelForm):
     latitude = forms.FloatField(required=False, widget=HiddenInput())

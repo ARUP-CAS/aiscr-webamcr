@@ -121,8 +121,11 @@ from neidentakce.models import NeidentAkce
 from ez.forms import PripojitArchZaznamForm
 from projekt.forms import PripojitProjektForm
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 @login_required

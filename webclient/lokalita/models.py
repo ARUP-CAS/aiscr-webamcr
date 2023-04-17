@@ -14,7 +14,7 @@ from core.constants import D_STAV_ARCHIVOVANY, PIAN_POTVRZEN
 
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 # Create your models here.
 class Lokalita(models.Model):

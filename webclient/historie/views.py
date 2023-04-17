@@ -15,7 +15,10 @@ from projekt.models import Projekt
 from core.views import ExportMixinDate
 from uzivatel.models import User
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
