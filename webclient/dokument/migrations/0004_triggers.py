@@ -5,42 +5,13 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('dokument', '0003_initial'),
+        ("dokument", "0003_initial"),
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="""
-            CREATE OR REPLACE FUNCTION public.delete_connected_document_cast()
-                RETURNS trigger
-                LANGUAGE 'plpgsql'
-                COST 100
-                VOLATILE NOT LEAKPROOF
-            AS $BODY$
-                    BEGIN
-                        DELETE FROM dokument_cast AS dc
-                        WHERE dc.archeologicky_zaznam = old.id AND NOT EXISTS (SELECT FROM neident_akce AS na WHERE dc.id = na.dokument_cast)
-                        AND NOT EXISTS (SELECT FROM komponenta AS k WHERE k.komponenta_vazby = dc.komponenty);
-                        RETURN NEW;
-                    END;   
-            $BODY$;
-            """,
-            reverse_sql="DROP FUNCTION public.delete_connected_document_cast;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE TRIGGER delete_connected_document_cast
-                AFTER DELETE
-                ON archeologicky_zaznam
-                FOR EACH ROW
-                EXECUTE FUNCTION delete_connected_document_cast();
-        """,
-            reverse_sql="DROP TRIGGER public.delete_connected_document_cast;",
-        ),
         migrations.RunSQL(
             sql="""
             CREATE OR REPLACE FUNCTION public.delete_related_komponenta()
@@ -76,5 +47,37 @@ class Migration(migrations.Migration):
                 EXECUTE FUNCTION delete_related_komponenta();
             """,
             reverse_sql="DROP TRIGGER public.delete_related_komponenta_dokumentacni_jednotka;",
-        )
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE OR REPLACE FUNCTION public.delete_related_neident_dokument_cast()
+                RETURNS trigger
+                LANGUAGE 'plpgsql'
+                COST 100
+                VOLATILE NOT LEAKPROOF
+            AS $BODY$
+                BEGIN
+                    DELETE FROM neident_akce AS na
+                    WHERE na.dokument_cast = old.id
+                    ;
+                    DELETE FROM neident_akce_vedouci AS nav
+                    WHERE nav.neident_akce = old.id
+                    ;
+                    return null
+                    ;
+                END;    
+            $BODY$;
+            """,
+            reverse_sql="DROP FUNCTION public.delete_related_neident_dokument_cast;",
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE TRIGGER delete_related_neident_dokument_cast
+                AFTER DELETE
+                ON dokument_cast
+                FOR EACH ROW
+                EXECUTE FUNCTION delete_related_neident_dokument_cast();
+            """,
+            reverse_sql="DROP TRIGGER public.delete_related_neident_dokument_cast;",
+        ),
     ]
