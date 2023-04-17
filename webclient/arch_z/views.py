@@ -1407,6 +1407,19 @@ class AkceListView(SearchListView):
     default_header = _("akce.vyber.header.default")
     toolbar_name = _("akce.template.toolbar.title")
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = (
+            qs.all()
+            .select_related(
+                "archeologicky_zaznam__hlavni_katastr",
+                "archeologicky_zaznam__hlavni_katastr__okres",
+                "organizace",
+                "hlavni_vedouci",  
+            ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
+        )
+        return qs
+
 
 class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
     template_name = "core/transakce_modal.html"

@@ -80,6 +80,16 @@ class ExterniZdrojListView(SearchListView):
     default_header = _("externiZdroj.vyber.header.default")
     toolbar_name = _("externiZdroj.template.toolbar.title")
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.select_related(
+            "typ",
+        ).prefetch_related(
+            "editori",
+            "autori"
+        )
+        return qs
+
 
 class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
     model = ExterniZdroj

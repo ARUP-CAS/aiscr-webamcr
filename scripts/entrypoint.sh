@@ -34,5 +34,4 @@ for lang_item in ${languages[@]}; do
 
 done
 
-uwsgi --socket :8000 \
-  --master --enable-threads --module webclient.wsgi
+uwsgi /scripts/uwsgi_site.ini

@@ -120,6 +120,8 @@ from neidentakce.forms import NeidentAkceForm
 from neidentakce.models import NeidentAkce
 from ez.forms import PripojitArchZaznamForm
 from projekt.forms import PripojitProjektForm
+from core.models import Soubor
+from django.db.models import Prefetch, Subquery, OuterRef
 
 logger = logging.getLogger(__name__)
 logger_s = structlog.get_logger(__name__)
@@ -289,9 +291,29 @@ class DokumentListView(SearchListView):
 
     def get_queryset(self):
         # Only allow to view 3D models
+        subqry = Subquery(
+            Soubor.objects.filter(
+                mimetype__startswith="image", vazba=OuterRef("vazba")
+            ).values_list("id", flat=True)[:1]
+        )
         qs = super().get_queryset().exclude(ident_cely__contains="3D")
         qs = qs.select_related(
-            "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+            "typ_dokumentu",
+            "extra_data",
+            "organizace",
+            "extra_data__format",
+            "soubory",
+            "let",
+            "rada",
+            "pristupnost",
+            "material_originalu",
+            "ulozeni_originalu",
+        ).prefetch_related(
+            Prefetch(
+                "soubory__soubory",
+                queryset=Soubor.objects.filter(id__in=subqry),
+                to_attr="first_soubor",
+            )
         )
         return qs
 

@@ -65,7 +65,16 @@ class LokalitaListView(SearchListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related("druh", "typ_lokality", "zachovalost", "jistota")
+        qs = qs.select_related(
+            "druh",
+            "typ_lokality",
+            "zachovalost",
+            "jistota",
+            "archeologicky_zaznam__hlavni_katastr",
+            "archeologicky_zaznam__hlavni_katastr__okres",
+            "archeologicky_zaznam",
+            "archeologicky_zaznam__pristupnost",
+        ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
         return qs
 
 
