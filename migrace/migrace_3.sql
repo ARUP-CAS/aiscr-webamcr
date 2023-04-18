@@ -239,10 +239,7 @@ alter table soubor rename column uzivatelske_oznaceni to nazev_puvodni;
 alter table uzivatel_spoluprace rename column badatel to spolupracovnik;
 -- 18. uzivatel_spoluprace.archeolog -> vedouci
 alter table uzivatel_spoluprace rename column archeolog to vedouci;
--- 19. soubor.nahled to text
-ALTER TABLE soubor ALTER COLUMN nahled TYPE text;
-UPDATE soubor SET nahled = null;
--- 20. soubor.sha_512
+-- 19. soubor.sha_512
 ALTER TABLE soubor ADD COLUMN sha_512 text;
 
 -- Pridat not null
