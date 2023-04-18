@@ -48,13 +48,7 @@
                 {% include 'bootstrap4/layout/field_file.html' %}
             {% else %}
                 <div{% if field_class %} class="{{ field_class }}"{% endif %}>
-                    {% if field|is_select and use_custom_control %}
-                        {% if field.errors %}
-                            {% crispy_field field 'class' 'is-invalid' %}
-                        {% else %}
-                            {% crispy_field field %}
-                        {% endif %}
-                    {% elif field|is_file %}
+                    {% if field|is_file %}
                         {% if field.errors %}                 
                             {% crispy_field field 'class' 'form-control-file is-invalid' %}
                         {% else %}

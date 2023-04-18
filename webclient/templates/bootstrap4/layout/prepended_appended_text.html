@@ -18,18 +18,10 @@
                     <span class="input-group-text">{{ crispy_prepended_text }}</span>
                   </div>
                 {% endif %}
-                {% if field|is_select and use_custom_control %}
-                    {% if field.errors %}
-                        {% crispy_field field 'class' 'is-invalid' %}
-                    {% else %}
-                        {% crispy_field field %}
-                    {% endif %}
+                {% if field.errors %}
+                    {% crispy_field field 'class' 'form-control is-invalid' %}
                 {% else %}
-                    {% if field.errors %}
-                        {% crispy_field field 'class' 'form-control is-invalid' %}
-                    {% else %}
-                        {% crispy_field field 'class' 'form-control' %}
-                    {% endif %}
+                    {% crispy_field field 'class' 'form-control' %}
                 {% endif %}
                 {% if crispy_appended_text %}
                   <div class="input-group-append{% if active %} active{% endif %}">
