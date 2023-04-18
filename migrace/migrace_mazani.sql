@@ -86,6 +86,8 @@ alter table pian drop column cj;
 alter table projekt drop column okres;
 alter table projekt drop column katastr;
 alter table projekt drop column dalsi_katastry;
+--13. soubor.nahled
+alter table soubor drop column nahled;
 --15. extra_data.northing, easting, pas, osoby, index
 alter table dokument_extra_data drop column northing;
 alter table dokument_extra_data drop column easting;
