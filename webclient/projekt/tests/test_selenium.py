@@ -3,7 +3,7 @@ import datetime
 import unittest
 from types import MappingProxyType
 
-import structlog
+
 from django.conf import settings
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By

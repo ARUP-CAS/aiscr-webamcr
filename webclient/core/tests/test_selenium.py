@@ -2,7 +2,7 @@ import unittest
 
 import time
 
-import structlog
+
 import socket
 
 from django.conf import settings

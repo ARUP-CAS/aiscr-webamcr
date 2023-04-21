@@ -60,16 +60,16 @@ def smazat_nalez(request, typ, ident_cely):
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
-                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                logger.warning("nalez.views.smazat_nalez.redirect_not_safe", extra={"next_url": next_url})
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
         if resp:
-            logger.debug("Objekt dokumentu byl smazan: " + str(resp))
+            logger.debug("nalez.views.smazat_nalez.deleted", extra={"resp": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse({"redirect": response})
         else:
-            logger.warning("Dokument nebyl smazan: " + str(ident_cely))
+            logger.debug("nalez.views.smazat_nalez.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse({"redirect": response}, status=403)
         response.set_cookie("show-form", f"detail_komponenta_form_{zaznam.komponenta.ident_cely}", max_age=1000)
@@ -114,16 +114,16 @@ def edit_nalez(request, komp_ident_cely):
         request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
     )
     if formset_objekt.is_valid() and formset_predmet.is_valid():
-        logger.debug("Nalez Form is valid")
+        logger.debug("nalez.views.edit_nalez.form_valid")
         formset_predmet.save()
         formset_objekt.save()
         if formset_objekt.has_changed() or formset_predmet.has_changed():
             logger.debug("Form data was changed")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
-        logger.warning("Form is not valid")
-        logger.debug(formset_predmet.errors)
-        logger.debug(formset_objekt.errors)
+        logger.debug("nalez.views.edit_nalez.form_not_valid",
+                     extra={"formset_predmet_errors": formset_predmet.errors,
+                            "formset_objekt_errors": formset_objekt.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         request.session["_old_nalez_post"] = request.POST
         request.session["komp_ident_cely"] = komp_ident_cely

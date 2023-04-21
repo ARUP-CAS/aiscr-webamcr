@@ -1,5 +1,5 @@
 from math import fabs
-import structlog
+
 
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
@@ -7,6 +7,7 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import Point
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
@@ -17,7 +18,7 @@ import logstash
 logger = logging.getLogger('python-logstash-logger')
 
 
-class Kladysm5(models.Model):
+class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     """
     Class pro model kladysm5
     """
@@ -111,7 +112,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
         raise MaximalIdentNumberError(max_count)
 
 
-class VyskovyBod(models.Model):
+class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
     """
     Class pre db model vyskovy bod.
     Obsahuje vazbu na ADB.
@@ -172,7 +173,7 @@ class VyskovyBod(models.Model):
         db_table = "vyskovy_bod"
 
 
-class AdbSekvence(models.Model):
+class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):
     """
     Class pro sekvenci ADB pole db modelu kladysm5
     """

@@ -1,6 +1,6 @@
 import logging
 
-import structlog
+
 from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
 from core.ident_cely import get_temporary_pian_ident

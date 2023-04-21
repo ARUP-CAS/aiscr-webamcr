@@ -108,7 +108,7 @@ def auto_logout_client(request):
             datetime.now() + timedelta(seconds=options["MAINTENANCE_LOGOUT_TIME"]),
             900,
         )
-        logger.debug(logout_time)
+        logger.debug("core.context_processors.auto_logout_client", extra={"logout_time": logout_time})
         until_logout = logout_time - datetime.now()
         ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
         ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5

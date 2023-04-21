@@ -32,13 +32,14 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
+from django_prometheus.models import ExportModelOperationsMixin
 
 # from dj.models import DokumentacniJednotka
 
 logger = logging.getLogger('python-logstash-logger')
 
 
-class ArcheologickyZaznam(models.Model):
+class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), models.Model):
 
     TYP_ZAZNAMU_LOKALITA = "L"
     TYP_ZAZNAMU_AKCE = "A"
@@ -321,7 +322,7 @@ class ArcheologickyZaznam(models.Model):
             return "[ident_cely not yet assigned]"
 
 
-class ArcheologickyZaznamKatastr(models.Model):
+class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,
@@ -336,7 +337,7 @@ class ArcheologickyZaznamKatastr(models.Model):
         unique_together = (("archeologicky_zaznam", "katastr"),)
 
 
-class Akce(models.Model):
+class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     TYP_AKCE_PROJEKTOVA = "R"
     TYP_AKCE_SAMOSTATNA = "N"
@@ -413,7 +414,7 @@ class Akce(models.Model):
         )
 
 
-class AkceVedouci(models.Model):
+class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
     vedouci = models.ForeignKey(Osoba, on_delete=models.RESTRICT, db_column="vedouci")
     organizace = models.ForeignKey(Organizace, on_delete=models.RESTRICT, db_column="organizace")
@@ -424,7 +425,7 @@ class AkceVedouci(models.Model):
         ordering = ["id"]
 
 
-class ExterniOdkaz(models.Model):
+class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
     externi_zdroj = models.ForeignKey(
         ExterniZdroj,
         models.RESTRICT,

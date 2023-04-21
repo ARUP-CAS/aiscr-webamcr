@@ -1,7 +1,7 @@
 import datetime
 import re
 from django.forms import ValidationError
-import structlog
+
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper

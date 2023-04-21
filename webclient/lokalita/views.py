@@ -1,6 +1,6 @@
 import logging
 
-import structlog
+
 from arch_z.forms import CreateArchZForm
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import (

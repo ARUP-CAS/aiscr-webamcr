@@ -1,4 +1,4 @@
-import structlog
+
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.forms import TwoLevelSelectField

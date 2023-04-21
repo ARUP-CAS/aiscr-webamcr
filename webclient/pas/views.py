@@ -1,7 +1,7 @@
 import logging
 
 import simplejson as json
-import structlog
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,

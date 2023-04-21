@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
 import os
-import structlog
+
 
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT

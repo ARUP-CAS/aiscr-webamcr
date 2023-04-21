@@ -1,7 +1,7 @@
 import os
 from core.models import Soubor
 from webclient.settings.base import MEDIA_ROOT
-import structlog
+
 
 import logging
 import logstash

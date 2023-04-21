@@ -3,7 +3,7 @@ import logging
 from itertools import repeat
 from typing import Union
 
-import structlog
+
 from concurrent.futures import ThreadPoolExecutor
 
 from django.conf import settings

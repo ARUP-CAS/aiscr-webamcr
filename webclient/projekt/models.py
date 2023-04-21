@@ -11,6 +11,7 @@ from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -55,7 +56,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger('python-logstash-logger')
 
 
-class Projekt(models.Model):
+class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
     CHOICES = (
         (PROJEKT_STAV_OZNAMENY, "P0 - Oznámen"),
         (PROJEKT_STAV_ZAPSANY, "P1 - Zapsán"),
@@ -482,7 +483,7 @@ class Projekt(models.Model):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
 
-class ProjektKatastr(models.Model):
+class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.RESTRICT)
 

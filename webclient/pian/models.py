@@ -18,11 +18,12 @@ from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
 from uzivatel.models import User
 from django.db.models import Q, CheckConstraint
+from django_prometheus.models import ExportModelOperationsMixin
 
 logger = logging.getLogger('python-logstash-logger')
 
 
-class Pian(models.Model):
+class Pian(ExportModelOperationsMixin("pian"), models.Model):
 
     STATES = (
         (PIAN_NEPOTVRZEN, _("Nepotvrzený")),
@@ -136,7 +137,7 @@ class Pian(models.Model):
         self.save()
 
 
-class Kladyzm(models.Model):
+class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
     gid = models.AutoField(primary_key=True)
     objectid = models.IntegerField(unique=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
@@ -150,7 +151,7 @@ class Kladyzm(models.Model):
         db_table = "kladyzm"
 
 
-class PianSekvence(models.Model):
+class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
     kladyzm50 = models.ForeignKey(
         "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
     )
@@ -159,6 +160,7 @@ class PianSekvence(models.Model):
 
     class Meta:
         db_table = "pian_sekvence"
+
 
 def vytvor_pian(katastr):
     zm10s = (

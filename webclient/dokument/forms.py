@@ -34,7 +34,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
         qs = super().clean(value)
         if value:
             i = 1
-            logger.debug(value)
+            logger.debug("dokument.forms.AutoriField.clean", extra={"value": value})
             for item in value:
                 part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
                 if i ==1:

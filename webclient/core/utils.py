@@ -5,7 +5,6 @@ import zlib
 
 import core.message_constants as mc
 import requests
-import structlog
 from arch_z.models import ArcheologickyZaznam
 from core.message_constants import (
     VALIDATION_EMPTY,
@@ -21,10 +20,6 @@ from heslar.models import RuianKatastr
 from pian.models import Pian
 
 logger = logging.getLogger('python-logstash-logger')
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
 
 
 def get_mime_type(file_name):
@@ -53,17 +48,11 @@ def get_cadastre_from_point(point):
     )
     try:
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
-        logger.debug(
-            "Point: "
-            + str(point[0])
-            + ", "
-            + str(point[1])
-            + " cadastre: "
-            + str(type(katastr))
-        )
+        logger.debug("core.utils.get_cadastre_from_point.start",
+                     extra={"point_0": point[0], "point_1": point[1], "katastr": katastr})
         return katastr
     except IndexError:
-        logger.error("Could not find cadastre for point: " + str(point))
+        logger.error("core.utils.get_cadastre_from_point.error", extra={"point": point})
         return None
 
 
@@ -73,13 +62,13 @@ def get_cadastre_from_point_with_geometry(point):
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
     try:
-        logger.debug([point[0], point[1]])
+        logger.debug("core.utils.get_cadastre_from_point.start", extra={"point_0": point[0], "point_1": point[1]})
         cursor = connection.cursor()
         cursor.execute(query, [point[0], point[1]])
         line = cursor.fetchone()
         return [line[1], line[2], line[3]]
     except IndexError:
-        logger.error("Could not find cadastre for ponit: " + str(point))
+        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"point": point})
         return None
 
 
@@ -97,7 +86,6 @@ def get_centre_point(bod, geom):
                     len(geom),
                 ]
         elif isinstance(geom[0][0][0], tuple):
-            logger.info(len(geom[0][0]))
             for i in range(0, len(geom)):
                 [x0, x1, xlength] = [
                     x0 + geom[0][0][i][0],
@@ -115,7 +103,7 @@ def get_centre_point(bod, geom):
         bod.lng = x0 / xlength
         return [bod, geom]
     except Exception as e:
-        logger.error("Pian error: " + e)
+        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e})
 
 
 def get_all_pians_with_akce(ident_cely):
@@ -161,7 +149,7 @@ def get_all_pians_with_akce(ident_cely):
         return back
 
     except Exception as e:
-        logger.debug(e)
+        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"e": e})
         return None
 
 
@@ -183,10 +171,8 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
 
 
 def update_all_katastr_within_akce_or_lokalita(ident_cely):
-    logger_s.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
+    logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     akce_ident_cely = ident_cely.split("-D")[0]
-    # logger.debug("dj.ident_cely %s", [ident_cely])
-    # logger.debug("akce.ident_cely %s", [akce_ident_cely])
     hlavni_name = ""
     hlavni_id = None
     ostatni_name = []
@@ -236,7 +222,7 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
             cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
     except IndexError:
         return None
-    logger_s.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
+    logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
 def get_centre_from_akce(katastr, pian):
@@ -257,7 +243,7 @@ def get_centre_from_akce(katastr, pian):
                 presnost = dj.pian.presnost.zkratka
         return [bod, geom, presnost]
     except IndexError:
-        logger.error("Could not find cadastre: " + str(katastr) + " with pian: " + pian)
+        logger.error("core.utils.get_centre_from_akce.error", extra={"katastr": katastr, "pian": pian})
         return None
 
 
@@ -273,7 +259,8 @@ def get_points_from_envelope(left, bottom, right, top):
         projekty = Projekt.objects.raw(query, [left, bottom, right, top])
         return projekty
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_centre_from_akce.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -291,7 +278,7 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
         )
         return pians
     except Exception:
-        logger.debug("No pians")
+        logger.debug("core.utils.get_all_pians_with_dj.no_pians")
         return None
 
 
@@ -306,7 +293,8 @@ def get_num_pians_from_envelope(left, bottom, right, top):
         cursor.execute(query, [left, bottom, right, top])
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_num_pians_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -330,7 +318,8 @@ def get_pians_from_envelope(left, bottom, right, top, ident_cely):
         pians = Pian.objects.raw(query, [ident_cely, left, bottom, right, top])
         return pians
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_pians_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -345,7 +334,8 @@ def get_num_projects_from_envelope(left, bottom, right, top):
         cursor.execute(query, [left, bottom, right, top])
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_num_projects_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -362,15 +352,11 @@ def get_projects_from_envelope(left, bottom, right, top):
         pians = Projekt.objects.raw(query, [left, bottom, right, top])
         return pians
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_projects_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
-# CREATE TABLE amcr_clusters_table AS
-# WITH query AS (
-# select st_clusterkmeans(geom,500) OVER() cid, geom from pian LIMIT 6000
-# )
-# SELECT cid,  COUNT(*),st_centroid(st_union(geom)) FROM query GROUP BY cid
 def dictfetchall(cursor):
     "Return all rows from a cursor as a dict"
     columns = [col[0] for col in cursor.description]
@@ -392,7 +378,8 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_pian.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -408,7 +395,8 @@ def get_heatmap_pian_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_pian_density.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -427,7 +415,8 @@ def get_heatmap_project(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_project.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -446,7 +435,8 @@ def get_heatmap_project_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_project_density.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
@@ -499,20 +489,16 @@ def get_transform_towgs84(cy, cx):
         "Pragma": "no-cache",
     }
     try:
-        # logger.debug(url)
-        # logger.debug(query)
         r = requests.post(url, data=query, headers=headers)
-        # logger.debug(r.status_code)
-        # logger.debug(r.text)
         body = json.loads(r.text)["Coordinates"].split(" ")
         return [body[0], body[1]]
     except IndexError:
-        logger.error("Error during transformation")
+        logger.error("core.utils.get_transform_towgs84.transformation_error")
         return None
 
 
 def get_multi_transform_towgs84(jtsk_points):
-    logger.debug("get_multi_transform_towgs84")
+    logger.debug("core.utils.get_multi_transform_towgs84.start")
 
     url = "https://geoportal.cuzk.cz/(S(k10mxdjzq1pv5tkgcghghohf))/WCTSHandlerhld.ashx"
 
@@ -568,20 +554,17 @@ def get_multi_transform_towgs84(jtsk_points):
     query = query + "--amcr-multipart-block--\r\n"
 
     try:
-        # logger.debug(url)
-        # logger.debug(query)
         r = requests.post(url, data=query, headers=headers)
-        # logger.debug(r.status_code)
         points = []
         for line in r.text.split("\n"):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
-                logger.debug(p)
+                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"p": p})
                 points.append([p[0], p[1]])
 
         return points
     except IndexError:
-        logger.error("Error during transformation")
+        logger.error("core.utils.get_multi_transform_towgs84.transformation_error")
         return None
 
 

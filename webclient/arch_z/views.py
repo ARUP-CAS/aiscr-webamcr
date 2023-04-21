@@ -1,7 +1,7 @@
 import logging
 
 import simplejson as json
-import structlog
+
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.filters import AkceFilter

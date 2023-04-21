@@ -1,6 +1,5 @@
 import logging
 
-import structlog as structlog
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
@@ -15,10 +14,7 @@ from projekt.models import Projekt
 from core.views import ExportMixinDate
 from uzivatel.models import User
 
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger('python-logstash-logger')
 
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):

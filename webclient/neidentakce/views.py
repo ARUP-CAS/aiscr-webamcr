@@ -1,4 +1,4 @@
-import structlog
+
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -13,9 +13,8 @@ from .forms import NeidentAkceForm
 from .models import NeidentAkce
 
 import logging
-import logstash
 
-logger_s = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger('python-logstash-logger')
 
 
 class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
@@ -64,6 +63,5 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"errors": form.errors})
         return super().form_invalid(form)

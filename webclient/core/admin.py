@@ -57,7 +57,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
                 uwsgi.reload()  # pretty easy right?
             except Exception as e:
-                logger.debug(e)
+                logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
                 pass  # we may not be running under uwsgi :P
         super().save_model(request, obj, form, change)
 

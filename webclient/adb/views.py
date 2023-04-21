@@ -1,5 +1,5 @@
 import logging
-import structlog
+
 
 from adb.forms import CreateADBForm, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod

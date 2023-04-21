@@ -1,6 +1,6 @@
 import datetime
 import logging
-import structlog
+
 
 from django import template
 from psycopg2._range import DateRange

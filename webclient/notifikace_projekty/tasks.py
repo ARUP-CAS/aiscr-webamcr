@@ -1,4 +1,4 @@
-import structlog
+
 from celery import shared_task
 
 from projekt.models import Projekt

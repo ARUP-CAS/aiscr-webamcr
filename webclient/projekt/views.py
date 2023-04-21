@@ -2,7 +2,7 @@ import logging
 from django.views import View
 
 import simplejson as json
-import structlog
+
 from django.db.models.functions import Length
 from django.template.loader import render_to_string
 from dal import autocomplete
@@ -99,11 +99,8 @@ from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
 
-import logging
-import logstash
 
 logger = logging.getLogger('python-logstash-logger')
-logger_s = logging.getLogger('python-logstash-logger')
 
 
 @login_required
@@ -232,7 +229,7 @@ def post_ajax_get_projects_limit(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
-    logger_s.debug("create.start")
+    logger.debug("create.start")
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -289,7 +286,7 @@ def create(request):
             logger.debug("The form projekt is not valid!")
             logger.debug(form_projekt.errors)
     else:
-        logger_s.debug("create.get")
+        logger.debug("create.get")
         form_projekt = CreateProjektForm(
             required=required_fields, required_next=required_fields_next
         )

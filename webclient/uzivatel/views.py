@@ -1,6 +1,6 @@
 import logging
 
-import structlog
+
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -34,10 +34,6 @@ from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, A
 from uzivatel.models import Osoba, User
 
 logger = logging.getLogger('python-logstash-logger')
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
@@ -214,7 +210,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
-        logger_s.debug("uzivatel.views.UserAccountUpdateView.post.start", request_data=request_data)
+        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", request_data=request_data)
         form = self.form_class(data=request.POST, instance=self.request.user)
         if form.is_valid():
             obj = form.save(commit=False)

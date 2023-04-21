@@ -1,11 +1,12 @@
 from abc import ABC
 
-import structlog
+
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from core.mixins import ManyToManyRestrictedClassMixin
 from heslar.hesla import (
@@ -21,7 +22,7 @@ import logstash
 logger_s = logging.getLogger('python-logstash-logger')
 
 
-class Heslar(models.Model, ManyToManyRestrictedClassMixin):
+class Heslar(ExportModelOperationsMixin("heslar"), models.Model, ManyToManyRestrictedClassMixin):
     # TextFields should be changed to CharField if no long text is expected to be written in
     ident_cely = models.TextField(unique=True, verbose_name=_("heslar.models.Heslar.ident_cely"))
     nazev_heslare = models.ForeignKey(
@@ -55,7 +56,7 @@ class Heslar(models.Model, ManyToManyRestrictedClassMixin):
             return ""
 
 
-class HeslarDatace(models.Model):
+class HeslarDatace(ExportModelOperationsMixin("heslar_datace"), models.Model):
     obdobi = models.OneToOneField(
         Heslar,
         models.CASCADE,
@@ -76,7 +77,7 @@ class HeslarDatace(models.Model):
         verbose_name_plural = "Heslář datace"
 
 
-class HeslarDokumentTypMaterialRada(models.Model):
+class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_typ_material_rada"), models.Model):
     dokument_rada = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -110,7 +111,7 @@ class HeslarDokumentTypMaterialRada(models.Model):
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
 
-class HeslarHierarchie(models.Model):
+class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
     TYP_CHOICES = [
         ('podřízenost', _('HeslarHierarchie.TYP_CHOICES.podrizenost')),
         ('uplatnění', _('HeslarHierarchie.TYP_CHOICES.uplatneni')),
@@ -141,7 +142,7 @@ class HeslarHierarchie(models.Model):
         ]
 
 
-class HeslarNazev(models.Model):
+class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.HeslarNazev.nazev"))
     povolit_zmeny = models.BooleanField(default=True, verbose_name=_("heslar.models.HeslarNazev.povolit_zmeny"))
 
@@ -153,7 +154,7 @@ class HeslarNazev(models.Model):
         verbose_name_plural = "Heslář název"
 
 
-class HeslarOdkaz(models.Model):
+class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     heslo = models.ForeignKey(Heslar, models.CASCADE, db_column="heslo", verbose_name=_("heslar.models.HeslarOdkaz.heslo"))
     zdroj = models.CharField(max_length=255, verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
     nazev_kodu = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
@@ -165,7 +166,7 @@ class HeslarOdkaz(models.Model):
         verbose_name_plural = "Heslář odkaz"
 
 
-class RuianKatastr(models.Model):
+class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), models.Model):
     okres = models.ForeignKey("RuianOkres", models.RESTRICT, db_column="okres", verbose_name=_("heslar.models.RuianKatastr.okres"))
     aktualni = models.BooleanField(verbose_name=_("heslar.models.RuianKatastr.aktualni"))
     nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"))
@@ -198,7 +199,7 @@ class RuianKatastr(models.Model):
         return self.nazev + " (" + self.okres.nazev + ")"
 
 
-class RuianKraj(models.Model):
+class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), models.Model):
     nazev = models.CharField(unique=True, max_length=100, verbose_name=_("heslar.models.RuianKraj.nazev"))
     kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKraj.kod"))
     rada_id = models.CharField(max_length=1, verbose_name=_("heslar.models.RuianKraj.rada_id"))
@@ -220,7 +221,7 @@ class RuianKraj(models.Model):
         return self.nazev
 
 
-class RuianOkres(models.Model):
+class RuianOkres(ExportModelOperationsMixin("ruian_okres"), models.Model):
     nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianOkres.nazev"))
     kraj = models.ForeignKey(RuianKraj, models.RESTRICT, db_column="kraj", verbose_name=_("heslar.models.RuianOkres.kraj"))
     spz = models.CharField(unique=True, max_length=3, verbose_name=_("heslar.models.RuianOkres.spz"))

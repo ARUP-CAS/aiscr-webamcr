@@ -13,6 +13,7 @@ from django.db import models
 from django.db.models import CheckConstraint, Q
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from projekt.models import Projekt
 from arch_z.models import ArcheologickyZaznam
@@ -53,7 +54,7 @@ from core.utils import calculate_crc_32
 logger = logging.getLogger('python-logstash-logger')
 
 
-class Dokument(models.Model):
+class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
     STATES = (
         (D_STAV_ZAPSANY, "D1 - Zapsán"),
         (D_STAV_ODESLANY, "D2 - Odeslán"),
@@ -258,8 +259,8 @@ class Dokument(models.Model):
         if "3D" in self.ident_cely:
             try:
                 return self.casti.all()[0].komponenty.komponenty.all()[0]
-            except Exception as ex:
-                logger.error(ex)
+            except Exception as err:
+                logger.error("dokument.models.Dokument.get_komponenta_error", extra={"err": err})
                 raise UnexpectedDataRelations("Neleze ziskat komponentu modelu 3D.")
         else:
             return None
@@ -277,12 +278,8 @@ class Dokument(models.Model):
         while True:
             if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
                 sequence.sekvence += 1
-                logger.warning(
-                    "Ident "
-                    + perm_ident_cely
-                    + " already exists, trying next number "
-                    + str(sequence.sekvence)
-                )
+                logger.warning("dokument.models.Dokument.set_permanent_ident_cely",
+                               extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence})
                 perm_ident_cely = (
                     rada
                     + "-"
@@ -312,20 +309,21 @@ class Dokument(models.Model):
                 file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
                 os.rename(old_path, str(new_path))
                 file.save()
-            except FileNotFoundError as e:
-                logger.error(e)
+            except FileNotFoundError as err:
+                logger.warning("dokument.models.Dokument.set_permanent_ident_cely.FileNotFoundError",
+                               extra={"err": err})
                 raise FileNotFoundError()
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
                     komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
                     komponenta.save()
-                    logger.debug(
-                        "Prejmenovany ident komponenty " + komponenta.ident_cely
-                    )
+                    logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
+                                   extra={"ident_cely": komponenta.ident_cely})
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
             dc.save()
-            logger.debug("Prejmenovany ident dokumentacni casti " + dc.ident_cely)
+            logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
+                         extra={"ident_cely": dc.ident_cely})
         sequence.sekvence += 1
         sequence.save()
         self.save()
@@ -342,7 +340,7 @@ class Dokument(models.Model):
         self.datum_zverejneni = datetime.date(year, month, day)
 
 
-class DokumentCast(models.Model):
+class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         models.SET_NULL,
@@ -392,7 +390,7 @@ class DokumentCast(models.Model):
         )
 
 
-class DokumentExtraData(models.Model):
+class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
     dokument = models.OneToOneField(
         Dokument,
         on_delete=models.CASCADE,
@@ -471,7 +469,7 @@ class DokumentExtraData(models.Model):
         ]
 
 
-class DokumentAutor(models.Model):
+class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField()
@@ -482,7 +480,7 @@ class DokumentAutor(models.Model):
         ordering = (["poradi"],)
 
 
-class DokumentJazyk(models.Model):
+class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -503,7 +501,7 @@ class DokumentJazyk(models.Model):
         return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
 
-class DokumentOsoba(models.Model):
+class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
@@ -512,7 +510,7 @@ class DokumentOsoba(models.Model):
         unique_together = (("dokument", "osoba"),)
 
 
-class DokumentPosudek(models.Model):
+class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Model):
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -533,7 +531,7 @@ class DokumentPosudek(models.Model):
         return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
 
-class Tvar(models.Model):
+class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     dokument = models.ForeignKey(
         Dokument, on_delete=models.CASCADE, db_column="dokument"
     )
@@ -545,7 +543,7 @@ class Tvar(models.Model):
         unique_together = (("dokument", "tvar", "poznamka"),)
 
 
-class DokumentSekvence(models.Model):
+class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):
     rada = models.CharField(max_length=4)
     rok = models.IntegerField()
     sekvence = models.IntegerField()
@@ -554,7 +552,7 @@ class DokumentSekvence(models.Model):
         db_table = "dokument_sekvence"
 
 
-class Let(models.Model):
+class Let(ExportModelOperationsMixin("let"), models.Model):
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     datum = models.DateField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
@@ -612,7 +610,7 @@ class Let(models.Model):
 def get_dokument_soubor_name(dokument, filename, add_to_index=1):
     my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
     files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
-    logger.debug(files)
+    logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
@@ -623,7 +621,7 @@ def get_dokument_soubor_name(dokument, filename, add_to_index=1):
                 split_file = os.path.splitext(file.nazev)
                 list_last_char.append(split_file[0][-1])
             last_char = max(list_last_char)
-            logger.debug(last_char)
+            logger.debug("dokument.models.get_dokument_soubor_name", extra={"last_char": last_char})
             if last_char != "Z" or add_to_index == 0:
                 return (
                     dokument.ident_cely.replace("-", "")
@@ -631,9 +629,8 @@ def get_dokument_soubor_name(dokument, filename, add_to_index=1):
                     + os.path.splitext(filename)[1]
                 )
             else:
-                logger.error(
-                    "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
-                )
+                logger.warning("dokument.models.get_dokument_soubor_name.cannot_be_loaded",
+                               extra={"last_char": last_char})
                 return False
 
         else:

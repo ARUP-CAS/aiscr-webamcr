@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-import structlog
+
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 from django.core.exceptions import ImproperlyConfigured
 
@@ -144,7 +144,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "django_structlog.middlewares.RequestMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
     'django_prometheus.middleware.PrometheusAfterMiddleware',
@@ -397,21 +396,6 @@ DIGI_LINKS = {
     "ARUB_MAIL": "<a href='mailto:oznameni@arub.cas.cz'>oznameni@arub.cz</a>",
 }
 
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-    ],
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
 # auto logout settings
 AUTO_LOGOUT = {
     "IDLE_TIME": 3600,

@@ -1,4 +1,4 @@
-import structlog
+
 
 
 from django_cron import CronJobBase, Schedule

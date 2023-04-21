@@ -105,12 +105,23 @@ services:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
 
+  grafana:
+    image: grafana/grafana-enterprise:8.2.0
+    restart: always
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
   prometheus:
     image: prom/prometheus
     volumes:
       - ./prometheus:/etc/prometheus
-    ports:
-      - "9090:9090"
 
   celery_worker:
     build:
@@ -190,6 +201,7 @@ volumes:
   db_dev_data:
   logs_volume:
   elasticsearch_volume:
+  grafana_data:
 
 secrets:
   pg_admin_pass:

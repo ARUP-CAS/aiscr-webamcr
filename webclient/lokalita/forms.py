@@ -1,4 +1,4 @@
-import structlog
+
 
 from django import forms
 from django.utils.translation import gettext as _
@@ -11,9 +11,8 @@ from heslar.models import HeslarHierarchie
 from .models import Lokalita
 
 import logging
-import logstash
 
-logger_s = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger('python-logstash-logger')
 
 
 class LokalitaForm(forms.ModelForm):

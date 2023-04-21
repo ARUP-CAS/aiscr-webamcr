@@ -61,13 +61,12 @@ def detail(request, ident_cely):
         prefix=ident_cely,
     )
     if form.is_valid():
-        logger.debug("K.Form is valid:1")
+        logger.debug("komponenta.views.detail.form_valid", extra={"ident_cely": ident_cely})
         form.save()
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
-        logger.warning("Form is not valid")
-        logger.debug(form.errors)
+        logger.debug("komponenta.views.detail.not_valid", extra={"errors": form.errors, "ident_cely": ident_cely})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     if "nalez_edit_nalez" in request.POST:
@@ -105,16 +104,16 @@ def detail(request, ident_cely):
             request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
         )
         if formset_objekt.is_valid() and formset_predmet.is_valid():
-            logger.debug("K.Form is valid:2")
+            logger.debug("komponenta.views.detail.form_valid_2")
             formset_predmet.save()
             formset_objekt.save()
             if formset_objekt.has_changed() or formset_predmet.has_changed():
                 logger.debug("Form data was changed")
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.warning("Form is not valid")
-            logger.debug(formset_predmet.errors)
-            logger.debug(formset_objekt.errors)
+            logger.debug("komponenta.views.detail.form_not_valid_2",
+                         extra={"formset_predmet_errors": formset_predmet.errors,
+                                "formset_objekt_errors": formset_objekt.errors})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
             request.session["_old_nalez_post"] = request.POST
             request.session["komp_ident_cely"] = ident_cely
@@ -163,7 +162,6 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
     druh = request.GET.get("typ", None)
-    logger.debug(druh)
     dj = None
     cast = None
     if druh:
@@ -175,7 +173,7 @@ def zapsat(request, dj_ident_cely):
     form = CreateKomponentaForm(obdobi_choices, areal_choices, request.POST)
     komp_ident_cely = None
     if form.is_valid():
-        logger.debug("K.Form is valid:3")
+        logger.debug("komponenta.views.zapsat.form_valid")
         komponenta = form.save(commit=False)
         try:
             if dj:
@@ -222,8 +220,7 @@ def zapsat(request, dj_ident_cely):
                 args=[cast.dokument.ident_cely, komponenta.ident_cely],
             )
     else:
-        logger.warning("Form CreateKomponentaForm is not valid")
-        logger.debug(form.errors)
+        logger.debug("komponenta.views.zapsat.form_not_valid", extra={"formset_errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
         if dj:
             url = reverse(
@@ -262,7 +259,7 @@ def smazat(request, ident_cely):
         resp = k.delete()
 
         if resp:
-            logger.debug("Byla smazána komponenta: " + str(resp))
+            logger.debug("komponenta.views.smazat.resp", extra={"resp": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             if dj:
                 response = JsonResponse({"redirect": dj.get_absolute_url()})
@@ -285,7 +282,7 @@ def smazat(request, ident_cely):
                 )
             return response
         else:
-            logger.warning("Komponenta nebyla smazana: " + str(ident_cely))
+            logger.warning("komponenta.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             if dj:
                 response = JsonResponse(
