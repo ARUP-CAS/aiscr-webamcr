@@ -29,9 +29,9 @@ jobs:
 
       - name: Setup VPN config
         run: |
-          echo "${{ secrets.VPN_CA_CRT }}" > ca.crt
-          echo "${{ secrets.VPN_USER_CRT }}" > user.crt
-          echo "${{ secrets.VPN_USER_KEY }}" > user.key
+          echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
+          echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
+          echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
           echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
 
       - name: Connect VPN
