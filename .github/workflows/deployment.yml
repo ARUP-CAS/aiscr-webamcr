@@ -20,6 +20,7 @@ jobs:
     name: Connect to VPN, do deployment actions, Kill VPN
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - name: Get tag
         run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
       - name: Install OpenVPN
@@ -37,7 +38,7 @@ jobs:
           echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
           echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
           ls ".github/vpn/"
-          
+
       - name: Connect VPN
         run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --log "${{ env.log_name }}" --daemon --askpass secret.txt
 
