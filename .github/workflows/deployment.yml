@@ -52,10 +52,10 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS_DEV }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KNOWN_HOST_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          sleep 10
-          ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}
+          sleep 30
+          ping -c 10 ${{ secrets.DEPLOYMENT_SERVER_DEV }}
           ssh amcr@${{ secrets.DEPLOYMENT_SERVER_DEV }} << EOF
           sudo su - root << AOF
           cd ${{ env.server_deploy_root }}
