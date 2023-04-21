@@ -13,7 +13,7 @@ env:
   log_name: deployment_vpn.log
   branch: dev
   server_deploy_root: /home/amcr/aiscr-webamcr
-  dep_script_test: scripts/ci_deployment/deploy_server_1.sh
+  dep_script_dev: scripts/ci_deployment/deploy_server_dev.sh
 
 jobs:
   deployment:
@@ -44,10 +44,10 @@ jobs:
       - name: SSH connection DEPLOYMENT_SERVER_DEV
         run: |
           eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_1 }}" | tr -d '\r' | ssh-add -
+          echo "${{ secrets.SSH_PRIVATE_KEY_SERVER_DEV }}" | tr -d '\r' | ssh-add -
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_KNOWN_HOSTS_1 }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_KNOWN_HOSTS_DEV }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           sleep 10
           ping -c 5 ${{ secrets.DEPLOYMENT_SERVER_DEV }}
@@ -58,8 +58,8 @@ jobs:
           git stash push -m "CI_autostash_${{ env.tag_version }}_${{ env.date_stamp }}"
           git checkout ${{ env.branch }}
           git pull
-          chmod +x ${{ env.dep_script_test }}
-          ./${{ env.dep_script_test }} ${{ env.tag_version }} ${{ env.server_deploy_root }} ${{ env.branch }}"
+          chmod +x ${{ env.dep_script_dev }}
+          ./${{ env.dep_script_dev }} ${{ env.tag_version }} ${{ env.server_deploy_root }} ${{ env.branch }}"
           AOF
           EOF
 
