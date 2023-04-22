@@ -8,7 +8,7 @@ user="cz_archeologickamapa_api"
 
 echo "_________STARTING PG DUMP__________"
 pg_dump --dbname=prod_zaloha --host=localhost --port=5432 --format=t --file=/var/lib/pgsql/${backup_complete_name} --username=${user}
-mv /var/lib/pgsql/${backup_complete_name} ${backup_destination}
+mv /var/lib/pgsql/${backup_complete_name} ${backup_destination}/
 
 echo "_________COMPRESSING__________"
 gzip --rsyncable ${backup_destination}/*.tar 
