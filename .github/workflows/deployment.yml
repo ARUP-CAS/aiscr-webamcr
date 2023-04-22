@@ -19,8 +19,8 @@ env:
   dep_script_dev: scripts/ci_deployment/deploy_server_dev.sh
 
 jobs:
-  deployment:
-    name: Connect to VPN, do deployment actions, Kill VPN
+  deployment_dev:
+    name: Connect to VPN, do deployment actions on DEV SERVER, Kill VPN
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
