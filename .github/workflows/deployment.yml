@@ -2,7 +2,11 @@ name: Deployment to selected environment
 
 on:
   workflow_call:
-    
+    inputs:
+      man-tag:
+        description: 'Auxilliary tag describing deployment [optional]'
+        required: false
+        type: string
   workflow_dispatch :
     inputs:
       man_tag:
