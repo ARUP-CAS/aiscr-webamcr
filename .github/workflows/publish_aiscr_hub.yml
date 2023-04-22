@@ -74,3 +74,9 @@ jobs:
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
+  deploy_on_dev:
+      name: Deploy containers on DEV SERVER
+      needs: build_publish_images
+      uses: ./.github/workflows/deployment.yml
+      with:
+         man_tag: ${{ inputs.tags }}
