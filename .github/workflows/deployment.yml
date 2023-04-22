@@ -1,10 +1,13 @@
 name: Deployment to selected environment
 
 on:
+  create:
+    tags:
+      - "v**"
   workflow_dispatch :
     inputs:
-      tags:
-       description: 'Tag describing manual trigger'
+      man_tag:
+       description: 'Auxilliary tag describing deployment [optional]'
        type: string
        required: false
 
@@ -22,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Get tag
-        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)${{ inputs.man_tag }}" >> $GITHUB_ENV
       - name: Install OpenVPN
         run: |
           sudo apt-get update
@@ -31,13 +34,9 @@ jobs:
       - name: Setup VPN config
         run: |
           echo "${{ secrets.VPN_CA_CRT }}" > .github/vpn/openvpn20_huldio_ci_ca.crt
-          echo "TEST_DEPLOYMENT"
-          pwd
-          ls ".github/vpn/"
           echo "${{ secrets.VPN_USER_CRT }}" > .github/vpn/openvpn20_huldio_ci_user.crt
           echo "${{ secrets.VPN_USER_KEY }}" > .github/vpn/openvpn20_huldio_ci_user.key
           echo "${{ secrets.VPN_SECRET_USERNAME_PASSWORD }}" > secret.txt
-          ls ".github/vpn/"
 
       - name: Connect VPN
         run: sudo openvpn --config ".github/vpn/openvpn20_huldio_ci.ovpn" --log "${{ env.log_name }}" --daemon --askpass secret.txt
