@@ -77,6 +77,6 @@ jobs:
   deploy_on_dev:
       name: Deploy containers on DEV SERVER
       needs: build_publish_images
-      uses: .github/workflows/deployment.yml
+      uses: ./.github/workflows/deployment.yml
       with:
          man_tag: ${{ inputs.tags }}
