@@ -78,5 +78,7 @@ jobs:
       name: Deploy containers on DEV SERVER
       needs: build_publish_images
       uses: ./.github/workflows/deployment.yml
+      secrets: inherit
       with:
          man_tag: ${{ inputs.tags }}
+      
