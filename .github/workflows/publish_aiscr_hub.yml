@@ -1,7 +1,7 @@
 name: Build and Publish Docker images on  https://hub.docker.com/u/aiscr
 
 on:
-  create:
+  push:
     tags:
       - "v**"
   workflow_dispatch :
