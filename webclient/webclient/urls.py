@@ -72,6 +72,8 @@ urlpatterns = [
     path("notifikace_projekty/",  include("notifikace_projekty.urls")),
     # path("select2/", include("django_select2.urls"))
 ]
+urlpatterns+=[re_path(r'^healthcheck/', include("healthcheck.urls"))]
+
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]
 
