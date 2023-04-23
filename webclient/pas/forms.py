@@ -27,7 +27,7 @@ from uzivatel.models import User
 import logging
 import logstash
 
-logger_s = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger('python-logstash-logger')
 
 
 def validate_uzivatel_email(email):
@@ -39,7 +39,7 @@ def validate_uzivatel_email(email):
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
-        logger_s.debug(
+        logger.debug(
             "validate_uzivatel_email.ValidationError",
             extra={"email": email, "hlavni_role_id": user[0].hlavni_role.pk},
         )

@@ -154,21 +154,13 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
     body = json.loads(request.body.decode("utf-8"))
-    # logger.debug(request.body.decode("utf-8"))
-    # logger.debug(body["zoom"])
-    # logger.debug(body["southEast"]["lat"])
-    # DEBUG {"
-    # northWest":{"lat":50.01239997944656,"lng":14.618017673492433},
-    # "southEast":{"lat":50.00964206670656,"lng":14.63383197784424},"zoom":17}
-    # get_points_from_envelope
     num = get_num_projects_from_envelope(
         body["southEast"]["lng"],
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
     )
-    logger.debug("projekt pocet geometrii")
-    logger.debug(num)
+    logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
         pians = get_projects_from_envelope(
             body["southEast"]["lng"],
@@ -178,7 +170,6 @@ def post_ajax_get_projects_limit(request):
         )
         back = []
         for pian in pians:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             back.append(
                 {
                     "id": pian.id,
@@ -198,7 +189,7 @@ def post_ajax_get_projects_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        logger.debug("projekt density %s", density)
+        logger.debug("projekt.views.post_ajax_get_projects_limit.density", extra={"density": density})
 
         heats = get_heatmap_project(
             body["southEast"]["lng"],
@@ -210,7 +201,6 @@ def post_ajax_get_projects_limit(request):
         back = []
         cid = 0
         for heat in heats:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             cid += 1
             back.append(
                 {
@@ -229,7 +219,7 @@ def post_ajax_get_projects_limit(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
-    logger.debug("create.start")
+    logger.debug("projekt.views.create.start")
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -243,15 +233,14 @@ def create(request):
             required = False
         form_oznamovatel = OznamovatelForm(request.POST, required=required)
         if form_projekt.is_valid():
-            logger.debug("Projekt form is valid")
+            logger.debug("projekt.views.create.form_valid")
             lat = form_projekt.cleaned_data["latitude"]
             long = form_projekt.cleaned_data["longitude"]
             p = form_projekt.save(commit=False)
             if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
                 if not form_oznamovatel.is_valid():
-                    logger.debug("The form oznamovatel is not valid!")
-                    logger.debug(form_oznamovatel.errors)
+                    logger.debug("projekt.views.create.form_not_valid", extra={"errors": form_oznamovatel.errors})
                     return render(
                         request,
                         "projekt/create.html",
@@ -283,10 +272,8 @@ def create(request):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
-            logger.debug("The form projekt is not valid!")
-            logger.debug(form_projekt.errors)
+            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
     else:
-        logger.debug("create.get")
         form_projekt = CreateProjektForm(
             required=required_fields, required_next=required_fields_next
         )
@@ -321,7 +308,7 @@ def edit(request, ident_cely):
             required_next=required_fields_next,
         )
         if form.is_valid():
-            logger.debug("Projekt Form is valid:1")
+            logger.debug("projekt.views.edit.form_valid")
             lat = form.cleaned_data["latitude"]
             long = form.cleaned_data["longitude"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
@@ -335,16 +322,16 @@ def edit(request, ident_cely):
                 p.geom = new_geom
                 p.save()
                 geom_changed = True
-                logger.debug("Geometry successfully updated: " + str(p.geom))
+                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": p.geom})
             else:
-                logger.warning("Projekt geom not updated.")
+                logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
+                logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
                 logger.debug(form.changed_data)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
-            logger.debug("The form is not valid!")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})
 
     else:
         form = EditProjektForm(
