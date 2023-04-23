@@ -2,7 +2,7 @@
 
 print_d1 () {
     echo "----------------"
-    echo "${1}" | tee -a ${logfile}
+    echo "${1}" | tee -a ${logfilepath}
     echo "----------------"
 
 }
@@ -19,10 +19,10 @@ logpath="${deployment_root}/logs"
 scriptpath="${deployment_root}/scripts"
 logfile="deployment_${d_stamp}.log"
 logfilepath="${logpath}/${logfile}"
-
 path_last_tag="${logpath}/last_deployment_tag.txt"
-
 last_deployment_tag=$(cat ${path_last_tag})
+
+mkdir -p ${logpath}
 
 #Repo update
 git stash push -m "CI_autostash_${current_deployment_tag}_${d_stamp}"
@@ -32,7 +32,6 @@ git pull
 
 #Prints
 print_d1 "START DEPLOYMENT SCRIPT @${d_stamp}"
-echo ${d_stamp} > ${logfilepath}
 
 #DB backup
 print_d1 "DB BACKUP"
