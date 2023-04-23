@@ -9,3 +9,4 @@ Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Ka�
 
    code_documentation/adb/index
    code_documentation/arch_z/index
+   code_documentation/core/index

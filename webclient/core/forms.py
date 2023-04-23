@@ -17,6 +17,10 @@ logger_s = structlog.get_logger(__name__)
 
 
 class SelectMultipleSeparator(forms.SelectMultiple):
+    """
+    Override nad widgetom na zobrazení multi selectu stejně v každém formuláři.
+    """
+
     def __init__(
         self,
         attrs={
@@ -30,6 +34,10 @@ class SelectMultipleSeparator(forms.SelectMultiple):
 
 
 class TwoLevelSelectField(forms.CharField):
+    """
+    Potrebná úprava metód pro Charfield ve formuláři, pokud se používa widget se zobrazením dvou-stupňového seznamu.
+    """
+
     def to_python(self, selected_value):
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
@@ -43,6 +51,10 @@ class TwoLevelSelectField(forms.CharField):
 
 
 class HeslarChoiceFieldField(forms.ChoiceField):
+    """
+    Potrebná úprava metód pro ChoiceField ve formuláři, pro správne zobrazení a spracováni predmetu specifikace.
+    """
+
     def clean(self, selected_value):
         if selected_value:
             return Heslar.objects.get(pk=int(selected_value))
@@ -62,6 +74,11 @@ class HeslarChoiceFieldField(forms.ChoiceField):
 
 
 class CheckStavNotChangedForm(forms.Form):
+    """
+    Formulář pro kontrolu jestli se stav záznamu nezmenil mezi jeho načtením a odeslánim zmeny.
+    Celá logika je v clean metóde.
+    """
+
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     def __init__(self, db_stav=None, *args, **kwargs):
@@ -85,6 +102,10 @@ class CheckStavNotChangedForm(forms.Form):
 
 
 class VratitForm(forms.Form):
+    """
+    Formulář pro vrácení záznamu. Obsahuje jen text pole pro zdůvodnění vrácení.
+    """
+
     reason = forms.CharField(
         label=_("Zdůvodnění vrácení"),
         required=True,
@@ -99,6 +120,10 @@ class VratitForm(forms.Form):
 
 
 class DecimalTextWideget(forms.widgets.TextInput):
+    """
+    Třida pro formátování hodnoty velikosti souboru na 3 desetiná místa.
+    """
+
     def format_value(self, value):
         if value == "" or value is None:
             return None
@@ -108,6 +133,10 @@ class DecimalTextWideget(forms.widgets.TextInput):
 
 
 class SouborMetadataForm(forms.ModelForm):
+    """
+    Formulář pro zobrazení detailu metadat souboru.
+    """
+
     nazev_zkraceny = forms.CharField()
     nazev = forms.CharField()
     mimetype = forms.CharField()
@@ -140,7 +169,13 @@ class SouborMetadataForm(forms.ModelForm):
             self.fields[field].widget.attrs["readonly"] = True
             self.fields[field].required = False
 
+
 class OdstavkaSystemuForm(forms.ModelForm):
+    """
+    Formulář pro nastavení a úpravu odstávky.
+    Vrámci načítáni formuláře se doplní načítají hodnoty z template odstávky.
+    """
+
     error_text_cs = forms.CharField(
         label=_("core.forms.odstavkaSystemu.errorTextCs"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),

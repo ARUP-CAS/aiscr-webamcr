@@ -5,6 +5,10 @@ logger_s = structlog.get_logger(__name__)
 
 
 class ManyToManyRestrictedClassMixin:
+    """
+    Třída pro model pro vytvoření property has_connections.
+    Hledá jestli má model nejakou many to many vazbu.
+    """
     @property
     def has_connections(self):
         attr_list = []

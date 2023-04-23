@@ -3,6 +3,10 @@ from django.core.exceptions import ValidationError
 
 
 class AMCRAuthUser(ModelBackend):
+    """
+    Třída pro určení jestli se uživatel múže prihlásit. kontroluje se pole is_active na uživatelovi.
+    """
+
     def user_can_authenticate(self, user):
         if user.is_active:
             return True

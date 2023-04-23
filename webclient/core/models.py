@@ -7,7 +7,6 @@ from django.db import models
 from django.forms import ValidationError
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
-from uzivatel.models import User
 from pypdf import PdfReader
 from PIL import Image
 from django.utils.translation import gettext as _
@@ -24,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_upload_to(instance, filename):
+    """
+    Funkce pro získaní cesty, kde se ma daný typ souboru uložit.
+    """
     instance: Soubor
     vazba: SouborVazby = instance.vazba
     if vazba.typ_vazby == PROJEKT_RELATION_TYPE:
@@ -46,6 +48,10 @@ def get_upload_to(instance, filename):
 
 
 class SouborVazby(models.Model):
+    """
+    Model pro relační tabulku mezi souborem a záznamem.
+    Obsahuje typ vazby podle typu záznamu.
+    """
     CHOICES = (
         (PROJEKT_RELATION_TYPE, "Projekt"),
         (DOKUMENT_RELATION_TYPE, "Dokument"),
@@ -59,6 +65,9 @@ class SouborVazby(models.Model):
 
 
 class Soubor(models.Model):
+    """
+    Model pro soubor. Obsahuje jeho základné data, vazbu na historii a souborovů vazbu.
+    """
     nazev_zkraceny = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
@@ -83,6 +92,9 @@ class Soubor(models.Model):
         return self.nazev
 
     def create_soubor_vazby(self):
+        """
+        Metóda pro vytvoření vazby na historii.
+        """
         logger.debug("Creating history records for soubor ")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
         hv.save()
@@ -90,6 +102,9 @@ class Soubor(models.Model):
         self.save()
 
     def zaznamenej_nahrani(self, user):
+        """
+        Metóda pro zapsáni vytvoření souboru do historie.
+        """
         self.create_soubor_vazby()
         Historie(
             typ_zmeny=NAHRANI_SBR,
@@ -99,6 +114,9 @@ class Soubor(models.Model):
         ).save()
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
+        """
+        Metóda pro zapsáni nahrání nové verze souboru do historie.
+        """
         if self.historie is None:
             self.create_soubor_vazby()
         if not nazev:
@@ -111,6 +129,9 @@ class Soubor(models.Model):
         ).save()
 
     def save(self, *args, **kwargs):
+        """
+        Metóda pro uložení souboru do DB. Navíc se počítá počet stran pro pdf, případne počet frames pro obrázek.
+        """
         super().save(*args, **kwargs)
         try:
             self.path
@@ -138,6 +159,9 @@ class Soubor(models.Model):
 
 
 class ProjektSekvence(models.Model):
+    """
+    Model pro tabulku se sekvencemi projektu.
+    """
     rada = models.CharField(max_length=1)
     rok = models.IntegerField()
     sekvence = models.IntegerField()
@@ -147,6 +171,9 @@ class ProjektSekvence(models.Model):
 
 
 class OdstavkaSystemu(models.Model):
+    """
+    Model pro tabulku s odstávkami systému.
+    """
     info_od = models.DateField(_("model.odstavka.infoOd"))
     datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
     cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
@@ -158,6 +185,9 @@ class OdstavkaSystemu(models.Model):
         verbose_name_plural = _("model.odstavka.modelTitle")
 
     def clean(self):
+        """
+        Metóda clean, kde se navíc kontrolu, jestli už není jedna odstávka uložena.
+        """
         odstavky = OdstavkaSystemu.objects.filter(status=True)
         if odstavky.count() > 0 and self.status:
             if odstavky.first().pk != self.pk:
@@ -171,6 +201,9 @@ class OdstavkaSystemu(models.Model):
 
 
 class GeomMigrationJobError(models.Model):
+    """
+    Model pro tabulku s chybami jobu geaom migracií.
+    """
     pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
 
     class Meta:
@@ -178,6 +211,9 @@ class GeomMigrationJobError(models.Model):
 
 
 class GeomMigrationJobSJTSKError(GeomMigrationJobError):
+    """
+    Model pro tabulku s chybami jobu geaom SJTSK migracií.
+    """
     pian = models.ForeignKey(Pian, on_delete=models.RESTRICT)
 
     class Meta:
@@ -186,6 +222,9 @@ class GeomMigrationJobSJTSKError(GeomMigrationJobError):
 
 
 class GeomMigrationJobWGS84Error(GeomMigrationJobError):
+    """
+    Model pro tabulku s chybami jobu geaom WGS84 migracií.
+    """
     pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
     abstract = False
 
@@ -194,6 +233,9 @@ class GeomMigrationJobWGS84Error(GeomMigrationJobError):
 
 
 class GeomMigrationJob(models.Model):
+    """
+    Model pro tabulku jobu geaom migracií.
+    """
     typ = models.TextField()
     count_selected_wgs84 = models.IntegerField(default=0)
     count_selected_sjtsk = models.IntegerField(default=0)
