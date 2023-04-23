@@ -1,0 +1,22 @@
+FROM ubuntu:latest
+
+
+ENV VERSION=${VERSION_APP}
+ENV TAG=${TAG_APP}
+
+RUN apt-get update && apt-get --assume-yes --no-install-recommends install openvpn ssh dnsutils iputils-ping
+RUN mkdir /code
+WORKDIR /code
+COPY .github/vpn/  .github/vpn/
+COPY scripts/ci_deployment/   scripts/
+RUN chmod +x ./scripts/test_deployment.sh
+RUN mkdir -p ~/.ssh &&  chmod 700 ~/.ssh && cat .github/vpn/SSH_KNOWN_HOST.txt >> ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+#RUN openvpn --config vpn/openvpn20_huldio_ci.ovpn --askpass vpn/openvpn20_pass.txt --daemon && until dig 192.168.1.1 192.168.254.30 A +time=1; do sleep 2; done
+#CMD ["ssh", "amcr@192.168.254.24 && cd aiscr-webamcr/ && echo $(git status) >> logs/ci_deployment_test.log"]
+CMD ["./scripts/test_deployment.sh"]
+
+
+#docker build -t ci_test -f Dockerfile_test_dep .
+#docker run --privileged --rm -ti ci_test bash
+
+            
