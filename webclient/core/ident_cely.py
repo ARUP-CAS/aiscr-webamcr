@@ -149,10 +149,11 @@ def get_komponenta_ident(zaznam) -> str:
                     max_count = last_digits
     else:
         for dc in zaznam.casti.all():
-            for komponenta in dc.komponenty.komponenty.all():
-                last_digits = int(komponenta.ident_cely[-last_digit_count:])
-                if max_count < last_digits:
-                    max_count = last_digits
+            if dc.komponenty is not None:
+                for komponenta in dc.komponenty.komponenty.all():
+                    last_digits = int(komponenta.ident_cely[-last_digit_count:])
+                    if max_count < last_digits:
+                        max_count = last_digits
     event_ident = zaznam.ident_cely
     if max_count < MAXIMAL_KOMPONENTAS:
         ident = event_ident + "-K" + str(max_count + 1).zfill(last_digit_count)

@@ -4,12 +4,11 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('pas', '0002_initial'),
-        ('historie', '0002_initial'),
+        ("pas", "0002_initial"),
+        ("historie", "0002_initial"),
     ]
 
     operations = [
@@ -22,8 +21,16 @@ class Migration(migrations.Migration):
                 VOLATILE NOT LEAKPROOF
             AS $BODY$
                 BEGIN
-                    DELETE FROM historie_vazby WHERE historie_vazby.id = old.historie;
-                    RETURN NEW;
+                    with deleted_historie as (
+                    DELETE FROM historie_vazby AS hv
+                    WHERE hv.id = old.historie
+                    returning id
+                    )
+                    DELETE FROM historie AS h
+                    WHERE h.vazba in (select id from deleted_historie)
+                    ;
+                    return null
+                    ;
                 END;   
             $BODY$;
             """,

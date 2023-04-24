@@ -34,5 +34,5 @@ for lang_item in ${languages[@]}; do
 
 done
 
-uwsgi --socket :8000 \
+uwsgi --socket :8000 --http-socket :8001 \
   --master --enable-threads --module webclient.wsgi
