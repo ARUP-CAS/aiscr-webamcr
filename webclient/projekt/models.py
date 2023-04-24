@@ -11,6 +11,7 @@ from django.db import models
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -52,10 +53,10 @@ from projekt.doc_utils import OznameniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
-class Projekt(models.Model):
+class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
     CHOICES = (
         (PROJEKT_STAV_OZNAMENY, "P0 - Oznámen"),
         (PROJEKT_STAV_ZAPSANY, "P1 - Zapsán"),
@@ -235,7 +236,6 @@ class Projekt(models.Model):
             soubory = self.soubory.soubory.exclude(
                 nazev_zkraceny__regex="^log_dokumentace_"
             )
-            logger.debug(soubory)
             if soubory.count() > 0:
                 filename = (
                         "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
@@ -263,9 +263,8 @@ class Projekt(models.Model):
                 for file in soubory:
                     file.path.delete()
                 items_deleted = soubory.delete()
-                logger.debug(
-                    "Pocet smazanych souboru soubory: " + str(items_deleted[0])
-                )
+                logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
+                             extra={"deleted": items_deleted[0]})
 
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
@@ -389,7 +388,7 @@ class Projekt(models.Model):
             number = last_part[4:]
             permanent = False if "X-" in self.ident_cely else True
         else:
-            logger.warning("Cannot retrieve year from null ident_cely.")
+            logger.warning("projekt.models.Projekt.parse_ident_cely.cannot_retrieve_ident_cely", extra={"pk": self.pk})
         return permanent, region, year, number
 
     def has_oznamovatel(self):
@@ -404,9 +403,8 @@ class Projekt(models.Model):
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
-        logger.debug(
-            "Region " + region + " of the cadastry: " + str(self.hlavni_katastr)
-        )
+        logger.debug("projekt.models.Projekt.set_permanent_ident_cely.region_cadastry",
+                     extra={"region": region, "hlavni_katastr": self.hlavni_katastr})
         sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
             0
         ]
@@ -417,12 +415,8 @@ class Projekt(models.Model):
         while True:
             if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
                 sequence.sekvence += 1
-                logger.warning(
-                    "Ident "
-                    + perm_ident_cely
-                    + " already exists, trying next number "
-                    + str(sequence.sekvence)
-                )
+                logger.warning("projekt.models.Projekt.set_permanent_ident_cely.already_exists",
+                             extra={"perm_ident_cely": perm_ident_cely, "sequence_sekvence": self.sequence.sekvence})
                 perm_ident_cely = (
                         region
                         + "-"
@@ -482,7 +476,7 @@ class Projekt(models.Model):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
 
-class ProjektKatastr(models.Model):
+class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
     katastr = models.ForeignKey(RuianKatastr, on_delete=models.RESTRICT)
 

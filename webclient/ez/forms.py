@@ -1,5 +1,5 @@
 from django.urls import reverse
-import structlog
+
 
 from django import forms
 from django.utils.translation import gettext as _
@@ -15,7 +15,10 @@ from uzivatel.models import Osoba
 
 from .models import ExterniZdroj
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class ExterniZdrojForm(forms.ModelForm):
@@ -210,7 +213,7 @@ class ExterniZdrojForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         for key in self.fields.keys():
-            # logger_s.info(key=self.fields[key], widget=self.fields[key].widget)
+            # logger.info(key=self.fields[key], widget=self.fields[key].widget)
             if isinstance(self.fields[key].widget, forms.widgets.Textarea) \
                     and hasattr(self.fields[key].widget.attrs, "class"):
                 self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) \

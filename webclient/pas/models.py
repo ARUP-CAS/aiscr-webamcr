@@ -32,9 +32,10 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class SamostatnyNalez(models.Model):
+class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Model):
     PAS_STATES = [
         (SN_ZAPSANY, _("SN1 - zapsaný")),
         (SN_ODESLANY, _("SN2 - odeslaný")),  # Odeslaný
@@ -239,7 +240,7 @@ class SamostatnyNalez(models.Model):
             return "Samostatny nalez [ident_cely not yet assigned]"
 
 
-class UzivatelSpoluprace(models.Model):
+class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
     SPOLUPRACE_STATES = [
         (SPOLUPRACE_NEAKTIVNI, _("neaktivní")),
         (SPOLUPRACE_AKTIVNI, _("aktivní")),

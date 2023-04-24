@@ -17,11 +17,12 @@ from core.constants import (
     ZAPSANI_EXT_ZD,
 )
 from core.exceptions import MaximalIdentNumberError
+from django_prometheus.models import ExportModelOperationsMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
-class ExterniZdroj(models.Model):
+class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
 
     STATES = (
         (EZ_STAV_ZAPSANY, _("EZ1 - Zapsána")),
@@ -157,19 +158,14 @@ def get_ez_ident(zaznam=None):
         start = idents[0]
         end = MAXIMAL
         missing = sorted(set(range(start, end + 1)).difference(idents))
-        logger.debug(missing[0])
         if missing[0] >= MAXIMAL:
-            logger.error(
-                "Maximal number of temporary document ident is "
-                + str(MAXIMAL)
-                + "for given region and rada"
-            )
+            logger.error("ez.models:get_ez_ident.maximal", extra={"maximal": MAXIMAL, "zaznam": zaznam})
             raise MaximalIdentNumberError(MAXIMAL)
         sequence = str(missing[0]).zfill(7)
         return prefix + sequence
 
 
-class ExterniZdrojAutor(models.Model):
+class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), models.Model):
     externi_zdroj = models.ForeignKey(
         ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
@@ -183,7 +179,7 @@ class ExterniZdrojAutor(models.Model):
         unique_together = (("externi_zdroj", "autor"), ("externi_zdroj", "poradi"))
 
 
-class ExterniZdrojEditor(models.Model):
+class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), models.Model):
     externi_zdroj = models.ForeignKey(
         ExterniZdroj, models.CASCADE, db_column="externi_zdroj"
     )

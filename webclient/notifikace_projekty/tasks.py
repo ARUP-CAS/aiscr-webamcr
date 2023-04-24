@@ -1,4 +1,4 @@
-import structlog
+
 from celery import shared_task
 
 from projekt.models import Projekt
@@ -7,7 +7,10 @@ from .models import Pes
 from django.contrib.contenttypes.models import ContentType
 from heslar.models import RuianKraj, RuianOkres, RuianKatastr
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 @shared_task

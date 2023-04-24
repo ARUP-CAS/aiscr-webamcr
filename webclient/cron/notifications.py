@@ -1,4 +1,4 @@
-import structlog
+
 
 
 from django_cron import CronJobBase, Schedule
@@ -9,7 +9,10 @@ from historie.models import Historie
 from core.constants import ODESLANI_SN, ARCHIVACE_SN
 
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 class Notifications(CronJobBase):

@@ -1,7 +1,7 @@
 import datetime
 import re
 from django.forms import ValidationError
-import structlog
+
 from arch_z.models import Akce, AkceVedouci, ArcheologickyZaznam
 from core.forms import TwoLevelSelectField
 from crispy_forms.helper import FormHelper
@@ -17,7 +17,10 @@ from projekt.models import Projekt
 
 from . import validators
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 class AkceVedouciFormSetHelper(FormHelper):
@@ -81,11 +84,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
         def __init__(self, *args, **kwargs):
             super(CreateAkceVedouciObjektForm, self).__init__(*args, **kwargs)
             self.readonly = readonly
-            logger_s.debug(
-                "CreateAkceVedouciObjektForm.init",
-                readonly=readonly,
-                initial=self.initial,
-            )
+            logger.debug("CreateAkceVedouciObjektForm.init", extra={"readonly": readonly, "initial": self.initial})
             self.fields["vedouci"].required = False
 
     return CreateAkceVedouciObjektForm
@@ -150,7 +149,7 @@ class CreateArchZForm(forms.ModelForm):
                 self.fields["hlavni_katastr"].initial = self.instance.hlavni_katastr
                 self.fields["katastry"].initial = self.instance.katastry.all()
             except Exception as e:
-                logger_s.debug(e)
+                logger.debug(e)
                 pass
         try:
             self.fields["hlavni_katastr_show"] = forms.CharField(
@@ -179,7 +178,7 @@ class CreateArchZForm(forms.ModelForm):
             else:
                 pass
         except Exception as e:
-            logger_s.debug(e)
+            logger.debug(e)
 
         self.helper = FormHelper(self)
 
@@ -231,8 +230,9 @@ class CustomDateInput(forms.DateField):
         if value:
             if isinstance(value, str) and CustomDateInput.year_only(value):
                 return self.get_date_based_on_year(int(value))
-            logger_s.info("arch_z.forms.CustomDateInput.to_python",
-                          format=formats.get_format_lazy('DATE_INPUT_FORMATS'))
+            logger.info("arch_z.forms.CustomDateInput.to_python",
+                        extra={"format": formats.get_format_lazy('DATE_INPUT_FORMATS')})
+
             return super().to_python(value)  # return self.strptime(value, "%d.%m.%Y")
         return super().to_python(value)
 

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
 import os
-import structlog
+
 
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT
@@ -20,7 +20,10 @@ from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
 from heslar.models import RuianKraj
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm

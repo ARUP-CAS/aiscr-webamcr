@@ -1,6 +1,7 @@
+import logging
 from typing import Union
 
-import structlog
+
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -19,7 +20,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import Group
 
-logger_s = structlog.get_logger(__name__)
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 class UserNotificationTypeInlineForm(forms.ModelForm):
@@ -129,7 +131,8 @@ class CustomUserAdmin(UserAdmin):
     def save_model(self, request, obj: User, form, change):
         user = request.user
         user.created_from_admin_panel = True
-        logger_s.debug("uzivatel.admin.save_model.start", user=user.pk, obj_pk=obj.pk, change=change, form=form)
+        logger.debug("uzivatel.admin.save_model.start",
+                     extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form})
         try:
             user_db = User.objects.get(id=obj.pk)
         except ObjectDoesNotExist as err:
@@ -148,8 +151,8 @@ class CustomUserAdmin(UserAdmin):
             max_id = ROLE_BADATEL_ID
 
         if set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)):
-            logger_s.debug("uzivatel.admin.save_model.role_changed", old=obj.hlavni_role,
-                           new=user.groups.values_list('name', flat=True))
+            logger.debug("uzivatel.admin.save_model.role_changed",
+                         extra={"old": obj.hlavni_role, "new": user.groups.values_list('name', flat=True)})
             Historie(
                 typ_zmeny=ZMENA_HLAVNI_ROLE,
                 uzivatel=user,
@@ -165,15 +168,16 @@ class CustomUserAdmin(UserAdmin):
         ).save()
 
         if user_db is not None:
-            logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk,
-                           user_groups=user_db.groups.values_list('id', flat=True))
+            logger.debug("uzivatel.admin.save_model.manage_user_groups",
+                         extra={"user": obj.pk, "user_groups": user_db.groups.values_list('id', flat=True)})
         if not obj.is_active:
-            logger_s.debug("uzivatel.admin.save_model.manage_user_groups.deactivated", user=obj.pk)
+            logger.debug("uzivatel.admin.save_model.manage_user_groups.deactivated", extra={"user": obj.pk})
             transaction.on_commit(lambda: obj.groups.set([], clear=True))
             return
-        logger_s.debug("uzivatel.admin.save_model.manage_user_groups", user=obj.pk, group_count=groups.count())
+        logger.debug("uzivatel.admin.save_model.manage_user_groups",
+                     extra={"user": obj.pk, "group_count": groups.count()})
         if groups.count() == 0:
-            logger_s.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added", user=obj.pk)
+            logger.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added", extra={"user": obj.pk})
             group = Group.objects.get(pk=ROLE_BADATEL_ID)
             transaction.on_commit(lambda: obj.groups.set([group] + list(other_groups.values_list('id', flat=True)),
                                                               clear=True))
@@ -183,9 +187,10 @@ class CustomUserAdmin(UserAdmin):
                                                               clear=True))
             # Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
         Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
-        logger_s.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups", user=obj.pk,
-                       user_groups=obj.groups.values_list('id', flat=True))
-        logger_s.debug("uzivatel.admin.save_model.manage_user_groups", max_id=max_id, hlavni_role_pk=obj.hlavni_role.pk)
+        logger.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups",
+                     extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True)})
+        logger.debug("uzivatel.admin.save_model.manage_user_groups",
+                     extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:

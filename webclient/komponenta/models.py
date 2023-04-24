@@ -6,11 +6,12 @@ from core.constants import (
 from django.db import models
 from heslar.hesla import HESLAR_AKTIVITA, HESLAR_AREAL, HESLAR_OBDOBI
 from heslar.models import Heslar
+from django_prometheus.models import ExportModelOperationsMixin
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
-class KomponentaVazby(models.Model):
+class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Model):
 
     CHOICES = (
         (DOKUMENTACNI_JEDNOTKA_RELATION_TYPE, "Dokumentacni jednotka"),
@@ -23,7 +24,7 @@ class KomponentaVazby(models.Model):
         db_table = "komponenta_vazby"
 
 
-class Komponenta(models.Model):
+class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
     obdobi = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -68,7 +69,7 @@ class Komponenta(models.Model):
         ordering = ["ident_cely"]
 
 
-class KomponentaAktivita(models.Model):
+class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):
     komponenta = models.ForeignKey(Komponenta, models.CASCADE, db_column="komponenta")
     aktivita = models.ForeignKey(
         Heslar,

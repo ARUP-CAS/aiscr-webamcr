@@ -32,7 +32,7 @@ from heslar.models import Heslar
 from projekt.models import Projekt
 from uzivatel.models import User
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class UrlTests(TestCase):

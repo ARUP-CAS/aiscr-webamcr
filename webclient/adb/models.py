@@ -1,5 +1,5 @@
 from math import fabs
-import structlog
+
 
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
@@ -7,14 +7,18 @@ from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.geos import Point
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger = logging.getLogger('python-logstash-logger')
 
 
-class Kladysm5(models.Model):
+class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     """
     Class pro model kladysm5
     """
@@ -104,11 +108,11 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
         nejvyssi_postfix = str(nejvyssi_postfix).zfill(last_digit_count)
         return f"{adb.ident_cely}-V{nejvyssi_postfix}"
     else:
-        logger_s.error("Maximal number of Výškový bod is " + str(MAXIMAL_VYSKOVY_BOD))
+        logger.error("adb.models.get_vyskovy_bod.maximal_number_reached", extra={"max": str(MAXIMAL_VYSKOVY_BOD)})
         raise MaximalIdentNumberError(max_count)
 
 
-class VyskovyBod(models.Model):
+class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
     """
     Class pre db model vyskovy bod.
     Obsahuje vazbu na ADB.
@@ -130,14 +134,15 @@ class VyskovyBod(models.Model):
         """
         Metoda na nastaveni geomu (suradnic)
         """
-        logger_s.debug("adb.models.VyskovyBod.set_geom", northing=northing, easting=easting, nivelete=niveleta)
+        logger.debug("adb.models.VyskovyBod.set_geom", extra={"northing": northing, "easting": easting,
+                                                                "nivelete": niveleta})
         if northing != 0.0:
             self.geom = Point(
                 x=fabs(northing),
                 y=fabs(easting),
                 z=fabs(niveleta),
             )
-            logger_s.debug("adb.models.VyskovyBod.set_geom.point", point=self.geom)
+            logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom})
             self.save()
 
     def save(self, *args, **kwargs):
@@ -168,7 +173,7 @@ class VyskovyBod(models.Model):
         db_table = "vyskovy_bod"
 
 
-class AdbSekvence(models.Model):
+class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):
     """
     Class pro sekvenci ADB pole db modelu kladysm5
     """

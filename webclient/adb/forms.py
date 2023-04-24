@@ -1,4 +1,5 @@
-import structlog
+import logging
+import logstash
 
 from adb.models import Adb, VyskovyBod
 from crispy_forms.bootstrap import AppendedText
@@ -10,7 +11,7 @@ from django.utils.translation import gettext as _
 from django.utils.safestring import mark_safe
 
 
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class CreateADBForm(forms.ModelForm):
@@ -209,10 +210,14 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             if pian:
                 [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
                 has_initial_values = cleaned_data.get("northing", None) == -1 * round(x, 2) and cleaned_data.get("easting", None) == -1 * round(y, 2)
-                logger_s.debug(cleaned_data=cleaned_data, x=x, y=y, has_initial_values=has_initial_values)
+                logger.debug("adb.forms.create_vyskovy_bod_form.pian",
+                             extra={"cleaned_data": cleaned_data, "x": x, "y": y,
+                                      "has_initial_values": has_initial_values})
             if has_initial_values and niveleta:
                 has_initial_values = cleaned_data.get("niveleta", None) == niveleta
-                logger_s.debug(cleaned_data=cleaned_data, niveleta=niveleta, has_initial_values=has_initial_values)
+                logger.debug("adb.forms.create_vyskovy_bod_form.has_initial_values", extra={
+                    "cleaned_data": cleaned_data, "niveleta": niveleta,
+                    "has_initial_values": has_initial_values})
             elif "niveleta" in cleaned_data:
                 has_initial_values = False
             if "typ" in cleaned_data and cleaned_data["typ"] is not None:
