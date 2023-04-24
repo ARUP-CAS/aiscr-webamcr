@@ -236,7 +236,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             soubory = self.soubory.soubory.exclude(
                 nazev_zkraceny__regex="^log_dokumentace_"
             )
-            logger.debug(soubory)
             if soubory.count() > 0:
                 filename = (
                         "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
@@ -264,9 +263,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
                 for file in soubory:
                     file.path.delete()
                 items_deleted = soubory.delete()
-                logger.debug(
-                    "Pocet smazanych souboru soubory: " + str(items_deleted[0])
-                )
+                logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
+                             extra={"deleted": items_deleted[0]})
 
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
@@ -390,7 +388,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             number = last_part[4:]
             permanent = False if "X-" in self.ident_cely else True
         else:
-            logger.warning("Cannot retrieve year from null ident_cely.")
+            logger.warning("projekt.models.Projekt.parse_ident_cely.cannot_retrieve_ident_cely", extra={"pk": self.pk})
         return permanent, region, year, number
 
     def has_oznamovatel(self):
@@ -405,9 +403,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
-        logger.debug(
-            "Region " + region + " of the cadastry: " + str(self.hlavni_katastr)
-        )
+        logger.debug("projekt.models.Projekt.set_permanent_ident_cely.region_cadastry",
+                     extra={"region": region, "hlavni_katastr": self.hlavni_katastr})
         sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
             0
         ]
@@ -418,12 +415,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         while True:
             if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
                 sequence.sekvence += 1
-                logger.warning(
-                    "Ident "
-                    + perm_ident_cely
-                    + " already exists, trying next number "
-                    + str(sequence.sekvence)
-                )
+                logger.warning("projekt.models.Projekt.set_permanent_ident_cely.already_exists",
+                             extra={"perm_ident_cely": perm_ident_cely, "sequence_sekvence": self.sequence.sekvence})
                 perm_ident_cely = (
                         region
                         + "-"

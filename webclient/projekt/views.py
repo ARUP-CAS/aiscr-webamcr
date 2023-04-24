@@ -327,7 +327,6 @@ def edit(request, ident_cely):
                 logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
                 logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
-                logger.debug(form.changed_data)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
@@ -343,7 +342,7 @@ def edit(request, ident_cely):
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
         else:
-            logger.warning("Projekt geom is empty.")
+            logger.warning("projekt.views.edit.empty")
     return render(
         request,
         "projekt/edit.html",
@@ -403,7 +402,7 @@ def odebrat_sloupec_z_vychozich(request):
                 skryte_sloupce.remove(sloupec)
             except ValueError:
                 logger.error(
-                    f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
+                    f"projekt.views.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
                 )
                 HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
         else:
@@ -494,12 +493,8 @@ def schvalit(request, ident_cely):
                     status=403,
                 )
             else:
-                logger.debug(
-                    "Projektu "
-                    + ident_cely
-                    + " byl prirazen permanentni ident "
-                    + projekt.ident_cely
-                )
+                logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
+                                                                         "permIdent_cely": projekt.ident_cely})
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -542,7 +537,6 @@ def prihlasit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    logger.debug("something")
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -561,8 +555,7 @@ def prihlasit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
     else:
         archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
         form = PrihlaseniProjektForm(
@@ -611,8 +604,7 @@ def zahajit_v_terenu(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"errors": form.errors})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -660,8 +652,7 @@ def ukoncit_v_terenu(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"errors": form.errors})
     else:
         form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -698,11 +689,11 @@ def uzavrit(request, ident_cely):
         akce = Akce.objects.filter(projekt=projekt)
         for a in akce:
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                logger.debug("Setting event to state A2")
+                logger.debug("projekt.views.uzavrit.set_a2", extra={"ident_cely": ident_cely})
                 a.archeologicky_zaznam.set_odeslany(request.user)
             for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
                 if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
-                    logger.debug("Setting dokument to state D2")
+                    logger.debug("projekt.views.uzavrit.set_d2", extra={"ident_cely": ident_cely})
                     dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
@@ -712,7 +703,7 @@ def uzavrit(request, ident_cely):
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug(warnings)
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warnings": warnings})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -776,7 +767,7 @@ def archivovat(request, ident_cely):
         )
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug(warnings)
+        logger.debug("projekt.views.archivovat.warnings", extra={"warnings": warnings})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -841,7 +832,6 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            logger.debug(duvod_to_save)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.save()
             messages.add_message(
@@ -855,12 +845,11 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"errors": form.errors})
             context = {"projekt": projekt, "form": form}
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
-        logger.debug(warnings)
+        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warnings": warnings})
 
         if warnings:
             request.session["temp_data"] = []
@@ -920,9 +909,9 @@ def zrusit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
-            context = context = {
+            form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
+            logger.debug("projekt.views.zrusit.form_not_valid", extra={"errors": form.errors})
+            context = {
                 "object": projekt,
                 "title": _("projekt.modalForm.zruseni.title.text"),
                 "id_tag": "zrusit-form",
@@ -945,7 +934,6 @@ def zrusit(request, ident_cely):
                 .order_by("-datum_zmeny")[0]
                 .poznamka
             )
-            logger.debug(last_history_poznamka)
             context["form"] = ZruseniProjektForm(
                 initial={"reason_text": last_history_poznamka}
             )
@@ -985,8 +973,7 @@ def vratit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.vratit.form_not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1034,8 +1021,7 @@ def vratit_navrh_zruseni(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1257,11 +1243,11 @@ def katastr_text_to_id(request):
         return post
     else:
         if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
-            logger.debug(
-                f"Katastr {hlavni_katastr_name} and {okres_name} are already numbers"
-            )
+            logger.debug("projekt.views.katastr_text_to_id.has_numbers",
+                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         else:
-            logger.error(f"Cannot find katastr {hlavni_katastr_name} in {okres_name}!")
+            logger.error("projekt.views.katastr_text_to_id.not_found",
+                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         return request.POST.copy()
 
 

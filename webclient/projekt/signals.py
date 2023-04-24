@@ -27,26 +27,28 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
         instance_db = None
     if instance_db and instance.termin_odevzdani_nz == instance_db.termin_odevzdani_nz:
         if instance.datum_ukonceni != instance_db.datum_ukonceni and instance.datum_ukonceni:
-            logger.debug("Zmenen datum ukonceni a nezmenene termin_odevzdani_NZ - menim automaticky termin_odevzdani_NZ")
+            logger.debug("projekt.signals.change_termin_odevzdani_NZ.changed_automatic_date",
+                         extra={"ident_cely": instance.ident_cely})
             instance.termin_odevzdani_nz = instance.datum_ukonceni
             instance.termin_odevzdani_nz = instance.termin_odevzdani_nz.replace(year=instance.termin_odevzdani_nz.year + 3)
 
 def create_projekt_vazby(sender, instance, **kwargs):
     if instance.pk is None:
-        logger.debug("Creating history records for projekt " + str(instance))
+        logger.debug("projekt.signals.create_projekt_vazby.history_created",
+                     extra={"instance": instance})
         hv = HistorieVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         hv.save()
         instance.historie = hv
-        logger.debug(
-            "Creating child file for soubory records for project " + str(instance)
-        )
+        logger.debug("projekt.signals.create_projekt_vazby.child_file_created",
+                     extra={"instance": instance})
         sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         sv.save()
         instance.soubory = sv
 
 @receiver(post_save, sender=Projekt)
-def odosli_hlidaciho_psa(sender, instance, **kwargs):
+def odesli_hlidaciho_psa(sender, instance, **kwargs):
     if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
             and instance.stav != instance.__original_stav:
-        logger.debug("Projekt change status to Zapsany, checking hlidaci pes.")
+        logger.debug("projekt.signals.odesli_hlidaciho_psa.checked_hlidaci_pes",
+                     extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)

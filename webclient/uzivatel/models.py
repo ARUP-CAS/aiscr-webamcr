@@ -157,7 +157,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 fail_silently=False,
             )
         except ConnectionRefusedError as err:
-            logger.error("user.email_user.error", user_id=self.pk, email=self.email)
+            logger.error("user.email_user.error", extra={"user_id": self.pk, "email": self.email})
 
     def name_and_id(self):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
@@ -173,16 +173,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
-                logger.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
-                               is_active=self.is_active)
+                logger.debug("User.save.deactivate_spoluprace",
+                             extra={"hlavni_role_id": self.hlavni_role.pk, "is_active": self.is_active})
             else:
-                logger.debug("User.save.deactivate_spoluprace", is_active=self.is_active)
+                logger.debug("User.save.deactivate_spoluprace", extra={"is_active": self.is_active})
             # local import to avoid circual import issue
             from pas.models import UzivatelSpoluprace
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
-            logger.debug("User.save.deactivate_spoluprace", spoluprace_count=spoluprace_query.count())
+            logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_count": spoluprace_query.count()})
             for spoluprace in spoluprace_query:
-                logger.debug("User.save.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
+                logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
 
