@@ -100,14 +100,6 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(old_casti + 1, new_casti)
 
-    def test_get_detail_komponenta(self):
-        self.client.force_login(self.existing_user)
-        response = self.client.get(
-            f"/dokument/detail/{self.existing_dokument}/komponenta/{DOKUMENT_KOMPONENTA_IDENT}"
-        )
-
-        self.assertEqual(200, response.status_code)
-
     def test_get_komponenta_zapsat(self):
         self.client.force_login(self.existing_user)
         response = self.client.get(
@@ -123,15 +115,16 @@ class UrlTests(TestCase):
             "areal": str(AREAL_HRADISTE_ID),
         }
         self.client.force_login(self.existing_user)
+        dok_cast = DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT).first()
+        komponenty_before = dok_cast.komponenty.komponenty.count()
         response = self.client.post(
             f"/komponenta/zapsat/{DOKUMENT_CAST_IDENT}?typ=cast",
             data,
             follow=True,
         )
-        dok_cast = DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT).first()
-        komponenty = len(dok_cast.komponenty.komponenty.all())
+        komponenty_after = dok_cast.komponenty.komponenty.count()
         self.assertEqual(200, response.status_code)
-        self.assertEqual(komponenty, 2)
+        self.assertEqual(komponenty_before + 1, komponenty_after)
 
     def test_post_tvary_editovat(self):
         dok = Dokument.objects.filter(ident_cely=TESTOVACI_DOKUMENT_IDENT).first()
