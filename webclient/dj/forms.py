@@ -1,5 +1,3 @@
-import logging
-
 from arch_z.models import Akce, ArcheologickyZaznam
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -10,8 +8,6 @@ from django.db.models import Q
 from django.utils.translation import gettext as _
 from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
-
-logger = logging.getLogger(__name__)
 
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):

@@ -46,9 +46,10 @@ from core.constants import (
 from django.db import models
 from django.utils.translation import gettext as _
 from uzivatel.models import User
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class Historie(models.Model):
+class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
     CHOICES = (
         # Project related choices
@@ -112,7 +113,7 @@ class Historie(models.Model):
         verbose_name = "historie"
 
 
-class HistorieVazby(models.Model):
+class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     CHOICES = (
         (PROJEKT_RELATION_TYPE, "Projekt"),

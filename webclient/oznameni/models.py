@@ -2,9 +2,10 @@ from datetime import datetime
 
 from django.db import models
 from projekt.models import Projekt
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class Oznamovatel(models.Model):
+class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
     projekt = models.OneToOneField(
         Projekt,
         on_delete=models.CASCADE,

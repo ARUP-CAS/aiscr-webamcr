@@ -2,7 +2,7 @@ import logging
 from django.views import View
 
 import simplejson as json
-import structlog
+
 from django.db.models.functions import Length
 from django.template.loader import render_to_string
 from dal import autocomplete
@@ -99,8 +99,8 @@ from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required
@@ -154,21 +154,13 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
     body = json.loads(request.body.decode("utf-8"))
-    # logger.debug(request.body.decode("utf-8"))
-    # logger.debug(body["zoom"])
-    # logger.debug(body["southEast"]["lat"])
-    # DEBUG {"
-    # northWest":{"lat":50.01239997944656,"lng":14.618017673492433},
-    # "southEast":{"lat":50.00964206670656,"lng":14.63383197784424},"zoom":17}
-    # get_points_from_envelope
     num = get_num_projects_from_envelope(
         body["southEast"]["lng"],
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
     )
-    logger.debug("projekt pocet geometrii")
-    logger.debug(num)
+    logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
         pians = get_projects_from_envelope(
             body["southEast"]["lng"],
@@ -178,7 +170,6 @@ def post_ajax_get_projects_limit(request):
         )
         back = []
         for pian in pians:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             back.append(
                 {
                     "id": pian.id,
@@ -198,7 +189,7 @@ def post_ajax_get_projects_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        logger.debug("projekt density %s", density)
+        logger.debug("projekt.views.post_ajax_get_projects_limit.density", extra={"density": density})
 
         heats = get_heatmap_project(
             body["southEast"]["lng"],
@@ -210,7 +201,6 @@ def post_ajax_get_projects_limit(request):
         back = []
         cid = 0
         for heat in heats:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             cid += 1
             back.append(
                 {
@@ -229,7 +219,7 @@ def post_ajax_get_projects_limit(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
-    logger_s.debug("create.start")
+    logger.debug("projekt.views.create.start")
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -243,15 +233,14 @@ def create(request):
             required = False
         form_oznamovatel = OznamovatelForm(request.POST, required=required)
         if form_projekt.is_valid():
-            logger.debug("Projekt form is valid")
+            logger.debug("projekt.views.create.form_valid")
             lat = form_projekt.cleaned_data["latitude"]
             long = form_projekt.cleaned_data["longitude"]
             p = form_projekt.save(commit=False)
             if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
                 if not form_oznamovatel.is_valid():
-                    logger.debug("The form oznamovatel is not valid!")
-                    logger.debug(form_oznamovatel.errors)
+                    logger.debug("projekt.views.create.form_not_valid", extra={"errors": form_oznamovatel.errors})
                     return render(
                         request,
                         "projekt/create.html",
@@ -283,10 +272,8 @@ def create(request):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 return redirect("projekt:detail", ident_cely=p.ident_cely)
         else:
-            logger.debug("The form projekt is not valid!")
-            logger.debug(form_projekt.errors)
+            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
     else:
-        logger_s.debug("create.get")
         form_projekt = CreateProjektForm(
             required=required_fields, required_next=required_fields_next
         )
@@ -321,7 +308,7 @@ def edit(request, ident_cely):
             required_next=required_fields_next,
         )
         if form.is_valid():
-            logger.debug("Projekt Form is valid:1")
+            logger.debug("projekt.views.edit.form_valid")
             lat = form.cleaned_data["latitude"]
             long = form.cleaned_data["longitude"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
@@ -335,16 +322,15 @@ def edit(request, ident_cely):
                 p.geom = new_geom
                 p.save()
                 geom_changed = True
-                logger.debug("Geometry successfully updated: " + str(p.geom))
+                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": p.geom})
             else:
-                logger.warning("Projekt geom not updated.")
+                logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
-                logger.debug(form.changed_data)
+                logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
-            logger.debug("The form is not valid!")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})
 
     else:
         form = EditProjektForm(
@@ -356,7 +342,7 @@ def edit(request, ident_cely):
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
         else:
-            logger.warning("Projekt geom is empty.")
+            logger.warning("projekt.views.edit.empty")
     return render(
         request,
         "projekt/edit.html",
@@ -416,7 +402,7 @@ def odebrat_sloupec_z_vychozich(request):
                 skryte_sloupce.remove(sloupec)
             except ValueError:
                 logger.error(
-                    f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
+                    f"projekt.views.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
                 )
                 HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
         else:
@@ -507,12 +493,8 @@ def schvalit(request, ident_cely):
                     status=403,
                 )
             else:
-                logger.debug(
-                    "Projektu "
-                    + ident_cely
-                    + " byl prirazen permanentni ident "
-                    + projekt.ident_cely
-                )
+                logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
+                                                                         "permIdent_cely": projekt.ident_cely})
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -555,7 +537,6 @@ def prihlasit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    logger.debug("something")
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -574,8 +555,7 @@ def prihlasit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
     else:
         archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
         form = PrihlaseniProjektForm(
@@ -624,8 +604,7 @@ def zahajit_v_terenu(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"errors": form.errors})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -673,8 +652,7 @@ def ukoncit_v_terenu(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"errors": form.errors})
     else:
         form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -711,11 +689,11 @@ def uzavrit(request, ident_cely):
         akce = Akce.objects.filter(projekt=projekt)
         for a in akce:
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                logger.debug("Setting event to state A2")
+                logger.debug("projekt.views.uzavrit.set_a2", extra={"ident_cely": ident_cely})
                 a.archeologicky_zaznam.set_odeslany(request.user)
             for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
                 if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
-                    logger.debug("Setting dokument to state D2")
+                    logger.debug("projekt.views.uzavrit.set_d2", extra={"ident_cely": ident_cely})
                     dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
@@ -725,7 +703,7 @@ def uzavrit(request, ident_cely):
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug(warnings)
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warnings": warnings})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -789,7 +767,7 @@ def archivovat(request, ident_cely):
         )
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug(warnings)
+        logger.debug("projekt.views.archivovat.warnings", extra={"warnings": warnings})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -854,7 +832,6 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            logger.debug(duvod_to_save)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.save()
             messages.add_message(
@@ -868,12 +845,11 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"errors": form.errors})
             context = {"projekt": projekt, "form": form}
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
-        logger.debug(warnings)
+        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warnings": warnings})
 
         if warnings:
             request.session["temp_data"] = []
@@ -933,9 +909,9 @@ def zrusit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
-            context = context = {
+            form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
+            logger.debug("projekt.views.zrusit.form_not_valid", extra={"errors": form.errors})
+            context = {
                 "object": projekt,
                 "title": _("projekt.modalForm.zruseni.title.text"),
                 "id_tag": "zrusit-form",
@@ -958,7 +934,6 @@ def zrusit(request, ident_cely):
                 .order_by("-datum_zmeny")[0]
                 .poznamka
             )
-            logger.debug(last_history_poznamka)
             context["form"] = ZruseniProjektForm(
                 initial={"reason_text": last_history_poznamka}
             )
@@ -998,8 +973,7 @@ def vratit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.vratit.form_not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1047,8 +1021,7 @@ def vratit_navrh_zruseni(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1270,11 +1243,11 @@ def katastr_text_to_id(request):
         return post
     else:
         if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
-            logger.debug(
-                f"Katastr {hlavni_katastr_name} and {okres_name} are already numbers"
-            )
+            logger.debug("projekt.views.katastr_text_to_id.has_numbers",
+                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         else:
-            logger.error(f"Cannot find katastr {hlavni_katastr_name} in {okres_name}!")
+            logger.error("projekt.views.katastr_text_to_id.not_found",
+                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         return request.POST.copy()
 
 

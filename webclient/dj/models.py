@@ -7,10 +7,10 @@ from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class DokumentacniJednotka(models.Model):
-
+class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), models.Model):
     typ = models.ForeignKey(
         Heslar,
         models.RESTRICT,

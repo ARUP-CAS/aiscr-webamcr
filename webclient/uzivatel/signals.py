@@ -1,5 +1,5 @@
 import logging
-import structlog
+
 from django.contrib.auth.models import Group
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,8 +9,7 @@ from django.dispatch import receiver
 from services.mailer import Mailer
 from uzivatel.models import User
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @receiver(pre_save, sender=User)
@@ -22,10 +21,10 @@ def create_ident_cely(sender, instance, **kwargs):
             instance.old = User.objects.get(id=instance.id)
         except ObjectDoesNotExist as err:
             # Primary for the automatic testing where a new instance is created with ID
-            logger_s.error("uzivatel.signals.create_ident_cely.ObjectDoesNotExist", err=err)
+            logger.error("uzivatel.signals.create_ident_cely.ObjectDoesNotExist", extra={"err": err})
     if instance.pk is None:
         instance.model_is_updated = False
-        logger.debug("Running create_ident_cely receiver ...")
+        logger.error("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
         if not instance.ident_cely:
             users = User.objects.all().order_by("-ident_cely")
             if users.count() > 0:

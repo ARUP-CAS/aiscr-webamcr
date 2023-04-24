@@ -2,7 +2,7 @@ import unittest
 
 import time
 
-import structlog
+
 import socket
 
 from django.conf import settings
@@ -18,7 +18,10 @@ from django.test import LiveServerTestCase
 
 from core.tests.runner import TEST_USER_USERNAME, TEST_USER_PASSWORD, AMCRSeleniumTestRunner
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger_s = logging.getLogger('python-logstash-logger')
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")

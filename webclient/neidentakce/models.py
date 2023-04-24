@@ -2,9 +2,10 @@ from django.db import models
 from dokument.models import DokumentCast
 from heslar.models import RuianKatastr
 from uzivatel.models import Osoba
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class NeidentAkce(models.Model):
+class NeidentAkce(ExportModelOperationsMixin("neident_akce"), models.Model):
     katastr = models.ForeignKey(
         RuianKatastr, models.RESTRICT, db_column="katastr", blank=True, null=True
     )
@@ -32,7 +33,7 @@ class NeidentAkce(models.Model):
         db_table = "neident_akce"
 
 
-class NeidentAkceVedouci(models.Model):
+class NeidentAkceVedouci(ExportModelOperationsMixin("neident_akce_vedouci"), models.Model):
     neident_akce = models.ForeignKey(
         NeidentAkce,
         on_delete=models.CASCADE,

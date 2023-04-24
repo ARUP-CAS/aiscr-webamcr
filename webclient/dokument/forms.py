@@ -26,7 +26,7 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from uzivatel.models import Osoba
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class AutoriField(forms.models.ModelMultipleChoiceField):
@@ -34,7 +34,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
         qs = super().clean(value)
         if value:
             i = 1
-            logger.debug(value)
+            logger.debug("dokument.forms.AutoriField.clean", extra={"value": value})
             for item in value:
                 part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
                 if i ==1:

@@ -5,7 +5,7 @@ from core.utils import SearchTable
 
 from .models import Projekt
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 class ProjektTable(SearchTable):
 

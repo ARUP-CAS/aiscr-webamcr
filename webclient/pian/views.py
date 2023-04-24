@@ -1,6 +1,6 @@
 import logging
 
-import structlog
+
 from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
 from core.ident_cely import get_temporary_pian_ident
@@ -38,8 +38,7 @@ from heslar.models import Heslar
 from pian.forms import PianCreateForm
 from pian.models import Kladyzm, Pian
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required
@@ -55,23 +54,18 @@ def detail(request, ident_cely):
     c = connection.cursor()
     validation_results = ""
     validation_geom = ""
-    logger_s.debug("pian.views.detail.start")
+    logger.debug("pian.views.detail.start")
     try:
         dict1 = dict(request.POST)
-        logger_s.debug("pian.views.detail", post=dict1.items())
+        logger.debug("pian.views.detail", extra={"post": dict1.items()})
         for key in dict1.keys():
             if key == "geom":
                 validation_geom = dict1.get(key)[0]
                 c.execute("BEGIN")
                 c.callproc("validateGeom", [validation_geom])
                 validation_results = c.fetchone()[0]
-                logger_s.debug(
-                    "pian.views.detail",
-                    validation_results=validation_results,
-                    validation_geom=validation_geom,
-                    key=key,
-                )
-                # logger.debug(validation_results)
+                logger.debug("pian.views.detail", extra={"validation_results": validation_results,
+                                                         "validation_geom": validation_geom, "key": key})
                 c.execute("COMMIT")
     except Exception:
         validation_results = PIAN_VALIDACE_VYPNUTA
@@ -94,13 +88,13 @@ def detail(request, ident_cely):
             + get_validation_messages(validation_results),
         )
     elif form.is_valid():
-        logger_s.debug("pian.views.detail.form.valid", pian_ident_cely=pian.ident_cely)
+        logger.debug("pian.views.detail.form.valid", extra={"pian_ident_cely": pian.ident_cely})
         form.save()
         update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
         if form.changed_data:
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
-        logger_s.debug("pian.views.detail.form.not_valid", form_errors=form.errors)
+        logger.debug("pian.views.detail.form.not_valid", extra={"form_errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
     response = redirect(dj.get_absolute_url())
@@ -127,10 +121,10 @@ def odpojit(request, dj_ident_cely):
         dj.pian = None
         dj.save()
         update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
-        logger.debug("Pian odpojen: " + pian.ident_cely)
+        logger.debug("pian.views.odpojit.odpojen", extra={"pian_ident_cely": pian.ident_cely})
         if delete_pian:
             pian.delete()
-            logger.debug("Pian smazán: " + pian.ident_cely)
+            logger.debug("pian.views.odpojit.smazan", extra={"pian_ident_cely": pian.ident_cely})
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_SMAZAN)
         else:
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_ODPOJEN)
@@ -170,14 +164,14 @@ def potvrdit(request, dj_ident_cely):
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
-            logger_s.debug("pian.views.potvrdit", message=MAXIMUM_IDENT_DOSAZEN)
+            logger.debug("pian.views.potvrdit", extra={"pian_ident_cely": pian.ident_cely})
             return JsonResponse(
                 {"redirect": redirect_view},
                 status=403,
             )
         else:
             pian.set_potvrzeny(request.user)
-            logger.debug("Pian potvrzen: " + pian.ident_cely)
+            logger.debug("pian.views.potvrdit.potvrzen", extra={"pian_ident_cely": pian.ident_cely})
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
             response = JsonResponse({"redirect": dj.get_absolute_url()})
             response.set_cookie(
@@ -202,7 +196,7 @@ def potvrdit(request, dj_ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def create(request, dj_ident_cely):
-    logger_s.debug("pian.views.create.start")
+    logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
     c = connection.cursor()
@@ -212,13 +206,10 @@ def create(request, dj_ident_cely):
         c.callproc("validateGeom", [str(form.data["geom"])])
         validation_results = c.fetchone()[0]
         c.execute("COMMIT")
-        logger_s.debug(
-            "pian.views.create.commit",
-            validation_results=validation_results,
-            geom=str(form.data["geom"]),
-        )
+        logger.debug("pian.views.create.commit", extra={"validation_results": validation_results,
+                                                        "geom": str(form.data["geom"])})
     except Exception as ex:
-        logger_s.warning("pian.views.create.validation_exception", exception=ex)
+        logger.warning("pian.views.create.validation_exception", extra={"exception": ex})
         validation_results = PIAN_VALIDACE_VYPNUTA
     finally:
         c.close()
@@ -232,9 +223,9 @@ def create(request, dj_ident_cely):
             + " "
             + get_validation_messages(validation_results),
         )
-        logger_s.debug("pian.views.potvrdit", message=PIAN_NEVALIDNI_GEOMETRIE)
+        logger.debug("pian.views.create", extra={"message": PIAN_NEVALIDNI_GEOMETRIE})
     elif form.is_valid():
-        logger.debug("pian.views.create: Form is valid")
+        logger.debug("pian.views.create.form_valid")
         pian = form.save(commit=False)
         # Assign base map references
         if type(pian.geom) == Point:
@@ -248,7 +239,7 @@ def create(request, dj_ident_cely):
             point = Centroid(pian.geom)
         else:
             raise NeznamaGeometrieError()
-        logger.debug("pian.views.create: GEOM: " + str(form.data["geom"]))
+        logger.debug("pian.views.create.geom", extra={"geom": str(form.data["geom"])})
         zm10s = (
             Kladyzm.objects.filter(kategorie=KLADYZM10)            
             .filter(the_geom__contains=point)
@@ -263,7 +254,7 @@ def create(request, dj_ident_cely):
             try:
                 pian.ident_cely = get_temporary_pian_ident(zm50s[0])
             except MaximalIdentNumberError as e:
-                logger.error(f"pian.views.create: {messages.ERROR}, {e.message}.")
+                logger.warning("pian.views.create.error", extra={"message": messages.ERROR, "exception": e.message})
                 messages.add_message(request, messages.ERROR, e.message)
             else:
                 pian.save()
@@ -271,21 +262,16 @@ def create(request, dj_ident_cely):
                 dj.pian = pian
                 dj.save()
                 update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
-                logger.debug(
-                    f"pian.views.create: {messages.SUCCESS}, {ZAZNAM_USPESNE_VYTVOREN} {dj.pk}."
-                )
+                logger.warning("pian.views.create.error", extra={"message": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         else:
-            logger.error("pian.views.create: Nelze priradit ZM10 nebo ZM50 k pianu.")
-            logger.error("pian.views.create: ZM10s" + str(zm10s))
-            logger.error("pian.views.create: ZM50s" + str(zm50s))
+            logger.info("pian.views.create.assignment_error", extra={"zm10s": zm10s, "zm50s": zm50s})
             messages.add_message(
                 request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_VYTVORIT
             )
         redirect("dj:detail", ident_cely=dj_ident_cely)
     else:
-        logger.warning("pian.views.create: Form is not valid")
-        logger.warning(f"pian.views.create: Form errors: {form.errors}")
+        logger.info("pian.views.create.not_valid", extra={"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     response = redirect(dj.get_absolute_url())

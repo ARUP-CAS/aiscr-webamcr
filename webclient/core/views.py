@@ -9,7 +9,7 @@ from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 
-import structlog
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -56,14 +56,12 @@ from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required
 @require_http_methods(["GET"])
 def index(request):
-
     return render(request, "core/index.html")
 
 
@@ -76,7 +74,7 @@ def delete_file(request, pk):
         items_deleted = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
-            logger.debug("Soubor " + str(s) + " nebyl smazan.")
+            logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             django_messages = []
             for message in messages.get_messages(request):
@@ -89,7 +87,7 @@ def delete_file(request, pk):
                 )
             return JsonResponse({"messages": django_messages}, status=400)
         else:
-            logger.debug("Byl smazán soubor: " + str(items_deleted))
+            logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")
@@ -97,7 +95,7 @@ def delete_file(request, pk):
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
-                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                logger.warning("core.views.delete_file.redirect_not_safe", extra={"next_url": next_url})
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
@@ -128,9 +126,7 @@ def download_file(request, pk):
         )
         return response
     else:
-        logger.debug(
-            "File " + str(soubor.nazev) + " does not exists at location " + str(path)
-        )
+        logger.debug("core.views.download_file.not_exists", extra={"name": soubor.nazev, "path": path})
     raise Http404
 
 
@@ -191,7 +187,7 @@ def post_upload(request):
     update = "fileID" in request.POST
     s = None
     if not update:
-        logger.debug("Uploading file to object: " + request.POST["objectID"])
+        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST["objectID"]})
         projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
         finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
@@ -220,11 +216,11 @@ def post_upload(request):
                 status=500,
             )
     else:
-        logger.debug("Updating file for soubor " + request.POST["fileID"])
+        logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"]})
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
         if os.path.exists(s.path.path):
             os.remove(s.path.path)
-        logger_s.debug("core.views.post_upload.update", s=s.pk, fullname=s.path.path)
+        logger.debug("core.views.post_upload.update", extra={"s": s.pk, "fullname": s.path.path})
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
@@ -244,7 +240,7 @@ def post_upload(request):
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():
-                logger.debug("Saving file object: " + str(s))
+                logger.debug("core.views.post_upload.saving", extra={"s": s})
                 s.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
@@ -255,9 +251,7 @@ def post_upload(request):
                     {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
                 )
             else:
-                logger.warning(
-                    "File already exists on the server. Saving copy: " + str(s)
-                )
+                logger.warning("core.views.post_upload.already_exists", extra={"s": s})
                 s.save()
                 if not request.user.is_authenticated:
                     user_admin = User.objects.filter(email="amcr@arup.cas.cz").first()
@@ -271,7 +265,6 @@ def post_upload(request):
                 if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                     parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
                 if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                    logger.debug(duplikat[0].vazba.samostatny_nalez_souboru.get())
                     parent_ident = (
                         duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
                     )
@@ -310,7 +303,7 @@ def post_upload(request):
             mimetype = get_mime_type(soubor.name)
             soubor.name = checksum + "_" + new_name
             s.nazev = checksum + "_" + new_name
-            logger_s.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
+            logger.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
             s.nazev = checksum + "_" + new_name
             s.nazev_zkraceny = new_name
             s.path = soubor
@@ -331,7 +324,6 @@ def post_upload(request):
                 if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
                     parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
                 if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                    logger.debug(duplikat[0].vazba.samostatny_nalez_souboru.get())
                     parent_ident = (
                         duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
                     )
@@ -353,7 +345,7 @@ def post_upload(request):
                     {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
                 )
     else:
-        logger.warning("No file attached to the announcement form.")
+        logger.warning("core.views.post_upload.no_file")
 
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
 
@@ -372,8 +364,6 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
         for file in files:
             split_file = os.path.splitext(file.nazev)
             list_last_char.append(split_file[0][-2:])
-        logger.debug(list_last_char)
-        logger.debug(files)
         last_char = max(list_last_char)
         if last_char != "99" or add_to_index == 0:
             return (
@@ -383,9 +373,8 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
                 + os.path.splitext(filename)[1]
             )
         else:
-            logger.error(
-                "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
-            )
+            logger.warning("core.views.get_finds_soubor_name.cannot_upload",
+                           extra={"file": filename, "list_last_char": list_last_char})
             return False
 
 
@@ -398,7 +387,7 @@ def get_projekt_soubor_name(file_name):
 
 
 def check_stav_changed(request, zaznam):
-    logger_s.debug("check_stav_changed.start", zaznam_id=zaznam.pk)
+    logger.debug("core.views.check_stav_changed.start", extra={"zaznam_id": zaznam.pk})
     if request.method == "POST":
         # TODO BR-A-5
         form_check = CheckStavNotChangedForm(data=request.POST, db_stav=zaznam.stav)
@@ -410,40 +399,32 @@ def check_stav_changed(request, zaznam):
                     messages.add_message(
                         request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV
                     )
-                    logger_s.debug(
-                        "check_stav_changed.state_changed.error",
-                        reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                        form_check_errors=str(form_check.errors),
-                    )
+                    logger.debug("core.views.check_stav_changed.state_changed.error",
+                                 extra={"reason": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
+                                        "form_check_errors": str(form_check.errors)})
                 elif isinstance(zaznam, ArcheologickyZaznam):
                     messages.add_message(
                         request,
                         messages.ERROR,
                         get_message(zaznam, "NEKDO_ZMENIL_STAV"),
                     )
-                    logger_s.debug(
-                        "check_stav_changed.state_changed.error",
-                        reason=get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                        form_check_errors=str(form_check.errors),
-                    )
+                    logger.debug("core.views.check_stav_changed.state_changed.error",
+                                 extra={"reason": get_message(zaznam, "NEKDO_ZMENIL_STAV"),
+                                        "form_check_errors": str(form_check.errors)})
                 elif isinstance(zaznam, Dokument):
                     messages.add_message(
                         request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV
                     )
-                    logger_s.debug(
-                        "check_stav_changed.state_changed.error",
-                        reason=DOKUMENT_NEKDO_ZMENIL_STAV,
-                        form_check_errors=str(form_check.errors),
-                    )
+                    logger.debug("core.views.check_stav_changed.state_changed.error",
+                                 extra={"reason": DOKUMENT_NEKDO_ZMENIL_STAV,
+                                        "form_check_errors": str(form_check.errors)})
                 elif isinstance(zaznam, Projekt):
                     messages.add_message(
                         request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV
                     )
-                    logger_s.debug(
-                        "check_stav_changed.state_changed.error",
-                        reason=PROJEKT_NEKDO_ZMENIL_STAV,
-                        form_check_errors=str(form_check.errors),
-                    )
+                    logger.debug("core.views.check_stav_changed.state_changed.error",
+                                 extra={"reason": PROJEKT_NEKDO_ZMENIL_STAV,
+                                        "form_check_errors": str(form_check.errors)})
                 return True
 
     else:
@@ -457,42 +438,30 @@ def check_stav_changed(request, zaznam):
                 messages.add_message(
                     request, messages.ERROR, SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV
                 )
-                logger_s.debug(
-                    "check_stav_changed.sent_stav.error",
-                    reason=SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV,
-                    zaznam_stav=zaznam_stav,
-                    sent_stav=sent_stav,
-                )
+                logger.debug("core.views.check_stav_changed.sent_stav.error",
+                             extra={"reason": SAMOSTATNY_NALEZ_NEKDO_ZMENIL_STAV, "zaznam_stav": zaznam_stav,
+                                    "sent_stav": sent_stav})
             elif isinstance(zaznam, ArcheologickyZaznam):
                 messages.add_message(
                     request, messages.ERROR, get_message(zaznam, "NEKDO_ZMENIL_STAV")
                 )
-                logger_s.debug(
-                    "check_stav_changed.sent_stav.error",
-                    reason=get_message(zaznam, "NEKDO_ZMENIL_STAV"),
-                    zaznam_stav=zaznam_stav,
-                    sent_stav=sent_stav,
-                )
+                logger.debug("core.views.check_stav_changed.sent_stav.error",
+                             extra={"reason": get_message(zaznam, "NEKDO_ZMENIL_STAV"), "zaznam_stav": zaznam_stav,
+                                    "sent_stav": sent_stav})
             elif isinstance(zaznam, Dokument):
                 messages.add_message(
                     request, messages.ERROR, DOKUMENT_NEKDO_ZMENIL_STAV
                 )
-                logger_s.debug(
-                    "check_stav_changed.sent_stav.error",
-                    reason=DOKUMENT_NEKDO_ZMENIL_STAV,
-                    zaznam_stav=zaznam_stav,
-                    sent_stav=sent_stav,
-                )
+                logger.debug("core.views.check_stav_changed.sent_stav.error",
+                             extra={"reason": DOKUMENT_NEKDO_ZMENIL_STAV, "zaznam_stav": zaznam_stav,
+                                    "sent_stav": sent_stav})
             elif isinstance(zaznam, Projekt):
                 messages.add_message(request, messages.ERROR, PROJEKT_NEKDO_ZMENIL_STAV)
-                logger_s.debug(
-                    "check_stav_changed.sent_stav.error",
-                    reason=PROJEKT_NEKDO_ZMENIL_STAV,
-                    zaznam_stav=zaznam_stav,
-                    sent_stav=sent_stav,
-                )
+                logger.debug("core.views.check_stav_changed.sent_stav.error",
+                             extra={"reason": PROJEKT_NEKDO_ZMENIL_STAV, "zaznam_stav": zaznam_stav,
+                                    "sent_stav": sent_stav})
             return True
-    logger_s.debug("check_stav_changed.sent_stav.false")
+    logger.debug("core.views.check_stav_changed.sent_stav.false")
     return False
 
 
@@ -500,22 +469,22 @@ def check_stav_changed(request, zaznam):
 @require_http_methods(["GET"])
 def redirect_ident_view(request, ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
-        logger.debug("regex match for project with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.project", extra={"ident_cely": ident_cely})
         return redirect("projekt:detail", ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
-        logger.debug("regex match for archeologicka akce with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.archeologicka_akce", extra={"ident_cely": ident_cely})
         return redirect("arch_z:detail", ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,7}\D{1}", ident_cely)):
-        logger.debug("regex match for samostatna akce with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.samostatna_akce", extra={"ident_cely": ident_cely})
         return redirect("arch_z:detail", ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7}", ident_cely)):
-        logger.debug("regex match for lokality with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.lokalita", extra={"ident_cely": ident_cely})
         return redirect("lokalita:detail", slug=ident_cely)
     if bool(re.fullmatch("(BIB|X-BIB)-\d{7}", ident_cely)):
-        logger.debug("regex match for zdroj with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.zdroj", extra={"ident_cely": ident_cely})
         return redirect("ez:detail", slug=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
-        logger.debug("regex match for dokumentacni jednotka with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
         response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])
         response.set_cookie("show-form", f"detail_dj_form_{ident_cely}", max_age=1000)
         response.set_cookie(
@@ -525,10 +494,8 @@ def redirect_ident_view(request, ident_cely):
         )
         return response
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-K\d{3}", ident_cely)):
-        logger.debug(
-            "regex match for Komponenta on dokumentacni jednotka with ident %s",
-            ident_cely,
-        )
+        logger.debug("core.views.redirect_ident_view.komponenta_on_dokumentacni_jednotka",
+                     extra={"ident_cely": ident_cely})
         response = redirect("arch_z:detail", ident_cely=ident_cely[:-5])
         response.set_cookie(
             "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
@@ -538,7 +505,7 @@ def redirect_ident_view(request, ident_cely):
         )
         return response
     if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
-        logger.debug("regex match for ADB with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.adb", extra={"ident_cely": ident_cely})
         adb = get_object_or_404(Adb, ident_cely=ident_cely)
         dj_ident = adb.dokumentacni_jednotka.ident_cely
         response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
@@ -550,7 +517,7 @@ def redirect_ident_view(request, ident_cely):
         )
         return response
     if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
-        logger.debug("regex match for Vyskovy bod with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.vyskovy_bod", extra={"ident_cely": ident_cely})
         vb = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
         dj_ident = vb.adb.dokumentacni_jednotka.ident_cely
         response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
@@ -562,45 +529,44 @@ def redirect_ident_view(request, ident_cely):
         )
         return response
     if bool(re.fullmatch("(P|N)-\d{4}-\d{6}", ident_cely)):
-        logger.debug("regex match for PIAN with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.pian", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
-        logger.debug("regex match for dokument 3D with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.dokument_3D", extra={"ident_cely": ident_cely})
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
         re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)
     ):
-        logger.debug(
-            "regex match for obsah/cast dokumentu 3D with ident %s", ident_cely
-        )
+        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu_3D", extra={"ident_cely": ident_cely})
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(
         re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)
     ):
-        logger.debug("regex match for dokument with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.dokument", extra={"ident_cely": ident_cely})
         return redirect("dokument:detail", ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
         re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)
     ):
-        logger.debug("regex match for obsah/cast dokumentu with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu", extra={"ident_cely": ident_cely})
         return redirect("dokument:detail", ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
+        logger.debug("core.views.redirect_ident_view.samostatny_nalez", extra={"ident_cely": ident_cely})
         logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
         return redirect("pas:detail", ident_cely=ident_cely)
     if bool(re.fullmatch("(X-BIB|BIB)-\d{7}", ident_cely)):
-        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
-        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(HES)-\d{6}", ident_cely)):
-        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(ORG)-\d{6}", ident_cely)):
-        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(OS)-\d{6}", ident_cely)):
-        logger.debug("regex match for externi zdroj with ident %s", ident_cely)
+        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
 
     messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
@@ -639,7 +605,6 @@ def tr_wgs84(request):
 @login_required
 @require_http_methods(["POST"])
 def tr_mwgs84(request):
-    logger.debug("multi-trans")
     body = json.loads(request.body.decode("utf-8"))["points"]
     points = get_multi_transform_towgs84(body)
     if points is not None:
@@ -713,9 +678,8 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
                 request.session.modified = True
                 return HttpResponse("Odebrano ze skrytych %s" % sloupec)
             except ValueError:
-                logger.error(
-                    f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
-                )
+                logger.error("core.SearchListChangeColumnsView.post..odebrat_sloupec_z_vychozich.error",
+                             extra={"sloupec": sloupec})
                 HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
         else:
             skryte_sloupce.append(sloupec)

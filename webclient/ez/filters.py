@@ -24,7 +24,7 @@ from arch_z.models import ArcheologickyZaznam
 from .models import ExterniZdroj
 from uzivatel.models import Organizace, Osoba, User
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class ExterniZdrojFilter(HistorieFilter):

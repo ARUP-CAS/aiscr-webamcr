@@ -15,7 +15,7 @@ from psycopg2._range import DateRange
 
 from core.utils import get_cadastre_from_point
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class DateRangeField(forms.DateField):

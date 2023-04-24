@@ -1,7 +1,7 @@
 import logging
 
 import simplejson as json
-import structlog
+
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.filters import AkceFilter
@@ -112,8 +112,7 @@ from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required
@@ -287,10 +286,7 @@ class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
 
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug(
-            "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            dj_ident_cely=dj_ident_cely,
-        )
+        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"dj_ident_cely": dj_ident_cely})
         objects = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return objects
 
@@ -306,7 +302,7 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         typ_akce = None
-        logger.debug("self")
+        logger.debug("arch_z.views.DokumentacniJednotkaCreateView.get_context_data")
         try:
             self.get_archeologicky_zaznam()
             if (
@@ -367,10 +363,7 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug(
-            "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            dj_ident_cely=dj_ident_cely,
-        )
+        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"dj_ident_cely": dj_ident_cely})
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
 
@@ -455,7 +448,7 @@ def edit(request, ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("ArchZ.Form is valid:1")
+            logger.debug("arch_z.views.edit.form_valid")
             form_az.save()
             form_akce.save()
             ostatni_vedouci_objekt_formset.save()
@@ -463,9 +456,8 @@ def edit(request, ident_cely):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
-            logger.warning("Form is not valid")
-            logger.debug(form_az.errors)
-            logger.debug(form_akce.errors)
+            logger.warning("arch_z.views.edit.form_az_valid", extra={"form_az_errors": form_az.errors,
+                                                                     "form_akce_errors": form_akce.errors})
     else:
         form_az = CreateArchZForm(instance=zaznam)
         form_akce = CreateAkceForm(
@@ -519,7 +511,7 @@ def odeslat(request, ident_cely):
         )
     # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
-        logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
+        logger.debug("arch_z.views.odeslat.redirec_to_arch_z:detail")
         return JsonResponse(
             {"redirect": az.get_absolute_url()},
             status=403,
@@ -530,23 +522,19 @@ def odeslat(request, ident_cely):
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "USPESNE_ODESLANA")
         )
-        logger.debug(
-            "arch_z.views.odeslat akce uspesne odeslana "
-            + get_message(az, "USPESNE_ODESLANA")
-        )
+        logger.debug("arch_z.views.odeslat.akce_uspesne_odeslana",
+                     extra={"message": get_message(az, "USPESNE_ODESLANA")})
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_odeslanim()
-        logger.debug(
-            "arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings)
-        )
+        logger.debug("arch_z.views.odeslat.warnings", extra={"ident_cely": ident_cely, "warnings": str(warnings)})
 
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(
                 request, messages.ERROR, get_message(az, "NELZE_ODESLAT")
             )
-            logger.debug("arch_z.views.odeslat akci nelze odeslat AKCE_NELZE_ODESLAT")
+            logger.debug("arch_z.views.odeslat_akci_nelze_odeslat")
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},
                 status=403,
@@ -597,7 +585,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
-        logger.debug(warnings)
+        logger.debug("arch_z.views.archivovat", extra={"warnings": warnings})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(
@@ -644,18 +632,13 @@ def vratit(request, ident_cely):
             if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                 #  Return also project from the states P6 or P5 to P4
                 projekt_stav = projekt.stav
+                logger.debug("arch_z.views.vratit.valid", extra={"ident": ident_cely, "stav": projekt.stav})
                 if projekt_stav == PROJEKT_STAV_UZAVRENY:
-                    logger.debug(
-                        "Automaticky vracím projekt do stavu " + str(projekt_stav - 1)
-                    )
                     projekt.set_vracen(
                         request.user, projekt_stav - 1, "Automatické vrácení projektu"
                     )
                     projekt.save()
                 if projekt_stav == PROJEKT_STAV_ARCHIVOVANY:
-                    logger.debug(
-                        "Automaticky vracím projekt do stavu " + str(projekt_stav - 2)
-                    )
                     projekt.set_vracen(
                         request.user, projekt_stav - 1, "Automatické vrácení projektu"
                     )
@@ -674,8 +657,7 @@ def vratit(request, ident_cely):
             )
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("arch_z.views.vratit.not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": az.stav})
     context = {
@@ -696,8 +678,7 @@ def zapsat(request, projekt_ident_cely=None):
         # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
         if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
             logger.debug(
-                "arch_z.views.zapsat: "
-                f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added."
+                "arch_z.views.zapsat.stav_error", extra={"projekt_ident_cely": projekt_ident_cely, "stav": projekt.stav}
             )
             raise PermissionDenied(
                 "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
@@ -705,8 +686,8 @@ def zapsat(request, projekt_ident_cely=None):
         # Projektove akce nelze vytvorit pro projekt typu pruzkum
         if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
             logger.debug(
-                "arch_z.views.zapsat: "
-                f"Type of project {projekt_ident_cely} is {projekt.typ_projektu} and action cannot be added."
+                "arch_z.views.zapsat.typ_projektu_error", extra={"projekt_ident_cely": projekt_ident_cely,
+                                                                 "stav": projekt.stav}
             )
             raise PermissionDenied(
                 f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
@@ -754,7 +735,7 @@ def zapsat(request, projekt_ident_cely=None):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("ArchZ.Form is valid:2")
+            logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
@@ -801,22 +782,18 @@ def zapsat(request, projekt_ident_cely=None):
                 if ostatni_vedouci_objekt_formset.is_valid():
                     ostatni_vedouci_objekt_formset.save()
                 else:
-                    logger.warning("arch_z.views.zapsat: " "Form is not valid")
-                    logger.debug(ostatni_vedouci_objekt_formset.errors)
+                    logger.debug("arch_z.views.zapsat.form_not_valid",
+                                 extra={"errors": ostatni_vedouci_objekt_formset.errors})
 
                 messages.add_message(
                     request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
                 )
-                logger.debug(
-                    f"arch_z.views.zapsat: AKCE_USPESNE_ZAPSANA, ID akce: {akce.pk}, "
-                    f"projekt: {projekt_ident_cely}"
-                )
+                logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
                 return redirect("arch_z:detail", az.ident_cely)
 
         else:
-            logger.warning("arch_z.views.zapsat: " "Form is not valid")
-            logger.debug(form_az.errors)
-            logger.debug(form_akce.errors)
+            logger.debug("arch_z.views.zapsat.not_valid", extra={"form_az_errors": form_az,
+                                                                 "form_akce_errors": form_akce.errors})
 
     else:
         ostatni_vedouci_objekt_formset = inlineformset_factory(
@@ -882,7 +859,7 @@ def smazat(request, ident_cely):
         for komponenta_vazba in komponenty_jednotek_vazby:
             komponenta_vazba.delete()
 
-        logger.debug("Byl smazán archeologicky zaznam: " + str(ident_cely))
+        logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         if projekt:
@@ -930,7 +907,6 @@ def post_ajax_get_pians(request):
     pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
     for pian in pians:
-        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
         back.append(
             {
                 "id": pian.id,
@@ -956,8 +932,7 @@ def post_ajax_get_pians_limit(request):
         body["southEast"]["lat"],
     )
     clusters = num >= 500
-    logger.debug("pocet geometrii")
-    logger.debug(num)
+    logger.debug("arch_z.views.post_ajax_get_pians_limit.pocet_geometrii", extra={"num": num})
     if num < 5000:
         pians = get_pians_from_envelope(
             body["southEast"]["lng"],
@@ -968,7 +943,6 @@ def post_ajax_get_pians_limit(request):
         )
         back = []
         for pian in pians:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             back.append(
                 {
                     "id": pian.id,
@@ -1003,7 +977,7 @@ def post_ajax_get_pians_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        logger.debug("density %s", density)
+        logger.debug("arch_z.views.post_ajax_get_pians_limit.density", extra={"density": density})
 
         heats = get_heatmap_pian(
             body["southEast"]["lng"],
@@ -1015,7 +989,6 @@ def post_ajax_get_pians_limit(request):
         back = []
         cid = 0
         for heat in heats:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             cid += 1
             back.append(
                 {
@@ -1034,7 +1007,7 @@ def post_ajax_get_pians_limit(request):
 @require_http_methods(["POST"])
 def post_akce2kat(request):
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug(body)
+    logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
     pian_ident_cely = body["pian"]
 
@@ -1139,7 +1112,7 @@ def smazat_akce_vedoucí(request, akce_vedouci_id):
         if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             response = next_url
         else:
-            logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+            logger.debug("arch_z.views.smazat_akce_vedoucí.redirect", extra={"next_url": next_url})
             response = reverse("core:home")
     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
     response = redirect(next_url)
@@ -1287,7 +1260,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             "show_pripojit_pian": True if jednotka.pian is None else False,
         }
         if has_adb:
-            logger.debug(jednotka.ident_cely)
+            logger.debug("arch_z.views.get_arch_z_context.adb", extra={"jednotka_ident_cely": jednotka.ident_cely})
             dj_form_detail["adb_form"] = (
                 CreateADBForm(
                     old_adb_post,
@@ -1472,9 +1445,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             vazba=az.historie,
         ).save()
 
-        logger.debug(
-            "Byl zmenenena projektova akce na samostatnou: " + str(az.ident_cely)
-        )
+        logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
 
         return JsonResponse({"redirect": az.get_absolute_url()})
@@ -1531,13 +1502,11 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 vazba=az.historie,
             ).save()
 
-            logger.debug(
-                "Byl zmenenena samostatna akce na projektovou: " + str(az.ident_cely)
-            )
+            logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"az_ident_cely": str(az.ident_cely)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.debug(form.errors)
-            logger.debug(form.non_field_errors())
+            logger.debug("arch_z.views.SamostatnaAkceChange.post.not_valid", extra={"errors": form.errors, 
+                                                                                    "form_non_field_errors": form.non_field_errors})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
         return redirect(az.get_absolute_url())
@@ -1626,7 +1595,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR else False,
     }
     if has_adb and app != "lokalita":
-        logger.debug(jednotka.ident_cely)
+        logger.debug("arch_z.views.get_dj_form_detail", extra={"jednotka_ident_cely": jednotka.ident_cely})
         dj_form_detail["adb_form"] = CreateADBForm(
             old_adb_post,
             instance=jednotka.adb,

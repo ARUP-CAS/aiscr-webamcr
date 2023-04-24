@@ -25,7 +25,7 @@ from core.models import OdstavkaSystemu
 from datetime import datetime, date, timedelta
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def constants_import(request):
@@ -108,7 +108,7 @@ def auto_logout_client(request):
             datetime.now() + timedelta(seconds=options["MAINTENANCE_LOGOUT_TIME"]),
             900,
         )
-        logger.debug(logout_time)
+        logger.debug("core.context_processors.auto_logout_client", extra={"logout_time": logout_time})
         until_logout = logout_time - datetime.now()
         ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
         ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5

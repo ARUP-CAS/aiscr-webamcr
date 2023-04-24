@@ -11,7 +11,7 @@ from core.tests.runner import (
 from komponenta.models import Komponenta
 from uzivatel.models import User
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class UrlTests(TestCase):

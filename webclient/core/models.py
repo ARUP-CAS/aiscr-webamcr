@@ -11,6 +11,7 @@ from uzivatel.models import User
 from pypdf import PdfReader
 from PIL import Image
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
@@ -20,7 +21,7 @@ from .constants import (
     SOUBOR_RELATION_TYPE,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def get_upload_to(instance, filename):
@@ -45,7 +46,7 @@ def get_upload_to(instance, filename):
     return os.path.join(base_path, instance.nazev)
 
 
-class SouborVazby(models.Model):
+class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     CHOICES = (
         (PROJEKT_RELATION_TYPE, "Projekt"),
         (DOKUMENT_RELATION_TYPE, "Dokument"),
@@ -58,7 +59,7 @@ class SouborVazby(models.Model):
         db_table = "soubor_vazby"
 
 
-class Soubor(models.Model):
+class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     nazev_zkraceny = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
@@ -83,7 +84,7 @@ class Soubor(models.Model):
         return self.nazev
 
     def create_soubor_vazby(self):
-        logger.debug("Creating history records for soubor ")
+        logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
         hv.save()
         self.historie = hv
@@ -120,7 +121,7 @@ class Soubor(models.Model):
             try:
                 reader = PdfReader(self.path)
             except:
-                logger.debug("Error while reading pdf file to get rozsah. setting 1")
+                logger.debug("core.models.Soubor.save_error_reading_pdf")
                 self.rozsah = 1
             else:
                 self.rozsah = len(reader.pages)
@@ -128,7 +129,7 @@ class Soubor(models.Model):
             try:
                 img = Image.open(self.path)
             except:
-                logger.debug("Error while reading tif file to get rozsah. setting 1")
+                logger.debug("core.models.Soubor.save_error_reading_tif")
                 self.rozsah = 1
             else:
                 self.rozsah = img.n_frames
@@ -146,7 +147,7 @@ class ProjektSekvence(models.Model):
         db_table = "projekt_sekvence"
 
 
-class OdstavkaSystemu(models.Model):
+class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Model):
     info_od = models.DateField(_("model.odstavka.infoOd"))
     datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
     cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
@@ -170,14 +171,14 @@ class OdstavkaSystemu(models.Model):
         return "{}: {} {}".format(_("Odstavka"), self.datum_odstavky, self.cas_odstavky)
 
 
-class GeomMigrationJobError(models.Model):
+class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):
     pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         abstract = True
 
 
-class GeomMigrationJobSJTSKError(GeomMigrationJobError):
+class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):
     pian = models.ForeignKey(Pian, on_delete=models.RESTRICT)
 
     class Meta:
@@ -185,7 +186,7 @@ class GeomMigrationJobSJTSKError(GeomMigrationJobError):
         abstract = False
 
 
-class GeomMigrationJobWGS84Error(GeomMigrationJobError):
+class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):
     pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
     abstract = False
 
@@ -193,7 +194,7 @@ class GeomMigrationJobWGS84Error(GeomMigrationJobError):
         db_table = "amcr_geom_migrations_jobs_wgs84_errors"
 
 
-class GeomMigrationJob(models.Model):
+class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.Model):
     typ = models.TextField()
     count_selected_wgs84 = models.IntegerField(default=0)
     count_selected_sjtsk = models.IntegerField(default=0)

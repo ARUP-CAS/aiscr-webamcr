@@ -1,7 +1,7 @@
 name: Build and Publish Docker images on  https://hub.docker.com/u/aiscr
 
 on:
-  create:
+  push:
     tags:
       - "v**"
   workflow_dispatch :
@@ -12,6 +12,7 @@ on:
        required: false
 
 env:
+  DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
   DOCKER_HUB_REPO_PROXY: aiscr/webamcr-proxy
   DOCKER_HUB_REPO_PROD: aiscr/webamcr
   DOCKER_HUB_USERNAME: aiscr
@@ -54,7 +55,6 @@ jobs:
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
-              - name: Build and push Docker image
       #---------------------
       # BUILD PROXY
       #---------------------
@@ -74,3 +74,30 @@ jobs:
           build-args: |
             VERSION_APP=${{ env.tag_version }}
             TAG_APP=${{ github.ref }}
+      #---------------------
+      # BUILD REDIS
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker redis image
+        id: meta_redis
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_REDIS }}
+
+      - name: REDIS - Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./redis
+          push: true
+          tags: ${{ steps.meta_redis.outputs.tags }}
+          labels: ${{ steps.meta_redis.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+  deploy_on_dev:
+      name: Deploy containers on DEV SERVER
+      needs: build_publish_images
+      uses: ./.github/workflows/deployment.yml
+      secrets: inherit
+      with:
+         man_tag: ${{ inputs.tags }}
+      
