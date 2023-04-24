@@ -28,7 +28,7 @@ from django.utils.translation import gettext_lazy as _
 from django.forms import inlineformset_factory
 from .forms import CONTENT_TYPES
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 ALLOWED_ROLES = ["admin", "archeolog", "archivar"]
@@ -109,13 +109,13 @@ class PesCreateView(LoginRequiredMixin, View):
             queryset=Pes.objects.filter(content_type__model=model_typ),
         )
         if formset_pes.is_valid():
-            logger.debug("formset is valid")
+            logger.debug("notifikace_projekty.PesCreateView.post.is_valid")
             formset_pes.save()
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN
             )
         else:
-            logger.error(formset_pes.errors)
+            logger.debug("notifikace_projekty.PesCreateView.post.not_valid", extra={"errors": formset_pes.errors})
             request.session["_old_pes_post"] = request.POST
             request.session["_old_pes_type"] = model_typ
             messages.add_message(
@@ -160,8 +160,8 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             zaznam = self.get_zaznam()
             zaznam.delete()
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_SMAZAN)
-        except Exception as e:
-            logger.error(e)
+        except Exception as err:
+            logger.warning("notifikace_projekty.PesSmazatView.post.not_valid", extra={"err": err})
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_NEUSPESNE_SMAZAN
             )

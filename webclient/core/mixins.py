@@ -1,7 +1,10 @@
-import structlog
+
 from django.core.exceptions import ObjectDoesNotExist
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 class ManyToManyRestrictedClassMixin:
@@ -18,7 +21,7 @@ class ManyToManyRestrictedClassMixin:
                     if hasattr(getattr(self, attr), "all"):
                         attr_list.append(attr)
                 except ObjectDoesNotExist as err:
-                    logger_s.debug("core.mixins.ManyToManyRestrictedClassMixin.has_connections.ObjectDoesNotExist",
-                                   err=err)
+                    logger.debug("core.mixins.ManyToManyRestrictedClassMixin.has_connections.ObjectDoesNotExist",
+                                   extra={"err": err})
         attr_list = [attr for attr in attr_list if getattr(self, attr).all().count() > 0]
         return len(attr_list) > 0

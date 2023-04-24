@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def validate_phone_number(number):
@@ -31,10 +31,10 @@ def validate_phone_number(number):
         is_valid = True
 
     if not is_valid:
-        logger.debug(f"core.validators.validate_phone_number: {number} is not valid.")
+        logger.debug(f"core.validators.validate_phone_number.not_valid", extra={"number": number})
         raise ValidationError(
             _("%(value)s nesprávný formát čísla. Musí být: +420xxxxxxxxx"),
             params={"value": number},
         )
     else:
-        logger.debug(f"core.validators.validate_phone_number: {number} is valid.")
+        logger.debug(f"core.validators.validate_phone_number.valid", extra={"number": number})

@@ -61,7 +61,7 @@ from nalez.models import NalezObjekt
 from core.models import Soubor
 from core.forms import SelectMultipleSeparator
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class SouborTypFilter(MultipleChoiceFilter):
@@ -786,8 +786,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
-        logger.debug("Uzemni prislusnost filtering")
-        logger.debug(value)
+        logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
         return queryset.filter(query)
 

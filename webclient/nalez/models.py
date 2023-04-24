@@ -8,9 +8,10 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from komponenta.models import Komponenta
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class NalezObjekt(models.Model):
+class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,
@@ -45,7 +46,7 @@ class NalezObjekt(models.Model):
         return self.druh.heslo
 
 
-class NalezPredmet(models.Model):
+class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,

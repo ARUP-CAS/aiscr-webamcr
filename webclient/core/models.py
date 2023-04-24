@@ -10,6 +10,7 @@ from pian.models import Pian
 from pypdf import PdfReader
 from PIL import Image
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from .constants import (
     DOKUMENT_RELATION_TYPE,
@@ -19,7 +20,7 @@ from .constants import (
     SOUBOR_RELATION_TYPE,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def get_upload_to(instance, filename):
@@ -47,7 +48,7 @@ def get_upload_to(instance, filename):
     return os.path.join(base_path, instance.nazev)
 
 
-class SouborVazby(models.Model):
+class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     """
     Model pro relační tabulku mezi souborem a záznamem.
     Obsahuje typ vazby podle typu záznamu.
@@ -64,7 +65,7 @@ class SouborVazby(models.Model):
         db_table = "soubor_vazby"
 
 
-class Soubor(models.Model):
+class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
     Model pro soubor. Obsahuje jeho základné data, vazbu na historii a souborovů vazbu.
     """
@@ -95,7 +96,7 @@ class Soubor(models.Model):
         """
         Metóda pro vytvoření vazby na historii.
         """
-        logger.debug("Creating history records for soubor ")
+        logger.debug("core.models.Soubor.create_soubor_vazby.start")
         hv = HistorieVazby(typ_vazby=SOUBOR_RELATION_TYPE)
         hv.save()
         self.historie = hv
@@ -141,7 +142,7 @@ class Soubor(models.Model):
             try:
                 reader = PdfReader(self.path)
             except:
-                logger.debug("Error while reading pdf file to get rozsah. setting 1")
+                logger.debug("core.models.Soubor.save_error_reading_pdf")
                 self.rozsah = 1
             else:
                 self.rozsah = len(reader.pages)
@@ -149,7 +150,7 @@ class Soubor(models.Model):
             try:
                 img = Image.open(self.path)
             except:
-                logger.debug("Error while reading tif file to get rozsah. setting 1")
+                logger.debug("core.models.Soubor.save_error_reading_tif")
                 self.rozsah = 1
             else:
                 self.rozsah = img.n_frames
@@ -170,7 +171,7 @@ class ProjektSekvence(models.Model):
         db_table = "projekt_sekvence"
 
 
-class OdstavkaSystemu(models.Model):
+class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Model):
     """
     Model pro tabulku s odstávkami systému.
     """
@@ -200,7 +201,7 @@ class OdstavkaSystemu(models.Model):
         return "{}: {} {}".format(_("Odstavka"), self.datum_odstavky, self.cas_odstavky)
 
 
-class GeomMigrationJobError(models.Model):
+class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):
     """
     Model pro tabulku s chybami jobu geaom migracií.
     """
@@ -210,7 +211,7 @@ class GeomMigrationJobError(models.Model):
         abstract = True
 
 
-class GeomMigrationJobSJTSKError(GeomMigrationJobError):
+class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):
     """
     Model pro tabulku s chybami jobu geaom SJTSK migracií.
     """
@@ -221,7 +222,7 @@ class GeomMigrationJobSJTSKError(GeomMigrationJobError):
         abstract = False
 
 
-class GeomMigrationJobWGS84Error(GeomMigrationJobError):
+class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):
     """
     Model pro tabulku s chybami jobu geaom WGS84 migracií.
     """
@@ -232,7 +233,7 @@ class GeomMigrationJobWGS84Error(GeomMigrationJobError):
         db_table = "amcr_geom_migrations_jobs_wgs84_errors"
 
 
-class GeomMigrationJob(models.Model):
+class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.Model):
     """
     Model pro tabulku jobu geaom migracií.
     """

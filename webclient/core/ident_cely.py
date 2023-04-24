@@ -20,7 +20,7 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def get_temporary_project_ident(project: Projekt, region: str) -> str:
@@ -34,7 +34,9 @@ def get_temporary_project_ident(project: Projekt, region: str) -> str:
         id_number = "{0}".format(str(project.id)).zfill(9)
         return "X-" + region + "-" + id_number
     else:
-        logger.error("Could not assign temporary identifier to project with Null ID")
+        logger.error("core.ident_cely.get_temporary_project_ident.error",
+                     extra={"message": "Could not assign temporary identifier to project with Null ID",
+                            "projekt": project.ident_cely, "region": region})
         return None
 
 
@@ -58,10 +60,12 @@ def get_project_event_ident(project: Projekt) -> str:
             else:
                 return project.ident_cely + "A"
         else:
-            logger.error("Maximal number of project events is 26.")
+            logger.error("core.ident_cely.get_project_event_ident.error",
+                         extra={"message": "Maximal number of project events is 26."})
             raise MaximalEventCount(MAXIMAL_PROJECT_EVENTS)
     else:
-        logger.error("Project is missing ident_cely")
+        logger.error("core.ident_cely.get_project_event_ident.error",
+                     extra={"message": "Project is missing ident_cely"})
         return None
 
 
@@ -75,11 +79,9 @@ def get_dokument_rada(typ, material):
     if len(instances) == 1:
         return instances[0].dokument_rada
     else:
-        logger.error(
-            "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace typu {} a materialu. {}".format(
-                typ.id, material.id
-            )
-        )
+        logger.error("core.ident_cely.get_dokument_rada.error",
+                     extra={"message": "Nelze priradit radu k dokumentu. Neznama/nejednoznacna kombinace "
+                                       f"typu {typ.id} a materialu. {material.id}"})
         raise NelzeZjistitRaduError()
 
 
@@ -105,26 +107,18 @@ def get_temp_dokument_ident(rada, region):
         else:
             # temp number from empty spaces
             sequence = d[d.count() - 1].ident_cely[-5:]
-            logger.warning(sequence)
+            logger.error("core.ident_cely.get_temp_dokument_ident.warning", extra={"sequence": sequence})
             while True:
                 if d.filter(ident_cely=prefix + sequence).exists():
                     old_sequence = sequence
                     sequence = str(int(sequence) + 1).zfill(5)
-                    logger.warning(
-                        "Ident "
-                        + prefix
-                        + old_sequence
-                        + " already exists, trying next number "
-                        + str(sequence)
-                    )
+                    logger.error("core.ident_cely.get_temp_dokument_ident.already_exists",
+                                 extra={"prefix": prefix, "old_sequence": old_sequence, "sequence": str(sequence)})
                 else:
                     break
             if int(sequence) >= MAXIMAL:
-                logger.error(
-                    "Maximal number of temporary document ident is "
-                    + str(MAXIMAL)
-                    + "for given region and rada"
-                )
+                logger.error("core.ident_cely.get_temp_dokument_ident.maximal_temporary_document_ident",
+                             extra={"maximum": str(MAXIMAL)})
                 raise MaximalIdentNumberError(MAXIMAL)
             return prefix + sequence
     else:
@@ -151,7 +145,8 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
         ident = doc_ident + "-D" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of dokument parts is" + str(MAXIMUM))
+        logger.error("core.ident_cely.get_cast_dokumentu_ident.maximal_number_document_part",
+                     extra={"maximum": str(MAXIMUM)})
         raise MaximalIdentNumberError(max_count)
 
 
@@ -174,7 +169,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
         ident = event_ident + "-D" + str(max_count + 1).zfill(dj_last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of DJs is " + str(MAXIMAL_EVENT_DJS))
+        logger.error("core.ident_cely.get_dj_ident.maximal_number_dj", extra={"maximum": str(MAXIMAL_EVENT_DJS)})
         raise MaximalIdentNumberError(max_count)
 
 
@@ -197,18 +192,19 @@ def get_komponenta_ident(zaznam) -> str:
                     max_count = last_digits
     else:
         for dc in zaznam.casti.all():
-            for komponenta in dc.komponenty.komponenty.all():
-                last_digits = int(komponenta.ident_cely[-last_digit_count:])
-                if max_count < last_digits:
-                    max_count = last_digits
+            if dc.komponenty is not None:
+                for komponenta in dc.komponenty.komponenty.all():
+                    last_digits = int(komponenta.ident_cely[-last_digit_count:])
+                    if max_count < last_digits:
+                        max_count = last_digits
     event_ident = zaznam.ident_cely
     if max_count < MAXIMAL_KOMPONENTAS:
         ident = event_ident + "-K" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of el komponentas is " + str(MAXIMAL_KOMPONENTAS))
+        logger.error("core.ident_cely.get_komponenta_ident.maximal_number_komponent",
+                     extra={"maximum": str(MAXIMAL_KOMPONENTAS)})
         raise MaximalIdentNumberError(max_count)
-
 
 def get_sm_from_point(point):
     """
@@ -218,9 +214,7 @@ def get_sm_from_point(point):
     if mapovy_list.count() == 1:
         return mapovy_list
     else:
-        logger.error(
-            "Nelze priradit mapovy list Kladysm5 pianu geometrie. Nula nebo >1 vysledku!"
-        )
+        logger.error("core.ident_cely.get_sm_from_point.error")
         raise PianNotInKladysm5Error(point)
 
 
@@ -247,18 +241,13 @@ def get_temporary_pian_ident(zm50) -> str:
     else:
         # temp number from empty spaces
         sequence = pian[pian.count() - 1].ident_cely[-last_digit_count:]
-        logger.warning(sequence)
+        logger.warning("core.ident_cely.get_temporary_pian_ident.warning", extra={"sequence": sequence})
         while True:
             if pian.filter(ident_cely=start + sequence).exists():
                 old_sequence = sequence
                 sequence = str(int(sequence) + 1).zfill(last_digit_count)
-                logger.warning(
-                    "Ident "
-                    + start
-                    + old_sequence
-                    + " already exists, trying next number "
-                    + str(sequence)
-                )
+                logger.warning("core.ident_cely.get_temporary_pian_ident.warning",
+                               extra={"start": start, "old_sequence": old_sequence, "sequence": sequence})
             else:
                 break
         if int(sequence) >= MAXIMAL_PIANS:
@@ -267,6 +256,7 @@ def get_temporary_pian_ident(zm50) -> str:
                 + str(MAXIMAL_PIANS)
                 + "for given region and rada"
             )
+            logger.warning("core.ident_cely.get_temporary_pian_ident.warning", extra={"maximal_pints": MAXIMAL_PIANS})
             raise MaximalIdentNumberError(MAXIMAL_PIANS)
         return start + sequence
 
@@ -291,7 +281,7 @@ def get_sn_ident(projekt: Projekt) -> str:
         ident = projekt.ident_cely + "-N" + str(max_count + 1).zfill(last_digit_count)
         return ident
     else:
-        logger.error("Maximal number of SN is " + str(MAXIMAL_FINDS))
+        logger.error("core.ident_cely.get_sn_ident.error", extra={"maximal_sn": MAXIMAL_FINDS})
         raise MaximalIdentNumberError(max_count)
 
 
@@ -312,7 +302,7 @@ def get_adb_ident(pian: Pian) -> str:
     elif type(pian.geom) == Polygon:
         point = Centroid(pian.geom)
     else:
-        logger.error("Neznamy typ geometrie" + str(type(pian.geom)))
+        logger.error("core.ident_cely.get_adb_ident.error", extra={"type": str(type(pian.geom))})
         raise NeznamaGeometrieError()
     sm5 = get_sm_from_point(point)[0]
     record_list = "ADB-" + sm5.mapno
@@ -325,12 +315,8 @@ def get_adb_ident(pian: Pian) -> str:
     while True:
         if Adb.objects.filter(ident_cely=perm_ident_cely).exists():
             sequence.sekvence += 1
-            logger.warning(
-                "Ident "
-                + perm_ident_cely
-                + " already exists, trying next number "
-                + str(sequence.sekvence)
-            )
+            logger.warning("core.ident_cely.get_adb_ident.already_exists",
+                           extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence})
             perm_ident_cely = (
                 record_list + "-" + "{0}".format(sequence.sekvence).zfill(6)
             )
@@ -342,7 +328,7 @@ def get_adb_ident(pian: Pian) -> str:
         sequence.save()
         return ident, sm5
     else:
-        logger.error("Maximal number of ADBs is " + str(MAXIMAL_ADBS))
+        logger.error("core.ident_cely.get_adb_ident.max_adbs_error", extra={"maximal_adbs": MAXIMAL_ADBS})
         raise MaximalIdentNumberError(sequence.sekvence)
 
 
@@ -361,4 +347,6 @@ def get_temp_lokalita_ident(typ, region, lokalita):
         return prefix + id_number
     else:
         logger.error("Could not assign temporary identifier to lokalita with Null ID")
+        logger.error("core.ident_cely.get_temp_lokalita_ident.null_id_error",
+                     extra={"typ": typ, "region": region, "lokalita": lokalita})
         return None

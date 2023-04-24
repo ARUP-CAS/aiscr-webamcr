@@ -1,7 +1,7 @@
 import logging
 
 import simplejson as json
-import structlog
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -61,8 +61,7 @@ from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
 from uzivatel.models import Organizace, User
 from services.mailer import Mailer
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 def get_detail_context(sn, request):
@@ -73,7 +72,7 @@ def get_detail_context(sn, request):
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
     context["history_dates"] = get_history_dates(sn.historie)
     context["show"] = get_detail_template_shows(sn)
-    logger.debug(context)
+    logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
         context["soubory"] = sn.soubory.soubory.all()
     else:
@@ -115,9 +114,7 @@ def create(request, ident_cely=None):
                 if sjtsk_dx > 0 and sjtsk_dy > 0:
                     geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
             except Exception:
-                logger.error("PAS.Chybny format souradnic:1")
-            # latitude = form.cleaned_data["latitude"]
-            # longitude = form.cleaned_data["longitude"]
+                logger.info("pas.views.create.corrd_format_error", extra={"geom": geom, "geom_sjtsk": geom_sjtsk})
             sn = form.save(commit=False)
             try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
@@ -140,7 +137,7 @@ def create(request, ident_cely=None):
                 return redirect("pas:detail", ident_cely=sn.ident_cely)
 
         else:
-            logger.debug(form.errors)
+            logger.info("pas.views.create.form_invalid", extra={"errors": form.errors})
             messages.add_message(request, messages.ERROR, FORM_NOT_VALID)
     else:
         form = CreateSamostatnyNalezForm(
@@ -190,14 +187,12 @@ def detail(request, ident_cely):
             geom_sjtsk = (
                 str(sn.geom_sjtsk).split("(")[1].replace(", ", ",").replace(")", "")
             )
-        logger.debug("++++++++++++++++++")
-        logger.debug(sn.geom_system)
         system = (
             "WGS-84"
             if sn.geom_system == "wgs84"
             else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
         )
-        logger.debug(system)
+        logger.debug("pas.views.create.detail", extra={"sn_geom_system": sn.geom_system, "system": system})
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
                 "detector_coordinates_x": geom.split(" ")[1]
@@ -252,9 +247,9 @@ def edit(request, ident_cely):
             if sjtsk_dx > 0 and sjtsk_dy > 0:
                 geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
         except Exception as e:
-            logger.error("PAS.Chybny format souradnic:2 " + e)
+            logger.info("pas.views.edit.corrd_format_error", extra={"geom": geom, "geom_sjtsk": geom_sjtsk})
         if form.is_valid():
-            logger.debug("PAS Form is valid:1")
+            logger.debug("pas.views.edit.form_valid")
             sn.geom_system = form_coor.data.get("coordinate_system")
             if geom is not None:
                 sn.katastr = get_cadastre_from_point(geom)
@@ -263,12 +258,11 @@ def edit(request, ident_cely):
                 sn.geom_sjtsk = geom_sjtsk
             form.save()
             if form.changed_data:
-                logger.debug(form.changed_data)
+                logger.debug("pas.views.edit.form_changed_data", extra={"changed_data": form.changed_data})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
-            logger.debug("The form is not valid!")
-            logger.debug(form.errors)
+            logger.info("pas.views.edit.form_invalid", extra={"form_errors": form.errors})
 
     else:
         form = CreateSamostatnyNalezForm(
@@ -333,21 +327,20 @@ def edit_ulozeni(request, ident_cely):
             request.POST, instance=sn, predano_required=predano_required
         )
         if form.is_valid():
-            logger.debug("PAS Form is valid:2")
+            logger.debug("pas.views.edit_ulozeni.form_valid")
             formObj = form.save(commit=False)
             formObj.predano_organizace = get_object_or_404(
                 Organizace, id=sn.projekt.organizace_id
             )
             formObj.save()
             if form.changed_data:
-                logger.debug(form.changed_data)
+                logger.debug("pas.views.edit_ulozeni.form_changed_data", extra={"changed_data": form.changed_data})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
         else:
-            logger.debug("The form is not valid!")
-            logger.debug(form.errors)
+            logger.info("pas.views.edit_ulozeni.form_invalid", extra={"form_errors": form.errors})
     else:
         form = PotvrditNalezForm(
             instance=sn,
@@ -393,8 +386,7 @@ def vratit(request, ident_cely):
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.info("pas.views.vratit.form_invalid", extra={"form_errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": sn.stav})
     context = {
@@ -442,7 +434,7 @@ def odeslat(request, ident_cely):
         )
 
     warnings = sn.check_pred_odeslanim()
-    logger.debug(warnings)
+    logger.info("pas.views.odeslat.warnings", extra={"warnings": warnings})
     if warnings:
         request.session["temp_data"] = warnings
         messages.add_message(request, messages.ERROR, SAMOSTATNY_NALEZ_NELZE_ODESLAT)
@@ -491,8 +483,7 @@ def potvrdit(request, ident_cely):
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.info("pas.views.potvrdit.form_invalid", extra={"form_errors": form.errors})
     else:
         form = PotvrditNalezForm(
             instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True
@@ -584,11 +575,11 @@ def smazat(request, ident_cely):
         resp3 = soubory.delete()
 
         if resp1:
-            logger.debug("Nalez byl smazan: " + str(resp1 + resp2 + resp3))
+            logger.info("pas.views.smazat.deleted", extra={"resp1": resp1, "resp2": resp2, "resp3": resp3})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("core:home")})
         else:
-            logger.warning("Nalez nebyl smazan: " + str(ident_cely))
+            logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
@@ -610,10 +601,10 @@ def smazat(request, ident_cely):
 @require_http_methods(["GET", "POST"])
 def zadost(request):
     if request.method == "POST":
-        logger_s.debug("zadost.start")
+        logger.debug("pas.views.zadost.start")
         form = CreateZadostForm(request.POST)
         if form.is_valid():
-            logger_s.debug("zadost.form_valid")
+            logger.debug("pas.views.zadost.form_valid")
             uzivatel_email = form.cleaned_data["email_uzivatele"]
             uzivatel_text = form.cleaned_data["text"]
             uzivatel = get_object_or_404(User, email=uzivatel_email)
@@ -625,10 +616,7 @@ def zadost(request):
                 messages.add_message(
                     request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
                 )
-                logger_s.debug(
-                    "zadost.post.error",
-                    error=_("Nelze vytvořit spolupráci sám se sebou"),
-                )
+                logger.debug("pas.views.zadost.post.error", extra={"error": _("Nelze vytvořit spolupráci sám se sebou")})
             elif exists:
                 messages.add_message(
                     request,
@@ -639,11 +627,9 @@ def zadost(request):
                         + " již existuje."
                     ),
                 )
-                logger_s.debug(
-                    "zadost.post.error",
-                    error=_("Spoluprace jiz existuje"),
-                    email=uzivatel_email,
-                )
+                logger.debug("pas.views.zadost.post.error", extra={"error": _("Spoluprace jiz existuje"),
+                                                         "email": uzivatel_email})
+
             else:
                 hv = HistorieVazby(typ_vazby=UZIVATEL_SPOLUPRACE_RELATION_TYPE)
                 hv.save()
@@ -664,22 +650,16 @@ def zadost(request):
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
                 )
-                logger_s.debug(
-                    "zadost.post.success",
-                    hv_id=hv.pk,
-                    s_id=s.pk,
-                    hist_id=hist.pk,
-                    message=ZADOST_O_SPOLUPRACI_VYTVORENA,
-                )
+                logger.debug("pas.views.zadost.post.success", extra={"hv_id": hv.pk, "s_id": s.pk, "hist_id": hist.pk,
+                                                           "message": ZADOST_O_SPOLUPRACI_VYTVORENA})
+
                 Mailer.send_en05(
                     email_to=uzivatel_email, reason=uzivatel_text, user=request.user, spoluprace_id=s.pk
                 )
                 return redirect("pas:spoluprace_list")
         else:
-            print("Form is no valid")
-            logger.debug(form.errors)
+            logger.info("pas.views.zadost.form_invalid", extra={"form_errors": form.errors})
     else:
-        logger_s.debug("zadost.form_invalid")
         form = CreateZadostForm()
 
     return render(
@@ -724,7 +704,7 @@ def aktivace(request, pk):
         return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_aktivaci()
-        logger.debug(warnings)
+        logger.info("pas.views.aktivace.warnings", extra={"warnings": warnings})
         if warnings:
             messages.add_message(
                 request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}"
@@ -756,7 +736,7 @@ def deaktivace(request, pk):
         return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
     else:
         warnings = spoluprace.check_pred_deaktivaci()
-        logger.debug(warnings)
+        logger.info("pas.views.deaktivace.warnings", extra={"warnings": warnings})
         if warnings:
             messages.add_message(
                 request, messages.ERROR, f"{SPOLUPRACI_NELZE_DEAKTIVOVAT} {warnings[0]}"
@@ -788,11 +768,11 @@ def smazat_spolupraci(request, pk):
         resp2 = historie.delete()
 
         if resp1:
-            logger.debug("Spoluprace byla smazana: " + str(resp1 + resp2))
+            logger.info("pas.views.smazat_spolupraci.deleted", extra={"resp1": resp1, "resp2": resp2})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
         else:
-            logger.warning("Spoluprace nebyla smazana: " + str(pk))
+            logger.warning("pas.views.smazat_spolupraci.not_deleted", extra={"pk": pk})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             return JsonResponse(
                 {"redirect": reverse("pas:spoluprace_list")}, status=403
@@ -846,7 +826,7 @@ def get_detail_template_shows(sn):
 @require_http_methods(["POST"])
 def post_point_position_2_katastre(request):
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug(body)
+    logger.warning("pas.views.post_point_position_2_katastre", extra={"body": body})
     katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
     if katastr_name is not None:
         return JsonResponse(

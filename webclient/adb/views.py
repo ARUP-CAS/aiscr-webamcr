@@ -1,4 +1,4 @@
-import structlog
+import logging
 
 from adb.forms import CreateADBForm
 from adb.models import Adb, VyskovyBod
@@ -20,7 +20,8 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 
-logger_s = structlog.get_logger(__name__)
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 @login_required
@@ -31,12 +32,12 @@ def zapsat(request, dj_ident_cely):
     Pred uložením do DB se vytvoří relace na DB, nový ident celý je vygenerovaný a sm5 je přidané.
     Po úspešném uložení je uživatel presměrován na pohled detailu DJ.
     """
-    logger_s.debug("adb.views.zapsat.start", dj_ident_cely=dj_ident_cely)
+    logger.debug("adb.views.zapsat.start", extra={"dj_ident_cely": dj_ident_cely})
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     dj: DokumentacniJednotka
     form = CreateADBForm(request.POST)
     if form.is_valid():
-        logger_s.debug("Adb. Form is valid:2")
+        logger.debug("adb.views.zapsat.is_valid")
         adb = form.save(commit=False)
         if not dj.pian:
             raise DJNemaPianError(dj)
@@ -50,8 +51,7 @@ def zapsat(request, dj_ident_cely):
             adb.save()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
     else:
-        logger_s.warning("Form is not valid")
-        logger_s.debug(form.errors)
+        logger.debug("adb.views.zapsat.not_valid", extra={"errors": form.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
 
     response = redirect(dj.get_absolute_url())
@@ -78,7 +78,7 @@ def smazat(request, ident_cely):
         resp = adb.delete()
 
         if resp:
-            logger_s.debug("Byla smazána adb: " + str(resp))
+            logger.debug("adb.views.smazat.resp", extra={"resp": str(resp)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse(
                 {
@@ -86,7 +86,7 @@ def smazat(request, ident_cely):
                 }
             )
         else:
-            logger_s.warning("Adb nebyla smazana: " + str(ident_cely))
+            logger.warning("adb.views.smazat.error", extra={"ident_cely": str(ident_cely)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse(
                 {
@@ -129,16 +129,16 @@ def smazat_vb(request, ident_cely):
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
-                logger_s.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                logger.warning("adb.views.smazat.smazat_vb.not_safe", extra={"next_url": str(next_url)})
                 response = redirect(request.META.get("HTTP_REFERER"))
         else:
             response = redirect(request.META.get("HTTP_REFERER"))
         if resp:
-            logger_s.debug("Objekt dokumentu byl smazan: " + str(resp))
+            logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"resp": str(resp)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse({"redirect": response})
         else:
-            logger_s.warning("Dokument nebyl smazan: " + str(ident_cely))
+            logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"ident_cely": str(ident_cely)})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse({"redirect": response}, status=403)
         response.set_cookie("show-form", f"detail_dj_form_{zaznam.adb.dokumentacni_jednotka.ident_cely}", max_age=1000)

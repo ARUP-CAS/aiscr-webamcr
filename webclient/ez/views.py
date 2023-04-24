@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views import View
 
-import structlog
+
 from core.views import SearchListView, check_stav_changed
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext as _
@@ -55,8 +55,7 @@ from .forms import (
     PripojitExterniOdkazForm,
 )
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
@@ -143,7 +142,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
         try:
             ez.ident_cely = get_ez_ident(ez)
         except MaximalIdentNumberError as e:
-            logger_s.debug("Maximum lokalit dosazeno")
+            logger.debug("ez.views.ExterniZdrojCreateView.form_valid.lokality_max", extra={"ident_cely": ez.ident_cely})
             messages.add_message(self.request, messages.ERROR, e.message)
             return self.form_invalid(form)
         ez.save()
@@ -154,8 +153,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("ez.views.ExterniZdrojCreateView.form_invalid", extra={"form_errors": form.errors})
         return super().form_invalid(form)
 
 
@@ -190,8 +188,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("ez.views.ExterniZdrojEditView.form_invalid", extra={"form_errors": form.errors})
         return super().form_invalid(form)
 
 
@@ -206,7 +203,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
-        logger.debug(ident_cely)
+        logger.debug("ez.views.TransakceView.get_zaznam.start", extra={"ident_cely": ident_cely})
         return get_object_or_404(
             ExterniZdroj,
             ident_cely=ident_cely,
@@ -227,7 +224,7 @@ class TransakceView(LoginRequiredMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         zaznam = self.get_zaznam()
         if zaznam.stav not in self.allowed_states:
-            logger.debug("state not allowed for action: %s", self.action)
+            logger.debug("ez.views.TransakceView.dispatch.start", extra={"action": self.action})
             messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
             return JsonResponse(
                 {"redirect": zaznam.get_absolute_url()},
@@ -317,8 +314,7 @@ class ExterniZdrojVratitView(TransakceView):
 
             return JsonResponse({"redirect": zaznam.get_absolute_url()})
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("ez.views.ExterniZdrojVratitView.form_invalid", extra={"form_errors": form.errors})
             return self.render_to_response(context)
 
 
@@ -364,11 +360,11 @@ class ExterniOdkazPripojitView(TransakceView):
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        logger.debug(self.kwargs)
+        logger.debug("ez.views.ExterniOdkazPripojitView.post.start", extra={"kwargs": self.kwargs})
         ez = self.get_zaznam()
         form = PripojitArchZaznamForm(data=request.POST, type_arch=context["type"])
         if form.is_valid():
-            logger_s.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
+            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_valid")
             arch_z_id = form.cleaned_data["arch_z"]
             arch_z = ArcheologickyZaznam.objects.get(id=arch_z_id)
             eo = ExterniOdkaz.objects.create(
@@ -381,7 +377,7 @@ class ExterniOdkazPripojitView(TransakceView):
                 request, messages.SUCCESS, get_message(arch_z, "EO_USPESNE_PRIPOJEN")
             )
         else:
-            logger_s.debug("ez.views.ExterniOdkazPripojitView.post.form_error", form_errors=form.errors)
+            logger.debug("ez.views.ExterniOdkazPripojitView.post.form_error", extra={"form_errors": form.errors})
         return JsonResponse({"redirect": ez.get_absolute_url()})
 
 
@@ -431,8 +427,7 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("ez.views.ExterniOdkazEditView.form_invalid", extra={"errors": form.errors})
         return super().form_invalid(form)
 
 
@@ -443,7 +438,7 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
-        logger.debug(ident_cely)
+        logger.debug("ez.views.TransakceView.ExterniOdkazOdpojitAZView.start", extra={"ident_cely": ident_cely})
         return get_object_or_404(
             ArcheologickyZaznam,
             ident_cely=ident_cely,
@@ -451,8 +446,8 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger.debug("eo_id")
-        logger.debug(self.kwargs.get("eo_id"))
+        logger.debug("ez.views.TransakceView.ExterniOdkazOdpojitAZView.get_context_data",
+                     extra={"eo_id": self.kwargs.get("eo_id")})
         context["object"] = ExterniZdroj.objects.get(
             externi_odkazy_zdroje__id=self.kwargs.get("eo_id")
         )
@@ -502,7 +497,6 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
-        logger.debug(ident_cely)
         return get_object_or_404(
             ArcheologickyZaznam,
             ident_cely=ident_cely,
@@ -538,8 +532,7 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
                 request, messages.SUCCESS, get_message(az, "EO_USPESNE_PRIPOJEN")
             )
         else:
-            logger.debug("not valid")
-            logger.debug(form.errors)
+            logger.debug("ez.views.ExterniOdkazPripojitDoAzView.form_invalid", extra={"errors": form.errors})
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 

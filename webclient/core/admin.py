@@ -10,7 +10,7 @@ from django.core.cache import cache
 from core.constants import ROLE_NASTAVENI_ODSTAVKY
 from django.core.cache.utils import make_template_fragment_key
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('python-logstash-logger')
 
 
 class OdstavkaSystemuAdmin(admin.ModelAdmin):
@@ -66,7 +66,7 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
                 uwsgi.reload()  # pretty easy right?
             except Exception as e:
-                logger.debug(e)
+                logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
                 pass  # we may not be running under uwsgi :P
         super().save_model(request, obj, form, change)
 

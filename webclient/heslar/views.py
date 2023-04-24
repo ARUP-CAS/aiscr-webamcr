@@ -9,10 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from heslar.hesla import HESLAR_DOKUMENT_TYP, MODEL_3D_DOKUMENT_TYPES, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
 import logging
-import structlog
 
-logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
@@ -36,7 +35,7 @@ def merge_heslare(first, second):
             data.append((k["heslo"], tuple(druhy_kategorie)))
     except ProgrammingError as err:
         # This error will always be shown before
-        logger_s.debug("heslar.views.merge_heslare.error", err=err)
+        logger.debug("heslar.views.merge_heslare.error", extra={"err": err})
     return data
 
 
@@ -75,33 +74,32 @@ def zjisti_vychozi_hodnotu(request):
     vychozi_hodnota = HeslarHierarchie.objects.filter(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
     if vychozi_hodnota.exists():
         queryset = vychozi_hodnota.values_list('heslo_podrazene', flat=True)
-        logger.debug(queryset)
         list = []
         for id in queryset:
             list.append({"id":id})
-        logger.debug(list)
         return JsonResponse(
-            data = list,
+            data=list,
             status=200,
             safe=False
         )
     else:
         return JsonResponse(data = {},status=400)
 
+
 def zjisti_nadrazenou_hodnotu(request):
     podrazene = request.GET.get("podrazene", 0)
-    i=0
+    i = 0
     while i < int(request.GET.get("iterace", 1)):
         try:
             nadrazene = HeslarHierarchie.objects.get(heslo_podrazene=podrazene, typ="podřízenost").heslo_nadrazene
             podrazene = nadrazene.id
-            i+=1
+            i += 1
         except ObjectDoesNotExist as err:
-            logger.debug(err)
-            return JsonResponse(data = {},status=400)
-    list = [{"id":nadrazene.id}]
+            logger.debug("heslar.views.zjisti_nadrazenou_hodnotu.does_not_exist", extra={"err": err})
+            return JsonResponse(data={}, status=400)
+    list = [{"id": nadrazene.id}]
     return JsonResponse(
-        data = list,
+        data=list,
         status=200,
         safe=False
     )

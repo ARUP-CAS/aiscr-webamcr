@@ -32,15 +32,16 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
+from django_prometheus.models import ExportModelOperationsMixin
 
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger('python-logstash-logger')
 
 
-class ArcheologickyZaznam(models.Model):
+class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), models.Model):
     """
     Class pro db model archeologicky_zaznam.
     """
-
     TYP_ZAZNAMU_LOKALITA = "L"
     TYP_ZAZNAMU_AKCE = "A"
 
@@ -189,12 +190,14 @@ class ArcheologickyZaznam(models.Model):
                 )
             ) == 0 and not (self.akce.je_nz or self.akce.odlozena_nz):
                 result.append(_("Nemá nálezovou zprávu."))
-                logger.warning("Akce " + self.ident_cely + " nema nalezovou zpravu.")
+                logger.warning("arch_z.models.ArcheologickyZaznam.nema_nalezovou_zpravu",
+                               extra={"ident_cely": self.ident_cely})
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.dokumentacni_jednotky_akce.all()) == 0:
             result.append(_("Nemá žádnou dokumentační jednotku."))
-            logger.warning("Akce " + self.ident_cely + " nema dokumentacni jednotku.")
+            logger.warning("arch_z.models.ArcheologickyZaznam.nema_dokumentacni_jednotku",
+                           extra={"ident_cely": self.ident_cely})
         for dj in self.dokumentacni_jednotky_akce.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
@@ -205,7 +208,7 @@ class ArcheologickyZaznam(models.Model):
                     + _(" nemá zadanou žádnou komponentu.")
                 )
                 logger.debug(
-                    "DJ " + dj.ident_cely + " nema komponentu ani neni negativni."
+                    "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"dj": dj.ident_cely}
                 )
             # Each documentation unit associated with the project event must have a valid PIAN relation.
             if dj.pian is None:
@@ -214,7 +217,7 @@ class ArcheologickyZaznam(models.Model):
                     + str(dj.ident_cely)
                     + _(" nemá zadaný pian.")
                 )
-                logger.debug("DJ " + dj.ident_cely + " nema pian.")
+                logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"dj": dj.ident_cely})
         for dokument_cast in self.casti_dokumentu.all():
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
@@ -223,10 +226,8 @@ class ArcheologickyZaznam(models.Model):
                 )
                 result.append(dokument_warning)
                 logger.debug(
-                    "Dokument "
-                    + dokument_cast.dokument.ident_cely
-                    + " warnings: "
-                    + str(dokument_warning)
+                    "arch_z.models.ArcheologickyZaznam.dokument_warning",
+                    extra={"ident_cely": dokument_cast.dokument.ident_cely, "dokument_warning": str(dokument_warning)}
                 )
         return result
 
@@ -286,12 +287,12 @@ class ArcheologickyZaznam(models.Model):
             start = idents[0]
             end = MAXIMAL
             missing = sorted(set(range(start, end + 1)).difference(idents))
-            logger.debug(missing[0])
+            logger.debug("arch_z.models.ArcheologickyZaznam.set_lokalita_permanent_ident_cely.missing",
+                         extra={"missing": missing[0]})
             if missing[0] >= MAXIMAL:
                 logger.error(
-                    "Maximal number of temporary document ident is "
-                    + str(MAXIMAL)
-                    + "for given region and rada"
+                    "arch_z.models.ArcheologickyZaznam.set_lokalita_permanent_ident_cely.maximum_error",
+                    extra={"maximum": str(MAXIMAL)}
                 )
                 raise MaximalIdentNumberError(MAXIMAL)
             sequence = str(missing[0]).zfill(7)
@@ -364,7 +365,7 @@ class ArcheologickyZaznam(models.Model):
             return "[ident_cely not yet assigned]"
 
 
-class ArcheologickyZaznamKatastr(models.Model):
+class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
     """
     Class pro db model archeologicky_zaznam_katastr, který drží v sobe relace na další katastry arch záznamu.
     """
@@ -382,11 +383,10 @@ class ArcheologickyZaznamKatastr(models.Model):
         unique_together = (("archeologicky_zaznam", "katastr"),)
 
 
-class Akce(models.Model):
+class Akce(ExportModelOperationsMixin("akce"), models.Model):
     """
     Class pro db model akce.
     """
-
     TYP_AKCE_PROJEKTOVA = "R"
     TYP_AKCE_SAMOSTATNA = "N"
 
@@ -465,7 +465,7 @@ class Akce(models.Model):
         )
 
 
-class AkceVedouci(models.Model):
+class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """
     Class pro db model akce_vedouci, který drží v sobe relace na dalších vedoucích arch záznamu.
     """
@@ -479,7 +479,7 @@ class AkceVedouci(models.Model):
         ordering = ["id"]
 
 
-class ExterniOdkaz(models.Model):
+class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
     """
     Class pro db model externi_odkaz, který drží v sobe relace na externí odkazy arch záznamu.
     """
@@ -527,13 +527,10 @@ def get_akce_ident(region, temp=None, id=None):
         start = idents[0]
         end = MAXIMAL
         missing = sorted(set(range(start, end + 1)).difference(idents))
+        logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
         logger.debug(missing[0])
         if missing[0] >= MAXIMAL:
-            logger.error(
-                "Maximal number of temporary document ident is "
-                + str(MAXIMAL)
-                + "for given region and rada"
-            )
+            logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMAL)})
             raise MaximalIdentNumberError(MAXIMAL)
         sequence = str(missing[0]).zfill(6)
         return prefix + sequence + "A"

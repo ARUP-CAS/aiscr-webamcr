@@ -2,7 +2,6 @@ import random
 import string
 from typing import Union
 
-import structlog
 
 from distlib.util import cached_property
 from django.core.validators import MaxValueValidator
@@ -35,6 +34,7 @@ from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
@@ -43,14 +43,17 @@ from simple_history.models import HistoricalRecords
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
-logger_s = structlog.get_logger(__name__)
+import logging
+
+
+logger = logging.getLogger('python-logstash-logger')
 
 
 def only_notification_groups():
     return UserNotificationType.objects.filter(ident_cely__icontains='S-E-').all()
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor")
@@ -154,7 +157,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 fail_silently=False,
             )
         except ConnectionRefusedError as err:
-            logger_s.error("user.email_user.error", user_id=self.pk, email=self.email)
+            logger.error("user.email_user.error", extra={"user_id": self.pk, "email": self.email})
 
     def name_and_id(self):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
@@ -164,22 +167,22 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
-        logger_s.debug("User.save.start")
+        logger.debug("User.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
-                logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
-                               is_active=self.is_active)
+                logger.debug("User.save.deactivate_spoluprace",
+                             extra={"hlavni_role_id": self.hlavni_role.pk, "is_active": self.is_active})
             else:
-                logger_s.debug("User.save.deactivate_spoluprace", is_active=self.is_active)
+                logger.debug("User.save.deactivate_spoluprace", extra={"is_active": self.is_active})
             # local import to avoid circual import issue
             from pas.models import UzivatelSpoluprace
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
-            logger_s.debug("User.save.deactivate_spoluprace", spoluprace_count=spoluprace_query.count())
+            logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_count": spoluprace_query.count()})
             for spoluprace in spoluprace_query:
-                logger_s.debug("User.save.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
+                logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
 
@@ -209,7 +212,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Uživatelé"
 
 
-class Organizace(models.Model, ManyToManyRestrictedClassMixin):
+class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToManyRestrictedClassMixin):
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255)
     nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255,
                                       unique=True)
@@ -248,7 +251,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
     ident_cely = models.CharField(max_length=10, unique=True)
 
     def save(self, *args, **kwargs):
-        logger_s.debug("Organizace.save.start")
+        logger.debug("Organizace.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
@@ -268,7 +271,7 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
 
 
 
-class Osoba(models.Model, ManyToManyRestrictedClassMixin):
+class Osoba(ExportModelOperationsMixin("osoba"), models.Model, ManyToManyRestrictedClassMixin):
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
     prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)
     vypis = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis"), max_length=200)
@@ -280,7 +283,7 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
     ident_cely = models.CharField(max_length=20, unique=True)
 
     def save(self, *args, **kwargs):
-        logger_s.debug("Osoba.save.start")
+        logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
@@ -304,7 +307,7 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
         return self.vypis_cely
 
 
-class UserNotificationType(models.Model):
+class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):
     ident_cely = models.TextField(unique=True)
     zasilat_neaktivnim = models.BooleanField(default=False)
     predmet = models.TextField()
@@ -318,7 +321,7 @@ class UserNotificationType(models.Model):
         return _(self.ident_cely)
 
 
-class NotificationsLog(models.Model):
+class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

@@ -9,11 +9,10 @@ from heslar.hesla import PRISTUPNOST_ANONYM_ID
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('arch_z', '0005_initial'),
+        ("arch_z", "0005_initial"),
     ]
 
     operations = [
@@ -26,6 +25,19 @@ class Migration(migrations.Migration):
                 VOLATILE NOT LEAKPROOF
             AS $BODY$
                     BEGIN
+                        DELETE FROM dokument_cast AS dc
+                        WHERE dc.dokument_id IN (
+                            SELECT d.id FROM dokument AS d
+                            WHERE d.ident_cely NOT LIKE 'X-%'
+                            AND EXISTS (
+                                SELECT FROM dokument_cast AS dc
+                                WHERE dc.dokument = d.id AND dc.archeologicky_zaznam = old.id AND NOT EXISTS (
+                                    SELECT FROM dokument_cast AS dci
+                                    WHERE dci.dokument = d.id AND dci.archeologicky_zaznam != old.id
+                                )
+                            )
+                        );
+                        
                         DELETE FROM dokument AS d
                         WHERE d.ident_cely NOT LIKE 'X-%'
                         AND EXISTS (
@@ -50,5 +62,5 @@ class Migration(migrations.Migration):
                 EXECUTE FUNCTION delete_connected_documents();
             """,
             reverse_sql="DROP TRIGGER public.delete_connected_documents;",
-        )
+        ),
     ]
