@@ -129,7 +129,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
     hostname: elasticsearch
     environment:
-      - xpack.security.transport.ssl.verification_mode=none
+      - xpack.security.enabled=false
     ports:
       - 9200:9200
     volumes:
