@@ -270,91 +270,94 @@ LOGGING = {
             'fqdn': False,
             'tags': ['myapp'],
         },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "timestamp",
+        }
     },
     "loggers": {
         'django': {
-            'handlers': ['logstash'],
-            'level': 'DEBUG',
+            'handlers': ["logstash", "console"],
             'propagate': True,
         },
         "historie": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "oznameni": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "projekt": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "heslar": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "core": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "cron": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "ez": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "pian": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "uzivatel": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "arch_z": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "dokument": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "dj": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "komponenta": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "nalez": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "adb": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "pas": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "lokalita": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "neidentakce": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "services": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "django_cron": {
-            "handlers": ["logstash"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
     },

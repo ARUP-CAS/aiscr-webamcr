@@ -174,7 +174,7 @@ services:
     depends_on:
       - elasticsearch
     ports:
-      - 5000:5000
+      - 9600:9600
       - 5959:5959
     volumes:
       - logs_volume:/logs:ro
