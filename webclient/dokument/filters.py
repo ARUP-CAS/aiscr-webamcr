@@ -117,22 +117,29 @@ class HistorieFilter(filters.FilterSet):
         uzivatel = self.form.cleaned_data["historie_uzivatel"]
         datum = self.form.cleaned_data["historie_datum_zmeny_od"]
         filtered = Historie.objects.all()
+        needs_filtering = False
         if zmena:
             filtered = filtered.filter(typ_zmeny__in=zmena)
+            needs_filtering = True
         if uzivatel:
             filtered = filtered.filter(uzivatel__in=uzivatel)
+            needs_filtering = True
         if datum and datum.start:
             filtered = filtered.filter(datum_zmeny__gte=datum.start)
+            needs_filtering = True
         if datum and datum.stop:
             filtered = filtered.filter(datum_zmeny__lte=datum.stop)
-        if self.filter_typ and self.filter_typ == "arch_z":
-            queryset = queryset.filter(
-                archeologicky_zaznam__historie__historie__in=filtered
-            ).distinct()
-        else:
-            queryset = queryset.filter(historie__historie__in=filtered).distinct()
+            needs_filtering = True
+        if needs_filtering:
+            if self.filter_typ and self.filter_typ == "arch_z":
+                queryset = queryset.filter(
+                    archeologicky_zaznam__historie__historie__in=filtered
+                ).distinct()
+            else:
+                queryset = queryset.filter(historie__historie__in=filtered).distinct()
         for name, value in self.form.cleaned_data.items():
-            queryset = self.filters[name].filter(queryset, value)
+            if name not in ["historie_typ_zmeny","historie_uzivatel","historie_datum_zmeny_od"]:
+                queryset = self.filters[name].filter(queryset, value)
             assert isinstance(
                 queryset, models.QuerySet
             ), "Expected '%s.%s' to return a QuerySet, but got a %s instead." % (

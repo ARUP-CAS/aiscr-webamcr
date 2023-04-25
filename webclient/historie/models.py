@@ -99,7 +99,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     )
 
     datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))
-    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"))
+    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"),db_index=True)
     uzivatel = models.ForeignKey(
         User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("Uživatel")
     )
@@ -126,7 +126,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, "Archeologický záznam"),
     )
 
-    typ_vazby = models.TextField(max_length=24, choices=CHOICES)
+    typ_vazby = models.TextField(max_length=24, choices=CHOICES,db_index=True)
 
     class Meta:
         db_table = "historie_vazby"
