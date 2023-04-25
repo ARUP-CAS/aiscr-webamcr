@@ -101,13 +101,18 @@ services:
       - grafana_admin_password
     ports:
       - "3000:3000"
+    networks:
+      - git-reverse-proxy
 
   prometheus:
     image: prom/prometheus
     volumes:
       - ./prometheus:/etc/prometheus
+    networks:
+      - git-reverse-proxy
 
   logstash:
+    hostname: elasticsearch
     image: docker.elastic.co/logstash/logstash:8.7.0
     depends_on:
       - elasticsearch
@@ -117,6 +122,8 @@ services:
     volumes:
       - logs_volume:/logs:ro
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - git-reverse-proxy
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
@@ -129,6 +136,8 @@ services:
       - 9200:9200
     volumes:
       - elasticsearch_volume:/usr/share/elasticsearch/data
+    networks:
+      - git-reverse-proxy
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.7.0
@@ -139,6 +148,8 @@ services:
       - elasticsearch
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - git-reverse-proxy
 
 volumes:
   static_data:
