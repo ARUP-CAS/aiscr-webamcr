@@ -173,6 +173,9 @@ services:
     image: docker.elastic.co/logstash/logstash:8.7.0
     depends_on:
       - elasticsearch
+    ports:
+      - 5000:5000
+      - 5959:5959
     volumes:
       - logs_volume:/logs:ro
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
