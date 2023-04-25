@@ -112,9 +112,11 @@ services:
       - prometheus
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
     volumes:
       - grafana_data:/var/lib/grafana
+    secrets:
+      - grafana_admin_password
     ports:
       - "3000:3000"
 
@@ -221,3 +223,5 @@ secrets:
     file: ./secrets/redis_pass.txt
     # production environment
     # external: true
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt

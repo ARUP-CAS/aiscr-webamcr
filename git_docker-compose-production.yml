@@ -87,6 +87,54 @@ services:
       web:
         condition: service_started
 
+  grafana:
+    image: grafana/grafana-enterprise:8.2.0
+    restart: always
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    secrets:
+      - grafana_admin_password
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    depends_on:
+      - elasticsearch
+    volumes:
+      - logs_volume:/logs:ro
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+    ports:
+      - 9200:9200
+    volumes:
+      - elasticsearch_volume:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    restart: always
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
 volumes:
   static_data:
   locale_data:
@@ -103,3 +151,5 @@ secrets:
    file : secrets_mail_client.json
   redis_pass:
     file : redis_pass.txt
+  grafana_admin_password:
+    file: grafana_admin_password.txt
