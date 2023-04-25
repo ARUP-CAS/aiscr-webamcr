@@ -12,16 +12,7 @@ Požadované vlastnosti testovacího scénáře jsou následující (vychází z
 
 ## Postup vytvoření kódu testu
 
-K vytvoření kódu lze využít rozšíření prohlížeče [Selenium IDE](https://www.selenium.dev/selenium-ide/), rozšíření je
-dostupné pro Firefox a Google Chrome. Test je možné nahrát pomocí následujícího postupu:
-
-* Spusťte prohlížeč a otevřete rozšíření Selenium IDE. Založte nový projekt či otevřete existující.
-* Klikněte na tlačítko Record vpravo nahoře. Zadejte adresu webu. Poté se otevře nové okno prohlížeče.
-* Proveďte uživatelskou akci, která má být otestována.
-* Po dokončení akce klikněte na tlačítko STOP a zadejte název testu.
-* Klikněte pravým tlačítkem na název testu v panelu vlevo a zvolte možnost Export.
-* V dialogovém okně vyberte možnost Python pytest a klikněte na Export. Výsledkem je vygenerovaný Python skript s průběhem testu.
-* Test je třeba doplnit popisem a metrikou pro ověření úspěšného průběhu testu.
+Pro scénář je třeba připravit sadu vstupních dat a kontrolní výstup.
 
 # Přehled testovacích scénářů
 
@@ -50,8 +41,10 @@ Scénáře jsou seskupeny podle jednotlivých aplikací.
 
 #### Testovací data
 
-* id_username = e-mail testovacího uživatele
-* id_password = heslo testovacího uživatele
+| Field       | Value                         |
+|-------------|-------------------------------|
+| id_username | e-mail testovacího uživatele  |
+| id_password | heslo testovacího uživatele   |
 
 #### Očekávané výsledky
 
@@ -111,16 +104,18 @@ Test zapsání projektu na stránce `/projekt/zapsat`.
 
 #### Testovací data
 
-* typ_projektu = záchranný
-* id_podnet = test
-* id_lokalizace = test
-* id_parcelni_cislo = test
-* id_planovane_zahajeni = dynamicky vložené datum (dnes + dva dny - dnes + pět dní)
-* id_oznamovatel = test
-* id_odpovedna_osoba = test
-* id_adresa = test
-* id_telefon = +420123456789
-* id_email = test@example.com
+| Field                | Value                                              |
+|----------------------|----------------------------------------------------|
+| typ_projektu         | záchranný                                          |
+| id_podnet            | test                                               |
+| id_lokalizace        | test                                               |
+| id_parcelni_cislo    | test                                               |
+| id_planovane_zahajeni| dynamicky vložené datum (dnes + dva dny - dnes + pět dní)|
+| id_oznamovatel       | test                                               |
+| id_odpovedna_osoba   | test                                               |
+| id_adresa            | test                                               |
+| id_telefon           | +420123456789                                      |
+| id_email             | test@example.com                                   |
 
 #### PROJEKT-ZAPSAT-P-001
 
@@ -134,6 +129,680 @@ Test simuluje zadání validních data měl by končit zapsáním projektu do da
 ##### Stav testu
 
 Implementován
+
+#### test_projekt_zapsat_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel vyplní formulář.
+
+##### Testovací data
+
+| Pole                  | Hodnota                                             |
+|-----------------------|-----------------------------------------------------|
+| id_typ_projektu       | záchranný                                           |
+| projectMap            | (click_count: 5)                                    |
+| id_podnet             | test                                                |
+| id_lokalizace         | test                                                |
+| id_parcelni_cislo     | test                                                |
+| id_planovane_zahajeni | (date range calculated: 2 days and 5 days from now) |
+| id_oznamovatel        | test                                                |
+| id_odpovedna_osoba    | test                                                |
+| id_adresa             | test                                                |
+| id_telefon            | +420734456789                                       |
+| id_email              | test@example.com                                    |
+
+
+##### Očekávané výsledky
+
+- Pole `id_oznamovatel` je povoleno.
+- Pole `id_odpovedna_osoba` je povoleno.
+- Pole `id_adresa` je povoleno.
+- Pole `id_telefon` je povoleno.
+- Pole `id_email` je povoleno.
+- Počet projektů se zvýšil o 1.
+
+##### Stav testu
+
+Implementován
+
+#### test_projekt_zapsat_n_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře stránku Zapsat projekt.
+
+##### Testovací data
+
+Pokud není uvedeno, jsou stejná jako u `test_projekt_zapsat_p_001`.
+
+| Field ID            | Value                                      |
+|---------------------|--------------------------------------------|
+| id_planovane_zahajeni | (date range calculated: -9 days and -5 days from today) |
+
+
+##### Očekávané výsledky
+
+- Počet projektů se nezměnil.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zapsat_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel vyplní formulář.
+
+##### Testovací data
+
+| Pole                  | Hodnota                                             |
+|-----------------------|-----------------------------------------------------|
+| id_typ_projektu       | záchranný                                           |
+| projectMap            | (click_count: 5)                                    |
+| id_podnet             | test                                                |
+| id_lokalizace         | test                                                |
+| id_parcelni_cislo     | test                                                |
+| id_planovane_zahajeni | (date range calculated: 2 days and 5 days from now) |
+| id_oznamovatel        | test                                                |
+| id_odpovedna_osoba    | test                                                |
+| id_adresa             | test                                                |
+| id_telefon            | +420734456789                                       |
+| id_email              | test@example.com                                    |
+
+
+##### Očekávané výsledky
+
+- Pole `id_oznamovatel` je povoleno.
+- Pole `id_odpovedna_osoba` je povoleno.
+- Pole `id_adresa` je povoleno.
+- Pole `id_telefon` je povoleno.
+- Pole `id_email` je povoleno.
+- Počet projektů se zvýšil o 1.
+
+##### Stav testu
+
+Implementován
+
+#### test_projekt_zapsat_n_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře stránku Zapsat projekt.
+
+##### Testovací data
+
+Pokud není uvedeno, jsou stejná jako u `test_projekt_zapsat_p_001`.
+
+| Field ID            | Value                                      |
+|---------------------|--------------------------------------------|
+| id_planovane_zahajeni | (date range calculated: -9 days and -5 days from today) |
+
+
+##### Očekávané výsledky
+
+- Počet projektů se nezměnil.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zapsat_n_002
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře stránku Zapsat projekt.
+
+##### Testovací data
+
+Pokud není uvedeno, jsou stejná jako u `test_projekt_zapsat_p_001`.
+
+| Field ID            | Value                                      |
+|---------------------|--------------------------------------------|
+| id_telefon | XXX |
+
+
+##### Očekávané výsledky
+
+- Počet projektů se nezměnil.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zapsat_n_003
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře stránku Zapsat projekt.
+
+##### Testovací data
+
+Pokud není uvedeno, jsou stejná jako u `test_projekt_zapsat_p_001`.
+
+| Field ID            | Value                                      |
+|---------------------|--------------------------------------------|
+| id_planovane_zahajeni | (date range calculated: 600 days and 620 days from today) |
+
+
+##### Očekávané výsledky
+
+- Počet projektů se nezměnil.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zapsat_n_002
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře stránku Zapsat projekt.
+
+##### Testovací data
+
+Pokud není uvedeno, jsou stejná jako u `test_projekt_zapsat_p_001`.
+
+| Field ID            | Value                                      |
+|---------------------|--------------------------------------------|
+| id_telefon | XXX |
+
+
+##### Očekávané výsledky
+
+- Počet projektů se nezměnil.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zahajit_vyzkum_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A2.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A2.
+
+##### Testovací data
+
+| Field ID          | Value                                      |
+|-------------------|--------------------------------------------|
+| id_datum_zahajeni | (date calculated: -5 days from today)      |
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A3
+- Datum zahájení projektu odpovídá testovacím datům.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_ukoncit_vyzkum_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A3.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A3.
+
+##### Testovací data
+
+| Field ID          | Value                                 |
+|-------------------|---------------------------------------|
+| id_datum_ukonceni | (date calculated: -1 days from today) |
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A4.
+- Datum zahájení projektu odpovídá testovacím datům.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_ukoncit_vyzkum_n_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A3.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A3.
+
+##### Testovací data
+
+| Field ID          | Value                                 |
+|-------------------|---------------------------------------|
+| id_datum_ukonceni | (date calculated: 90 days from today) |
+
+##### Očekávané výsledky
+
+- Projekt zůstal ve stavu A3.
+- Zobrazena chyba `Datum nesmí být dále než měsíc v budoucnosti`.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_ukoncit_vyzkum_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A3.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A3.
+
+##### Testovací data
+
+| Field ID          | Value                                 |
+|-------------------|---------------------------------------|
+| id_datum_ukonceni | (date calculated: -1 days from today) |
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A4.
+- Datum zahájení projektu odpovídá testovacím datům.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_uzavrit_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A4, který má projektovou akci.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A4.
+
+##### Testovací data
+
+Žádná.
+
+##### Očekávané výsledky
+
+- Projekt přestunut do stavu A5.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_uzavrit_n_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A4, který nemá projektovou akci.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A4.
+
+##### Testovací data
+
+Žádná.
+
+##### Očekávané výsledky
+
+- Projekt zůstal ve stavu A4.
+- Zobrazena chyba `Projekt musí mít alespoň jednu projektovou akci`.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_archivovat_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A5, který má archivovanou projektovou akci.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A5.
+
+##### Testovací data
+
+Žádná
+
+##### Očekávané výsledky
+
+- Projekt je přesunut do stavu A6.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_uzavrit_n_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A5, který má nearchivovanou projektovou akci.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A5.
+
+##### Testovací data
+
+Stejná jako u `test_projekt_zapsat_p_001`.
+
+##### Očekávané výsledky
+
+- Projekt zůstal ve stavu A5.
+- Zobrazena chyba `Akce musí být archivovaná`.
+
+##### Stav testu
+
+Implementován.
+
+#### ProjektVratitArchivovanySeleniumTest
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A6.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A6.
+
+##### Testovací data
+
+| Field ID  | Value |
+|-----------|-------|
+| id_reason | test  |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A5.
+- Zobrazena chyba `Akce musí být archivovaná`.
+
+##### Stav testu
+
+Implementován.
+
+#### ProjektVratitUzavrenySeleniumTest
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A5.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A5.
+
+##### Testovací data
+
+| Field ID  | Value |
+|-----------|-------|
+| id_reason | test  |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A4.
+
+##### Stav testu
+
+Implementován.
+
+#### ProjektVratitUkoncenySeleniumTest
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A4.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A4.
+
+##### Testovací data
+
+| Field ID  | Value |
+|-----------|-------|
+| id_reason | test  |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A3.
+
+##### Stav testu
+
+Implementován.
+
+#### ProjektVratitZahajenySeleniumTest
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A3.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A3.
+
+##### Testovací data
+
+| Field ID  | Value |
+|-----------|-------|
+| id_reason | test  |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A2.
+
+##### Stav testu
+
+Implementován.
+
+#### ProjektVratitPrihlasenySeleniumTest
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A2.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt ve stavu A2.
+
+##### Testovací data
+
+| Field ID  | Value |
+|-----------|-------|
+| id_reason | test  |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A1.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zrusit_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt.
+
+##### Testovací data
+
+| Field ID  | Value      |
+|-----------|------------|
+| reason | item no. 2 |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A7.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zrusit_p_002
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt.
+
+##### Testovací data
+
+| Field ID  | Value      |
+|-----------|------------|
+| reason | item no. 1 |
+| id_projekt_id | test       |
+
+
+##### Očekávané výsledky
+
+- Projekt přesunut do stavu A7.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zrusit_n_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt s projektovými akcemi.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt s projektovými akcemi.
+
+##### Testovací data
+
+| Field ID  | Value      |
+|-----------|------------|
+| reason | item no. 2 |
+
+
+##### Očekávané výsledky
+
+- Projekt zůstal ve výchozím stavu.
+- Zobrazena chyba `Projekt před zrušením nesmí mít projektové akce`.
+
+##### Stav testu
+
+Implementován.
+
+#### test_projekt_zrusit_p_001
+
+##### Předpoklady
+
+- Uživatel je přihlášen.
+- Uživatel otevře stránku Zapsat projekt.
+- Existuje projekt ve stavu A7.
+
+##### Uživatelské kroky
+
+Uživatel otevře projekt s projektovými akcemi.
+
+##### Testovací data
+
+| Field ID  | Value |
+|-----------|-------|
+| id_reason_text | test  |
+
+
+##### Očekávané výsledky
+
+- Projekt je přesunut do stavu A8.
+
+##### Stav testu
+
+Implementován.
 
 ## Nadpisy
 

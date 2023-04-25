@@ -29,8 +29,9 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         return [e.find_element(By.TAG_NAME, "a").text for e in elements]
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
-        logger_s.debug("CoreSeleniumTest._check_column_hiding", element_id_initial=element_id_initial,
-                       column_header_text=column_header_text, initial=initial)
+        logger_s.debug("CoreSeleniumTest._check_column_hiding",
+                       extra={"element_id_initial": element_id_initial, "column_header_text": column_header_text,
+                              "initial": initial})
         self.driver.find_element(By.CSS_SELECTOR, "#btnGroupDropTable > .material-icons").click()
         self.driver.find_element(By.ID, element_id_initial).click()
         table = self.driver.find_element(By.TAG_NAME, "table")
@@ -515,7 +516,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     @classmethod
     def get_project(cls, stav: int = 2, y_fill: str = "04") -> Projekt:
         ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", y_fill)
-        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.get_project", ident_cely=ident_cely)
+        logger_s.debug("ProjektNavrhnoutZrusitSeleniumTest.get_project", extra={"ident_cely": ident_cely})
         return Projekt.objects.get(ident_cely=ident_cely)
 
     def test_projekt_zrusit_p_001(self):
@@ -586,7 +587,7 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
     def get_project(cls, y_fill="01") -> Projekt:
         ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(PROJEKT_STAV_NAVRZEN_KE_ZRUSENI))\
             .replace("YY", y_fill)
-        logger_s.debug("ProjektZrusitSeleniumTest.get_project", ident_cely=ident_cely)
+        logger_s.debug("ProjektZrusitSeleniumTest.get_project", extra={"ident_cely": ident_cely})
         return Projekt.objects.get(ident_cely=ident_cely)
 
     def test_projekt_zrusit_p_001(self):

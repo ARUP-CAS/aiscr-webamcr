@@ -274,7 +274,7 @@ LOGGING = {
     "loggers": {
         'django': {
             'handlers': ['logstash'],
-            'level': 'INFO',
+            'level': 'DEBUG',
             'propagate': True,
         },
         "historie": {
