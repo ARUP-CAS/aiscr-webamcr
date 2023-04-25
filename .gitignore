@@ -10,7 +10,6 @@ secrets_backup.json
 
 # Pycharm project files
 .idea/
-*.ini
 
 # VsCode project files
 .vscode/

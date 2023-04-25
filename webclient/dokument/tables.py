@@ -81,7 +81,7 @@ class DokumentTable(SearchTable):
     licence = tables.columns.Column(default="")
     nahled = tables.columns.Column(
         default="",
-        accessor="soubory__soubory",
+        accessor="soubory",
         attrs={
             "th": {"class": "white"},
         },
@@ -102,7 +102,10 @@ class DokumentTable(SearchTable):
     first_columns = None
 
     def render_nahled(self, value, record):
-        soubor = record.soubory.soubory.filter(mimetype__startswith="image").first()
+        if len(record.soubory.first_soubor)>0:
+            soubor = record.soubory.first_soubor[0]
+        else: 
+            soubor = None
         if soubor is not None:
             soubor_url = reverse("core:download_file", args=(soubor.id,))
             return format_html(

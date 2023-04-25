@@ -553,7 +553,13 @@ class SamostatnyNalezListView(SearchListView):
         # Only allow to view 3D models
         qs = super().get_queryset()
         qs = qs.select_related(
-            "obdobi", "specifikace", "nalezce", "druh_nalezu", "predano_organizace"
+            "obdobi",
+            "specifikace",
+            "nalezce",
+            "druh_nalezu",
+            "predano_organizace",
+            "katastr",
+            "katastr__okres",
         )
         return qs
 
@@ -684,7 +690,7 @@ class UzivatelSpolupraceListView(SearchListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related("vedouci", "spolupracovnik")
+        qs = qs.select_related("vedouci", "spolupracovnik","vedouci__organizace","historie","spolupracovnik__organizace")
         return qs.order_by("id")
 
     def get_table_kwargs(self):
