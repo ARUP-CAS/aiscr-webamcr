@@ -139,6 +139,7 @@ volumes:
   static_data:
   locale_data:
   nginx_data:
+  elasticsearch_volume:
 
 networks:
   git-reverse-proxy:
