@@ -259,6 +259,12 @@ SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "timestamp": {
+            "format": "{asctime} {levelname} {message}",
+            "style": "{",
+        },
+    },
     "handlers": {
         'logstash': {
             'level': 'DEBUG',
