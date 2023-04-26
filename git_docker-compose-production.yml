@@ -112,7 +112,7 @@ services:
       - git-reverse-proxy
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.7.0d
+    image: docker.elastic.co/logstash/logstash:8.7.0
     depends_on:
       - elasticsearch
     ports:
