@@ -1,3 +1,4 @@
+import logging
 import simplejson as json
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
