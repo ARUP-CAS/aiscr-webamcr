@@ -130,6 +130,7 @@ services:
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
+      - XPACK_MONITORING_ENABLED=false
     ports:
       - 9200:9200
     volumes:
