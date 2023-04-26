@@ -130,6 +130,8 @@ services:
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - http.host=0.0.0.0
     ports:
       - 9200:9200
     volumes:
@@ -144,6 +146,15 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
+    networks:
+      - git-reverse-proxy
+
+  selenium:
+    image: selenium/standalone-chrome-debug
+    ports:
+      - 4444:4444
+      - 5900:5900
+    shm_size: '1gb'
     networks:
       - git-reverse-proxy
 
