@@ -89,7 +89,14 @@ class UrlTests(TestCase):
 
     def test_get_odeslat_s_chybami(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(reverse("arch_z:odeslat", args=[EXISTING_EVENT_IDENT_INCOMPLETE, ]))
+        response = self.client.get(
+            reverse(
+                "arch_z:odeslat",
+                args=[
+                    EXISTING_EVENT_IDENT_INCOMPLETE,
+                ],
+            )
+        )
 
         self.assertTrue(
             _("Datum zahájení není vyplněn.") in self.client.session["temp_data"]
@@ -100,7 +107,9 @@ class UrlTests(TestCase):
         self.assertTrue(
             _("Lokalizace okolností není vyplněna.") in self.client.session["temp_data"]
         )
-        self.assertTrue(_("Hlavní typ není vyplněn.") in self.client.session["temp_data"])
+        self.assertTrue(
+            _("Hlavní typ není vyplněn.") in self.client.session["temp_data"]
+        )
         self.assertTrue(
             _("Hlavní vedoucí není vyplněn.") in self.client.session["temp_data"]
         )
@@ -119,13 +128,19 @@ class UrlTests(TestCase):
 
     def test_get_vratit(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(reverse("arch_z:vratit", kwargs={"ident_cely": EXISTING_EVENT_IDENT}))
+        response = self.client.get(
+            reverse("arch_z:vratit", kwargs={"ident_cely": EXISTING_EVENT_IDENT})
+        )
         self.assertEqual(403, response.status_code)
 
     def test_get_pripojit_dokument(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(reverse("arch_z:pripojit_dokument",
-                                           kwargs={"arch_z_ident_cely": EXISTING_EVENT_IDENT}))
+        response = self.client.get(
+            reverse(
+                "arch_z:pripojit_dokument",
+                kwargs={"arch_z_ident_cely": EXISTING_EVENT_IDENT},
+            )
+        )
         self.assertEqual(200, response.status_code)
 
     def test_post_pripojit_dokument(self):
@@ -138,8 +153,13 @@ class UrlTests(TestCase):
         documents_before = Dokument.objects.filter(
             casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT
         ).count()
-        response = self.client.post(reverse("arch_z:pripojit_dokument",
-                                            kwargs={"arch_z_ident_cely": EXISTING_EVENT_IDENT}), data)
+        response = self.client.post(
+            reverse(
+                "arch_z:pripojit_dokument",
+                kwargs={"arch_z_ident_cely": EXISTING_EVENT_IDENT},
+            ),
+            data,
+        )
         documents_after = Dokument.objects.filter(
             casti__archeologicky_zaznam__ident_cely=EXISTING_EVENT_IDENT
         ).count()

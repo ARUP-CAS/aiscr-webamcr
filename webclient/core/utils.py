@@ -23,6 +23,9 @@ logger = logging.getLogger('python-logstash-logger')
 
 
 def get_mime_type(file_name):
+    """
+    Funkce pro získaní mime typu pro soubor.
+    """
     mime_type = mimetypes.guess_type(file_name)[0]
     # According to RFC 4180 csv is text/csv
     if file_name.endswith(".csv"):
@@ -32,7 +35,7 @@ def get_mime_type(file_name):
 
 def calculate_crc_32(file):
     """
-    Calculates crc32 of the file (int32) transforms it to string and fills string with 0 for 13 characters.
+    Počítá crc32 ze souboru (int32), transformuje ho na string a doplňuje ho na 13 znaků.
     """
     prev = 0
     for eachLine in file:
@@ -42,6 +45,9 @@ def calculate_crc_32(file):
 
 
 def get_cadastre_from_point(point):
+    """
+    Funkce pro získaní katastru z bodu geomu.
+    """
     query = (
         "select id, nazev_stary from public.ruian_katastr where "
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
@@ -57,6 +63,9 @@ def get_cadastre_from_point(point):
 
 
 def get_cadastre_from_point_with_geometry(point):
+    """
+    Funkce pro získaní katastru s geometrií z bodu geomu.
+    """
     query = (
         "select id, nazev_stary,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
@@ -73,6 +82,9 @@ def get_cadastre_from_point_with_geometry(point):
 
 
 def get_centre_point(bod, geom):
+    """
+    Funkce pro získani stredového bodu z bodu a geomu.
+    """
     try:
         [x0, x1, xlength] = [0.0, 0.0, 1]
         bod.zoom = 17
@@ -107,6 +119,9 @@ def get_centre_point(bod, geom):
 
 
 def get_all_pians_with_akce(ident_cely):
+    """
+    Funkce pro získaní všech pianů s akci.
+    """
     query = (
         " (SELECT A.id,A.ident_cely,ST_AsText(A.geom) as geometry, A.dj,katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
         " FROM public.ruian_katastr katastr "
@@ -154,6 +169,9 @@ def get_all_pians_with_akce(ident_cely):
 
 
 def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
+    """
+    Funkce pro update katastru u akce podle katastrálního území.
+    """
     akce_ident_cely = ident_cely.split("-D")[0]
 
     query_update_archz = (
@@ -171,6 +189,9 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
 
 
 def update_all_katastr_within_akce_or_lokalita(ident_cely):
+    """
+    Funkce pro update katastru u akce a lokalit.
+    """
     logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     akce_ident_cely = ident_cely.split("-D")[0]
     hlavni_name = ""
@@ -226,6 +247,9 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
 
 
 def get_centre_from_akce(katastr, pian):
+    """
+    Funkce pro bodu, geomu a presnosti z akce.
+    """
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
@@ -248,6 +272,9 @@ def get_centre_from_akce(katastr, pian):
 
 
 def get_points_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní projektů a jeho geomu podle čtverce.
+    """
     from projekt.models import Projekt
 
     query = (
@@ -265,6 +292,9 @@ def get_points_from_envelope(left, bottom, right, top):
 
 
 def get_all_pians_with_dj(ident_cely, lat, lng):
+    """
+    Funkce pro získaní pianů s DJ podle ident_cely DJ a souradnic.
+    """
     query = (
         "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj from public.pian pian "
         " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely like %s "
@@ -283,6 +313,9 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
 
 
 def get_num_pians_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní počtu pianů ze čtverce.
+    """
     query = (
         "select count(*) from public.pian pian where "
         "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
@@ -299,6 +332,9 @@ def get_num_pians_from_envelope(left, bottom, right, top):
 
 
 def get_pians_from_envelope(left, bottom, right, top, ident_cely):
+    """
+    Funkce pro získaní pianů ze čtverce.
+    """
     query = (
         "select pian.id,pian.ident_cely,"
         " ST_AsText(pian.geom) as geometry,"
@@ -324,6 +360,9 @@ def get_pians_from_envelope(left, bottom, right, top, ident_cely):
 
 
 def get_num_projects_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní počtu projektů ze čtverce.
+    """
     query = (
         "select count(*) from public.projekt p where "
         "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
@@ -340,6 +379,9 @@ def get_num_projects_from_envelope(left, bottom, right, top):
 
 
 def get_projects_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní projektů ze čtverce.
+    """
     from projekt.models import Projekt
 
     query = (
@@ -364,6 +406,9 @@ def dictfetchall(cursor):
 
 
 def get_heatmap_pian(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy pianů ze čtverce.
+    """
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
     query_zoom = (
         "select count*3 as count, ST_AsText(st_centroid) as geometry "
@@ -384,6 +429,9 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
 
 
 def get_heatmap_pian_density(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy hustoty pianů ze čtverce.
+    """
     query = "select max(count) from amcr_heat_pian_l2"
     query_zoom = "select max(count) from amcr_heat_pian_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
     try:
@@ -401,6 +449,9 @@ def get_heatmap_pian_density(left, bottom, right, top, zoom):
 
 
 def get_heatmap_project(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy projektů ze čtverce.
+    """
     query = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_l2"
     query_zoom = (
         "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_lx2 "
@@ -421,6 +472,9 @@ def get_heatmap_project(left, bottom, right, top, zoom):
 
 
 def get_heatmap_project_density(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy hustoty projektů ze čtverce.
+    """
     query = "select max(count) from amcr_heat_projekt_l2"
     query_zoom = (
         "select max(count) from amcr_heat_projekt_lx2 "
@@ -441,6 +495,9 @@ def get_heatmap_project_density(left, bottom, right, top, zoom):
 
 
 def get_validation_messages(text):
+    """
+    Funkce pro získaní textu validační chyby.
+    """
     if text == "Not valid":
         return VALIDATION_NOT_VALID
     elif text == "Geometry is empty":
@@ -458,6 +515,9 @@ def get_validation_messages(text):
 
 
 def get_transform_towgs84(cy, cx):
+    """
+    Funkce pro transformaci na wgs84.
+    """
     url = "https://geoportal.cuzk.cz/(S(k10mxdjzq1pv5tkgcghghohf))/WCTSHandlerhld.ashx"
 
     query = (
@@ -498,6 +558,9 @@ def get_transform_towgs84(cy, cx):
 
 
 def get_multi_transform_towgs84(jtsk_points):
+    """
+    Funkce pro transformaci více jtsk bodů na wgs84.
+    """
     logger.debug("core.utils.get_multi_transform_towgs84.start")
 
     url = "https://geoportal.cuzk.cz/(S(k10mxdjzq1pv5tkgcghghohf))/WCTSHandlerhld.ashx"
@@ -569,6 +632,9 @@ def get_multi_transform_towgs84(jtsk_points):
 
 
 def get_message(az, message):
+    """
+    Funkce pro získaní textu správy podle záznamu.
+    """
     return str(
         getattr(
             mc,
@@ -583,7 +649,8 @@ def get_message(az, message):
 
 class SearchTable(ColumnShiftTableBootstrap4):
     """
-    Base for table used in search. Added hiding and showinf columns
+    Základní setup pro tabulky používané v aplikaci. 
+    Obsahuje metódu na získaní sloupců které mají byt zobrazeny.
     """
 
     columns_to_hide = []

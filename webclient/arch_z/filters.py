@@ -49,6 +49,9 @@ from heslar.views import heslar_12
 
 
 class ArchZaznamFilter(HistorieFilter, KatastrFilter):
+    """
+    Class pro zakladní filtrování archeologických záznamů a jejich potomků.
+    """
     filter_typ = "arch_z"
 
     stav = MultipleChoiceFilter(
@@ -249,24 +252,36 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     )
 
     def filtr_katastr(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle hlavního i vedlejšího katastru.
+        """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__nazev__icontains=value)
             | Q(archeologicky_zaznam__katastry__nazev__icontains=value)
         ).distinct()
 
     def filtr_katastr_kraj(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle hlavního i vedlejšího kraje.
+        """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__kraj__in=value)
             | Q(archeologicky_zaznam__katastry__okres__kraj__in=value)
         ).distinct()
 
     def filtr_katastr_okres(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle hlavního i vedlejšího okresu.
+        """
         return queryset.filter(
             Q(archeologicky_zaznam__hlavni_katastr__okres__in=value)
             | Q(archeologicky_zaznam__katastry__okres__in=value)
         ).distinct()
 
     def filter_dj_zjisteni(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle dj_zjisteni.
+        """
         if "True" in value and "False" in value:
             return queryset.filter(
                 Q(
@@ -286,6 +301,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             ).distinct()
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle poznámky a počtu predmětu.
+        """
         return queryset.filter(
             Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__predmety__poznamka__icontains=value
@@ -296,6 +314,9 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         ).distinct()
 
     def filter_objekt_pozn_pocet(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle poznámky a počtu objektu.
+        """
         return queryset.filter(
             Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__poznamka__icontains=value
@@ -306,32 +327,50 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         ).distinct()
 
     def filter_obdobi(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle období komponenty.
+        """
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__obdobi__in=value
         ).distinct()
 
     def filter_areal(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle areálu komponenty.
+        """
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__areal__in=value
         ).distinct()
 
     def filter_predmety_druh(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle druhu předmětu komponenty.
+        """
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__predmety__druh__in=value
         ).distinct()
 
     def filter_objekty_druh(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle druhu objektu komponenty.
+        """
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__druh__in=value
         ).distinct()
 
     def filter_objekty_specifikace(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle specifikace objektu komponenty.
+        """
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__specifikace__in=value
         ).distinct()
 
 
 class AkceFilter(ArchZaznamFilter):
+    """
+    Class pro filtrování akce.
+    """
 
     typ = MultipleChoiceFilter(
         method="filter_akce_typ",
@@ -511,16 +550,25 @@ class AkceFilter(ArchZaznamFilter):
     )
 
     def filter_akce_typ(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle typu akce.
+        """
         return queryset.filter(
             Q(hlavni_typ__in=value) | Q(vedlejsi_typ__in=value)
         ).distinct()
 
     def filtr_vedouci(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle hlavního a vedlejšiho vedoucího akce.
+        """
         return queryset.filter(
             Q(hlavni_vedouci__in=value) | Q(akcevedouci__vedouci__in=value)
         ).distinct()
 
     def filter_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle lokalizace, upřesnení, uložení, označení akce.
+        """
         return queryset.filter(
             Q(lokalizace_okolnosti__icontains=value)
             | Q(souhrn_upresneni__icontains=value)
@@ -530,6 +578,9 @@ class AkceFilter(ArchZaznamFilter):
         ).distinct()
 
     def filtr_zahrnout_projektove(self, queryset, name, value):
+        """
+        Metóda pro filtrování mezi projektovými a samostatnými akcemi.
+        """
         if value is None:
             return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA).distinct()
         if "True" in value:
@@ -538,6 +589,9 @@ class AkceFilter(ArchZaznamFilter):
             return queryset.exclude(typ=Akce.TYP_AKCE_PROJEKTOVA).distinct()
 
     def filter_has_positive_find(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle toho či akce má pozitivní DJ.
+        """
         if "True" in value and "False" in value:
             return queryset
         elif "True" in value:
@@ -550,6 +604,9 @@ class AkceFilter(ArchZaznamFilter):
             ).distinct()
 
     def filter_adb_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle popisných údajů ADB.
+        """
         return queryset.filter(
             Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__adb__uzivatelske_oznaceni_sondy__icontains=value
@@ -569,6 +626,9 @@ class AkceFilter(ArchZaznamFilter):
         ).distinct()
 
     def filtr_adb_autori(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle autorů revize a popisu ADB.
+        """
         return queryset.filter(
             Q(
                 archeologicky_zaznam__dokumentacni_jednotky_akce__adb__autor_popisu__in=value
@@ -579,6 +639,9 @@ class AkceFilter(ArchZaznamFilter):
         ).distinct()
 
     def filter_adb_roky(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle roku revize a popisu ADB.
+        """
         if value:
             if value.start is not None and value.stop is not None:
                 self.lookup_expr = "range"
@@ -609,6 +672,9 @@ class AkceFilter(ArchZaznamFilter):
 
 
 class AkceFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Class pro form helper pro zobrazení formuláře.
+    """
     form_method = "GET"
     dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
         "translation": _(u"akce.filter.djPian.divider.label")

@@ -9,6 +9,9 @@ logger = logging.getLogger('python-logstash-logger')
 
 
 def validate_phone_number(number):
+    """
+    Validátor pro ověření telefonního čísla na správny formát.
+    """
     number = number.replace(" ", "")
     is_valid = False
     r = re.compile("[0-9]+")

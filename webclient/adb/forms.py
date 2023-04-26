@@ -15,6 +15,9 @@ logger = logging.getLogger('python-logstash-logger')
 
 
 class CreateADBForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení ADB.
+    """
     class Meta:
         model = Adb
         fields = (
@@ -80,16 +83,12 @@ class CreateADBForm(forms.ModelForm):
             "poznamka": _("adb.form.poznamka.tooltip"),
         }
 
-        # widgets = {
-        #     "autor_popisu": autocomplete.ModelSelect2(
-        #         url="uzivatel:osoba-autocomplete"
-        #     ),
-        #     "autor_revize": autocomplete.ModelSelect2(
-        #         url="uzivatel:osoba-autocomplete"
-        #     ),
-        # }
-
     def __init__(self, *args, readonly=False, **kwargs):
+        """
+        Init metóda pro vytvoření formuláře.
+        Args:
+            readonly (boolean): nastavuje formulář na readonly.
+        """
         super(CreateADBForm, self).__init__(*args, **kwargs)
         self.fields["uzivatelske_oznaceni_sondy"].required = False
         self.fields["autor_revize"].required = False
@@ -157,6 +156,9 @@ class CreateADBForm(forms.ModelForm):
 
 
 class VyskovyBodFormSetHelper(FormHelper):
+    """
+    Form helper pro správne vykreslení formuláře výškovího bodu.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
@@ -165,7 +167,24 @@ class VyskovyBodFormSetHelper(FormHelper):
 
 
 def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
+    """
+    Funkce která vrací formulář VB pro formset.
+
+    Args:
+        pian (pian): pian objeckt.
+
+        niveleta (niveleta): niveleta objekt.
+        
+        not_readonly (boolean): nastavuje formulář na readonly.
+    
+    Returns:
+        CreateVysovyBodForm: django model formulář VB
+    """
+    
     class CreateVyskovyBodForm(forms.ModelForm):
+        """
+        Hlavní formulář pro vytvoření, editaci a zobrazení VB.
+        """
         northing = forms.FloatField(
             label=_("adb.form.vyskovyBod.northing.label"),
             help_text=_("adb.form.vyskovyBod.northing.tooltip"),
@@ -205,6 +224,14 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             }
 
         def _has_initial_values(self):
+            """
+            Metóda která vrací či ma formulář vyplnená initial hodnota
+            Args:
+            pian (pian): pian objeckt.
+            niveleta (niveleta): niveleta objekt
+            Returns:
+            has_initial_values: boolean jestli formulář má initial hodnotu nebo ne.
+            """
             cleaned_data = self.cleaned_data
             has_initial_values = False
             if pian:
@@ -225,17 +252,28 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             return has_initial_values
 
         def is_valid(self):
+            """
+            Metóda která vrací či je formulář správne vyplněn, zakomponována metóda na vyplnení initial hodnoty.
+            """
             parent_is_valid = super().is_valid()
             if self._has_initial_values():
                 return True
             return parent_is_valid
 
         def save(self, commit=True):
+            """
+            Metóda která ukladá formulář do modelu, zakomponována metóda na vyplnení initial hodnoty.
+            """
             if self._has_initial_values():
                 return None
             return super().save(commit)
 
         def __init__(self, *args, **kwargs):
+            """
+            Init metóda pro vytvoření formuláře.
+            Args:
+            not_readonly (boolean): nastavuje formulář na readonly.
+            """
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
             self.fields["ident_cely"].required = False
 

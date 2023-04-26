@@ -1,10 +1,12 @@
 ADB
 ===
 
-This application contains the main Django settings and is used to define the global functions. Views defined in this application are general views and first level url views.
+Táto aplikácia obsahuje definici archeologických dokumentáčních bodů a výškových bodů. Obsahuje pohľady a formuláře na ich správu. 
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
    :caption: Contents:
 
    models
+   views
+   forms

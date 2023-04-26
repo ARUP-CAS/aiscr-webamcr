@@ -34,13 +34,14 @@ from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
 from django_prometheus.models import ExportModelOperationsMixin
 
-# from dj.models import DokumentacniJednotka
 
 logger = logging.getLogger('python-logstash-logger')
 
 
 class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), models.Model):
-
+    """
+    Class pro db model archeologicky_zaznam.
+    """
     TYP_ZAZNAMU_LOKALITA = "L"
     TYP_ZAZNAMU_AKCE = "A"
 
@@ -86,6 +87,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         ]
 
     def set_zapsany(self, user):
+        """
+        Metóda pro nastavení stavu zapsaný a uložení změny do historie.
+        """
         self.stav = AZ_STAV_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_AZ,
@@ -95,6 +99,11 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         self.save()
 
     def set_odeslany(self, user):
+        """
+        Metóda pro nastavení stavu odeslaný a uložení změny do historie.
+        Dokumenty se taky posouvají do stavu odeslaný.
+        Externí zdroje se posouvají do stavu zapsaný.
+        """
         self.stav = AZ_STAV_ODESLANY
         Historie(
             typ_zmeny=ODESLANI_AZ,
@@ -113,6 +122,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
             ez.set_odeslany(user)
 
     def set_archivovany(self, user):
+        """
+        Metóda pro nastavení stavu archivovaný a uložení změny do historie.
+        Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
+        """
         self.stav = AZ_STAV_ARCHIVOVANY
         Historie(
             typ_zmeny=ARCHIVACE_AZ,
@@ -128,6 +141,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
             self.set_akce_ident()
 
     def set_vraceny(self, user, new_state, poznamka):
+        """
+        Metóda pro vrácení o jeden stav méně a uložení změny do historie.
+        """
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_AZ,
@@ -138,12 +154,16 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         self.save()
 
     def check_pred_odeslanim(self):
-        # All of the events must have akce.datum_zahajeni,
-        # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
-        # Related events must have a “vedouci” and “hlavni_katastr” column filled in
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, hlavni_vedouci a hlavni_typ jsou vyplněna.
+            
+            Akce má přripojený dokument typu nálezová správa nebo je akce typu nz.
+            
+            Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
+        """
         result = []
-        # There must be a document of type “nálezová zpráva” attached to each related event,
-        # or akce.je_nz must be true.
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             required_fields = [
                 (self.akce.datum_zahajeni, _("Datum zahájení není vyplněn.")),
@@ -212,7 +232,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         return result
 
     def check_pred_archivaci(self):
-        # All documents associated with it must be archived
+        """
+        Metóda na kontrolu prerekvizit pred archivací:
+
+            všechny pripojené dokumenty jsou archivované.
+
+            všechny DJ mají potvrzený pian
+        """
         result = []
         for dc in self.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
@@ -235,6 +261,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         return result
 
     def set_lokalita_permanent_ident_cely(self):
+        """
+        Metóda pro nastavení permanentního ident celý pro lokality.
+        Metóda najde první volné místo v db.
+        """
         MAXIMAL: int = 9999999
         # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
         prefix = str(
@@ -270,6 +300,10 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         self.save()
 
     def set_akce_ident(self, ident=None):
+        """
+        Metóda pro nastavení ident celý pro akci a její relace.
+        Nastaví ident z předaného argumentu ident nebo z metódy get_akce_ident.
+        """
         if ident:
             new_ident = ident
         else:
@@ -284,6 +318,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         self.save()
 
     def get_absolute_url(self, dj_ident_cely=None):
+        """
+        Metóda pro získaní absolut url záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+        """
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
                 return reverse("arch_z:detail", kwargs={"ident_cely": self.ident_cely})
@@ -300,6 +337,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
                 )
 
     def get_redirect(self, dj_ident_cely=None):
+        """
+        Metóda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
+        """
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             if dj_ident_cely is None:
                 return redirect(reverse("arch_z:detail", self.ident_cely))
@@ -316,6 +356,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
                 )
 
     def __str__(self):
+        """
+        Metóda vráti jako str reprezentaci modelu ident_cely.
+        """
         if self.ident_cely:
             return self.ident_cely
         else:
@@ -323,6 +366,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
+    """
+    Class pro db model archeologicky_zaznam_katastr, který drží v sobe relace na další katastry arch záznamu.
+    """
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         on_delete=models.CASCADE,
@@ -338,7 +384,9 @@ class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zazna
 
 
 class Akce(ExportModelOperationsMixin("akce"), models.Model):
-
+    """
+    Class pro db model akce.
+    """
     TYP_AKCE_PROJEKTOVA = "R"
     TYP_AKCE_SAMOSTATNA = "N"
 
@@ -409,12 +457,18 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         ]
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu.
+        """
         return reverse(
             "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
         )
 
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
+    """
+    Class pro db model akce_vedouci, který drží v sobe relace na dalších vedoucích arch záznamu.
+    """
     akce = models.ForeignKey(Akce, on_delete=models.CASCADE, db_column="akce")
     vedouci = models.ForeignKey(Osoba, on_delete=models.RESTRICT, db_column="vedouci")
     organizace = models.ForeignKey(Organizace, on_delete=models.RESTRICT, db_column="organizace")
@@ -426,6 +480,9 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
+    """
+    Class pro db model externi_odkaz, který drží v sobe relace na externí odkazy arch záznamu.
+    """
     externi_zdroj = models.ForeignKey(
         ExterniZdroj,
         models.RESTRICT,
@@ -445,6 +502,10 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
 
 
 def get_akce_ident(region, temp=None, id=None):
+    """
+        Funkce pro nastavení permanentního ident celý pro akci.
+        Metóda najde první volné místo v db.
+    """
     MAXIMAL: int = 999999
     # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
     if temp:

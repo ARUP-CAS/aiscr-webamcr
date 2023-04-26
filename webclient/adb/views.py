@@ -1,15 +1,12 @@
 import logging
 
-
-from adb.forms import CreateADBForm, create_vyskovy_bod_form
+from adb.forms import CreateADBForm
 from adb.models import Adb, VyskovyBod
 from core.exceptions import DJNemaPianError, MaximalIdentNumberError
 from core.ident_cely import get_adb_ident
 from core.message_constants import (
-    ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
-    ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
     ZAZNAM_USPESNE_VYTVOREN,
 )
@@ -17,15 +14,12 @@ from dj.models import DokumentacniJednotka
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 
-import logging
 
 logger = logging.getLogger('python-logstash-logger')
 
@@ -33,6 +27,11 @@ logger = logging.getLogger('python-logstash-logger')
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
+    """
+    Pohled pro vytvoření novího ADB.
+    Pred uložením do DB se vytvoří relace na DB, nový ident celý je vygenerovaný a sm5 je přidané.
+    Po úspešném uložení je uživatel presměrován na pohled detailu DJ.
+    """
     logger.debug("adb.views.zapsat.start", extra={"dj_ident_cely": dj_ident_cely})
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     dj: DokumentacniJednotka
@@ -68,9 +67,12 @@ def zapsat(request, dj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Pohled pro smazání ADB.
+    Po úspešném smazání je uživatel presměrován na pohled detailu DJ.
+    """
     adb = get_object_or_404(Adb, ident_cely=ident_cely)
     if request.method == "POST":
-        arch_z_ident_cely = adb.dokumentacni_jednotka.archeologicky_zaznam.ident_cely
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
         resp = adb.delete()
@@ -109,6 +111,10 @@ def smazat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat_vb(request, ident_cely):
+    """
+    Pohled pro smazání VB.
+    Po úspešném smazání je uživatel presměrován na next_url z requestu.
+    """
     zaznam = get_object_or_404(VyskovyBod, id=ident_cely)
     context = {
         "object": zaznam,
@@ -128,7 +134,7 @@ def smazat_vb(request, ident_cely):
         else:
             response = redirect(request.META.get("HTTP_REFERER"))
         if resp:
-            logger.warning("adb.views.smazat.smazat_vb.deleted", extra={"resp": str(resp)})
+            logger.debug("adb.views.smazat.smazat_vb.deleted", extra={"resp": str(resp)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse({"redirect": response})
         else:

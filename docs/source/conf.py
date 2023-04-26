@@ -46,5 +46,5 @@ html_static_path = ["_static"]
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    "exclude-members": "__weakref__, DoesNotExist, MultipleObjectsReturned",
+    "exclude-members": "DoesNotExist, MultipleObjectsReturned, media",
 }

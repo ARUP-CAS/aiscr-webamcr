@@ -29,6 +29,9 @@ logger = logging.getLogger('python-logstash-logger')
 
 
 def constants_import(request):
+    """
+    Automatický import stavov projektú do kontextu všech template.
+    """
     constants_dict = {
         "PROJEKT_STAV_OZNAMENY": PROJEKT_STAV_OZNAMENY,
         "PROJEKT_STAV_ZAPSANY": PROJEKT_STAV_ZAPSANY,
@@ -45,11 +48,17 @@ def constants_import(request):
 
 
 def digi_links_from_settings(request):
+    """
+    Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
+    """
     return getattr(settings, "DIGI_LINKS")
 
 
 # for autologout function redirect immediatelly
 def auto_logout_client(request):
+    """
+    Automatický výpočet a import kontextu potrebného pro správne zobrzazení automatického logoutu na všech stránkach.
+    """
     if request.user.is_anonymous:
         return {}
 

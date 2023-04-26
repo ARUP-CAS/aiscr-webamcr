@@ -5,7 +5,6 @@ from polib import pofile
 from django.conf import settings
 import logging
 import os
-from datetime import datetime, date
 from bs4 import BeautifulSoup
 from django.core.cache import cache
 from core.constants import ROLE_NASTAVENI_ODSTAVKY
@@ -15,6 +14,11 @@ logger = logging.getLogger('python-logstash-logger')
 
 
 class OdstavkaSystemuAdmin(admin.ModelAdmin):
+    """
+    Třída admin panelu pro zobrazení odstávek systému.
+    Pomocí ní se zobrazuje tabulka s odstávkami, detail a jednotlivé akce.
+    """
+
     list_display = (
         "info_od",
         "datum_odstavky",
@@ -24,6 +28,11 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
     form = OdstavkaSystemuForm
 
     def save_model(self, request, obj, form, change):
+        """
+        Metóda na uložení modelu odstávky.
+        Jednotlivé texty z modelu se ukladají do textú prekladů a template.
+        Po uložení se restartuje wsgi pro načítaní nových prekladů.
+        """
         locale_path = settings.LOCALE_PATHS[0]
         languages = settings.LANGUAGES
         for code, lang in languages:
@@ -62,27 +71,23 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def has_module_permission(self, request):
+        """
+        Metóda pro určení práv na modul odstávky.
+        """
         return request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() > 0
 
-    def has_delete_permission(self, request, obj=None, *args):
-        if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
-            return False
-        odstavka = OdstavkaSystemu.objects.filter(
-            info_od__lte=datetime.today(), datum_odstavky__gte=datetime.today()
-        )
-        if odstavka:
-            if odstavka[0].datum_odstavky != date.today():
-                return True
-            elif odstavka[0].cas_odstavky > datetime.now().time():
-                return True
-        return False
-
     def has_view_permission(self, request, obj=None, *args):
+        """
+        Metóda pro určení práv na videní odstávky.
+        """
         if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
             return False
         return super().has_view_permission(request, obj, *args)
 
     def has_add_permission(self, request, *args):
+        """
+        Metóda pro určení práv na přidání odstávky. Není možné přidat více než jednu odstávku.
+        """
         if OdstavkaSystemu.objects.count() > 0:
             return False
         if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
@@ -90,11 +95,17 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
         return super().has_add_permission(request, *args)
 
     def has_change_permission(self, request, obj=None, *args):
+        """
+        Metóda pro určení práv pro úpravu odstávky.
+        """
         if request.user.groups.filter(id=ROLE_NASTAVENI_ODSTAVKY).count() == 0:
             return False
         return super().has_change_permission(request, obj, *args)
 
     def file_handler(self, language, form):
+        """
+        Pomocní metóda pro úpravu template zobrazených počas odstávky.
+        """
         with open("/vol/web/nginx/data/" + language + "/custom_50x.html") as fp:
             soup = BeautifulSoup(fp)
             soup.find("h1").string.replace_with(

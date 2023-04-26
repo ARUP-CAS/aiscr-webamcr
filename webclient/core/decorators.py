@@ -11,6 +11,12 @@ logger = logging.getLogger('python-logstash-logger')
 
 
 def allowed_user_groups(allowed_groups):
+    """
+    Dekorátor funkce použitý nad pohledem, na kontrolu práv uživatele na daný pohled.
+    Na vstupe je list povolených uživatelských skupin.
+    Jestli uživatel nemá jesnou z daných skupin jako hlavní tak funkce vráti exception PermissionError a nezobrazí formulár.
+    """
+
     @wraps(allowed_groups)
     def _method_wrapper(func):
         @wraps(func)
@@ -26,6 +32,10 @@ def allowed_user_groups(allowed_groups):
 
 
 def odstavka_in_progress(view_func):
+    """
+    Dekorátor funkce použitý nad pohledem, na zobrazení stránky o odstávke místo stránky oznámení a prihlášení pokud je nastavená odstívka.
+    """
+
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
         last_maintenance = cache.get("last_maintenance")

@@ -62,12 +62,16 @@ logger = logging.getLogger('python-logstash-logger')
 @login_required
 @require_http_methods(["GET"])
 def index(request):
+    "Funkce podledu pro zobrazení hlavní stránky."
     return render(request, "core/index.html")
 
 
 @login_required
 @require_http_methods(["POST", "GET"])
 def delete_file(request, pk):
+    """
+    Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
+    """
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
         s.path.delete()
@@ -113,6 +117,9 @@ def delete_file(request, pk):
 @login_required
 @require_http_methods(["GET"])
 def download_file(request, pk):
+    """
+    Funkce pohledu pro stažení souboru.
+    """
     soubor = get_object_or_404(Soubor, id=pk)
     path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
     if os.path.exists(path):
@@ -133,6 +140,9 @@ def download_file(request, pk):
 @login_required
 @require_http_methods(["GET"])
 def upload_file_projekt(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení stránky pro upload souboru k projektu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -146,6 +156,9 @@ def upload_file_projekt(request, ident_cely):
 @login_required
 @require_http_methods(["GET"])
 def upload_file_dokument(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení stránky pro upload souboru k dokumentu.
+    """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -159,6 +172,9 @@ def upload_file_dokument(request, ident_cely):
 @login_required
 @require_http_methods(["GET"])
 def update_file(request, typ_vazby, file_id):
+    """
+    Funkce pohledu pro zobrazení stránky pro upload souboru.
+    """
     ident_cely = ""
     back_url = request.GET.get("next")
     soubor = get_object_or_404(Soubor, id=file_id)
@@ -172,6 +188,9 @@ def update_file(request, typ_vazby, file_id):
 @login_required
 @require_http_methods(["GET"])
 def upload_file_samostatny_nalez(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení stránky pro upload souboru k samostatnému nálezu.
+    """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav == SN_ARCHIVOVANY:
         raise PermissionDenied()
@@ -184,6 +203,9 @@ def upload_file_samostatny_nalez(request, ident_cely):
 
 @require_http_methods(["POST"])
 def post_upload(request):
+    """
+    Funkce pohledu pro upload souboru a k navázaní ke správnemu záznamu.
+    """
     update = "fileID" in request.POST
     s = None
     if not update:
@@ -351,6 +373,9 @@ def post_upload(request):
 
 
 def get_finds_soubor_name(find, filename, add_to_index=1):
+    """
+    Funkce pro získaní jména souboru pro samostatný nález.
+    """
     my_regex = (
         r"^\d+_" + re.escape(find.ident_cely.replace("-", "")) + r"(F\d{2}\.\w+)$"
     )
@@ -379,6 +404,9 @@ def get_finds_soubor_name(find, filename, add_to_index=1):
 
 
 def get_projekt_soubor_name(file_name):
+    """
+    Funkce pro získaní jména souboru pro projekt.
+    """
     split_file = os.path.splitext(file_name)
     nfkd_form = unicodedata.normalize("NFKD", split_file[0])
     only_ascii = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
@@ -387,6 +415,9 @@ def get_projekt_soubor_name(file_name):
 
 
 def check_stav_changed(request, zaznam):
+    """
+    Funkce pro oveření jestli se zmenil stav záznamu pri uložení formuláře oproti jeho načtení.
+    """
     logger.debug("core.views.check_stav_changed.start", extra={"zaznam_id": zaznam.pk})
     if request.method == "POST":
         # TODO BR-A-5
@@ -468,6 +499,9 @@ def check_stav_changed(request, zaznam):
 @login_required
 @require_http_methods(["GET"])
 def redirect_ident_view(request, ident_cely):
+    """
+    Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
+    """
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
         logger.debug("core.views.redirect_ident_view.project", extra={"ident_cely": ident_cely})
         return redirect("projekt:detail", ident_cely=ident_cely)
@@ -577,6 +611,9 @@ def redirect_ident_view(request, ident_cely):
 @login_required
 @require_http_methods(["GET"])
 def prolong_session(request):
+    """
+    Funkce pohledu pro prodloužení prihlášení.
+    """
     options = getattr(settings, "AUTO_LOGOUT")
     current_time = now()
     session_time = seconds_until_idle_time_end(
@@ -591,6 +628,9 @@ def prolong_session(request):
 @login_required
 @require_http_methods(["POST"])
 def tr_wgs84(request):
+    """
+    Funkce pohledu pro transformaci souradnic na wsg84.
+    """
     body = json.loads(request.body.decode("utf-8"))
     [cx, cy] = get_transform_towgs84(body["cy"], body["cx"])
     if cx is not None:
@@ -605,6 +645,9 @@ def tr_wgs84(request):
 @login_required
 @require_http_methods(["POST"])
 def tr_mwgs84(request):
+    """
+    Funkce pohledu pro transformaci na wsg84.
+    """
     body = json.loads(request.body.decode("utf-8"))["points"]
     points = get_multi_transform_towgs84(body)
     if points is not None:
@@ -617,6 +660,9 @@ def tr_mwgs84(request):
 
 
 class ExportMixinDate(ExportMixin):
+    """
+    Mixin pro získaní názvu exportovaného souboru.
+    """
     def get_export_filename(self, export_format):
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         return "{}{}.{}".format(self.export_name, now, export_format)
@@ -624,7 +670,7 @@ class ExportMixinDate(ExportMixin):
 
 class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
     """
-    View used in Search lists as base for all ListViews.
+    Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
     """
     template_name = "search_list.html"
     paginate_by = 100
@@ -663,6 +709,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
 
 
 class SearchListChangeColumnsView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro změnu zobrazení sloupcu u tabulky.
+    """
     def post(self, request, *args, **kwargs):
         if "vychozi_skryte_sloupce" not in request.session:
             request.session["vychozi_skryte_sloupce"] = {}
