@@ -282,9 +282,10 @@ LOGGING = {
         }
     },
     "loggers": {
-        'django': {
-            'handlers': ["logstash", "console"],
-            'propagate': True,
+        "django.request": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+            "propagate": True,
         },
         "historie": {
             "handlers": ["logstash", "console"],
