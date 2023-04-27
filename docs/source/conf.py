@@ -19,8 +19,8 @@ django.setup()
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "aiscr-webamcr"
-copyright = "2023, HULD"
-author = "HULD"
+copyright = "CC BY 4.0"
+author = "CC BY 4.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
