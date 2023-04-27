@@ -112,7 +112,7 @@ from projekt.models import Projekt
 from services.mailer import Mailer
 
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def get_obdobi_choices():

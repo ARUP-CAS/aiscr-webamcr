@@ -33,7 +33,7 @@ from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
 from services.mailer import Mailer
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @odstavka_in_progress

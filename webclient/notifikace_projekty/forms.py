@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from dal import autocomplete
 from crispy_forms.helper import FormHelper
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 KRAJ_CONTENT_TYPE = "ruiankraj"
 OKRES_CONTENT_TYPE = "ruianokres"

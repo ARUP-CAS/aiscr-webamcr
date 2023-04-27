@@ -16,7 +16,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 import logging
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):

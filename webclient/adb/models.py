@@ -15,7 +15,7 @@ from uzivatel.models import Osoba
 import logging
 import logstash
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):

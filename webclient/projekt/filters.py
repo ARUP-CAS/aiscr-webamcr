@@ -41,7 +41,7 @@ from historie.models import Historie
 from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):

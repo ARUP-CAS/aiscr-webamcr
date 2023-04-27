@@ -27,7 +27,7 @@ from uzivatel.models import User
 import logging
 import logstash
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def validate_uzivatel_email(email):

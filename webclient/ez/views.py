@@ -55,7 +55,7 @@ from .forms import (
     PripojitExterniOdkazForm,
 )
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):

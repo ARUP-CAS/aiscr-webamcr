@@ -10,7 +10,7 @@ from heslar.models import RuianKatastr
 from pian.models import vytvor_pian
 from heslar.hesla import TYP_DJ_KATASTR
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=DokumentacniJednotka)

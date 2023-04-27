@@ -19,7 +19,7 @@ from historie.views import (
 )
 from uzivatel.models import User
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class HistorieTests(TestCase):

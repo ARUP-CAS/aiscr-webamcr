@@ -46,7 +46,7 @@ from django.contrib.contenttypes.models import ContentType
 import logging
 
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def only_notification_groups():

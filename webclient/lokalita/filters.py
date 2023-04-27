@@ -19,7 +19,7 @@ from arch_z.filters import ArchZaznamFilter
 from core.forms import SelectMultipleSeparator
 from .models import Lokalita
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class LokalitaFilter(ArchZaznamFilter):

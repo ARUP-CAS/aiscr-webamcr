@@ -20,7 +20,7 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def get_temporary_project_ident(project: Projekt, region: str) -> str:

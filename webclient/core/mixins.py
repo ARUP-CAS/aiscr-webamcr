@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 import logging
 import logstash
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class ManyToManyRestrictedClassMixin:

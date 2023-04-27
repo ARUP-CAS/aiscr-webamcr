@@ -9,7 +9,7 @@ from heslar.hesla import HESLAR_AKTIVITA
 from heslar.models import Heslar
 from komponenta.models import Komponenta
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class CreateKomponentaForm(forms.ModelForm):

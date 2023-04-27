@@ -7,7 +7,7 @@ from django.shortcuts import render
 from core.models import OdstavkaSystemu
 from django.core.cache import cache
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def allowed_user_groups(allowed_groups):

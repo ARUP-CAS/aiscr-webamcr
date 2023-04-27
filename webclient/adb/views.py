@@ -21,7 +21,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @login_required

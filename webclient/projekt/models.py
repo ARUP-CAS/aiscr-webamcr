@@ -53,7 +53,7 @@ from projekt.doc_utils import OznameniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class Projekt(ExportModelOperationsMixin("projekt"), models.Model):

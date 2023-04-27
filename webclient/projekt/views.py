@@ -100,7 +100,7 @@ from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
 
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @login_required

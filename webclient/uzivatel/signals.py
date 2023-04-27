@@ -9,7 +9,7 @@ from django.dispatch import receiver
 from services.mailer import Mailer
 from uzivatel.models import User
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=User)

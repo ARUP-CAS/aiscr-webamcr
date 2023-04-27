@@ -38,7 +38,7 @@ from heslar.models import Heslar
 from pian.forms import PianCreateForm
 from pian.models import Kladyzm, Pian
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @login_required

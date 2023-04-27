@@ -92,7 +92,7 @@ from lokalita.models import Lokalita
 from ez.models import ExterniZdroj
 from neidentakce.models import NeidentAkce
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 # Konstanty pouzite v testech
 PRESNOST_DESITKY_METRU_ID = 56

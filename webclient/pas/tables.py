@@ -8,7 +8,7 @@ from core.utils import SearchTable
 
 from .models import SamostatnyNalez, UzivatelSpoluprace
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezTable(SearchTable):

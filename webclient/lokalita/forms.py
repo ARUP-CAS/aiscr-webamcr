@@ -12,7 +12,7 @@ from .models import Lokalita
 
 import logging
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class LokalitaForm(forms.ModelForm):

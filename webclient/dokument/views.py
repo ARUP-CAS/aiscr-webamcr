@@ -123,7 +123,7 @@ from projekt.forms import PripojitProjektForm
 from core.models import Soubor
 from django.db.models import Prefetch, Subquery, OuterRef
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @login_required

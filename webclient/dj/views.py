@@ -37,7 +37,7 @@ from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @login_required

@@ -21,7 +21,7 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class UserNotificationTypeInlineForm(forms.ModelForm):

@@ -14,7 +14,7 @@ from heslar import hesla
 
 register = template.Library()
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 import logging
 import logstash
 

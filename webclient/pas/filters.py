@@ -42,7 +42,7 @@ from dokument.filters import HistorieFilter
 from heslar.views import heslar_12
 from core.forms import SelectMultipleSeparator
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezFilter(HistorieFilter):

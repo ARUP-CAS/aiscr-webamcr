@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from historie.models import HistorieVazby
 from pian.models import Pian
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=Pian)

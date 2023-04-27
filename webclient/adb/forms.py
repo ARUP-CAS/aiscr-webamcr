@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 from django.utils.safestring import mark_safe
 
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class CreateADBForm(forms.ModelForm):

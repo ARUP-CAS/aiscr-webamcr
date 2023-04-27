@@ -20,7 +20,7 @@ from . import validators
 import logging
 import logstash
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class AkceVedouciFormSetHelper(FormHelper):

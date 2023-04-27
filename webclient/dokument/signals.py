@@ -8,7 +8,7 @@ from dokument.models import Dokument, DokumentAutor, DokumentCast
 from historie.models import HistorieVazby
 from komponenta.models import KomponentaVazby
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=Dokument)

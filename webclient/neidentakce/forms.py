@@ -8,7 +8,7 @@ from django.utils.translation import gettext as _
 
 from .models import NeidentAkce
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class NeidentAkceForm(forms.ModelForm):

@@ -38,7 +38,7 @@ from .forms import LokalitaForm
 from .models import Lokalita
 from .tables import LokalitaTable
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 import logging
 import logstash
 

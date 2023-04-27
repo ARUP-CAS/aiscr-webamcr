@@ -19,7 +19,7 @@ from core.constants import (
 from core.exceptions import MaximalIdentNumberError
 from django_prometheus.models import ExportModelOperationsMixin
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):

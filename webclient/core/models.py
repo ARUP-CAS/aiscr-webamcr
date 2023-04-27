@@ -20,7 +20,7 @@ from .constants import (
     SOUBOR_RELATION_TYPE,
 )
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def get_upload_to(instance, filename):

@@ -33,7 +33,7 @@ from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, A
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):

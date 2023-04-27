@@ -25,7 +25,7 @@ from core.models import OdstavkaSystemu
 from datetime import datetime, date, timedelta
 import logging
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def constants_import(request):

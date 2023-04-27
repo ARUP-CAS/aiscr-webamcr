@@ -12,7 +12,7 @@ from core.utils import SearchTable
 
 from .models import Dokument
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class Model3DTable(SearchTable):

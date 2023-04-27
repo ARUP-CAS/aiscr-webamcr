@@ -56,7 +56,7 @@ from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @login_required

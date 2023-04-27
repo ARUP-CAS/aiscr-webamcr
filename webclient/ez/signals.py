@@ -6,7 +6,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=ExterniZdroj)

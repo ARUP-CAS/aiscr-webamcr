@@ -8,7 +8,7 @@ from heslar.hesla import HESLAR_AKTIVITA, HESLAR_AREAL, HESLAR_OBDOBI
 from heslar.models import Heslar
 from django_prometheus.models import ExportModelOperationsMixin
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class KomponentaVazby(ExportModelOperationsMixin("komponenta_vazby"), models.Model):

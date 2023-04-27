@@ -14,7 +14,7 @@ from .models import NeidentAkce
 
 import logging
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 class NeidentAkceEditView(LoginRequiredMixin, UpdateView):

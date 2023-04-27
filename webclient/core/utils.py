@@ -19,7 +19,7 @@ from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
 
-logger = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 def get_mime_type(file_name):
