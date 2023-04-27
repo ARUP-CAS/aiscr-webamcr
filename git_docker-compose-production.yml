@@ -119,7 +119,7 @@ services:
       - 9600:9600
       - 5959:5959
     volumes:
-      - logs_volume:/logs:ro
+      - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - git-reverse-proxy
