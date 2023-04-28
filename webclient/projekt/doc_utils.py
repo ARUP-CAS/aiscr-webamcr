@@ -2,6 +2,7 @@ import tempfile
 from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
+import logging
 import os
 
 
@@ -20,10 +21,7 @@ from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
 from heslar.models import RuianKraj
 
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
+logger_s = logging.getLogger(__name__)
 
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
@@ -36,7 +34,7 @@ try:
     pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
     registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
 except Exception as e:
-    logger_s.error("doc_utils", exception=e)
+    logger_s.error("doc_utils", extra={"exception": e})
 
 
 Title = "Hello world"

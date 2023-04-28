@@ -1,5 +1,6 @@
-from abc import ABC
+import logging
 
+from abc import ABC
 
 from django.contrib.gis.db import models as pgmodels
 from django.contrib.gis.db import models as pgmodels
@@ -16,10 +17,7 @@ from heslar.hesla import (
 )
 
 
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
+logger_s = logging.getLogger(__name__)
 
 
 class Heslar(ExportModelOperationsMixin("heslar"), models.Model, ManyToManyRestrictedClassMixin):

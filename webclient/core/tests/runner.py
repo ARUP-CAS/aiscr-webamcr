@@ -170,15 +170,6 @@ TEST_USER_PASSWORD = "foo1234!!!"
 
 
 class AMCRBaseTestRunner(BaseRunner):
-    def save_geographical_data(self):
-        pass
-
-    def setup_databases(self, *args, **kwargs):
-        temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
-        self.save_geographical_data()
-        self.create_common_test_records()
-        return temp_return
-
     @staticmethod
     def create_common_test_records():
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
@@ -840,6 +831,12 @@ class AMCRBaseTestRunner(BaseRunner):
 
 
 class AMCGithubTestRunner(AMCRBaseTestRunner):
+    def setup_databases(self, *args, **kwargs):
+        temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
+        self.save_geographical_data()
+        self.create_common_test_records()
+        return temp_return
+
     def save_geographical_data(self):
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, )
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
@@ -930,10 +927,11 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
 class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
     def setup_databases(self, *args, **kwargs):
         temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
+        self.save_geographical_data()
+        self.create_common_test_records()
         return temp_return
 
-    @staticmethod
-    def save_geographical_data():
+    def save_geographical_data(self):
         def item_to_str(item):
             if item is None:
                 return "null"
@@ -965,7 +963,7 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
         # execute SQL query to copy data from prod_zaloha.ruian_katastr to test_prod_zaloha.ruian_katastr
         tables = (
             ("id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en", "public.ruian_kraj"),
-            ("id, nazev, kraj, spz, kod, nazev_en, hranice, definicni_bod", "ruian_okres"),
+            ("id, nazev, kraj, spz, kod, nazev_en, hranice, ISNULL(definicni_bod, '0'), ruian_okres"),
             ("id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny", "ruian_katastr"),
         )
         for table in tables:

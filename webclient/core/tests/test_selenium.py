@@ -21,7 +21,7 @@ from core.tests.runner import TEST_USER_USERNAME, TEST_USER_PASSWORD, AMCRSeleni
 import logging
 import logstash
 
-logger_s = logging.getLogger('python-logstash-logger')
+logger = logging.getLogger(__name__)
 
 
 @unittest.skipIf(settings.SKIP_SELENIUM_TESTS, "Skipping Selenium tests")
@@ -84,8 +84,8 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     def _fill_form_fields(self, test_data):
         for item, value in test_data.items():
             field_type = value["field_type"]
-            logger_s.debug("BaseSeleniumTestClass._fill_form_fields.start", filed=item, content=value,
-                           field_type=field_type)
+            logger.debug("BaseSeleniumTestClass._fill_form_fields.start", extra={"filed": item, "content": value,
+                                                                                 "field_type": field_type})
             if field_type == "text_field":
                 self._fill_text_field(value.get("field_id"), value.get("value"))
             elif field_type == "select_picker":
@@ -95,8 +95,8 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
             elif field_type == "radio_button":
                 self._select_radion_group_item(value["item_order"])
             else:
-                logger_s.error("BaseSeleniumTestClass._fill_form_fields.unknown_field_type",
-                               field_type=field_type, value=value)
+                logger.error("BaseSeleniumTestClass._fill_form_fields.unknown_field_type",
+                             extra={"field_type": field_type, "value": value})
 
     def login(self):
         port = self.server_thread.port

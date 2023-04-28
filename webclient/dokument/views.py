@@ -1180,7 +1180,7 @@ def create_model_3D(request):
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
-    logger.debug("dokument.views.odeslat.start", ident_cely=ident_cely)
+    logger.debug("dokument.views.odeslat.start", extra={"ident_cely": ident_cely})
     if d.stav != D_STAV_ZAPSANY:
         logger.debug("dokument.views.odeslat.permission_denied", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)

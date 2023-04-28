@@ -274,7 +274,6 @@ LOGGING = {
             'version': 1,
             'message_type': 'logstash',
             'fqdn': False,
-            'tags': ['myapp'],
         },
         "console": {
             "class": "logging.StreamHandler",
@@ -286,6 +285,10 @@ LOGGING = {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
             "propagate": True,
+        },
+        "tests": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
         },
         "historie": {
             "handlers": ["logstash", "console"],
@@ -364,6 +367,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "django_cron": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "notifikace_projekty": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
