@@ -36,6 +36,9 @@ def merge_heslare(first, second):
     except ProgrammingError as err:
         # This error will always be shown before
         logger.debug("heslar.views.merge_heslare.error", extra={"err": err})
+    except OperationalError as err:
+        # This error will always be shown before
+        logger.debug("heslar.views.merge_heslare.error", extra={"err": err})
     return data
 
 

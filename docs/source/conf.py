@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../webclient"))
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.production")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.docs")
 
 # Setup Django
 import django
@@ -48,3 +48,5 @@ autodoc_default_options = {
     "member-order": "bysource",
     "exclude-members": "DoesNotExist, MultipleObjectsReturned, media",
 }
+
+autodoc_mock_imports = ["django_prometheus"]

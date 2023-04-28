@@ -9,12 +9,13 @@ Dokumentace webu archeologického ústavu
 Repozitář obsahuje webovou aplikaci pro archeologický ústav České republiky.
 Aplikace je psaná pomocí frameworku Django a je rozdelená do funkčních modulů.
 
-Dokumentace je delená na část popisující adresarovou strukturu a skripty obsáhle v ní a část popisující samotný moduly.
+Dokumentace je delená na část popisující nasazování, adresarovou strukturu a skripty obsáhle v ní a část popisující samotný moduly.
 
 .. toctree::
    :maxdepth: 2
    :caption: Obsah:
    
+   nasazovani
    file_documentation
    code_documentation
 
