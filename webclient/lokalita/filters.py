@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaFilter(ArchZaznamFilter):
+    """
+    Třída pro zakladní filtrování lokality a jejich potomků.
+    """
     typ_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_TYP),
         label=_("lokalita.filter.typLokality.label"),
@@ -55,6 +58,9 @@ class LokalitaFilter(ArchZaznamFilter):
     )
 
     def filter_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle názvu, popisu, uživatelského označení a poznámek.
+        """
         return queryset.filter(
             Q(nazev__icontains=value)
             | Q(popis__icontains=value)
@@ -76,6 +82,9 @@ class LokalitaFilter(ArchZaznamFilter):
 
 
 class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Třída pro správne zobrazení filtru.
+    """
     form_method = "GET"
     dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
         "translation": _(u"lokalita.filter.djPian.divider.label")

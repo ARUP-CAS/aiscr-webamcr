@@ -12,6 +12,9 @@ from .models import ExterniZdroj
 
 
 class ExtZdrojAutoriColumn(tables.Column):
+    """
+    Třída pro sloupec autori externího zdroje, kvůli zohlednení pořadí zadání.
+    """
     def render(self, record, value):
         if value:
             osoby = Osoba.objects.filter(
@@ -39,6 +42,9 @@ class ExtZdrojAutoriColumn(tables.Column):
 
 
 class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
+    """
+    Třída pro sloupec editori externího zdroje, kvůli zohlednení pořadí zadání.
+    """
     def render(self, record, value):
         if value:
             osoby = Osoba.objects.filter(
@@ -66,6 +72,9 @@ class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
 
 
 class ExterniZdrojTable(SearchTable):
+    """
+    Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
+    """
     ident_cely = tables.Column(linkify=True)
     autor = ExtZdrojAutoriColumn(default="", accessor="autori__all")
     editor = ExtZdrojEditoriColumn(default="", accessor="editori__all")

@@ -1,5 +1,5 @@
 Lokalita pohledy
-=======================
+=================
 
 Definice pohledů.
 

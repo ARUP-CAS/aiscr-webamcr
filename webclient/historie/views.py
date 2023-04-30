@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, ListView):
+    """
+    Třida pohledu pro zobrazení historie záznamu.
+    Třída se dedí pro jednotlivá historie.
+    """
     table_class = HistorieTable
     model = Historie
     template_name = "historie/historie_list.html"
@@ -30,6 +34,9 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
 
 
 class ProjektHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie projektu.
+    """
     def get_queryset(self):
         projekt_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
@@ -45,6 +52,9 @@ class ProjektHistorieListView(HistorieListView):
 
 
 class AkceHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie akcií.
+    """
     def get_queryset(self):
         akce_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
@@ -60,6 +70,9 @@ class AkceHistorieListView(HistorieListView):
 
 
 class DokumentHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie dokumentů.
+    """
     def get_queryset(self):
         dokument_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
@@ -78,6 +91,9 @@ class DokumentHistorieListView(HistorieListView):
 
 
 class SamostatnyNalezHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie samostatných nálezů.
+    """
     def get_queryset(self):
         sn_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
@@ -95,6 +111,9 @@ class SamostatnyNalezHistorieListView(HistorieListView):
 
 
 class SpolupraceHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie spolupráce.
+    """
     def get_queryset(self):
         spoluprace_ident = self.kwargs["pk"]
         return self.model.objects.filter(
@@ -109,6 +128,9 @@ class SpolupraceHistorieListView(HistorieListView):
 
 
 class SouborHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie souborů.
+    """
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         soubor_id = self.kwargs["soubor_id"]
@@ -130,6 +152,9 @@ class SouborHistorieListView(HistorieListView):
 
 
 class LokalitaHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie lokalit.
+    """
     def get_queryset(self):
         lokalita_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
@@ -145,6 +170,9 @@ class LokalitaHistorieListView(HistorieListView):
 
 
 class UzivatelHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie uživatele.
+    """
     def get_queryset(self):
         user_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(
@@ -160,6 +188,9 @@ class UzivatelHistorieListView(HistorieListView):
 
 
 class ExterniZdrojHistorieListView(HistorieListView):
+    """
+    Třida pohledu pro zobrazení historie externích zdrojů.
+    """
     def get_queryset(self):
         ez_ident = self.kwargs["ident_cely"]
         return self.model.objects.filter(

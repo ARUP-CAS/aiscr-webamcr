@@ -1,5 +1,5 @@
 Nalez
-===============
+======
 
 Táto aplikácia obsahuje definici nálezů. Obsahuje pohľady a formuláře na ich správu. 
 

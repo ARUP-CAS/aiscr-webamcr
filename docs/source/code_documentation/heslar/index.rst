@@ -9,5 +9,5 @@ Táto aplikácia obsahuje definici heslaře. Obsahuje pohľady a admin panel na 
 
    models
    views
-   forms
+   admin
    

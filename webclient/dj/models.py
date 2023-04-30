@@ -11,6 +11,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 
 class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), models.Model):
+    """
+    Class pro db model dokumentační jednotky.
+    """
     typ = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -48,6 +51,9 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolute url pro arch záznam pro dokumentační jednotku.
+        """
         if self.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             return reverse("arch_z:detail-dj", args=[self.archeologicky_zaznam.ident_cely, self.ident_cely])
         else:
@@ -58,6 +64,9 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         return self.ident_cely.replace("-", "_")
 
     def has_adb(self):
+        """
+        Metóda pro ověření jestli dokumentační jednotka má ADB.
+        """
         has_adb = False
         try:
             has_adb = self.adb is not None

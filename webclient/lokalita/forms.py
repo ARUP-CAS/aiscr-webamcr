@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení lokality.
+    """
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),
         help_text=_("lokalita.forms.typLokality.label"),

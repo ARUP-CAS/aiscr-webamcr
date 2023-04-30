@@ -46,7 +46,7 @@ html_static_path = ["_static"]
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    "exclude-members": "DoesNotExist, MultipleObjectsReturned, media",
+    "exclude-members": "DoesNotExist, MultipleObjectsReturned, media, render, order",
 }
 
 autodoc_mock_imports = ["django_prometheus"]

@@ -1,4 +1,4 @@
-Dokumentace modulů
+Moduly aplikace
 ==================
 
 Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Každá aplikace je definována pro správu určité funkce v projektu. 
@@ -18,3 +18,6 @@ Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Ka�
    code_documentation/komponenta/index
    code_documentation/lokalita/index
    code_documentation/nalez/index
+   code_documentation/neidentakce/index
+   code_documentation/notifikace_projekty/index
+   code_documentation/oznameni/index

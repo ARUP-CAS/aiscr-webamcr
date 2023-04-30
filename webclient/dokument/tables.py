@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class Model3DTable(SearchTable):
-
+    """
+    Class pro definování tabulky pro modelu 3D použitých pro zobrazení přehledu modelu 3D a exportu.
+    """
     ident_cely = tables.Column(linkify=True)
     typ_dokumentu = tables.columns.Column(default="")
     organizace__nazev_zkraceny = tables.columns.Column(default="")
@@ -47,6 +49,9 @@ class Model3DTable(SearchTable):
 
 
 class AutorColumn(tables.Column):
+    """
+    Class pro definování sloupce autor a toho jak se zobrazuje aby bylo dodrženo pořadí.
+    """
     def render(self, record, value):
         osoby = Osoba.objects.filter(
             dokumentautor__dokument__ident_cely=record
@@ -60,7 +65,9 @@ class AutorColumn(tables.Column):
 
 
 class DokumentTable(SearchTable):
-
+    """
+    Class pro definování tabulky pro dokumenty použitých pro zobrazení přehledu dokumentů a exportu.
+    """
     ident_cely = tables.Column(linkify=True)
     typ_dokumentu = tables.columns.Column(default="")
     organizace__nazev_zkraceny = tables.columns.Column(
@@ -102,6 +109,9 @@ class DokumentTable(SearchTable):
     first_columns = None
 
     def render_nahled(self, value, record):
+        """
+        Metóda pro správne zobrazení náhledu souboru.
+        """
         if len(record.soubory.first_soubor)>0:
             soubor = record.soubory.first_soubor[0]
         else: 

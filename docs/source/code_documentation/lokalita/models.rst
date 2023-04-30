@@ -1,9 +1,7 @@
-Externí zdroje modely
+Lokalita modely
 ======================
 
 Definice modelů a signálů.
 
-.. automodule:: ez.models
-    :members:
-.. automodule:: ez.signals
+.. automodule:: lokalita.models
     :members:

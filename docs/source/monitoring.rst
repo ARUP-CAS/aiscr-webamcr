@@ -1,4 +1,4 @@
-Nasazování aplikace
+Monitoring aplikace
 ================================
 
 Zde nalezneme dokumentaci nasazování aplikace.

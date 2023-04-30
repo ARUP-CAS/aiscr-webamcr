@@ -28,6 +28,9 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojFilter(HistorieFilter):
+    """
+    Třída pro zakladní filtrování externího zdroju a jejich potomků.
+    """
     stav = MultipleChoiceFilter(
         choices=ExterniZdroj.STATES,
         field_name="stav",
@@ -135,6 +138,9 @@ class ExterniZdrojFilter(HistorieFilter):
     )
 
     def filter_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
+        """
         return queryset.filter(
             Q(nazev__icontains=value)
             | Q(edice_rada__icontains=value)
@@ -147,12 +153,18 @@ class ExterniZdrojFilter(HistorieFilter):
         )
 
     def filter_akce_ident(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle identu celý akce.
+        """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
             externi_odkazy_zdroje__archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,
         )
 
     def filter_lokalita_ident(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle identu celý lokality.
+        """
         return queryset.filter(
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
             externi_odkazy_zdroje__archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
@@ -182,6 +194,9 @@ class ExterniZdrojFilter(HistorieFilter):
 
 
 class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Třída pro správne zobrazení filtru.
+    """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
         "translation": _(u"externiZdroj.filter.history.divider.label")

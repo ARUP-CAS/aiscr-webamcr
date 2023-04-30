@@ -19,6 +19,9 @@ CONTENT_TYPES = [KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, KATASTR_CONTENT_TYPE]
 
 
 def create_pes_form(not_readonly=True, model_typ=None):
+    """
+    Funkce která vrací formulář hlídacího psa pro formset.
+    """
     class PesForm(forms.ModelForm):
         class Meta:
             model = Pes

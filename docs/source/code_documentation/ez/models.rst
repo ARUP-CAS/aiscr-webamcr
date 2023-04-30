@@ -1,5 +1,5 @@
-Externí zdroje modely
-======================
+Externí zdroje modely a signály
+================================
 
 Definice modelů a signálů.
 

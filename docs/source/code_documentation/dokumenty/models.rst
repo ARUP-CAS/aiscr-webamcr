@@ -1,4 +1,4 @@
-Dokumenty modely
+Dokumenty modely a signály
 ===========================
 
 Definice modelů a signálů.

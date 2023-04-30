@@ -1,5 +1,5 @@
-DJ modely
-===========
+DJ modely a signály
+====================
 
 Definice modelů a signálu.
 

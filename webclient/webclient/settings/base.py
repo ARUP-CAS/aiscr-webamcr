@@ -255,7 +255,6 @@ LOGOUT_REDIRECT_URL = "/"
 
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
-"""
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -369,7 +368,6 @@ LOGGING = {
         },
     },
 }
-"""
 
 COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
 STATICFILES_FINDERS = [

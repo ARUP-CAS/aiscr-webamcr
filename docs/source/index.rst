@@ -16,6 +16,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    :caption: Obsah:
    
    nasazovani
+   monitoring
    file_documentation
    code_documentation
 

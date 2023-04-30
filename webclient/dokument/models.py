@@ -55,6 +55,9 @@ logger = logging.getLogger(__name__)
 
 
 class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
+    """
+    Class pro db model dokument.
+    """
     STATES = (
         (D_STAV_ZAPSANY, "D1 - Zapsán"),
         (D_STAV_ODESLANY, "D2 - Odeslán"),
@@ -165,6 +168,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         return self.ident_cely
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle typu dokumentu.
+        """
         if "3D" in self.ident_cely:
             return reverse(
                 "dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely}
@@ -172,6 +178,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_zapsany(self, user):
+        """
+        Metóda pro nastavení stavu zapsaný a uložení změny do historie.
+        """
         self.stav = D_STAV_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_DOK,
@@ -181,6 +190,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         self.save()
 
     def set_odeslany(self, user):
+        """
+        Metóda pro nastavení stavu odeslaný a uložení změny do historie.
+        """
         self.stav = D_STAV_ODESLANY
         Historie(
             typ_zmeny=ODESLANI_DOK,
@@ -190,6 +202,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         self.save()
 
     def set_archivovany(self, user):
+        """
+        Metóda pro nastavení stavu archivovaný a uložení změny do historie.
+        """
         self.stav = D_STAV_ARCHIVOVANY
         if not self.datum_zverejneni:
             self.set_datum_zverejneni()
@@ -201,6 +216,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         self.save()
 
     def set_vraceny(self, user, new_state, poznamka):
+        """
+        Metóda pro vrácení o jeden stav méně a uložení změny do historie.
+        """
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_DOK,
@@ -211,6 +229,15 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         self.save()
 
     def check_pred_odeslanim(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
+            
+            polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
+            
+            Dokument má aspoň jeden dokument.
+        """
         result = []
 
         if "3D" in self.ident_cely:
@@ -241,6 +268,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         return result
 
     def check_pred_archivaci(self):
+        """
+        Metóda na kontrolu prerekvizit pred archivací:
+
+            Dokument má aspoň jeden dokument.
+        """
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
@@ -248,6 +280,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         return result
 
     def has_extra_data(self):
+        """
+        Metóda na zjištení že dokument má extra data.
+        """
         has_extra_data = False
         try:
             has_extra_data = self.extra_data is not None
@@ -256,6 +291,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         return has_extra_data
 
     def get_komponenta(self):
+        """
+        Metóda na získaní všech komponent dokumentu.
+        """
         if "3D" in self.ident_cely:
             try:
                 return self.casti.all()[0].komponenty.komponenty.all()[0]
@@ -266,6 +304,11 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
             return None
 
     def set_permanent_ident_cely(self, rada):
+        """
+        Metóda pro nastavení permanentního ident celý pro dokument.
+        Metóda bere pořadoví číslo z db dokument sekvence.
+        Metóda zmení i ident připojených souborů.
+        """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
@@ -329,6 +372,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         self.save()
 
     def set_datum_zverejneni(self):
+        """
+        metóda pro nastavení datumu zvěřejnení.
+        """
         new_date = datetime.date.today()
         new_month = new_date.month + self.organizace.mesicu_do_zverejneni
         year = new_date.year + (math.floor(new_month / 12))
@@ -341,6 +387,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
+    """
+    Class pro db model dokument část.
+    """
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         models.SET_NULL,
@@ -381,6 +430,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
         ]
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url.
+        """
         return reverse(
             "dokument:detail-cast",
             kwargs={
@@ -391,6 +443,9 @@ class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
 
 
 class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
+    """
+    Class pro db model dokument extra data.
+    """
     dokument = models.OneToOneField(
         Dokument,
         on_delete=models.CASCADE,
@@ -470,6 +525,9 @@ class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), model
 
 
 class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
+    """
+    Class pro db model dokument autori. Obsahuje pořadí.
+    """
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
     poradi = models.IntegerField()
@@ -481,6 +539,9 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
+    """
+    Class pro db model dokument jazyky.
+    """
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -502,6 +563,9 @@ class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
 
 
 class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
+    """
+    Class pro db model dokument osoby.
+    """
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
     osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
@@ -511,6 +575,9 @@ class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
 
 
 class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Model):
+    """
+    Class pro db model dokument posudky.
+    """
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -532,6 +599,9 @@ class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Mod
 
 
 class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
+    """
+    Class pro db model tvary.
+    """
     dokument = models.ForeignKey(
         Dokument, on_delete=models.CASCADE, db_column="dokument"
     )
@@ -544,6 +614,9 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):
+    """
+    Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
+    """
     rada = models.CharField(max_length=4)
     rok = models.IntegerField()
     sekvence = models.IntegerField()
@@ -553,6 +626,9 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
 
 
 class Let(ExportModelOperationsMixin("let"), models.Model):
+    """
+    Class pro db model let.
+    """
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
     datum = models.DateField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
@@ -608,6 +684,9 @@ class Let(ExportModelOperationsMixin("let"), models.Model):
 
 
 def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+    """
+    Funkce pro získaní správného jména souboru.
+    """
     my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
     files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})

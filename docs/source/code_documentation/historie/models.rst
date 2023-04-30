@@ -1,9 +1,7 @@
-Historie modely a admin
-========================
+Historie modely
+===============
 
-Definice modelů a admin panelu.
+Definice modelů.
 
 .. automodule:: historie.models
-    :members:
-.. automodule:: historie.admin
     :members:

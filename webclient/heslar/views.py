@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete ruian katastru.
+    """
     def get_queryset(self):
         qs = RuianKatastr.objects.all()
         if self.q:
@@ -25,6 +28,9 @@ class RuianKatastrAutocomplete(autocomplete.Select2QuerySetView):
 
 
 def merge_heslare(first, second):
+    """
+    Pomocní funkce pro vytvoření dvoustupňového selectu.
+    """
     data = [("", "")]
     try:
         for k in first:
@@ -43,6 +49,9 @@ def merge_heslare(first, second):
 
 
 def heslar_12(druha, prvni_kat,id=False):
+    """
+    Funkce pro vytvoření dvoustupňového selectu.
+    """
     druha = (
         Heslar.objects.filter(nazev_heslare=druha)
         .order_by("razeni")
@@ -57,6 +66,9 @@ def heslar_12(druha, prvni_kat,id=False):
 
 
 def zjisti_katastr_souradnic(request):
+    """
+    Funkce pohledu pro vrácení katastru podle souradnic.
+    """
     nalezene_katastry = RuianKatastr.objects.filter(
         hranice__contains=Point(
             float(request.GET.get("long", 0)), float(request.GET.get("lat", 0))
@@ -73,6 +85,9 @@ def zjisti_katastr_souradnic(request):
         return JsonResponse({})
 
 def zjisti_vychozi_hodnotu(request):
+    """
+    Funkce pohledu pro zjištení výchozí hodnoty z heslaře.
+    """
     nadrazene = request.GET.get("nadrazene", 0)
     vychozi_hodnota = HeslarHierarchie.objects.filter(heslo_nadrazene=nadrazene, typ="výchozí hodnota")
     if vychozi_hodnota.exists():
@@ -90,6 +105,9 @@ def zjisti_vychozi_hodnotu(request):
 
 
 def zjisti_nadrazenou_hodnotu(request):
+    """
+    Funkce pohledu pro zjištení nadřazené hodnoty z heslaře.
+    """
     podrazene = request.GET.get("podrazene", 0)
     i = 0
     while i < int(request.GET.get("iterace", 1)):
@@ -109,6 +127,9 @@ def zjisti_nadrazenou_hodnotu(request):
 
 
 class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete dokument typu.
+    """
     def get_queryset(self):
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
             id__in=MODEL_3D_DOKUMENT_TYPES
@@ -117,6 +138,9 @@ class DokumentTypAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetVi
 
 
 class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete dokument formatu.
+    """
     def get_queryset(self):
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
             heslo__startswith="3D"
@@ -125,6 +149,9 @@ class DokumentFormatAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySe
 
 
 class PristupnostAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete pristupnosti.
+    """
     def get_queryset(self):
         qs = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST)
         return qs

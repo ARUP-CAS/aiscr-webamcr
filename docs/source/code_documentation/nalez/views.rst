@@ -1,5 +1,5 @@
 Nalez pohledy
-=======================
+==============
 
 Definice pohledů.
 
