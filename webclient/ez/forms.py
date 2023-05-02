@@ -22,6 +22,9 @@ logger_s = logging.getLogger('python-logstash-logger')
 
 
 class ExterniZdrojForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju.
+    """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
@@ -220,6 +223,9 @@ class ExterniZdrojForm(forms.ModelForm):
                                                          + " disabled-text-area"
 
 class ExterniOdkazForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci externího odkazu.
+    """
     class Meta:
         model = ExterniOdkaz
         fields = ("paginace",)
@@ -237,6 +243,9 @@ class ExterniOdkazForm(forms.ModelForm):
 
 
 class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
+    """
+    Hlavní formulář pro připojení archeologického záznamu.
+    """
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         if dok:
@@ -276,6 +285,9 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
 
 
 class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
+    """
+    Hlavní formulář pro připojení externího zdroju.
+    """
     def __init__(self, *args, **kwargs):
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         new_choices = list(

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def create_arch_z_vazby(sender, instance, **kwargs):
     """
         Metóda pro vytvoření historických vazeb arch záznamu.
-        metóda se volá pred uložením arch záznamu.
+        Metóda se volá pred uložením arch záznamu.
     """
     if instance.pk is None:
         logger.debug(

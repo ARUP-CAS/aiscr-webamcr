@@ -65,6 +65,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_detail_context(sn, request):
+    """
+    Funkce pro získaní potřebného kontextu pro samostatný nález.
+    """
     context = {"sn": sn}
     context["form"] = CreateSamostatnyNalezForm(
         instance=sn, readonly=True, user=request.user
@@ -83,12 +86,18 @@ def get_detail_context(sn, request):
 @login_required
 @require_http_methods(["GET"])
 def index(request):
+    """
+    Funkce pohledu pro zobrazení domovské stránky samostatného nálezu s navigačními možnostmi.
+    """
     return render(request, "pas/index.html")
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request, ident_cely=None):
+    """
+    Funkce pohledu pro vytvoření samostatného nálezu.
+    """
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -164,6 +173,9 @@ def create(request, ident_cely=None):
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení detailu samostatného nálezu.
+    """
     context = {"warnings": request.session.pop("temp_data", None)}
     sn = get_object_or_404(
         SamostatnyNalez.objects.select_related(
@@ -217,6 +229,9 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro editaci samostatného nálezu.
+    """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav == SN_ARCHIVOVANY:
         raise PermissionDenied()
@@ -315,6 +330,9 @@ def edit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_ulozeni(request, ident_cely):
+    """
+    Funkce pohledu pro editaci uložení samostatného nálezu pomocí modalu.
+    """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     predano_required = True if sn.stav == SN_POTVRZENY else False
     if check_stav_changed(request, sn):
@@ -361,6 +379,9 @@ def edit_ulozeni(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
+    """
+    Funkce pohledu pro vrácení stavu samostatného nálezu pomocí modalu.
+    """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if not SN_ARCHIVOVANY >= sn.stav > SN_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -402,6 +423,9 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
+    """
+    Funkce pohledu pro odeslání samostatného nálezu pomocí modalu.
+    """
     sn = get_object_or_404(
         SamostatnyNalez.objects.select_related(
             "soubory",
@@ -457,6 +481,9 @@ def odeslat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def potvrdit(request, ident_cely):
+    """
+    Funkce pohledu pro potvrzení samostatného nálezu pomocí modalu.
+    """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -499,6 +526,9 @@ def potvrdit(request, ident_cely):
 
 
 def archivovat(request, ident_cely):
+    """
+    Funkce pohledu pro archivaci samostatného nálezu pomocí modalu.
+    """
     sn = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if sn.stav != SN_POTVRZENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -532,6 +562,9 @@ def archivovat(request, ident_cely):
 
 
 class SamostatnyNalezListView(SearchListView):
+    """
+    Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky.
+    """
     table_class = SamostatnyNalezTable
     model = SamostatnyNalez
     template_name = "pas/samostatny_nalez_list.html"
@@ -567,6 +600,9 @@ class SamostatnyNalezListView(SearchListView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro smazání samostatného nálezu pomocí modalu.
+    """
     nalez = get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if check_stav_changed(request, nalez):
         return JsonResponse(
@@ -606,6 +642,9 @@ def smazat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zadost(request):
+    """
+    Funkce pohledu pro vytvoření žádosti o spolupráci.
+    """
     if request.method == "POST":
         logger.debug("pas.views.zadost.start")
         form = CreateZadostForm(request.POST)
@@ -676,6 +715,9 @@ def zadost(request):
 
 
 class UzivatelSpolupraceListView(SearchListView):
+    """
+    Třída pohledu pro zobrazení přehledu spoluprác s filtrem v podobe tabulky.
+    """
     table_class = UzivatelSpolupraceTable
     model = UzivatelSpoluprace
     template_name = "pas/uzivatel_spoluprace_list.html"
@@ -702,6 +744,9 @@ class UzivatelSpolupraceListView(SearchListView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def aktivace(request, pk):
+    """
+    Funkce pohledu pro aktivaci spolupráce pomocí modalu.
+    """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
         spoluprace.set_aktivni(request.user)
@@ -735,6 +780,9 @@ def aktivace(request, pk):
 @login_required
 @require_http_methods(["GET", "POST"])
 def deaktivace(request, pk):
+    """
+    Funkce pohledu pro deaktivaci spolupráce pomocí modalu.
+    """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
         spoluprace.set_neaktivni(request.user)
@@ -767,6 +815,9 @@ def deaktivace(request, pk):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat_spolupraci(request, pk):
+    """
+    Funkce pohledu pro smazání spolupráce pomocí modalu.
+    """
     spoluprace = get_object_or_404(UzivatelSpoluprace, id=pk)
     if request.method == "POST":
         historie = spoluprace.historie
@@ -800,6 +851,9 @@ def smazat_spolupraci(request, pk):
 
 
 def get_history_dates(historie_vazby):
+    """
+    Funkce pro získaní historických datumu.
+    """
     historie = {
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN),
@@ -810,6 +864,9 @@ def get_history_dates(historie_vazby):
 
 
 def get_detail_template_shows(sn):
+    """
+    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
+    """
     show_vratit = sn.stav > SN_ZAPSANY
     show_odeslat = sn.stav == SN_ZAPSANY
     show_potvrdit = sn.stav == SN_ODESLANY
@@ -831,6 +888,9 @@ def get_detail_template_shows(sn):
 
 @require_http_methods(["POST"])
 def post_point_position_2_katastre(request):
+    """
+    Funkce pro získaní názvu katastru z bodu.
+    """
     body = json.loads(request.body.decode("utf-8"))
     logger.warning("pas.views.post_point_position_2_katastre", extra={"body": body})
     katastr_name = get_cadastre_from_point(Point(body["cX"], body["cY"]))
@@ -847,6 +907,9 @@ def post_point_position_2_katastre(request):
 
 @require_http_methods(["POST"])
 def post_point_position_2_katastre_with_geom(request):
+    """
+    Funkce pro získaní názvu katastru, geomu z bodu.
+    """
     body = json.loads(request.body.decode("utf-8"))
     [katastr_name, katastr_db, katastr_geom] = get_cadastre_from_point_with_geometry(
         Point(body["cX"], body["cY"])
@@ -865,6 +928,17 @@ def post_point_position_2_katastre_with_geom(request):
 
 
 def get_required_fields(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu samostatného nálezu.
+
+    Args:     
+        zaznam (PAS): model samostatního nálezu pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav

@@ -50,7 +50,7 @@ from heslar.views import heslar_12
 
 class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     """
-    Class pro zakladní filtrování archeologických záznamů a jejich potomků.
+    Třída pro zakladní filtrování archeologických záznamů a jejich potomků.
     """
     filter_typ = "arch_z"
 

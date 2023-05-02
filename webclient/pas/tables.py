@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezTable(SearchTable):
-
+    """
+    Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
+    """
     ident_cely = tables.Column(linkify=True)
     katastr = tables.Column(verbose_name=_("Katastrální území"), default="")
     datum_nalezu = tables.columns.DateTimeColumn(format="Y-m-d", default="")
@@ -50,7 +52,9 @@ class SamostatnyNalezTable(SearchTable):
 
 
 class UzivatelSpolupraceTable(SearchTable):
-
+    """
+    Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
+    """
     stav = tables.Column(
         verbose_name="Stav", default=""
     )

@@ -12,6 +12,9 @@ from .models import Lokalita
 
 
 class DalsiKatastryColumn(tables.Column):
+    """
+    Třída pro sloupec další katastry lokality.
+    """
     def render(self, value):
         if value:
             items = []
@@ -40,6 +43,9 @@ class DalsiKatastryColumn(tables.Column):
 
 
 class LokalitaTable(SearchTable):
+    """
+    Class pro definování tabulky pro lokaity použitých pro zobrazení přehledu lokalit a exportu.
+    """
     ident_cely = tables.Column(
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )

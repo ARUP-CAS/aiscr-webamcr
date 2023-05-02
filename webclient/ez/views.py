@@ -59,10 +59,16 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro zobrazení domovské stránky externích zdrojů s navigačními možnostmi.
+    """
     template_name = "ez/index.html"
 
 
 class ExterniZdrojListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s externím zdrojem.
+    """
     table_class = ExterniZdrojTable
     model = ExterniZdroj
     filterset_class = ExterniZdrojFilter
@@ -91,6 +97,9 @@ class ExterniZdrojListView(SearchListView):
 
 
 class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
+    """
+    Třida pohledu pro zobrazení detailu externího zdroju.
+    """
     model = ExterniZdroj
     template_name = "ez/detail.html"
     slug_field = "ident_cely"
@@ -128,6 +137,9 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
 
 
 class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
+    """
+    Třida pohledu pro vytvoření externího zdroje.
+    """
     model = ExterniZdroj
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
@@ -168,6 +180,9 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
 
 
 class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třida pohledu pro editaci externího zdroje.
+    """
     model = ExterniZdroj
     template_name = "ez/create.html"
     form_class = ExterniZdrojForm
@@ -203,6 +218,9 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
 
 
 class TransakceView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro změnu stavu a práci s externíma zdrojama cez modal, která se dedí pro jednotlivá změny.
+    """
     template_name = "core/transakce_modal.html"
     title = "title"
     id_tag = "id_tag"
@@ -261,6 +279,9 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
 
 class ExterniZdrojOdeslatView(TransakceView):
+    """
+    Třida pohledu pro odeslání externího zdroje pomoci modalu.
+    """
     title = _("externiZdroj.modalForm.odeslat.title.text")
     id_tag = "odeslat-ez-form"
     button = _("externiZdroj.modalForm.odeslat.submit.button")
@@ -270,6 +291,9 @@ class ExterniZdrojOdeslatView(TransakceView):
 
 
 class ExterniZdrojPotvrditView(TransakceView):
+    """
+    Třida pohledu pro potvrzení externího zdroje pomoci modalu.
+    """
     title = _("externiZdroj.modalForm.potvrdit.title.text")
     id_tag = "potvrdit-ez-form"
     button = _("externiZdroj.modalForm.potvrdit.submit.button")
@@ -279,6 +303,9 @@ class ExterniZdrojPotvrditView(TransakceView):
 
 
 class ExterniZdrojSmazatView(TransakceView):
+    """
+    Třida pohledu pro smazání externího zdroje pomoci modalu.
+    """
     title = _("externiZdroj.modalForm.smazat.title.text")
     id_tag = "smazat-ez-form"
     button = _("externiZdroj.modalForm.smazat.submit.button")
@@ -298,6 +325,9 @@ class ExterniZdrojSmazatView(TransakceView):
 
 
 class ExterniZdrojVratitView(TransakceView):
+    """
+    Třida pohledu pro vrácení externího zdroje pomoci modalu.
+    """
     title = _("externiZdroj.modalForm.vratit.title.text")
     id_tag = "vratit-ez-form"
     button = _("externiZdroj.modalForm.vratit.submit.button")
@@ -329,6 +359,9 @@ class ExterniZdrojVratitView(TransakceView):
 
 
 class ExterniOdkazOdpojitView(TransakceView):
+    """
+    Třida pohledu pro odpojení externího odkazu pomoci modalu.
+    """
     title = _("externiZdroj.modalForm.odpojitAZ.title.text")
     id_tag = "odpojit-az-form"
     button = _("externiZdroj.modalForm.odpojitAZ.submit.button")
@@ -352,6 +385,9 @@ class ExterniOdkazOdpojitView(TransakceView):
 
 
 class ExterniOdkazPripojitView(TransakceView):
+    """
+    Třida pohledu pro připojení externího odkazu pomoci modalu.
+    """
     template_name = "core/transakce_table_modal.html"
     title = _("externiZdroj.modalForm.pripojitAZ.title.text")
     id_tag = "pripojit-eo-form"
@@ -392,6 +428,9 @@ class ExterniOdkazPripojitView(TransakceView):
 
 
 class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třida pohledu pro editaci externího odkazu pomoci modalu.
+    """
     model = ExterniOdkaz
     template_name = "core/transakce_modal.html"
     title = _("externiZdroj.modalForm.zmeniPaginaci.title.text")
@@ -442,6 +481,9 @@ class ExterniOdkazEditView(LoginRequiredMixin, UpdateView):
 
 
 class ExterniOdkazOdpojitAZView(TransakceView):
+    """
+    Třida pohledu pro odpojení externího odkazu z archeologického záznamu pomoci modalu.
+    """
     id_tag = "odpojit-az-form"
     allowed_states = [AZ_STAV_ODESLANY, AZ_STAV_ZAPSANY, AZ_STAV_ARCHIVOVANY]
     success_message = EO_USPESNE_ODPOJEN
@@ -480,6 +522,9 @@ class ExterniOdkazOdpojitAZView(TransakceView):
 
 
 class ExterniZdrojAutocomplete(autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete externích zdrojů.
+    """
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ExterniZdroj.objects.none()
@@ -491,6 +536,9 @@ class ExterniZdrojAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class ExterniZdrojTableRowView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro získaní řádku tabulky s externím zdrojem.
+    """
     def get(self, request):
         zaznam = ExterniZdroj.objects.get(id=request.GET.get("id", ""))
         context = {"ez": zaznam}
@@ -499,6 +547,9 @@ class ExterniZdrojTableRowView(LoginRequiredMixin, View):
 
 
 class ExterniOdkazPripojitDoAzView(TransakceView):
+    """
+    Třída pohledu pro připojení externího odkazu do arch záznamu.
+    """
     template_name = "core/transakce_table_modal.html"
     title = _("externiZdroj.modalForm.pripojitAZ.title.text")
     id_tag = "pripojit-eo-doaz-form"
@@ -547,6 +598,9 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
 
 
 def get_history_dates(historie_vazby):
+    """
+    Funkce pro získaní historických datumu.
+    """
     historie = {
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD),
@@ -556,6 +610,9 @@ def get_history_dates(historie_vazby):
 
 
 def get_detail_template_shows(zaznam):
+    """
+    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
+    """
     show_vratit = zaznam.stav > EZ_STAV_ZAPSANY
     show_odeslat = zaznam.stav == EZ_STAV_ZAPSANY
     show_potvrdit = zaznam.stav == EZ_STAV_ODESLANY
@@ -578,6 +635,17 @@ def get_detail_template_shows(zaznam):
 
 
 def get_required_fields():
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu externího zdroje.
+
+    Args:     
+        zaznam (Externí zdroj): model ExterniZdroj pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = [
         "typ",
         "autori",
@@ -588,6 +656,9 @@ def get_required_fields():
 
 
 def save_autor_editor(zaznam, form):
+    """
+    Funkce pro uložení autorů a editorů k externímu zdroji podle toho v jakém pořadí byly zadáni.
+    """
     i = 1
     for autor in form.cleaned_data["autori"]:
         ExterniZdrojAutor.objects.create(

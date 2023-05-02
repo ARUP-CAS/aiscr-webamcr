@@ -43,6 +43,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
+    """
+    Funkce pohledu pro editaci dokumentační jednotky a ADB.
+    """
     logger.debug("dj.views.detail.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     pian_db = dj.pian
@@ -181,6 +184,9 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, arch_z_ident_cely):
+    """
+    Funkce pohledu pro vytvoření dokumentační jednotky.
+    """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     form = CreateDJForm(request.POST)
     if form.is_valid():
@@ -212,6 +218,9 @@ def zapsat(request, arch_z_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro smazání dokumentační jednotky.
+    """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
         resp = dj.delete()
@@ -237,6 +246,9 @@ def smazat(request, ident_cely):
         return render(request, "core/transakce_modal.html", context)
 
 class ChangeKatastrView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro editaci katastru dokumentační jednotky.
+    """
     template_name = "core/transakce_modal.html"
     title = _("dj.modalForm.zmenitKatastr.title.text")
     id_tag = "zmenit-katastr-form"

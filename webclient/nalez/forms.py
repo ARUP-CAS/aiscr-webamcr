@@ -16,6 +16,9 @@ class NalezFormSetHelper(FormHelper):
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
 def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=True):
+    """
+    Funkce která vrací formulář nálezu objekty pro formset.
+    """
     class CreateNalezObjektForm(forms.ModelForm):
         typ = forms.CharField(widget=forms.HiddenInput())
         class Meta:
@@ -74,6 +77,9 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
 def create_nalez_predmet_form(
     druh_projekt_choices, specifikce_predmetu_choices, not_readonly=True
 ):
+    """
+    Funkce která vrací formulář nálezu předměty pro formset.
+    """
     class CreateNalezPredmetForm(forms.ModelForm):
         typ = forms.CharField(widget=forms.HiddenInput())
         class Meta:

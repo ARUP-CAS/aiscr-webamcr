@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 class DateRangeField(forms.DateField):
+    """
+    Třída pro správnu práci s date range.
+    """
     def to_python(self, value):
         values = value.split(" - ")
         from_date = super(DateRangeField, self).to_python(values[0])
@@ -30,10 +33,10 @@ class DateRangeField(forms.DateField):
 
 
 class DateRangeWidget(forms.TextInput):
+    """
+    Třída pro správne zobrazení date range.
+    """
     def format_value(self, value):
-        """
-        Return a value as it should appear when rendered in a template.
-        """
         if value == "" or value is None:
             return None
         if isinstance(value, DateRange):
@@ -50,6 +53,9 @@ class DateRangeWidget(forms.TextInput):
 
 
 class OznamovatelForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření oznámení.
+    """
     telefon = forms.CharField(
         validators=[validate_phone_number],
         help_text=_("oznameni.forms.telefon.tooltip"),
@@ -144,6 +150,9 @@ class OznamovatelForm(forms.ModelForm):
 
 
 class ProjektOznameniForm(forms.ModelForm):
+    """
+    Hlavní formulář pro editaci a doplňení oznamovatele do projektu.
+    """
     planovane_zahajeni = DateRangeField(
         required=True,
         label=_("Plánované zahájení prací"),
@@ -250,4 +259,7 @@ class ProjektOznameniForm(forms.ModelForm):
 
 
 class FormWithCaptcha(forms.Form):
+    """
+    Hlavní formulář pro captchu.
+    """
     captcha = ReCaptchaField(widget=ReCaptchaV2Invisible)

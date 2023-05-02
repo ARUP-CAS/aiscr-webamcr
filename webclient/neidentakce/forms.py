@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkceForm(forms.ModelForm):
+    """
+    Hlavní formulář pro editaci a zobrazení neident akce.
+    """
     class Meta:
         model = NeidentAkce
         fields = (

@@ -6,6 +6,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 
 class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
+    """
+    Class pro db model oznamovatel.
+    """
     projekt = models.OneToOneField(
         Projekt,
         on_delete=models.CASCADE,
@@ -26,20 +29,3 @@ class Oznamovatel(ExportModelOperationsMixin("oznamovatel"), models.Model):
         db_table = "oznamovatel"
         verbose_name = "oznamovatele"
 
-    def set_dummy_data(self, projekt):
-        value = "Údaj nezadán"
-        self.projekt = projekt
-        self.oznamovatel = value
-        self.odpovedna_osoba = value
-        self.adresa = value
-        self.telefon = value
-        self.email = value
-
-    def remove_data(self):
-        value = "Údaj odstraněn (" + str(datetime.today().date()) + ")"
-        self.oznamovatel = value
-        self.odpovedna_osoba = value
-        self.adresa = value
-        self.telefon = value
-        self.email = value
-        self.save()

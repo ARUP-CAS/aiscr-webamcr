@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Dokument)
 def create_dokument_vazby(sender, instance, **kwargs):
+    """
+    Metóda pro vytvoření historických vazeb dokumentu.
+    Metóda se volá pred uložením záznamu.
+    """
     if instance.pk is None:
         logger.debug("dokument.signals.create_dokument_vazby.creating_history_for_dokument",
                      extra={"instance": instance})
@@ -24,7 +28,11 @@ def create_dokument_vazby(sender, instance, **kwargs):
         instance.soubory = sv
 
 @receiver(pre_save, sender=DokumentCast)
-def create_dokument_cast_vazby(sender, instance, **kwargs):        
+def create_dokument_cast_vazby(sender, instance, **kwargs):     
+        """
+        Metóda pro vytvoření komponent vazeb dokument části.
+        Metóda se volá pred uložením dokument části.
+        """   
         logger.debug("Creating child komponenty for dokument cast" + str(instance))
         k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
         k.save()
@@ -33,6 +41,10 @@ def create_dokument_cast_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=DokumentAutor)
 def create_hlavni_autor(sender, instance, **kwargs):
+    """
+        Metóda pro vytvoření hlavního autora pro účely filtrování.
+        Metóda se volá po uložení dokument autorů.
+    """  
     if instance.poradi == 1:
         dokument = instance.dokument
         dokument.hlavni_autor = instance.autor.prijmeni

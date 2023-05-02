@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=SamostatnyNalez)
 def create_dokument_vazby(sender, instance, **kwargs):
+    """
+    Metóda pro vytvoření historických a souborových vazeb samostatnýho náleze.
+    Metóda se volá pred uložením záznamu.
+    """
     if instance.pk is None:
         logger.debug("Creating history records for SN " + str(instance))
         hv = HistorieVazby(typ_vazby=SAMOSTATNY_NALEZ_RELATION_TYPE)

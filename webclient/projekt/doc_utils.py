@@ -36,7 +36,7 @@ try:
     pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
     registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
 except Exception as e:
-    logger_s.error("doc_utils", exception=e)
+    logger_s.error("doc_utils", extra={"exception":e})
 
 
 Title = "Hello world"

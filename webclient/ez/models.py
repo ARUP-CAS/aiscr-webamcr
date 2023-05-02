@@ -23,7 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
-
+    """
+    Class pro db model externí zdroj.
+    """
     STATES = (
         (EZ_STAV_ZAPSANY, _("EZ1 - Zapsána")),
         (EZ_STAV_ODESLANY, _("EZ2 - Odeslána")),
@@ -84,6 +86,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
         db_table = "externi_zdroj"
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle identu.
+        """
         return reverse(
             "ez:detail",
             kwargs={"slug": self.ident_cely},
@@ -96,6 +101,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
             return "[ident_cely not yet assigned]"
 
     def set_odeslany(self, user):
+        """
+        Metóda pro nastavení stavu odeslaný a uložení změny do historie pro externí zdroj.
+        """
         self.stav = EZ_STAV_ODESLANY
         Historie(
             typ_zmeny=ODESLANI_EXT_ZD,
@@ -105,6 +113,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
         self.save()
 
     def set_vraceny(self, user, new_state, poznamka):
+        """
+        Metóda pro vrácení o jeden stav méně a uložení změny do historie pro externí zdroj.
+        """
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_EXT_ZD,
@@ -115,6 +126,10 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
         self.save()
 
     def set_potvrzeny(self, user):
+        """
+        Metóda pro nastavení stavu potvrzená a uložení změny do historie pro externí zdroj.
+        Pokud je ident dočasný nahrazení identem stálým.
+        """
         self.stav = EZ_STAV_POTVRZENY
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             self.ident_cely = get_ez_ident()
@@ -126,6 +141,9 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
         self.save()
 
     def set_zapsany(self, user):
+        """
+        Metóda pro nastavení stavu zapsaný a uložení změny do historie pro externí zdroj.
+        """
         self.stav = EZ_STAV_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_EXT_ZD,
@@ -136,6 +154,11 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
 
 
 def get_ez_ident(zaznam=None):
+    """
+    Funkce pro výpočet ident celý pro externí zdroj.
+    Funkce vrátí pro dočasný ident ident podle id v DB.
+    Funkce vráti pro permanentní ident id nejmenší volné z uložených zdrojů.
+    """
     MAXIMAL: int = 9999999
     # [BIB]-[pořadové číslo v sedmimístném formátu]
     prefix = "X-BIB-"
@@ -166,6 +189,9 @@ def get_ez_ident(zaznam=None):
 
 
 class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), models.Model):
+    """
+    Class pro db model autora externího zdroje, zohledňuje pořadí zadání.
+    """
     externi_zdroj = models.ForeignKey(
         ExterniZdroj, models.CASCADE, db_column="externi_zdroj")
     autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
@@ -180,6 +206,9 @@ class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), model
 
 
 class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), models.Model):
+    """
+    Class pro db model editora externího zdroje, zohledňuje pořadí zadání.
+    """
     externi_zdroj = models.ForeignKey(
         ExterniZdroj, models.CASCADE, db_column="externi_zdroj"
     )

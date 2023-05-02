@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
+    """
+    Class pro db model lokalita.
+    """
     druh = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -66,13 +69,22 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         db_table = "lokalita"
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle identu.
+        """
         return reverse(
             "lokalita:detail",
             kwargs={"slug": self.archeologicky_zaznam.ident_cely},
         )
 
     def check_pred_archivaci(self):
-        # All documents associated with it must be archived
+        """
+        Metóda na kontrolu prerekvizit pred archivací:
+
+            všechny pripojené dokumenty jsou archivované.
+
+            všechny DJ mají potvrzený pian
+        """
         result = []
         for dc in self.archeologicky_zaznam.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
@@ -95,9 +107,15 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         return result
 
     def check_pred_odeslanim(self):
-        # All of the events must have akce.datum_zahajeni,
-        # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
-        # Related events must have a “vedouci” and “hlavni_katastr” column filled in
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, organizace, hlavni_vedouci a hlavni_typ jsou vyplněna.
+            
+            Akce má připojený dokument typu nálezová správa nebo je akce typu nz.
+            
+            Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
+        """
         result = []
         required_fields = [
             (self.datum_zahajeni, _("Datum zahájení není vyplněn.")),
@@ -163,9 +181,3 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                              extra={"dokument_warning": dokument_warning,
                                     "dokument_cast_dokument_ident_cely": dokument_cast.dokument.ident_cely})
         return result
-
-    def get_absolute_url(self):
-        return reverse(
-            "lokalita:detail",
-            kwargs={"slug": self.archeologicky_zaznam.ident_cely},
-        )

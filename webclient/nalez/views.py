@@ -37,6 +37,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat_nalez(request, typ, ident_cely):
+    """
+    Funkce pohledu pro smazání nálezu předmětu nebo objektu pomocí modalu.
+    """
     if typ == "objekt":
         zaznam = get_object_or_404(NalezObjekt, id=ident_cely)
         context = {
@@ -81,6 +84,9 @@ def smazat_nalez(request, typ, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def edit_nalez(request, komp_ident_cely):
+    """
+    Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
+    """
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(

@@ -46,7 +46,9 @@ logger = logging.getLogger(__name__)
 
 
 class SamostatnyNalezFilter(HistorieFilter):
-
+    """
+    Třída pro zakladní filtrování samostatného nálezu a jejich potomků.
+    """
     stav = MultipleChoiceFilter(
         choices=SamostatnyNalez.PAS_STATES,
         widget=SelectMultiple(
@@ -235,12 +237,21 @@ class SamostatnyNalezFilter(HistorieFilter):
         self.helper = SamostatnyNalezFilterFormHelper()
 
     def filter_obdobi(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle období.
+        """
         return queryset.filter(obdobi__in=value)
 
     def filter_druh_nalezu(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle druhu nálezu.
+        """
         return queryset.filter(druh_nalezu__in=value)
 
     def filter_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle lokalizace, poznámek a evidenčního čísla.
+        """
         return queryset.filter(
             Q(lokalizace__icontains=value)
             | Q(poznamka__icontains=value)
@@ -248,6 +259,9 @@ class SamostatnyNalezFilter(HistorieFilter):
         )
 
     def filter_by_oblast(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle oblasti.
+        """
         if value == OBLAST_CECHY:
             return queryset.filter(ident_cely__contains="C-")
         if value == OBLAST_MORAVA:
@@ -256,6 +270,9 @@ class SamostatnyNalezFilter(HistorieFilter):
 
 
 class UzivatelSpolupraceFilter(filters.FilterSet):
+    """
+    Třída pro zakladní filtrování uživatelské spolupráce a jejich potomků.
+    """
     vedouci = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace"),
         field_name="vedouci",
@@ -291,6 +308,9 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
 
 
 class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Třída pro správne zobrazení filtru.
+    """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
         "translation": _(u"pas.filter.history.divider.label")
@@ -344,6 +364,9 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
 
 
 class UzivatelSpolupraceFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Třída pro správne zobrazení filtru.
+    """
     form_method = "GET"
     layout = Layout(
         Div(

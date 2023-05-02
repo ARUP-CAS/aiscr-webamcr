@@ -12,6 +12,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 
 class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
+    """
+    Class pro db model nalez objekt.
+    """
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,
@@ -47,6 +50,9 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
 
 class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
+    """
+    Class pro db model nalez predmet.
+    """
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,

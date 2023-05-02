@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class CreateKomponentaForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení komponenty.
+    """
     class Meta:
         model = Komponenta
         fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
