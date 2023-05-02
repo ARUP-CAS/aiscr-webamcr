@@ -44,6 +44,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
+    """
+    Funkce pohledu pro zapsání změny pianu.
+    """
     dj_ident_cely = request.POST["dj_ident_cely"]
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
@@ -110,6 +113,9 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit(request, dj_ident_cely):
+    """
+    Funkce pohledu pro odpojení pianu pomocí modalu.
+    """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian_djs = DokumentacniJednotka.objects.filter(pian=dj.pian)
     delete_pian = (
@@ -156,6 +162,9 @@ def odpojit(request, dj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def potvrdit(request, dj_ident_cely):
+    """
+    Funkce pohledu pro potvrzení pianu pomocí modalu.
+    """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
     if request.method == "POST":
@@ -196,6 +205,9 @@ def potvrdit(request, dj_ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def create(request, dj_ident_cely):
+    """
+    Funkce pohledu pro vytvoření pianu.
+    """
     logger.debug("pian.views.create.start")
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     form = PianCreateForm(request.POST)
@@ -285,6 +297,9 @@ def create(request, dj_ident_cely):
 
 
 class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete pianu.
+    """
     def get_queryset(self):
         qs = Pian.objects.all().order_by("ident_cely")
         if self.q:

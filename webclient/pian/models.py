@@ -24,7 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 class Pian(ExportModelOperationsMixin("pian"), models.Model):
-
+    """
+    Class pro db model pian.
+    """
     STATES = (
         (PIAN_NEPOTVRZEN, _("Nepotvrzený")),
         (PIAN_POTVRZEN, _("Potvrzený")),
@@ -86,6 +88,10 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
     def set_permanent_ident_cely(self):
+        """
+        Metóda pro nastavení permanentního ident celý pro pian.
+        Metóda vráti ident podle sekvence pianu.
+        """
         MAXIMUM: int = 999999
         katastr = True if self.presnost.zkratka == "4" else False
         sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(
@@ -124,20 +130,32 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         self.save()
 
     def set_vymezeny(self, user):
+        """
+        Metóda pro nastavení stavu vymezený.
+        """
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
 
     def set_potvrzeny(self, user):
+        """
+        Metóda pro nastavení stavu potvrzený.
+        """
         self.stav = PIAN_POTVRZEN
         Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
 
     def zaznamenej_zapsani(self, user):
+        """
+        Metóda pro uložení změny do historie pro pianu.
+        """
         Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
 
 
 class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
+    """
+    Class pro db model klady zm.
+    """
     gid = models.AutoField(primary_key=True)
     objectid = models.IntegerField(unique=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
@@ -152,6 +170,9 @@ class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
 
 
 class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
+    """
+    Class pro db model sekvence pianu podle klady zm 50 a katastru.
+    """
     kladyzm50 = models.ForeignKey(
         "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
     )
@@ -163,6 +184,9 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 
 
 def vytvor_pian(katastr):
+    """
+    Funkce pro vytvoření pianu v DB podle katastru.
+    """
     zm10s = (
                 Kladyzm.objects.filter(kategorie=KLADYZM10)
                 .filter(the_geom__contains=katastr.definicni_bod)

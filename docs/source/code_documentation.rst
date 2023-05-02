@@ -21,3 +21,4 @@ Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Ka�
    code_documentation/neidentakce/index
    code_documentation/notifikace_projekty/index
    code_documentation/oznameni/index
+   code_documentation/pas/index

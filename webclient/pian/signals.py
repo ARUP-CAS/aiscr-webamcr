@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Pian)
 def create_pian_vazby(sender, instance, **kwargs):
+    """
+    Metóda pro vytvoření historických vazeb pianu.
+    Metóda se volá pred uložením záznamu.
+    """
     if instance.pk is None:
         logger.debug("Creating history records for Pian " + str(instance))
         hv = HistorieVazby(typ_vazby=PIAN_RELATION_TYPE)

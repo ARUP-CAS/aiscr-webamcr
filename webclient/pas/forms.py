@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 
 
 def validate_uzivatel_email(email):
+    """
+    Funkce pro validaci zadaného emailu uživatele.
+    """
     user = User.objects.filter(email=email)
     if not user.exists():
         raise ValidationError(
@@ -49,11 +52,17 @@ def validate_uzivatel_email(email):
 
 
 class ProjectModelChoiceField(ModelChoiceField):
+    """
+    Třída pro správne zobrazení label.
+    """
     def label_from_instance(self, obj):
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
 class PotvrditNalezForm(forms.ModelForm):
+    """
+    Hlavní formulář pro potvrzení nálezu lokality.
+    """
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
@@ -139,8 +148,9 @@ class PotvrditNalezForm(forms.ModelForm):
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
-    # latitude = forms.FloatField(required=False, widget=HiddenInput())
-    # longitude = forms.FloatField(required=False, widget=HiddenInput())
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení samostatnýho nálezu.
+    """
     katastr = forms.CharField(
         max_length=50,
         label=_("Katastrální území"),
@@ -312,6 +322,9 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
 
 
 class CreateZadostForm(forms.Form):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení žádosti o spoluprácu.
+    """
     email_uzivatele = forms.EmailField(
         label=_("Uživatel"),
         widget=forms.EmailInput(

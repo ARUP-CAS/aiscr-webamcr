@@ -157,7 +157,7 @@ def get_ez_ident(zaznam=None):
     """
     Funkce pro výpočet ident celý pro externí zdroj.
     Funkce vrátí pro dočasný ident ident podle id v DB.
-    Finkce vráti pro permanentní ident id nejmenší volné z uložených zdrojů.
+    Funkce vráti pro permanentní ident id nejmenší volné z uložených zdrojů.
     """
     MAXIMAL: int = 9999999
     # [BIB]-[pořadové číslo v sedmimístném formátu]

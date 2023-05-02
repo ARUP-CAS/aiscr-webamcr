@@ -36,6 +36,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 
 class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Model):
+    """
+    Class pro db model samostantý nález.
+    """
     PAS_STATES = [
         (SN_ZAPSANY, _("SN1 - zapsaný")),
         (SN_ODESLANY, _("SN2 - odeslaný")),  # Odeslaný
@@ -148,6 +151,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
     geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
 
     def set_zapsany(self, user):
+        """
+        Metóda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_SN,
@@ -157,6 +163,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
         self.save()
 
     def set_vracen(self, user, new_state, poznamka):
+        """
+        Metóda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
+        """
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_SN,
@@ -167,6 +176,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
         self.save()
 
     def set_odeslany(self, user):
+        """
+        Metóda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_ODESLANY
         Historie(
             typ_zmeny=ODESLANI_SN,
@@ -176,6 +188,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
         self.save()
 
     def set_potvrzeny(self, user):
+        """
+        Metóda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_POTVRZENY
         Historie(
             typ_zmeny=POTVRZENI_SN,
@@ -185,6 +200,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
         self.save()
 
     def set_archivovany(self, user):
+        """
+        Metóda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_ARCHIVOVANY
         Historie(
             typ_zmeny=ARCHIVACE_SN,
@@ -194,9 +212,19 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
         self.save()
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle identu.
+        """
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     def check_pred_odeslanim(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
+            
+            Samostaný nález má připojený alespoň jeden soubor.
+        """
         resp = []
         if not self.obdobi:
             resp.append(_("Nález před odesláním musí mít vyplneno období."))
@@ -241,6 +269,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
+    """
+    Class pro db model spolupráce.
+    """
     SPOLUPRACE_STATES = [
         (SPOLUPRACE_NEAKTIVNI, _("neaktivní")),
         (SPOLUPRACE_AKTIVNI, _("aktivní")),
@@ -269,6 +300,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     )
 
     def set_aktivni(self, user):
+        """
+        Metóda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
+        """
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
             typ_zmeny=SPOLUPRACE_AKTIVACE,
@@ -278,6 +312,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         self.save()
 
     def set_neaktivni(self, user):
+        """
+        Metóda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
+        """
         self.stav = SPOLUPRACE_NEAKTIVNI
         Historie(
             typ_zmeny=SPOLUPRACE_DEAKTIVACE,
@@ -287,12 +324,20 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         self.save()
 
     def check_pred_aktivaci(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu aktivní.
+        Kontrola že stav není aktivný.
+        """
         result = []
         if self.stav == SPOLUPRACE_AKTIVNI:
             result.append(_("Spolupráce již je aktivní."))
         return result
 
     def check_pred_deaktivaci(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu neaktivní.
+        Kontrola že stav není neaktivný.
+        """
         result = []
         if self.stav == SPOLUPRACE_NEAKTIVNI:
             result.append(_("Spolupráce již je neaktivní."))
