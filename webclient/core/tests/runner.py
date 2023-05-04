@@ -963,7 +963,7 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
         # execute SQL query to copy data from prod_zaloha.ruian_katastr to test_prod_zaloha.ruian_katastr
         tables = (
             ("id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en", "public.ruian_kraj"),
-            ("id, nazev, kraj, spz, kod, nazev_en, hranice, ISNULL(definicni_bod, '0')", "ruian_okres"),
+            ("id, nazev, kraj, spz, kod, nazev_en, hranice, COALESCE(definicni_bod, '0')", "ruian_okres"),
             ("id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny", "ruian_katastr"),
         )
         for table in tables:
