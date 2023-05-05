@@ -281,7 +281,7 @@ LOGGING = {
         }
     },
     "loggers": {
-        "django.request": {
+        "django": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
             "propagate": True,
