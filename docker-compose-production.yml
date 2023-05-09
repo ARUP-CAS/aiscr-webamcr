@@ -173,6 +173,9 @@ volumes:
   static_data:
   locale_data:
   nginx_data:
+  logs_volume:
+  elasticsearch_volume:
+  grafana_data:
 
 networks:
   prod-net:
