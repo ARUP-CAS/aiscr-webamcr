@@ -16,6 +16,9 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 
 class CreateDJForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
+    """
     ku_change = forms.CharField(
         max_length=50, required=False, widget=forms.HiddenInput()
     )
@@ -33,6 +36,9 @@ class CreateDJForm(forms.ModelForm):
         typ_arch_z=None,
         typ_akce=None,
     ):
+        """
+        Metóda formuláře pro získaní querysetu pro typ DJ podle typu akce.
+        """
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
             return queryset.filter(id__in=[TYP_DJ_LOKALITA,TYP_DJ_KATASTR])
@@ -184,6 +190,9 @@ class CreateDJForm(forms.ModelForm):
 
 
 class ChangeKatastrForm(forms.Form):
+    """
+    Formulář pro editaci katastru u archeologického záznamu.
+    """
     katastr = forms.ModelChoiceField(
         label=_("dj.form.katastrChange.label"),
         widget=autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),

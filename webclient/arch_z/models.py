@@ -159,7 +159,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
 
             polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, hlavni_vedouci a hlavni_typ jsou vyplněna.
             
-            Akce má přripojený dokument typu nálezová správa nebo je akce typu nz.
+            Akce má připojený dokument typu nálezová správa nebo je akce typu nz.
             
             Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
         """

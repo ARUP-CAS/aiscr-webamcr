@@ -49,6 +49,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["POST"])
 def detail(request, ident_cely):
+    """
+    Funkce pohledu pro zapsání editace komponenty.
+    """
     komponenta = get_object_or_404(Komponenta, ident_cely=ident_cely)
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
@@ -161,6 +164,9 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def zapsat(request, dj_ident_cely):
+    """
+    Funkce pohledu pro zapsání vytvořeni komponenty.
+    """
     druh = request.GET.get("typ", None)
     dj = None
     cast = None
@@ -248,6 +254,9 @@ def zapsat(request, dj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro smazání komponenty pomoci modalu.
+    """
     k = get_object_or_404(Komponenta, ident_cely=ident_cely)
     dj = None
     cast = None

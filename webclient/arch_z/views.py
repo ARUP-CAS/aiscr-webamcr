@@ -135,7 +135,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
     """
     def get_shows(self):
         """
-        Metóda pro získaní informací které čáasti stránky mají být zobrazeny.
+        Metóda pro získaní informací které části stránky mají být zobrazeny.
         """
         return get_detail_template_shows(
             self.get_archeologicky_zaznam(), self.get_jednotky(), self.request.user

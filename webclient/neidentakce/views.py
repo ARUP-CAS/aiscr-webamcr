@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 
 class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třída pohledu pro editaci neident akce pomocí modalu.
+    """
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
     title = _("neidentAkce.modalForm.edit.title.text")

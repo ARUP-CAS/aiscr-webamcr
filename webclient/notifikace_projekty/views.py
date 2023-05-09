@@ -41,8 +41,7 @@ CARD_NAME_TRANS = {
 
 class PesListView(LoginRequiredMixin, TemplateView):
     """
-    View to get list of all hlidacich psu on user.
-    3 separate formsets per 1 content type
+    Třída pohledu pro zobrazení listu hlídacích psů.
     """
 
     http_method_names = ["get"]
@@ -90,7 +89,7 @@ class PesListView(LoginRequiredMixin, TemplateView):
 
 class PesCreateView(LoginRequiredMixin, View):
     """
-    View to create new hlidaci pes
+    Třída pohledu pro vytvořené hlídacího psa.
     """
 
     http_method_names = ["post"]
@@ -126,7 +125,7 @@ class PesCreateView(LoginRequiredMixin, View):
 
 class PesSmazatView(LoginRequiredMixin, TemplateView):
     """
-    View to delete hlidaci pes
+    Třída pohledu pro smazání hlídacího psa pomocí modalu.
     """
 
     template_name = "core/transakce_modal.html"

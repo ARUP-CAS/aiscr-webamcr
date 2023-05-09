@@ -13,6 +13,9 @@ logger_s = logging.getLogger(__name__)
 
 @shared_task
 def check_hlidaci_pes(projekt_id):
+    """
+    Task pro celery pro skontrolování jestli je nastavený hlídací pes.
+    """
     logger_s.debug("cron.Notifications.collect_watchdogs.start")
     projekt = Projekt.objects.get(pk=projekt_id)
     users_to_notify = Pes.objects.none()

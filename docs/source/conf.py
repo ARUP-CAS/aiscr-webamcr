@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../../webclient"))
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.production")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webclient.settings.docs")
 
 # Setup Django
 import django
@@ -19,8 +19,8 @@ django.setup()
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "aiscr-webamcr"
-copyright = "2023, HULD"
-author = "HULD"
+copyright = "CC BY 4.0"
+author = "CC BY 4.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -46,5 +46,7 @@ html_static_path = ["_static"]
 autodoc_default_options = {
     "members": True,
     "member-order": "bysource",
-    "exclude-members": "DoesNotExist, MultipleObjectsReturned, media",
+    "exclude-members": "DoesNotExist, MultipleObjectsReturned, media, render, order",
 }
+
+autodoc_mock_imports = ["django_prometheus"]

@@ -129,12 +129,18 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def index_model_3D(request):
+    """
+    Funkce pohledu pro zobrazení domovské stránky modelu 3D s navigačními možnostmi.
+    """
     return render(request, "dokument/index_model_3D.html")
 
 
 @login_required
 @require_http_methods(["GET"])
 def detail_model_3D(request, ident_cely):
+    """
+    Třida pohledu pro zobrazení detailu modelu 3D.
+    """
     context = {"warnings": request.session.pop("temp_data", None)}
     old_nalez_post = request.session.pop("_old_nalez_post", None)
     dokument = get_object_or_404(
@@ -233,6 +239,9 @@ def detail_model_3D(request, ident_cely):
 
 
 class Model3DListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s modelama 3D.
+    """
     table_class = Model3DTable
     model = Dokument
     filterset_class = Model3DFilter
@@ -264,10 +273,16 @@ class Model3DListView(SearchListView):
 
 
 class DokumentIndexView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro zobrazení domovské stránky dokumentů s navigačními možnostmi.
+    """
     template_name = "dokument/index_dokument.html"
 
 
 class DokumentListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s dokumentama.
+    """
     table_class = DokumentTable
     model = Dokument
     filterset_class = DokumentFilter
@@ -319,7 +334,13 @@ class DokumentListView(SearchListView):
 
 
 class RelatedContext(LoginRequiredMixin, TemplateView):
+    """
+    Třida, která se dedí a která obsahuje metódy pro získaní relací dokumentů.
+    """
     def get_cast(self, context, cast, **kwargs):
+        """
+        Metóda pro získaní informací ohlědně části dokumentu.
+        """
         context["cast"] = cast
         cast_form = DokumentCastForm(
             instance=cast,
@@ -338,6 +359,9 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
             context["show_pripojit"] = False
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní contextu dokumentu pro template.
+        """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
         dokument = get_object_or_404(
@@ -394,6 +418,9 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         return context
 
     def render_to_response(self, context, **response_kwargs):
+        """
+        Metóda pro render response, kvúli správnemu zobrazení zpět možnosti.
+        """
         response = super().render_to_response(context, **response_kwargs)
         referer = urlparse(self.request.META.get("HTTP_REFERER", False)).path
         referer_next = urlparse(self.request.META.get("HTTP_REFERER", False)).query
@@ -447,10 +474,16 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
 
 
 class DokumentDetailView(RelatedContext):
+    """
+    Třida pohledu pro zobrazení detailu dokumentu.
+    """
     template_name = "dokument/dok/detail.html"
 
 
 class DokumentCastDetailView(RelatedContext):
+    """
+    Třida pohledu pro zobrazení detailu části dokumentu.
+    """
     template_name = "dokument/dok/detail_cast_dokumentu.html"
 
     def get_context_data(self, **kwargs):
@@ -465,6 +498,9 @@ class DokumentCastDetailView(RelatedContext):
 
 
 class DokumentCastEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třida pohledu pro editaci části dokumentu pomocí modalu.
+    """
     model = DokumentCast
     template_name = "core/transakce_modal.html"
     title = _("dokumentCast.modalForm.zmenitPoznamku.title.text")
@@ -507,6 +543,9 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
 
 
 class KomponentaDokumentDetailView(RelatedContext):
+    """
+    Třida pohledu pro zobrazení detailu komponenty části dokumentu.
+    """
     template_name = "dokument/dok/detail_komponenta.html"
 
     def get_context_data(self, **kwargs):
@@ -531,6 +570,9 @@ class KomponentaDokumentDetailView(RelatedContext):
 
 
 class KomponentaDokumentCreateView(RelatedContext):
+    """
+    Třida pohledu pro vytvoření komponenty části dokumentu.
+    """
     template_name = "dokument/dok/create_komponenta.html"
 
     def get_context_data(self, **kwargs):
@@ -547,6 +589,9 @@ class KomponentaDokumentCreateView(RelatedContext):
 
 
 class TvarEditView(LoginRequiredMixin, View):
+    """
+    Třida pohledu pro uložení zmeny tvaru z formuláře.
+    """
     def post(self, request, *args, **kwargs):
         dokument = get_object_or_404(Dokument, ident_cely=self.kwargs["ident_cely"])
         TvarFormset = inlineformset_factory(
@@ -572,6 +617,9 @@ class TvarEditView(LoginRequiredMixin, View):
 
 
 class TvarSmazatView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro smazání tvaru dokumentu pomocí modalu.
+    """
     template_name = "core/transakce_modal.html"
     title = _("dokument.modalForm.smazatTvar.title.text")
     id_tag = "smazat-tvar-form"
@@ -608,6 +656,9 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
 
 
 class VytvoritCastView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro vytvoření části dokumentu pomoci modalu.
+    """
     template_name = "core/transakce_modal.html"
     title = _("dokument.modalForm.vytvoritCast.title.text")
     id_tag = "vytvor-cast-form"
@@ -665,6 +716,9 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
 
 
 class TransakceView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro změnu stavu a práci s dokumentama cez modal, která se dedí pro jednotlivá změny.
+    """
     template_name = "core/transakce_modal.html"
     title = "title"
     id_tag = "id_tag"
@@ -722,6 +776,9 @@ class TransakceView(LoginRequiredMixin, TemplateView):
 
 
 class DokumentCastPripojitAkciView(TransakceView):
+    """
+    Třida pohledu pro připojení akce do části dokumentu pomoci modalu.
+    """
     template_name = "core/transakce_table_modal.html"
     title = _("dokument.modalForm.pripojitAZ.title.text")
     id_tag = "pripojit-eo-form"
@@ -757,6 +814,9 @@ class DokumentCastPripojitAkciView(TransakceView):
 
 
 class DokumentCastPripojitProjektView(TransakceView):
+    """
+    Třida pohledu pro připojení projektu do části dokumentu pomoci modalu.
+    """
     template_name = "core/transakce_table_modal.html"
     title = _("dokument.modalForm.pripojitProjekt.title.text")
     id_tag = "pripojit-projekt-form"
@@ -786,6 +846,9 @@ class DokumentCastPripojitProjektView(TransakceView):
 
 
 class DokumentCastOdpojitView(TransakceView):
+    """
+    Třida pohledu pro odpojení části dokumentu pomoci modalu.
+    """
     title = _("dokument.modalForm.odpojitVazbuCast.title.text")
     id_tag = "odpojit-cast-form"
     button = _("dokument.modalForm.odpojitVazbuCast.submit.button")
@@ -816,6 +879,9 @@ class DokumentCastOdpojitView(TransakceView):
 
 
 class DokumentCastSmazatView(TransakceView):
+    """
+    Třida pohledu pro smazání části dokumentu pomoci modalu.
+    """
     title = _("dokument.modalForm.smazatCast.title.text")
     id_tag = "smazat-cast-form"
     button = _("dokument.modalForm.smazatCast.submit.button")
@@ -835,6 +901,9 @@ class DokumentCastSmazatView(TransakceView):
 
 
 class DokumentNeidentAkceSmazatView(TransakceView):
+    """
+    Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
+    """
     title = _("dokument.modalForm.smazatNeidentAkce.title.text")
     id_tag = "smazat-neident-akce-form"
     button = _("dokument.modalForm.smazatNeidentAkce.submit.button")
@@ -858,6 +927,9 @@ class DokumentNeidentAkceSmazatView(TransakceView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro editaci dokumentu.
+    """
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -936,6 +1008,9 @@ def edit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit_model_3D(request, ident_cely):
+    """
+    Funkce pohledu pro editaci modelu 3D.
+    """
     dokument = get_object_or_404(Dokument, ident_cely=ident_cely)
     if dokument.stav == D_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -1053,11 +1128,17 @@ def edit_model_3D(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zapsat_do_akce(request, arch_z_ident_cely):
+    """
+    Funkce pohledu pro zapsání dokumentu do akce.
+    """
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     return zapsat(request, zaznam)
 
 
 def zapsat_do_projektu(request, proj_ident_cely):
+    """
+    Funkce pohledu pro zapsání dokumentu do projektu.
+    """
     zaznam = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     return zapsat(request, zaznam)
 
@@ -1065,6 +1146,9 @@ def zapsat_do_projektu(request, proj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create_model_3D(request):
+    """
+    Funkce pohledu pro vytvoření modelu 3D.
+    """
     obdobi_choices = heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
     areal_choices = heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
     required_fields = get_required_fields_model3D()
@@ -1179,6 +1263,9 @@ def create_model_3D(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
+    """
+    Funkce pohledu pro odeslání dokumentu cez modal.
+    """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     logger.debug("dokument.views.odeslat.start", extra={"ident_cely": ident_cely})
     if d.stav != D_STAV_ZAPSANY:
@@ -1219,6 +1306,9 @@ def odeslat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
+    """
+    Funkce pohledu pro archivaci dokumentu cez modal.
+    """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     logger.debug("dokument.views.archivovat.start", extra={"ident_cely": ident_cely})
     if d.stav != D_STAV_ODESLANY:
@@ -1277,6 +1367,9 @@ def archivovat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
+    """
+    Funkce pohledu pro vrácení dokumentu cez modal.
+    """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if d.stav != D_STAV_ODESLANY and d.stav != D_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -1312,6 +1405,9 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro smazání dokumentu cez modal.
+    """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if check_stav_changed(request, d):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
@@ -1352,6 +1448,9 @@ def smazat(request, ident_cely):
 
 
 class DokumentAutocomplete(autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro autocomplete dokumentů.
+    """
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Dokument.objects.none()
@@ -1362,6 +1461,9 @@ class DokumentAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
+    """
+    Třída pohledu pro autocomplete dokumentů bez zapsaných.
+    """
     def get_queryset(self):
         qs = super(DokumentAutocompleteBezZapsanych, self).get_queryset()
         qs = (
@@ -1373,6 +1475,9 @@ class DokumentAutocompleteBezZapsanych(DokumentAutocomplete):
 
 
 def get_hierarchie_dokument_typ():
+    """
+    Funkce pro získaní hierarchie pro heslař.
+    """
     hierarchie_qs = HeslarHierarchie.objects.filter(
         heslo_podrazene__nazev_heslare__id=HESLAR_DOKUMENT_TYP
     ).values_list("heslo_podrazene", "heslo_nadrazene")
@@ -1386,6 +1491,9 @@ def get_hierarchie_dokument_typ():
 
 
 def get_history_dates(historie_vazby):
+    """
+    Funkce pro získaní historických datumu.
+    """
     historie = {
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK),
@@ -1395,6 +1503,9 @@ def get_history_dates(historie_vazby):
 
 
 def get_detail_template_shows(dokument):
+    """
+    Funkce pro získaní kontextu pro zobrazování možností na stránkách.
+    """
     show_vratit = dokument.stav > D_STAV_ZAPSANY
     show_odeslat = dokument.stav == D_STAV_ZAPSANY
     show_archivovat = dokument.stav == D_STAV_ODESLANY
@@ -1415,6 +1526,9 @@ def get_detail_template_shows(dokument):
 
 
 def zapsat(request, zaznam=None):
+    """
+    Funkce pohledu pro zapsání dokumentu.
+    """
     required_fields = get_required_fields_dokument()
     required_fields_next = get_required_fields_dokument(next=1)
     if request.method == "POST":
@@ -1498,6 +1612,9 @@ def zapsat(request, zaznam=None):
 
 
 def odpojit(request, ident_doku, ident_zaznamu, zaznam):
+    """
+    Funkce pohledu pro odpojení dokumentu cez modal.
+    """
     relace_dokumentu = DokumentCast.objects.filter(dokument__ident_cely=ident_doku)
     remove_orphan = False
     orphan_dokument = None
@@ -1551,6 +1668,9 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
 
 
 def pripojit(request, ident_zaznam, proj_ident_cely, typ):
+    """
+    Funkce pohledu pro pripojení dokumentu cez modal.
+    """
     zaznam = get_object_or_404(typ, ident_cely=ident_zaznam)
     if isinstance(zaznam, ArcheologickyZaznam):
         casti_zaznamu = DokumentCast.objects.filter(
@@ -1639,11 +1759,17 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
 @login_required
 @require_http_methods(["GET"])
 def get_dokument_table_row(request):
+    """
+    Funkce pohledu pro získaní řádku dokumentu pro vykreslení v modalu.
+    """
     context = {"d": Dokument.objects.get(id=request.GET.get("id", ""))}
     return HttpResponse(render_to_string("dokument/dokument_table_row.html", context))
 
 
 def get_detail_view(ident_cely):
+    """
+    Funkce pohledu pro redirect podle identu na model 3D nebo dokument detail.
+    """
     if "3D" in ident_cely:
         return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
     else:
@@ -1651,6 +1777,9 @@ def get_detail_view(ident_cely):
 
 
 def get_detail_json_view(ident_cely):
+    """
+    Funkce pohledu pro vrácení url pro redirect podle identu na model 3D nebo dokument detail.
+    """
     if "3D" in ident_cely:
         return reverse("dokument:detail-model-3D", kwargs={"ident_cely": ident_cely})
     else:
@@ -1658,6 +1787,17 @@ def get_detail_json_view(ident_cely):
 
 
 def get_required_fields_model3D(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu modelu 3D.
+
+    Args:     
+        zaznam (Dokument): model Dokument pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav
@@ -1682,6 +1822,17 @@ def get_required_fields_model3D(zaznam=None, next=0):
 
 
 def get_required_fields_dokument(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu dokumentu.
+
+    Args:     
+        zaznam (Dokument): model Dokument pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav
@@ -1707,6 +1858,9 @@ def get_required_fields_dokument(zaznam=None, next=0):
 
 
 def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely):
+    """
+    Funkce pro získaní formsetu predmetu a objektu pro komponentu.
+    """
     NalezObjektFormset = inlineformset_factory(
         Komponenta,
         NalezObjekt,
@@ -1768,8 +1922,14 @@ def get_komponenta_form_detail(komponenta, show, old_nalez_post, komp_ident_cely
 
 
 def get_obdobi_choices():
+    """
+    Funkce která vrací dvou stupňový heslař pro období.
+    """
     return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
 
 
 def get_areal_choices():
+    """
+    Funkce která vrací dvou stupňový heslař pro areál.
+    """
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)

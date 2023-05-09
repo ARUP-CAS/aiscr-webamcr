@@ -6,6 +6,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 
 class Pes(ExportModelOperationsMixin("pes"), models.Model):
+    """
+    Class pro db model hlídací pes.
+    """
     user = models.ForeignKey(User, models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

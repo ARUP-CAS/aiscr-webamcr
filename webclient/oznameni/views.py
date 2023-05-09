@@ -39,6 +39,10 @@ logger = logging.getLogger(__name__)
 @odstavka_in_progress
 @require_http_methods(["GET", "POST"])
 def index(request, test_run=False):
+    """
+    Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
+    V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
+    """
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
         if request.POST.get("ident_cely"):
@@ -164,6 +168,9 @@ def index(request, test_run=False):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro editaci oznamovatele.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
@@ -190,6 +197,9 @@ def edit(request, ident_cely):
 @csrf_exempt
 @require_http_methods(["POST"])
 def post_poi2kat(request):
+    """
+    Funkce pohledu pro získaní katastru podle bodu pro oznámení.
+    """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
     geom = Point(float(body["corY"]), float(body["corX"]))
@@ -202,6 +212,9 @@ def post_poi2kat(request):
 
 
 class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro vytvoření oznamovetele pomocí modalu.
+    """
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):

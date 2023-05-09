@@ -50,7 +50,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 
 class Historie(ExportModelOperationsMixin("historie"), models.Model):
-
+    """
+    Class pro db model historie.
+    """
     CHOICES = (
         # Project related choices
         (OZNAMENI_PROJ, "Oznámení projektu"),
@@ -114,7 +116,10 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
 
 
 class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
-
+    """
+    Class pro db model historie vazby.
+    Model se používa k napojení na jednotlivé záznamy.
+    """
     CHOICES = (
         (PROJEKT_RELATION_TYPE, "Projekt"),
         (DOKUMENT_RELATION_TYPE, "Dokument"),
@@ -136,6 +141,9 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type):
+        """
+        Metóda pro zjištení datumu posledné transakce daného typu.
+        """
         resp = {}
         if isinstance(transaction_type, list):
             tranzakce_list = (

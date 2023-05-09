@@ -42,10 +42,16 @@ logger = logging.getLogger(__name__)
 
 
 class LokalitaIndexView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro zobrazení domovské stránky lokalit s navigačními možnostmi.
+    """
     template_name = "lokalita/index.html"
 
 
 class LokalitaListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s lokalitami.
+    """
     table_class = LokalitaTable
     model = Lokalita
     filterset_class = LokalitaFilter
@@ -78,6 +84,9 @@ class LokalitaListView(SearchListView):
 
 
 class LokalitaDetailView(LoginRequiredMixin, DetailView):
+    """
+    Třida pohledu pro zobrazení detailu lokality.
+    """
     model = Lokalita
     template_name = "lokalita/lokalita_detail.html"
     slug_field = "archeologicky_zaznam__ident_cely"
@@ -107,6 +116,9 @@ class LokalitaDetailView(LoginRequiredMixin, DetailView):
 
 
 class LokalitaCreateView(LoginRequiredMixin, CreateView):
+    """
+    Třida pohledu pro vytvoření lokality.
+    """
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
@@ -170,6 +182,9 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
 
 class LokalitaEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třida pohledu pro editaci lokality.
+    """
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
@@ -222,6 +237,9 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
 
 
 class LokalitaRelatedView(LokalitaDetailView):
+    """
+    Třida pohledu pro získaní relací lokality, která je dedená v dalších pohledech.
+    """
     model = Lokalita
     slug_field = "archeologicky_zaznam__ident_cely"
 
@@ -253,6 +271,9 @@ class LokalitaRelatedView(LokalitaDetailView):
 
 
 class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
+    """
+    Třida pohledu pro vytvoření dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -264,6 +285,9 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
 
 
 class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
+    """
+    Třida pohledu pro získaní dokumentačních jednotek lokality, která je dedená v dalších pohledech.
+    """
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
         logger.debug(
@@ -280,6 +304,9 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
 
 
 class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro editaci dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
@@ -291,6 +318,9 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
 
 
 class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro vytvoření komponenty lokality.
+    """
     template_name = "lokalita/dj/komponenta_create.html"
 
     def get_context_data(self, **kwargs):
@@ -303,6 +333,9 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro editaci komponenty lokality.
+    """
     template_name = "lokalita/dj/komponenta_detail.html"
 
     def get_komponenta(self):
@@ -323,6 +356,9 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro vytvoření pianu dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/pian_create.html"
 
     def get_context_data(self, **kwargs):
@@ -332,6 +368,9 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro editaci pianu dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/pian_update.html"
 
     def get_pian(self):
@@ -346,6 +385,17 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 def get_required_fields(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu lokality.
+
+    Args:     
+        zaznam (Lokalita): model Lokalita pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav

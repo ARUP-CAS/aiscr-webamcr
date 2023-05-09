@@ -1,8 +1,8 @@
-Archeologický záznam modely
-===========================
+CORE modely
+===========
 
 Definice modelů.
 
-.. automodule:: arch_z.models
+.. automodule:: core.models
     :members:
     
