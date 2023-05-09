@@ -15,10 +15,6 @@ from heslar import hesla
 register = template.Library()
 
 logger = logging.getLogger(__name__)
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
 
 
 @register.filter
@@ -170,5 +166,6 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]
     else:
-        logger_s.error("template_filters.get_value_from_heslar.error", nazev_heslare=nazev_heslare, hodnota=hodnota)
+        logger.error("template_filters.get_value_from_heslar.error",
+                     extra={"nazev_heslare": nazev_heslare, "hodnota": hodnota})
         return ""

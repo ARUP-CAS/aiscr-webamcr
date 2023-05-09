@@ -1,3 +1,5 @@
+import logging
+
 from django.urls import reverse
 
 from crispy_forms.bootstrap import FormActions, AppendedText
@@ -16,10 +18,7 @@ from projekt.models import Projekt
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
 from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID
 
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
+logger_s = logging.getLogger(__name__)
 
 class CreateProjektForm(forms.ModelForm):
     latitude = forms.FloatField(required=False, widget=HiddenInput())

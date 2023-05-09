@@ -39,10 +39,6 @@ from .models import Lokalita
 from .tables import LokalitaTable
 
 logger = logging.getLogger(__name__)
-import logging
-import logstash
-
-logger_s = logging.getLogger('python-logstash-logger')
 
 
 class LokalitaIndexView(LoginRequiredMixin, TemplateView):
@@ -96,8 +92,8 @@ class LokalitaDetailView(LoginRequiredMixin, DetailView):
     slug_field = "archeologicky_zaznam__ident_cely"
 
     def get_context_data(self, **kwargs):
-        logger_s.debug(self.slug_field)
-        logger_s.debug(self.get_object())
+        logger.debug(self.slug_field)
+        logger.debug(self.get_object())
         lokalita_obj = self.get_object()
         context = get_arch_z_context(
             self.request,
@@ -129,7 +125,7 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger_s.debug("context is called")
+        logger.debug("context is called")
         required_fields = get_required_fields()
         required_fields_next = get_required_fields(next=1)
         context["form"] = LokalitaForm(
@@ -148,12 +144,12 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        logger_s.debug(CreateArchZForm(self.request.POST))
+        logger.debug(CreateArchZForm(self.request.POST))
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
-            logger_s.debug("Form to save new Lokalita and AZ OK")
+            logger.debug("Form to save new Lokalita and AZ OK")
             az = form_az.save(commit=False)
-            logger_s.debug(az)
+            logger.debug(az)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             lokalita = form.save(commit=False)
@@ -170,18 +166,18 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             messages.add_message(
                 self.request, messages.SUCCESS, LOKALITA_USPESNE_ZAPSANA
             )
-            logger_s.debug(
+            logger.debug(
                 f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}."
             )
         else:
-            logger_s.debug(form_az.errors)
+            logger.debug(form_az.errors)
             self.form_invalid(form)
         return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("main form is invalid")
+        logger.debug(form.errors)
         return super().form_invalid(form)
 
 
@@ -197,7 +193,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         required_fields = get_required_fields()
-        logger_s.debug(required_fields[0:-1])
+        logger.debug(required_fields[0:-1])
         required_fields_next = get_required_fields(next=1)
         context["form"] = LokalitaForm(
             instance=self.object,
@@ -217,26 +213,26 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        logger_s.debug("Lokalita.EditForm is valid")
+        logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(
             self.request.POST, instance=self.object.archeologicky_zaznam
         )
         if form_az.is_valid():
-            logger_s.debug("Lokalita.EditFormAz is valid")
+            logger.debug("Lokalita.EditFormAz is valid")
             form_az.save()
             messages.add_message(
                 self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
             )
         else:
-            logger_s.debug("AZ form is invalid")
-            logger_s.debug(form_az.errors)
+            logger.debug("AZ form is invalid")
+            logger.debug(form_az.errors)
             self.form_invalid(form)
         return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("main form is invalid")
+        logger.debug(form.errors)
         return super().form_invalid(form)
 
 
@@ -294,9 +290,9 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
     """
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug(
+        logger.debug(
             "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            dj_ident_cely=dj_ident_cely,
+            extra={"dj_ident_cely": dj_ident_cely}
         )
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object

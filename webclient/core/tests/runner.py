@@ -170,15 +170,6 @@ TEST_USER_PASSWORD = "foo1234!!!"
 
 
 class AMCRBaseTestRunner(BaseRunner):
-    def save_geographical_data(self):
-        pass
-
-    def setup_databases(self, *args, **kwargs):
-        temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
-        self.save_geographical_data()
-        self.create_common_test_records()
-        return temp_return
-
     @staticmethod
     def create_common_test_records():
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
@@ -840,6 +831,12 @@ class AMCRBaseTestRunner(BaseRunner):
 
 
 class AMCGithubTestRunner(AMCRBaseTestRunner):
+    def setup_databases(self, *args, **kwargs):
+        temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
+        self.save_geographical_data()
+        self.create_common_test_records()
+        return temp_return
+
     def save_geographical_data(self):
         kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, )
         kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
@@ -930,6 +927,8 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
 class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
     def setup_databases(self, *args, **kwargs):
         temp_return = super(AMCRBaseTestRunner, self).setup_databases(*args, **kwargs)
+        self.save_geographical_data()
+        self.create_common_test_records()
         return temp_return
 
     @staticmethod
@@ -964,9 +963,9 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
 
         # execute SQL query to copy data from prod_zaloha.ruian_katastr to test_prod_zaloha.ruian_katastr
         tables = (
-            ("id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en", "public.ruian_kraj"),
-            ("id, nazev, kraj, spz, kod, nazev_en, hranice, definicni_bod", "ruian_okres"),
-            ("id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny", "ruian_katastr"),
+            ("id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en", "public.ruian_kraj", "id, nazev, kod, rada_id, definicni_bod, hranice, nazev_en"),
+            ("id, nazev, kraj, spz, kod, nazev_en, COALESCE(hranice, ST_GeomFromText('MULTIPOLYGON(((-74.013751 40.711976, -74.01344 40.712439,-74.012834 40.712191,-74.013145 40.711732,-74.013751 40.711976)),((-74.013622 40.710772,-74.013311 40.711236,-74.012699 40.710992,-74.013021 40.710532,-74.013622 40.710772)))', 4326)) AS hranice, COALESCE(definicni_bod, ST_GeomFromText('POINT(-71.060316 48.432044)', 4326)) AS definicni_bod", "ruian_okres", "id, nazev, kraj, spz, kod, nazev_en, hranice, definicni_bod"),
+            ("id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny", "ruian_katastr", "id, okres, aktualni, nazev, kod, definicni_bod, hranice, nazev_stary, soucasny"),
         )
         for table in tables:
             prod_cursor.execute(f"SELECT {table[0]} FROM {table[1]}")
@@ -974,7 +973,7 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
                 row = ", ".join([item_to_str(item) for item in row])
                 if table[1] == "ruian_katastr":
                     row = row[:7] + row[8:]
-                test_cursor.execute(f"INSERT INTO {table[1]} ({table[0]}) VALUES ({row});")
+                test_cursor.execute(f"INSERT INTO {table[1]} ({table[2]}) VALUES ({row});")
             test_conn.commit()
 
         prod_cursor.close()

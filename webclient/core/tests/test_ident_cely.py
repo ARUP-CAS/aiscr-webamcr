@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+import logging
 
 from core.ident_cely import get_dokument_rada, get_temporary_project_ident
 from core.models import ProjektSekvence
@@ -18,6 +19,9 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
+
+
+logger = logging.getLogger("tests")
 
 
 class IdentTests(TestCase):

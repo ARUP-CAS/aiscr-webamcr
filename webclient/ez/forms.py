@@ -16,9 +16,9 @@ from uzivatel.models import Osoba
 from .models import ExterniZdroj
 
 import logging
-import logstash
 
-logger_s = logging.getLogger('python-logstash-logger')
+
+logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojForm(forms.ModelForm):

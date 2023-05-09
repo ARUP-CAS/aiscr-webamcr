@@ -113,13 +113,17 @@ services:
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
-    depends_on:
-      - elasticsearch
+    environment:
+      - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
     volumes:
       - logs_volume:/logs
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - git-reverse-proxy
+    depends_on:
+      - elasticsearch
+    secrets:
+      - logstash_elastic_pass
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
@@ -130,12 +134,15 @@ services:
       - http.host=0.0.0.0
       - xpack.security.enabled=true
       - XPACK_MONITORING_ENABLED=false
-    ports:
-      - 9200:9200
+      - ELASTIC_PASSWORD=elastic_pass
     volumes:
       - elasticsearch_volume:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
     networks:
       - git-reverse-proxy
+    secrets:
+      - elastic_pass
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.7.0
@@ -183,3 +190,5 @@ secrets:
     file: grafana_admin_password.txt
   elastic_pass:
     file: elastic_password.txt
+  logstash_elastic_pass:
+    file: logstash_elastic_password.txt

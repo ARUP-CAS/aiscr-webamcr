@@ -695,8 +695,8 @@ def zadost(request):
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
                 )
-                logger.debug("pas.views.zadost.post.success", extra={"hv_id": hv.pk, "s_id": s.pk, "hist_id": hist.pk,
-                                                           "message": ZADOST_O_SPOLUPRACI_VYTVORENA})
+                logger.debug("pas.views.zadost.post.success",
+                             extra={"hv_id": hv.pk, "s_id": s.pk, "hist_id": hist.pk})
 
                 Mailer.send_en05(
                     email_to=uzivatel_email, reason=uzivatel_text, user=request.user, spoluprace_id=s.pk

@@ -1,3 +1,5 @@
+import logging
+
 from django.urls import reverse
 
 from core.constants import SN_ZAPSANY
@@ -16,6 +18,9 @@ from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from projekt.views import create, detail, edit, smazat
 from uzivatel.models import User, UserNotificationType
+
+
+logger = logging.getLogger("tests")
 
 
 class UrlTests(TestCase):
