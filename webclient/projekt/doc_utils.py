@@ -5,6 +5,7 @@ from io import BytesIO
 import logging
 import os
 
+from django.contrib.staticfiles.storage import staticfiles_storage
 
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT
@@ -30,8 +31,8 @@ HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png
 
 #Try except because of failing sphinx-build
 try:
-    pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
-    pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
+    pdfmetrics.registerFont(TTFont('OpenSans', staticfiles_storage.path('fonts/OpenSans-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', staticfiles_storage.path('fonts/OpenSans-Bold.ttf')))
     registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
 except Exception as e:
     logger_s.error("doc_utils", extra={"exception": e})
