@@ -28,7 +28,7 @@ class ProjektSeleniumTest(BaseSeleniumTestClass):
         return [e.find_element(By.TAG_NAME, "a").text for e in elements]
 
     def _check_column_hiding(self, element_id_initial, column_header_text, initial=True):
-        logger.debug("CoreSeleniumTest._check_column_hiding",
+        logger.info("CoreSeleniumTest._check_column_hiding",
                      extra={"element_id_initial": element_id_initial, "column_header_text": column_header_text,
                               "initial": initial})
         self.driver.find_element(By.CSS_SELECTOR, "#btnGroupDropTable > .material-icons").click()
@@ -160,7 +160,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "bs-select-1-1").click()
 
     def test_projekt_zapsat_p_001(self):
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_p_001.start")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_p_001.start")
         project_count_old = Projekt.objects.count()
 
         self.login()
@@ -184,10 +184,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         project_count_new = Projekt.objects.count()
         self.assertEqual(project_count_old + 1, project_count_new)
 
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_p_001.end")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_p_001.end")
 
     def test_projekt_zapsat_n_001(self):
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_n_001.start")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_001.start")
         project_count_old = Projekt.objects.count()
 
         self.login()
@@ -206,10 +206,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "actionSubmitBtn").click()
         project_count_new = Projekt.objects.count()
         self.assertEqual(project_count_old, project_count_new)
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_n_001.end")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_001.end")
 
     def test_projekt_zapsat_n_002(self):
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_n_002.start")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_002.start")
         project_count_old = Projekt.objects.count()
 
         self.login()
@@ -226,10 +226,10 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "actionSubmitBtn").click()
         project_count_new = Projekt.objects.count()
         self.assertEqual(project_count_old, project_count_new)
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_n_002.end")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_002.end")
 
     def test_projekt_zapsat_n_003(self):
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_n_003.start")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_003.start")
         project_count_old = Projekt.objects.count()
 
         self.login()
@@ -248,7 +248,7 @@ class ProjektZapsatSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "actionSubmitBtn").click()
         project_count_new = Projekt.objects.count()
         self.assertEqual(project_count_old, project_count_new)
-        logger.debug("CoreSeleniumTest.test_projekt_zapsat_n_003.end")
+        logger.info("CoreSeleniumTest.test_projekt_zapsat_n_003.end")
 
 
 class ProjektZmenaStavuSeleniumTest(BaseSeleniumTestClass):
@@ -286,7 +286,7 @@ class ProjektZahajitVyzkumSeleniumTest(ProjektZmenaStavuSeleniumTest):
         }
 
     def test_projekt_zahajit_vyzkum_p_001(self):
-        logger.debug("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.start")
+        logger.info("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.start")
 
         self.login()
         self.go_to_form()
@@ -298,7 +298,7 @@ class ProjektZahajitVyzkumSeleniumTest(ProjektZmenaStavuSeleniumTest):
         self.assertEqual(self.get_project().stav, self.next_stav_projektu)
         self.assertEqual(self.get_project().datum_zahajeni, datetime.datetime.today() + datetime.timedelta(days=-5))
 
-        logger.debug("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.end")
+        logger.info("ProjektZahajitVyzkumSeleniumTest.test_projekt_zahajit_vyzkum_p_001.end")
 
 
 class ProjektUkoncitVyzkumSeleniumTest(ProjektZmenaStavuSeleniumTest):
@@ -321,7 +321,7 @@ class ProjektUkoncitVyzkumSeleniumTest(ProjektZmenaStavuSeleniumTest):
         }
 
     def test_projekt_ukoncit_vyzkum_p_001(self):
-        logger.debug("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.start")
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.start")
 
         self.login()
         self.go_to_form()
@@ -332,10 +332,10 @@ class ProjektUkoncitVyzkumSeleniumTest(ProjektZmenaStavuSeleniumTest):
 
         self.assertEqual(self.get_project().stav, self.next_stav_projektu)
 
-        logger.debug("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.end")
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_p_001.end")
 
     def test_projekt_ukoncit_vyzkum_n_001(self):
-        logger.debug("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.start")
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.start")
 
         self.login()
         self.go_to_form()
@@ -350,7 +350,7 @@ class ProjektUkoncitVyzkumSeleniumTest(ProjektZmenaStavuSeleniumTest):
 
         self.assertEqual(self.get_project().stav, self.stav_projektu)
 
-        logger.debug("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.end")
+        logger.info("ProjektUkoncitVyzkumSeleniumTest.test_projekt_ukoncit_vyzkum_n_001.end")
 
 
 class ProjektUzavritSeleniumTest(ProjektZmenaStavuSeleniumTest):
@@ -367,7 +367,7 @@ class ProjektUzavritSeleniumTest(ProjektZmenaStavuSeleniumTest):
         return {}
 
     def test_projekt_uzavrit_p_001(self):
-        logger.debug("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.start")
+        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.start")
 
         self.login()
         self.go_to_form()
@@ -378,10 +378,10 @@ class ProjektUzavritSeleniumTest(ProjektZmenaStavuSeleniumTest):
 
         self.assertEqual(self.get_project().stav, self.next_stav_projektu)
 
-        logger.debug("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.end")
+        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_p_001.end")
 
     def test_projekt_uzavrit_n_001(self):
-        logger.debug("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.start")
+        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.start")
 
         self.login()
         self.go_to_form("02")
@@ -389,7 +389,7 @@ class ProjektUzavritSeleniumTest(ProjektZmenaStavuSeleniumTest):
         self.assertIn("Projekt musí mít alespoň jednu projektovou akci.", alert_info.text)
         self.assertEqual(self.get_project().stav, self.stav_projektu)
 
-        logger.debug("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.end")
+        logger.info("ProjektUzavritSeleniumTest.test_projekt_uzavrit_n_001.end")
 
 
 class ProjektArchivovatSeleniumTest(ProjektZmenaStavuSeleniumTest):
@@ -406,7 +406,7 @@ class ProjektArchivovatSeleniumTest(ProjektZmenaStavuSeleniumTest):
         return {}
 
     def test_projekt_archivovat_p_001(self):
-        logger.debug("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
+        logger.info("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
 
         self.login()
         self.go_to_form()
@@ -417,10 +417,10 @@ class ProjektArchivovatSeleniumTest(ProjektZmenaStavuSeleniumTest):
 
         self.assertEqual(self.get_project().stav, self.next_stav_projektu)
 
-        logger.debug("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_p_001.end")
+        logger.info("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_p_001.end")
 
     def test_projekt_uzavrit_n_001(self):
-        logger.debug("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
+        logger.info("ProjektArchivovatSeleniumTest.test_projekt_archivovat_p_001.start")
 
         self.login()
         self.go_to_form("02")
@@ -428,7 +428,7 @@ class ProjektArchivovatSeleniumTest(ProjektZmenaStavuSeleniumTest):
         self.assertIn("Akce musí být archivovaná", alert_info.text)
         self.assertEqual(self.get_project().stav, self.stav_projektu)
 
-        logger.debug("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_n_001.end")
+        logger.info("ProjektArchivovatSeleniumTest.test_projekt_uzavrit_n_001.end")
 
 
 class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
@@ -457,7 +457,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
         return Projekt.objects.get(ident_cely=ident_cely)
 
     def test_projekt_vratit_p_001(self):
-        logger.debug("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.start")
+        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.start")
 
         self.login()
         self.go_to_form()
@@ -468,7 +468,7 @@ class ProjektVratitSeleniumTest(BaseSeleniumTestClass):
 
         self.assertEqual(self.get_project().stav, self.next_stav_projektu)
 
-        logger.debug("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.end")
+        logger.info("ProjektVratitSeleniumTest.test_projekt_vratit_p_001.end")
 
 
 class ProjektVratitArchivovanySeleniumTest(ProjektVratitSeleniumTest):
@@ -515,11 +515,11 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
     @classmethod
     def get_project(cls, stav: int = 2, y_fill: str = "04") -> Projekt:
         ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(stav)).replace("YY", y_fill)
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.get_project", extra={"ident_cely": ident_cely})
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.get_project", extra={"ident_cely": ident_cely})
         return Projekt.objects.get(ident_cely=ident_cely)
 
     def test_projekt_zrusit_p_001(self):
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
 
         self.login()
         self.go_to_form(y_fill="04")
@@ -529,10 +529,10 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.CLASS_NAME, "btn-primary").click()
         self.assertEqual(self.get_project(y_fill="04").stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
 
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
 
     def test_projekt_zrusit_p_002(self):
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.start")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.start")
 
         self.login()
         self.go_to_form(y_fill="05")
@@ -548,10 +548,10 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.CLASS_NAME, "btn-primary").click()
         self.assertEqual(self.get_project(y_fill="05").stav, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI)
 
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.end")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_p_002.end")
 
     def test_projekt_zrusit_n_001(self):
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.start")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.start")
         stav_projektu = self.get_project(stav=PROJEKT_STAV_UKONCENY_V_TERENU, y_fill="01").stav
 
         self.login()
@@ -561,7 +561,7 @@ class ProjektNavrhnoutZrusitSeleniumTest(BaseSeleniumTestClass):
         self.assertIn("Projekt před zrušením nesmí mít projektové akce.", alert_info.text)
         self.assertEqual(self.get_project(stav=PROJEKT_STAV_UKONCENY_V_TERENU, y_fill="01").stav, stav_projektu)
 
-        logger.debug("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.end")
+        logger.info("ProjektNavrhnoutZrusitSeleniumTest.test_projekt_zrusit_n_001.end")
 
 
 class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
@@ -586,11 +586,11 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
     def get_project(cls, y_fill="01") -> Projekt:
         ident_cely = EXISTING_PROJECT_IDENT_STATUS.replace("X", str(PROJEKT_STAV_NAVRZEN_KE_ZRUSENI))\
             .replace("YY", y_fill)
-        logger.debug("ProjektZrusitSeleniumTest.get_project", extra={"ident_cely": ident_cely})
+        logger.info("ProjektZrusitSeleniumTest.get_project", extra={"ident_cely": ident_cely})
         return Projekt.objects.get(ident_cely=ident_cely)
 
     def test_projekt_zrusit_p_001(self):
-        logger.debug("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
+        logger.info("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.start")
 
         self.login()
         self.go_to_form()
@@ -600,5 +600,5 @@ class ProjektZrusitSeleniumTest(BaseSeleniumTestClass):
         self.driver.find_element(By.ID, "submit-btn").click()
         self.assertEqual(self.get_project().stav, PROJEKT_STAV_ZRUSENY)
 
-        logger.debug("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
+        logger.info("ProjektZrusitSeleniumTest.test_projekt_zrusit_p_001.end")
 

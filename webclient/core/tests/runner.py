@@ -973,7 +973,10 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
                 row = ", ".join([item_to_str(item) for item in row])
                 if table[1] == "ruian_katastr":
                     row = row[:7] + row[8:]
-                test_cursor.execute(f"INSERT INTO {table[1]} ({table[2]}) VALUES ({row});")
+                try:
+                    test_cursor.execute(f"INSERT INTO {table[1]} ({table[2]}) VALUES ({row});")
+                except psycopg2.IntegrityError as err:
+                    logger.debug("core.tests.runner.AMCRSeleniumTestRunner.save_geographical_data", extra={row: row})
             test_conn.commit()
 
         prod_cursor.close()

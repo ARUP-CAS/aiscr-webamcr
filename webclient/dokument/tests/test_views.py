@@ -349,7 +349,7 @@ class UrlTests(TestCase):
 
         self.assertEqual(302, response.status_code)
         updated_dokument = Dokument.objects.get(ident_cely=self.existing_dokument)
-        logger.debug("Zachovalost: " + str(updated_dokument.extra_data.zachovalost))
+        logger.info("Zachovalost: " + str(updated_dokument.extra_data.zachovalost))
         self.assertTrue(
             updated_dokument.rok_vzniku == 2019
             and updated_dokument.extra_data.zachovalost

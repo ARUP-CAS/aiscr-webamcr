@@ -395,10 +395,12 @@
       };
     });
 
-    timer.addEventListener('targetAchieved', function (e) {
-      {{redirect_to_login_immediately}}
-    });
-    if (maintenance != "true"){
+    {% if redirect_to_login_immediately %}
+      timer.addEventListener('targetAchieved', function (e) {
+        {{redirect_to_login_immediately}}
+      });
+    {% endif %}
+    if (maintenance !== "true"){
       $('.message-container').on('click', '#prolong_btn', function () {
         $.ajax({
           type: "GET",

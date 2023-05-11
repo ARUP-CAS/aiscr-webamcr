@@ -282,8 +282,13 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["logstash", "console"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["logstash", "console"],
+            "level": "WARNING",
+            "propagate": False,
         },
         "tests": {
             "handlers": ["logstash", "console"],

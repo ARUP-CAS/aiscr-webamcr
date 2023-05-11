@@ -84,7 +84,7 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
     def _fill_form_fields(self, test_data):
         for item, value in test_data.items():
             field_type = value["field_type"]
-            logger.debug("BaseSeleniumTestClass._fill_form_fields.start", extra={"filed": item, "content": value,
+            logger.info("BaseSeleniumTestClass._fill_form_fields.start", extra={"filed": item, "content": value,
                                                                                  "field_type": field_type})
             if field_type == "text_field":
                 self._fill_text_field(value.get("field_id"), value.get("value"))
