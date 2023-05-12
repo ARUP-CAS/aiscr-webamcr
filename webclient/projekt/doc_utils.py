@@ -31,11 +31,17 @@ HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png
 
 #Try except because of failing sphinx-build
 
-path = staticfiles_storage.path('fonts/OpenSans-Regular.ttf')
-path_bold = staticfiles_storage.path('fonts/OpenSans-Bold.ttf')
-pdfmetrics.registerFont(TTFont('OpenSans', path))
-pdfmetrics.registerFont(TTFont('OpenSansBold', path_bold))
-registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+path = None
+path_bold = None
+try:
+    path = staticfiles_storage.path('fonts/OpenSans-Regular.ttf')
+    path_bold = staticfiles_storage.path('fonts/OpenSans-Bold.ttf')
+    pdfmetrics.registerFont(TTFont('OpenSans', path))
+    pdfmetrics.registerFont(TTFont('OpenSansBold', path_bold))
+    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+except Exception as err:
+    # This will be triggered during collectstatic
+    logger_s.error("doc_utils.font.error", extra={"path": path, "path_bold": path_bold})
 
 Title = "Hello world"
 pageinfo = "platypus example"
