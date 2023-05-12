@@ -30,17 +30,15 @@ HEADER_HEIGHT = 10 * mm
 HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png")
 
 #Try except because of failing sphinx-build
-try:
-    pdfmetrics.registerFont(TTFont('OpenSans', staticfiles_storage.path('fonts/OpenSans-Regular.ttf')))
-    pdfmetrics.registerFont(TTFont('OpenSansBold', staticfiles_storage.path('fonts/OpenSans-Bold.ttf')))
-    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
-except Exception as e:
-    logger_s.error("doc_utils", extra={"exception": e})
 
+path = staticfiles_storage.path('fonts/OpenSans-Regular.ttf')
+path_bold = staticfiles_storage.path('fonts/OpenSans-Bold.ttf')
+pdfmetrics.registerFont(TTFont('OpenSans', path))
+pdfmetrics.registerFont(TTFont('OpenSansBold', path_bold))
+registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
 
 Title = "Hello world"
 pageinfo = "platypus example"
-
 
 class DocumentCreator(ABC):
 

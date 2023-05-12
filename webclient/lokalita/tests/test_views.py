@@ -36,7 +36,7 @@ class UrlTests(TestCase):
     def test_post_zapsat(self):
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="MANĚTÍN").first().pk),
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="JOSEFOV").first().pk),
             "typ_lokality": str(LOKALITA_TYP_NEW),
             "druh": str(LOKALITA_DRUH),
             "uzivatelske_oznaceni": "",
@@ -66,7 +66,7 @@ class UrlTests(TestCase):
     def test_post_editovat(self):
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="MANĚTÍN").first().pk),
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="JOSEFOV").first().pk),
             "typ_lokality": str(LOKALITA_TYP_NEW),
             "druh": str(LOKALITA_DRUH),
             "uzivatelske_oznaceni": "",

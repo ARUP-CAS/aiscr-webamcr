@@ -457,7 +457,7 @@ class AMCRBaseTestRunner(BaseRunner):
         user_archeolog.save()
         user_archeolog.groups.add(archeolog_group)
 
-        praha = RuianKatastr.objects.filter(nazev="MANĚTÍN").first()
+        praha = RuianKatastr.objects.filter(nazev="JOSEFOV").first()
         # PROJEKT
         p = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
@@ -895,7 +895,7 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
         )
         praha = RuianKatastr(
             id=316655,
-            nazev="MANĚTÍN",
+            nazev="JOSEFOV",
             okres=okres_praha,
             kod=316655,
             aktualni=True,

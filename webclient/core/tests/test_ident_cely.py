@@ -57,7 +57,7 @@ class IdentTests(TestCase):
         p = Projekt(
             stav=0,
             typ_projektu=Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID),
-            hlavni_katastr=RuianKatastr.objects.get(id=150),
+            hlavni_katastr=RuianKatastr.objects.first(),
         )
         p.save()
 

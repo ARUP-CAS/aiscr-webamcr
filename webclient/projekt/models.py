@@ -416,7 +416,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
                 sequence.sekvence += 1
                 logger.warning("projekt.models.Projekt.set_permanent_ident_cely.already_exists",
-                             extra={"perm_ident_cely": perm_ident_cely, "sequence_sekvence": self.sequence.sekvence})
+                             extra={"perm_ident_cely": perm_ident_cely, "sequence_sekvence": sequence.sekvence})
                 perm_ident_cely = (
                         region
                         + "-"
