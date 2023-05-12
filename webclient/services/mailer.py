@@ -405,11 +405,15 @@ class Mailer():
         logger.debug("services.mailer.send_ep07", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         subject = notification_type.predmet.format(ident_cely=project.ident_cely)
+        if project.organizace is not None:
+            organizace_nazev = project.organizace.nazev
+        else:
+            organizace_nazev = ""
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "ident_cely": project.ident_cely,
             "katastr": project.hlavni_katastr.nazev,
-            "organization": project.organizace.nazev,
+            "organization": organizace_nazev,
             "reason": reason,
         })
         cls.send(subject=subject, to="info@amapa.cz", html_content=html)

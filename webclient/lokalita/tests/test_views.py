@@ -6,11 +6,11 @@ from django.urls import reverse
 from arch_z.models import ArcheologickyZaznam
 from core.tests.runner import (
     EXISTING_LOKALITA_IDENT,
-    KATASTR_PRAHA_ID,
     LOKALITA_DRUH,
     LOKALITA_TYP_NEW,
 )
 from heslar.hesla import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID
+from heslar.models import RuianKatastr
 from uzivatel.models import User
 
 
@@ -36,7 +36,7 @@ class UrlTests(TestCase):
     def test_post_zapsat(self):
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "hlavni_katastr": str(KATASTR_PRAHA_ID),
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="MANĚTÍN").first().pk),
             "typ_lokality": str(LOKALITA_TYP_NEW),
             "druh": str(LOKALITA_DRUH),
             "uzivatelske_oznaceni": "",
@@ -66,7 +66,7 @@ class UrlTests(TestCase):
     def test_post_editovat(self):
         data = {
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "hlavni_katastr": KATASTR_PRAHA_ID,
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="MANĚTÍN").first().pk),
             "typ_lokality": str(LOKALITA_TYP_NEW),
             "druh": str(LOKALITA_DRUH),
             "uzivatelske_oznaceni": "",

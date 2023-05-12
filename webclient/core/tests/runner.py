@@ -123,8 +123,6 @@ TYP_ORGANIZACE_VYZKUMNA_INSTITUCE_ID = 581
 TYP_ORGANIZACE_OSTATNI_ID = 110
 
 EL_CHEFE_ID = 666
-KATASTR_ODROVICE_ID = 150
-KATASTR_PRAHA_ID = 316655
 TESTOVACI_DOKUMENT_IDENT = "C-TX-201501985"
 TESTOVACI_SOUBOR_ID = 123
 DOCUMENT_NALEZOVA_ZPRAVA_IDENT = "C-TX-201501986"
@@ -459,7 +457,7 @@ class AMCRBaseTestRunner(BaseRunner):
         user_archeolog.save()
         user_archeolog.groups.add(archeolog_group)
 
-        praha = RuianKatastr.objects.get(pk=316655)
+        praha = RuianKatastr.objects.filter(nazev="MANĚTÍN").first()
         # PROJEKT
         p = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
@@ -875,7 +873,7 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
             ),
         )
         odrovice = RuianKatastr(
-            id=KATASTR_ODROVICE_ID,
+            id=315940,
             nazev="ODROVICE",
             okres=okres_brno_venkov,
             kod=3,
@@ -896,8 +894,8 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
             ),
         )
         praha = RuianKatastr(
-            id=KATASTR_PRAHA_ID,
-            nazev="JOSEFOV",
+            id=316655,
+            nazev="MANĚTÍN",
             okres=okres_praha,
             kod=316655,
             aktualni=True,

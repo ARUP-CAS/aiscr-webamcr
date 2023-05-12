@@ -12,12 +12,12 @@ from core.tests.runner import (
     EXISTING_EVENT_IDENT2,
     EXISTING_SAM_EVENT_IDENT,
     HLAVNI_TYP_SONDA_ID,
-    KATASTR_ODROVICE_ID,
     EXISTING_EVENT_IDENT_INCOMPLETE,
     AMCR_TESTOVACI_ORGANIZACE_ID,
 )
 from dokument.models import Dokument
 from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.models import RuianKatastr
 from projekt.models import Projekt
 from uzivatel.models import User
 
@@ -42,7 +42,7 @@ class UrlTests(TestCase):
     def test_post_zapsat(self):
         data = {
             "csrfmiddlewaretoken": "27ZVK57GOldButY8IAxsDdqBlpUtsWBcpykJT7DgTENfOsy7uqkfoSoYWkbXmcu2",
-            "hlavni_katastr": str(KATASTR_ODROVICE_ID),
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="ODROVICE").first().pk),
             "pristupnost": str(PRISTUPNOST_ANONYM_ID),
             "uzivatelske_oznaceni": "",
             "hlavni_vedouci": str(EL_CHEFE_ID),

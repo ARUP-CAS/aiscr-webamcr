@@ -5,7 +5,6 @@ from django.urls import reverse
 from core.constants import SN_ZAPSANY
 from core.models import Soubor
 from core.message_constants import PROJEKT_NELZE_SMAZAT
-from core.tests.runner import KATASTR_ODROVICE_ID
 from django.contrib.gis.geos import Point
 from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -32,7 +31,7 @@ class UrlTests(TestCase):
             ident_cely="M-202212541",
             lokalizace="Je to na zahradce",
             geom=self.lokace_zahradky,
-            hlavni_katastr=RuianKatastr.objects.get(id=KATASTR_ODROVICE_ID),
+            hlavni_katastr=RuianKatastr.objects.filter(nazev="ODROVICE").first(),
         )
         self.projekt.save()
         self.oznamovatel = Oznamovatel(
@@ -67,7 +66,7 @@ class UrlTests(TestCase):
             "lokalizace": nova_lokalizace,
             "csrfmiddlewaretoken": "NYrbj266E2EKwDd9FQ5Nj4mtBRqnxhkWdxVjSfoXePMaDHQ6cfLYiqJKcJ7mhhKH",
             "typ_projektu": str(TYP_PROJEKTU_ZACHRANNY_ID),
-            "hlavni_katastr": str(KATASTR_ODROVICE_ID),
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="ODROVICE").first().pk),
             "planovane_zahajeni": "13.03.2021 - 21.03.2021",
             "podnet": "Trutnov knn pro p. č. 1865/4, IV-12-2020648",
             "parcelni_cislo": "1865/4, 2327/1",
@@ -110,7 +109,7 @@ class UrlTests(TestCase):
         data = {
             "csrfmiddlewaretoken": "NYrbj266E2EKwDd9FQ5Nj4mtBRqnxhkWdxVjSfoXePMaDHQ6cfLYiqJKcJ7mhhKH",
             "typ_projektu": str(TYP_PROJEKTU_ZACHRANNY_ID),
-            "hlavni_katastr": str(KATASTR_ODROVICE_ID),
+            "hlavni_katastr": str(RuianKatastr.objects.filter(nazev="ODROVICE").first().pk),
             "planovane_zahajeni": "13.03.2021 - 21.03.2021",
             "podnet": "Tralala",
             "lokalizace": "Helelelle",

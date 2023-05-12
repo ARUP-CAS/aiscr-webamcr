@@ -6,7 +6,6 @@ from core.ident_cely import get_dokument_rada, get_temporary_project_ident
 from core.models import ProjektSekvence
 from core.tests.runner import (
     GEOMETRY_PLOCHA,
-    KATASTR_ODROVICE_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     PRESNOST_DESITKY_METRU_ID,
     RADA_DOKUMENTU_TEXT_ID,
@@ -82,7 +81,7 @@ class IdentTests(TestCase):
         # Insert some projects to the database
         year = datetime.datetime.now().year
         zachranny_typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
-        katastr_odrovice = RuianKatastr.objects.get(id=KATASTR_ODROVICE_ID)
+        katastr_odrovice = RuianKatastr.objects.filter(nazev="ODROVICE").first()
         Projekt(
             stav=0,
             typ_projektu=zachranny_typ_projektu,
