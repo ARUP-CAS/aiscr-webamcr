@@ -113,7 +113,7 @@ services:
     networks:
       - prod-net
     ports:
-      - 9090:9090
+      - "9090:9090"
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
