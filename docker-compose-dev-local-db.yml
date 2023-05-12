@@ -124,6 +124,8 @@ services:
     image: prom/prometheus
     volumes:
       - ./prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
 
   celery_worker:
     build:

@@ -982,11 +982,6 @@ class AMCRSeleniumTestRunner(AMCRBaseTestRunner):
                         logger.debug("core.tests.runner.AMCRSeleniumTestRunner.save_geographical_data",
                                      extra={row: row, "err": err})
                 test_conn.commit()
-
-            prod_cursor.close()
-            test_cursor.close()
-            prod_conn.close()
-            test_conn.close()
         except Exception as err:
             logger.warning("core.tests.runner.AMCRSeleniumTestRunner.save_geographical_data.general_exception",
                            extra={"err": err})
