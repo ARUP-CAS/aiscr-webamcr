@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
         migrations.RunSQL(
             sql="""
             CREATE TRIGGER delete_related_neident_dokument_cast
-                AFTER DELETE
+                BEFORE DELETE
                 ON dokument_cast
                 FOR EACH ROW
                 EXECUTE FUNCTION delete_related_neident_dokument_cast();

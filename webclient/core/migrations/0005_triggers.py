@@ -21,7 +21,10 @@ class Migration(migrations.Migration):
             AS $BODY$
                     BEGIN
                         DELETE FROM soubor AS s
-                        WHERE s.vazba = old.id
+                        WHERE s.vazba = old.soubory
+                        ;
+                        DELETE FROM soubor_vazby AS s
+                        WHERE s.id = old.soubory
                         ;
                         RETURN NULL
                         ;
@@ -32,12 +35,17 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL(
             sql="""
-            CREATE TRIGGER delete_related_soubor
-                AFTER DELETE
-                ON soubor_vazby
-                FOR EACH ROW
-                EXECUTE FUNCTION delete_related_soubor();
+            CREATE TRIGGER delete_related_soubor_dokument BEFORE DELETE ON dokument
+                FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
+            CREATE TRIGGER delete_related_soubor_projekt BEFORE DELETE ON projekt
+                FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
+            CREATE TRIGGER delete_related_soubor_samostatny_nalez BEFORE DELETE ON samostatny_nalez
+                FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
             """,
-            reverse_sql="DROP TRIGGER public.delete_related_soubor;",
+            reverse_sql="""
+            DROP TRIGGER public.delete_related_soubor_dokument; 
+            DROP TRIGGER public.delete_related_soubor_projekt; 
+            DROP TRIGGER public.delete_related_soubor_samostatny_nalez;
+            """,
         ),
     ]
