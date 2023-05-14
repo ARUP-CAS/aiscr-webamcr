@@ -61,8 +61,8 @@ class AuthUserCreationForm(RegistrationForm):
             Field("email"),
             Field("telefon"),
             Field("organizace"),
-            AppendedText('password1', '<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
-            AppendedText('password2', '<i class="bi bi-eye-slash" id="togglePassword2"></i>'),
+            AppendedText('password1', mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),input_size="input-group-sm"),
+            AppendedText('password2', mark_safe('<i class="bi bi-eye-slash" id="togglePassword2"></i>'),input_size="input-group-sm"),
         )
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
