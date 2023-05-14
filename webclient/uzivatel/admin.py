@@ -19,6 +19,7 @@ from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
 from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import Group
+from django.utils.translation import gettext_lazy as _
 
 
 logger = logging.getLogger(__name__)
@@ -61,16 +62,20 @@ class PesNotificationTypeInline(admin.TabularInline):
 class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     model_type = KRAJ_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
+    verbose_name = _("admin.uzivatel.form.notifikace.kraj")
+    verbose_name_plural = _("admin.uzivatel.form.notifikace.kraje")
 
 class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     model_type = OKRES_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
-    verbose_name = "Okres"
-    verbose_name_plural = "Okresy"
+    verbose_name = _("admin.uzivatel.form.notifikace.okres")
+    verbose_name_plural = _("admin.uzivatel.form.notifikace.okresy")
     
 class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     model_type = KATASTR_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
+    verbose_name = _("admin.uzivatel.form.notifikace.katastr")
+    verbose_name_plural = _("admin.uzivatel.form.notifikace.katastry")
 
 class CustomUserAdmin(UserAdmin):
     add_form = AuthUserCreationForm
