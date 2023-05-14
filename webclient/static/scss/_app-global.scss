@@ -472,6 +472,9 @@ form {
   &.app-entity-historie {
     height: 92% !important;
   }
+  &.app-entity-historie.app-entity-soubor {
+    height: 85% !important;
+  }
 
   &.app-entity-soubor {
     .app-toolbar {
