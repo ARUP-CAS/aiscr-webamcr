@@ -19,14 +19,17 @@
   </div>
 </form>
 
-{% block script %}
 <script>
   
   window.addEventListener('modalLoaded', (event) => {
     $('#div_id_reason_text').hide();
     $('#div_id_projekt_id').hide();
-    $('<span class="asteriskField">*</span>').insertAfter('#div_id_projekt_id label')
-    $('<span class="asteriskField">*</span>').insertAfter('#div_id_reason_text label')
+    if ($('#div_id_projekt_id span').length == 0) {
+      $('<span class="asteriskField">*</span>').insertAfter('#div_id_projekt_id label')
+    }
+    if ($('#div_id_reason_text span').length == 0) {
+      $('<span class="asteriskField">*</span>').insertAfter('#div_id_reason_text label')
+    }
     if ($('input[name=reason]:checked', '#div_id_reason').val() == 'option1') {
       $('#div_id_projekt_id').show();
       };
@@ -51,4 +54,3 @@
     });
   
   </script>
-{% endblock %}
