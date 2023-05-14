@@ -35,7 +35,7 @@
       </table>
     </div>
   {% endfor %}
-  {% if request.user|can_translate  %}
+  {% if app_list|length > 1 and request.user|can_translate  %}
     <div class="app-rosetta module">
         <table>
         <caption>
