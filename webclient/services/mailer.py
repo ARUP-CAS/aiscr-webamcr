@@ -145,7 +145,7 @@ class Mailer():
             "organization": user.organizace.nazev,
             "email": user.email,
             "phone": user.telefon,
-            "role": user.hlavni_role.name,
+            "role": user.hlavni_role.name if user.hlavni_role else None,
         })
         cls.send(notification_type.predmet, user.email, html)
 
@@ -184,9 +184,13 @@ class Mailer():
         IDENT_CELY = 'E-U-06'
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        roles = ", "
-        roles = roles.join([group.name for group in groups])
-        roles = roles.rstrip(', ')
+        if groups[0] is not None:
+            logger.debug(groups)
+            roles = ", "
+            roles = roles.join([group.name for group in groups])
+            roles = roles.rstrip(', ')
+        else:
+            roles = ""
         html = render_to_string(notification_type.cesta_sablony, {
             "title": notification_type.predmet,
             "roles": roles,
