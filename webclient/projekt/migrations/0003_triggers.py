@@ -10,6 +10,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projekt', '0002_initial'),
+        ('pas', '0001_initial'),
+        ('dokument', '0001_initial'),
     ]
 
     operations = [

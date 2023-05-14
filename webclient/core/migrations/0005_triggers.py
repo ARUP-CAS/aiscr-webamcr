@@ -8,6 +8,8 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("core", "0004_default"),
+        ("dokument", "0003_initial"),
+        ("projekt", "0004_default"),
     ]
 
     operations = [
@@ -39,13 +41,10 @@ class Migration(migrations.Migration):
                 FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
             CREATE TRIGGER delete_related_soubor_projekt BEFORE DELETE ON projekt
                 FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
-            CREATE TRIGGER delete_related_soubor_samostatny_nalez BEFORE DELETE ON samostatny_nalez
-                FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
             """,
             reverse_sql="""
             DROP TRIGGER public.delete_related_soubor_dokument; 
             DROP TRIGGER public.delete_related_soubor_projekt; 
-            DROP TRIGGER public.delete_related_soubor_samostatny_nalez;
             """,
         ),
     ]
