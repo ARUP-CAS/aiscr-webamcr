@@ -5,13 +5,12 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('projekt', '0002_initial'),
-        ('pas', '0001_initial'),
-        ('dokument', '0001_initial'),
+        ("projekt", "0002_initial"),
+        ("pas", "0001_initial"),
+        ("dokument", "0001_initial"),
     ]
 
     operations = [
@@ -42,31 +41,5 @@ class Migration(migrations.Migration):
                 EXECUTE FUNCTION prevent_project_deletion();
             """,
             reverse_sql="DROP TRIGGER public.prevent_project_deletion;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE OR REPLACE FUNCTION public.delete_related_soubor()
-                RETURNS trigger
-                LANGUAGE 'plpgsql'
-                COST 100
-                VOLATILE NOT LEAKPROOF
-            AS $BODY$
-                BEGIN
-                    DELETE FROM soubor_vazby WHERE soubor_vazby.id = old.soubory;
-                    RETURN NEW;
-                END;   
-            $BODY$;
-            """,
-            reverse_sql="DROP FUNCTION public.delete_related_soubor;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE TRIGGER delete_related_soubor_projekt
-                AFTER DELETE
-                ON projekt
-                FOR EACH ROW
-                EXECUTE FUNCTION delete_related_soubor();
-            """,
-            reverse_sql="DROP TRIGGER public.delete_related_soubor_projekt;",
         ),
     ]
