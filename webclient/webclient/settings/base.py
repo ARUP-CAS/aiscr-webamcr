@@ -126,12 +126,12 @@ INSTALLED_APPS = [
     "simple_history",
     "widget_tweaks",
     "rosetta",
-    "django_cron",
     "bs4",
     "django_extensions",
     "django_celery_beat",
     "django_celery_results",
     'django_prometheus',
+    "cron",
 ]
 
 MIDDLEWARE = [

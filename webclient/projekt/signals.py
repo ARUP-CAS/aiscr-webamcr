@@ -20,6 +20,7 @@ def projekt_pre_save(sender, instance, **kwargs):
         if instance.stav == PROJEKT_STAV_ZAPSANY:
             instance.__original_stav = Projekt.objects.get(pk=instance.id).stav
 
+
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
     try:
         instance_db = sender.objects.get(pk = instance.pk)
@@ -31,6 +32,7 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
                          extra={"ident_cely": instance.ident_cely})
             instance.termin_odevzdani_nz = instance.datum_ukonceni
             instance.termin_odevzdani_nz = instance.termin_odevzdani_nz.replace(year=instance.termin_odevzdani_nz.year + 3)
+
 
 def create_projekt_vazby(sender, instance, **kwargs):
     if instance.pk is None:
@@ -44,6 +46,7 @@ def create_projekt_vazby(sender, instance, **kwargs):
         sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         sv.save()
         instance.soubory = sv
+
 
 @receiver(post_save, sender=Projekt)
 def odesli_hlidaciho_psa(sender, instance, **kwargs):
