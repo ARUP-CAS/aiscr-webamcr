@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                     DELETE FROM historie AS h
                     WHERE h.vazba in (select id from deleted_historie)
                     ;
-                    return null
+                    return OLD
                     ;
                 END;   
             $BODY$;

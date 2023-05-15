@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                         DELETE FROM soubor_vazby AS s
                         WHERE s.id = old.soubory
                         ;
-                        RETURN NULL
+                        RETURN OLD
                         ;
                     END;    
             $BODY$;

@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                                 WHERE dci.dokument = d.id AND dci.archeologicky_zaznam != old.id
                             )
                         );
-                        RETURN NEW;
+                        RETURN OLD;
                     END;   
             $BODY$;
             """,

@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                         DELETE FROM komponenta AS k
                         WHERE k.komponenta_vazby  = old.id
                         ;
-                        return null
+                        return OLD
                         ;
                     END;   
             $BODY$;
@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                     DELETE FROM nalez_objekt AS nob
                     WHERE nob.komponenta = old.id
                     ;
-                    return null
+                    return OLD
                     ;
                 END;    
             $BODY$;
