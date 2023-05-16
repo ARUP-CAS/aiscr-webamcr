@@ -5,7 +5,7 @@
 {% trans "E-U-01.tato_zpráva_slouží_k_ověření_vaší_emailové_adresy_což_je_nezbytný_krok_pro_získání_přístupu_do_amčr" %}.
 
 {% trans "E-U-01.svoji_emailovou_adresu_ověříte_kliknutím_na_níže_uvedený_odkaz" %}:
-{% get_server_domain %}{% url 'django_registration_activate' activation_key %}
+{{ site }}{% url 'django_registration_activate' activation_key %}
 
 {% trans "E-U-01.tento_odkaz_expiruje_za" %} {{ expiration_days }} {% trans "E-U-01.dní" %}.
 
