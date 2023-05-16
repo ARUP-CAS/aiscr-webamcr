@@ -50,7 +50,8 @@ crossorigin=""/>
   {{ formCoor.coordinate_sjtsk_y|as_crispy_field }}
 </div>
 <div class="row">
-    <div class="form-group col-sm-4 row">
+    <div class="form-group col-sm-4">
+      <div class="row">
       <div class="form-group col-sm-6">
       {{ form.projekt|as_crispy_field }}
       </div>
@@ -133,6 +134,7 @@ crossorigin=""/>
       <div class="form-group col-sm-12">
         {{ form.lokalizace|as_crispy_field }}
       </div>
+    </div>
     </div>
     <div class="col-sm-8">
         {% include "map.html" %}
