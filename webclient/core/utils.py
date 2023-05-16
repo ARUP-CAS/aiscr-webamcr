@@ -98,18 +98,18 @@ def get_centre_point(bod, geom):
                     len(geom),
                 ]
         elif isinstance(geom[0][0][0], tuple):
-            for i in range(0, len(geom)):
+            for i in range(0, len(geom)-1):
                 [x0, x1, xlength] = [
                     x0 + geom[0][0][i][0],
                     x1 + geom[0][0][i][1],
-                    len(geom),
+                    len(geom)-1,
                 ]
         else:
-            for i in range(0, len(geom[0])):
+            for i in range(0, len(geom[0])-1):
                 [x0, x1, xlength] = [
                     x0 + geom[0][i][0],
                     x1 + geom[0][i][1],
-                    len(geom[0]),
+                    len(geom[0])-1,
                 ]
         bod.lat = x1 / xlength
         bod.lng = x0 / xlength
