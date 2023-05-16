@@ -82,7 +82,8 @@ class Mailer():
                     ident_cely=groups[notification_type.ident_cely])
                 group_key = group.pk
             except ObjectDoesNotExist:
-                logger.debug("group not found exception")
+                logger.debug("services.mailer._notification_should_be_sent.group_not_found",
+                             extra={"user": user, "notification_type": notification_type.ident_cely})
         if notification_type.ident_cely in always_active:
             notification_is_enabled = True
         else:
@@ -185,10 +186,8 @@ class Mailer():
         logger.debug("services.mailer.send_eu06", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
         if groups[0] is not None:
-            logger.debug(groups)
-            roles = ", "
-            roles = roles.join([group.name for group in groups])
-            roles = roles.rstrip(', ')
+            logger.debug("services.mailer.send_eu06.groups", extra={"ident_cely": IDENT_CELY, "groups": groups})
+            roles = ", ".join([group.name for group in groups])
         else:
             roles = ""
         html = render_to_string(notification_type.cesta_sablony, {
