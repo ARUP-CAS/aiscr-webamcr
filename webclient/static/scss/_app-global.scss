@@ -283,6 +283,10 @@ form {
     margin-bottom: $app-form-label-mg-bottom;
   }
 
+  .form-check-label{
+    font-weight: normal;
+  }
+
   .input-group-append {
     cursor: pointer;
 

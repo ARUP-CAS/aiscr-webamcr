@@ -131,7 +131,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, "Archeologický záznam"),
     )
 
-    typ_vazby = models.TextField(max_length=24, choices=CHOICES,db_index=True)
+    typ_vazby = models.TextField(max_length=24, choices=CHOICES, db_index=True)
 
     class Meta:
         db_table = "historie_vazby"
@@ -146,18 +146,18 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
         """
         resp = {}
         if isinstance(transaction_type, list):
-            tranzakce_list = (
+            transakce_list = (
                 self.historie_set.filter(typ_zmeny__in=transaction_type)
                 .only("datum_zmeny")
                 .order_by("-datum_zmeny")
             )
         else:
-            tranzakce_list = (
+            transakce_list = (
                 self.historie_set.filter(typ_zmeny=transaction_type)
                 .only("datum_zmeny")
                 .order_by("-datum_zmeny")
             )
-        if len(tranzakce_list) > 0:
-            resp["datum"] = tranzakce_list[0].datum_zmeny
-            resp["uzivatel"] = tranzakce_list[0].uzivatel
+        if len(transakce_list) > 0:
+            resp["datum"] = transakce_list[0].datum_zmeny
+            resp["uzivatel"] = transakce_list[0].uzivatel
         return resp

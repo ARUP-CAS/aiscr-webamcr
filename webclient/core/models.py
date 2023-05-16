@@ -101,18 +101,20 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         hv.save()
         self.historie = hv
         self.save()
+        logger.debug("core.models.soubor.create_soubor_vazby.finished", extra={"historie": hv})
 
     def zaznamenej_nahrani(self, user):
         """
         Metóda pro zapsáni vytvoření souboru do historie.
         """
         self.create_soubor_vazby()
-        Historie(
+        hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
             poznamka=self.nazev,
             vazba=self.historie,
         ).save()
+        logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
@@ -122,12 +124,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             self.create_soubor_vazby()
         if not nazev:
             nazev = self.nazev
-        Historie(
+        hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
             poznamka=nazev,
             vazba=self.historie,
         ).save()
+        logger.debug("core.models.soubor.zaznamenej_nahrani_nove_verze.finished", extra={"historie": hist})
 
     def save(self, *args, **kwargs):
         """

@@ -434,6 +434,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
 
     def create_confirmation_document(self, additional=False, user=None):
         from core.utils import get_mime_type
+        logger.debug("projekt.models.create_confirmation_document.start",
+                     extra={"projekt_ident": self.ident_cely, "additional": additional, "user": user})
         creator = OznameniPDFCreator(self.oznamovatel, self, additional)
         filename, filename_without_checksum = creator.build_document()
         filename_without_path = os.path.basename(filename)
@@ -448,10 +450,15 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
                 size_mb=os.path.getsize(filename)/1024/1024,
             )
             soubor.save()
+            logger.debug("projekt.models.create_confirmation_document.created",
+                         extra={"projekt_ident": self.ident_cely, "soubor": soubor.pk, "created_filename": filename})
             if user:
                 soubor.zaznamenej_nahrani(user)
             else:
                 soubor.create_soubor_vazby()
+        else:
+            logger.debug("projekt.models.create_confirmation_document.duplicat_exists",
+                         extra={"projekt_ident": self.ident_cely, "filename": filename})
 
     @property
     def expert_list_can_be_created(self):

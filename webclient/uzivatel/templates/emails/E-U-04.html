@@ -1,5 +1,6 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
+{% load template_tags %}
 {% block content %}
     <p>
         {% trans "E-U-04.dobrý_den" %},
@@ -15,5 +16,5 @@
         <li><b>{% trans "E-U-04.email" %}:</b> {{ email }}</li>
         <li><b>{% trans "E-U-04.telefon" %}:</b> {{ phone }}</li>
     </ul>
-    <p>{% trans "E-U-04.uživatelský_účet_aktivujete_v_administraci_amčr" %}: <a href="{{ admin_link }}">{{ admin_link }}</a></p>
+    <p>{% trans "E-U-04.uživatelský_účet_aktivujete_v_administraci_amčr" %}: <a href="{% get_site_url %}{{ admin_link }}">{% get_site_url %}{{ admin_link }}</a></p>
 {% endblock %}

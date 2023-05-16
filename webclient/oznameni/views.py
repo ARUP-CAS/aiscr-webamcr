@@ -43,30 +43,30 @@ def index(request, test_run=False):
     Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
     V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
     """
+    logger.debug(f"oznameni.views.index.start", extra={"text_run": test_run})
+    test_run = test_run or request.GET["test"].lower() == "true"
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
+        logger.debug(f"oznameni.views.index.first_part_start")
         if request.POST.get("ident_cely"):
             projekt = get_object_or_404(
                 Projekt, ident_cely=request.POST.get("ident_cely")
             )
             form_ozn = OznamovatelForm(request.POST, instance=projekt.oznamovatel)
             form_projekt = ProjektOznameniForm(request.POST, instance=projekt)
-            ident_cely = projekt.ident_cely
         else:
             form_ozn = OznamovatelForm(request.POST)
             form_projekt = ProjektOznameniForm(request.POST)
         form_captcha = FormWithCaptcha(request.POST)
-        logger.debug(f"oznameni.views.index form_ozn.is_valid {form_ozn.is_valid()}")
-        logger.debug(
-            f"oznameni.views.index form_projekt.is_valid {form_projekt.is_valid()}"
-        )
-
+        logger.debug("oznameni.views.index.form_ozn.valid", extra={"valid": form_ozn.is_valid()})
+        logger.debug("oznameni.views.index.form_projekt.valid", extra={"valid": form_projekt.is_valid()})
+        logger.debug("oznameni.views.index.form_captcha.valid", extra={"valid": form_captcha.is_valid()})
         if (
             form_ozn.is_valid()
             and form_projekt.is_valid()
             and (test_run or form_captcha.is_valid())
         ):
-            logger.debug("Oznameni Form is valid")
+            logger.debug("oznameni.views.index.all_forms_valid")
             o = form_ozn.save(commit=False)
             p = form_projekt.save(commit=False)
             p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
@@ -76,16 +76,14 @@ def index(request, test_run=False):
                 float(request.POST.get("latitude")),
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
-            logger.debug(p)
+            logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": p.hlavni_katastr})
             p.save()
             if p.hlavni_katastr is not None:
                 p.ident_cely = get_temporary_project_ident(
                     p, p.hlavni_katastr.okres.kraj.rada_id
                 )
             else:
-                logger.warning(
-                    "Unknown cadastre location for point {}".format(str(p.geom))
-                )
+                logger.debug("oznameni.views.index.unknow_location", extra={"point": str(p.geom)})
             p.save()
             o.projekt = p
             o.save()
@@ -117,19 +115,20 @@ def index(request, test_run=False):
             response.set_cookie("project", hash(p.ident_cely), 3600)
             return response
         else:
-            logger.debug("One of the forms is not valid")
-            logger.debug(form_ozn.errors)
-            logger.debug(form_projekt.errors)
+            extra = {"form_ozn_errors": form_ozn.errors, "form_projekt_errors": form_projekt.errors}
             if not test_run:
-                logger.debug(form_captcha.errors)
+                extra["form_captcha_errors"] = form_captcha.errors
+            logger.debug("oznameni.views.index.form_not_valid", extra=extra)
 
     # Part 2 of the announcement form
     elif request.method == "POST" and "ident_cely" in request.POST:
+        logger.debug(f"oznameni.views.index.second_part_start")
         p = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
         p.set_oznameny()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)
     elif request.method == "GET" and "ident_cely" in request.GET:
+        logger.debug(f"oznameni.views.index.get")
         cookie_project = request.COOKIES.get("project", None)
         ident = request.GET.get("ident_cely")
         logger.debug(ident)
