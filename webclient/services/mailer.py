@@ -92,9 +92,9 @@ class Mailer():
                 result = True
             if user.is_active is True:
                 result = True
-        logger.debug("services.mailer._notification_should_be_sent",
-                     extra={"notification_type": notification_type, "user": user, "result": result})
-
+        if result:
+            logger.debug("services.mailer._notification_should_be_sent",
+                         extra={"notification_type": notification_type, "user": user})
         return result
 
     @classmethod
@@ -102,7 +102,7 @@ class Mailer():
                                user: 'uzivatel.models.User'):
         notification_log = user.notification_log.filter(notification_type=notification_type).first()
         logger.debug("services.mailer._notification_was_sent",
-                     extra={"notification_type": notification_type, "user": user})
+                     extra={"notification_type": notification_type.ident_cely, "user": user})
         if notification_log:
             return True
         return False
@@ -121,7 +121,7 @@ class Mailer():
             plain_text = cls.__strip_tags(html_content)
             email = EmailMultiAlternatives(subject, plain_text, from_email, [to])
             email.attach_alternative(html_content, "text/html")
-            logger.debug("services.mailer.send.debug", extra={"from_email": from_email, "to": to, "subject": subject})
+            logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to, "subject": subject})
             if attachment_path:
                 email.attach_file(attachment_path)
             try:
@@ -130,7 +130,7 @@ class Mailer():
                 logger.error("services.mailer.send.error",
                              extra={"from_email": from_email, "to": to, "subject": subject, "exception": e})
         else:
-            logger.debug("services.mailer.send.invalid_email", extra={"to": to, "subject": subject})
+            logger.warning("services.mailer.send.invalid_email", extra={"to": to, "subject": subject})
 
     @classmethod
     def send_eu02(cls, user: 'uzivatel.models.User'):
