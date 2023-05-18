@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 import psycopg2
+from django.db import IntegrityError
 
 from arch_z.models import Akce, ArcheologickyZaznam, ExterniOdkaz
 from core.constants import (
@@ -210,9 +211,13 @@ class AMCRBaseTestRunner(BaseRunner):
         )
 
         for ident, template in user_notifications:
-            UserNotificationType(ident_cely=ident, zasilat_neaktivnim=False,
-                                 predmet=f"Selenium test {ident}",
-                                 cesta_sablony=template).save()
+            try:
+                UserNotificationType(ident_cely=ident, zasilat_neaktivnim=False,
+                                     predmet=f"Selenium test {ident}",
+                                     cesta_sablony=template).save()
+            except IntegrityError as err:
+                logger.debug("core.tests.runner.AMCRBaseTestRunner.notification.already_exists",
+                             extra={"err": err, "ident": ident})
 
         hn = HeslarNazev(id=HESLAR_PROJEKT_TYP, nazev="heslar_typ_projektu")
         hp = HeslarNazev(id=HESLAR_PIAN_PRESNOST, nazev="heslar_presnost")
