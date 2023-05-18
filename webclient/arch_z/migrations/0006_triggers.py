@@ -26,17 +26,15 @@ class Migration(migrations.Migration):
             AS $BODY$
                     BEGIN
                         DELETE FROM dokument_cast AS dc
-                        WHERE dc.dokument_id IN (
-                            SELECT d.id FROM dokument AS d
-                            WHERE d.ident_cely NOT LIKE 'X-%'
-                            AND EXISTS (
-                                SELECT FROM dokument_cast AS dc
-                                WHERE dc.dokument = d.id AND dc.archeologicky_zaznam = old.id AND NOT EXISTS (
-                                    SELECT FROM dokument_cast AS dci
-                                    WHERE dci.dokument = d.id AND dci.archeologicky_zaznam != old.id
-                                )
-                            )
-                        );
+                        WHERE dc.archeologicky_zaznam = old.id
+                        AND EXISTS (
+                            SELECT FROM komponenta_vazby kv
+                            WHERE kv.id = dc.komponenty AND EXISTS (
+                                SELECT from komponenta k 
+                                WHERE k.komponenta_vazby = kv.id))
+                        AND NOT EXISTS (
+                                SELECT from neident_akce na 
+                                WHERE na.dokument_cast = dc.id);
                         
                         DELETE FROM dokument AS d
                         WHERE d.ident_cely NOT LIKE 'X-%'
@@ -47,7 +45,7 @@ class Migration(migrations.Migration):
                                 WHERE dci.dokument = d.id AND dci.archeologicky_zaznam != old.id
                             )
                         );
-                        RETURN NEW;
+                        RETURN OLD;
                     END;   
             $BODY$;
             """,
@@ -56,7 +54,7 @@ class Migration(migrations.Migration):
         migrations.RunSQL(
             sql="""
             CREATE TRIGGER delete_connected_documents
-                AFTER DELETE
+                BEFORE DELETE
                 ON archeologicky_zaznam
                 FOR EACH ROW
                 EXECUTE FUNCTION delete_connected_documents();
