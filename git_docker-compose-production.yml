@@ -19,6 +19,11 @@ services:
       - "8000"
     ports:
       - "2525:2525"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
 
   memcached:
     image: memcached:latest
@@ -66,6 +71,11 @@ services:
         condition: service_started
       web:
         condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 0.5G
 
   celery_beat:
     build:
@@ -86,6 +96,11 @@ services:
         condition: service_started
       web:
         condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 0.5G
 
   grafana:
     image: grafana/grafana-enterprise:8.2.0
@@ -145,6 +160,11 @@ services:
       - git-reverse-proxy
     secrets:
       - elastic_pass
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1.5G
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.7.0
@@ -168,6 +188,11 @@ services:
     shm_size: '1gb'
     networks:
       - git-reverse-proxy
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
 
 volumes:
   static_data:
