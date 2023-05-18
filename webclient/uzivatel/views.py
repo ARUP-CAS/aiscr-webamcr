@@ -250,7 +250,6 @@ class UserActivationView(ActivationView):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
         user.save()
-        Mailer.send_eu02(user)
         return user
 
 class UserPasswordResetView(PasswordResetView):

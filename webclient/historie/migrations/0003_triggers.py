@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                     DELETE FROM historie AS h
                     WHERE h.vazba in (select id from deleted_historie)
                     ;
-                    return null
+                    return OLD
                     ;
                 END;   
             $BODY$;
@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
         migrations.RunSQL(
             sql="""
             CREATE TRIGGER delete_history_spoluprace
-                AFTER DELETE
+                BEFORE DELETE
                 ON uzivatel_spoluprace
                 FOR EACH ROW
                 EXECUTE FUNCTION delete_history_spoluprace();
