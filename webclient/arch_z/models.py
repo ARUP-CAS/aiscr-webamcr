@@ -190,14 +190,14 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
                 )
             ) == 0 and not (self.akce.je_nz or self.akce.odlozena_nz):
                 result.append(_("Nemá nálezovou zprávu."))
-                logger.warning("arch_z.models.ArcheologickyZaznam.nema_nalezovou_zpravu",
-                               extra={"ident_cely": self.ident_cely})
+                logger.info("arch_z.models.ArcheologickyZaznam.nema_nalezovou_zpravu",
+                            extra={"ident_cely": self.ident_cely})
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.dokumentacni_jednotky_akce.all()) == 0:
             result.append(_("Nemá žádnou dokumentační jednotku."))
-            logger.warning("arch_z.models.ArcheologickyZaznam.nema_dokumentacni_jednotku",
-                           extra={"ident_cely": self.ident_cely})
+            logger.info("arch_z.models.ArcheologickyZaznam.nema_dokumentacni_jednotku",
+                        extra={"ident_cely": self.ident_cely})
         for dj in self.dokumentacni_jednotky_akce.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.

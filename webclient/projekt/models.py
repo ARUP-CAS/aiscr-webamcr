@@ -388,7 +388,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             number = last_part[4:]
             permanent = False if "X-" in self.ident_cely else True
         else:
-            logger.warning("projekt.models.Projekt.parse_ident_cely.cannot_retrieve_ident_cely", extra={"pk": self.pk})
+            if self.pk:
+                logger.warning("projekt.models.Projekt.parse_ident_cely.cannot_retrieve_ident_cely",
+                               extra={"pk": self.pk})
+            else:
+                logger.warning("projekt.models.Projekt.parse_ident_cely.cannot_retrieve_ident_cely.no_pk")
         return permanent, region, year, number
 
     def has_oznamovatel(self):

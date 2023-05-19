@@ -17,14 +17,14 @@ def create_ident_cely(sender, instance, **kwargs):
     # check if the updated fields exist and if you're not creating a new object
     if not kwargs['update_fields'] and instance.id:
         # Save it, so it can be used in post_save
-        try:
-            instance.old = User.objects.get(id=instance.id)
-        except ObjectDoesNotExist as err:
-            # Primary for the automatic testing where a new instance is created with ID
-            logger.error("uzivatel.signals.create_ident_cely.ObjectDoesNotExist", extra={"err": err})
+        database_user_query = User.objects.filter(id=instance.id)
+        if database_user_query.count() > 0:
+            instance.old = database_user_query.first()
+        else:
+            instance.old = None
     if instance.pk is None:
         instance.model_is_updated = False
-        logger.error("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
+        logger.debug("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
         if not instance.ident_cely:
             users = User.objects.all().order_by("-ident_cely")
             if users.count() > 0:
@@ -38,7 +38,7 @@ def create_ident_cely(sender, instance, **kwargs):
 
 @receiver(post_save, sender=User)
 def send_deactivation_email(sender, instance: User, **kwargs):
-    if not kwargs.get('update_fields') and hasattr(instance, 'old'):
+    if not kwargs.get('update_fields') and hasattr(instance, 'old') and instance.old is not None:
         kwargs['update_fields'] = []
         if instance.is_active != instance.old.is_active:
             kwargs['update_fields'].append('is_active')

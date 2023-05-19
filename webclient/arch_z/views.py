@@ -567,7 +567,7 @@ def odeslat(request, ident_cely):
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ZAPSANY:
-        logger_s.debug("arch_z.views.odeslat permission denied")
+        logger.debug("arch_z.views.odeslat permission denied")
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
         return JsonResponse(
             {"redirect": az.get_absolute_url()},
