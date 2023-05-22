@@ -47,10 +47,10 @@ class Migration(migrations.Migration):
             name='Kladysm5',
             fields=[
                 ('gid', models.IntegerField(primary_key=True, serialize=False)),
-                ('id', models.DecimalField(decimal_places=1000, max_digits=1000)),
+                ('id', models.DecimalField(decimal_places=1000, max_digits=500)),
                 ('mapname', models.TextField()),
                 ('mapno', models.TextField()),
-                ('podil', models.DecimalField(decimal_places=1000, max_digits=1000)),
+                ('podil', models.DecimalField(decimal_places=1000, max_digits=999)),
                 ('geom', django.contrib.gis.db.models.fields.PolygonField(srid=5514)),
                 ('cislo', models.TextField()),
             ],

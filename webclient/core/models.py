@@ -83,7 +83,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         related_name="soubor_historie",
         null=True,
     )
-    path = models.FileField(upload_to=get_upload_to)
+    path = models.FileField(upload_to=get_upload_to, max_length=500)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
 
     class Meta:

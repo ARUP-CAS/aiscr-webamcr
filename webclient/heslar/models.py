@@ -254,7 +254,7 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), models.Model):
     nazev_en = models.TextField(verbose_name=_("heslar.models.RuianOkres.nazev_en"))
     definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"),
                                         srid=4326)
-    hranice = pgmodels.MultiPolygonField(null=False, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
+    hranice = pgmodels.MultiPolygonField(null=True, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
 
     class Meta:
         db_table = "ruian_okres"
