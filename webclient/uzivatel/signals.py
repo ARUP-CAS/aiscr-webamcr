@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=User)
 def create_ident_cely(sender, instance, **kwargs):
-    # check if the updated fields exist and if you're not creating a new object
+    """
+    Přidelení identu celý pro usera.
+    """
     if not kwargs['update_fields'] and instance.id:
         # Save it, so it can be used in post_save
         database_user_query = User.objects.filter(id=instance.id)
@@ -38,6 +40,9 @@ def create_ident_cely(sender, instance, **kwargs):
 
 @receiver(post_save, sender=User)
 def send_deactivation_email(sender, instance: User, **kwargs):
+    """
+    Signál pro poslání deaktivačního emailu uživately.
+    """
     if not kwargs.get('update_fields') and hasattr(instance, 'old') and instance.old is not None:
         kwargs['update_fields'] = []
         if instance.is_active != instance.old.is_active:
@@ -49,16 +54,25 @@ def send_deactivation_email(sender, instance: User, **kwargs):
 
 @receiver(post_save, sender=User)
 def send_new_user_email_to_admin(sender, instance: User, **kwargs):
+    """
+    Signál pro zaslání info o nově registrovaném uživately adminovy.
+    """
     if kwargs.get('created') is True and instance.created_from_admin_panel is False:
         Mailer.send_eu04(user=instance)
 
 
 @receiver(post_save, sender=User)
 def send_account_confirmed_email(sender, instance: User, **kwargs):
+    """
+    signál pro zaslání emailu uživately o jeho konfirmaci.
+    """
     if kwargs.get('created') is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
 
 
 @receiver(post_delete, sender=User)
 def delete_profile(sender, instance, *args, **kwargs):
+    """
+    Signál pro zaslání emailu uživately o jeho smazání.
+    """
     Mailer.send_eu03(user=instance)
