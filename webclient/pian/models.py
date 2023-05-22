@@ -48,7 +48,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
     geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
-    geom_system = models.TextField(max_length=6, default="wgs84")
+    geom_system = models.CharField(max_length=6, default="wgs84")
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
@@ -61,7 +61,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         db_column="zm50",
         related_name="pian_zm50",
     )
-    ident_cely = models.TextField(unique=True)
+    ident_cely = models.CharField(unique=True, max_length=13)
     historie = models.OneToOneField(
         HistorieVazby,
         on_delete=models.SET_NULL,
@@ -181,6 +181,7 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 
     class Meta:
         db_table = "pian_sekvence"
+        unique_together = ["kladyzm50", "sekvence", "katastr"]
 
 
 def vytvor_pian(katastr):

@@ -585,6 +585,7 @@ class AMCRBaseTestRunner(BaseRunner):
             hlavni_katastr=praha,
             ident_cely=EXISTING_EVENT_IDENT_INCOMPLETE,
             stav=AZ_STAV_ZAPSANY,
+            pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
         )
         az_incoplete.save()
         a_incomplete = Akce(
@@ -841,8 +842,8 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
         return temp_return
 
     def save_geographical_data(self):
-        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, )
-        kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
+        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, nazev_en="Praha")
+        kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2, nazev_en="Brno")
         okres_praha = RuianOkres(
             id=162, nazev="Praha", kraj=kraj_brno, spz="1", kod=3,
             definicni_bod=GEOSGeometry(

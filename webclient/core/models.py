@@ -205,7 +205,7 @@ class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error
     """
     Model pro tabulku s chybami jobu geaom migracií.
     """
-    pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
+    pian = models.ForeignKey(Pian, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
@@ -215,7 +215,6 @@ class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_
     """
     Model pro tabulku s chybami jobu geaom SJTSK migracií.
     """
-    pian = models.ForeignKey(Pian, on_delete=models.RESTRICT)
 
     class Meta:
         db_table = "amcr_geom_migrations_jobs_sjtsk_errors"
@@ -226,11 +225,10 @@ class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_
     """
     Model pro tabulku s chybami jobu geaom WGS84 migracií.
     """
-    pian = models.ForeignKey(Pian, on_delete=models.SET_NULL, null=True)
-    abstract = False
 
     class Meta:
         db_table = "amcr_geom_migrations_jobs_wgs84_errors"
+        abstract = False
 
 
 class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.Model):

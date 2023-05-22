@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        #('dokument', '0005_auto_20230328_1538'),
         ('neidentakce', '0002_initial'),
     ]
 
