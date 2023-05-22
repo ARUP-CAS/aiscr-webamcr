@@ -28,11 +28,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='geommigrationjobwgs84error',
             name='pian',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='pian.pian'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pian.pian'),
         ),
         migrations.AddField(
             model_name='geommigrationjobsjtskerror',
             name='pian',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, to='pian.pian'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='pian.pian'),
         ),
     ]

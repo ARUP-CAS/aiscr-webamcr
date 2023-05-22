@@ -99,3 +99,4 @@ kibana/kibana.yml
 
 # logstash config
 logstash/logstash.conf
+/scripts/test_preparaton.sh

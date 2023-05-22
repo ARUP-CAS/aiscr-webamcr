@@ -12,11 +12,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name='ruiankraj',
-            name='nazev_en',
-            field=models.TextField(null=True, verbose_name='heslar.models.RuianKraj.nazevEn'),
-        ),
-        migrations.AlterField(
             model_name='ruianokres',
             name='hranice',
             field=django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326, verbose_name='heslar.models.RuianKatastr.hranice'),

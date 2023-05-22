@@ -194,7 +194,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), models.Model):
     # nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKatastr.nazev"))
     # kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKatastr.kod"))
     # END of TODO
-    definicni_bod = pgmodels.PointField(null=False, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
+    definicni_bod = pgmodels.PointField(null=True, verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
     hranice = pgmodels.MultiPolygonField(null=False, verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
     pian = models.OneToOneField("pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True)
