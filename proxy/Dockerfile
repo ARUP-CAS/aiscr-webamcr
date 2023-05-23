@@ -21,6 +21,6 @@ RUN chmod 777 -R  /vol/nginx/data
 COPY ./run-healthcheck_proxy.sh /scripts/
 RUN chmod +x /scripts/*
 
-RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > version.txt
+RUN echo "DATE:$(date +%Y%m%dT%H%M%S),VERSION:${VERSION}" > /version.txt
 
 USER nginx
