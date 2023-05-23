@@ -123,6 +123,8 @@ from projekt.forms import PripojitProjektForm
 from core.models import Soubor
 from django.db.models import Prefetch, Subquery, OuterRef
 
+from uzivatel.models import Osoba
+
 logger = logging.getLogger(__name__)
 
 
@@ -311,6 +313,10 @@ class DokumentListView(SearchListView):
                 mimetype__startswith="image", vazba=OuterRef("vazba")
             ).values_list("id", flat=True)[:1]
         )
+        ordered_osoby = Subquery(Osoba.objects.filter(
+            dokumentautor__dokument__id=OuterRef("dokument")
+        ).order_by("dokumentautor__poradi").values_list("id", flat=True)
+        )
         qs = super().get_queryset().exclude(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu",
@@ -328,6 +334,11 @@ class DokumentListView(SearchListView):
                 "soubory__soubory",
                 queryset=Soubor.objects.filter(id__in=subqry),
                 to_attr="first_soubor",
+            ),
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                to_attr="ordered_autors",
             )
         )
         return qs

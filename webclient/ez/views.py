@@ -54,6 +54,9 @@ from .forms import (
     PripojitArchZaznamForm,
     PripojitExterniOdkazForm,
 )
+from django.db.models import Prefetch
+
+from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,16 @@ class ExterniZdrojListView(SearchListView):
         qs = qs.select_related(
             "typ",
         ).prefetch_related(
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("externizdrojautor__poradi"),
+                to_attr="ordered_autors",
+            ),
+            Prefetch(
+                "editori",
+                queryset=Osoba.objects.all().order_by("externizdrojeditor__poradi"),
+                to_attr="ordered_editors",
+            ),
             "editori",
             "autori"
         )
