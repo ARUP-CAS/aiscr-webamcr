@@ -25,6 +25,23 @@ services:
           cpus: '1'
           memory: 1G
 
+  db:
+    image: postgis/postgis:14-3.3
+    ports:
+      - "5432:5432"
+    secrets:
+      - local_db_pass
+    environment:
+      - POSTGRES_DB=django_migrated_db
+      - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
+    volumes:
+      - db_dev_data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '1G'
+
   memcached:
     image: memcached:latest
     expose:
@@ -207,12 +224,14 @@ networks:
     external: true
 
 secrets:
+  db_pass:
+    file: db_pass.txt
   db_conf:
-   file : secrets.json
+   file: secrets.json
   mail_conf:
-   file : secrets_mail_client.json
+   file: secrets_mail_client.json
   redis_pass:
-    file : redis_pass.txt
+    file: redis_pass.txt
   grafana_admin_password:
     file: grafana_admin_password.txt
   elastic_pass:

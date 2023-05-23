@@ -268,6 +268,12 @@ class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToM
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
         verbose_name = "Organizace"
         verbose_name_plural = "Organizace"
+        constraints = [
+            CheckConstraint(
+                check = Q(mesicu_do_zverejneni__lte=1200),
+                name = "organizace_mesicu_do_zverejneni_max_value_check",
+            ),
+        ]
 
 
 
