@@ -6,8 +6,7 @@ import psycopg2
 
 
 SOURCE_DB_NAME = "django_migrated_db_source_db"
-DESTINATION_DB_NAME = "django_migrated_db"
-DEFAULT_BATCH_SIZE = 1000
+DEFAULT_BATCH_SIZE = 10000
 TABLE_BATCH_SIZE = {"dokument_sekvence": 10**4, "dokument_jazyk": 10**4}
 
 
@@ -34,7 +33,7 @@ def write_batch(table_name, column_names, query_data, destination_cursor, destin
         destination_conn.commit()
 
 
-def save_geographical_data(host, user, password):
+def save_geographical_data(host, destination_db, user, password):
     source_conn = None
     destination_conn = None
     source_cursor = None
@@ -50,7 +49,7 @@ def save_geographical_data(host, user, password):
         # establish connection to test_prod_zaloha database
         destination_conn = psycopg2.connect(
             host=host,
-            database=DESTINATION_DB_NAME,
+            database=destination_db,
             user=user,
             password=password
         )
@@ -181,4 +180,4 @@ def save_geographical_data(host, user, password):
 
 
 if __name__ == "__main__":
-    save_geographical_data(sys.argv[1], sys.argv[2], sys.argv[3])
+    save_geographical_data(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
