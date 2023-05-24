@@ -1,13 +1,15 @@
 import datetime
+import hashlib
+import secrets
 import sys
 import traceback
 
 import psycopg2
-
+from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
 SOURCE_DB_NAME = "django_migrated_db_source_db"
 DEFAULT_BATCH_SIZE = 10000
-TABLE_BATCH_SIZE = {"dokument_sekvence": 10**4, "dokument_jazyk": 10**4}
+TABLE_BATCH_SIZE = {"dokument_sekvence": 10 ** 4, "dokument_jazyk": 10 ** 4}
 
 
 def item_to_str(item):
@@ -33,25 +35,26 @@ def write_batch(table_name, column_names, query_data, destination_cursor, destin
         destination_conn.commit()
 
 
-def save_geographical_data(host, destination_db, user, password):
+def copy_data(source_host, destination_host, source_db, destination_db, source_user, destination_user, source_password,
+              destination_password, truncate_all=False):
     source_conn = None
     destination_conn = None
     source_cursor = None
     destination_cursor = None
     try:
         source_conn = psycopg2.connect(
-            host=host,
-            database=SOURCE_DB_NAME,
-            user=user,
-            password=password
+            host=source_host,
+            database=source_db,
+            user=source_user,
+            password=source_password
         )
 
         # establish connection to test_prod_zaloha database
         destination_conn = psycopg2.connect(
-            host=host,
+            host=destination_host,
             database=destination_db,
-            user=user,
-            password=password
+            user=destination_user,
+            password=destination_password
         )
 
         source_cursor = source_conn.cursor()
@@ -71,7 +74,8 @@ def save_geographical_data(host, destination_db, user, password):
             ("*", "historie_vazby"),
             ("*", "auth_user"),
             ("*", "auth_group"),
-            ("id, ident_cely, zasilat_neaktivnim, predmet, COALESCE(cesta_sablony, 'X') AS cesta_sablony", "notifikace_typ"),
+            ("id, ident_cely, zasilat_neaktivnim, predmet, COALESCE(cesta_sablony, 'X') AS cesta_sablony",
+             "notifikace_typ"),
             ("*", "auth_user_notifikace_typ"),
             ("*", "historie"),
             ("*", "kladysm5"),
@@ -86,7 +90,9 @@ def save_geographical_data(host, destination_db, user, password):
             ("*", "soubor_vazby"),
             ("*", "soubor"),
             ("*", "dokument_sekvence"),
-            ("id, rok_vzniku, popis, poznamka, oznaceni_originalu, stav, ident_cely, datum_zverejneni, licence, historie, let, material_originalu, organizace, pristupnost, rada, soubory, typ_dokumentu, ulozeni_originalu", "dokument"),
+            (
+            "id, rok_vzniku, popis, poznamka, oznaceni_originalu, stav, ident_cely, datum_zverejneni, licence, historie, let, material_originalu, organizace, pristupnost, rada, soubory, typ_dokumentu, ulozeni_originalu",
+            "dokument"),
             ("*", "dokument_autor"),
             ("*", "dokument_extra_data"),
             ("*", "dokument_jazyk"),
@@ -131,7 +137,7 @@ def save_geographical_data(host, destination_db, user, password):
             source_result = source_cursor.fetchone()
             destination_cursor.execute(f"SELECT COUNT(*) FROM public.{item}")
             destination_result = destination_cursor.fetchone()
-            if source_result != destination_result:
+            if source_result != destination_result or truncate_all is True:
                 destination_cursor.execute(f"TRUNCATE TABLE public.{item} CASCADE;")
                 destination_conn.commit()
                 print(f"Truncated table: {item}.")
@@ -179,5 +185,112 @@ def save_geographical_data(host, destination_db, user, password):
             destination_conn.close()
 
 
+class PBKDF2WrappedSHA1PasswordHasher(PBKDF2PasswordHasher):
+    algorithm = "pbkdf2_wrapped_sha1"
+
+    def encode_sha1_hash(self, sha1_hash, salt, iterations=None):
+        hashff = super().encode(sha1_hash, salt, iterations)
+        return hashff
+
+    def encode(self, password, salt, iterations=None):
+        sha1_hash = hashlib.sha1(password.encode("utf8")).hexdigest()
+        return self.encode_sha1_hash(sha1_hash, salt, iterations)
+
+
+def encrypt_passwords(destination_host, destination_db, destination_user, destination_password):
+    destination_conn = psycopg2.connect(
+        host=destination_host,
+        database=destination_db,
+        user=destination_user,
+        password=destination_password
+    )
+    destination_cursor = destination_conn.cursor()
+    destination_cursor.execute("select id, sha_1 from auth_user;")
+    sha1 = destination_cursor.fetchall()
+    hasher = PBKDF2WrappedSHA1PasswordHasher()
+    for current_hash in sha1:
+        sha1_hash = current_hash[1]
+        if len(sha1_hash) == 40:
+            salt = secrets.token_hex(16)
+            sha256 = hasher.encode_sha1_hash(sha1_hash, salt)
+            destination_cursor.execute(f"update auth_user set password = '{sha256}' where id = {current_hash[0]};")
+    destination_conn.commit()
+
+
+def reset_sequences(destination_host, destination_db, destination_user, destination_password):
+    destination_conn = psycopg2.connect(
+        host=destination_host,
+        database=destination_db,
+        user=destination_user,
+        password=destination_password
+    )
+    destination_cursor = destination_conn.cursor()
+    tables = (
+        ("id", "odstavky_systemu"),
+        ("id", "heslar_nazev"),
+        ("id", "heslar"),
+        ("id", "heslar_dokument_typ_material_rada"),
+        ("id", "heslar_hierarchie"),
+        ("id", "heslar_odkaz"),
+        ("id", "osoba"),
+        ("id", "organizace"),
+        ("id", "historie_vazby"),
+        ("id", "auth_user"),
+        ("id", "notifikace_typ"),
+        ("id", "auth_user_notifikace_typ"),
+        ("id", "historie"),
+        # ("id", "kladyzm"),
+        ("id", "ruian_kraj"),
+        ("id", "ruian_okres"),
+        ("id", "pian_sekvence"),
+        ("id", "pian"),
+        ("id", "ruian_katastr"),
+        ("id", "let"),
+        ("id", "soubor_vazby"),
+        ("id", "soubor"),
+        ("id", "dokument_sekvence"),
+        ("id", "dokument"),
+        ("id", "dokument_autor"),
+        # ("id", "dokument_extra_data"),
+        ("id", "dokument_jazyk"),
+        ("id", "dokument_osoba"),
+        ("id", "dokument_posudek"),
+        ("id", "archeologicky_zaznam"),
+        ("id", "archeologicky_zaznam_katastr"),
+        ("id", "projekt_sekvence"),
+        ("id", "projekt"),
+        ("id", "projekt_katastr"),
+        # ("id", "akce"),
+        ("id", "akce_vedouci"),
+        ("id", "komponenta_vazby"),
+        ("id", "dokument_cast"),
+        ("id", "neident_akce_vedouci"),
+        ("id", "komponenta"),
+        ("id", "komponenta_aktivita"),
+        ("id", "nalez_objekt"),
+        ("id", "nalez_predmet"),
+        ("id", "dokumentacni_jednotka"),
+        ("id", "adb_sekvence"),
+        ("id", "vyskovy_bod"),
+        ("id", "externi_zdroj"),
+        ("id", "externi_zdroj_autor"),
+        ("id", "externi_zdroj_editor"),
+        ("id", "externi_odkaz"),
+        ("id", "samostatny_nalez"),
+        ("id", "uzivatel_spoluprace"),
+    )
+    for item in tables:
+        destination_cursor.execute(f"SELECT SETVAL("
+                                   f"(SELECT PG_GET_SERIAL_SEQUENCE('\"{item[1]}\"', '{item[0]}')),"
+                                   f"(SELECT (MAX(\"{item[0]}\") + 1) FROM \"{item[1]}\"),FALSE);")
+    destination_conn.commit()
+
 if __name__ == "__main__":
-    save_geographical_data(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    copy_data(source_host=sys.argv[1], destination_host=sys.argv[2],
+              source_db=sys.argv[3], destination_db=sys.argv[4],
+              source_user=sys.argv[5], destination_user=sys.argv[6],
+              source_password=sys.argv[7], destination_password=sys.argv[8])
+    encrypt_passwords(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],
+                      destination_password=sys.argv[8])
+    reset_sequences(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],
+                      destination_password=sys.argv[8])
