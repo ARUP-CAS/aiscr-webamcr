@@ -24,9 +24,6 @@ UPDATE notifikace_typ
 SET ident_cely = 'S-E-K-01'
 WHERE ident_cely = 'AMČR - Knihovna 3D: archivace záznamů';
 
-ALTER TABLE notifications_log
-    RENAME TO notifikace_log;
-
 ALTER TABLE auth_user_notifikace_typ
     ALTER COLUMN usernotificationtype_id SET NOT NULL;
 
@@ -53,27 +50,5 @@ ALTER TABLE auth_user_notifikace_typ
     ADD CONSTRAINT auth_user_notifikace_typ_user_id_fkey
         FOREIGN KEY (user_id)
             REFERENCES auth_user (id)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE;
-
-ALTER TABLE notifikace_log DROP CONSTRAINT notifications_log_object_id_check;
-
-ALTER TABLE notifikace_log
-    DROP CONSTRAINT notifications_log_content_type_id_0d88bca2_fk_django_content_ty;
-
-ALTER TABLE notifikace_log
-    ADD CONSTRAINT notifikace_log_content_type_id_fkey
-        FOREIGN KEY (content_type_id)
-            REFERENCES django_content_type (id)
-            ON UPDATE CASCADE
-            ON DELETE CASCADE;
-
-ALTER TABLE notifikace_log
-    DROP CONSTRAINT notifications_log_notification_type_id_2eefa8d4_fk_dump_notific;
-
-ALTER TABLE notifikace_log
-    ADD CONSTRAINT notifikace_log_notification_type_id_fkey
-        FOREIGN KEY (notification_type_id)
-            REFERENCES notifikace_typ (id)
             ON UPDATE CASCADE
             ON DELETE CASCADE;

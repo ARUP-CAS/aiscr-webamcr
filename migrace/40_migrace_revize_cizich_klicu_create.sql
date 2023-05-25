@@ -20,19 +20,12 @@ ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_hlavni_kata
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_archeologicky_zaznam_id_fkey FOREIGN KEY (archeologicky_zaznam_id) REFERENCES archeologicky_zaznam (id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE archeologicky_zaznam_katastr ADD CONSTRAINT archeologicky_zaznam_katastr_katastr_id_fkey FOREIGN KEY (katastr_id) REFERENCES ruian_katastr (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE archeologicky_zaznam ADD CONSTRAINT archeologicky_zaznam_pristupnost_fkey FOREIGN KEY (pristupnost) REFERENCES heslar (id) ON UPDATE CASCADE ON DELETE NO ACTION;
-ALTER TABLE auth_group_permissions ADD CONSTRAINT auth_group_permissio_permission_id_84c5c92e_fk_auth_perm FOREIGN KEY (permission_id) REFERENCES auth_permission (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE auth_group_permissions ADD CONSTRAINT auth_group_permissions_group_id_b120cbf9_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE auth_permission ADD CONSTRAINT auth_permission_content_type_id_2f476e4b_fk_django_co FOREIGN KEY (content_type_id) REFERENCES django_content_type (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
 ALTER TABLE auth_user_groups ADD CONSTRAINT auth_user_groups_group_id_97559544_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
 ALTER TABLE auth_user_groups ADD CONSTRAINT auth_user_groups_user_id_6a12ed8b_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_historie_fkey FOREIGN KEY (historie) REFERENCES historie_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_hlavni_role_fkey FOREIGN KEY (hlavni_role) REFERENCES auth_group (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_organizace_fkey FOREIGN KEY (organizace) REFERENCES organizace (id) ON UPDATE CASCADE ON DELETE NO ACTION;
 ALTER TABLE auth_user ADD CONSTRAINT auth_user_osoba_fkey FOREIGN KEY (osoba) REFERENCES osoba (id) ON UPDATE CASCADE ON DELETE NO ACTION;
-ALTER TABLE auth_user_user_permissions ADD CONSTRAINT auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm FOREIGN KEY (permission_id) REFERENCES auth_permission (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE auth_user_user_permissions ADD CONSTRAINT auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE django_admin_log ADD CONSTRAINT django_admin_log_content_type_id_c4bce8eb_fk_django_co FOREIGN KEY (content_type_id) REFERENCES django_content_type (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE django_admin_log ADD CONSTRAINT django_admin_log_user_id_c564eba6_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user (id) ON UPDATE NO ACTION ON DELETE NO ACTION;
 ALTER TABLE dokument_autor ADD CONSTRAINT dokument_autor_autor_fkey FOREIGN KEY (autor) REFERENCES osoba (id) ON UPDATE CASCADE ON DELETE NO ACTION;
   --
   --
@@ -178,4 +171,3 @@ ALTER TABLE vyskovy_bod ADD CONSTRAINT vyskovy_bod_typ_fkey FOREIGN KEY (typ) RE
 ALTER TABLE dokument_cast ADD CONSTRAINT dokument_cast_projekt_fkey FOREIGN KEY (projekt) REFERENCES projekt (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE soubor ADD CONSTRAINT soubor_historie_fkey FOREIGN KEY (historie) REFERENCES historie_vazby (id) ON UPDATE CASCADE ON DELETE SET NULL;
 ALTER TABLE stats_login ADD CONSTRAINT stats_login_uzivatel_fkey FOREIGN KEY (uzivatel) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE CASCADE;
-ALTER TABLE uzivatel_historicaluser ADD CONSTRAINT uzivatel_historicaluser_history_user_id_fkey FOREIGN KEY (history_user_id) REFERENCES auth_user (id) ON UPDATE CASCADE ON DELETE CASCADE;
