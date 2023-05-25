@@ -1,86 +1,139 @@
 Nasazování aplikace
 ================================
-
-Nasazení aplikace na cílové stanici je řešeno pomocí docker obrazů, jejichž vytváření je zautomatizováno pomocí Github Actions implmenetových v souboru 
-`./.github/workflows/publish_aiscr_hub.yml`. Tato akce se spouští jedině a tehdy pokud se vytvoří tag na "dev" větvi ve formátu "v*."
+Tato sekce popisuje možné způsoby nasazení aplikace WebAMČR, včetně předpokladů a specifik takových nasazení. Všechny následující postupy jsou založeny na použití docker kontejnerů, které jsou vytvářeny pomocí docker-compose souborů a to automaticky nebo manuálně.
+Primárně jsou docker obrazy vytvářeny v rámci běhu Gihub CI, tj. definované ve workflow `./.github/workflows/publish_aiscr_hub.yml` spouštěné v rámci Github Actions. Uvedná worfklow se spouští jedině a tehdy pokud se vytvoří tag na větvi "dev" a tento tag je ve formátu "v*."
 Další možnosti vytvoření docker obrazů jsou pomocí níže uvedených automatizačních skriptů, které dokáží tyto obrazy vytvořit lokálně na cílové stanici.
 
 =========================
 Vytváření docker obrazů
 =========================
-Při spuštění `./.github/workflows/publish_aiscr_hub.yml` dojde k vytvoření těchto docker obrazů:
+Jak bylo zmíněno výše, primární metodou vytváření docker obrazů je workflow `./.github/workflows/publish_aiscr_hub.yml`, po jejím spuštění dojde k vytvoření těchto docker obrazů:
 
-* aiscr/webamcr (obraz s aplikací WebAMČR)
-* aiscr/webacmr-proxy (obraz s proxy serverem NGINX)
-* aiscr/webamcr-redis (chachovací server Redis s upravenou konfigurací)
+* **aiscr/webamcr** (obraz s aplikací WebAMČR)
+* **aiscr/webacmr-proxy** (obraz s proxy serverem NGINX)
+* **aiscr/webamcr-redis** (chachovací server Redis s upravenou konfigurací)
   
-Všechny tři vytvořené obrazy jsou poté nahrány do veřejně přístupného docker-hub repozitáře na adrese `https://hub.docker.com/u/aiscr`
-Každý vytvořený obraz obsahuje soubour **/version.txt**, který zachycuje datum vytvoření a verzi daného kontejneru (tj. název tagu). Jméno verze je také zapsáno do proměných prostředí (VERSION a TAG) každého docker obrazu, takže tyto systémové proměnné lze použít pro účely aplikace.
+Všechny tři vytvořené obrazy jsou poté nahrány do veřejně přístupného docker-hub repozitáře umístěného na adrese `https://hub.docker.com/u/aiscr`. Tento repozitář je spravovaný Archeologickým instituem Praha.
+Každý vytvořený obraz obsahuje soubour **/version.txt**, který zachycuje datum vytvoření a verzi daného obrazu (verze je odvozena od názvu tagu vytvořeného v rámci git repozitáře). Jméno verze je také zapsáno do proměnných prostředí (VERSION, TAG) každého docker obrazu, takže tyto systémové proměnné lze použít pro účely aplikace.
 Docker-hub repozitář pak slouží jako místo, kde se uchovávají všechny vytvořené verze aplikace WebAMČR a lze jej tak snadno použít pro nasazení aplikace v různých verzích, definovaných tagy.
 
-Alternativně lze docker obrazy vytvoři manuálně s pomocí předpřipravených Dockerfile souborů:
+Alternativně lze docker obrazy vytvořit manuálně, s pomocí předpřipravených Dockerfile souborů:
 
 * Dockerfile-production - definice docker obrazu pro aplikaci WebAMČR, produkční / testovací nasazení, nutná existence systémových proměnných VERSION_APP, TAG_APP, které popisují verzi vytvářeného obrazu (automaticky dodáváno při vytváření přes automatizační skripty)
-* Dockerfile-DEV - definice docker obrazu pro aplikaci WebAMČR pro vývojové nasazení, nutná existence parametrů --build-arg TAG_APP=<value> a --build-arg VERSION_APP=<value> při spuštění vytváření obrazu (automatizační skript toto dodává bez nutnosti zásahu uživatele)
+* Dockerfile-DEV - definice docker obrazu pro aplikaci WebAMČR pro vývojové nasazení, nutná existence parametrů --build-arg TAG_APP=<value> a --build-arg VERSION_APP=<value> při spuštění vytváření obrazu z příkazové řádky (automatizační skript toto dodává bez nutnosti zásahu uživatele)
 * Dockerfile-DB - definice docker obrazu databáze Postgresql pro lokální nasazení a vývojové účely
 * redis/Dockerfile - definice docker obrazu pro redis server s upravenou konfigurací
 * proxy/Dockerfile - definice docker obrazu pro proxy server NGINX
 
 
+===============================
+Varianty nasazení aplikace WebAMČR
+===============================
 *Existuje pět různých módů nasazení aplikace WebAMČR*:
 
 #. Automatické nasazení v rámci Github Actions (použito pro nasazení do vývojového prostředí)
 #. Skriptované nasazení z docker-hubu (ostatní případě, včetně produkčního nasazení), `./scripts/prod_deploy.sh`
 #. Skriptované nasazení z lokálního repozitáře (použito pro specifické účely, např. hotfix ve zdrojovém kódu, nezávisle na prostředí), `./scripts/git_prod_deploy.sh`
-#. Skriptované nasazení pro vývojové účely (specifický deployment pro vývojové účely na lokálním prostředí)
-#. Manuální nasazení pomocí docker-compose souborů (specifické případy), ovládání přes docker-compose není v tomto manuálu vysvětleno a lze využít oficiální dokumentaci `Docker compose <https://docs.docker.com/compose/>` 
+#. Skriptované nasazení pro vývojové účely (specifický deployment pro vývojové účely na lokálním vývojovém prostředí)
+#. Manuální nasazení pomocí docker-compose souborů (specifické případy), ovládání přes docker-compose není v tomto manuálu vysvětleno a lze využít oficiální dokumentaci `Docker compose <https://docs.docker.com/compose/>`
+
+**VAROVÁNÍ**: pokud si vývojář není jist svými zásahy, nikdy by nemělo docházet k spuštění více různých způsobů nasazení na jedné stanici bez předchozího ukončení běžící aplikace WebAMČR nasazené jiným než aktuálně plánovaným způsobem. Např. skriptované nasazení z docker-hubu s následným spuštěním nasazení z lokálního repozitáře.
+V takových případech může docházet k neočekávaným chybám a konfliktům. Každý automatizační skript má volitelné parametry pro ukončení daného nasazení, které by tak mělo být vždy spuštěno před vyvoláním jiného nasazení. Docker kontejnery lze vždy ukončit standardními příkazy, pokud se vyskytnou problémy.
+
+.. list-table:: Stručný přehled
+    :header-rows: 1
+
+    * - Metoda
+      - Spuštění
+      - Obrazy
+      - Port
+      - Secrets
+      - Použití
+    * - Automatické Github Actions
+      - worfklow `.github\workflows\deployment.yml`
+      - Docker-hub
+      - 8080
+      - docker secrets
+      - Vývojová stanice ARUP
+    * - Skriptované z Docker-hub
+      - ``./scripts/prod_deploy.sh``
+      - Docker-hub
+      - 8080
+      - docker secrets
+      - Testovací stanice ARUP
+    * - Skriptované z lokálního repozitáře
+      - ``./scripts/git_prod_deploy.sh``
+      - lokální
+      - 8081
+      - soubory se secrets
+      - Hotfix, speciální případy
+    * - Skriptované pro vývojové účely
+      - ``./scripts/dev_deploy.sh``
+      - lokální
+      - 8000
+      - soubory secrets
+      - Lokální vývoj
+    * - Manuální via docker-compose
+      - docker-compose příkaz
+      - Lokální nebo Docker-hub
+      - [ 8080 | 8081 | 8000 ]
+      - docker secrets nebo soubory se secrets
+      - Speciální případy
 
 
 ===============================
 Automatické nasazení
 ================================
-Automatické nasazení probíhá při pokaždé při vytvoření tagu pojmenovaného dle formátu "v*" v repozitáři Github. Po vytvoření tagu nejprve proběhne proces vytvoření docker obrazů (popsaný výše) a poté dojde ke spuštění
-další Github workflow s názvem `.github\workflows\deployment.yml` v rámci které dojde ke spuštění následujících kroků:
+Automatické nasazení probíhá při vytvoření tagu pojmenovaného dle formátu "v*" v repozitáři Github. Po vytvoření takového tagu nejprve proběhne proces vytvoření docker obrazů (popsaný výše) a poté dojde ke spuštění
+další Github workflow s názvem `.github\workflows\deployment.yml` v rámci které dojde ke provedení následujících kroků:
 
 * inicializace VPN spojení na DEPLOYMENT_SERVER_DEV
 * ověření stability spojení pomocí dotazů na lokalní DNS server
 * přihlášení přes ssh na cílovou stanici
 * v místě nasazení dojde k otevření adresáře obsahujícího deployment skripty a následnému stashování git repozitáře a jeho aktualizaci (tzv. pull).
-* spuštění deployment skriptu (`scripts/ci_deployment/deploy_server_dev.sh`), který provede:
+* spuštění deployment skriptu (`scripts/ci_deployment/deploy_server_dev.sh`), který poté vyvolá:
 
- * spuštění skriptu `scripts/db/db_backup.sh` tj. zálohování existující databáze a zkopírování její zálohy označené předchozí verzí ve formátu .gzip.
- * spuštění samostného nasazení přes skript `scripts/prod_deploy.sh`, tj. nasazení nejnovějších docker obrazů z docker-hubu pomocí swarm módu.
+ * spuštění skriptu `scripts/db/db_backup.sh` tj. zálohování existující databáze a zkopírování její zálohy označené předchozí verzí ve formátu .gzip a uložení do adresáře `../db_backups`
+ * spuštění vlastního nasazení WebAMČR přes skript `scripts/prod_deploy.sh`, tj. nasazení nejnovějších docker obrazů z docker-hubu pomocí swarm módu.
  * ověření správného spuštění docker kontejnerů ve swarm-mode.
 
+Github Action worfklow `.github\workflows\deployment.yml` potřebuje ke správnému spuštění následující definice tzv. secrets v repozitáři Github, tyto je nutné definovat manuálně a jsou v gesci správce repozitáře:
+
+* VPN_CA_CRT - certifikát CA pro VPN
+* VPN_USER_CRT - certifikát uživatele pro VPN
+* VPN_USER_KEY - privátní klíč uživatele pro VPN
+* VPN_SECRET_USERNAME_PASSWORD - uživatelské heslo pro VPN
+* DEPLOYMENT_SERVER_DEV - IP adresa cílové stanice pro nasazení
+* DNS_RESOLVER - IP adresa DNS serveru pro ověření stability spojení
+* SSH_KNOWN_HOST_DEV - fingerprint cílové stanice SSH připojení
+* SSH_PRIVATE_KEY_SERVER_DEV - privátní klíč pro SSH připojení na cílovou stanici
 
 ========================
 Skriptované nasazení z docker-hubu
 ========================
 Pro nasazování na testovací prostředí byl vytvořen automatizační skript `scripts/prod_deploy.sh`, který zjednodušuje nasazení, provádí logování celého průběhu do adresáře `logs/prod_deploy/`, aktualizaci docker obrazů, ověřování prostředí, a nasazení aplikace WebAMČR.
-Tento skript má několik možných parametrů, nápověda přístupná přes spuštěním ``./scripts/prod_deploy.sh -h.``. V základním módu se spouští
-bez jakéhokoliv volitelného parametru > ``./scripts/prod_deploy.sh``. Po úspěsném vykonání je aplikace WebAMČR dostupná na ip adrese dané stanice a portu **8080**.
+Tento skript má několik možných parametrů, nápověda přístupná spuštěním příkazu ``./scripts/prod_deploy.sh -h.``. V základním módu se tento skript spouští
+bez jakéhokoliv volitelného parametru, tzn. ``./scripts/prod_deploy.sh``. Po úspěšném vykonání je aplikace WebAMČR dostupná na ip adrese dané stanice a portu **8080**.
 
-**Předpoklady**: existující a definice docker secrets, vytvořené následující secrets přes příkaz ``docker secrets create <název secretu> <cesta k souboru s obsahem ze kterého se secret má vytvořit>``
+**Předpoklady**: existující definice docker secrets, tyto secrets musejí být vytvořené přes příkaz ``docker secrets create <název secretu> <cesta k souboru s obsahem ze kterého se secret má vytvořit>``
 
-* db_conf
-* mail_conf
-* redis_pass
-* grafana_admin_password
-* elastic_pass
-* logstash_elastic_pass
+* db_conf - přihlašovací údaje a nastavení pro připojení k databázi
+* mail_conf - konfigurace pro odesílání emailů
+* redis_pass - heslo k redis serveru
+* grafana_admin_password - heslo pro rozhraní grafana
+* elastic_pass - heslo ke službě elasticsearch
+* logstash_elastic_pass - heslo ke službě logstash
 
-
-**Souhrn:** ``./scripts/prod_deploy.sh``, docker swarm-mode, <ip_adresa_stanice:8080>, existující docker secrets.
+**Souhrn:** ``./scripts/prod_deploy.sh``, docker swarm-mode, <ip_adresa_stanice:8080>, existující definice docker secrets.
 
 ========================
 Skriptované nasazení z lokálního repozitáře
 ========================
-V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat příslušné soubory přímo v lokální repozitáři a spustit automatizační skript `./logs/git_prod_deploy`.
-Tento skript loguje průběh do souboru `logs/git_prod_deploy`, vytváří lokálně docker obrazy, které následně nasadí pomocí docker-compose, tj. **NEPOUŽÍVÁ SE swarm-mode**, aplikace WebAMČR je v tomto případě přístupná na portu **8081**.
-Základní spuštění probíhá bez jakéhokoliv volitelného parametru > ``./scripts/git_prod_deploy.sh``.
-Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``. 
+V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./logs/git_prod_deploy`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
+Tento skript loguje průběh do souboru `logs/git_prod_deploy`, vytváří lokálně docker obrazy, jež jsou následně nasazeny pomocí docker-compose, tj. **NEPOUŽÍVÁ SE swarm-mode**. Aplikace WebAMČR je v tomto případě přístupná na portu **8081**.
+Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``. 
 
-**Předpoklady**: existující a aktualizované soubory secrets, které obsahují nezbytné autentizační údaje viz `git_docker-compose-production.yml`, kde se předpokládá existence těch souborů:
+**Předpoklady**: existující a aktualizované soubory s tzv. secrets, které obsahují nezbytné autentizační a konfigurační údaje viz `git_docker-compose-production.yml`, kde se předpokládá existence těch souborů:
 
 * db_conf: secrets.json  
 * mail_conf: secrets_mail_client.json
@@ -99,24 +152,25 @@ V případě lokálního nasazení na vývojové stanici, lze využít speciáln
 * Automatizační skript `scripts/dev_deploy.sh`
 * Manuálně pomocí docker compose souboru `docker-compose-dev-local-db.yml`
 
-Info o volitelných parametrech automatizačního skriptu je dostupné přes ``./scripts/dev_deploy.sh -h``. Při tomto nasazení je možné také zprovoznit lokální instanci databáze (nebo ponechat připojení ke vzdálené databázi - nastavení dáno souborem na který se odkazuje secret db_conf), včetně jejího naplnění vzorovými daty z připravého souboru .tar.
-Oproti ostatním typům nasazení je lze místo tzv. docker volumes využíváno propojení docker kontejneru se souborovým systém, tzn. docker kontejner má přímo napojené soubory z lokálního repozitáře a jakákoliv jejich editace se pak ihned projeví v aplikaci bez nutnosti restartovat příslušné docker kontejnery.
+Info o volitelných parametrech automatizačního skriptu je dostupné přes ``./scripts/dev_deploy.sh -h``. Při tomto nasazení je možné také zprovoznit lokální instanci databáze (nebo ponechat připojení ke vzdálené databázi - nastavení dáno souborem na který se odkazuje secret db_conf), včetně jejího naplnění vzorovými daty z připraveného souboru .tar.
+Oproti ostatním typům nasazení je zde místo tzv. docker volumes využíváno propojení docker kontejneru se souborovým systémem (bind-mount), tzn. docker kontejner má přímo napojené soubory z lokálního repozitáře a jakákoliv jejich editace se ihned projeví v aplikaci bez nutnosti znovu vytvářet příslušné docker kontejnery.
 Ve vývojovém nasazení také běží navíc tři další služby:
 
 * db - lokální databáze postgresql
 * pgadmin - webový správce databáze postgresql
-* livereload - služba zajišťující aktutalizace aplikace WebAMČR při změně souborů v lokálním repozitáři
-  
+* livereload - služba zajišťující aktualizace aplikace WebAMČR při změně souborů v lokálním repozitáři
+
+**Souhrh:** ``./scripts\dev_deploy.sh``, docker compose mode, <ip_adresa_stanice:8000>, existující soubory s definicí secrets, volitelně: soubor (.tar) s daty pro naplnění lokální databáze.
 
 ========================
 Manuální nasazení pomocí docker-compose souborů
 ========================
-Při specifických způosbech nasazení, kdy výše uvedené automatizační skripty neodpovídají požadovanému scénáři, je možné využít existujících docker-compose souborů.
+Při specifických způsobech nasazení, kdy výše uvedené automatizační skripty neodpovídají požadovanému scénáři, je možné využít existujících docker-compose souborů a celou akci provést manuálně.
 
-* ./docker-compose-production.yml - obsahuje služby potřebné pro běh aplikace WebAMČR, (**nutnost existence systémové proměnněho IMAGE_TAG, která definuje požadovanou verzi aplikace WebAMČR, která má být stažena z docker-hub repozitáře, tj. latest, nebo v0.3.0 apod.**)
+* `./docker-compose-production.yml` - obsahuje služby potřebné pro běh aplikace WebAMČR, (**nutnost existence systémové proměnné IMAGE_TAG, která definuje požadovanou verzi aplikace WebAMČR, která má být stažena z docker-hub repozitáře, tj. latest, nebo v0.3.0 apod.**)
  
  * web - aplikace WebAMČR
- * memcached - chachovací server
+ * memcached - cachovací server
  * sidecar - pomocná služba pro zálohování locale na lokální úložiště
  * redis - chachovací server
  * celery_worker - worker pro asynchronní úlohy
@@ -128,12 +182,12 @@ Při specifických způosbech nasazení, kdy výše uvedené automatizační skr
  * kibana - grafické prostředí pro logovací službu
  * selenium - testovací služba
  
-* ./docker-compose-production-proxy.yml - obsahuje služby potřebné pro běh proxy serveru NGINX, port je nastaven na 8080
+* `./docker-compose-production-proxy.yml` - obsahuje služby potřebné pro běh proxy serveru NGINX, port je nastaven na 8080, služby:
  
  * proxy - proxy server NGINX
 
-* ./git_docker-compose-production.yml - obsahuje stejné služby jako ./docker-compose-production.yml, ale pro službu web využívá lokální build přes ``Dockerfile-production``
-* ./git_docker-compose-production-proxy.yml - obsahuje stejné služby jako ./docker-compose-production-proxy.yml, ale pro službu proxy využívá lokální build přes ``proxy\Dockerfile`` a nastavuje port na 8081
-* ./git_docker-compose-production.override.yml - obsahuje alternativní secrets, samostatně nespustitelné, využívá pouze nepřímo skrze rozhodovací strukturu v rámci skriptu `./scripts/git_prod_deploy.sh`
+* `./git_docker-compose-production.yml` - obsahuje stejné služby jako `./docker-compose-production.yml`, ale pro službu web využívá lokální build přes ``Dockerfile-production`` místo stažení obrazu z docker-hubu
+* `./git_docker-compose-production-proxy.yml` - obsahuje stejné služby jako `./docker-compose-production-proxy.yml`, ale pro službu proxy využívá lokální build přes ``proxy\Dockerfile`` a nastavuje port na 8081
+* `./git_docker-compose-production.override.yml` - obsahuje alternativní secrets, samostatně nespustitelné, využívá se pouze nepřímo skrze rozhodovací strukturu v rámci skriptu `./scripts/git_prod_deploy.sh`
   
 
