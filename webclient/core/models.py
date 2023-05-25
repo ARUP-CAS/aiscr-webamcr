@@ -88,6 +88,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     class Meta:
         db_table = "soubor"
+        indexes = [
+            models.Index(fields=["mimetype",],name="mimetype_idx",opclasses=["text_ops"]),
+        ]
 
     def __str__(self):
         return self.nazev

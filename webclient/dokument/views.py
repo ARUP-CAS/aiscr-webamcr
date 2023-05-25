@@ -123,6 +123,8 @@ from projekt.forms import PripojitProjektForm
 from core.models import Soubor
 from django.db.models import Prefetch, Subquery, OuterRef
 
+from uzivatel.models import Osoba
+
 logger = logging.getLogger(__name__)
 
 
@@ -328,6 +330,11 @@ class DokumentListView(SearchListView):
                 "soubory__soubory",
                 queryset=Soubor.objects.filter(id__in=subqry),
                 to_attr="first_soubor",
+            ),
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                to_attr="ordered_autors",
             )
         )
         return qs

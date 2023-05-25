@@ -38,14 +38,3 @@ def create_dokument_cast_vazby(sender, instance, **kwargs):
         k.save()
         instance.komponenty = k
 
-
-@receiver(post_save, sender=DokumentAutor)
-def create_hlavni_autor(sender, instance, **kwargs):
-    """
-        Metóda pro vytvoření hlavního autora pro účely filtrování.
-        Metóda se volá po uložení dokument autorů.
-    """  
-    if instance.poradi == 1:
-        dokument = instance.dokument
-        dokument.hlavni_autor = instance.autor.prijmeni
-        dokument.save()
