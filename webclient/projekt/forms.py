@@ -21,6 +21,9 @@ from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID
 logger_s = logging.getLogger(__name__)
 
 class CreateProjektForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření projektu.
+    """
     latitude = forms.FloatField(required=False, widget=HiddenInput())
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
@@ -143,6 +146,9 @@ class CreateProjektForm(forms.ModelForm):
 
 
 class EditProjektForm(forms.ModelForm):
+    """
+    Hlavní formulář pro editaci projektu.
+    """
     latitude = forms.FloatField(required=False, widget=HiddenInput())
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
@@ -356,6 +362,9 @@ class EditProjektForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean(self):
+        """
+        Kontrola datumu zahájení a ukončení pri validaci formuláře.
+        """
         cleaned_data = super().clean()
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
             if cleaned_data.get("datum_zahajeni") and cleaned_data.get(
@@ -371,6 +380,9 @@ class EditProjektForm(forms.ModelForm):
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
+    """
+    Formulář pro navržení zrušení projektu.
+    """
     reason = forms.CharField(
         label=_("Důvod návrhu zrušení"),
         required=True,
@@ -423,6 +435,9 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         )
 
     def clean(self):
+        """
+        Metóda na kontrolu obsahu důvodu pro zrušení.
+        """
         cleaned_data = super().clean()
         if cleaned_data.get("reason") == "option1":
             if not cleaned_data.get("projekt_id"):
@@ -438,6 +453,9 @@ class NavrhnoutZruseniProjektForm(forms.Form):
 
 
 class PrihlaseniProjektForm(forms.ModelForm):
+    """
+    Hlavní formulář pro prihlášení projektu.
+    """
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
@@ -526,6 +544,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
 
 
 class ZahajitVTerenuForm(forms.ModelForm):
+    """
+    Formulář pro zahájení projektu v terénu.
+    """
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip"),
@@ -557,6 +578,9 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
 
 class UkoncitVTerenuForm(forms.ModelForm):
+    """
+    Formulář pro ukončení projektu v terénu.
+    """
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
@@ -587,6 +611,9 @@ class UkoncitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
+        """
+        Metóda pro kontrolu datumu ukončení.
+        """
         cleaned_data = super().clean()
         if {"datum_ukonceni"} <= cleaned_data.keys():
             if self.instance.datum_zahajeni > cleaned_data.get("datum_ukonceni"):
@@ -598,7 +625,9 @@ class UkoncitVTerenuForm(forms.ModelForm):
 
 
 class ZruseniProjektForm(forms.Form):
-
+    """
+    Formulář pro zrušení projektu.
+    """
     reason_text = forms.CharField(
         label=_("projekt.form.zruseni.duvod.label"),
         required=True,
@@ -623,6 +652,9 @@ class ZruseniProjektForm(forms.Form):
 
 
 class GenerovatNovePotvrzeniForm(forms.Form):
+    """
+    Formulář pro vygenerování nového potvrzení projektu.
+    """
     odeslat_oznamovateli = forms.BooleanField(label=_("Odeslat oznamovateli"), required=False)
 
     def __init__(self, *args, **kwargs):
@@ -655,6 +687,9 @@ VYSLEDEK_CHOICES = [
 ]
 
 class GenerovatExpertniListForm(forms.Form):
+    """
+    Formulář pro generování expertního listu projektu.
+    """
     cislo_jednaci = forms.CharField(label=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.label"),
                                     required=False,
                                     help_text=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
@@ -706,6 +741,9 @@ class GenerovatExpertniListForm(forms.Form):
         )
 
 class PripojitProjektForm(forms.Form):
+    """
+    Formulář pro pripojení projektu do akce nebo dokumentu.
+    """
     def __init__(self,dok=False, *args, **kwargs):
         super(PripojitProjektForm, self).__init__(*args, **kwargs)
         if dok:

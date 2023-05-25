@@ -8,7 +8,9 @@ from .models import Projekt
 logger = logging.getLogger(__name__)
 
 class ProjektTable(SearchTable):
-
+    """
+    Třída pro definování tabulky pro projekt použitých pro zobrazení přehledu projektů a exportu.
+    """
     ident_cely = tables.Column(linkify=True)
     datum_zahajeni = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
     datum_ukonceni = tables.columns.DateTimeColumn(format ='Y-m-d',default="")
