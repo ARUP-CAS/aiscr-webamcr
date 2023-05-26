@@ -21,6 +21,11 @@ from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
 from services.mailer import Mailer
 from django_registration.backends.activation.views import ActivationView
+from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework_xml.renderers import XMLRenderer
 
 from core.decorators import odstavka_in_progress
 from core.message_constants import (
@@ -32,6 +37,9 @@ from core.message_constants import (
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User
+from .serializers import UserSerializer
+from django.utils.encoding import force_str
+
 
 logger = logging.getLogger(__name__)
 
@@ -171,10 +179,9 @@ class UserLoginView(LoginView):
     authentication_form = AuthUserLoginForm
 
 
-# overriding logout view for adding message after auto logout
 class UserLogoutView(LogoutView):
     """
-    Třída pohledu pro odhlášení uživatele.
+    Třída pohledu pro odhlášení uživatele, kvůli zobrazení info o logoutu
     """
     def dispatch(self, request, *args, **kwargs):
         if request.GET.get("autologout") == "true":
@@ -287,3 +294,53 @@ class UserPasswordResetView(PasswordResetView):
     Třída pohledu pro resetování hesla.
     """
     form_class = UserPasswordResetForm
+    
+class TokenAuthenticationBearer(TokenAuthentication):
+    """
+    Override třídy pro nastavení názvu tokenu na Bearer.
+    """
+    keyword = "Bearer"
+    
+class MyXMLRenderer(XMLRenderer):
+    """
+    Override třídy pro nastavení správnych tagů.
+    """
+    root_tag_name = 'amcr:uzivatel'
+
+    def _to_xml(self, xml, data):
+        if isinstance(data, (list, tuple)):
+            for item in data:
+                xml.startElement(self.item_tag_name, {})
+                self._to_xml(xml, item)
+                xml.endElement(self.item_tag_name)
+
+        elif isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, dict) and "idRef" in value:
+                    xml.startElement(key, {"id":value.pop("idRef")})
+                    self._to_xml(xml, value["value"])
+                else:
+                    xml.startElement(key, {})
+                    self._to_xml(xml, value)
+                xml.endElement(key)
+
+        elif data is None:
+            # Don't output any value
+            pass
+
+        else:
+            xml.characters(force_str(data))
+
+class GetUserInfo(APIView):
+    """
+    Třída podlehu pro získaní základních info o uživately.
+    """
+    authentication_classes = [TokenAuthenticationBearer]
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [MyXMLRenderer,]
+    http_method_names = ["get",]
+    
+    def get(self, request, format=None):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
