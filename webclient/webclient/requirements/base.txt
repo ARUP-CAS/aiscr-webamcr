@@ -34,6 +34,8 @@ django-celery-beat==2.5.0
 django-celery-results==2.4.0
 django-prometheus==2.2.0
 python-logstash==0.4.8
+djangorestframework==3.14.0
+djangorestframework-xml==2.0.0
 # DEV requirements
 pre-commit==3.2.1
 isort==5.11.2
