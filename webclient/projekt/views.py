@@ -79,7 +79,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
-from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter

@@ -44,6 +44,8 @@ from core.models import ProjektSekvence, Soubor, SouborVazby
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
+)
+from heslar.hesla_dynamicka import (
     TYP_PROJEKTU_PRUZKUM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
 )

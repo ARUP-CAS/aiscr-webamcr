@@ -10,7 +10,8 @@ from dal import autocomplete
 from django import forms
 from django.utils.translation import gettext as _
 from django.utils import formats
-from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT, SPECIFIKACE_DATA_PRESNE
+from heslar.hesla import HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT
+from heslar.hesla_dynamicka import SPECIFIKACE_DATA_PRESNE
 from heslar.models import Heslar
 from heslar.views import heslar_12
 from projekt.models import Projekt

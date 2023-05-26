@@ -16,7 +16,7 @@ from core.tests.runner import (
     AMCR_TESTOVACI_ORGANIZACE_ID,
 )
 from dokument.models import Dokument
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
 from heslar.models import RuianKatastr
 from projekt.models import Projekt
 from uzivatel.models import User

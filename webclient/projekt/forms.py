@@ -16,7 +16,7 @@ from arch_z import validators
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
-from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 
 logger_s = logging.getLogger(__name__)
 

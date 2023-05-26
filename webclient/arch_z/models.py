@@ -25,7 +25,8 @@ from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_DATUM_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
-    PRISTUPNOST_ANONYM_ID,
+)
+from heslar.hesla_dynamicka import (
     TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
 )
 from heslar.models import Heslar, RuianKatastr

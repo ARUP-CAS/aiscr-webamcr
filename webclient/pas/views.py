@@ -50,7 +50,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.forms import CoordinatesDokumentForm
-from heslar.hesla import PRISTUPNOST_ARCHEOLOG_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
