@@ -7,7 +7,7 @@ def get_id_from_heslar(ident_cely):
         return pk
     except Exception:
         # This will happen when automated tests are run
-        return 0
+        return int(ident_cely.replace("HES-", ""))
 
 
 # Pouzite heslare v kodu

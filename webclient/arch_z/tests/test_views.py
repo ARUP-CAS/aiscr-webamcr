@@ -16,7 +16,7 @@ from core.tests.runner import (
     AMCR_TESTOVACI_ORGANIZACE_ID,
 )
 from dokument.models import Dokument
-from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, SPECIFIKACE_DATA_PRESNE
 from heslar.models import RuianKatastr
 from projekt.models import Projekt
 from uzivatel.models import User
@@ -48,7 +48,7 @@ class UrlTests(TestCase):
             "hlavni_vedouci": str(EL_CHEFE_ID),
             "datum_zahajeni": "15.11.2020",
             "datum_ukonceni": "15.12.2020",
-            "specifikace_data": 885,
+            "specifikace_data": SPECIFIKACE_DATA_PRESNE,
             "lokalizace_okolnosti": "Nekde proste to je",
             "ulozeni_nalezu": "",
             "hlavni_typ": str(HLAVNI_TYP_SONDA_ID),
@@ -81,7 +81,7 @@ class UrlTests(TestCase):
         az = ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B").first()
         az.refresh_from_db()
         self.assertEqual(200, response.status_code)
-        self.assertEqual(az.akce.specifikace_data.pk, 885)
+        self.assertEqual(az.akce.specifikace_data.pk, SPECIFIKACE_DATA_PRESNE)
         self.assertEqual(az.pristupnost.pk, PRISTUPNOST_ANONYM_ID)
         self.assertTrue(
             len(ArcheologickyZaznam.objects.filter(ident_cely="C-202000001B")) == 1
