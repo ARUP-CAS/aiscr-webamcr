@@ -1,45 +1,53 @@
-from typing import Final
 from heslar.models import Heslar
 
+
+def get_id_from_heslar(ident_cely):
+    try:
+        pk = Heslar.objects.get(ident_cely=ident_cely).pk
+        return pk
+    except Exception:
+        # This will happen when automated tests are run
+        return 0
+
+
 # Pouzite heslare v kodu
-TYP_PROJEKTU_ZACHRANNY_ID: Final = Heslar.objects.get(ident_cely="HES-001136").pk
-TYP_PROJEKTU_PRUZKUM_ID: Final = Heslar.objects.get(ident_cely="HES-001138").pk
-TYP_PROJEKTU_BADATELSKY_ID: Final = Heslar.objects.get(ident_cely="HES-001137").pk
+TYP_PROJEKTU_ZACHRANNY_ID = get_id_from_heslar("HES-001136")
+TYP_PROJEKTU_PRUZKUM_ID = get_id_from_heslar("HES-001138")
+TYP_PROJEKTU_BADATELSKY_ID = get_id_from_heslar("HES-001137")
 
-PRISTUPNOST_BADATEL_ID: Final = Heslar.objects.get(ident_cely="HES-000866").pk
-PRISTUPNOST_ARCHEOLOG_ID: Final = Heslar.objects.get(ident_cely="HES-000867").pk
-PRISTUPNOST_ANONYM_ID: Final = Heslar.objects.get(ident_cely="HES-000865").pk
-PRISTUPNOST_ARCHIVAR_ID: Final = Heslar.objects.get(ident_cely="HES-000868").pk
+PRISTUPNOST_BADATEL_ID = get_id_from_heslar("HES-000866")
+PRISTUPNOST_ARCHEOLOG_ID = get_id_from_heslar("HES-000867")
+PRISTUPNOST_ANONYM_ID = get_id_from_heslar("HES-000865")
+PRISTUPNOST_ARCHIVAR_ID = get_id_from_heslar("HES-000868")
 
-SPECIFIKACE_DATA_PRESNE: Final = Heslar.objects.get(ident_cely="HES-000887").pk
-TYP_DJ_SONDA_ID: Final = Heslar.objects.get(ident_cely="HES-001072").pk
-TYP_DJ_KATASTR: Final = Heslar.objects.get(ident_cely="HES-001073").pk
-TYP_DJ_CELEK: Final = Heslar.objects.get(ident_cely="HES-001070").pk
-TYP_DJ_CAST: Final = Heslar.objects.get(ident_cely="HES-001071").pk
-TYP_DJ_LOKALITA: Final = Heslar.objects.get(ident_cely="HES-001074").pk
+SPECIFIKACE_DATA_PRESNE = get_id_from_heslar("HES-000887")
+TYP_DJ_SONDA_ID = get_id_from_heslar("HES-001072")
+TYP_DJ_KATASTR = get_id_from_heslar("HES-001073")
+TYP_DJ_CELEK = get_id_from_heslar("HES-001070")
+TYP_DJ_CAST = get_id_from_heslar("HES-001071")
+TYP_DJ_LOKALITA = get_id_from_heslar("HES-001074")
 
-GEOMETRY_PLOCHA: Final = Heslar.objects.get(ident_cely="HES-001135").pk
-GEOMETRY_LINIE: Final = Heslar.objects.get(ident_cely="HES-001134").pk
-GEOMETRY_BOD: Final = Heslar.objects.get(ident_cely="HES-001133").pk
+GEOMETRY_PLOCHA = get_id_from_heslar("HES-001135")
+GEOMETRY_LINIE = get_id_from_heslar("HES-001134")
+GEOMETRY_BOD = get_id_from_heslar("HES-001133")
 
-# Rada modelu 3D
-DOKUMENT_RADA_DATA_3D: Final = Heslar.objects.get(ident_cely="HES-000870").pk
-MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR: Final = Heslar.objects.get(ident_cely="HES-000217").pk
+DOKUMENT_RADA_DATA_3D = get_id_from_heslar("HES-000870")
+MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR = get_id_from_heslar("HES-000217")
 
 # Typy dokumentu povolene pridat k akci/projektu
-DATA_GPS = Heslar.objects.get(ident_cely="HES-001085").pk
-EXPERTNI_POSUDEK = Heslar.objects.get(ident_cely="HES-001077").pk
-HLASENI_ZAA = Heslar.objects.get(ident_cely="HES-001080").pk
-TYP_DOKUMENTU_NALEZOVA_ZPRAVA: Final = Heslar.objects.get(ident_cely="HES-001075").pk
-DATA_ANALYZY_EKOFAKTORU = Heslar.objects.get(ident_cely="HES-001082").pk
-INVESTORSKA_ZPRAVA = Heslar.objects.get(ident_cely="HES-001079").pk
-RESTAURATORSKA_ZPRAVA = Heslar.objects.get(ident_cely="HES-001078").pk
-DATA_VEKTOROVEHO_PLANU = Heslar.objects.get(ident_cely="HES-001087").pk
-TEXT_JINY = Heslar.objects.get(ident_cely="HES-001081").pk
-DATA_TERENNIHO_VYZKUMU = Heslar.objects.get(ident_cely="HES-001086").pk
-PRILOHA_NZ_ZAA = Heslar.objects.get(ident_cely="HES-001076").pk
-DATA_GEOFYZIKALNI = Heslar.objects.get(ident_cely="HES-001084").pk
-DATA_GEODETICKA = Heslar.objects.get(ident_cely="HES-001083").pk
+DATA_GPS = get_id_from_heslar("HES-001085")
+EXPERTNI_POSUDEK = get_id_from_heslar("HES-001077")
+HLASENI_ZAA = get_id_from_heslar("HES-001080")
+TYP_DOKUMENTU_NALEZOVA_ZPRAVA = get_id_from_heslar("HES-001075")
+DATA_ANALYZY_EKOFAKTORU = get_id_from_heslar("HES-001082")
+INVESTORSKA_ZPRAVA = get_id_from_heslar("HES-001079")
+RESTAURATORSKA_ZPRAVA = get_id_from_heslar("HES-001078")
+DATA_VEKTOROVEHO_PLANU = get_id_from_heslar("HES-001087")
+TEXT_JINY = get_id_from_heslar("HES-001081")
+DATA_TERENNIHO_VYZKUMU = get_id_from_heslar("HES-001086")
+PRILOHA_NZ_ZAA = get_id_from_heslar("HES-001076")
+DATA_GEOFYZIKALNI = get_id_from_heslar("HES-001084")
+DATA_GEODETICKA = get_id_from_heslar("HES-001083")
 ALLOWED_DOKUMENT_TYPES = [
     DATA_GPS,
     EXPERTNI_POSUDEK,
@@ -55,18 +63,18 @@ ALLOWED_DOKUMENT_TYPES = [
     DATA_GEOFYZIKALNI,
     DATA_GEODETICKA,
 ]
-REKONSTRUKCE_3D_ID: Final = Heslar.objects.get(ident_cely="HES-001113").pk
-TEXTURA_3D_ID: Final = Heslar.objects.get(ident_cely="HES-001115").pk
-DOKUMENTACE_3D_ID: Final = Heslar.objects.get(ident_cely="HES-001114").pk
+REKONSTRUKCE_3D_ID = get_id_from_heslar("HES-001113")
+TEXTURA_3D_ID = get_id_from_heslar("HES-001115")
+DOKUMENTACE_3D_ID = get_id_from_heslar("HES-001114")
 MODEL_3D_DOKUMENT_TYPES = [REKONSTRUKCE_3D_ID, TEXTURA_3D_ID, DOKUMENTACE_3D_ID]
 
-# Externi zdroj typ
-EXTERNI_ZDROJ_TYP_KNIHA = Heslar.objects.get(ident_cely="HES-001117").pk
-EXTERNI_ZDROJ_TYP_CAST_KNIHY = Heslar.objects.get(ident_cely="HES-001118").pk
-EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE = Heslar.objects.get(ident_cely="HES-001119").pk
-EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH = Heslar.objects.get(ident_cely="HES-001120").pk
-EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA = Heslar.objects.get(ident_cely="HES-001121").pk
+EXTERNI_ZDROJ_TYP_KNIHA = get_id_from_heslar("HES-001117")
+EXTERNI_ZDROJ_TYP_CAST_KNIHY = get_id_from_heslar("HES-001118")
+EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE = get_id_from_heslar("HES-001119")
+EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH = get_id_from_heslar("HES-001120")
+EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA = get_id_from_heslar("HES-001121")
 
-PIAN_PRESNOST_KATASTR = Heslar.objects.get(ident_cely="HES-000864").pk
-HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE = Heslar.objects.get(ident_cely="HES-000889").pk
-HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE = Heslar.objects.get(ident_cely="HES-000886").pk
+PIAN_PRESNOST_KATASTR = get_id_from_heslar("HES-000864")
+HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE = get_id_from_heslar("HES-000889")
+HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE = get_id_from_heslar("HES-000886")
+
