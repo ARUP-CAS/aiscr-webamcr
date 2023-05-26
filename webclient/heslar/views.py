@@ -6,7 +6,8 @@ from django.http import JsonResponse
 from django.db.models import Value, IntegerField
 from django.core.exceptions import ObjectDoesNotExist
 
-from heslar.hesla import HESLAR_DOKUMENT_TYP, MODEL_3D_DOKUMENT_TYPES, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
+from heslar.hesla import HESLAR_DOKUMENT_TYP, HESLAR_DOKUMENT_FORMAT, HESLAR_PRISTUPNOST
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar, RuianKatastr, HeslarHierarchie
 import logging
 

@@ -8,7 +8,7 @@ from django.dispatch import receiver
 from dj.models import DokumentacniJednotka
 from heslar.models import RuianKatastr
 from pian.models import vytvor_pian
-from heslar.hesla import TYP_DJ_KATASTR
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 
 logger = logging.getLogger(__name__)
 

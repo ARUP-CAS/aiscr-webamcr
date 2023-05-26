@@ -26,8 +26,8 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
-    TYP_PROJEKTU_PRUZKUM_ID,
 )
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt

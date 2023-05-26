@@ -1,14 +1,5 @@
-from django.db.models import Q
-
-from core.tests.runner import PRESNOST_DESITKY_METRU_ID
-from django.contrib.messages.middleware import MessageMiddleware
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.db import transaction
 from django.test import RequestFactory, TestCase
-from heslar.hesla import GEOMETRY_BOD, HESLAR_PIAN_PRESNOST
-from heslar.models import Heslar
-from pian.models import Pian
-from pian.views import create
+
 from uzivatel.models import User
 
 

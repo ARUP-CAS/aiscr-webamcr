@@ -6,7 +6,8 @@ from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
+from heslar.hesla import HESLAR_DJ_TYP
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
 
 

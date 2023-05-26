@@ -14,13 +14,15 @@ from crispy_forms.bootstrap import AppendedText
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let, Tvar
 from heslar.hesla import (
-    ALLOWED_DOKUMENT_TYPES,
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_JAZYK,
     HESLAR_LETFOTO_TVAR,
     HESLAR_POSUDEK_TYP,
+)
+from heslar.hesla_dynamicka import (
+    ALLOWED_DOKUMENT_TYPES,
     MODEL_3D_DOKUMENT_TYPES,
 )
 from heslar.models import Heslar

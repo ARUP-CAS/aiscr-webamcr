@@ -1,5 +1,5 @@
 from django.test import TestCase
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from projekt.models import Projekt
 

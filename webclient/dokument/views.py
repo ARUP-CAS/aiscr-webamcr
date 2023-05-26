@@ -87,7 +87,6 @@ from dokument.models import (
 )
 from dokument.tables import Model3DTable, DokumentTable
 from heslar.hesla import (
-    DOKUMENT_RADA_DATA_3D,
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
     HESLAR_DOKUMENT_TYP,
@@ -100,6 +99,9 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
+)
+from heslar.hesla_dynamicka import (
+    DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     PRISTUPNOST_BADATEL_ID,
 )

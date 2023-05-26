@@ -27,7 +27,7 @@ from core.tests.runner import (
     EXISTING_DOCUMENT_ID,
 )
 from dokument.models import Dokument, DokumentCast, Tvar
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
 from uzivatel.models import User
