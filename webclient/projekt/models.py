@@ -75,7 +75,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
     )
 
     stav = models.SmallIntegerField(
-        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav")
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav"),db_index=True
     )
     typ_projektu = models.ForeignKey(
         Heslar,
