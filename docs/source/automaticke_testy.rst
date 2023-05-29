@@ -1,5 +1,5 @@
-Spuštění testů
-==============
+Automatické testy
+=================
 
 Ke spuštění testů slouží vývojový server (.24). Testy je možné spustit
 následujícím příkazem
@@ -27,9 +27,6 @@ varování) a ``Test Overview`` (statistika chybových zpráv testu).
 .. image:: images/automaticke_testy_dashboard.png
    :alt: dashboard
 
-Postup vytvoření scénáře
-========================
-
 Požadované vlastnosti testovacího scénáře
 -----------------------------------------
 
@@ -50,9 +47,6 @@ Postup vytvoření kódu testu
 ---------------------------
 
 Pro scénář je třeba připravit sadu vstupních dat a kontrolní výstup.
-
-Přehled testovacích scénářů
-===========================
 
 Struktura popisu scénáře
 ------------------------
