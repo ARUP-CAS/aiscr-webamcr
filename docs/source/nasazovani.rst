@@ -131,7 +131,7 @@ Skriptované nasazení z lokálního repozitáře
 ========================
 V případech, kdy na docker-hubu nejsou k dispozici docker obrazy v požadované verzi (např. při hotfixech), je možno aktualizovat zdrojový kód přímo v lokální repozitáři a následně spustit automatizační skript `./logs/git_prod_deploy`, který se postará o vytvoření docker obrazů lokálně na základě zdrojových souborů lokálního repozitáře.
 Tento skript loguje průběh do souboru `logs/git_prod_deploy`, vytváří lokálně docker obrazy, jež jsou následně nasazeny pomocí docker-compose, tj. **NEPOUŽÍVÁ SE swarm-mode**. Aplikace WebAMČR je v tomto případě přístupná na portu **8081**.
-Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``. 
+Základní spuštění probíhá bez jakéhokoliv volitelného parametru, tzn. ``./scripts/git_prod_deploy.sh``. Nápověda k dalším volbám je přístupná přes ``logs/git_prod_deploy.sh -h``.
 
 **Předpoklady**: existující a aktualizované soubory s tzv. secrets, které obsahují nezbytné autentizační a konfigurační údaje viz `git_docker-compose-production.yml`, kde se předpokládá existence těch souborů:
 
@@ -191,3 +191,15 @@ Při specifických způsobech nasazení, kdy výše uvedené automatizační skr
 * `./git_docker-compose-production.override.yml` - obsahuje alternativní secrets, samostatně nespustitelné, využívá se pouze nepřímo skrze rozhodovací strukturu v rámci skriptu `./scripts/git_prod_deploy.sh`
   
 
+========================
+Kontrola stavu aplikačních kontejnerů
+========================
+
+Existuje sada tzv. healtcheck skriptů, které reportují stav služby běžící uvnitř příslušného kontejneru.
+Každý kontejner používá jinou sadu charakteristik k odvození příslušné metriky "health status". Výsledky kontroly health status se dají pro každý kontejner nalézt po spuštění příkazu
+`docker inspect -f "{{json .State.Health}}"`. Tyto kontroly stavu zdraví aplikace se provádějí periodicky. Aktuálni hodnoty periody kontroly se dají odečíst v souboru `docker-compose-production.yml`.
+
+* Kontejner `web` (aplikace WebAMCR) má nejkomplexnější metriku implementovanou v `run-healthcheck.sh`, která se skládá z monitorování obsazenosti paměti diskového prostoru hostitelské stanice (musí být menší než 95 %), nadále dostupnost databáze (vytvořen skript `db_connection_from_docker-web.py`) a výsledek `django checks` reportovaný jako HTTP odpověď ve formátu JSON (musí být HTTP status code 200). V rámci této odpovědi zasílané na http-socketu 8001 se agreguje výsledek tzv. interních django checks (`manage.py checks`) a také (`manage.py checks --database default`). Pospojováním jednotlivých výsledků dílčích metrik pomocí operace AND pak vznikne souhrnný status code `0` (healthy) nebo `1` (not healthy)
+* Kontejner `proxy`, kontrola návratu HTTP status code 200 na http socketu 8080, implementováno ve skriptu `run-healthcheck_proxy.sh`.
+* Kontejner `celery`, metrika je odezva na příkaz celery ping, který musí mít nulový návratový kód, implemetováno ve skriptu `run-healthcheck_celery.sh`.
+* Kontejner `redis` metrika je odevzva na příkaz redis ping, očekáván nulový návratový kód, implementováno ve skriptu `run-healthcheck_redis.sh`.
