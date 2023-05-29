@@ -19,6 +19,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    logy
    monitoring
    file_documentation
+   automaticke_testy
    code_documentation
 
 
