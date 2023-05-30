@@ -66,7 +66,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set.datum_zmeny}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="oznamovatel" minOccurs="0" maxOccurs="1">
       	<xs:complexType>          
           <xs:sequence>
@@ -78,10 +78,10 @@
           </xs:sequence>          
         </xs:complexType>
       </xs:element>
-      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- soubory.soubory.nazev -->
-      <xs:element name="archeologicky_zaznam" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{akce_set.archeologicky_zaznam}" | "{akce_set.archeologicky_zaznam}" -->
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- soubory.soubory -->
+      <xs:element name="archeologicky_zaznam" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{akce_set.archeologicky_zaznam.ident_cely}" | "{akce_set.archeologicky_zaznam.ident_cely}" -->
       <xs:element name="samostatny_nalez" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{samostatne_nalezy.ident_cely}" | "{samostatne_nalezy.ident_cely}" -->
-      <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{casti_dokumentu.dokument}" | "{casti_dokumentu.dokument}" -->
+      <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{casti_dokumentu.ident_cely}" | "{casti_dokumentu.ident_cely}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="archeologicky_zaznamType">
