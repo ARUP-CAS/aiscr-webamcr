@@ -176,8 +176,8 @@ class AMCRBaseTestRunner(BaseRunner):
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
         projektove_sekvence = []
         for rok in sekvence_roku:
-            projektove_sekvence.append(ProjektSekvence(rada="C", rok=rok, sekvence=1))
-            projektove_sekvence.append(ProjektSekvence(rada="M", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region="C", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region="M", rok=rok, sekvence=1))
         ProjektSekvence.objects.bulk_create(projektove_sekvence)
 
         user_notifications = (

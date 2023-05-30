@@ -32,6 +32,7 @@ from core.decorators import odstavka_in_progress
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
 from services.mailer import Mailer
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ def index(request, test_run=False):
         if (
             form_ozn.is_valid()
             and form_projekt.is_valid()
-            and (test_run or form_captcha.is_valid())
+            and (test_run or settings.SKIP_RECAPTCHA or form_captcha.is_valid())
         ):
             logger.debug("Oznameni Form is valid")
             o = form_ozn.save(commit=False)
@@ -77,10 +78,10 @@ def index(request, test_run=False):
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
             logger.debug(p)
-            p.save()
+            # p.save()
             if p.hlavni_katastr is not None:
                 p.ident_cely = get_temporary_project_ident(
-                    p, p.hlavni_katastr.okres.kraj.rada_id
+                    p.hlavni_katastr.okres.kraj.rada_id
                 )
             else:
                 logger.warning(

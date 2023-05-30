@@ -71,10 +71,10 @@ class IdentTests(TestCase):
             id=1,
         )
         region = "M"
-        ident = get_temporary_project_ident(p, region)
+        ident = get_temporary_project_ident(region)
         self.assertEqual(ident, f"X-M-{'0' * 8}1")
         p.id = 100000
-        ident = get_temporary_project_ident(p, region)
+        ident = get_temporary_project_ident(region)
         self.assertEqual(ident, f"X-M-{str(p.id).zfill(9)}")
 
     def test_get_permanent_ident(self):
@@ -97,7 +97,7 @@ class IdentTests(TestCase):
         p.save()
         p.set_permanent_ident_cely()
         self.assertEqual(p.ident_cely, "C-" + str(year) + "00001")
-        s = ProjektSekvence.objects.filter(rok=year).filter(rada="C")[0]
+        s = ProjektSekvence.objects.filter(rok=year).filter(region="C")[0]
         # Over ze se sekvence inkrementla
         self.assertEqual(s.sekvence, 2)
 

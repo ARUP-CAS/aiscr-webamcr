@@ -127,18 +127,29 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
         """
         self.stav = AZ_STAV_ARCHIVOVANY
-        Historie(
-            typ_zmeny=ARCHIVACE_AZ,
-            uzivatel=user,
-            vazba=self.historie,
-        ).save()
+        poznamka_historie = None
         self.save()
         if (
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
             and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
         ):
+            old_ident = self.ident_cely
             self.set_akce_ident()
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        if (
+            self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA 
+            and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
+        ):
+            old_ident = self.ident_cely
+            self.set_lokalita_permanent_ident_cely()
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        Historie(
+            typ_zmeny=ARCHIVACE_AZ,
+            uzivatel=user,
+            vazba=self.historie,
+            poznamka=poznamka_historie,
+        ).save()
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -501,17 +512,14 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_table = "externi_odkaz"
 
 
-def get_akce_ident(region, temp=None, id=None):
+def get_akce_ident(region):
     """
-        Funkce pro nastavení permanentního ident celý pro akci.
+        Funkce pro získaní permanentního ident celý pro akci.
         Metóda najde první volné místo v db.
     """
     MAXIMAL: int = 999999
     # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-    if temp:
-        return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + str(id) + "A")
-    else:
-        prefix = str(region + "-9")
+    prefix = str(region + "-9")
     l = ArcheologickyZaznam.objects.filter(
         ident_cely__regex="^" + prefix + "\\d{6}A$"
     ).order_by("-ident_cely")

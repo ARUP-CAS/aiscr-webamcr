@@ -457,3 +457,4 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ]
 }
+SKIP_RECAPTCHA = False

@@ -131,12 +131,16 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
         Pokud je ident dočasný nahrazení identem stálým.
         """
         self.stav = EZ_STAV_POTVRZENY
+        historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
+            old_ident = self.ident_cely
             self.ident_cely = get_ez_ident()
+            historie_poznamka = f"{old_ident} -> {self.ident_cely}"
         Historie(
             typ_zmeny=POTVRZENI_EXT_ZD,
             uzivatel=user,
             vazba=self.historie,
+            poznamka = historie_poznamka,
         ).save()
         self.save()
 
@@ -161,12 +165,7 @@ def get_ez_ident(zaznam=None):
     """
     MAXIMAL: int = 9999999
     # [BIB]-[pořadové číslo v sedmimístném formátu]
-    prefix = "X-BIB-"
-    if zaznam is not None:
-        id_number = "{0}".format(str(zaznam.id)).zfill(7)
-        return prefix + id_number
-    else:
-        prefix = "BIB-"
+    prefix = "BIB-"
     ez = ExterniZdroj.objects.filter(
         ident_cely__regex="^" + prefix + "\\d{7}$"
     ).order_by("-ident_cely")

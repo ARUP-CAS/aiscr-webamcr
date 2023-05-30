@@ -480,7 +480,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.set_schvaleny(request.user)
+        old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
@@ -497,6 +497,7 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
                                                                          "permIdent_cely": projekt.ident_cely})
+        projekt.set_schvaleny(request.user,old_ident)
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)

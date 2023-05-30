@@ -188,12 +188,15 @@ class ProjektSekvence(models.Model):
     """
     Model pro tabulku se sekvencemi projektu.
     """
-    rada = models.CharField(max_length=1)
+    region = models.CharField(max_length=1)
     rok = models.IntegerField()
     sekvence = models.IntegerField()
 
     class Meta:
         db_table = "projekt_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['region','rok'], name='unique_sekvence_projekt'),
+        ]
 
 
 class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Model):
