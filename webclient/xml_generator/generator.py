@@ -1,3 +1,5 @@
+import os
+
 import xml.etree.ElementTree as ET
 
 from lxml import etree
@@ -7,6 +9,7 @@ from projekt.models import Projekt
 
 AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
 AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
+AMCR_XSD_FILENAME = "amcr_230531.xsd"
 
 
 class DocumentGenerator:
@@ -21,13 +24,17 @@ class DocumentGenerator:
 
     @staticmethod
     def _create_xpath_query(model_name):
-        query_attribute_selection = f"[local-name()='complexType' and @name='{model_name}Type']"
+        if model_name.lower().endswith("type"):
+            model_name = model_name.replace("amcr:", "")
+            query_attribute_selection = f"[local-name()='complexType' and @name='{model_name}']"
+        else:
+            query_attribute_selection = f"[local-name()='complexType' and @name='{model_name}Type']"
         query = f"//*{query_attribute_selection}/*/*|//*{query_attribute_selection}/*/comment()"
         return query
 
     def _parse_schema(self, model_name):
         parser = etree.XMLParser()
-        tree = etree.parse("xml_generator/definitions/amcr_230522.xsd.xml", parser)
+        tree = etree.parse(os.path.join("xml_generator/definitions/", AMCR_XSD_FILENAME), parser)
         return tree.xpath(self._create_xpath_query(model_name))
 
     @staticmethod
@@ -43,8 +50,9 @@ class DocumentGenerator:
         else:
             return None, None
 
-    @staticmethod
-    def _get_attribute_of_record(record, attribute_name):
+    def _get_attribute_of_record(self, record, attribute_name):
+        if attribute_name == "self":
+            return self.document_object
         if "." not in attribute_name and "(" not in attribute_name:
             attribute_value = getattr(record, attribute_name, None)
             return attribute_value
@@ -62,7 +70,13 @@ class DocumentGenerator:
     @staticmethod
     def _get_attribute_of_record_unbounded(record, attribute_name):
         record_name_split = attribute_name.split(".")
-        if len(record_name_split) == 2:
+        if len(record_name_split) == 1:
+            record_attribute = getattr(record, record_name_split[0], None)
+            if hasattr(record_attribute, "all"):
+                return [x for x in record_attribute.all()]
+            else:
+                print("_get_attribute_of_record_unbounded", record_name_split)
+        elif len(record_name_split) == 2:
             related_record = getattr(record, record_name_split[0], None)
             if hasattr(related_record, "all"):
                 attributes = [getattr(x, record_name_split[1], None) for x in related_record.all()]
@@ -72,7 +86,6 @@ class DocumentGenerator:
             if hasattr(related_record, "all"):
                 return [x for x in related_record.all()]
         elif len(record_name_split) == 3:
-            print("_get_attribute_of_record_unbounded")
             related_record = getattr(record, record_name_split[0], None)
             if hasattr(related_record, "all"):
                 attributes = []
@@ -117,20 +130,26 @@ class DocumentGenerator:
                 id_field_name, field_name = self._parse_comment(next_element.text)
                 if schema_element.attrib["maxOccurs"] == "1":
                     if field_name is not None:
-                        self._create_element(schema_element, parent_element, field_name, id_field_name)
-                    else:
-                        print("Unknown field", next_element.text)
+                        if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType"):
+                            self._create_element(schema_element, parent_element, field_name, id_field_name)
+                        else:
+                            obj = self._get_attribute_of_record(self.document_object, field_name)
+                            if obj is not None:
+                                child_schema_element = self._parse_schema(schema_element.attrib["type"])
+                                self._parse_scheme_create_nested_element(child_schema_element, parent_element, obj,
+                                                                         schema_element.attrib["name"])
                 elif schema_element.attrib["maxOccurs"] == "unbounded":
                     id_field_names, field_names = self._parse_comment(next_element.text)
                     if field_name is not None:
                         related_records = self._get_attribute_of_record_unbounded(self.document_object, field_names)
                         if related_records is not None:
-                            if schema_element.attrib["type"] in ("amcr:historieType", "amcr:souborType"):
-                                child_schema_element = self._parse_schema(schema_element.attrib["name"])
-                                for obj in related_records:
-                                    self._parse_scheme_create_nested_element(child_schema_element, parent_element, obj,
-                                                                             schema_element.attrib["name"])
-                            elif schema_element.attrib["type"] == "amcr:refType":
+                            if schema_element.attrib["type"] != "amcr:refType":
+                                self._iterate_unbound_records(related_records, schema_element, parent_element)
+                                # child_schema_element = self._parse_schema(schema_element.attrib["type"])
+                                # for obj in related_records:
+                                #     self._parse_scheme_create_nested_element(child_schema_element, parent_element, obj,
+                                #                                              schema_element.attrib["name"])
+                            else:
                                 self._create_many_to_many_ref_elements(schema_element, parent_element, related_records,
                                                                        id_field_names if id_field_names else None)
                     else:
@@ -138,9 +157,15 @@ class DocumentGenerator:
             else:
                 print("Element without comment", schema_element.attrib["name"])
 
+    def _iterate_unbound_records(self, related_records, schema_element, parent_element):
+        child_schema_element = self._parse_schema(schema_element.attrib["type"])
+        for obj in related_records:
+            self._parse_scheme_create_nested_element(child_schema_element, parent_element, obj,
+                                                     schema_element.attrib["name"])
+
     def _parse_scheme_create_nested_element(self, schema_element, parent_element, document_object,
                                             child_parent_element_name):
-        print("_parse_scheme_create_nested_element", document_object, schema_element)
+        print("_parse_scheme_create_nested_element", document_object)
         child_parent_element = ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{child_parent_element_name}")
         for child_schema_element in schema_element:
             if child_schema_element.__class__.__name__ == "_Element":
@@ -151,6 +176,12 @@ class DocumentGenerator:
                         if field_name is not None:
                             self._create_element(child_schema_element, child_parent_element, field_name, id_field_name,
                                                  document_object)
+                    else:
+                        related_records = self._get_attribute_of_record_unbounded(document_object, field_name)
+                        if related_records is not None:
+                            self._iterate_unbound_records(related_records, child_schema_element, child_parent_element)
+                        else:
+                            print("_parse_scheme_create_nested_element_unbounded", field_name)
 
     def generate_document(self):
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
@@ -178,7 +209,7 @@ class DocumentGenerator:
         self.document_root = ET.Element("xmlns")
 
 
-object = ArcheologickyZaznam.objects.get(ident_cely="C-201901234A")
+objekt = ArcheologickyZaznam.objects.get(ident_cely="C-201901234A")
 # objekt = Projekt.objects.get(ident_cely="C-201705778")
-generator = DocumentGenerator(object)
+generator = DocumentGenerator(objekt)
 generator.generate_document()
