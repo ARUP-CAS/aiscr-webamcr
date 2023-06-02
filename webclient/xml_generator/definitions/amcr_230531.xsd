@@ -45,7 +45,7 @@
       <xs:element name="datum_zahajeni" minOccurs="0" maxOccurs="1" type="xs:date"/> <!-- "{datum_zahajeni}" -->
       <xs:element name="datum_ukonceni" minOccurs="0" maxOccurs="1" type="xs:date"/> <!-- "{datum_ukonceni}" -->
       <xs:element name="termin_odevzdani_nz" minOccurs="0" maxOccurs="1" type="xs:date"/> <!-- "{termin_odevzdani_nz}" -->
-      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- DEFAULT: "HES-000865" | "anonym"; "{pristupnost_pom.ident_cely}" | "{pristupnost_pom.heslo}") -->
+      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{pristupnost.ident_cely}" | "{pristupnost.heslo}" -->
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:projekt-chranene_udajeType"/> <!-- self -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="oznamovatel" minOccurs="0" maxOccurs="1" type="amcr:oznamovatelType"/> <!-- "{oznamovatel}" -->
@@ -519,7 +519,7 @@
    	  <xs:element name="jistota" minOccurs="0" maxOccurs="1" type="xs:boolean"/> <!-- "{jistota}" -->
    	  <xs:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{presna_datace}" -->
    	  <xs:element name="areal" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{areal.ident_cely}" | "{areal.heslo}" -->
-   	  <xs:element name="aktivita" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{aktivity.ident_cely}" | "{aktivity.heslo}" -->
+   	  <xs:element name="aktivita" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{aktivita_set.ident_cely}" | "{aktivita_set.heslo}" -->
    	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
    	  <xs:element name="nalez_objekt" minOccurs="0" maxOccurs="unbounded" type="amcr:nalez_objektType"/> <!-- "{objekty}" -->
    	  <xs:element name="nalez_predmet" minOccurs="0" maxOccurs="unbounded" type="amcr:nalez_predmetType"/><!-- "{predmety}" -->

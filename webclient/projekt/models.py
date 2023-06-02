@@ -479,6 +479,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
 
+    @property
+    def pristupnost(self):
+        return Heslar.objects.get(ident_cely="HES-000865")
+
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
     projekt = models.ForeignKey(Projekt, on_delete=models.CASCADE)
