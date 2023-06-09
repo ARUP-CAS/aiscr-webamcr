@@ -32,7 +32,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install wheel
-        pip install -r webclient/webclient/requirements/dev.txt
+        pip install -r webclient/webclient/requirements/base.txt
     - name: Install gdal dependencies
       run: |
         sudo apt-get update

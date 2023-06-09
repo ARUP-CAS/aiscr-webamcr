@@ -34,7 +34,7 @@ ENV PATH="/scripts:${PATH}"
 
 COPY ./webclient/webclient/requirements .
 
-RUN pip3 install -r production.txt
+RUN pip3 install -r base.txt
 
 RUN mkdir /code
 COPY ./webclient /code
