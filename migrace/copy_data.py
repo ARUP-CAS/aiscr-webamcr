@@ -239,7 +239,7 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "notifikace_typ"),
         ("id", "auth_user_notifikace_typ"),
         ("id", "historie"),
-        # ("id", "kladyzm"),
+        ("gid", "kladyzm"),
         ("id", "ruian_kraj"),
         ("id", "ruian_okres"),
         ("id", "pian_sekvence"),
@@ -251,7 +251,6 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "dokument_sekvence"),
         ("id", "dokument"),
         ("id", "dokument_autor"),
-        # ("id", "dokument_extra_data"),
         ("id", "dokument_jazyk"),
         ("id", "dokument_osoba"),
         ("id", "dokument_posudek"),
@@ -260,7 +259,6 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "projekt_sekvence"),
         ("id", "projekt"),
         ("id", "projekt_katastr"),
-        # ("id", "akce"),
         ("id", "akce_vedouci"),
         ("id", "komponenta_vazby"),
         ("id", "dokument_cast"),
@@ -278,11 +276,24 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "externi_odkaz"),
         ("id", "samostatny_nalez"),
         ("id", "uzivatel_spoluprace"),
+        ("history_id", "uzivatel_spoluprace"),
+        ("id", "uzivatel_notifikace"),
+        ("id", "uzivatel_spoluprace"),
     )
     for item in tables:
         destination_cursor.execute(f"SELECT SETVAL("
                                    f"(SELECT PG_GET_SERIAL_SEQUENCE('\"{item[1]}\"', '{item[0]}')),"
                                    f"(SELECT (MAX(\"{item[0]}\") + 1) FROM \"{item[1]}\"),FALSE);")
+    other_queries = [
+        "SELECT SETVAL('amcr_geom_migrations_jobs_sjtsk_errors_id_seq', COALESCE((SELECT MAX(pian_id) FROM amcr_geom_migrations_jobs_sjtsk_errors), 0) + 1);",
+        "SELECT SETVAL('amcr_geom_migrations_jobs_wgs84_errors_pian_id_seq', COALESCE((SELECT MAX(pian_id) FROM amcr_geom_migrations_jobs_wgs84_errors), 0) + 1);",
+        "SELECT SETVAL('auth_user_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 3) AS INT)) FROM auth_user) + 1);",
+        "SELECT SETVAL('organizace_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 5) AS INT)) FROM organizace) + 1);",
+        "SELECT SETVAL('osoba_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 4) AS INT)) FROM osoba) + 1);",
+
+    ]
+    for item in other_queries:
+        destination_cursor.execute(item)
     destination_conn.commit()
 
 if __name__ == "__main__":
