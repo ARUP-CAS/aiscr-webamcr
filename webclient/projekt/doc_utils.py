@@ -8,7 +8,7 @@ import os
 from django.contrib.staticfiles.storage import staticfiles_storage
 
 from core.utils import calculate_crc_32
-from webclient.settings.base import MEDIA_ROOT
+from webclient.settings.base import MEDIA_ROOT, STATIC_ROOT
 
 from reportlab.lib import utils
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -34,11 +34,16 @@ HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png
 path = None
 path_bold = None
 try:
-    path = staticfiles_storage.path('fonts/OpenSans-Regular.ttf')
-    path_bold = staticfiles_storage.path('fonts/OpenSans-Bold.ttf')
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Regular.ttf")
     pdfmetrics.registerFont(TTFont('OpenSans', path))
-    pdfmetrics.registerFont(TTFont('OpenSansBold', path_bold))
-    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Bold.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSansBold', path))
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Italic.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSansItalic', path))
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-BoldItalic.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSansBoldItalic', path))
+    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold', italic="OpenSansItalic",
+                       boldItalic="OpenSansBoldItalic")
 except Exception as err:
     # This will be triggered during collectstatic
     logger_s.error("doc_utils.font.error", extra={"path": path, "path_bold": path_bold})
@@ -262,18 +267,21 @@ class OznameniPDFCreator(DocumentCreator):
                                        leading=20))
         self.styles.add(ParagraphStyle("amBodyTextCenter",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_CENTER))
+                                       alignment=TA_CENTER,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amBodyTextSmallerSpaceAfter",
                                        parent=self.styles["amBodyText"],
                                        spaceAfter=0,
-                                       spaceBefore=0))
+                                       spaceBefore=0,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amHeading1",
                                        parent=self.styles["amBodyText"],
                                        alignment=TA_CENTER,
                                        fontName="OpenSansBold"))
         self.styles.add(ParagraphStyle("amDatum",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_RIGHT))
+                                       alignment=TA_RIGHT,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amVec",
                                        parent=self.styles["amBodyText"],
                                        alignment=TA_LEFT,
@@ -284,13 +292,16 @@ class OznameniPDFCreator(DocumentCreator):
                                        fontName="OpenSansBold"))
         self.styles.add(ParagraphStyle("amPodpis1",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_CENTER))
+                                       alignment=TA_CENTER,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amPodpis2",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_CENTER))
+                                       alignment=TA_CENTER,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amPodpis3",
                                        parent=self.styles["amPodpis2"],
-                                       fontSize=10))
+                                       fontSize=10,
+                                       fontName="OpenSans"))
 
     def build_document(self):
         def draw_image(filename, canvas, counter):
@@ -400,8 +411,7 @@ class OznameniPDFCreator(DocumentCreator):
             os.makedirs(directory)
         if self.additional:
             from core.models import Soubor
-            soubory_count = Soubor.objects.filter(nazev_zkraceny__startswith=f"oznameni_{self.projekt.ident_cely}_").count()
-            postfix = "_" + chr(65 + soubory_count)
+            postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         else:
             postfix = ""
         path = f"{directory}/oznameni_{self.projekt.ident_cely}{postfix}.pdf"
