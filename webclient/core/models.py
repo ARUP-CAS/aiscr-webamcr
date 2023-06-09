@@ -105,6 +105,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         self.historie = hv
         self.save()
 
+    @property
+    def vytvoreno(self):
+        return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+
     def zaznamenej_nahrani(self, user):
         """
         Metóda pro zapsáni vytvoření souboru do historie.

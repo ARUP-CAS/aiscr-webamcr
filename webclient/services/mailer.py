@@ -336,9 +336,14 @@ class Mailer():
         })
         logger.debug("services.mailer._send_ep01",
                      extra={"html": html, "cesta_sablony": notification_type.cesta_sablony})
-        project_file = projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
+        project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
                                                             nazev__startswith=f"oznameni_{project.ident_cely}",
-                                                            nazev__endswith=".pdf").order_by("vytvoreno").last()
+                                                            nazev__endswith=".pdf"))
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno))
+        if len(project_files) > 0:
+            project_file = project_files[0]
+        else:
+            project_file = None
         if project.has_oznamovatel():
             attachment_path = None
             if project_file:
