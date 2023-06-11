@@ -104,7 +104,7 @@ class IdentTests(TestCase):
         self.assertEqual(p.ident_cely, "C-" + str(year) + "00002")
         s = ProjektSekvence.objects.filter(rok=year).filter(region="C")[0]
         # Over ze se sekvence inkrementla
-        self.assertEqual(s.sekvence, 1)
+        self.assertEqual(s.sekvence, 2)
 
     def test_get_dokument_rada(self):
         material = Heslar.objects.get(id=MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID)
