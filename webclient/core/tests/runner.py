@@ -617,6 +617,7 @@ class AMCRBaseTestRunner(BaseRunner):
             hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
             hlavni_vedouci=Osoba.objects.first(),
             organizace=o,
+            odlozena_nz=True,
         )
         a.projekt = p
         a.save()
