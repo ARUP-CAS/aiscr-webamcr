@@ -75,7 +75,7 @@ class IdentTests(TestCase):
         region = "M"
         ident = get_temporary_project_ident(region)
         query = (
-        "select nextval()"
+        "select lastval()"
         )
         cursor = connection.cursor()
         cursor.execute(query)
@@ -101,7 +101,7 @@ class IdentTests(TestCase):
         )
         p.save()
         p.set_permanent_ident_cely()
-        self.assertEqual(p.ident_cely, "M-" + str(year) + "00002")
+        self.assertEqual(p.ident_cely, "C-" + str(year) + "00002")
         s = ProjektSekvence.objects.filter(rok=year).filter(region="C")[0]
         # Over ze se sekvence inkrementla
         self.assertEqual(s.sekvence, 1)
