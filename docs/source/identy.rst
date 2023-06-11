@@ -1,243 +1,241 @@
-Pridelovani ident_cely
+Přidělování ident_cely
 =======================
 
-Kazdy zaznam ma prideleny ident_cely na zaklade svojej logiky.
+Každému záznamu je na základě jeho logiky přiřazen ident_cely.
 
 ========
 Projekt
 ========
 
-Docasny ident
+Dočasný ident
 ---------------
 
-* Prideluje sa pre projekty vytvorene v ramci oznameni
+* Přiřazuje se pro projekty vytvořené na základě oznámení
 
-* Logika slozeni je: "X-" + region (M alebo C) + "-" + 9 mistne cislo (id ze sequence `projekt_xident_seq` doplnene na 9 cisel nulami)
+* Logika složení je: "X-" + region (M anebo C) + "-" + 9 místní číslo (id ze sekvence `projekt_xident_seq` doplněné nulami na 9 číslic)
 
-* Priklad: "X-M-000001234"
+* Příklad: "X-M-000001234"
 
-* Kod: `webclient/core/ident_cely.py/get_temporary_project_ident`
+* Kód: `webclient/core/ident_cely.py/get_temporary_project_ident`
 
-Permanentny ident
+Permanentní ident
 --------------------
 
-* Prideluje sa pre projekty vytvorene prihlasenymi uzivateli AMCR a pri schvaleni projektu (ak projekt uz nema permanentny ident)
+* Přiděluje se projektům vytvořeným registrovanými uživateli AMCR a po schválení projektu (pokud projekt ještě nemá stálou identitu)
 
-* Logika slozeni je: region (M alebo C) + "-" + rok + cislo sekvence z tabulky 'projekt_sekvence' doplnene na 5 cisel nulami
+* Logika složení je: region (M anebo C) + "-" + rok + číslo sekvence z tabulky `projekt_sekvence` doplněné nulami na 5 číslic
 
-* Priklad: "M-202100034"
+* Příklad: "M-202100034"
 
-* Pri prekroceni maxima cisla sekvence (99999) se vrati uzivateli na web chybova hlaska
+* Při překročení maximálního pořadového čísla (99999) se uživateli na webu zobrazí chybové hlášení.
 
-* Kod: `webclient/projekt/models.py/set_permanent_ident_cely`
+* Kód: `webclient/projekt/models.py/set_permanent_ident_cely`
 
-Projekt akcia
---------------
+Projektová akce
+----------------
 
-* Prideluje sa pre projektove archeologicke zaznamy
+* Je určena pro archeologickou dokumentaci projektu
 
-* Logika slozeni je: ident_cely projektu + pismeno abecedy v postupnosti od A po Z
+* Logika složení je: ident_cely projektu + písmeno abecedy v pořadí od A do Z
+  
+* Příklad: "M-202100034A"
 
-* Priklad: "M-202100034A"
+* Pokud je překročen maximální počet akcí pro projekt (26), zobrazí se na webu chybová zpráva
 
-* Pri prekroceni maxima akcii u projektu (26) sa zobrazi chybova hlaska na webe
-
-* Kod: `webclient/core/ident_cely.py/get_project_event_ident`
+* Kód: `webclient/core/ident_cely.py/get_project_event_ident`
 
 ========
 Dokument
 ========
-Docasny ident
+Dočasný ident
 --------------
 
-* Prideluje sa pre vytvorene dokumenty a 3D modely
+* Přiřazení k vytvořeným dokumentům a 3D modelům
+  
+* Logika složení je: "X-" + region (M anebo C) + "-" + rada (TX/DD/3D) + "-" + 9 místní číslo (id ze sekvence `dokument_xident_seq` doplněno na 9 čísel nulami)
 
-* Logika slozeni je: "X-" + region (M alebo C) + "-" + rada (TX/DD/3D) + "-" + 9 místne číslo (id ze sequence `dokument_xident_seq` doplněno na 9 čísel nulama)
+* Příklad: "X-M-TX-000000034"
+  
+* Kód: `webclient/core/ident_cely.py/get_temp_dokument_ident`
 
-* Priklad: "X-M-TX-000000034"
-* 
-* Kod: `webclient/core/ident_cely.py/get_temp_dokument_ident`
-
-Permanentny ident
+Permanentní ident
 ------------------
 
-* Prideluje sa pre dokumenty pri archivaci. astavy sa i pro casti a komponenty
+* Přiřazení k dokumentům při archivaci. platí také pro díly a součásti
+  
+* Logika složení je: region- (M/C) + rada (TX/DD/3D) + "-" + rok + číslo sekvence z tabulky `dokument_sekvence` doplněno na 5 čísel nulami
 
-* Logika slozeni je: region- (M/C) + rada (TX/DD/3D) + "-" + rok + cislo sekvence z tabulky `dokument_sekvence` doplnene na 5 cisel nulami
+* Tabulka `dokument_sekvence` se automaticky doplňuje o nové sekvence
 
-* Tabulka `dokument_sekvence` se automaticky doplnuje o nova sekvence
+* Příklad: "M-DD-202100034"
 
-* Priklad: "M-DD-202100034"
-
-* Pri prekroceni maxima cisla sekvence (99999) se vrati uzivateli na web chybova hlaska
-
-* Kod: `webclient/dokumenty/models.py/set_permanent_ident_cely`
+* Při překročení maximálního pořadového čísla (99999) je uživateli vrácena chybová zpráva
+  
+* Kód: `webclient/dokumenty/models.py/set_permanent_ident_cely`
 
 ===============
-Cast Dokumentu
+Část Dokumentu
 ===============
 
-* Prideluje sa pre casti dokumentu
+* Přiděluje se pro části dokumentů
 
-* Logika slozeni je: ident_cely dokumentu + "-D" + poradove cislo casti per dokument doplnene na 3 cislice nulami
+* Logika složení je: ident_cely dokumentu + "-D" + pořadové číslo části na dokument, doplněné nulami na 3 číslice
 
-* Priklad: "M-DD-202100034-D001"
+* Příklad: "M-DD-202100034-D001"
 
-* Pri prekroceni maxima casti u dokumentu (999) sa zobrazi chybova hlaska na webe
+* Při překročení maximální části dokumentu (999) se na webu zobrazí chybové hlášení
 
-* Kod: `webclient/core/ident*cely.py/get*cast*dokumentu*ident`
+* Kód: `webclient/core/ident_cely.py/get_cast_dokumentu_ident`
 
 =====================
-Dokumentacni jednotka
+Dokumentační jednotka
 =====================
 
-* Prideluje sa pre dokumentacnu jednotku archeologickeho zaznamu
+* Přiděluje se pro dokumentační jednotku archeologického záznamu
 
-* Logika slozeni je: ident_cely arch zaznamu + "-D" + poradove cislo DJ per arch zaznam doplnene na 2 cislice nulami
+* Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ na arch záznam doplněné na 2 číslice s nulami
 
-* Priklad: "M-202100034A-D01"
+* Příklad: "M-202100034A-D01"
 
-* Pri prekroceni maxima DJ u arch zaznamu (99) sa zobrazi chybova hlaska na webe
+* Při překročení maximálního počtu DJ arch záznamu (99) se na webu zobrazí chybové hlášení
 
-* Kod: `webclient/core/ident*cely.py/get*dj_ident`
+* Kód: `webclient/core/ident_cely.py/get_dj_ident`
 
 ================================
 Komponenta dokumentacni jednotky
 ================================
 
-* Prideluje sa pre komponentu dokumentacni jednotky
+* Přiděluje se pro komponentu dokumentační jednotky
 
-* Logika slozeni je: ident_cely arch zaznamu + "-K" + poradove cislo komponenty per arch zaznam (pod DJ) doplnene na 3 cislice nulami
+* Logika složení je: ident_cely arch záznamu + "-K" + pořadové číslo komponenty per arch záznam doplněné na 3 číslice s nulami
 
-* Priklad: "M-202100034A-K001"
+* Příklad: "M-202100034A-K001"
 
-* Pri prekroceni maxima komponent u arch zaznamu pod DJ (999) sa zobrazi chybova hlaska na webe
+* Pokud je překročeno maximum komponent arch záznamu pod DJ (999), zobrazí se na webu chybové hlášení
 
-* Kod: `webclient/core/ident*cely.py/get*komponenta_ident`
+* Kód: `webclient/core/ident_cely.py/get_komponenta_ident`
 
 ====================
 Komponenta dokumentu
 ====================
 
-* Prideluje sa pre komponentu dokumentu
+* Přiděluje se pro komponentu dokumentu
 
-* Logika slozeni je: ident_cely dokumentu + "-K" + poradove cislo komponenty per arch zaznam (pod DJ) doplnene na 3 cislice nulami
+* Logika složení je: ident_cely dokumentu + "-K" + pořadové číslo komponenty per arch záznam (pod DJ) doplněné na 3 číslice s nulami
 
-* Priklad: "M-DD-202100034-K001"
+* Příklad: "M-DD-202100034-K001"
 
-* Pri prekroceni maxima komponent u dokumentu (999) sa zobrazi chybova hlaska na webe
+* Pokud je překročeno maximum komponent u dokumentu (999), zobrazí se na webu chybové hlášení
 
-* Kod: `webclient/core/ident*cely.py/get*dokument*komponenta*ident`
+* Kód: `webclient/core/ident_cely.py/get_dokument_komponenta_ident`
 
 ====
 Pian
 ====
-Docasny ident
+Dočasný ident
 -------------
 
-* Prideluje sa pre vytvorene piany
+* PPřiděluje se pro vytvořené piany
 
-* Logika slozeni je: "N-" + cislo zm50 (bez "-") + "-" + 6 mistne cislo (první volné číslo pro zm50)
+* Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo (id ze sekvence `pian_xident_seq` doplněno na 9 čísel nulami)
 
-* Priklad: "N-1224-001234"
+* Příklad: "N-1224-000001234"
 
-* Pri prekroceni maxima pian pre dane zm50 (999999) sa zobrazi chybova hlaska na webe
+* Kód: `webclient/core/ident_cely.py/get_temporary_pian_ident`
 
-* Kod: `webclient/core/ident*cely.py/get*temporary*pian*ident`
-
-Permanentny ident
+Permanentní ident
 ------------------
 
-* Prideluje sa pre potvrdene piany
+* Přiděluje se pro potvrzené piany
 
-* Logika slozeni je: "P-" + cislo zm50 (bez "-") + "-" + cislo sekvence z tabulky 'pian_sekvence' (podle zm50 a katastru) doplnene na 6 cisel nulami
+* Logika složení je: "P-" + číslo zm50 (bez "-") + "-" + číslo sekvence z tabulky `pian_sekvence` (podle zm50 a katastru) doplněno na 6 čísel nulami
 
-* Priklad: "P-1224-100321"
+* Příklad: "P-1224-100321"
 
-* Pri prekroceni maxima cisla sekvence (999999) se vrati uzivateli na web chybova hlaska
+* Pokud je překročeno maximum sekvence (999999), zobrazí se na webu chybové hlášení
 
-* Kod: `webclient/pian/models.py/set*permanent*ident_cely`
+* Kód: `webclient/pian/models.py/set_permanent_ident_cely`
 
 ================
-Samostatny nalez
+Samostatný nález
 ================
 
-* Prideluje sa pre samostatny nalez
+* Přiděluje se pro samostatný nález
 
-* Logika slozeni je: ident_cely projektu + "-N" + poradove cislo SN per projekt doplnene na 5 cislice nulami
+* Logika složení je: ident_cely projektu + "-N" + pořadové číslo SN per projekt doplněno na 5 čísel nulami
 
-* Priklad: "M-202100034A-N00001"
+* Příklad: "M-202100034A-N00001"
 
-* Pri prekroceni maxima SN u projektu (99999) sa zobrazi chybova hlaska na webe
+* Pokud je překročeno maximum SN u projektu (99999), zobrazí se na webu chybové hlášení
 
-* Kod: `webclient/core/ident*cely.py/get*sn_ident`
+* Kód: `webclient/core/ident_cely.py/get_sn_ident`
 
 ===
 ADB
 ===
 
-* Prideluje sa pre ADB
+* Přiděluje se pro ADB
 
-* Logika slozeni je: "ADB-" + mapno pre sm5 + "-" + cislo sekvence z tabulky 'adb_sekvence' (podle kladysm5) doplnene na 6 cisel nulami
+* Logika složení je: "ADB-" + mapno pre sm5 + "-" + číslo sekvence z tabulky `adb_sekvence` (podle kladysm5) doplněno na 6 čísel nulami
 
-* Priklad: "ADB-PRAH43-000012"
+* Příklad: "ADB-PRAH43-000012"
 
-* Pri prekroceni maxima SN u projektu (999999) sa zobrazi chybova hlaska na webe
+* Pri překročení maxima sekvence u ADB (999999) se vráti uživateli na web chybová hláška.
 
-* Kod: `webclient/core/ident*cely.py/get*adb_ident`
+* Kód: `webclient/core/ident_cely.py/get_adb_ident`
 
 ============
-Vyskove body
+Výškové body
 ============
 
-* Prideluje sa pre Vyskovy bod 
+* Přiděluje se pro Výškový bod 
 
-* Logika slozeni je: ident_cely ADB + "-V" + poradove cislo vyskoveho bodu per ADB doplnene na 4 cislice nulami
+* Logika složení je: ident_cely ADB + "-V" + pořadové číslo výškového bodu per ADB doplněno na 4 čísel nulami
 
-* Priklad: "ADB-PRAH43-000012-V0001"
+* Příklad: "ADB-PRAH43-000012-V0001"
 
-* Pri prekroceni maxima VB u adb (9999) sa zobrazi chybova hlaska na webe
+* Pri překročení maxima VB u adb (9999) se vráti uživateli na web chybová hláška
 
-* Kod: `webclient/adb/models.py/get*vyskovy*bod`
+* Kód: `webclient/adb/models.py/get_vyskovy_bod`
 
 ========
-Uzivatel
+Uživatel
 ========
-Ident cely
+Ident celý
 -----------
 
 * Přiděluje se v databázi
 
-* Logika slozeni je: ident_cely "U" + poradove cislo uzivatele doplnene na 6 cislice nulami
+* Logika složení je: ident_cely "U" + pořadové číslo uživatele doplněno na 6 čísel nulami
 
-* Kod: auth*user.ident*cely
+* Kód: `auth_user.ident_cely`
 
 =========
 Lokalita
 =========
-Docasny ident
+Dočasný ident
 -------------
 
-* Prideluje sa pre vytvorene lokality
+* Přiděluje se pro vytvořené lokality
 
-* Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místne číslo ze sekvence `lokalita_xident_seq` doplňeno na 9 číslic.
+* Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
 
 * Příklad: "X-M-L000123456"
 
-* Kod: `webclient/core/ident_cely.py/get_temp_lokalita_ident`
+* Kód: `webclient/core/ident_cely.py/get_temp_lokalita_ident`
 
-Permanentny ident
+Permanentní ident
 ------------------
 
-* Prideluje sa pre archivované lokality
+* Přiděluje se pro archivované lokality
 
-* Logika slozeni je: region (M anebo C) + "-" + typ + 9 místne číslo ze sequnce lokalita_xident_seq doplňeno na 9 číslic.
+* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplňeno na 9 číslic.
 
-* Priklad: "P-1224-100321"
+* Příklad: "P-1224-100321"
 
-* Pri prekroceni maxima cisla sekvence (999999) se vrati uzivateli na web chybova hlaska
+* Pri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
-* Kod: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
+* Kód: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
 
 ================
 Samostatná akce
@@ -245,26 +243,26 @@ Samostatná akce
 Dočasný ident
 -------------
 
-* Prideluje sa pre vytvorene samostatné akce
+* Přiděluje se pro vytvořené samostatné akce
 
-* Logika složení je: "X-" + region (M anebo C) + "-9" + typ + 9 místne číslo ze sekvence `akce_xident_seq` doplňeno na 9 číslic + "A".
+* Logika složení je: "X-" + region (M anebo C) + "-9" + typ + 9 místní číslo ze sekvence `akce_xident_seq` doplněno na 9 číslic + "A".
 
 * Příklad: "X-M-9000123456A"
 
-* Kod: `webclient/core/ident_cely.py/get_temp_akce_ident`
+* Kód: `webclient/core/ident_cely.py/get_temp_akce_ident`
 
-Permanentny ident
+Permanentní ident
 ------------------
 
-* Prideluje sa pre archivované lokality
+* Přiděluje se pro archivované lokality
 
-* Logika slozeni je: region (M anebo C) + "-" + typ + 9 místne číslo ze sequnce lokalita_xident_seq doplňeno na 9 číslic.
+* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
 
-* Priklad: "P-1224-100321"
+* Příklad: "P-1224-100321"
 
-* Pri prekroceni maxima cisla sekvence (999999) se vrati uzivateli na web chybova hlaska
+* PPri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
-* Kod: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
+* Kód: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
 
 
 ================
@@ -273,23 +271,23 @@ Externí zdroj
 Dočasný ident
 -------------
 
-* Prideluje sa pre vytvorene externé zdroje
+* Přiděluje se pro vytvorene externé zdroje
 
-* Logika složení je: "X-BIB" + 9 místne číslo ze sekvence `externi_zdroj_xident_seq` doplňeno na 9 číslic.
+* Logika složení je: "X-BIB" + 9 místní číslo ze sekvence `externi_zdroj_xident_seq` doplněno na 9 číslic.
 
-* Příklad: "X-BIB-000123456"◊
+* Příklad: "X-BIB-000123456"
 
-* Kod: `webclient/core/ident_cely.py/get_temp_ez_ident`
+* Kód: `webclient/core/ident_cely.py/get_temp_ez_ident`
 
-Permanentny ident
+Permanentní ident
 ------------------
 
-* Prideluje sa pre archivované lokality
+* Přiděluje se pro archivované lokality
 
-* Logika slozeni je: region (M anebo C) + "-" + typ + 9 místne číslo ze sequnce lokalita_xident_seq doplňeno na 9 číslic.
+* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
 
-* Priklad: "P-1224-100321"
+* Příklad: "P-1224-100321"
 
-* Pri prekroceni maxima cisla sekvence (999999) se vrati uzivateli na web chybova hlaska
+* Pri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
-* Kod: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
+* Kód: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`

@@ -182,7 +182,9 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 
     class Meta:
         db_table = "pian_sekvence"
-        unique_together = ["kladyzm50", "sekvence", "katastr"]
+        constraints = [
+            models.UniqueConstraint(fields=['kladyzm50','katastr'], name='unique_sekvence_pian'),
+        ]
 
 
 def vytvor_pian(katastr):

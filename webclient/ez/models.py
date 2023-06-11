@@ -17,6 +17,8 @@ from core.constants import (
     ZAPSANI_EXT_ZD,
 )
 from core.exceptions import MaximalIdentNumberError
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
 
 logger = logging.getLogger(__name__)
@@ -160,31 +162,28 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
 def get_ez_ident(zaznam=None):
     """
     Funkce pro výpočet ident celý pro externí zdroj.
-    Funkce vrátí pro dočasný ident ident podle id v DB.
-    Funkce vráti pro permanentní ident id nejmenší volné z uložených zdrojů.
+    Funkce vráti pro permanentní ident id podle sekvence externího zdroje.
     """
-    MAXIMAL: int = 9999999
-    # [BIB]-[pořadové číslo v sedmimístném formátu]
+    MAXIMUM: int = 9999999
     prefix = "BIB-"
-    ez = ExterniZdroj.objects.filter(
-        ident_cely__regex="^" + prefix + "\\d{7}$"
-    ).order_by("-ident_cely")
-    if ez.filter(ident_cely=str(prefix + "0000001")).count() == 0:
-        return prefix + "0000001"
-    else:
-        # temp number from empty spaces
-        idents = list(ez.values_list("ident_cely", flat=True).order_by("ident_cely"))
-        idents = [sub.replace(prefix, "") for sub in idents]
-        idents = [sub.lstrip("0") for sub in idents]
-        idents = [eval(i) for i in idents]
-        start = idents[0]
-        end = MAXIMAL
-        missing = sorted(set(range(start, end + 1)).difference(idents))
-        if missing[0] >= MAXIMAL:
-            logger.error("ez.models:get_ez_ident.maximal", extra={"maximal": MAXIMAL, "zaznam": zaznam})
-            raise MaximalIdentNumberError(MAXIMAL)
-        sequence = str(missing[0]).zfill(7)
-        return prefix + sequence
+    try:
+        sequence = ExterniZdrojSekvence.objects.get(id=1)
+        if sequence.sekvence >= MAXIMUM:
+            raise MaximalIdentNumberError(MAXIMUM)
+        sequence.sekvence += 1
+    except ObjectDoesNotExist:
+        akce = ExterniZdroj.objects.filter(ident_cely__startswith=f"{prefix}")
+        if akce.count() > 0:
+            last = akce.annotate(sekv=Cast(Substr("ident_cely", 5), models.IntegerField())).order_by("-sekv")[0]
+            if last.sekv >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence = ExterniZdrojSekvence.objects.create(sekvence=last.sekv+1)
+        else:
+            sequence = ExterniZdrojSekvence.objects.create(sekvence=1)
+    sequence.save()
+    return (
+        prefix + "{0}".format(sequence.sekvence).zfill(7)
+    )
 
 
 class ExterniZdrojAutor(ExportModelOperationsMixin("externi_zdroj_autor"), models.Model):
@@ -223,3 +222,19 @@ class ExterniZdrojEditor(ExportModelOperationsMixin("externi_zdroj_editor"), mod
             ("externi_zdroj", "editor"),
             ("poradi", "externi_zdroj"),
         )
+
+class ExterniZdrojSekvence(models.Model):
+    """
+    Model pro tabulku se sekvencemi externích zdrojů.
+    """
+    id = models.SmallIntegerField(default=1,primary_key=True)
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "externi_zdroj_sekvence"
+        constraints = [
+            models.CheckConstraint(
+                name="constraint_only_one_sekvence",
+                check=models.Q(id=1)
+            )
+        ]
