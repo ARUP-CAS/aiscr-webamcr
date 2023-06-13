@@ -86,7 +86,7 @@ class DocumentGenerator:
                 return None
             parser = ET.XMLParser()
             attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
-            attribute_value = ET.fromstring(attribute_value, parser)
+            # attribute_value = ET.fromstring(attribute_value, parser)
         else:
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 2:
@@ -245,22 +245,8 @@ class DocumentGenerator:
                     ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}")
                 for child_schema_element in children[0][0]:
                     self._parse_scheme_create_element(child_schema_element, inner_document_element)
-        with open('data.xml', 'w') as f:
-            tree = ET.ElementTree(self.document_root)
-            ET.indent(tree, space="\t", level=0)
-            tree.write(f, encoding='unicode')
+        return ET.tostring(self.document_root, encoding='utf8', method='xml')
 
     def __init__(self, document_object):
         self.document_object = document_object
         self.document_root = ET.Element(f"{{{AMCR_NAMESPACE_URL}}}amcr")
-
-
-objekt = ArcheologickyZaznam.objects.get(ident_cely="C-201901234A")
-# objekt = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom")).get(ident_cely="C-201705778")
-generator = DocumentGenerator(objekt)
-generator.generate_document()
-
-import xmlschema
-my_schema = xmlschema.XMLSchema(generator.get_path_to_schema())
-print(my_schema.validate('data.xml'))
-

@@ -4,6 +4,7 @@ import os
 import zlib
 
 from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.db.models.functions import AsGML
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
@@ -154,6 +155,20 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             return self.ident_cely
         else:
             return "[ident_cely not yet assigned]"
+
+    @property
+    def geom_st_asgml(self):
+        return str("test")
+
+    @property
+    def geom_st_wkt(self):
+        return str("test")
+
+    @property
+    def metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata()
 
     class Meta:
         db_table = "projekt"
