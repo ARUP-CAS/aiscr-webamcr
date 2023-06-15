@@ -1,7 +1,7 @@
 asgiref==3.6.0
 Django==4.1.9
 psycopg2-binary==2.9.6
-pytz==2022.7.1
+pytz==2023.3
 simplejson==3.18.4
 django-crispy-forms==2.0
 crispy-bootstrap4
