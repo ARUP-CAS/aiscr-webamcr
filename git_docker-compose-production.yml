@@ -218,6 +218,7 @@ volumes:
   logs_volume:
   elasticsearch_volume:
   grafana_data:
+  db_dev_data:
 
 networks:
   git-reverse-proxy:
