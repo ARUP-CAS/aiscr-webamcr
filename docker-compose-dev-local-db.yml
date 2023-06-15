@@ -104,6 +104,25 @@ services:
       web:
         condition: service_started
 
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient beat -l INFO
+    secrets:
+      - db_conf
+      - redis_pass
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
 volumes:
   locale_data:
   pg_admin_vol:
