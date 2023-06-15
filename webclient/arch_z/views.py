@@ -79,8 +79,6 @@ from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
-    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
-    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_OBJEKT_DRUH,
@@ -90,6 +88,10 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
+)
+from heslar.hesla_dynamicka import (
+    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
     SPECIFIKACE_DATA_PRESNE,
     TYP_DJ_KATASTR,
     TYP_DJ_SONDA_ID,

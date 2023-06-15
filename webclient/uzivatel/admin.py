@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class UserNotificationTypeInlineForm(forms.ModelForm):
+    """
+    Inline form pro nastavení notifikací uživatele.
+    """
     def __init__(self, *args, **kwargs):
         super(UserNotificationTypeInlineForm, self).__init__(*args, **kwargs)
         self.fields['usernotificationtype'].queryset = UserNotificationType.objects.filter(
@@ -34,6 +37,9 @@ class UserNotificationTypeInlineForm(forms.ModelForm):
 
 
 class UserNotificationTypeInline(admin.TabularInline):
+    """
+    Inline panel pro nastavení notifikací uživatele.
+    """
     model = UserNotificationType.user.through
     form = UserNotificationTypeInlineForm
 
@@ -48,6 +54,9 @@ class UserNotificationTypeInline(admin.TabularInline):
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
 class PesNotificationTypeInline(admin.TabularInline):
+    """
+    Inline panel pro nastavení hlídacích psů uživatele.
+    """
     model_type = None
     model = Pes
     form = create_pes_form(model_typ=model_type)
@@ -60,24 +69,36 @@ class PesNotificationTypeInline(admin.TabularInline):
         return queryset
 
 class PesKrajNotificationTypeInline(PesNotificationTypeInline):
+    """
+    Inline panel pro nastavení hlídacích psů uživatele pro kraj.
+    """
     model_type = KRAJ_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
     verbose_name = _("admin.uzivatel.form.notifikace.kraj")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.kraje")
 
 class PesOkresNotificationTypeInline(PesNotificationTypeInline):
+    """
+    Inline panel pro nastavení hlídacích psů uživatele pro okres.
+    """
     model_type = OKRES_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
     verbose_name = _("admin.uzivatel.form.notifikace.okres")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.okresy")
     
 class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
+    """
+    Inline panel pro nastavení hlídacích psů uživatele pro katastr.
+    """
     model_type = KATASTR_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
     verbose_name = _("admin.uzivatel.form.notifikace.katastr")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.katastry")
 
 class CustomUserAdmin(UserAdmin):
+    """
+    Admin panel pro správu uživatele.
+    """
     add_form = AuthUserCreationForm
     model = User
     list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
@@ -206,6 +227,9 @@ class CustomUserAdmin(UserAdmin):
 
 
 class CustomGroupAdmin(admin.ModelAdmin):
+    """
+    Admin panel pro správu uživatelskych skupin.
+    """
     def has_delete_permission(self, request, obj=None):
         if obj is not None:
             obj: Group

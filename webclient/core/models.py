@@ -90,7 +90,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     nazev_zkraceny = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
-    mimetype = models.TextField()
+    mimetype = models.TextField(db_index=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
     )
@@ -106,6 +106,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     class Meta:
         db_table = "soubor"
+        indexes = [
+            models.Index(fields=["mimetype",],name="mimetype_idx",opclasses=["text_ops"]),
+        ]
 
     def __str__(self):
         return self.nazev
@@ -119,6 +122,10 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         hv.save()
         self.historie = hv
         self.save()
+
+    @property
+    def vytvoreno(self):
+        return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
 
     def zaznamenej_nahrani(self, user):
         """

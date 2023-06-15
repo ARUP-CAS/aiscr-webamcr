@@ -132,6 +132,8 @@ INSTALLED_APPS = [
     "django_celery_results",
     'django_prometheus',
     "cron",
+    'rest_framework',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -447,3 +449,11 @@ FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD")
 FEDORA_SERVER_HOSTNAME = get_secret("FEDORA_SERVER_HOSTNAME")
 FEDORA_SERVER_NAME = get_secret("FEDORA_SERVER_NAME")
 FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER")
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}

@@ -17,9 +17,7 @@ class ExtZdrojAutoriColumn(tables.Column):
     """
     def render(self, record, value):
         if value:
-            osoby = Osoba.objects.filter(
-                externizdrojautor__externi_zdroj__ident_cely=record
-            ).order_by("externizdrojautor__poradi")
+            osoby = record.ordered_autors
             items = []
             for autor in osoby:
                 content = conditional_escape(force_str(autor))
@@ -47,9 +45,7 @@ class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
     """
     def render(self, record, value):
         if value:
-            osoby = Osoba.objects.filter(
-                externizdrojeditor__externi_zdroj__ident_cely=record
-            ).order_by("externizdrojeditor__poradi")
+            osoby = record.ordered_editors
             items = []
             for autor in osoby:
                 content = conditional_escape(force_str(autor))

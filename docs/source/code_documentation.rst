@@ -22,3 +22,6 @@ Zde nalezneme dokumentaci kódu seřazenou podle struktury modulů projektu. Ka�
    code_documentation/notifikace_projekty/index
    code_documentation/oznameni/index
    code_documentation/pas/index
+   code_documentation/pian/index
+   code_documentation/projekt/index
+   code_documentation/uzivatel/index

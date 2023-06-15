@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from uzivatel.models import Osoba
 from dokument.models import DokumentAutor
 from ez.models import ExterniZdrojAutor, ExterniZdrojEditor
-from heslar import hesla
+from heslar import hesla_dynamicka
 
 register = template.Library()
 
@@ -157,11 +157,11 @@ def get_osoby_name(widget):
 @register.simple_tag
 def get_value_from_heslar(nazev_heslare, hodnota):
     values = {
-        ("externi_zdroj_typ", "kniha"): hesla.EXTERNI_ZDROJ_TYP_KNIHA,
-        ("externi_zdroj_typ", "cast_knihy"): hesla.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
-        ("externi_zdroj_typ", "clanek_v_casopise"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
-        ("externi_zdroj_typ", "clanek_v_novinach"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
-        ("externi_zdroj_typ", "nepublikovana_zprava"): hesla.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
+        ("externi_zdroj_typ", "kniha"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_KNIHA,
+        ("externi_zdroj_typ", "cast_knihy"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
+        ("externi_zdroj_typ", "clanek_v_casopise"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
+        ("externi_zdroj_typ", "clanek_v_novinach"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
+        ("externi_zdroj_typ", "nepublikovana_zprava"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
     }
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]

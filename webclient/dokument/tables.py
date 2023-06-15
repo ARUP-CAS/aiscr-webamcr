@@ -9,6 +9,7 @@ from django.utils.html import format_html
 
 from uzivatel.models import Osoba
 from core.utils import SearchTable
+from django.db.models import OuterRef, Subquery
 
 from .models import Dokument
 
@@ -53,15 +54,24 @@ class AutorColumn(tables.Column):
     Class pro definování sloupce autor a toho jak se zobrazuje aby bylo dodrženo pořadí.
     """
     def render(self, record, value):
-        osoby = Osoba.objects.filter(
-            dokumentautor__dokument__ident_cely=record
-        ).order_by("dokumentautor__poradi")
+        osoby = record.ordered_autors
         items = []
         for autor in osoby:
             content = conditional_escape(force_str(autor))
             items.append(content)
 
         return mark_safe(conditional_escape("; ").join(items))
+    
+    def order(self, queryset, is_descending):
+        osoby = (
+            Osoba.objects.filter(dokumentautor__dokument=OuterRef("pk"))
+            .order_by("dokumentautor__poradi")
+            .values("vypis_cely")
+        )
+        queryset = queryset.annotate(main=Subquery(osoby[:1])).order_by(
+            ("-" if is_descending else "") + "main"
+        )
+        return (queryset, True)
 
 
 class DokumentTable(SearchTable):
@@ -75,7 +85,7 @@ class DokumentTable(SearchTable):
     )
     popis = tables.columns.Column(default="")
     rok_vzniku = tables.columns.Column(default="")
-    autori = AutorColumn(order_by="hlavni_autor")
+    autori = AutorColumn()
     popis = tables.columns.Column(default="")
     pristupnost = tables.columns.Column(default="")
     rada = tables.columns.Column(default="")

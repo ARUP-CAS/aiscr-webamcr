@@ -9,8 +9,8 @@ from heslar.hesla import (
     HESLAR_LOKALITA_TYP,
     HESLAR_LOKALITA_DRUH,
     HESLAR_STAV_DOCHOVANI,
-    TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
 )
+from heslar.hesla_dynamicka import TYP_DOKUMENTU_NALEZOVA_ZPRAVA
 from core.constants import D_STAV_ARCHIVOVANY, PIAN_POTVRZEN
 from django_prometheus.models import ExportModelOperationsMixin
 

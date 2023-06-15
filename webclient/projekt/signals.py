@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 @receiver(pre_save, sender=Projekt)
 def projekt_pre_save(sender, instance, **kwargs):
+    """
+        Metóda pro volání dílčích metod pro nastavení projektu pred uložením.
+    """
     create_projekt_vazby(sender, instance)
     change_termin_odevzdani_NZ(sender, instance)
     if instance.pk is not None:
@@ -22,6 +25,9 @@ def projekt_pre_save(sender, instance, **kwargs):
 
 
 def change_termin_odevzdani_NZ(sender, instance, **kwargs):
+    """
+        Metóda pro nastavení terminu odevzdání NZ.
+    """
     try:
         instance_db = sender.objects.get(pk = instance.pk)
     except sender.DoesNotExist:
@@ -35,6 +41,10 @@ def change_termin_odevzdani_NZ(sender, instance, **kwargs):
 
 
 def create_projekt_vazby(sender, instance, **kwargs):
+    """
+        Metóda pro vytvoření historických vazeb projektu.
+        Metóda se volá pred uložením projektu.
+    """
     if instance.pk is None:
         logger.debug("projekt.signals.create_projekt_vazby.history_created",
                      extra={"instance": instance})
@@ -51,6 +61,9 @@ def create_projekt_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=Projekt)
 def projekt_post_save(sender, instance: Projekt, **kwargs):
     instance.save_metadata()
+    """
+        Metóda pro odeslání emailu hlídacího psa pri založení projektu.
+    """
     if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
             and instance.stav != instance.__original_stav:
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",

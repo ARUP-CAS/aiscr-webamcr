@@ -32,7 +32,8 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
+from heslar.hesla import HESLAR_DJ_TYP
+from heslar.hesla_dynamicka import TYP_DJ_CAST, TYP_DJ_KATASTR, TYP_DJ_LOKALITA, TYP_DJ_SONDA_ID
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian, vytvor_pian
