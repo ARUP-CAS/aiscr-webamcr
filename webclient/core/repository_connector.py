@@ -9,7 +9,6 @@ from django.contrib.gis.db.models.functions import AsGML
 from requests.auth import HTTPBasicAuth
 
 from core.models import ModelWithMetadata
-from projekt.models import Projekt
 from xml_generator.generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
@@ -22,9 +21,22 @@ class FedoraRequestType(Enum):
     CREATE_METADATA = 4
     UPDATE_METADATA = 5
     GET_METADATA = 6
+    CREATE_BINARY_FILE_CONTAINER = 7
+    GET_BINARY_FILE_CONTAINER = 8
+    CREATE_BINARY_FILE = 9
+    CREATE_BINARY_FILE_CONTENT = 10
+    CREATE_BINARY_FILE_PREVIEW = 11
 
 
 class FedoraRepositoryConnector:
+    def __init__(self, record: Union[ModelWithMetadata]):
+        from projekt.models import Projekt
+        if isinstance(record, Projekt):
+            self.record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom"))\
+                .get(pk=record.pk)
+        else:
+            self.record = record
+
     def _get_model_name(self):
         if isinstance(self.record, Projekt):
             return "projekt"
@@ -34,30 +46,36 @@ class FedoraRepositoryConnector:
                    f"{settings.FEDORA_SERVER_NAME}"
         if request_type == FedoraRequestType.CREATE_CONTAINER:
             return f"{base_url}/record/"
-        elif request_type == FedoraRequestType.GET_CONTAINER:
+        elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.CREATE_METADATA,
+                              FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             return f"{base_url}/record/{self.record.ident_cely}"
         elif request_type == FedoraRequestType.CREATE_LINK:
             return f"{base_url}/model/{self._get_model_name()}/member"
-        elif request_type == FedoraRequestType.CREATE_METADATA:
-            return f"{base_url}/record/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.GET_METADATA):
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
+        elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
+            return f"{base_url}/record/{self.record.ident_cely}/file"
+        elif request_type == FedoraRequestType.CREATE_BINARY_FILE_CONTENT:
+            return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}"
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         response = None
-        if request_type in (FedoraRequestType.CREATE_CONTAINER,):
+        if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA):
+        elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
+                              FedoraRequestType.GET_BINARY_FILE_CONTAINER):
             response = requests.get(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.CREATE_LINK,):
             response = requests.post(url, headers=headers, data=data.encode('utf-8'), auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.CREATE_METADATA,):
+        elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.CREATE_BINARY_FILE_CONTENT):
             response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.UPDATE_METADATA,):
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
+        elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
+            response = requests.post(url, auth=auth, verify=False)
         logger.debug("core_repository_connector._send_request.response", extra={"text": response.text,
                                                                                 "status_code": response.status_code})
         print(response.text)
@@ -80,9 +98,23 @@ class FedoraRepositoryConnector:
                f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self._get_model_name()}>"
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
 
-    def check_container(self):
+    def _check_container(self):
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
+        if result.status_code == 404:
+            self._create_container()
+            self._create_link()
+
+    def _create_binary_file_container(self):
+        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTAINER)
+        headers = {
+            "Slug": "file"
+        }
+        self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, headers=headers)
+
+    def _check_binary_file_container(self):
+        url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
+        result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         if result.status_code == 404:
             self._create_container()
             self._create_link()
@@ -100,7 +132,7 @@ class FedoraRepositoryConnector:
         return response.content
 
     def save_metadata(self, update=True):
-        self.check_container()
+        self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         document, hash512 = self._generate_metadata()
         headers = {
@@ -117,9 +149,20 @@ class FedoraRepositoryConnector:
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
             self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
 
-    def __init__(self, record: Union[ModelWithMetadata]):
-        if isinstance(record, Projekt):
-            self.record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom"))\
-                .get(pk=record.pk)
-        else:
-            self.record = record
+    def save_binary_file(self, file_name, content_type, file):
+        self._check_binary_file_container()
+        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
+        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
+        uuid = result.text.split("/")[-1]
+        data = file.read()
+        file_sha_512 = hashlib.sha512(data).hexdigest()
+        headers = {
+            "Content-Type": content_type,
+            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Digest": f"sha-512={file_sha_512}",
+            "Slug": "orig"
+        }
+        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
+        self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+        return uuid
+

@@ -7,7 +7,7 @@ from xml.dom import minidom
 from lxml import etree
 
 from arch_z.models import ArcheologickyZaznam
-from projekt.models import Projekt
+
 
 AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
 AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
@@ -15,8 +15,11 @@ AMCR_XSD_FILENAME = "amcr_230531.xsd"
 SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd " \
                   "http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"
 
+
 class DocumentGenerator:
     def _get_schema_name(self):
+        from projekt.models import Projekt
+
         type_class_dict = {
             Projekt: "projekt",
             ArcheologickyZaznam: "archeologicky_zaznam"

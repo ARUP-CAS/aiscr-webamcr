@@ -1,3 +1,4 @@
+import io
 import tempfile
 from abc import ABC, abstractmethod
 import datetime
@@ -7,6 +8,7 @@ import os
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 
+from core.repository_connector import FedoraRepositoryConnector
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT, STATIC_ROOT
 
@@ -424,6 +426,13 @@ class OznameniPDFCreator(DocumentCreator):
         filename_without_checksum = f"oznameni_{self.projekt.ident_cely}{postfix}.pdf"
         with open(path, "wb") as file:
             file.write(pdf_value)
+
+        file = io.BytesIO()
+        file.write(pdf_value)
+        file.seek(0)
+        con = FedoraRepositoryConnector(self.projekt)
+        con.save_binary_file(filename_without_checksum, "application/pdf", file)
+
         return path, filename_without_checksum
 
     def __init__(self, oznamovatel, projekt, additional=False):
