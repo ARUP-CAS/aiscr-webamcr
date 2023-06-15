@@ -25,7 +25,7 @@ PyRTF3==0.47.5
 pypdf==3.7.0
 Pillow==9.4.0
 beautifulsoup4==4.11.1
-django-extensions==3.2.1
+django-extensions==3.2.3
 celery==5.2.7
 django-add-default-value==0.10.0
 selenium==4.10.0
