@@ -2,8 +2,8 @@ import datetime
 import os
 
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
-from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from lxml import etree
 
 from arch_z.models import ArcheologickyZaznam
@@ -86,7 +86,7 @@ class DocumentGenerator:
                 return None
             parser = ET.XMLParser()
             attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
-            # attribute_value = ET.fromstring(attribute_value, parser)
+            attribute_value = ET.fromstring(attribute_value, parser)
         else:
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 2:
@@ -245,7 +245,8 @@ class DocumentGenerator:
                     ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}")
                 for child_schema_element in children[0][0]:
                     self._parse_scheme_create_element(child_schema_element, inner_document_element)
-        return ET.tostring(self.document_root, encoding='utf8', method='xml')
+        return minidom.parseString(ET.tostring(self.document_root, encoding='utf-8', method='xml')).toprettyxml()\
+            .encode("utf-8")
 
     def __init__(self, document_object):
         self.document_object = document_object

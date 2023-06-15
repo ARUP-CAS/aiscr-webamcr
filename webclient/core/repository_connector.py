@@ -5,8 +5,10 @@ from typing import Union, Optional
 
 import requests
 from django.conf import settings
+from django.contrib.gis.db.models.functions import AsGML
 from requests.auth import HTTPBasicAuth
 
+from core.models import ModelWithMetadata
 from projekt.models import Projekt
 from xml_generator.generator import DocumentGenerator
 
@@ -91,8 +93,8 @@ class FedoraRepositoryConnector:
         hash512 = hashlib.sha512(document).hexdigest()
         return document, hash512
 
-    def get_metadata(self) -> bytes:
-        self.save_metadata(True)
+    def get_metadata(self, update=False) -> bytes:
+        self.save_metadata(update)
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
         response = self._send_request(url, FedoraRequestType.GET_METADATA)
         return response.content
@@ -115,5 +117,9 @@ class FedoraRepositoryConnector:
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
             self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
 
-    def __init__(self, record: Union[Projekt]):
-        self.record = record
+    def __init__(self, record: Union[ModelWithMetadata]):
+        if isinstance(record, Projekt):
+            self.record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom"))\
+                .get(pk=record.pk)
+        else:
+            self.record = record

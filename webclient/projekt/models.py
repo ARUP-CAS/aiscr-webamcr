@@ -4,7 +4,7 @@ import os
 import zlib
 
 from django.contrib.gis.db import models as pgmodels
-from django.contrib.gis.db.models.functions import AsGML
+from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
@@ -41,7 +41,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
 )
 from core.exceptions import MaximalIdentNumberError
-from core.models import ProjektSekvence, Soubor, SouborVazby
+from core.models import ProjektSekvence, Soubor, SouborVazby, ModelWithMetadata
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
@@ -57,7 +57,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
+class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     CHOICES = (
         (PROJEKT_STAV_OZNAMENY, "P0 - Oznámen"),
         (PROJEKT_STAV_ZAPSANY, "P1 - Zapsán"),
@@ -155,20 +155,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             return self.ident_cely
         else:
             return "[ident_cely not yet assigned]"
-
-    @property
-    def geom_st_asgml(self):
-        return str("test")
-
-    @property
-    def geom_st_wkt(self):
-        return str("test")
-
-    @property
-    def metadata(self):
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
-        return connector.get_metadata()
 
     class Meta:
         db_table = "projekt"
