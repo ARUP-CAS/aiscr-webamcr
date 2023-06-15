@@ -18,7 +18,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
 from django.views.generic import TemplateView

@@ -1,5 +1,5 @@
 Pian
-=================
+=====
 
 Táto aplikácia obsahuje definici pianu. Obsahuje pohľady a formuláře na ich správu. 
 

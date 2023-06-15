@@ -9,7 +9,7 @@ from core.tests.runner import (
     LOKALITA_DRUH,
     LOKALITA_TYP_NEW,
 )
-from heslar.hesla import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import RuianKatastr
 from uzivatel.models import User
 

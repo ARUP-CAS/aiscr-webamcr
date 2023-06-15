@@ -7,7 +7,7 @@ from core.tests.runner import (
 )
 from django.test import TestCase
 from dokument.models import Dokument
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from uzivatel.models import Organizace
 

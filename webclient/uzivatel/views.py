@@ -21,6 +21,11 @@ from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
 from services.mailer import Mailer
 from django_registration.backends.activation.views import ActivationView
+from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework_xml.renderers import XMLRenderer
 
 from core.decorators import odstavka_in_progress
 from core.message_constants import (
@@ -32,11 +37,17 @@ from core.message_constants import (
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User
+from .serializers import UserSerializer
+from django.utils.encoding import force_str
+
 
 logger = logging.getLogger(__name__)
 
 
 class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro získaní osob pro autocomplete.
+    """
     def get_queryset(self):
         qs = Osoba.objects.all()
         if self.q:
@@ -45,6 +56,9 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
 
 class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro získaní uživatelů pro autocomplete.
+    """
     def get_queryset(self):
         qs = User.objects.all().order_by("last_name")
         if self.q and " " not in self.q:
@@ -81,6 +95,9 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView)
 
 
 class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu pro získaní osob choices pro autocomplete.
+    """
     def get_queryset(self):
         qs = Osoba.objects.all()
         if self.q:
@@ -92,6 +109,9 @@ class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetV
 @login_required
 @require_http_methods(["POST", "GET"])
 def create_osoba(request):
+    """
+    Funkce pohledu pro vytvoření osoby.
+    """
     if request.method == "POST":
         form = OsobaForm(request.POST)
         if form.is_valid():
@@ -144,17 +164,25 @@ def create_osoba(request):
 
 
 class UserRegistrationView(RegistrationView):
+    """
+    Třída pohledu pro registraci uživatele.
+    """
     form_class = AuthUserCreationForm
     success_url = reverse_lazy("django_registration_complete")
 
 
 @method_decorator(odstavka_in_progress, name='dispatch')
 class UserLoginView(LoginView):
+    """
+    Třída pohledu pro prihlášení uživatele.
+    """
     authentication_form = AuthUserLoginForm
 
 
-# overriding logout view for adding message after auto logout
 class UserLogoutView(LogoutView):
+    """
+    Třída pohledu pro odhlášení uživatele, kvůli zobrazení info o logoutu
+    """
     def dispatch(self, request, *args, **kwargs):
         if request.GET.get("autologout") == "true":
             messages.add_message(
@@ -168,6 +196,9 @@ class UserLogoutView(LogoutView):
 
 
 class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    """
+    Třída pohledu pro editaci uživatele.
+    """
     model = User
     form_class = AuthUserChangeForm
     template_name = "uzivatel/update_user.html"
@@ -235,6 +266,9 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
 @login_required
 def update_notifications(request):
+    """
+    Funkce pohledu pro editaci notifikací.
+    """
     form = NotificationsForm(request.POST)
     if form.is_valid():
         notifications = form.cleaned_data.get('notification_types')
@@ -246,6 +280,9 @@ def update_notifications(request):
 
 
 class UserActivationView(ActivationView):
+    """
+    Třída pohledu pro aktivaci uživatele.
+    """
     def activate(self, *args, **kwargs):
         username = self.validate_key(kwargs.get("activation_key"))
         user = self.get_user(username)
@@ -253,4 +290,57 @@ class UserActivationView(ActivationView):
         return user
 
 class UserPasswordResetView(PasswordResetView):
+    """
+    Třída pohledu pro resetování hesla.
+    """
     form_class = UserPasswordResetForm
+    
+class TokenAuthenticationBearer(TokenAuthentication):
+    """
+    Override třídy pro nastavení názvu tokenu na Bearer.
+    """
+    keyword = "Bearer"
+    
+class MyXMLRenderer(XMLRenderer):
+    """
+    Override třídy pro nastavení správnych tagů.
+    """
+    root_tag_name = 'amcr:uzivatel'
+
+    def _to_xml(self, xml, data):
+        if isinstance(data, (list, tuple)):
+            for item in data:
+                xml.startElement(self.item_tag_name, {})
+                self._to_xml(xml, item)
+                xml.endElement(self.item_tag_name)
+
+        elif isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, dict) and "idRef" in value:
+                    xml.startElement(key, {"id":value.pop("idRef")})
+                    self._to_xml(xml, value["value"])
+                else:
+                    xml.startElement(key, {})
+                    self._to_xml(xml, value)
+                xml.endElement(key)
+
+        elif data is None:
+            # Don't output any value
+            pass
+
+        else:
+            xml.characters(force_str(data))
+
+class GetUserInfo(APIView):
+    """
+    Třída podlehu pro získaní základních info o uživately.
+    """
+    authentication_classes = [TokenAuthenticationBearer]
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [MyXMLRenderer,]
+    http_method_names = ["get",]
+    
+    def get(self, request, format=None):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)

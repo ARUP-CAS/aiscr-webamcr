@@ -12,7 +12,8 @@ from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext as _
-from heslar.hesla import GEOMETRY_PLOCHA, HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP, PIAN_PRESNOST_KATASTR
+from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
+from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar
 from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError

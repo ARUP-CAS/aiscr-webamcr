@@ -41,7 +41,6 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PRISTUPNOST,
     HESLAR_UDALOST_TYP,
-    MODEL_3D_DOKUMENT_TYPES,
     HESLAR_ZEME,
     HESLAR_AREAL,
     HESLAR_AKTIVITA,
@@ -50,6 +49,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
 )
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar
 from uzivatel.models import Organizace, User, Osoba
 from django.utils.translation import gettext as _

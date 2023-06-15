@@ -17,8 +17,8 @@ from heslar.hesla import (
     HESLAR_OBDOBI_KAT,
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
-    TYP_PROJEKTU_PRUZKUM_ID,
 )
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.views import heslar_12
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt

@@ -87,7 +87,6 @@ from dokument.models import (
 )
 from dokument.tables import Model3DTable, DokumentTable
 from heslar.hesla import (
-    DOKUMENT_RADA_DATA_3D,
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
     HESLAR_DOKUMENT_TYP,
@@ -100,6 +99,9 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
+)
+from heslar.hesla_dynamicka import (
+    DOKUMENT_RADA_DATA_3D,
     MATERIAL_DOKUMENTU_DIGITALNI_SOUBOR,
     PRISTUPNOST_BADATEL_ID,
 )
@@ -122,6 +124,8 @@ from ez.forms import PripojitArchZaznamForm
 from projekt.forms import PripojitProjektForm
 from core.models import Soubor
 from django.db.models import Prefetch, Subquery, OuterRef
+
+from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -328,6 +332,11 @@ class DokumentListView(SearchListView):
                 "soubory__soubory",
                 queryset=Soubor.objects.filter(id__in=subqry),
                 to_attr="first_soubor",
+            ),
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                to_attr="ordered_autors",
             )
         )
         return qs

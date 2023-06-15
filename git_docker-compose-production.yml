@@ -19,27 +19,30 @@ services:
       - "8000"
     ports:
       - "2525:2525"
+    restart: always
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1G
+          cpus: "1"
+          memory: "1G"
 
-  memcached:
-    image: memcached:latest
-    expose:
-      - "11211"
-    networks:
-      - git-reverse-proxy
-  sidecar:
-    image: eeacms/rsync:latest
+  db:
+    image: postgis/postgis:14-3.3
+    ports:
+      - "5432:5432"
+    secrets:
+      - local_db_pass
     environment:
-      - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
+      - POSTGRES_DB=django_migrated_db
+      - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
     volumes:
-      - $HOME/translations_backup:/backup
-      - locale_data:/vol/web/locale
-    command:  
-      - client
+      - db_dev_data:/var/lib/postgresql/data
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1G"
 
   redis:
     build: ./redis
@@ -49,6 +52,7 @@ services:
     secrets:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
+    restart: always
     networks:
       - git-reverse-proxy
 
@@ -71,11 +75,12 @@ services:
         condition: service_started
       web:
         condition: service_started
+    restart: always
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: 0.5G
+          cpus: "0.1"
+          memory: "1G"
 
   celery_beat:
     build:
@@ -96,11 +101,12 @@ services:
         condition: service_started
       web:
         condition: service_started
+    restart: always
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: 0.5G
+          cpus: "0.1"
+          memory: "1G"
 
   grafana:
     image: grafana/grafana-enterprise:8.2.0
@@ -125,6 +131,7 @@ services:
       - ./prometheus:/etc/prometheus
     networks:
       - git-reverse-proxy
+    restart: always
     ports:
       - "9090:9090"
 
@@ -139,6 +146,7 @@ services:
       - git-reverse-proxy
     depends_on:
       - elasticsearch
+    restart: always
     secrets:
       - logstash_elastic_pass
 
@@ -160,11 +168,12 @@ services:
       - git-reverse-proxy
     secrets:
       - elastic_pass
+    restart: always
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1.5G
+          cpus: "1"
+          memory: "2G"
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.7.0
@@ -188,11 +197,12 @@ services:
     shm_size: '1gb'
     networks:
       - git-reverse-proxy
+    restart: always
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: 4G
+          cpus: "2"
+          memory: "4G"
 
 volumes:
   static_data:
@@ -201,18 +211,21 @@ volumes:
   logs_volume:
   elasticsearch_volume:
   grafana_data:
+  db_dev_data:
 
 networks:
   git-reverse-proxy:
     external: true
 
 secrets:
+  local_db_pass:
+    file: db_pass.txt
   db_conf:
-   file : secrets.json
+   file: secrets.json
   mail_conf:
-   file : secrets_mail_client.json
+   file: secrets_mail_client.json
   redis_pass:
-    file : redis_pass.txt
+    file: redis_pass.txt
   grafana_admin_password:
     file: grafana_admin_password.txt
   elastic_pass:

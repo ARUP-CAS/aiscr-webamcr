@@ -25,7 +25,8 @@ from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_DATUM_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
-    PRISTUPNOST_ANONYM_ID,
+)
+from heslar.hesla_dynamicka import (
     TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
 )
 from heslar.models import Heslar, RuianKatastr
@@ -391,7 +392,7 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
 
     CHOICES = ((TYP_AKCE_PROJEKTOVA, "Projektova"), (TYP_AKCE_SAMOSTATNA, "Samostatna"))
 
-    typ = models.CharField(max_length=1, choices=CHOICES)
+    typ = models.CharField(max_length=1, choices=CHOICES,db_index=True)
     lokalizace_okolnosti = models.TextField(blank=True, null=True)
     specifikace_data = models.ForeignKey(
         Heslar,

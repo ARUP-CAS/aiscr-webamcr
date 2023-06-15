@@ -10,7 +10,7 @@ from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import Http404
 from django.test import RequestFactory, TestCase
-from heslar.hesla import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from oznameni.models import Oznamovatel
 from pas.models import SamostatnyNalez

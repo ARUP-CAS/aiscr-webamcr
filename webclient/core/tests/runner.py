@@ -37,10 +37,8 @@ from dokument.models import (
     DokumentJazyk,
     Tvar,
 )
-from heslar import hesla
+from heslar import hesla, hesla_dynamicka
 from heslar.hesla import (
-    GEOMETRY_BOD,
-    GEOMETRY_PLOCHA,
     HESLAR_AKCE_TYP,
     HESLAR_AREAL,
     HESLAR_DATUM_SPECIFIKACE,
@@ -61,15 +59,19 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     HESLAR_LETFOTO_TVAR,
+    HESLAR_DOKUMENT_ULOZENI,
+    HESLAR_PREDMET_SPECIFIKACE,
+    HESLAR_PREDMET_DRUH,
+    HESLAR_OBDOBI_KAT,
+)
+from heslar.hesla_dynamicka import (
+    GEOMETRY_BOD,
+    GEOMETRY_PLOCHA,
     PRISTUPNOST_ANONYM_ID,
     PRISTUPNOST_ARCHEOLOG_ID,
     SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_PRUZKUM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
-    HESLAR_DOKUMENT_ULOZENI,
-    HESLAR_PREDMET_SPECIFIKACE,
-    HESLAR_PREDMET_DRUH,
-    HESLAR_OBDOBI_KAT,
 )
 from heslar.models import (
     Heslar,
@@ -277,11 +279,11 @@ class AMCRBaseTestRunner(BaseRunner):
             n.save()
 
         Heslar(
-            id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="záchranný", ident_cely="XXX1",
+            id=hesla_dynamicka.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="záchranný", ident_cely="XXX1",
             heslo_en="en_1"
         ).save()
         Heslar(
-            id=hesla.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="průzkumný", ident_cely="XXX2",
+            id=hesla_dynamicka.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="průzkumný", ident_cely="XXX2",
             heslo_en="en_2"
         ).save()
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp, zkratka=1, ident_cely="XXX3", heslo="cz_3",

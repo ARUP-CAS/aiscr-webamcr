@@ -6,6 +6,7 @@ export DJANGO_SETTINGS_MODULE=webclient.settings.production
 
 sudo cron
 
+python3 manage.py migrate
 python3 manage.py collectstatic --noinput
 
 #Copy locale from volume, create new one/update old, copy locale to volume and remove from app. Move has permission denied.
