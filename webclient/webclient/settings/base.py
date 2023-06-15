@@ -444,6 +444,13 @@ CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
+FEDORA_USER = get_secret("FEDORA_USER")
+FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD")
+FEDORA_SERVER_HOSTNAME = get_secret("FEDORA_SERVER_HOSTNAME")
+FEDORA_SERVER_NAME = get_secret("FEDORA_SERVER_NAME")
+FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER")
+
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',

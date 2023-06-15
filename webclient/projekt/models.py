@@ -4,6 +4,7 @@ import os
 import zlib
 
 from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
@@ -40,7 +41,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
 )
 from core.exceptions import MaximalIdentNumberError
-from core.models import ProjektSekvence, Soubor, SouborVazby
+from core.models import ProjektSekvence, Soubor, SouborVazby, ModelWithMetadata
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
@@ -58,7 +59,7 @@ from uzivatel.models import Organizace, Osoba, User
 logger = logging.getLogger(__name__)
 
 
-class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
+class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     """
     Class pro db model projekt.
     """
@@ -555,6 +556,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
 
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
+
+    @property
+    def pristupnost(self):
+        return Heslar.objects.get(ident_cely="HES-000865")
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

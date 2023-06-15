@@ -3,6 +3,8 @@ import logging
 import mimetypes
 import os
 import re
+from io import StringIO
+
 import unicodedata
 from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
@@ -15,7 +17,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import Http404, HttpResponse, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -734,3 +736,20 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
             skryte_sloupce.append(sloupec)
             request.session.modified = True
         return HttpResponse("Pridano do skrytych %s" % sloupec)
+
+
+class StahnoutMetadataView(LoginRequiredMixin, View):
+    def get(self, request, model_name, pk):
+        metadata = ""
+        if model_name == "projekt":
+            record: Projekt = Projekt.objects.get(pk=pk)
+            metadata = record.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
+

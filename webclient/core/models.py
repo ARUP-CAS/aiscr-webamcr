@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import re
+from abc import ABC, abstractmethod
 
 from django.db import models
 from django.forms import ValidationError
@@ -46,6 +47,23 @@ def get_upload_to(instance, filename):
         folder = ""
     base_path = f"soubory/{folder}{datetime.datetime.now().strftime('%Y/%m/%d')}"
     return os.path.join(base_path, instance.nazev)
+
+
+class ModelWithMetadata(models.Model):
+    ident_cely = models.TextField(unique=True)
+    @property
+    def metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata()
+
+    def save_metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.save_metadata(True)
+
+    class Meta:
+        abstract = True
 
 
 class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
