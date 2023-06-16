@@ -297,7 +297,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
                 sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
         sequence.save()
         self.ident_cely = (
-            sequence.region + "-" + str(sequence.typ.zkratka) + "{0}".format(sequence.sekvence).zfill(7)
+            sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
         self.save()
 
@@ -524,7 +524,7 @@ def get_akce_ident(region):
             sequence = AkceSekvence.objects.create(region=region, sekvence=1)
     sequence.save()
     return (
-        sequence.region + "-9" + "{0}".format(sequence.sekvence).zfill(6) + "A"
+        sequence.region + "-9" + f"{sequence.sekvence:06}" + "A"
     )
 
 class LokalitaSekvence(models.Model):

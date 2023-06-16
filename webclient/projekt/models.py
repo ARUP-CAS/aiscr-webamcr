@@ -500,7 +500,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
         sequence.save()
         self.ident_cely = (
-            sequence.region + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
+            sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
         self.save()
 

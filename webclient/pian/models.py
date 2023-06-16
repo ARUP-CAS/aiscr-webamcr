@@ -103,7 +103,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
                 "P-"
                 + str(self.zm50.cislo).replace("-", "").zfill(4)
                 + "-"
-                + "{0}".format(sequence.sekvence).zfill(6)
+                + f"{sequence.sekvence:06}"
             )
         else:
             raise MaximalIdentNumberError(MAXIMUM)
@@ -121,7 +121,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
                     "P-"
                     + str(self.zm50.cislo).replace("-", "").zfill(4)
                     + "-"
-                    + "{0}".format(sequence.sekvence).zfill(6)
+                    + f"{sequence.sekvence:06}"
                 )
             else:
                 break

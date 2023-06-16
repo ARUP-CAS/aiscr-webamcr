@@ -182,7 +182,7 @@ def get_ez_ident(zaznam=None):
             sequence = ExterniZdrojSekvence.objects.create(sekvence=1)
     sequence.save()
     return (
-        prefix + "{0}".format(sequence.sekvence).zfill(7)
+        prefix + f"{sequence.sekvence:07}"
     )
 
 
