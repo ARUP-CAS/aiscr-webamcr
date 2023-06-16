@@ -186,10 +186,11 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), models.Model):
     """
     Class pro db model ruian katastr.
     """
-    okres = models.ForeignKey("RuianOkres", models.RESTRICT, db_column="okres", verbose_name=_("heslar.models.RuianKatastr.okres"))
+    okres = models.ForeignKey("RuianOkres", models.RESTRICT, db_column="okres", db_index=True,
+                              verbose_name=_("heslar.models.RuianKatastr.okres"))
     aktualni = models.BooleanField(verbose_name=_("heslar.models.RuianKatastr.aktualni"))
-    nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"))
-    kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"))
+    nazev = models.TextField(verbose_name=_("heslar.models.RuianKatastr.nazev"), db_index=True)
+    kod = models.IntegerField(verbose_name=_("heslar.models.RuianKatastr.kod"), db_index=True)
     # TODO: BUG FIX #474 when ready #372
     # nazev = models.TextField(unique=True, verbose_name=_("heslar.models.RuianKatastr.nazev"))
     # kod = models.IntegerField(unique=True, verbose_name=_("heslar.models.RuianKatastr.kod"))
@@ -197,9 +198,11 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), models.Model):
     definicni_bod = pgmodels.PointField(verbose_name=_("heslar.models.RuianKatastr.definicni_bod"), srid=4326)
     hranice = pgmodels.MultiPolygonField(verbose_name=_("heslar.models.RuianKatastr.hranice"), srid=4326)
     nazev_stary = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.nazev_stary"))
-    pian = models.OneToOneField("pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"), null=True, blank=True)
+    pian = models.OneToOneField("pian.Pian", models.SET_NULL, verbose_name=_("heslar.models.RuianKatastr.pian"),
+                                null=True, blank=True)
     soucasny = models.ForeignKey(
-        "self", models.RESTRICT, db_column="soucasny", blank=True, null=True, verbose_name=_("heslar.models.RuianKatastr.soucasny")
+        "self", models.RESTRICT, db_column="soucasny", blank=True, null=True,
+        verbose_name=_("heslar.models.RuianKatastr.soucasny")
     )
 
     @property

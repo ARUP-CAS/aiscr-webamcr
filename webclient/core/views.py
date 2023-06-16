@@ -17,7 +17,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import Http404, HttpResponse, JsonResponse, StreamingHttpResponse, FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -44,6 +44,7 @@ from core.message_constants import (
     ZAZNAM_USPESNE_SMAZAN,
 )
 from core.models import Soubor
+from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
 from core.utils import (
     calculate_crc_32,
     get_mime_type,
@@ -122,20 +123,32 @@ def download_file(request, pk):
     """
     Funkce pohledu pro stažení souboru.
     """
-    soubor = get_object_or_404(Soubor, id=pk)
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
-    if os.path.exists(path):
-        content_type = mimetypes.guess_type(soubor.path.name)[
-            0
-        ]  # Use mimetypes to get file type
-        response = HttpResponse(soubor.path, content_type=content_type)
-        response["Content-Length"] = str(len(soubor.path))
+    soubor: Soubor = get_object_or_404(Soubor, id=pk)
+    rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
+    if rep_bin_file is not None:
+        # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
+        response = FileResponse(rep_bin_file.content, filename=soubor.nazev_zkraceny)
+        response["Content-Length"] = rep_bin_file.size
         response["Content-Disposition"] = (
-            "attachment; filename=" + soubor.nazev_zkraceny
+                "attachment; filename=" + soubor.nazev_zkraceny
         )
         return response
+
+    path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
+    if os.path.exists(path):
+        path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
+        if os.path.exists(path):
+            content_type = mimetypes.guess_type(soubor.path.name)[
+                0
+            ]  # Use mimetypes to get file type
+            response = HttpResponse(soubor.path, content_type=content_type)
+            response["Content-Length"] = str(len(soubor.path))
+            response["Content-Disposition"] = (
+                "attachment; filename=" + soubor.nazev_zkraceny
+            )
+            return response
     else:
-        logger.debug("core.views.download_file.not_exists", extra={"name": soubor.nazev, "path": path})
+        logger.debug("core.views.download_file.not_exists", extra={"file_name": soubor.nazev, "path": path})
     raise Http404
 
 
@@ -212,17 +225,17 @@ def post_upload(request):
     s = None
     if not update:
         logger.debug("core.views.post_upload.start", extra={"objectID": request.POST["objectID"]})
-        projects = Projekt.objects.filter(ident_cely=request.POST["objectID"])
-        documents = Dokument.objects.filter(ident_cely=request.POST["objectID"])
-        finds = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
-        if projects.exists():
-            objekt = projects[0]
+        projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
+        dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
+        samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
+        if projekt.exists():
+            objekt = projekt[0]
             new_name = get_projekt_soubor_name(request.FILES.get("file").name)
-        elif documents.exists():
-            objekt = documents[0]
+        elif dokument.exists():
+            objekt = dokument[0]
             new_name = get_dokument_soubor_name(objekt, request.FILES.get("file").name)
-        elif finds.exists():
-            objekt = finds[0]
+        elif samostatny_nalez.exists():
+            objekt = samostatny_nalez[0]
             new_name = get_finds_soubor_name(objekt, request.FILES.get("file").name)
         else:
             return JsonResponse(
@@ -232,7 +245,7 @@ def post_upload(request):
                 },
                 status=500,
             )
-        if new_name == False:
+        if not new_name:
             return JsonResponse(
                 {
                     "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
@@ -242,25 +255,25 @@ def post_upload(request):
     else:
         logger.debug("core.views.post_upload.updating", extra={"fileID": request.POST["fileID"]})
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
-        if os.path.exists(s.path.path):
-            os.remove(s.path.path)
-        logger.debug("core.views.post_upload.update", extra={"s": s.pk, "fullname": s.path.path})
+        logger.debug("core.views.post_upload.update", extra={"s": s.pk})
+        objekt = s.vazba.navazany_objekt
+        new_name = s.nazev_zkraceny
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
-        # After calculating checksum, must move pointer to the beginning
         soubor.file.seek(0)
         if not update:
-            old_name = soubor.name
-            soubor.name = checksum + "_" + soubor.name
+            conn = FedoraRepositoryConnector(objekt)
+            mimetype = get_mime_type(soubor.name)
+            rep_bin_file = conn.save_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name), soubor.file)
             s = Soubor(
-                path=soubor,
                 vazba=objekt.soubory,
-                nazev=checksum + "_" + new_name,
+                nazev=rep_bin_file.filename,
                 # Short name is new name without checksum
                 nazev_zkraceny=new_name,
-                mimetype=get_mime_type(old_name),
-                size_mb=soubor.size / 1024 / 1024,
+                mimetype=mimetype,
+                size_mb=rep_bin_file.size_mb,
+                repository_uuid=rep_bin_file.uuid
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():
@@ -283,15 +296,8 @@ def post_upload(request):
                 else:
                     s.zaznamenej_nahrani(request.user)
                 # Find parent record and send it to the user
-                parent_ident = ""
-                if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
-                    parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
-                if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                    parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
-                if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                    parent_ident = (
-                        duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
-                    )
+                parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
+                    if duplikat.first().vazba.navazany_objekt is not None else ""
                 return JsonResponse(
                     {
                         "duplicate": _(
@@ -312,29 +318,26 @@ def post_upload(request):
                     {"error": f"Chyba při zpracování souboru"},
                     status=500,
                 )
-            if s.vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                file_name, __ = os.path.splitext(s.nazev_zkraceny)
-                new_name = file_name + file_extension
-            elif s.vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                file_name, __ = os.path.splitext(s.nazev_zkraceny)
-                new_name = file_name + file_extension
-            else:
+            if s.vazba.typ_vazby is None:
                 return JsonResponse(
                     {"error": f"Chybí vazba souboru"},
                     status=500,
                 )
-            name_without_checksum = soubor.name
+            conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
-            soubor.name = checksum + "_" + new_name
-            s.nazev = checksum + "_" + new_name
-            logger.debug("core.views.post_upload.update", pk=s.pk, new_name=new_name)
-            s.nazev = checksum + "_" + new_name
-            s.nazev_zkraceny = new_name
-            s.path = soubor
-            s.size_mb = soubor.size / 1024 / 1024
-            s.mimetype = mimetype
-            s.save()
-            s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
+            if s.repository_uuid is not None:
+                rep_bin_file = conn.update_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name),
+                                                       soubor.file, s.repository_uuid)
+                name_without_checksum = soubor.name
+                soubor.name = checksum + "_" + new_name
+                s.nazev = checksum + "_" + new_name
+                logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
+                s.nazev = checksum + "_" + new_name
+                s.nazev_zkraceny = new_name
+                s.size_mb = rep_bin_file.size_mb
+                s.mimetype = mimetype
+                s.save()
+                s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
 
             duplikat = (
                 Soubor.objects.filter(nazev__icontains=checksum)
@@ -342,15 +345,8 @@ def post_upload(request):
                 .order_by("pk")
             )
             if duplikat.count() > 0:
-                parent_ident = ""
-                if duplikat[0].vazba.typ_vazby == PROJEKT_RELATION_TYPE:
-                    parent_ident = duplikat[0].vazba.projekt_souboru.ident_cely
-                if duplikat[0].vazba.typ_vazby == DOKUMENT_RELATION_TYPE:
-                    parent_ident = duplikat[0].vazba.dokument_souboru.ident_cely
-                if duplikat[0].vazba.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
-                    parent_ident = (
-                        duplikat[0].vazba.samostatny_nalez_souboru.get().ident_cely
-                    )
+                parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
+                    if duplikat.first().vazba.navazany_objekt is not None else ""
                 return JsonResponse(
                     {
                         "duplicate": _(

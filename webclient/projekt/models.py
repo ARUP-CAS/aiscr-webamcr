@@ -42,6 +42,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from core.models import ProjektSekvence, Soubor, SouborVazby, ModelWithMetadata
+from core.repository_connector import RepositoryBinaryFile
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
@@ -76,7 +77,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     )
 
     stav = models.SmallIntegerField(
-        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav"),db_index=True
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav"), db_index=True
     )
     typ_projektu = models.ForeignKey(
         Heslar,
@@ -85,6 +86,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
         verbose_name=_("Typ projektů"),
+        db_index=True,
     )
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
@@ -101,6 +103,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         blank=True,
         null=True,
         verbose_name=_("Vedoucí projektů"),
+        db_index=True,
     )
     datum_zahajeni = models.DateField(
         blank=True, null=True, verbose_name=_("Datum zahájení")
@@ -116,6 +119,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         null=True,
         limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
         verbose_name=_("Památka"),
+        db_index=True,
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(
@@ -138,7 +142,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         null=True,
     )
     organizace = models.ForeignKey(
-        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True
+        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True
     )
     oznaceni_stavby = models.TextField(
         blank=True, null=True, verbose_name=_("Označení stavby")
@@ -153,6 +157,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
         verbose_name=_("Hlavní katastr"),
+        db_index=True,
     )
 
     def __str__(self):
@@ -515,19 +520,17 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         Metóda na vytvoření oznámovací dokumentace.
         """
-        from core.utils import get_mime_type
         creator = OznameniPDFCreator(self.oznamovatel, self, additional)
-        filename, filename_without_checksum = creator.build_document()
-        filename_without_path = os.path.basename(filename)
-        duplikat = Soubor.objects.filter(nazev=filename)
+        rep_bin_file: RepositoryBinaryFile = creator.build_document()
+        duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
         if not duplikat.exists():
             soubor = Soubor(
-                path=filename,
                 vazba=self.soubory,
-                nazev=filename_without_path,
-                nazev_zkraceny=filename_without_checksum,
-                mimetype=get_mime_type(filename_without_path),
-                size_mb=os.path.getsize(filename)/1024/1024,
+                nazev=rep_bin_file.filename,
+                nazev_zkraceny=rep_bin_file.filename,
+                mimetype="application/pdf",
+                repository_uuid=rep_bin_file.uuid,
+                size_mb=rep_bin_file.size_mb,
             )
             soubor.save()
             if user:

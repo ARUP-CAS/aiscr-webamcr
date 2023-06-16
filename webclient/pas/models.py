@@ -15,7 +15,7 @@ from core.constants import (
     VRACENI_SN,
     ZAPSANI_SN,
 )
-from core.models import SouborVazby
+from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.urls import reverse
@@ -35,7 +35,7 @@ from uzivatel.models import Organizace, Osoba, User
 from django_prometheus.models import ExportModelOperationsMixin
 
 
-class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Model):
+class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithMetadata):
     """
     Class pro db model samostantý nález.
     """

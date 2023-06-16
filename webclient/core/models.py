@@ -2,14 +2,12 @@ import datetime
 import logging
 import os
 import re
-from abc import ABC, abstractmethod
+from typing import Optional
 
 from django.db import models
 from django.forms import ValidationError
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
-from pypdf import PdfReader
-from PIL import Image
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -20,6 +18,7 @@ from .constants import (
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SOUBOR_RELATION_TYPE,
 )
+from .repository_connector import RepositoryBinaryFile
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +81,15 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     class Meta:
         db_table = "soubor_vazby"
 
+    @property
+    def navazany_objekt(self) -> Optional[ModelWithMetadata]:
+        if self.typ_vazby == PROJEKT_RELATION_TYPE:
+            return self.projekt_souboru
+        if self.typ_vazby == DOKUMENT_RELATION_TYPE:
+            return  self.dokument_souboru
+        if self.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
+            return self.samostatny_nalez_souboru
+
 
 class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
@@ -101,8 +109,9 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         related_name="soubor_historie",
         null=True,
     )
-    path = models.FileField(upload_to=get_upload_to, max_length=500)
+    path = models.FileField(upload_to=get_upload_to, max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
+    repository_uuid = models.CharField(max_length=36, null=True, blank=True, db_index=True)
 
     class Meta:
         db_table = "soubor"
@@ -126,6 +135,23 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     @property
     def vytvoreno(self):
         return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+
+    def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
+        from .repository_connector import FedoraRepositoryConnector
+
+        record = None
+        vazba: SouborVazby = self.vazba
+        if vazba.projekt_souboru is not None:
+            record = vazba.projekt_souboru
+        if record is not None and self.repository_uuid is not None:
+            logger.debug("core.models.Soubor.get_repository_content", extra={"record_ident_cely": record.ident_cely,
+                                                                             "repository_uuid": self.repository_uuid})
+            conector = FedoraRepositoryConnector(record)
+            rep_bin_file = conector.get_binary_file(self.repository_uuid)
+            return rep_bin_file
+        logger.debug("core.models.Soubor.get_repository_content.not_found",
+                     extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
+        return None
 
     def zaznamenej_nahrani(self, user):
         """
@@ -158,29 +184,30 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         """
         Metóda pro uložení souboru do DB. Navíc se počítá počet stran pro pdf, případne počet frames pro obrázek.
         """
-        super().save(*args, **kwargs)
-        try:
-            self.path
-        except self.DoesNotExist:
-            super().save(*args, **kwargs)
-        if self.path and self.path.path.lower().endswith("pdf"):
-            try:
-                reader = PdfReader(self.path)
-            except:
-                logger.debug("core.models.Soubor.save_error_reading_pdf")
-                self.rozsah = 1
-            else:
-                self.rozsah = len(reader.pages)
-        elif self.path and self.path.path.lower().endswith("tif"):
-            try:
-                img = Image.open(self.path)
-            except:
-                logger.debug("core.models.Soubor.save_error_reading_tif")
-                self.rozsah = 1
-            else:
-                self.rozsah = img.n_frames
-        else:
-            self.rozsah = 1
+        # TODO: Rewrite this
+        # super().save(*args, **kwargs)
+        # try:
+        #     self.path
+        # except self.DoesNotExist:
+        #     super().save(*args, **kwargs)
+        # if self.path and self.path.path.lower().endswith("pdf"):
+        #     try:
+        #         reader = PdfReader(self.path)
+        #     except:
+        #         logger.debug("core.models.Soubor.save_error_reading_pdf")
+        #         self.rozsah = 1
+        #     else:
+        #         self.rozsah = len(reader.pages)
+        # elif self.path and self.path.path.lower().endswith("tif"):
+        #     try:
+        #         img = Image.open(self.path)
+        #     except:
+        #         logger.debug("core.models.Soubor.save_error_reading_tif")
+        #         self.rozsah = 1
+        #     else:
+        #         self.rozsah = img.n_frames
+        # else:
+        #     self.rozsah = 1
         super().save(*args, **kwargs)
 
 
