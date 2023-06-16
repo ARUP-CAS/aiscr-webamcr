@@ -170,6 +170,7 @@ def potvrdit(request, dj_ident_cely):
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
         try:
+            old_ident = pian.ident_cely
             pian.set_permanent_ident_cely()
         except MaximalIdentNumberError:
             messages.add_message(request, messages.ERROR, MAXIMUM_IDENT_DOSAZEN)
@@ -179,7 +180,7 @@ def potvrdit(request, dj_ident_cely):
                 status=403,
             )
         else:
-            pian.set_potvrzeny(request.user)
+            pian.set_potvrzeny(request.user,old_ident)
             logger.debug("pian.views.potvrdit.potvrzen", extra={"pian_ident_cely": pian.ident_cely})
             messages.add_message(request, messages.SUCCESS, PIAN_USPESNE_POTVRZEN)
             response = JsonResponse({"redirect": dj.get_absolute_url()})
@@ -274,7 +275,7 @@ def create(request, dj_ident_cely):
                 dj.pian = pian
                 dj.save()
                 update_all_katastr_within_akce_or_lokalita(dj_ident_cely)
-                logger.warning("pian.views.create.error", extra={"message": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk})
+                logger.warning("pian.views.create.error", extra={"info": ZAZNAM_USPESNE_VYTVOREN, "dj_pk": dj.pk})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
         else:
             logger.info("pian.views.create.assignment_error", extra={"zm10s": zm10s, "zm50s": zm50s})

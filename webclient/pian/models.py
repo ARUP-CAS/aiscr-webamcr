@@ -62,7 +62,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         db_column="zm50",
         related_name="pian_zm50",
     )
-    ident_cely = models.CharField(unique=True, max_length=13)
+    ident_cely = models.CharField(unique=True, max_length=16)
     historie = models.OneToOneField(
         HistorieVazby,
         on_delete=models.SET_NULL,
@@ -103,7 +103,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
                 "P-"
                 + str(self.zm50.cislo).replace("-", "").zfill(4)
                 + "-"
-                + "{0}".format(sequence.sekvence).zfill(6)
+                + f"{sequence.sekvence:06}"
             )
         else:
             raise MaximalIdentNumberError(MAXIMUM)
@@ -121,7 +121,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
                     "P-"
                     + str(self.zm50.cislo).replace("-", "").zfill(4)
                     + "-"
-                    + "{0}".format(sequence.sekvence).zfill(6)
+                    + f"{sequence.sekvence:06}"
                 )
             else:
                 break
@@ -137,12 +137,12 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
 
-    def set_potvrzeny(self, user):
+    def set_potvrzeny(self, user, old_ident):
         """
         Metóda pro nastavení stavu potvrzený.
         """
         self.stav = PIAN_POTVRZEN
-        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie).save()
+        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie, poznamka=f"{old_ident} -> {self.ident_cely}").save()
         self.save()
 
     def zaznamenej_zapsani(self, user):
@@ -182,7 +182,9 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 
     class Meta:
         db_table = "pian_sekvence"
-        unique_together = ["kladyzm50", "sekvence", "katastr"]
+        constraints = [
+            models.UniqueConstraint(fields=['kladyzm50','katastr'], name='unique_sekvence_pian'),
+        ]
 
 
 def vytvor_pian(katastr):

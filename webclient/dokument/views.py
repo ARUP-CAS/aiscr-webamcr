@@ -969,10 +969,9 @@ def edit(request, ident_cely):
             # instance_d.osoby.set(form_d.cleaned_data["jazyky"])
             if form_extra.cleaned_data["let"]:
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
+            #save autors with order
             instance_d.autori.clear()
             instance_d.save()
-            # form_d.save_m2m()
-            form_extra.save()
             i = 1
             for autor in form_d.cleaned_data["autori"]:
                 DokumentAutor(
@@ -981,6 +980,8 @@ def edit(request, ident_cely):
                     poradi=i,
                 ).save()
                 i = i + 1
+            # form_d.save_m2m()
+            form_extra.save()
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -1062,7 +1063,18 @@ def edit_model_3D(request, ident_cely):
         except Exception:
             logger.debug("dokument.views.edit_model_3D.coord_error", extra={"dx": dx, "dy": dy})
         if form_d.is_valid() and form_extra.is_valid() and form_komponenta.is_valid():
-            form_d.save()
+            #save autors with order
+            instance_d = form_d.save(commit=False)
+            instance_d.autori.clear()
+            instance_d.save()
+            i = 1
+            for autor in form_d.cleaned_data["autori"]:
+                DokumentAutor(
+                    dokument=dokument,
+                    autor=autor,
+                    poradi=i,
+                ).save()
+                i = i + 1
             if geom is not None:
                 dokument.extra_data.geom = geom
             form_extra.save()
@@ -1216,6 +1228,14 @@ def create_model_3D(request):
                     komponenty=kv,
                 )
                 dc.save()
+                i=1
+                for autor in form_d.cleaned_data["autori"]:
+                    DokumentAutor(
+                        dokument=dokument,
+                        autor=autor,
+                        poradi=i,
+                    ).save()
+                    i = i + 1
                 form_d.save_m2m()
                 extra_data = form_extra.save(commit=False)
                 extra_data.dokument = dokument
@@ -1333,7 +1353,8 @@ def archivovat(request, ident_cely):
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
             try:
-                d.set_permanent_ident_cely(d.ident_cely[2:4] + rada.zkratka)
+                old_ident = d.ident_cely
+                d.set_permanent_ident_cely(d.ident_cely[2], rada)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
                 return JsonResponse(
@@ -1349,7 +1370,7 @@ def archivovat(request, ident_cely):
             else:
                 d.save()
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": d.ident_cely})
-        d.set_archivovany(request.user)
+        d.set_archivovany(request.user,old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         Mailer.send_ek01(document=d)
         return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})

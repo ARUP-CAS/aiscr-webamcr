@@ -43,6 +43,7 @@ from core.message_constants import (
 from core.exceptions import MaximalIdentNumberError
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.utils import get_message
+from core.ident_cely import get_temp_ez_ident
 from .filters import ExterniZdrojFilter
 
 # from .forms import LokalitaForm
@@ -173,13 +174,7 @@ class ExterniZdrojCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         ez = form.save(commit=False)
         ez.stav = EZ_STAV_ZAPSANY
-        ez.save()
-        try:
-            ez.ident_cely = get_ez_ident(ez)
-        except MaximalIdentNumberError as e:
-            logger.debug("ez.views.ExterniZdrojCreateView.form_valid.lokality_max", extra={"ident_cely": ez.ident_cely})
-            messages.add_message(self.request, messages.ERROR, e.message)
-            return self.form_invalid(form)
+        ez.ident_cely = get_temp_ez_ident()
         ez.save()
         save_autor_editor(ez, form)
         ez.set_zapsany(self.request.user)

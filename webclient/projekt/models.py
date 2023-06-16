@@ -9,6 +9,7 @@ from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.db import models
+from django.db.models.functions import Cast, Substr
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -185,7 +186,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_schvaleny(self, user):
+    def set_schvaleny(self, user,old_ident):
         """
         Metóda pro nastavení stavu schvýlený a uložení změny do historie.
         """
@@ -194,6 +195,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
 
@@ -482,33 +484,24 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
-        logger.debug("projekt.models.Projekt.set_permanent_ident_cely.region_cadastry",
-                     extra={"region": region, "hlavni_katastr": self.hlavni_katastr})
-        sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
-            0
-        ]
-        perm_ident_cely = (
-                region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
-        # Loop through all of the idents that have been imported
-        while True:
-            if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
-                sequence.sekvence += 1
-                logger.warning("projekt.models.Projekt.set_permanent_ident_cely.already_exists",
-                             extra={"perm_ident_cely": perm_ident_cely, "sequence_sekvence": sequence.sekvence})
-                perm_ident_cely = (
-                        region
-                        + "-"
-                        + str(current_year)
-                        + "{0}".format(sequence.sekvence).zfill(5)
-                )
+        try:
+            sequence = ProjektSekvence.objects.get(region=region, rok=current_year)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            projekts = Projekt.objects.filter(ident_cely__startswith=f"{region}-{str(current_year)}")
+            if projekts.count() > 0:
+                last = projekts.annotate(sekv=Cast(Substr("ident_cely", 7), models.IntegerField())).order_by("-sekv")[0]
+                if last.sekv >= MAXIMUM:
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=last.sekv+1)
             else:
-                break
-        if sequence.sekvence >= MAXIMUM:
-            raise MaximalIdentNumberError(MAXIMUM)
-        self.ident_cely = perm_ident_cely
-        sequence.sekvence += 1
+                sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
         sequence.save()
+        self.ident_cely = (
+            sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
+        )
         self.save()
 
     def create_confirmation_document(self, additional=False, user=None):

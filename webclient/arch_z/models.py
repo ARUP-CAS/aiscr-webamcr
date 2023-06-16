@@ -25,6 +25,7 @@ from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_DATUM_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
+    HESLAR_LOKALITA_TYP,
 )
 from heslar.hesla_dynamicka import (
     TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
@@ -33,6 +34,8 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
 
 
@@ -127,18 +130,29 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
         """
         self.stav = AZ_STAV_ARCHIVOVANY
-        Historie(
-            typ_zmeny=ARCHIVACE_AZ,
-            uzivatel=user,
-            vazba=self.historie,
-        ).save()
+        poznamka_historie = None
         self.save()
         if (
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
             and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
         ):
+            old_ident = self.ident_cely
             self.set_akce_ident()
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        if (
+            self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA 
+            and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
+        ):
+            old_ident = self.ident_cely
+            self.set_lokalita_permanent_ident_cely()
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        Historie(
+            typ_zmeny=ARCHIVACE_AZ,
+            uzivatel=user,
+            vazba=self.historie,
+            poznamka=poznamka_historie,
+        ).save()
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -262,41 +276,29 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
 
     def set_lokalita_permanent_ident_cely(self):
         """
-        Metóda pro nastavení permanentního ident celý pro lokality.
-        Metóda najde první volné místo v db.
+        Metóda pro nastavení permanentního ident celý pro lokality z lokality sekvence.
         """
-        MAXIMAL: int = 9999999
-        # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        prefix = str(
-            self.hlavni_katastr.okres.kraj.rada_id
-            + "-"
-            + self.lokalita.typ_lokality.zkratka
+        MAXIMUM: int = 9999999
+        region = self.hlavni_katastr.okres.kraj.rada_id
+        typ = self.lokalita.typ_lokality
+        try:
+            sequence = LokalitaSekvence.objects.get(region=region, typ=typ)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{region}-{typ.zkratka}")
+            if lokality.count() > 0:
+                last = lokality.annotate(sekv=Cast(Substr("ident_cely", 4), models.IntegerField())).order_by("-sekv")[0]
+                if last.sekv >= MAXIMUM:
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=last.sekv+1)
+            else:
+                sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
+        sequence.save()
+        self.ident_cely = (
+            sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
-        l = ArcheologickyZaznam.objects.filter(
-            ident_cely__regex="^" + prefix + "\\d{7}$",
-            typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
-        ).order_by("-ident_cely")
-        if l.filter(ident_cely=str(prefix + "0000001")).count() == 0:
-            self.ident_cely = prefix + "0000001"
-        else:
-            # number from empty spaces
-            idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
-            idents = [sub.replace(prefix, "") for sub in idents]
-            idents = [sub.lstrip("0") for sub in idents]
-            idents = [eval(i) for i in idents]
-            start = idents[0]
-            end = MAXIMAL
-            missing = sorted(set(range(start, end + 1)).difference(idents))
-            logger.debug("arch_z.models.ArcheologickyZaznam.set_lokalita_permanent_ident_cely.missing",
-                         extra={"missing": missing[0]})
-            if missing[0] >= MAXIMAL:
-                logger.error(
-                    "arch_z.models.ArcheologickyZaznam.set_lokalita_permanent_ident_cely.maximum_error",
-                    extra={"maximum": str(MAXIMAL)}
-                )
-                raise MaximalIdentNumberError(MAXIMAL)
-            sequence = str(missing[0]).zfill(7)
-            self.ident_cely = prefix + sequence
         self.save()
 
     def set_akce_ident(self, ident=None):
@@ -501,36 +503,53 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_table = "externi_odkaz"
 
 
-def get_akce_ident(region, temp=None, id=None):
+def get_akce_ident(region):
     """
-        Funkce pro nastavení permanentního ident celý pro akci.
-        Metóda najde první volné místo v db.
+    Metóda pro získaní permanentního ident celý pro akci z akce sekvence.
     """
-    MAXIMAL: int = 999999
-    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-    if temp:
-        return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + str(id) + "A")
-    else:
-        prefix = str(region + "-9")
-    l = ArcheologickyZaznam.objects.filter(
-        ident_cely__regex="^" + prefix + "\\d{6}A$"
-    ).order_by("-ident_cely")
-    if l.filter(ident_cely=str(prefix + "000001A")).count() == 0:
-        return prefix + "000001A"
-    else:
-        # temp number from empty spaces
-        idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
-        idents = [sub.replace(prefix, "") for sub in idents]
-        idents = [sub.replace("A", "") for sub in idents]
-        idents = [sub.lstrip("0") for sub in idents]
-        idents = [eval(i) for i in idents]
-        start = idents[0]
-        end = MAXIMAL
-        missing = sorted(set(range(start, end + 1)).difference(idents))
-        logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
-        logger.debug(missing[0])
-        if missing[0] >= MAXIMAL:
-            logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMAL)})
-            raise MaximalIdentNumberError(MAXIMAL)
-        sequence = str(missing[0]).zfill(6)
-        return prefix + sequence + "A"
+    MAXIMUM: int = 999999
+    try:
+        sequence = AkceSekvence.objects.get(region=region)
+        if sequence.sekvence >= MAXIMUM:
+            raise MaximalIdentNumberError(MAXIMUM)
+        sequence.sekvence += 1
+    except ObjectDoesNotExist:
+        akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{region}-9",ident_cely__endswith="A")
+        if akce.count() > 0:
+            last = akce.annotate(sekv=Cast(Substr("ident_cely", 4, 6), models.IntegerField())).order_by("-sekv")[0]
+            if last.sekv >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence = AkceSekvence.objects.create(region=region, sekvence=last.sekv+1)
+        else:
+            sequence = AkceSekvence.objects.create(region=region, sekvence=1)
+    sequence.save()
+    return (
+        sequence.region + "-9" + f"{sequence.sekvence:06}" + "A"
+    )
+
+class LokalitaSekvence(models.Model):
+    """
+    Model pro tabulku se sekvencemi lokalit.
+    """
+    typ = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},)
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "lokalita_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['region','typ'], name='unique_sekvence_lokalita'),
+        ]
+
+class AkceSekvence(models.Model):
+    """
+    Model pro tabulku se sekvencemi akcií.
+    """
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "akce_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['region'], name='unique_sekvence_akce'),
+        ]

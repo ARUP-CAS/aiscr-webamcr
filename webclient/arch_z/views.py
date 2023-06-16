@@ -36,7 +36,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
-from core.ident_cely import get_project_event_ident
+from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
@@ -588,7 +588,7 @@ def odeslat(request, ident_cely):
             request, messages.SUCCESS, get_message(az, "USPESNE_ODESLANA")
         )
         logger.debug("arch_z.views.odeslat.akce_uspesne_odeslana",
-                     extra={"message": get_message(az, "USPESNE_ODESLANA")})
+                     extra={"info": get_message(az, "USPESNE_ODESLANA")})
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_odeslanim()
@@ -638,10 +638,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        # TODO BR-A-5
         az.set_archivovany(request.user)
-        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and az.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-            az.set_lokalita_permanent_ident_cely()
         az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -828,8 +825,8 @@ def zapsat(request, projekt_ident_cely=None):
                     typ_akce = Akce.TYP_AKCE_PROJEKTOVA
                 else:
                     az.save()
-                    az.ident_cely = get_akce_ident(
-                        az.hlavni_katastr.okres.kraj.rada_id, True, az.id
+                    az.ident_cely = get_temp_akce_ident(
+                        az.hlavni_katastr.okres.kraj.rada_id
                     )
                     typ_akce = Akce.TYP_AKCE_SAMOSTATNA
             except MaximalEventCount:
@@ -1614,7 +1611,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             az.set_akce_ident(get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id))
         else:
             az.set_akce_ident(
-                get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id, True, az.id)
+                get_temp_akce_ident(az.hlavni_katastr.okres.kraj.rada_id)
             )
         az.save()
         Historie(
