@@ -6,7 +6,7 @@ from typing import Union, Optional
 
 import requests
 from django.conf import settings
-from django.contrib.gis.db.models.functions import AsGML
+from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from requests.auth import HTTPBasicAuth
 
 from xml_generator.generator import DocumentGenerator
@@ -49,11 +49,7 @@ class FedoraRepositoryConnector:
         from projekt.models import Projekt
 
         record: ModelWithMetadata
-        if isinstance(record, Projekt):
-            self.record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom"))\
-                .get(pk=record.pk)
-        else:
-            self.record = record
+        self.record = record
 
     def _get_model_name(self):
         from projekt.models import Projekt

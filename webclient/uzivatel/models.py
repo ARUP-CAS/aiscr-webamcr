@@ -45,6 +45,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import logging
 
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -212,13 +213,24 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                     id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
             self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
 
+    @property
+    def metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata()
+
+    def save_metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.save_metadata(True)
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
 
 
-class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToManyRestrictedClassMixin):
+class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
     Class pro db model organizace.
     """
@@ -288,8 +300,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToM
         ]
 
 
-
-class Osoba(ExportModelOperationsMixin("osoba"), models.Model, ManyToManyRestrictedClassMixin):
+class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
     Class pro db model osoba.
     """

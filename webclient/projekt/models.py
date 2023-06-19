@@ -41,7 +41,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
 )
 from core.exceptions import MaximalIdentNumberError
-from core.models import ProjektSekvence, Soubor, SouborVazby, ModelWithMetadata
+from core.models import ProjektSekvence, Soubor, SouborVazby
 from core.repository_connector import RepositoryBinaryFile
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
@@ -56,6 +56,7 @@ from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import OznameniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 

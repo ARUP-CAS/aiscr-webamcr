@@ -625,7 +625,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
         db_table = "dokument_sekvence"
 
 
-class Let(ExportModelOperationsMixin("let"), models.Model):
+class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     """
     Class pro db model let.
     """

@@ -1433,6 +1433,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
                 )
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+            dj_form_detail["adb_pk"] = jednotka.adb.pk
             dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
                 instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
             )
@@ -1823,5 +1824,6 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
         )
         dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
+        dj_form_detail["adb_pk"] = jednotka.adb.pk
         dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
     return dj_form_detail

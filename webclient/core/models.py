@@ -11,6 +11,7 @@ from pian.models import Pian
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from xml_generator.models import ModelWithMetadata
 from .constants import (
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
@@ -46,23 +47,6 @@ def get_upload_to(instance, filename):
         folder = ""
     base_path = f"soubory/{folder}{datetime.datetime.now().strftime('%Y/%m/%d')}"
     return os.path.join(base_path, instance.nazev)
-
-
-class ModelWithMetadata(models.Model):
-    ident_cely = models.TextField(unique=True)
-    @property
-    def metadata(self):
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
-        return connector.get_metadata()
-
-    def save_metadata(self):
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
-        return connector.save_metadata(True)
-
-    class Meta:
-        abstract = True
 
 
 class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
@@ -138,10 +122,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
+        from projekt.models import Projekt
 
         record = None
         vazba: SouborVazby = self.vazba
-        if vazba.projekt_souboru is not None:
+        if vazba.navazany_objekt is not None and isinstance(vazba, Projekt):
             record = vazba.projekt_souboru
         if record is not None and self.repository_uuid is not None:
             logger.debug("core.models.Soubor.get_repository_content", extra={"record_ident_cely": record.ident_cely,

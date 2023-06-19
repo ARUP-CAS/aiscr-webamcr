@@ -1,13 +1,15 @@
 import datetime
+import json
 import os
 
 import xml.etree.ElementTree as ET
+from typing import Union
 from xml.dom import minidom
 
+from django.contrib.gis.db.models.functions import AsGML, AsGeoJSON
 from lxml import etree
 
-from arch_z.models import ArcheologickyZaznam
-
+from xml_generator.models import ModelWithMetadata
 
 AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
 AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
@@ -17,16 +19,57 @@ SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/sc
 
 
 class DocumentGenerator:
-    def _get_schema_name(self):
-        from projekt.models import Projekt
+    @classmethod
+    def generate_metadata(cls):
+        for current_class in cls._get_schema_dict():
+            for obj in current_class.objects.all():
+                from uzivatel.models import User
+                obj: Union[ModelWithMetadata, User]
+                obj.save_metadata()
 
-        type_class_dict = {
+    @classmethod
+    def _get_schema_dict(cls):
+        from adb.models import Adb
+        from arch_z.models import ArcheologickyZaznam
+        from dokument.models import Dokument
+        from projekt.models import Projekt
+        from pas.models import SamostatnyNalez
+        from ez.models import ExterniZdroj
+        from dokument.models import Let
+        from uzivatel.models import User, Organizace, Osoba
+        from heslar.models import Heslar, RuianKraj, RuianKatastr, RuianOkres
+        from pian.models import Pian
+
+        return {
             Projekt: "projekt",
-            ArcheologickyZaznam: "archeologicky_zaznam"
+            ArcheologickyZaznam: "archeologicky_zaznam",
+            Let: "let",
+            Adb: "adb",
+            Dokument: "dokument",
+            ExterniZdroj: "ext_zdroj",
+            Pian: "pian",
+            SamostatnyNalez: "samostatny_nalez",
+            User: "uzivatel",
+            Heslar: "heslo",
+            RuianKraj: "ruian_kraj",
+            RuianOkres: "ruian_okres",
+            RuianKatastr: "ruian_katastr",
+            Organizace: "organizace",
+            Osoba: "osoba",
         }
+
+    def _get_schema_name(self):
+        type_class_dict = self._get_schema_dict()
         object_class = self.document_object.__class__
         name = type_class_dict.get(object_class)
         return name
+
+    @staticmethod
+    def convert_geom_json_to_test(text):
+        if text is not None:
+            text = json.loads(text)
+            if "type" in text and "coordinates" in text:
+                return f"{text['type']}({','.join([str(x) for x in text['coordinates']])})"
 
     @staticmethod
     def _create_xpath_query(model_name):
@@ -78,18 +121,37 @@ class DocumentGenerator:
             return self.document_object
         if "." not in attribute_name and "(" not in attribute_name:
             attribute_value = getattr(record, attribute_name, None)
-        elif "st_asgml" in attribute_name.lower() or "st_srid" in attribute_name.lower():
+        elif "st_asgml" in attribute_name.lower() or "st_astext" in attribute_name.lower() \
+                or "st_srid" in attribute_name.lower():
+            from dokument.models import DokumentExtraData
+            from pas.models import SamostatnyNalez
+            from projekt.models import Projekt
+            if isinstance(record, DokumentExtraData):
+                record = DokumentExtraData.objects\
+                    .annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom")).get(pk=record.pk)
+            elif isinstance(record, SamostatnyNalez):
+                record = SamostatnyNalez.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsGeoJSON("geom"),
+                                                          geom_sjtsk_st_asgml=AsGML("geom_sjtsk"),
+                                                          geom_sjtsk_st_astext=AsGeoJSON("geom_sjtsk"))\
+                    .get(pk=record.pk)
+            elif isinstance(record, Projekt):
+                record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsGeoJSON("geom"))\
+                    .get(pk=record.pk)
             if "st_asgml" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_asgml", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}_st_asgml")
+            elif "st_astext" in attribute_name.lower():
+                field_name = attribute_name.lower().replace("st_astext", "").replace("(", "").replace(")", "")
+                attribute_value = self.convert_geom_json_to_test(getattr(record, f"{field_name}_st_astext"))
             elif "st_srid" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_srid", "").replace("(", "").replace(")", "")
-                attribute_value = getattr(record, f"{field_name}_st_wkt")
+                attribute_value = getattr(record, f"{field_name}").srid
             else:
                 return None
             parser = ET.XMLParser()
-            attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
-            attribute_value = ET.fromstring(attribute_value, parser)
+            if attribute_value is not None and "st_asgml" in attribute_name.lower():
+                attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
+                attribute_value = ET.fromstring(attribute_value, parser)
         else:
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 2:
@@ -252,5 +314,6 @@ class DocumentGenerator:
             .encode("utf-8")
 
     def __init__(self, document_object):
+        from projekt.models import Projekt
         self.document_object = document_object
         self.document_root = ET.Element(f"{{{AMCR_NAMESPACE_URL}}}amcr")

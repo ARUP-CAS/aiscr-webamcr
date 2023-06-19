@@ -49,7 +49,7 @@
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:projekt-chranene_udajeType"/> <!-- self -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="oznamovatel" minOccurs="0" maxOccurs="1" type="amcr:oznamovatelType"/> <!-- "{oznamovatel}" -->
-      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- soubory.soubory -->
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- {soubory.soubory} -->
       <xs:element name="archeologicky_zaznam" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{akce_set.archeologicky_zaznam.ident_cely}" | "{akce_set.archeologicky_zaznam.ident_cely}" -->
       <xs:element name="samostatny_nalez" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{samostatne_nalezy.ident_cely}" | "{samostatne_nalezy.ident_cely}" -->
       <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{casti_dokumentu.dokument.ident_cely}" | "{casti_dokumentu.dokument.ident_cely}" -->
@@ -128,11 +128,11 @@
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
       <xs:element name="licence" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{licence}" -->
       <xs:element name="osoba" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{osoby.ident_cely}" | "{osoby.vypis_cely}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->
-      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- "{soubory.Soubor}" -->
-      <xs:element name="extra_data" minOccurs="0" maxOccurs="1" type="amcr:extra_dataType"/> <!-- "{DokumentExtraData}" -->
-      <xs:element name="tvar" minOccurs="0" maxOccurs="unbounded" type="amcr:tvarType"/> <!-- "{Tvar}" -->
-      <xs:element name="dokument_cast" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_castType"/> <!-- "{DokumentCast}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- "{soubory.soubory}" -->
+      <xs:element name="extra_data" minOccurs="0" maxOccurs="1" type="amcr:extra_dataType"/> <!-- "{extra_data}" -->
+      <xs:element name="tvar" minOccurs="0" maxOccurs="unbounded" type="amcr:tvarType"/> <!-- "{tvar_set}" -->
+      <xs:element name="dokument_cast" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_castType"/> <!-- "{casti}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="ext_zdrojType">
@@ -159,7 +159,7 @@
       <xs:element name="typ_dokumentu" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{typ_dokumentu.ident_cely}" | "{typ_dokumentu.heslo}" -->
       <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:ez-ext_odkazType"/> <!-- "{ExterniOdkaz}" -->
     </xs:sequence>
   </xs:complexType>
@@ -174,7 +174,7 @@
       <xs:element name="geom_sjtsk_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{geom_sjtsk_updated_at}" -->
       <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- DEFAULT: "HES-000865" | "anonym"; "{pristupnost_pom.ident_cely}" | "{pristupnost_pom.heslo}") -->
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:pian-chranene_udajeType"/> <!-- SELF -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{DokumentacniJednotka.archeologicky_zaznam.ident_cely}" | "{DokumentacniJednotka.ident_cely}" -->
     </xs:sequence>
   </xs:complexType>
@@ -202,8 +202,8 @@
       <xs:element name="geom_sjtsk_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{geom_sjtsk_updated_at}" -->
       <xs:element name="pristupnost" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{pristupnost.ident_cely}" | "{pristupnost.heslo}" -->
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:sn-chranene_udajeType"/> <!-- SELF -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->  
-      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- "{soubory.Soubor}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->  
+      <xs:element name="soubor" minOccurs="0" maxOccurs="unbounded" type="amcr:souborType"/>  <!-- "{soubory.soubory}" -->
     </xs:sequence>
   </xs:complexType>
 
@@ -226,7 +226,7 @@
       <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- TODO - nevím, jak to správně zapsat; "{Pes.xxx}" -->
       <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> <!-- "{date_joined}" -->
       <xs:element name="datum_prihlaseni" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{last_login}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> <!-- FILTER: "{UzivatelSpoluprace.spolupracovnik}" -->
       <xs:element name="spoluprace_podrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_podrizeniType"/> <!-- FILTER: "{UzivatelSpoluprace.vedouci}" -->
     </xs:sequence>
@@ -567,7 +567,7 @@
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "spol:{id}" -->
       <xs:element name="vedouci" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{vedouci.ident_cely}" | "{vedouci.ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="spoluprace_podrizeniType">
@@ -575,7 +575,7 @@
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "spol:{id}" -->
       <xs:element name="spolupracovnik" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{spolupracovnik.ident_cely}" | "{spolupracovnik.ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.Historie}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="hierarchie_vyseType">

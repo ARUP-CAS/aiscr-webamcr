@@ -20,6 +20,7 @@ from core.constants import (
 from django.db import models
 from django.utils.translation import gettext as _
 from django.urls import reverse
+
 from ez.models import ExterniZdroj
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
@@ -34,12 +35,13 @@ from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
 from django_prometheus.models import ExportModelOperationsMixin
+from xml_generator.models import ModelWithMetadata
 
 
 logger = logging.getLogger(__name__)
 
 
-class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), models.Model):
+class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), ModelWithMetadata):
     """
     Class pro db model archeologicky_zaznam.
     """

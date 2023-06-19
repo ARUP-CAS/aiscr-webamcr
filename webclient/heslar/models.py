@@ -15,12 +15,12 @@ from heslar.hesla import (
     HESLAR_DOKUMENT_RADA,
     HESLAR_DOKUMENT_TYP, HESLAR_OBDOBI,
 )
-
+from xml_generator.models import ModelWithMetadata
 
 logger_s = logging.getLogger(__name__)
 
 
-class Heslar(ExportModelOperationsMixin("heslar"), models.Model, ManyToManyRestrictedClassMixin):
+class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
     Class pro db model heslar.
     """
@@ -182,7 +182,7 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         verbose_name_plural = "Heslář odkaz"
 
 
-class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), models.Model):
+class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
     """
     Class pro db model ruian katastr.
     """
@@ -220,8 +220,12 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), models.Model):
     def __str__(self):
         return self.nazev + " (" + self.okres.nazev + ")"
 
+    @property
+    def ident_cely(self):
+        return self.kod
 
-class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), models.Model):
+
+class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
     """
     Class pro db model ruian kraj.
     """
@@ -245,8 +249,12 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), models.Model):
     def __str__(self):
         return self.nazev
 
+    @property
+    def ident_cely(self):
+        return self.kod
 
-class RuianOkres(ExportModelOperationsMixin("ruian_okres"), models.Model):
+
+class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
     """
     Class pro db model ruian okres.
     """
@@ -266,3 +274,7 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), models.Model):
 
     def __str__(self):
         return self.nazev
+
+    @property
+    def ident_cely(self):
+        return self.kod

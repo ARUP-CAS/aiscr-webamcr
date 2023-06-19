@@ -53,6 +53,7 @@ from core.utils import (
     get_message,
 )
 from dokument.models import Dokument, get_dokument_soubor_name
+from ez.models import ExterniZdroj
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
@@ -736,10 +737,21 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
 
 class StahnoutMetadataView(LoginRequiredMixin, View):
     def get(self, request, model_name, pk):
-        metadata = ""
         if model_name == "projekt":
             record: Projekt = Projekt.objects.get(pk=pk)
-            metadata = record.metadata
+        elif model_name == "archeologicky_zaznam":
+            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(pk=pk)
+        elif model_name == "adb":
+            record: Adb = Adb.objects.get(pk=pk)
+        elif model_name == "dokument":
+            record: Dokument = Dokument.objects.get(pk=pk)
+        elif model_name == "samostatny_nalez":
+            record: SamostatnyNalez = SamostatnyNalez.objects.get(pk=pk)
+        elif model_name == "externi_zdroj":
+            record: ExterniZdroj = ExterniZdroj.objects.get(pk=pk)
+        else:
+            raise Http404
+        metadata = record.metadata
 
         def context_processor(content):
             yield content
