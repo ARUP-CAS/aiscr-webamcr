@@ -79,6 +79,7 @@ class FedoraRepositoryConnector:
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
+        logger.debug("core_repository_connector._send_request.start", extra={"url": url, "request_type": request_type})
         auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         response = None
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
@@ -99,13 +100,16 @@ class FedoraRepositoryConnector:
         return response
 
     def _create_container(self):
+        logger.debug("core_repository_connector._create_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.CREATE_CONTAINER)
         headers = {
             'Slug': self.record.ident_cely
         }
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
+        logger.debug("core_repository_connector._create_container.end", extra={"ident_cely": self.record.ident_cely})
 
     def _create_link(self):
+        logger.debug("core_repository_connector._create_link.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.CREATE_LINK)
         headers = {
             'Slug': self.record.ident_cely,
@@ -114,41 +118,58 @@ class FedoraRepositoryConnector:
         data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> " \
                f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self._get_model_name()}>"
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
+        logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely})
 
     def _check_container(self):
+        logger.debug("core_repository_connector._check_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
         if result.status_code == 404:
             self._create_container()
             self._create_link()
+        logger.debug("core_repository_connector._check_container.end", extra={"ident_cely": self.record.ident_cely})
 
     def _create_binary_file_container(self):
+        logger.debug("core_repository_connector._create_binary_file_container.start",
+                     extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTAINER)
         headers = {
             "Slug": "file"
         }
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, headers=headers)
+        logger.debug("core_repository_connector._create_binary_file_container.end",
+                     extra={"ident_cely": self.record.ident_cely})
 
     def _check_binary_file_container(self):
+        logger.debug("core_repository_connector._check_binary_file_containe.start",
+                     extra={"ident_cely": self.record.ident_cely})
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         if result.status_code == 404:
             self._create_binary_file_container()
+        logger.debug("core_repository_connector._check_binary_file_container.end",
+                     extra={"ident_cely": self.record.ident_cely})
 
     def _generate_metadata(self):
+        logger.debug("core_repository_connector._generate_metadata.start",
+                     extra={"ident_cely": self.record.ident_cely})
         document_generator = DocumentGenerator(self.record)
         document = document_generator.generate_document()
         hash512 = hashlib.sha512(document).hexdigest()
+        logger.debug("core_repository_connector._generate_metadata.end", extra={"ident_cely": self.record.ident_cely})
         return document, hash512
 
     def get_metadata(self, update=False) -> bytes:
+        logger.debug("core_repository_connector.get_metadata.start", extra={"ident_cely": self.record.ident_cely})
         self.save_metadata(update)
         url = self._get_request_url(FedoraRequestType.GET_METADATA)
         response = self._send_request(url, FedoraRequestType.GET_METADATA)
+        logger.debug("core_repository_connector.get_metadata.end", extra={"ident_cely": self.record.ident_cely})
         return response.content
 
     def save_metadata(self, update=True):
+        logger.debug("core_repository_connector.save_metadata.start", extra={"ident_cely": self.record.ident_cely})
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         document, hash512 = self._generate_metadata()
@@ -165,6 +186,7 @@ class FedoraRepositoryConnector:
         elif update is True:
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
             self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
+        logger.debug("core_repository_connector.save_metadata.end", extra={"ident_cely": self.record.ident_cely})
 
     def save_binary_file(self, file_name, content_type, file: io.BytesIO) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.save_binary_file.start",
@@ -196,6 +218,7 @@ class FedoraRepositoryConnector:
         file.write(response.content)
         file.seek(0)
         rep_bin_file = RepositoryBinaryFile(uuid, file)
+        logger.debug("core_repository_connector.get_binary_file.end", extra={"uuid": uuid})
         return rep_bin_file
 
     def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str) -> RepositoryBinaryFile:
