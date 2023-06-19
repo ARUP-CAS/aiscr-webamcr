@@ -179,7 +179,7 @@ class FedoraRepositoryConnector:
             'Digest': f'sha-512={hash512}',
             'Slug': self.record.ident_cely
         }
-        result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
+        result = self._send_request(url, FedoraRequestType.GET_METADATA)
         if result.status_code == 404:
             url = self._get_request_url(FedoraRequestType.CREATE_METADATA)
             self._send_request(url, FedoraRequestType.CREATE_METADATA, headers=headers, data=document)
