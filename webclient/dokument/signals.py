@@ -33,8 +33,9 @@ def create_dokument_cast_vazby(sender, instance, **kwargs):
         Metóda pro vytvoření komponent vazeb dokument části.
         Metóda se volá pred uložením dokument části.
         """   
-        logger.debug("Creating child komponenty for dokument cast" + str(instance))
-        k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
-        k.save()
-        instance.komponenty = k
+        if instance.pk is None:
+            logger.debug("Creating child komponenty for dokument cast" + str(instance))
+            k = KomponentaVazby(typ_vazby=DOKUMENT_CAST_RELATION_TYPE)
+            k.save()
+            instance.komponenty = k
 

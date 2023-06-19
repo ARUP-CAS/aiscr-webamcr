@@ -50,7 +50,7 @@ class UrlTests(TestCase):
         self.client.force_login(self.existing_user)
         response = self.client.post("/arch-z/lokalita/zapsat", data, follow=True)
         response_text = str(response.rendered_content)
-        regex = re.compile(r"\w-\w-\w{8}")
+        regex = re.compile(r"\w-\w-\w{10}")
         ident_cely = regex.findall(response_text)[0]
         az = ArcheologickyZaznam.objects.filter(ident_cely=ident_cely).first()
         self.assertEqual(200, response.status_code)

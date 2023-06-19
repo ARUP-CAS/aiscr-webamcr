@@ -583,7 +583,10 @@ class CreateModelDokumentForm(forms.ModelForm):
                     self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     if key == "autori":
-                        self.fields[key].widget = forms.widgets.Select()
+                        self.fields[key].widget = forms.widgets.SelectMultiple()
+                        self.fields[key].widget.attrs.update(
+                            {"name_id": str(key) + ";" + str(self.instance)}
+                        )
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""

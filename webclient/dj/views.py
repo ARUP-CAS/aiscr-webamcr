@@ -6,7 +6,7 @@ from adb.models import Adb, VyskovyBod
 from arch_z.models import ArcheologickyZaznam, get_akce_ident
 from core.constants import AZ_STAV_ARCHIVOVANY, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
-from core.ident_cely import get_dj_ident
+from core.ident_cely import get_dj_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
@@ -297,7 +297,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
                     az.set_akce_ident(get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id))
                 else:
                     az.set_akce_ident(
-                        get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id, True, az.id)
+                        get_temp_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id)
                     )
             zaznam.refresh_from_db()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)

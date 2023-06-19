@@ -10,7 +10,8 @@ from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.db.models import CheckConstraint, Q, IntegerField
+from django.db.models.functions import Cast, Substr
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -201,7 +202,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_archivovany(self, user):
+    def set_archivovany(self, user, old_ident):
         """
         Metóda pro nastavení stavu archivovaný a uložení změny do historie.
         """
@@ -212,6 +213,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             typ_zmeny=ARCHIVACE_DOK,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
 
@@ -303,7 +305,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         else:
             return None
 
-    def set_permanent_ident_cely(self, rada):
+    def set_permanent_ident_cely(self, region, rada):
         """
         Metóda pro nastavení permanentního ident celý pro dokument.
         Metóda bere pořadoví číslo z db dokument sekvence.
@@ -311,28 +313,24 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
-        sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
-            0
-        ]
-        perm_ident_cely = (
-            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
-        # Loop through all of the idents that have been imported
-        while True:
-            if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
-                sequence.sekvence += 1
-                logger.warning("dokument.models.Dokument.set_permanent_ident_cely",
-                               extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence})
-                perm_ident_cely = (
-                    rada
-                    + "-"
-                    + str(current_year)
-                    + "{0}".format(sequence.sekvence).zfill(5)
-                )
+        try:
+            sequence = DokumentSekvence.objects.get(region=region, rada=rada, rok=current_year)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            docs = Dokument.objects.filter(ident_cely__startswith=f"{region}-{rada.zkratka}-{str(current_year)}")
+            if docs.count() > 0:
+                last = docs.annotate(sekv=Cast(Substr("ident_cely", 10), IntegerField())).order_by("-sekv")[0]
+                if last.sekv >= MAXIMUM:
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=last.sekv+1)
             else:
-                break
-        if sequence.sekvence >= MAXIMUM:
-            raise MaximalIdentNumberError(MAXIMUM)
+                sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+        sequence.save()
+        perm_ident_cely = (
+            sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
+        )
         self.ident_cely = perm_ident_cely
         for file in (
             self.soubory.soubory.all()
@@ -367,8 +365,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
             dc.save()
             logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
                          extra={"ident_cely": dc.ident_cely})
-        sequence.sekvence += 1
-        sequence.save()
         self.save()
 
     def set_datum_zverejneni(self):
@@ -617,12 +613,17 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     """
     Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
     """
-    rada = models.CharField(max_length=4)
+    rada = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},)
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
     rok = models.IntegerField()
     sekvence = models.IntegerField()
 
     class Meta:
         db_table = "dokument_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['rada', 'region','rok'], name='unique_sekvence_dokument'),
+        ]
+        
 
 
 class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):

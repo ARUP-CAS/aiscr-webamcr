@@ -149,7 +149,7 @@ def download_file(request, pk):
             )
             return response
     else:
-        logger.debug("core.views.download_file.not_exists", extra={"file_name": soubor.nazev, "path": path})
+        logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
     raise Http404
 
 
@@ -507,13 +507,13 @@ def redirect_ident_view(request, ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
         logger.debug("core.views.redirect_ident_view.archeologicka_akce", extra={"ident_cely": ident_cely})
         return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,7}\D{1}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,9}\D{1}", ident_cely)):
         logger.debug("core.views.redirect_ident_view.samostatna_akce", extra={"ident_cely": ident_cely})
         return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7}", ident_cely)):
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}", ident_cely)):
         logger.debug("core.views.redirect_ident_view.lokalita", extra={"ident_cely": ident_cely})
         return redirect("lokalita:detail", slug=ident_cely)
-    if bool(re.fullmatch("(BIB|X-BIB)-\d{7}", ident_cely)):
+    if bool(re.fullmatch("(BIB|X-BIB)-\d{7,9}", ident_cely)):
         logger.debug("core.views.redirect_ident_view.zdroj", extra={"ident_cely": ident_cely})
         return redirect("ez:detail", slug=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
@@ -561,7 +561,7 @@ def redirect_ident_view(request, ident_cely):
             max_age=1000,
         )
         return response
-    if bool(re.fullmatch("(P|N)-\d{4}-\d{6}", ident_cely)):
+    if bool(re.fullmatch("(P|N)-\d{4}-\d{6,9}", ident_cely)):
         logger.debug("core.views.redirect_ident_view.pian", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
