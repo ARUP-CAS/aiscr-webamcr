@@ -28,7 +28,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
-from core.models import SouborVazby
+from core.models import SouborVazby, ModelWithMetadata
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -55,7 +55,7 @@ from core.utils import calculate_crc_32
 logger = logging.getLogger(__name__)
 
 
-class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
+class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     """
     Class pro db model dokument.
     """
@@ -626,7 +626,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
         
 
 
-class Let(ExportModelOperationsMixin("let"), models.Model):
+class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     """
     Class pro db model let.
     """

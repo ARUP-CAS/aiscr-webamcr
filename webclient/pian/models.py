@@ -21,10 +21,12 @@ from uzivatel.models import User
 from django.db.models import Q, CheckConstraint
 from django_prometheus.models import ExportModelOperationsMixin
 
+from xml_generator.models import ModelWithMetadata
+
 logger = logging.getLogger(__name__)
 
 
-class Pian(ExportModelOperationsMixin("pian"), models.Model):
+class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     """
     Class pro db model pian.
     """

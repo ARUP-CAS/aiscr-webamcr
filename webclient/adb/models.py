@@ -11,7 +11,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
-
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
         db_table = "kladysm5"
 
 
-class Adb(models.Model):
+class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     """
     Class pre db model ADB.
     Obsahuje vazbu na dokumentační jednotku.

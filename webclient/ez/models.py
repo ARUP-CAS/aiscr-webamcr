@@ -21,10 +21,12 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
 
+from xml_generator.models import ModelWithMetadata
+
 logger = logging.getLogger(__name__)
 
 
-class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
+class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadata):
     """
     Class pro db model externí zdroj.
     """
