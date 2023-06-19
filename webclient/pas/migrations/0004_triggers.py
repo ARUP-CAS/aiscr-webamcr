@@ -7,7 +7,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("core", "0009_ident_sequences_v2"),
         ("pas", "0003_default"),
     ]
 
