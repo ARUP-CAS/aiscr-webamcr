@@ -99,9 +99,9 @@ def smazat(request, ident_cely):
     else:
         context = {
             "object": adb,
-            "title": _("adb.modalForm.smazani.title.text"),
+            "title": _("adb.views.smazat.modalForm.title"),
             "id_tag": "smazat-adb-form",
-            "button": _("adb.modalForm.smazani.submit.button"),
+            "button": _("adb.views.smazat.modalForm.submit.button"),
         }
         response = render(request, "core/transakce_modal.html", context)
         response.set_cookie("show-form", f"detail_dj_form_{adb.dokumentacni_jednotka.ident_cely}", max_age=1000)
@@ -118,9 +118,9 @@ def smazat_vb(request, ident_cely):
     zaznam = get_object_or_404(VyskovyBod, id=ident_cely)
     context = {
         "object": zaznam,
-        "title": _("vb.modalForm.smazaniVB.title.text"),
+        "title": _("adb.views.smazat_vb.modalForm.title"),
         "id_tag": "smazat-vb-form",
-        "button": _("vb.modalForm.smazaniVB.submit.button"),
+        "button": _("adb.views.smazat_vb.modalForm.submit.button"),
     }
     if request.method == "POST":
         resp = zaznam.delete()
