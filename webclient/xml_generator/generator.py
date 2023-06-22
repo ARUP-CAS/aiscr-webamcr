@@ -1,12 +1,13 @@
 import datetime
-import json
+import logging
 import os
 
 import xml.etree.ElementTree as ET
 from typing import Union
 from xml.dom import minidom
 
-from django.contrib.gis.db.models.functions import AsGML, AsGeoJSON
+from django.contrib.gis.db.models.functions import AsGML, AsGeoJSON, GeoFunc
+from django.contrib.gis.db import models
 from lxml import etree
 
 from xml_generator.models import ModelWithMetadata
@@ -16,6 +17,10 @@ AMCR_XSD_URL = "https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd"
 AMCR_XSD_FILENAME = "amcr.xsd"
 SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/schema/amcr/2.0/amcr.xsd " \
                   "http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"
+logger = logging.getLogger(__name__)
+
+class AsText(GeoFunc):
+    output_field = models.TextField()
 
 
 class DocumentGenerator:
@@ -65,13 +70,6 @@ class DocumentGenerator:
         return name
 
     @staticmethod
-    def convert_geom_json_to_test(text):
-        if text is not None:
-            text = json.loads(text)
-            if "type" in text and "coordinates" in text:
-                return f"{text['type']}({','.join([str(x) for x in text['coordinates']])})"
-
-    @staticmethod
     def _create_xpath_query(model_name):
         if model_name.lower().endswith("type"):
             model_name = model_name.replace("amcr:", "")
@@ -114,6 +112,8 @@ class DocumentGenerator:
             return [None, None]
 
     def _get_attribute_of_record(self, attribute_name, record=None):
+        logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.start",
+                     extra={"attribute_name": attribute_name})
         attribute_value = None
         if record is None:
             record = self.document_object
@@ -126,28 +126,35 @@ class DocumentGenerator:
             from dokument.models import DokumentExtraData
             from pas.models import SamostatnyNalez
             from projekt.models import Projekt
+            from heslar.models import RuianKatastr
+            logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.geom",
+                         extra={"attribute_name": attribute_name, "pk": record.pk})
             if isinstance(record, DokumentExtraData):
                 record = DokumentExtraData.objects\
                     .annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom")).get(pk=record.pk)
             elif isinstance(record, SamostatnyNalez):
-                record = SamostatnyNalez.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsGeoJSON("geom"),
+                record = SamostatnyNalez.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsText("geom"),
                                                           geom_sjtsk_st_asgml=AsGML("geom_sjtsk"),
-                                                          geom_sjtsk_st_astext=AsGeoJSON("geom_sjtsk"))\
+                                                          geom_sjtsk_st_astext=AsText("geom_sjtsk"))\
                     .get(pk=record.pk)
             elif isinstance(record, Projekt):
-                record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsGeoJSON("geom"))\
+                record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsText("geom"))\
+                    .get(pk=record.pk)
+            elif isinstance(record, RuianKatastr):
+                record = RuianKatastr.objects.annotate(definicni_bod_st_asgml=AsGML("definicni_bod"),
+                                                       definicni_bod_st_astext=AsText("definicni_bod"),
+                                                       hranice_st_asgml=AsGML("hranice"),
+                                                       hranice_st_astext=AsText("hranice"))\
                     .get(pk=record.pk)
             if "st_asgml" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_asgml", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}_st_asgml")
             elif "st_astext" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_astext", "").replace("(", "").replace(")", "")
-                attribute_value = self.convert_geom_json_to_test(getattr(record, f"{field_name}_st_astext"))
+                attribute_value = getattr(record, f"{field_name}_st_astext")
             elif "st_srid" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_srid", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}").srid
-            else:
-                return None
             parser = ET.XMLParser()
             if attribute_value is not None and "st_asgml" in attribute_name.lower():
                 attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
@@ -246,7 +253,7 @@ class DocumentGenerator:
                 if schema_element.attrib["maxOccurs"] == "1":
                     if field_name is not None:
                         if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
-                                                             "xs:dateTime"):
+                                                             "xs:dateTime", "amcr:gmlType", "amcr:wktType"):
                             self._create_element(schema_element, parent_element, field_name, id_field_name,
                                                  id_field_prefix=prefix)
                         else:
