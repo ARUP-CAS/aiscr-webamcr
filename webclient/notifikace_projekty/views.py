@@ -41,8 +41,7 @@ CARD_NAME_TRANS = {
 
 class PesListView(LoginRequiredMixin, TemplateView):
     """
-    View to get list of all hlidacich psu on user.
-    3 separate formsets per 1 content type
+    Třída pohledu pro zobrazení listu hlídacích psů.
     """
 
     http_method_names = ["get"]
@@ -90,7 +89,7 @@ class PesListView(LoginRequiredMixin, TemplateView):
 
 class PesCreateView(LoginRequiredMixin, View):
     """
-    View to create new hlidaci pes
+    Třída pohledu pro vytvořené hlídacího psa.
     """
 
     http_method_names = ["post"]
@@ -109,13 +108,13 @@ class PesCreateView(LoginRequiredMixin, View):
             queryset=Pes.objects.filter(content_type__model=model_typ),
         )
         if formset_pes.is_valid():
-            logger.debug("formset is valid")
+            logger.debug("notifikace_projekty.PesCreateView.post.is_valid")
             formset_pes.save()
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_USPESNE_VYTVOREN
             )
         else:
-            logger.error(formset_pes.errors)
+            logger.debug("notifikace_projekty.PesCreateView.post.not_valid", extra={"errors": formset_pes.errors})
             request.session["_old_pes_post"] = request.POST
             request.session["_old_pes_type"] = model_typ
             messages.add_message(
@@ -126,7 +125,7 @@ class PesCreateView(LoginRequiredMixin, View):
 
 class PesSmazatView(LoginRequiredMixin, TemplateView):
     """
-    View to delete hlidaci pes
+    Třída pohledu pro smazání hlídacího psa pomocí modalu.
     """
 
     template_name = "core/transakce_modal.html"
@@ -160,8 +159,8 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             zaznam = self.get_zaznam()
             zaznam.delete()
             messages.add_message(request, messages.SUCCESS, HLIDACI_PES_USPESNE_SMAZAN)
-        except Exception as e:
-            logger.error(e)
+        except Exception as err:
+            logger.warning("notifikace_projekty.PesSmazatView.post.not_valid", extra={"err": err})
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_NEUSPESNE_SMAZAN
             )

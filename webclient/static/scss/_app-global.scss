@@ -472,6 +472,9 @@ form {
   &.app-entity-historie {
     height: 92% !important;
   }
+  &.app-entity-historie.app-entity-soubor {
+    height: 85% !important;
+  }
 
   &.app-entity-soubor {
     .app-toolbar {
@@ -805,5 +808,11 @@ span.badge-span .badge {
         height: 100% !important;
       }
     }
+  }
+}
+
+.app-entity-samostatny_nalez {
+  #projectMap{
+    position:absolute;
   }
 }

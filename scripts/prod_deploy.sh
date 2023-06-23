@@ -189,7 +189,7 @@ mkdir -p ${tr_path}
 
 #LOGGING
 log_dir="logs/prod_deploy"
-start_time=$(date +%Y-%m-%d_%H.%M.%S)
+start_time=$(date +%Y%m%dT%H%M%S)
 log_file="${start_time}_prod-deployment_${passed_args}.log"
 mkdir -p ${log_dir}
 

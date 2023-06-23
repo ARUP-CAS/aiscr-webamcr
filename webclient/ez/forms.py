@@ -1,8 +1,9 @@
 from django.urls import reverse
-import structlog
+
 
 from django import forms
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import AppendedText
 from crispy_forms.layout import Div, Layout
@@ -14,21 +15,27 @@ from uzivatel.models import Osoba
 
 from .models import ExterniZdroj
 
-logger_s = structlog.get_logger(__name__)
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class ExterniZdrojForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení externího zdroju.
+    """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            label = _("externiZdroj.forms.autori.label"),
-            help_text = _("externiZdroj.forms.autori.tooltip"),
+            label=_("externiZdroj.forms.autori.label"),
+            help_text=_("externiZdroj.forms.autori.tooltip"),
             )
     editori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            label= _("externiZdroj.forms.editori.label"),
-            help_text = _("externiZdroj.forms.editori.tooltip"),)
+            label=_("externiZdroj.forms.editori.label"),
+            help_text=_("externiZdroj.forms.editori.tooltip"),)
     class Meta:
         model = ExterniZdroj
         fields = (
@@ -138,14 +145,14 @@ class ExterniZdrojForm(forms.ModelForm):
             autori = Div(
                 AppendedText(
                     "autori",
-                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
             editori = Div(
                 AppendedText(
                     "editori",
-                    '<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-editor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
@@ -181,10 +188,10 @@ class ExterniZdrojForm(forms.ModelForm):
         self.helper.form_tag = False
         self.fields["autori"].widget.choices = list(Osoba.objects.filter(
             externizdrojautor__externi_zdroj=self.instance
-        ).order_by("externizdrojautor__poradi").values_list("id","vypis_cely"))
+        ).order_by("externizdrojautor__poradi").values_list("id", "vypis_cely"))
         self.fields["editori"].widget.choices = list(Osoba.objects.filter(
             externizdrojeditor__externi_zdroj=self.instance
-        ).order_by("externizdrojeditor__poradi").values_list("id","vypis_cely"))
+        ).order_by("externizdrojeditor__poradi").values_list("id", "vypis_cely"))
         for key in self.fields.keys():
             self.fields[key].disabled = readonly
             if required or required_next:
@@ -209,13 +216,16 @@ class ExterniZdrojForm(forms.ModelForm):
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
         for key in self.fields.keys():
-            # logger_s.info(key=self.fields[key], widget=self.fields[key].widget)
+            # logger.info(key=self.fields[key], widget=self.fields[key].widget)
             if isinstance(self.fields[key].widget, forms.widgets.Textarea) \
                     and hasattr(self.fields[key].widget.attrs, "class"):
                 self.fields[key].widget.attrs["class"] = str(self.fields[key].widget.attrs["class"]) \
                                                          + " disabled-text-area"
 
 class ExterniOdkazForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci externího odkazu.
+    """
     class Meta:
         model = ExterniOdkaz
         fields = ("paginace",)
@@ -233,6 +243,9 @@ class ExterniOdkazForm(forms.ModelForm):
 
 
 class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
+    """
+    Hlavní formulář pro připojení archeologického záznamu.
+    """
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         if dok:
@@ -272,6 +285,9 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
 
 
 class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
+    """
+    Hlavní formulář pro připojení externího zdroju.
+    """
     def __init__(self, *args, **kwargs):
         super(PripojitExterniOdkazForm, self).__init__(*args, **kwargs)
         new_choices = list(

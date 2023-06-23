@@ -10,6 +10,12 @@ services:
       - "8080:8080"
     networks:
       - prod-net
+    healthcheck:
+      test: ["CMD-SHELL", 'sh /scripts/run-healthcheck_proxy.sh']
+      interval: 2m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
 
 volumes:
   static_data:

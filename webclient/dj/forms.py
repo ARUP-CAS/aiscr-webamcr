@@ -1,5 +1,3 @@
-import logging
-
 from arch_z.models import Akce, ArcheologickyZaznam
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -8,10 +6,9 @@ from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
+from heslar.hesla import HESLAR_DJ_TYP
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
-
-logger = logging.getLogger(__name__)
 
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
@@ -20,6 +17,9 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 
 class CreateDJForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
+    """
     ku_change = forms.CharField(
         max_length=50, required=False, widget=forms.HiddenInput()
     )
@@ -37,6 +37,9 @@ class CreateDJForm(forms.ModelForm):
         typ_arch_z=None,
         typ_akce=None,
     ):
+        """
+        Metóda formuláře pro získaní querysetu pro typ DJ podle typu akce.
+        """
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
             return queryset.filter(id__in=[TYP_DJ_LOKALITA,TYP_DJ_KATASTR])
@@ -188,6 +191,9 @@ class CreateDJForm(forms.ModelForm):
 
 
 class ChangeKatastrForm(forms.Form):
+    """
+    Formulář pro editaci katastru u archeologického záznamu.
+    """
     katastr = forms.ModelChoiceField(
         label=_("dj.form.katastrChange.label"),
         widget=autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),

@@ -7,19 +7,22 @@ from django import forms
 from django.db import utils
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 from django.db.models import Value, IntegerField
 from crispy_forms.bootstrap import AppendedText
 
 from core.constants import COORDINATE_SYSTEM, D_STAV_ARCHIVOVANY, D_STAV_ODESLANY
 from dokument.models import Dokument, DokumentCast, DokumentExtraData, Let, Tvar
 from heslar.hesla import (
-    ALLOWED_DOKUMENT_TYPES,
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_TYP,
     HESLAR_DOKUMENT_ULOZENI,
     HESLAR_JAZYK,
     HESLAR_LETFOTO_TVAR,
     HESLAR_POSUDEK_TYP,
+)
+from heslar.hesla_dynamicka import (
+    ALLOWED_DOKUMENT_TYPES,
     MODEL_3D_DOKUMENT_TYPES,
 )
 from heslar.models import Heslar
@@ -27,12 +30,16 @@ from uzivatel.models import Osoba
 
 logger = logging.getLogger(__name__)
 
+
 class AutoriField(forms.models.ModelMultipleChoiceField):
+    """
+    Třída pro správne zaobcházení s autormi, tak aby jejich uložení pořadí bylo stejné jako zadané uživatelem.
+    """
     def clean(self, value):
         qs = super().clean(value)
         if value:
             i = 1
-            logger.debug(value)
+            logger.debug("dokument.forms.AutoriField.clean", extra={"value": value})
             for item in value:
                 part_qs = qs.filter(pk=item).annotate(qs_order=Value(i, IntegerField()))
                 if i ==1:
@@ -43,7 +50,11 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
             qs = new_qs.order_by("qs_order")
         return qs
 
+
 class CoordinatesDokumentForm(forms.Form):
+    """
+    Hlavní formulář pro editaci souradnic u modelu 3D.
+    """
     detector_system_coordinates = forms.ChoiceField(
         label=_("Souř. systém"),
         choices=COORDINATE_SYSTEM,
@@ -71,6 +82,9 @@ class CoordinatesDokumentForm(forms.Form):
 
 
 class EditDokumentExtraDataForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
+    """
     rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.form.dokumentExtraData.rada.tooltip"),)
 
     class Meta:
@@ -208,7 +222,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             dok_osoby_div = Div(
                 AppendedText(
                     "dokument_osoba",
-                    '<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-dok-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-2 input-osoba select2-input",
             )
@@ -272,6 +286,9 @@ class EditDokumentExtraDataForm(forms.ModelForm):
 
 
 class EditDokumentForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení Dokumentu.
+    """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
@@ -394,7 +411,7 @@ class EditDokumentForm(forms.ModelForm):
             autori_div = Div(
                 AppendedText(
                     "autori",
-                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-2 input-osoba select2-input",
             )
@@ -469,6 +486,9 @@ class EditDokumentForm(forms.ModelForm):
 
 
 class CreateModelDokumentForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení modelu 3D.
+    """
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),)
@@ -539,7 +559,7 @@ class CreateModelDokumentForm(forms.ModelForm):
             autori_div = Div(
                 AppendedText(
                     "autori",
-                    '<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-autor" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-6 input-osoba select2-input",
             )
@@ -563,7 +583,10 @@ class CreateModelDokumentForm(forms.ModelForm):
                     self.fields[key].empty_label = ""
                 if self.fields[key].disabled is True:
                     if key == "autori":
-                        self.fields[key].widget = forms.widgets.Select()
+                        self.fields[key].widget = forms.widgets.SelectMultiple()
+                        self.fields[key].widget.attrs.update(
+                            {"name_id": str(key) + ";" + str(self.instance)}
+                        )
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
@@ -581,6 +604,9 @@ class CreateModelDokumentForm(forms.ModelForm):
 
 
 class CreateModelExtraDataForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení extra dat modelu 3D.
+    """
     coordinate_x = forms.FloatField(required=False, widget=HiddenInput())
     coordinate_y = forms.FloatField(required=False, widget=HiddenInput())
 
@@ -674,6 +700,9 @@ class CreateModelExtraDataForm(forms.ModelForm):
 
 
 class PripojitDokumentForm(forms.Form):
+    """
+    Hlavní formulář připojení dokumentu do projektu nebo arch záznamu.
+    """
     def __init__(self, projekt=None, *args, **kwargs):
         super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
@@ -694,6 +723,9 @@ class PripojitDokumentForm(forms.Form):
 
 
 class DokumentCastForm(forms.ModelForm):
+    """
+    Hlavní formulář pro zobrazení Dokument části.
+    """
     poznamka = forms.CharField(
         help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
         label=_("dokument.form.castDokumentu.poznamka.label"),
@@ -716,6 +748,9 @@ class DokumentCastForm(forms.ModelForm):
 
 
 class DokumentCastCreateForm(forms.Form):
+    """
+    Hlavní formulář pro vytvoření, editaci Dokument části.
+    """
     poznamka = forms.CharField(
         help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
         label=_("dokument.form.castDokumentu.poznamka.label"),
@@ -728,8 +763,11 @@ class DokumentCastCreateForm(forms.Form):
         self.helper.form_tag = False
 
 
-# Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments
 def create_tvar_form(not_readonly=True):
+    """
+    Funkce která vrací formulář Tvar pro formset.
+    Pomocí ní je možné předat výběr formuláři.
+    """
     class TvarForm(forms.ModelForm):
         class Meta:
             model = Tvar
@@ -771,6 +809,9 @@ def create_tvar_form(not_readonly=True):
 
 
 class TvarFormSetHelper(FormHelper):
+    """
+    Form helper pro správne vykreslení formuláře tvarů.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"

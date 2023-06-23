@@ -107,6 +107,17 @@ run_default ()
    er "${cmd_docker_build} ${service_name}" && er "${cmd_docker_up} ${service_name}" && echo_dec "${msg_success} project ${project_name} ${service_name}" || echo_dec "${msg_fail_build} ${service_name}"
 }
 
+
+#LOGGING
+log_dir="logs/git_prod_deploy"
+start_time=$(date +%Y%m%dT%H%M%S)
+log_file="${start_time}_git_prod-deployment.log"
+mkdir -p ${log_dir}
+
+#REDIRECT to log
+exec > >(tee "${log_dir}/${log_file}" )
+exec 2>&1
+
 echo_dec "# DEPLOYMENT in from GIT Repository, i.e. building docker images from source code"
 script_name=$(basename ${0})
 

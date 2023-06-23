@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext as _
 from arch_z.models import ArcheologickyZaznam
 from heslar.models import Heslar
 from django.urls import reverse
@@ -8,20 +9,23 @@ from heslar.hesla import (
     HESLAR_LOKALITA_TYP,
     HESLAR_LOKALITA_DRUH,
     HESLAR_STAV_DOCHOVANI,
-    TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
 )
+from heslar.hesla_dynamicka import TYP_DOKUMENTU_NALEZOVA_ZPRAVA
 from core.constants import D_STAV_ARCHIVOVANY, PIAN_POTVRZEN
+from django_prometheus.models import ExportModelOperationsMixin
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Create your models here.
-class Lokalita(models.Model):
 
+class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
+    """
+    Class pro db model lokalita.
+    """
     druh = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="druh",
         related_name="lokalita_druh",
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_DRUH},
@@ -30,7 +34,7 @@ class Lokalita(models.Model):
     nazev = models.TextField(blank=False, null=False)
     typ_lokality = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_lokality",
         related_name="lokalita_typ",
         limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},
@@ -38,7 +42,7 @@ class Lokalita(models.Model):
     poznamka = models.TextField(blank=True, null=True)
     zachovalost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zachovalost",
         related_name="lokalita_zachovalost",
         limit_choices_to={"nazev_heslare": HESLAR_STAV_DOCHOVANI},
@@ -47,7 +51,7 @@ class Lokalita(models.Model):
     )
     jistota = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="jistota",
         related_name="lokalita_jistota",
         limit_choices_to={"nazev_heslare": HESLAR_JISTOTA_URCENI},
@@ -56,7 +60,7 @@ class Lokalita(models.Model):
     )
     archeologicky_zaznam = models.OneToOneField(
         ArcheologickyZaznam,
-        models.DO_NOTHING,
+        models.CASCADE,
         db_column="archeologicky_zaznam",
         primary_key=True,
     )
@@ -65,13 +69,22 @@ class Lokalita(models.Model):
         db_table = "lokalita"
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle identu.
+        """
         return reverse(
             "lokalita:detail",
             kwargs={"slug": self.archeologicky_zaznam.ident_cely},
         )
 
     def check_pred_archivaci(self):
-        # All documents associated with it must be archived
+        """
+        Metóda na kontrolu prerekvizit pred archivací:
+
+            všechny pripojené dokumenty jsou archivované.
+
+            všechny DJ mají potvrzený pian
+        """
         result = []
         for dc in self.archeologicky_zaznam.casti_dokumentu.all():
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
@@ -94,9 +107,15 @@ class Lokalita(models.Model):
         return result
 
     def check_pred_odeslanim(self):
-        # All of the events must have akce.datum_zahajeni,
-        # akce.datum_ukonceni, akce.lokalizace_okolnosti, akce.specifikace_data and akce.hlavni_typ fields filled in.
-        # Related events must have a “vedouci” and “hlavni_katastr” column filled in
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: datum_zahajeni, datum_ukonceni, lokalizace_okolnosti, specifikace_data, hlavni_katastr, organizace, hlavni_vedouci a hlavni_typ jsou vyplněna.
+            
+            Akce má připojený dokument typu nálezová správa nebo je akce typu nz.
+            
+            Je připojená aspoň jedna dokumentační jednotka se všemi relevantními relacemi.
+        """
         result = []
         required_fields = [
             (self.datum_zahajeni, _("Datum zahájení není vyplněn.")),
@@ -114,29 +133,23 @@ class Lokalita(models.Model):
         # There must be a document of type “nálezová zpráva” attached to each related event,
         # or akce.je_nz must be true.
         if (
-            len(
-                self.archeologicky_zaznam.casti_dokumentu.filter(
-                    dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
+                len(
+                    self.archeologicky_zaznam.casti_dokumentu.filter(
+                        dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
+                    )
                 )
-            )
-            == 0
-            and not self.je_nz
+                == 0
+                and not self.je_nz
         ):
             result.append(_("Nemá nálezovou zprávu."))
-            logger.warning(
-                "Akce "
-                + self.archeologicky_zaznam.ident_cely
-                + " nema nalezovou zpravu."
-            )
+            logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_nalezovou_zpravu",
+                        extra={"archeologicky_zaznam_ident_cely": self.archeologicky_zaznam.ident_cely})
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.archeologicky_zaznam.dokumentacni_jednotky_akce.all()) == 0:
             result.append(_("Nemá žádnou dokumentační jednotku."))
-            logger.warning(
-                "Akce "
-                + self.archeologicky_zaznam.ident_cely
-                + " nema dokumentacni jednotku."
-            )
+            logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_dokumentacni_jednotku",
+                        extra={"archeologicky_zaznam_ident_cely": self.archeologicky_zaznam.ident_cely})
         for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             # Each documentation unit must have either associated at least one component or the
             # documentation unit must be negative.
@@ -146,9 +159,8 @@ class Lokalita(models.Model):
                     + str(dj.ident_cely)
                     + _(" nemá zadanou žádnou komponentu.")
                 )
-                logger.debug(
-                    "DJ " + dj.ident_cely + " nema komponentu ani neni negativni."
-                )
+                logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_kompunentu_neni_negativni",
+                            extra={"dj_ident_cely": dj.ident_cely})
             # Each documentation unit associated with the project event must have a valid PIAN relation.
             if dj.pian is None:
                 result.append(
@@ -156,7 +168,8 @@ class Lokalita(models.Model):
                     + str(dj.ident_cely)
                     + _(" nemá zadaný pian.")
                 )
-                logger.debug("DJ " + dj.ident_cely + " nema pian.")
+                logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_pian",
+                            extra={"dj_ident_cely": dj.ident_cely})
         for dokument_cast in self.archeologicky_zaznam.casti_dokumentu.all():
             dokument_warning = dokument_cast.dokument.check_pred_odeslanim()
             if dokument_warning:
@@ -164,16 +177,7 @@ class Lokalita(models.Model):
                     0, ("Dokument " + dokument_cast.dokument.ident_cely + ": ")
                 )
                 result.append(dokument_warning)
-                logger.debug(
-                    "Dokument "
-                    + dokument_cast.dokument.ident_cely
-                    + " warnings: "
-                    + str(dokument_warning)
-                )
+                logger.debug("lokalita.models.Lokalita.check_pred_odeslanim.nema_pian",
+                             extra={"dokument_warning": dokument_warning,
+                                    "dokument_cast_dokument_ident_cely": dokument_cast.dokument.ident_cely})
         return result
-
-    def get_absolute_url(self):
-        return reverse(
-            "lokalita:detail",
-            kwargs={"slug": self.archeologicky_zaznam.ident_cely},
-        )

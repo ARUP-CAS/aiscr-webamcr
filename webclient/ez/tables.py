@@ -12,11 +12,12 @@ from .models import ExterniZdroj
 
 
 class ExtZdrojAutoriColumn(tables.Column):
+    """
+    Třída pro sloupec autori externího zdroje, kvůli zohlednení pořadí zadání.
+    """
     def render(self, record, value):
         if value:
-            osoby = Osoba.objects.filter(
-                externizdrojautor__externi_zdroj__ident_cely=record
-            ).order_by("externizdrojautor__poradi")
+            osoby = record.ordered_autors
             items = []
             for autor in osoby:
                 content = conditional_escape(force_str(autor))
@@ -39,11 +40,12 @@ class ExtZdrojAutoriColumn(tables.Column):
 
 
 class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
+    """
+    Třída pro sloupec editori externího zdroje, kvůli zohlednení pořadí zadání.
+    """
     def render(self, record, value):
         if value:
-            osoby = Osoba.objects.filter(
-                externizdrojeditor__externi_zdroj__ident_cely=record
-            ).order_by("externizdrojeditor__poradi")
+            osoby = record.ordered_editors
             items = []
             for autor in osoby:
                 content = conditional_escape(force_str(autor))
@@ -66,10 +68,12 @@ class ExtZdrojEditoriColumn(ExtZdrojAutoriColumn):
 
 
 class ExterniZdrojTable(SearchTable):
-
+    """
+    Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
+    """
     ident_cely = tables.Column(linkify=True)
-    autor = ExtZdrojAutoriColumn(default="", accessor="autori.all")
-    editor = ExtZdrojEditoriColumn(default="", accessor="editori.all")
+    autor = ExtZdrojAutoriColumn(default="", accessor="autori__all")
+    editor = ExtZdrojEditoriColumn(default="", accessor="editori__all")
     casopis_denik_nazev = tables.columns.Column(default="")
     casopis_rocnik = tables.columns.Column(default="")
     sbornik_nazev = tables.columns.Column(default="")

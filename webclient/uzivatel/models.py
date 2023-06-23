@@ -2,9 +2,9 @@ import random
 import string
 from typing import Union
 
-import structlog
 
 from distlib.util import cached_property
+from django.core.validators import MaxValueValidator
 
 from core.constants import (
     CESKY,
@@ -22,6 +22,7 @@ from core.constants import (
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE, UZIVATEL_RELATION_TYPE,
+    ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
@@ -29,10 +30,11 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import Group, PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import DEFERRED
+from django.db.models import DEFERRED, CheckConstraint, Q
 from django.db.models.functions import Collate
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
@@ -41,13 +43,21 @@ from simple_history.models import HistoricalRecords
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
-logger_s = structlog.get_logger(__name__)
+import logging
+
+from xml_generator.models import ModelWithMetadata
+
+logger = logging.getLogger(__name__)
 
 
 def only_notification_groups():
     return UserNotificationType.objects.filter(ident_cely__icontains='S-E-').all()
 
-class User(AbstractBaseUser, PermissionsMixin):
+
+class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
+    """
+    Class pro db model user.
+    """
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor")
@@ -58,20 +68,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False, verbose_name="Přístup do admin. rozhraní")
     is_active = models.BooleanField(default=False, verbose_name="Aktivní")
     date_joined = models.DateTimeField(default=timezone.now)
-    osoba = models.ForeignKey('Osoba', models.DO_NOTHING, db_column='osoba', blank=True, null=True)
+    osoba = models.ForeignKey('Osoba', models.RESTRICT, db_column='osoba', blank=True, null=True)
     organizace = models.ForeignKey(
-        "Organizace", models.DO_NOTHING, db_column="organizace", null=True
+        "Organizace", models.RESTRICT, db_column="organizace"
     )
-    history_vazba = models.ForeignKey('historie.HistorieVazby', db_column='historie',
-                                      on_delete=models.ForeignKey, related_name="uzivatelhistorievazba", null=True)
+    history_vazba = models.OneToOneField('historie.HistorieVazby', db_column='historie',
+                                      on_delete=models.SET_NULL, related_name="uzivatelhistorievazba", null=True)
     jazyk = models.CharField(max_length=15, default=CESKY, choices=JAZYKY)
     sha_1 = models.TextField(blank=True, null=True)
-    telefon = models.TextField(
-        blank=True, null=True, validators=[validate_phone_number]
+    telefon = models.CharField(
+        max_length=100, blank=True, null=True, validators=[validate_phone_number]
     )
     history = HistoricalRecords()
-    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user', db_table='auth_user_notifikace_typ',
-                                                limit_choices_to={'ident_cely__icontains': 'S-E-'}, default=only_notification_groups)
+    notification_types = models.ManyToManyField('UserNotificationType', blank=True, related_name='user',
+                                                db_table='auth_user_notifikace_typ',
+                                                limit_choices_to={'ident_cely__icontains': 'S-E-'},
+                                                default=only_notification_groups)
     notification_log = GenericRelation('NotificationsLog')
     created_from_admin_panel = False
 
@@ -80,7 +92,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    @property
+    @cached_property
     def hlavni_role(self) -> Union[Group, None]:
         roles = self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         if roles.count() == 0:
@@ -149,7 +161,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 fail_silently=False,
             )
         except ConnectionRefusedError as err:
-            logger_s.error("user.email_user.error", user_id=self.pk, email=self.email)
+            logger.error("user.email_user.error", extra={"user_id": self.pk, "email": self.email})
 
     def name_and_id(self):
         return self.last_name + ", " + self.first_name + " (" + self.ident_cely + ")"
@@ -159,22 +171,25 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
-        logger_s.debug("User.save.start")
+        """
+        save metóda pro přidelení identu celý.
+        """
+        logger.debug("User.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
         if not self._state.adding and (not self.is_active or self.hlavni_role.pk == ROLE_BADATEL_ID):
             if self.is_active:
-                logger_s.debug("User.save.deactivate_spoluprace", hlavni_role_id=self.hlavni_role.pk,
-                               is_active=self.is_active)
+                logger.debug("User.save.deactivate_spoluprace",
+                             extra={"hlavni_role_id": self.hlavni_role.pk, "is_active": self.is_active})
             else:
-                logger_s.debug("User.save.deactivate_spoluprace", is_active=self.is_active)
+                logger.debug("User.save.deactivate_spoluprace", extra={"is_active": self.is_active})
             # local import to avoid circual import issue
             from pas.models import UzivatelSpoluprace
             spoluprace_query = UzivatelSpoluprace.objects.filter(vedouci=self)
-            logger_s.debug("User.save.deactivate_spoluprace", spoluprace_count=spoluprace_query.count())
+            logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_count": spoluprace_query.count()})
             for spoluprace in spoluprace_query:
-                logger_s.debug("User.save.deactivate_spoluprace", spoluprace_id=spoluprace.pk)
+                logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
 
@@ -194,8 +209,20 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.ident_cely = f"U-{str(self.pk).zfill(6)}"
             super().save(*args, **kwargs)
         if self.is_active and \
-                self.groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
+                self.groups.filter(
+                    id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
             self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
+
+    @property
+    def metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata()
+
+    def save_metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.save_metadata(True)
 
     class Meta:
         db_table = "auth_user"
@@ -203,39 +230,52 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Uživatelé"
 
 
-class Organizace(models.Model, ManyToManyRestrictedClassMixin):
-    nazev = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev"))
-    nazev_zkraceny = models.TextField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"))
+class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
+    """
+    Class pro db model organizace.
+    """
+    nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255)
+    nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255,
+                                      unique=True)
     typ_organizace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_organizace",
         related_name="typy_organizaci",
         verbose_name=_("uzivatel.models.Organizace.typ_organizace"),
         limit_choices_to={"nazev_heslare": HESLAR_ORGANIZACE_TYP},
     )
     oao = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.oao"))
-    mesicu_do_zverejneni = models.IntegerField(default=36, verbose_name=_("uzivatel.models.Organizace.mesicu_do_zverejneni"))
+    mesicu_do_zverejneni = models.PositiveIntegerField(default=ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
+                                                       verbose_name=_(
+                                                           "uzivatel.models.Organizace.mesicu_do_zverejneni"),
+                                                       validators=[MaxValueValidator(1200)])
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zverejneni_pristupnost",
         related_name="organizace_pristupnosti",
         verbose_name=_("uzivatel.models.Organizace.zverejneni_pristupnost"),
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
     )
-    nazev_zkraceny_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny_en"))
-    email = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.email"))
-    telefon = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"))
-    adresa = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"))
-    ico = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"))
-    soucast = models.ForeignKey('self', models.DO_NOTHING, db_column='soucast', blank=True, null=True)
-    nazev_en = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"))
-    zanikla = models.BooleanField(blank=True, null=True, default=None, verbose_name=_("uzivatel.models.Organizace.zanikla"))
+    nazev_zkraceny_en = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny_en"), max_length=255)
+    email = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.email"), max_length=100)
+    telefon = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.telefon"),
+                               max_length=100)
+    adresa = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.adresa"),
+                              max_length=255)
+    ico = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.ico"), max_length=100)
+    soucast = models.ForeignKey('self', models.RESTRICT, db_column='soucast', blank=True, null=True)
+    nazev_en = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"),
+                                max_length=255)
+    zanikla = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.zanikla"))
     ident_cely = models.CharField(max_length=10, unique=True)
 
     def save(self, *args, **kwargs):
-        logger_s.debug("Organizace.save.start")
+        """
+        save metóda pro přidelení identu celý.
+        """
+        logger.debug("Organizace.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
@@ -252,20 +292,33 @@ class Organizace(models.Model, ManyToManyRestrictedClassMixin):
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
         verbose_name = "Organizace"
         verbose_name_plural = "Organizace"
+        constraints = [
+            CheckConstraint(
+                check = Q(mesicu_do_zverejneni__lte=1200),
+                name = "organizace_mesicu_do_zverejneni_max_value_check",
+            ),
+        ]
 
 
-class Osoba(models.Model, ManyToManyRestrictedClassMixin):
-    jmeno = models.TextField(verbose_name=_("uzivatel.models.Osoba.jmeno"))
-    prijmeni = models.TextField(verbose_name=_("uzivatel.models.Osoba.prijmeni"))
-    vypis = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis"))
-    vypis_cely = models.TextField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"))
+class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
+    """
+    Class pro db model osoba.
+    """
+    jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
+    prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)
+    vypis = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis"), max_length=200)
+    vypis_cely = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"), max_length=200, db_index=True)
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
-    rodne_prijmeni = models.TextField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"))
+    rodne_prijmeni = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"),
+                                      max_length=100)
     ident_cely = models.CharField(max_length=20, unique=True)
 
     def save(self, *args, **kwargs):
-        logger_s.debug("Osoba.save.start")
+        """
+        save metóda pro přidelení identu celý.
+        """
+        logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
             self.ident_cely = f"TEMP-{''.join(random.choice(string.ascii_lowercase) for i in range(5))}"
@@ -279,7 +332,7 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
         ordering = ["vypis_cely"]
         constraints = [
             models.UniqueConstraint(
-                fields=["jmeno", "prijmeni"], name="unique jmeno a prijmeni"
+                fields=["jmeno", "prijmeni"], name="osoba_jmeno_prijmeni_key"
             )
         ]
         verbose_name = "Osoba"
@@ -289,7 +342,10 @@ class Osoba(models.Model, ManyToManyRestrictedClassMixin):
         return self.vypis_cely
 
 
-class UserNotificationType(models.Model):
+class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):
+    """
+    Class pro db model typ user notifikace.
+    """
     ident_cely = models.TextField(unique=True)
     zasilat_neaktivnim = models.BooleanField(default=False)
     predmet = models.TextField()
@@ -303,7 +359,10 @@ class UserNotificationType(models.Model):
         return _(self.ident_cely)
 
 
-class NotificationsLog(models.Model):
+class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
+    """
+    Class pro db model logu notifikací.
+    """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

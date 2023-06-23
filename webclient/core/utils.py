@@ -5,7 +5,6 @@ import zlib
 
 import core.message_constants as mc
 import requests
-import structlog
 from arch_z.models import ArcheologickyZaznam
 from core.message_constants import (
     VALIDATION_EMPTY,
@@ -21,10 +20,12 @@ from heslar.models import RuianKatastr
 from pian.models import Pian
 
 logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
 
 
 def get_mime_type(file_name):
+    """
+    Funkce pro získaní mime typu pro soubor.
+    """
     mime_type = mimetypes.guess_type(file_name)[0]
     # According to RFC 4180 csv is text/csv
     if file_name.endswith(".csv"):
@@ -34,7 +35,7 @@ def get_mime_type(file_name):
 
 def calculate_crc_32(file):
     """
-    Calculates crc32 of the file (int32) transforms it to string and fills string with 0 for 13 characters.
+    Počítá crc32 ze souboru (int32), transformuje ho na string a doplňuje ho na 13 znaků.
     """
     prev = 0
     for eachLine in file:
@@ -44,43 +45,46 @@ def calculate_crc_32(file):
 
 
 def get_cadastre_from_point(point):
+    """
+    Funkce pro získaní katastru z bodu geomu.
+    """
     query = (
         "select id, nazev_stary from public.ruian_katastr where "
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
     try:
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
-        logger.debug(
-            "Point: "
-            + str(point[0])
-            + ", "
-            + str(point[1])
-            + " cadastre: "
-            + str(type(katastr))
-        )
+        logger.debug("core.utils.get_cadastre_from_point.start",
+                     extra={"point_0": point[0], "point_1": point[1], "katastr": katastr})
         return katastr
     except IndexError:
-        logger.error("Could not find cadastre for point: " + str(point))
+        logger.error("core.utils.get_cadastre_from_point.error", extra={"point": point})
         return None
 
 
 def get_cadastre_from_point_with_geometry(point):
+    """
+    Funkce pro získaní katastru s geometrií z bodu geomu.
+    """
     query = (
         "select id, nazev_stary,ST_AsText(definicni_bod) AS db, ST_AsText(hranice) AS hranice from public.ruian_katastr where "
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
     try:
-        logger.debug([point[0], point[1]])
+        logger.debug("core.utils.get_cadastre_from_point.start", extra={"point_0": point[0], "point_1": point[1]})
         cursor = connection.cursor()
         cursor.execute(query, [point[0], point[1]])
         line = cursor.fetchone()
         return [line[1], line[2], line[3]]
     except IndexError:
-        logger.error("Could not find cadastre for ponit: " + str(point))
+        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"point": point})
         return None
 
 
 def get_centre_point(bod, geom):
+    """
+    Funkce pro získani stredového bodu z bodu a geomu.
+    """
     try:
         [x0, x1, xlength] = [0.0, 0.0, 1]
         bod.zoom = 17
@@ -94,28 +98,30 @@ def get_centre_point(bod, geom):
                     len(geom),
                 ]
         elif isinstance(geom[0][0][0], tuple):
-            logger.info(len(geom[0][0]))
-            for i in range(0, len(geom)):
+            for i in range(0, len(geom)-1):
                 [x0, x1, xlength] = [
                     x0 + geom[0][0][i][0],
                     x1 + geom[0][0][i][1],
-                    len(geom),
+                    len(geom)-1,
                 ]
         else:
-            for i in range(0, len(geom[0])):
+            for i in range(0, len(geom[0])-1):
                 [x0, x1, xlength] = [
                     x0 + geom[0][i][0],
                     x1 + geom[0][i][1],
-                    len(geom[0]),
+                    len(geom[0])-1,
                 ]
         bod.lat = x1 / xlength
         bod.lng = x0 / xlength
         return [bod, geom]
     except Exception as e:
-        logger.error("Pian error: " + e)
+        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e})
 
 
 def get_all_pians_with_akce(ident_cely):
+    """
+    Funkce pro získaní všech pianů s akci.
+    """
     query = (
         " (SELECT A.id,A.ident_cely,ST_AsText(A.geom) as geometry, A.dj,katastr.nazev_stary AS katastr_nazev, katastr.id as ku_id"
         " FROM public.ruian_katastr katastr "
@@ -158,11 +164,14 @@ def get_all_pians_with_akce(ident_cely):
         return back
 
     except Exception as e:
-        logger.debug(e)
+        logger.debug("core.utils.get_all_pians_with_akce.exception", extra={"e": e})
         return None
 
 
 def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
+    """
+    Funkce pro update katastru u akce podle katastrálního území.
+    """
     akce_ident_cely = ident_cely.split("-D")[0]
 
     query_update_archz = (
@@ -180,10 +189,11 @@ def update_main_katastr_within_ku(ident_cely, ku_nazev_stary):
 
 
 def update_all_katastr_within_akce_or_lokalita(ident_cely):
-    logger_s.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
+    """
+    Funkce pro update katastru u akce a lokalit.
+    """
+    logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.start")
     akce_ident_cely = ident_cely.split("-D")[0]
-    # logger.debug("dj.ident_cely %s", [ident_cely])
-    # logger.debug("akce.ident_cely %s", [akce_ident_cely])
     hlavni_name = ""
     hlavni_id = None
     ostatni_name = []
@@ -233,10 +243,13 @@ def update_all_katastr_within_akce_or_lokalita(ident_cely):
             cursor.execute(query_delete_other, [zaznam_id, tuple(ostatni_id)])
     except IndexError:
         return None
-    logger_s.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
+    logger.debug("core.utils.update_all_katastr_within_akce_or_lokalita.end")
 
 
 def get_centre_from_akce(katastr, pian):
+    """
+    Funkce pro bodu, geomu a presnosti z akce.
+    """
     query = (
         "select id,ST_Y(definicni_bod) AS lat, ST_X(definicni_bod) as lng "
         " from public.ruian_katastr where "
@@ -254,11 +267,14 @@ def get_centre_from_akce(katastr, pian):
                 presnost = dj.pian.presnost.zkratka
         return [bod, geom, presnost]
     except IndexError:
-        logger.error("Could not find cadastre: " + str(katastr) + " with pian: " + pian)
+        logger.error("core.utils.get_centre_from_akce.error", extra={"katastr": katastr, "pian": pian})
         return None
 
 
 def get_points_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní projektů a jeho geomu podle čtverce.
+    """
     from projekt.models import Projekt
 
     query = (
@@ -270,11 +286,15 @@ def get_points_from_envelope(left, bottom, right, top):
         projekty = Projekt.objects.raw(query, [left, bottom, right, top])
         return projekty
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_centre_from_akce.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_all_pians_with_dj(ident_cely, lat, lng):
+    """
+    Funkce pro získaní pianů s DJ podle ident_cely DJ a souradnic.
+    """
     query = (
         "select pian.id,pian.ident_cely,ST_AsText(pian.geom) as geometry,dj.ident_cely as dj from public.pian pian "
         " left join public.dokumentacni_jednotka dj on pian.id=dj.pian  and dj.ident_cely like %s "
@@ -288,11 +308,14 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
         )
         return pians
     except Exception:
-        logger.debug("No pians")
+        logger.debug("core.utils.get_all_pians_with_dj.no_pians")
         return None
 
 
 def get_num_pians_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní počtu pianů ze čtverce.
+    """
     query = (
         "select count(*) from public.pian pian where "
         "pian.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
@@ -303,11 +326,15 @@ def get_num_pians_from_envelope(left, bottom, right, top):
         cursor.execute(query, [left, bottom, right, top])
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_num_pians_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_pians_from_envelope(left, bottom, right, top, ident_cely):
+    """
+    Funkce pro získaní pianů ze čtverce.
+    """
     query = (
         "select pian.id,pian.ident_cely,"
         " ST_AsText(pian.geom) as geometry,"
@@ -327,11 +354,15 @@ def get_pians_from_envelope(left, bottom, right, top, ident_cely):
         pians = Pian.objects.raw(query, [ident_cely, left, bottom, right, top])
         return pians
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_pians_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_num_projects_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní počtu projektů ze čtverce.
+    """
     query = (
         "select count(*) from public.projekt p where "
         "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
@@ -342,11 +373,15 @@ def get_num_projects_from_envelope(left, bottom, right, top):
         cursor.execute(query, [left, bottom, right, top])
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_num_projects_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_projects_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní projektů ze čtverce.
+    """
     from projekt.models import Projekt
 
     query = (
@@ -359,15 +394,11 @@ def get_projects_from_envelope(left, bottom, right, top):
         pians = Projekt.objects.raw(query, [left, bottom, right, top])
         return pians
     except IndexError:
-        logger.debug("No points in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_projects_from_envelope.no_points",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
-# CREATE TABLE amcr_clusters_table AS
-# WITH query AS (
-# select st_clusterkmeans(geom,500) OVER() cid, geom from pian LIMIT 6000
-# )
-# SELECT cid,  COUNT(*),st_centroid(st_union(geom)) FROM query GROUP BY cid
 def dictfetchall(cursor):
     "Return all rows from a cursor as a dict"
     columns = [col[0] for col in cursor.description]
@@ -375,6 +406,9 @@ def dictfetchall(cursor):
 
 
 def get_heatmap_pian(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy pianů ze čtverce.
+    """
     query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pian_l2"
     query_zoom = (
         "select count*3 as count, ST_AsText(st_centroid) as geometry "
@@ -389,11 +423,15 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_pian.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_heatmap_pian_density(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy hustoty pianů ze čtverce.
+    """
     query = "select max(count) from amcr_heat_pian_l2"
     query_zoom = "select max(count) from amcr_heat_pian_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
     try:
@@ -405,11 +443,15 @@ def get_heatmap_pian_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_pian_density.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_heatmap_project(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy projektů ze čtverce.
+    """
     query = "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_l2"
     query_zoom = (
         "select count*30 as count, ST_AsText(st_centroid) as geometry from amcr_heat_projekt_lx2 "
@@ -424,11 +466,15 @@ def get_heatmap_project(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_project.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_heatmap_project_density(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy hustoty projektů ze čtverce.
+    """
     query = "select max(count) from amcr_heat_projekt_l2"
     query_zoom = (
         "select max(count) from amcr_heat_projekt_lx2 "
@@ -443,11 +489,15 @@ def get_heatmap_project_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("No heatmap in rectangle: %s,%s,%s,%s", left, bottom, right, top)
+        logger.debug("core.utils.get_heatmap_project_density.no_heatmap",
+                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
         return None
 
 
 def get_validation_messages(text):
+    """
+    Funkce pro získaní textu validační chyby.
+    """
     if text == "Not valid":
         return VALIDATION_NOT_VALID
     elif text == "Geometry is empty":
@@ -465,6 +515,9 @@ def get_validation_messages(text):
 
 
 def get_transform_towgs84(cy, cx):
+    """
+    Funkce pro transformaci na wgs84.
+    """
     url = "https://geoportal.cuzk.cz/(S(k10mxdjzq1pv5tkgcghghohf))/WCTSHandlerhld.ashx"
 
     query = (
@@ -496,20 +549,19 @@ def get_transform_towgs84(cy, cx):
         "Pragma": "no-cache",
     }
     try:
-        # logger.debug(url)
-        # logger.debug(query)
         r = requests.post(url, data=query, headers=headers)
-        # logger.debug(r.status_code)
-        # logger.debug(r.text)
         body = json.loads(r.text)["Coordinates"].split(" ")
         return [body[0], body[1]]
     except IndexError:
-        logger.error("Error during transformation")
+        logger.error("core.utils.get_transform_towgs84.transformation_error")
         return None
 
 
 def get_multi_transform_towgs84(jtsk_points):
-    logger.debug("get_multi_transform_towgs84")
+    """
+    Funkce pro transformaci více jtsk bodů na wgs84.
+    """
+    logger.debug("core.utils.get_multi_transform_towgs84.start")
 
     url = "https://geoportal.cuzk.cz/(S(k10mxdjzq1pv5tkgcghghohf))/WCTSHandlerhld.ashx"
 
@@ -565,24 +617,24 @@ def get_multi_transform_towgs84(jtsk_points):
     query = query + "--amcr-multipart-block--\r\n"
 
     try:
-        # logger.debug(url)
-        # logger.debug(query)
         r = requests.post(url, data=query, headers=headers)
-        # logger.debug(r.status_code)
         points = []
         for line in r.text.split("\n"):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
-                logger.debug(p)
+                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"p": p})
                 points.append([p[0], p[1]])
 
         return points
     except IndexError:
-        logger.error("Error during transformation")
+        logger.error("core.utils.get_multi_transform_towgs84.transformation_error")
         return None
 
 
 def get_message(az, message):
+    """
+    Funkce pro získaní textu správy podle záznamu.
+    """
     return str(
         getattr(
             mc,
@@ -597,7 +649,8 @@ def get_message(az, message):
 
 class SearchTable(ColumnShiftTableBootstrap4):
     """
-    Base for table used in search. Added hiding and showinf columns
+    Základní setup pro tabulky používané v aplikaci. 
+    Obsahuje metódu na získaní sloupců které mají byt zobrazeny.
     """
 
     columns_to_hide = []

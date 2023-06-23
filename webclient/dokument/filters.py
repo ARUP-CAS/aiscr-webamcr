@@ -41,7 +41,6 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PRISTUPNOST,
     HESLAR_UDALOST_TYP,
-    MODEL_3D_DOKUMENT_TYPES,
     HESLAR_ZEME,
     HESLAR_AREAL,
     HESLAR_AKTIVITA,
@@ -50,6 +49,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
 )
+from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
 from heslar.models import Heslar
 from uzivatel.models import Organizace, User, Osoba
 from django.utils.translation import gettext as _
@@ -74,7 +74,9 @@ class SouborTypFilter(MultipleChoiceFilter):
 
 
 class HistorieFilter(filters.FilterSet):
-
+    """
+    Třída pro zakladní filtrování historie. Třída je dedená v jednotlivých filtracích záznamů.
+    """
     filter_typ = None
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
@@ -108,31 +110,35 @@ class HistorieFilter(filters.FilterSet):
 
     def filter_queryset(self, queryset):
         """
-        Filter the queryset with the underlying form's `cleaned_data`. You must
-        call `is_valid()` or `errors` before calling this method.
-        This method should be overridden if additional filtering needs to be
-        applied to the queryset before it is cached.
+        Metóda pro filtrování podle historie s logickým operátorem AND.
         """
         zmena = self.form.cleaned_data["historie_typ_zmeny"]
         uzivatel = self.form.cleaned_data["historie_uzivatel"]
         datum = self.form.cleaned_data["historie_datum_zmeny_od"]
         filtered = Historie.objects.all()
+        needs_filtering = False
         if zmena:
             filtered = filtered.filter(typ_zmeny__in=zmena)
+            needs_filtering = True
         if uzivatel:
             filtered = filtered.filter(uzivatel__in=uzivatel)
+            needs_filtering = True
         if datum and datum.start:
             filtered = filtered.filter(datum_zmeny__gte=datum.start)
+            needs_filtering = True
         if datum and datum.stop:
             filtered = filtered.filter(datum_zmeny__lte=datum.stop)
-        if self.filter_typ and self.filter_typ == "arch_z":
-            queryset = queryset.filter(
-                archeologicky_zaznam__historie__historie__in=filtered
-            ).distinct()
-        else:
-            queryset = queryset.filter(historie__historie__in=filtered).distinct()
+            needs_filtering = True
+        if needs_filtering:
+            if self.filter_typ and self.filter_typ == "arch_z":
+                queryset = queryset.filter(
+                    archeologicky_zaznam__historie__historie__in=filtered
+                ).distinct()
+            else:
+                queryset = queryset.filter(historie__historie__in=filtered).distinct()
         for name, value in self.form.cleaned_data.items():
-            queryset = self.filters[name].filter(queryset, value)
+            if name not in ["historie_typ_zmeny","historie_uzivatel","historie_datum_zmeny_od"]:
+                queryset = self.filters[name].filter(queryset, value)
             assert isinstance(
                 queryset, models.QuerySet
             ), "Expected '%s.%s' to return a QuerySet, but got a %s instead." % (
@@ -144,6 +150,9 @@ class HistorieFilter(filters.FilterSet):
 
 
 class Model3DFilter(HistorieFilter):
+    """
+    Třída pro zakladní filtrování modelu 3D a jejich potomků.
+    """
 
     ident_cely = CharFilter(lookup_expr="icontains", label="ID")
 
@@ -329,6 +338,9 @@ class Model3DFilter(HistorieFilter):
     )
 
     def filter_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
+        """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
             | Q(popis__icontains=value)
@@ -339,9 +351,15 @@ class Model3DFilter(HistorieFilter):
         )
 
     def filter_obdobi(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle období komponenty.
+        """
         return queryset.filter(casti__komponenty__komponenty__obdobi__in=value)
 
     def filter_areal(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle areálu komponenty.
+        """
         return queryset.filter(casti__komponenty__komponenty__areal__in=value)
 
     class Meta:
@@ -354,6 +372,9 @@ class Model3DFilter(HistorieFilter):
 
 
 class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Třída pro správne zobrazení filtru.
+    """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
         "translation": _(u"dokument.filter.history.divider.label")
@@ -410,6 +431,9 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
 
 
 class DokumentFilter(Model3DFilter):
+    """
+    Třída pro zakladní filtrování dokumentu a jejich potomků.
+    """
     rada = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_RADA),
         label=_("dokument.filter.rada.label"),
@@ -709,11 +733,6 @@ class DokumentFilter(Model3DFilter):
         label="&nbsp;",
         lookup_expr="lte",
     )
-    soubor_puvodni_nazev = CharFilter(
-        field_name="soubory__soubory__nazev_puvodni",
-        label=_("dokument.filter.souborPuvodniNazev.label"),
-        distinct=True,
-    )
     id_vazby = CharFilter(
         method="filter_id_vazby",
         label=_("dokument.filter.vazbyId.label"),
@@ -791,12 +810,17 @@ class DokumentFilter(Model3DFilter):
     )
 
     def filter_uzemni_prislusnost(self, queryset, name, value):
-        logger.debug("Uzemni prislusnost filtering")
-        logger.debug(value)
+        """
+        Metóda pro filtrování podle územní príslušnosti.
+        """
+        logger.debug("dokument.filters.DokumentFilter.filter_uzemni_prislusnost", extra={"value": value})
         query = reduce(operator.or_, (Q(ident_cely__contains=item) for item in value))
         return queryset.filter(query)
 
     def filter_popisne_udaje(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle popisu, poznámky, licence, čísla objektu, regiónu a události.
+        """
         return queryset.filter(
             Q(oznaceni_originalu__icontains=value)
             | Q(popis__icontains=value)
@@ -808,18 +832,27 @@ class DokumentFilter(Model3DFilter):
         )
 
     def filter_predmet_pozn_pocet(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle poznámky a počtu predmětu.
+        """
         return queryset.filter(
             Q(casti__komponenty__komponenty__predmety__poznamka__icontains=value)
             | Q(casti__komponenty__komponenty__predmety__pocet__icontains=value)
         ).distinct()
 
     def filter_objekt_pozn_pocet(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle poznámky a počtu objektu.
+        """
         return queryset.filter(
             Q(casti__komponenty__komponenty__objekty__poznamka__icontains=value)
             | Q(casti__komponenty__komponenty__objekty__pocet__icontains=value)
         ).distinct()
 
     def filter_jistota(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle jistoty.
+        """
         if "True" in value and "False" in value:
             return queryset.distinct()
         elif "True" in value:
@@ -834,6 +867,9 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def filter_neident_poznamka(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle neident akce.
+        """
         return queryset.filter(
             Q(casti__neident_akce__poznamka__icontains=value)
             | Q(casti__neident_akce__popis__icontains=value)
@@ -842,6 +878,9 @@ class DokumentFilter(Model3DFilter):
         ).distinct()
 
     def filter_let_poznamka(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle letu.
+        """
         return queryset.filter(
             Q(let__typ_letounu__icontains=value)
             | Q(let__fotoaparat__icontains=value)
@@ -850,12 +889,18 @@ class DokumentFilter(Model3DFilter):
         ).distinct()
 
     def filter_id_vazby(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle id vazby.
+        """
         return queryset.filter(
             Q(casti__archeologicky_zaznam__ident_cely__icontains=value)
             | Q(casti__projekt__ident_cely__icontains=value)
         ).distinct()
 
     def filter_exist_neident_akce(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle existence neident akce.
+        """
         if len(value) == 1:
             akce = NeidentAkce.objects.filter(dokument_cast=models.OuterRef("pk"))
             if "True" in value:
@@ -870,6 +915,9 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def filter_exist_komponenty(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle existence komponenty.
+        """
         if len(value) == 1:
             komponenty = Komponenta.objects.filter(
                 komponenta_vazby__casti_dokumentu=models.OuterRef("pk")
@@ -885,6 +933,9 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def filter_exist_nalezy(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle existence nálezu.
+        """
         if len(value) == 1:
             objekty = NalezObjekt.objects.filter(
                 komponenta__komponenta_vazby__casti_dokumentu=models.OuterRef("pk")
@@ -913,6 +964,9 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def filter_exist_tvary(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle existence tvaru.
+        """
         if len(value) == 1:
             tvar = Tvar.objects.filter(dokument=models.OuterRef("pk"))
             if "True" in value:
@@ -924,6 +978,9 @@ class DokumentFilter(Model3DFilter):
             return queryset.distinct()
 
     def filter_exist_soubory(self, queryset, name, value):
+        """
+        Metóda pro filtrování podle existence souboru.
+        """
         if len(value) == 1:
             soubor = Soubor.objects.filter(
                 vazba__dokument_souboru=models.OuterRef("pk")
@@ -942,6 +999,9 @@ class DokumentFilter(Model3DFilter):
 
 
 class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
+    """
+    Třída pro správne zobrazení filtru.
+    """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
         "translation": _(u"dokument.filter.history.divider.label")
@@ -1128,7 +1188,6 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
                 Div("soubor_velikost_do", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_od", css_class="col-sm-2"),
                 Div("soubor_pocet_stran_do", css_class="col-sm-2"),
-                Div("soubor_puvodni_nazev", css_class="col-sm-2"),
                 id="souboryCollapse",
                 css_class="collapse row",
             ),

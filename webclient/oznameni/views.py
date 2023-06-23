@@ -18,7 +18,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
 from django.views.generic import TemplateView
@@ -32,6 +32,7 @@ from core.decorators import odstavka_in_progress
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
 from services.mailer import Mailer
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,10 @@ logger = logging.getLogger(__name__)
 @odstavka_in_progress
 @require_http_methods(["GET", "POST"])
 def index(request, test_run=False):
+    """
+    Funkce pohledu pro oznámení. Oznámení je dvoustupňové.
+    V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
+    """
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
         if request.POST.get("ident_cely"):
@@ -60,7 +65,7 @@ def index(request, test_run=False):
         if (
             form_ozn.is_valid()
             and form_projekt.is_valid()
-            and (test_run or form_captcha.is_valid())
+            and (test_run or settings.SKIP_RECAPTCHA or form_captcha.is_valid())
         ):
             logger.debug("Oznameni Form is valid")
             o = form_ozn.save(commit=False)
@@ -73,10 +78,10 @@ def index(request, test_run=False):
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
             logger.debug(p)
-            p.save()
+            # p.save()
             if p.hlavni_katastr is not None:
                 p.ident_cely = get_temporary_project_ident(
-                    p, p.hlavni_katastr.okres.kraj.rada_id
+                    p.hlavni_katastr.okres.kraj.rada_id
                 )
             else:
                 logger.warning(
@@ -164,6 +169,9 @@ def index(request, test_run=False):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro editaci oznamovatele.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     oznameni = projekt.oznamovatel
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
@@ -190,6 +198,9 @@ def edit(request, ident_cely):
 @csrf_exempt
 @require_http_methods(["POST"])
 def post_poi2kat(request):
+    """
+    Funkce pohledu pro získaní katastru podle bodu pro oznámení.
+    """
     body = json.loads(request.body.decode("utf-8"))
     # logger.debug(body)
     geom = Point(float(body["corY"]), float(body["corX"]))
@@ -202,6 +213,9 @@ def post_poi2kat(request):
 
 
 class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro vytvoření oznamovetele pomocí modalu.
+    """
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):

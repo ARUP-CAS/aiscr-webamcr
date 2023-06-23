@@ -8,14 +8,18 @@ from .models import Akce
 
 
 class AkceTable(SearchTable):
-
-    ident_cely = tables.Column(linkify=True, accessor="archeologicky_zaznam.ident_cely")
+    """
+        Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
+    """
+    ident_cely = tables.Column(
+        linkify=True, accessor="archeologicky_zaznam__ident_cely"
+    )
     katastr = tables.Column(
         verbose_name=_("Katastrální území"),
         default="",
-        accessor="archeologicky_zaznam.hlavni_katastr",
+        accessor="archeologicky_zaznam__hlavni_katastr",
     )
-    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam.stav")
+    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam__stav")
     organizace = tables.columns.Column(
         default="", order_by="organizace__nazev_zkraceny"
     )
@@ -23,12 +27,12 @@ class AkceTable(SearchTable):
     uzivatelske_oznaceni = tables.Column(
         verbose_name=_("Uživatelské označení"),
         default="",
-        accessor="archeologicky_zaznam.uzivatelske_oznaceni",
+        accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
     dalsi_katastry = DalsiKatastryColumn(
         verbose_name=_("Další katastry"),
         default="",
-        accessor="archeologicky_zaznam.katastry.all",
+        accessor="archeologicky_zaznam__katastry__all",
     )
     app = "akce"
     columns_to_hide = ("uzivatelske_oznaceni", "dalsi_katastry")

@@ -727,9 +727,11 @@ var addPointToPoiLayerWithForceG = (st_text, layer, text, overview = false, pres
         c0 = 0
         //console.log(coor)
         for (const i of coor) {
-            x0 = x0 + parseFloat(i[0])
-            x1 = x1 + parseFloat(i[1])
-            c0 = c0 + 1
+            if(!(st_text.includes("POLYGON") && c0==coor.length-1)){
+                x0 = x0 + parseFloat(i[0])
+                x1 = x1 + parseFloat(i[1])
+                c0 = c0 + 1
+            }
         }
         if (st_text.includes("POLYGON") || st_text.includes("LINESTRING")) {
             mouseOverGeometry(L.marker(amcr_static_coordinate_precision_wgs84([x0 / c0, x1 / c0]), myIco2).bindTooltip(text).addTo(layer));

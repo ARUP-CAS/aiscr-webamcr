@@ -1,4 +1,4 @@
-import structlog
+
 
 from django import forms
 from django.utils.translation import gettext as _
@@ -10,10 +10,15 @@ from heslar.models import HeslarHierarchie
 
 from .models import Lokalita
 
-logger_s = structlog.get_logger(__name__)
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LokalitaForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení lokality.
+    """
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),
         help_text=_("lokalita.forms.typLokality.label"),

@@ -6,10 +6,9 @@ from pian.models import Pian
 
 
 class PianCreateForm(forms.ModelForm):
-
-    # geom = GeometryField(srid=4326, required=True, widget=HiddenInput())
-    # geom_sjtsk = GeometryField(srid=5514, required=True, widget=HiddenInput())
-
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení pianu.
+    """
     class Meta:
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")

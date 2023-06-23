@@ -13,7 +13,7 @@ from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from heslar.hesla import (
@@ -37,6 +37,9 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat_nalez(request, typ, ident_cely):
+    """
+    Funkce pohledu pro smazání nálezu předmětu nebo objektu pomocí modalu.
+    """
     if typ == "objekt":
         zaznam = get_object_or_404(NalezObjekt, id=ident_cely)
         context = {
@@ -57,19 +60,19 @@ def smazat_nalez(request, typ, ident_cely):
         resp = zaznam.delete()
         next_url = request.POST.get("next")
         if next_url:
-            if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+            if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
                 response = next_url
             else:
-                logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+                logger.warning("nalez.views.smazat_nalez.redirect_not_safe", extra={"next_url": next_url})
                 response = reverse("core:home")
         else:
             response = reverse("core:home")
         if resp:
-            logger.debug("Objekt dokumentu byl smazan: " + str(resp))
+            logger.debug("nalez.views.smazat_nalez.deleted", extra={"resp": resp})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             response = JsonResponse({"redirect": response})
         else:
-            logger.warning("Dokument nebyl smazan: " + str(ident_cely))
+            logger.debug("nalez.views.smazat_nalez.not_deleted", extra={"ident_cely": ident_cely})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             response = JsonResponse({"redirect": response}, status=403)
         response.set_cookie("show-form", f"detail_komponenta_form_{zaznam.komponenta.ident_cely}", max_age=1000)
@@ -81,6 +84,9 @@ def smazat_nalez(request, typ, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def edit_nalez(request, komp_ident_cely):
+    """
+    Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
+    """
     komponenta = get_object_or_404(Komponenta, ident_cely=komp_ident_cely)
     druh_objekt_choices = heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)
     specifikace_objekt_choices = heslar_12(
@@ -114,16 +120,16 @@ def edit_nalez(request, komp_ident_cely):
         request.POST, instance=komponenta, prefix=komponenta.ident_cely + "_p"
     )
     if formset_objekt.is_valid() and formset_predmet.is_valid():
-        logger.debug("Nalez Form is valid")
+        logger.debug("nalez.views.edit_nalez.form_valid")
         formset_predmet.save()
         formset_objekt.save()
         if formset_objekt.has_changed() or formset_predmet.has_changed():
             logger.debug("Form data was changed")
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
     else:
-        logger.warning("Form is not valid")
-        logger.debug(formset_predmet.errors)
-        logger.debug(formset_objekt.errors)
+        logger.debug("nalez.views.edit_nalez.form_not_valid",
+                     extra={"formset_predmet_errors": formset_predmet.errors,
+                            "formset_objekt_errors": formset_objekt.errors})
         messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
         request.session["_old_nalez_post"] = request.POST
         request.session["komp_ident_cely"] = komp_ident_cely

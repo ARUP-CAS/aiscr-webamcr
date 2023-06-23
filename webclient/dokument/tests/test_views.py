@@ -1,7 +1,10 @@
 import logging
 
+from django.test import TestCase
+from django.urls import reverse
+
+from arch_z.models import ArcheologickyZaznam
 from core.constants import D_STAV_ODESLANY
-from core.message_constants import DOKUMENT_NELZE_ARCHIVOVAT
 from core.tests.runner import (
     AMCR_TESTOVACI_ORGANIZACE_ID,
     ARCHEOLOGICKY_POSUDEK_ID,
@@ -9,7 +12,6 @@ from core.tests.runner import (
     DOKUMENT_CAST_IDENT,
     DOKUMENT_CAST_IDENT2,
     DOKUMENT_KOMPONENTA_IDENT,
-    EXISTIN_NEIDENT_AKCE_IDENT,
     EXISTING_EVENT_IDENT2,
     EXISTING_PROJECT_IDENT_PRUZKUMNY,
     JAZYK_DOKUMENTU_CESTINA_ID,
@@ -18,37 +20,23 @@ from core.tests.runner import (
     OBDOBI_STREDNI_PALEOLIT_ID,
     TYP_DOKUMENTU_PLAN_SONDY_ID,
     ZACHOVALOST_30_80_ID,
-    add_middleware_to_request,
     EL_CHEFE_ID,
     ARCHIV_ARUB,
     TESTOVACI_DOKUMENT_IDENT,
     DOCUMENT_NALEZOVA_ZPRAVA_IDENT,
     EXISTING_DOCUMENT_ID,
 )
-from django.contrib.messages.middleware import MessageMiddleware
-from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import RequestFactory, TestCase
 from dokument.models import Dokument, DokumentCast, Tvar
-from dokument.views import (
-    archivovat,
-    create_model_3D,
-    edit,
-    odeslat,
-    get_dokument_table_row,
-)
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
-from uzivatel.models import User
-from arch_z.models import ArcheologickyZaznam
 from projekt.models import Projekt
-from neidentakce.models import NeidentAkce
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
 
 class UrlTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
         self.existing_dokument = TESTOVACI_DOKUMENT_IDENT
         self.dokument_with_soubor = DOCUMENT_NALEZOVA_ZPRAVA_IDENT
@@ -112,14 +100,6 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
         self.assertEqual(old_casti + 1, new_casti)
 
-    def test_get_detail_komponenta(self):
-        self.client.force_login(self.existing_user)
-        response = self.client.get(
-            f"/dokument/detail/{self.existing_dokument}/komponenta/{DOKUMENT_KOMPONENTA_IDENT}"
-        )
-
-        self.assertEqual(200, response.status_code)
-
     def test_get_komponenta_zapsat(self):
         self.client.force_login(self.existing_user)
         response = self.client.get(
@@ -135,15 +115,16 @@ class UrlTests(TestCase):
             "areal": str(AREAL_HRADISTE_ID),
         }
         self.client.force_login(self.existing_user)
+        dok_cast = DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT).first()
+        komponenty_before = dok_cast.komponenty.komponenty.count()
         response = self.client.post(
             f"/komponenta/zapsat/{DOKUMENT_CAST_IDENT}?typ=cast",
             data,
             follow=True,
         )
-        dok_cast = DokumentCast.objects.filter(ident_cely=DOKUMENT_CAST_IDENT).first()
-        komponenty = len(dok_cast.komponenty.komponenty.all())
+        komponenty_after = dok_cast.komponenty.komponenty.count()
         self.assertEqual(200, response.status_code)
-        self.assertEqual(komponenty, 2)
+        self.assertEqual(komponenty_before + 1, komponenty_after)
 
     def test_post_tvary_editovat(self):
         dok = Dokument.objects.filter(ident_cely=TESTOVACI_DOKUMENT_IDENT).first()
@@ -311,61 +292,38 @@ class UrlTests(TestCase):
         self.assertEqual(200, response.status_code)
 
     def test_get_create_model3D(self):
-        request = self.factory.get("/dokument/create/model")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
-
-        response = create_model_3D(request)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("dokument:create-model-3D"))
         self.assertEqual(200, response.status_code)
 
     def test_get_edit(self):
-        request = self.factory.get("/dokument/edit/")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.user = self.existing_user
-        request.session.save()
-
-        response = edit(request, ident_cely=self.existing_dokument)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("dokument:edit", kwargs={"ident_cely": self.existing_dokument}))
         self.assertEqual(200, response.status_code)
 
     def test_get_change_states(self):
-        requestA = self.factory.get("/dokument/archivovat/")
-        requestA = add_middleware_to_request(requestA, SessionMiddleware)
-        requestA = add_middleware_to_request(requestA, MessageMiddleware)
-        requestA.user = self.existing_user
-        requestA.session.save()
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("dokument:archivovat", kwargs={"ident_cely": self.existing_dokument}))
         # Dokument je ve spatnem stavu
-        response = archivovat(requestA, ident_cely=self.existing_dokument)
         self.assertEqual(403, response.status_code)
 
-        request = self.factory.get("/dokument/odeslat/")
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.user = self.existing_user
-        request.session.save()
+        response = self.client.get(reverse("dokument:odeslat", kwargs={"ident_cely": self.dokument_with_soubor}))
         # Dokument lze odeslat
-        response = odeslat(request, ident_cely=self.dokument_with_soubor)
         self.assertEqual(200, response.status_code)
 
         data = {
             "csrfmiddlewaretoken": "OxkETGL2ZdGqjVIqmDUxCYQccG49OOmBe6OMsT3Tz0OQqZlnT2AIBkdtNyL8yOMm",
             "old_stav": 1,
         }
-        request = self.factory.post("/dokument/odeslat/", data)
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.user = self.existing_user
-        request.session.save()
+        response = self.client.post(reverse("dokument:odeslat", kwargs={"ident_cely": self.existing_dokument}), data)
         # Stav se zmeni na odeslany
-        response = odeslat(request, ident_cely=self.existing_dokument)
         self.assertEqual(200, response.status_code)
         self.assertEqual(
             Dokument.objects.get(ident_cely=self.existing_dokument).stav,
             D_STAV_ODESLANY,
         )
         # Nejde archivovat protoze neni prilozen soubor
-        response = archivovat(requestA, ident_cely=self.existing_dokument)
+        response = self.client.get(reverse("dokument:archivovat", kwargs={"ident_cely": self.existing_dokument}))
         self.assertEqual(403, response.status_code)
 
     def test_post_edit(self):
@@ -386,16 +344,12 @@ class UrlTests(TestCase):
             "ulozeni_originalu": str(ARCHIV_ARUB),
             "autori": str(EL_CHEFE_ID),
         }
-        request = self.factory.post("/dokument/edit/", data)
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request = add_middleware_to_request(request, MessageMiddleware)
-        request.session.save()
+        self.client.force_login(self.existing_user)
+        response = self.client.post(reverse("dokument:edit", kwargs={"ident_cely": self.existing_dokument}), data)
 
-        response = edit(request, self.existing_dokument)
         self.assertEqual(302, response.status_code)
         updated_dokument = Dokument.objects.get(ident_cely=self.existing_dokument)
-        logger.debug("Zachovalost: " + str(updated_dokument.extra_data.zachovalost))
+        logger.info("Zachovalost: " + str(updated_dokument.extra_data.zachovalost))
         self.assertTrue(
             updated_dokument.rok_vzniku == 2019
             and updated_dokument.extra_data.zachovalost
@@ -406,10 +360,6 @@ class UrlTests(TestCase):
         data = {
             "id": EXISTING_DOCUMENT_ID,
         }
-        request = self.factory.get("/dokument/dokument-radek-tabulky", data)
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.user = self.existing_user
-        request.session.save()
-
-        response = get_dokument_table_row(request)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("dokument:get_dokument_table_row"), data)
         self.assertContains(response, TESTOVACI_DOKUMENT_IDENT)

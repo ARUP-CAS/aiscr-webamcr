@@ -1,4 +1,4 @@
-import structlog
+
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -12,10 +12,15 @@ from .forms import NeidentAkceForm
 
 from .models import NeidentAkce
 
-logger_s = structlog.get_logger(__name__)
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třída pohledu pro editaci neident akce pomocí modalu.
+    """
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
     title = _("neidentAkce.modalForm.edit.title.text")
@@ -61,6 +66,5 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("neidentakce.views.NeidentAkceEditView.form_invalid", extra={"errors": form.errors})
         return super().form_invalid(form)

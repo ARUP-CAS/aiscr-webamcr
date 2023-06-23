@@ -7,13 +7,16 @@ from heslar.hesla import HESLAR_DJ_TYP
 from heslar.models import Heslar
 from komponenta.models import KomponentaVazby
 from pian.models import Pian
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class DokumentacniJednotka(models.Model):
-
+class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), models.Model):
+    """
+    Class pro db model dokumentační jednotky.
+    """
     typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ",
         related_name="dokumentacni_jednotka_typy",
         limit_choices_to={"nazev_heslare": HESLAR_DJ_TYP},
@@ -23,7 +26,7 @@ class DokumentacniJednotka(models.Model):
     ident_cely = models.TextField(unique=True)
     pian = models.ForeignKey(
         Pian,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pian",
         blank=True,
         null=True,
@@ -31,9 +34,10 @@ class DokumentacniJednotka(models.Model):
     )
     komponenty = models.OneToOneField(
         KomponentaVazby,
-        models.CASCADE,
+        models.SET_NULL,
         db_column="komponenty",
         related_name="dokumentacni_jednotka",
+        null=True
     )
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
@@ -47,6 +51,9 @@ class DokumentacniJednotka(models.Model):
         ordering = ["ident_cely"]
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolute url pro arch záznam pro dokumentační jednotku.
+        """
         if self.archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             return reverse("arch_z:detail-dj", args=[self.archeologicky_zaznam.ident_cely, self.ident_cely])
         else:
@@ -57,6 +64,9 @@ class DokumentacniJednotka(models.Model):
         return self.ident_cely.replace("-", "_")
 
     def has_adb(self):
+        """
+        Metóda pro ověření jestli dokumentační jednotka má ADB.
+        """
         has_adb = False
         try:
             has_adb = self.adb is not None

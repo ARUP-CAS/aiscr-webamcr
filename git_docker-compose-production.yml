@@ -19,22 +19,30 @@ services:
       - "8000"
     ports:
       - "2525:2525"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1G"
 
-  memcached:
-    image: memcached:latest
-    expose:
-      - "11211"
-    networks:
-      - git-reverse-proxy
-  sidecar:
-    image: eeacms/rsync:latest
+  db:
+    image: postgis/postgis:14-3.3
+    ports:
+      - "5432:5432"
+    secrets:
+      - local_db_pass
     environment:
-      - CRON_TASK_1=*/1 * * * * rsync -a /vol/web/locale/* /backup/
+      - POSTGRES_DB=django_migrated_db
+      - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
     volumes:
-      - $HOME/translations_backup:/backup
-      - locale_data:/vol/web/locale
-    command:  
-      - client
+      - db_dev_data:/var/lib/postgresql/data
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "1G"
 
   redis:
     build: ./redis
@@ -44,6 +52,7 @@ services:
     secrets:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
+    restart: always
     networks:
       - git-reverse-proxy
 
@@ -64,10 +73,14 @@ services:
     depends_on:
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
       web:
         condition: service_started
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "1G"
 
   celery_beat:
     build:
@@ -86,24 +99,136 @@ services:
     depends_on:
       redis:
         condition: service_started
-      db:
-        condition: service_healthy
       web:
         condition: service_started
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "1G"
+
+  grafana:
+    image: grafana/grafana-enterprise:8.2.0
+    restart: always
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    secrets:
+      - grafana_admin_password
+    ports:
+      - "3000:3000"
+    networks:
+      - git-reverse-proxy
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    networks:
+      - git-reverse-proxy
+    restart: always
+    ports:
+      - "9090:9090"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    environment:
+      - LOGSTASH_INTERNAL_PASSWORD=logstash_elastic_pass
+    volumes:
+      - logs_volume:/logs
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    networks:
+      - git-reverse-proxy
+    depends_on:
+      - elasticsearch
+    restart: always
+    secrets:
+      - logstash_elastic_pass
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    hostname: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+      - http.host=0.0.0.0
+      - xpack.security.enabled=true
+      - XPACK_MONITORING_ENABLED=false
+      - ELASTIC_PASSWORD=elastic_pass
+    volumes:
+      - elasticsearch_volume:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - git-reverse-proxy
+    secrets:
+      - elastic_pass
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    restart: always
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - git-reverse-proxy
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+
+  selenium:
+    image: selenium/standalone-chrome-debug
+    ports:
+      - 4444:4444
+      - 5900:5900
+    shm_size: '1gb'
+    networks:
+      - git-reverse-proxy
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "4G"
 
 volumes:
   static_data:
   locale_data:
   nginx_data:
+  logs_volume:
+  elasticsearch_volume:
+  grafana_data:
+  db_dev_data:
 
 networks:
   git-reverse-proxy:
     external: true
 
 secrets:
+  local_db_pass:
+    file: db_pass.txt
   db_conf:
-   file : secrets.json
+   file: secrets.json
   mail_conf:
-   file : secrets_mail_client.json
+   file: secrets_mail_client.json
   redis_pass:
-    external: true
+    file: redis_pass.txt
+  grafana_admin_password:
+    file: grafana_admin_password.txt
+  elastic_pass:
+    file: elastic_password.txt
+  logstash_elastic_pass:
+    file: logstash_elastic_password.txt

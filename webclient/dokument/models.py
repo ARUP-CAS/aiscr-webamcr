@@ -10,8 +10,11 @@ from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import CheckConstraint, Q, IntegerField
+from django.db.models.functions import Cast, Substr
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from projekt.models import Projekt
 from arch_z.models import ArcheologickyZaznam
@@ -25,7 +28,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
-from core.models import SouborVazby
+from core.models import SouborVazby, ModelWithMetadata
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -52,7 +55,10 @@ from core.utils import calculate_crc_32
 logger = logging.getLogger(__name__)
 
 
-class Dokument(models.Model):
+class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
+    """
+    Class pro db model dokument.
+    """
     STATES = (
         (D_STAV_ZAPSANY, "D1 - Zapsán"),
         (D_STAV_ODESLANY, "D2 - Odeslán"),
@@ -60,24 +66,24 @@ class Dokument(models.Model):
     )
 
     let = models.ForeignKey(
-        "Let", models.DO_NOTHING, db_column="let", blank=True, null=True
+        "Let", models.RESTRICT, db_column="let", blank=True, null=True
     )
     rada = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="rada",
         related_name="dokumenty_rady",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},
     )
     typ_dokumentu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ_dokumentu",
         related_name="dokumenty_typu_dokumentu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_TYP},
     )
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace"
+        Organizace, models.RESTRICT, db_column="organizace"
     )
     rok_vzniku = models.PositiveIntegerField(
         blank=True,
@@ -86,7 +92,7 @@ class Dokument(models.Model):
     )
     pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pristupnost",
         related_name="dokumenty_pristupnosti",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
@@ -95,7 +101,7 @@ class Dokument(models.Model):
     )
     material_originalu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="material_originalu",
         related_name="dokumenty_materialu",
         limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_MATERIAL},
@@ -104,7 +110,7 @@ class Dokument(models.Model):
     poznamka = models.TextField(blank=True, null=True)
     ulozeni_originalu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="ulozeni_originalu",
         blank=True,
         null=True,
@@ -154,7 +160,6 @@ class Dokument(models.Model):
     tvary = models.ManyToManyField(
         Heslar, through="Tvar", related_name="dokumenty_tvary"
     )
-    hlavni_autor = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = "dokument"
@@ -164,6 +169,9 @@ class Dokument(models.Model):
         return self.ident_cely
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle typu dokumentu.
+        """
         if "3D" in self.ident_cely:
             return reverse(
                 "dokument:detail-model-3D", kwargs={"ident_cely": self.ident_cely}
@@ -171,6 +179,9 @@ class Dokument(models.Model):
         return reverse("dokument:detail", kwargs={"ident_cely": self.ident_cely})
 
     def set_zapsany(self, user):
+        """
+        Metóda pro nastavení stavu zapsaný a uložení změny do historie.
+        """
         self.stav = D_STAV_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_DOK,
@@ -180,6 +191,9 @@ class Dokument(models.Model):
         self.save()
 
     def set_odeslany(self, user):
+        """
+        Metóda pro nastavení stavu odeslaný a uložení změny do historie.
+        """
         self.stav = D_STAV_ODESLANY
         Historie(
             typ_zmeny=ODESLANI_DOK,
@@ -188,7 +202,10 @@ class Dokument(models.Model):
         ).save()
         self.save()
 
-    def set_archivovany(self, user):
+    def set_archivovany(self, user, old_ident):
+        """
+        Metóda pro nastavení stavu archivovaný a uložení změny do historie.
+        """
         self.stav = D_STAV_ARCHIVOVANY
         if not self.datum_zverejneni:
             self.set_datum_zverejneni()
@@ -196,10 +213,14 @@ class Dokument(models.Model):
             typ_zmeny=ARCHIVACE_DOK,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
 
     def set_vraceny(self, user, new_state, poznamka):
+        """
+        Metóda pro vrácení o jeden stav méně a uložení změny do historie.
+        """
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_DOK,
@@ -210,6 +231,15 @@ class Dokument(models.Model):
         self.save()
 
     def check_pred_odeslanim(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: format, popis, duveryhodnost, obdobi, areal jsou vyplněna pro model 3D.
+            
+            polia: pristupnost, popis, ulozeni_originalu jsou vyplněna pro model 3D.
+            
+            Dokument má aspoň jeden dokument.
+        """
         result = []
 
         if "3D" in self.ident_cely:
@@ -240,6 +270,11 @@ class Dokument(models.Model):
         return result
 
     def check_pred_archivaci(self):
+        """
+        Metóda na kontrolu prerekvizit pred archivací:
+
+            Dokument má aspoň jeden dokument.
+        """
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
@@ -247,6 +282,9 @@ class Dokument(models.Model):
         return result
 
     def has_extra_data(self):
+        """
+        Metóda na zjištení že dokument má extra data.
+        """
         has_extra_data = False
         try:
             has_extra_data = self.extra_data is not None
@@ -255,44 +293,44 @@ class Dokument(models.Model):
         return has_extra_data
 
     def get_komponenta(self):
+        """
+        Metóda na získaní všech komponent dokumentu.
+        """
         if "3D" in self.ident_cely:
             try:
                 return self.casti.all()[0].komponenty.komponenty.all()[0]
-            except Exception as ex:
-                logger.error(ex)
+            except Exception as err:
+                logger.error("dokument.models.Dokument.get_komponenta_error", extra={"err": err})
                 raise UnexpectedDataRelations("Neleze ziskat komponentu modelu 3D.")
         else:
             return None
 
-    def set_permanent_ident_cely(self, rada):
+    def set_permanent_ident_cely(self, region, rada):
+        """
+        Metóda pro nastavení permanentního ident celý pro dokument.
+        Metóda bere pořadoví číslo z db dokument sekvence.
+        Metóda zmení i ident připojených souborů.
+        """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
-        sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
-            0
-        ]
-        perm_ident_cely = (
-            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
-        # Loop through all of the idents that have been imported
-        while True:
-            if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
-                sequence.sekvence += 1
-                logger.warning(
-                    "Ident "
-                    + perm_ident_cely
-                    + " already exists, trying next number "
-                    + str(sequence.sekvence)
-                )
-                perm_ident_cely = (
-                    rada
-                    + "-"
-                    + str(current_year)
-                    + "{0}".format(sequence.sekvence).zfill(5)
-                )
+        try:
+            sequence = DokumentSekvence.objects.get(region=region, rada=rada, rok=current_year)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            docs = Dokument.objects.filter(ident_cely__startswith=f"{region}-{rada.zkratka}-{str(current_year)}")
+            if docs.count() > 0:
+                last = docs.annotate(sekv=Cast(Substr("ident_cely", 10), IntegerField())).order_by("-sekv")[0]
+                if last.sekv >= MAXIMUM:
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=last.sekv+1)
             else:
-                break
-        if sequence.sekvence >= MAXIMUM:
-            raise MaximalIdentNumberError(MAXIMUM)
+                sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+        sequence.save()
+        perm_ident_cely = (
+            sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
+        )
         self.ident_cely = perm_ident_cely
         for file in (
             self.soubory.soubory.all()
@@ -312,25 +350,27 @@ class Dokument(models.Model):
                 file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
                 os.rename(old_path, str(new_path))
                 file.save()
-            except FileNotFoundError as e:
-                logger.error(e)
+            except FileNotFoundError as err:
+                logger.warning("dokument.models.Dokument.set_permanent_ident_cely.FileNotFoundError",
+                               extra={"err": err})
                 raise FileNotFoundError()
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
                     komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
                     komponenta.save()
-                    logger.debug(
-                        "Prejmenovany ident komponenty " + komponenta.ident_cely
-                    )
+                    logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
+                                   extra={"ident_cely": komponenta.ident_cely})
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
             dc.save()
-            logger.debug("Prejmenovany ident dokumentacni casti " + dc.ident_cely)
-        sequence.sekvence += 1
-        sequence.save()
+            logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
+                         extra={"ident_cely": dc.ident_cely})
         self.save()
 
     def set_datum_zverejneni(self):
+        """
+        metóda pro nastavení datumu zvěřejnení.
+        """
         new_date = datetime.date.today()
         new_month = new_date.month + self.organizace.mesicu_do_zverejneni
         year = new_date.year + (math.floor(new_month / 12))
@@ -342,7 +382,10 @@ class Dokument(models.Model):
         self.datum_zverejneni = datetime.date(year, month, day)
 
 
-class DokumentCast(models.Model):
+class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
+    """
+    Class pro db model dokument část.
+    """
     archeologicky_zaznam = models.ForeignKey(
         ArcheologickyZaznam,
         models.SET_NULL,
@@ -375,8 +418,17 @@ class DokumentCast(models.Model):
 
     class Meta:
         db_table = "dokument_cast"
+        constraints = [
+            CheckConstraint(
+                check=(~(Q(archeologicky_zaznam__isnull=False) & Q(projekt__isnull=False))),
+                name='dokument_cast_vazba_check',
+            ),
+        ]
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url.
+        """
         return reverse(
             "dokument:detail-cast",
             kwargs={
@@ -386,7 +438,10 @@ class DokumentCast(models.Model):
         )
 
 
-class DokumentExtraData(models.Model):
+class DokumentExtraData(ExportModelOperationsMixin("dokument_extra_data"), models.Model):
+    """
+    Class pro db model dokument extra data.
+    """
     dokument = models.OneToOneField(
         Dokument,
         on_delete=models.CASCADE,
@@ -397,7 +452,7 @@ class DokumentExtraData(models.Model):
     datum_vzniku = models.DateField(blank=True, null=True)
     zachovalost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zachovalost",
         blank=True,
         null=True,
@@ -406,7 +461,7 @@ class DokumentExtraData(models.Model):
     )
     nahrada = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="nahrada",
         blank=True,
         null=True,
@@ -417,7 +472,7 @@ class DokumentExtraData(models.Model):
     odkaz = models.TextField(blank=True, null=True)
     format = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="format",
         blank=True,
         null=True,
@@ -430,7 +485,7 @@ class DokumentExtraData(models.Model):
     cislo_objektu = models.TextField(blank=True, null=True)
     zeme = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zeme",
         blank=True,
         null=True,
@@ -441,7 +496,7 @@ class DokumentExtraData(models.Model):
     udalost = models.TextField(blank=True, null=True)
     udalost_typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="udalost_typ",
         blank=True,
         null=True,
@@ -451,30 +506,38 @@ class DokumentExtraData(models.Model):
     rok_od = models.PositiveIntegerField(blank=True, null=True)
     rok_do = models.PositiveIntegerField(blank=True, null=True)
     duveryhodnost = models.PositiveIntegerField(
-        blank=True, null=True, validators=[MinValueValidator(1), MaxValueValidator(100)]
+        blank=True, null=True, validators=[MaxValueValidator(100)]
     )
     geom = PointField(blank=True, null=True, srid=4326)
 
     class Meta:
         db_table = "dokument_extra_data"
+        constraints = [
+            CheckConstraint(
+                check=Q(duveryhodnost__gte=0) & Q(duveryhodnost__lte=100),
+                name='duveryhodnost_check',
+            ),
+        ]
 
 
-class DokumentAutor(models.Model):
+class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
+    """
+    Class pro db model dokument autori. Obsahuje pořadí.
+    """
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
-    autor = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="autor")
-    poradi = models.IntegerField(null=True)
+    autor = models.ForeignKey(Osoba, models.RESTRICT, db_column="autor")
+    poradi = models.IntegerField()
 
     class Meta:
         db_table = "dokument_autor"
-        unique_together = (("dokument", "autor"),)
+        unique_together = (("dokument", "autor"), ("dokument", "poradi"))
         ordering = (["poradi"],)
 
-    class Meta:
-        db_table = "dokument_autor"
-        unique_together = (("dokument", "poradi"),)
 
-
-class DokumentJazyk(models.Model):
+class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
+    """
+    Class pro db model dokument jazyky.
+    """
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -482,7 +545,7 @@ class DokumentJazyk(models.Model):
     )
     jazyk = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="jazyk",
         limit_choices_to={"nazev_heslare": HESLAR_JAZYK},
     )
@@ -495,16 +558,22 @@ class DokumentJazyk(models.Model):
         return "D: " + str(self.dokument) + " - J: " + str(self.jazyk)
 
 
-class DokumentOsoba(models.Model):
+class DokumentOsoba(ExportModelOperationsMixin("dokument_osoba"), models.Model):
+    """
+    Class pro db model dokument osoby.
+    """
     dokument = models.ForeignKey(Dokument, models.CASCADE, db_column="dokument")
-    osoba = models.ForeignKey(Osoba, models.DO_NOTHING, db_column="osoba")
+    osoba = models.ForeignKey(Osoba, models.RESTRICT, db_column="osoba")
 
     class Meta:
         db_table = "dokument_osoba"
         unique_together = (("dokument", "osoba"),)
 
 
-class DokumentPosudek(models.Model):
+class DokumentPosudek(ExportModelOperationsMixin("dokument_posudek"), models.Model):
+    """
+    Class pro db model dokument posudky.
+    """
     dokument = models.ForeignKey(
         Dokument,
         models.CASCADE,
@@ -512,7 +581,7 @@ class DokumentPosudek(models.Model):
     )
     posudek = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="posudek",
         limit_choices_to={"nazev_heslare": HESLAR_POSUDEK_TYP},
     )
@@ -525,11 +594,14 @@ class DokumentPosudek(models.Model):
         return "D: " + str(self.dokument) + " - P: " + str(self.posudek)
 
 
-class Tvar(models.Model):
+class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
+    """
+    Class pro db model tvary.
+    """
     dokument = models.ForeignKey(
         Dokument, on_delete=models.CASCADE, db_column="dokument"
     )
-    tvar = models.ForeignKey(Heslar, models.DO_NOTHING, db_column="tvar")
+    tvar = models.ForeignKey(Heslar, models.RESTRICT, db_column="tvar")
     poznamka = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -537,25 +609,36 @@ class Tvar(models.Model):
         unique_together = (("dokument", "tvar", "poznamka"),)
 
 
-class DokumentSekvence(models.Model):
-    rada = models.CharField(max_length=4)
+class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):
+    """
+    Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
+    """
+    rada = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},)
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
     rok = models.IntegerField()
     sekvence = models.IntegerField()
 
     class Meta:
         db_table = "dokument_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['rada', 'region','rok'], name='unique_sekvence_dokument'),
+        ]
+        
 
 
-class Let(models.Model):
+class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
+    """
+    Class pro db model let.
+    """
     uzivatelske_oznaceni = models.TextField(blank=True, null=True)
-    datum = models.DateTimeField(blank=True, null=True)
+    datum = models.DateField(blank=True, null=True)
     pilot = models.TextField(blank=True, null=True)
-    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, db_column="pozorovatel")
+    pozorovatel = models.ForeignKey(Osoba, models.RESTRICT, null=True, blank=True, db_column="pozorovatel")
     ucel_letu = models.TextField(blank=True, null=True)
     typ_letounu = models.TextField(blank=True, null=True)
     letiste_start = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="letiste_start",
         related_name="let_start",
         limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
@@ -563,7 +646,7 @@ class Let(models.Model):
     )
     letiste_cil = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="letiste_cil",
         related_name="let_cil",
         limit_choices_to={"nazev_heslare": HESLAR_LETISTE},
@@ -573,7 +656,7 @@ class Let(models.Model):
     hodina_konec = models.TextField(blank=True, null=True)
     pocasi = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pocasi",
         related_name="let_pocasi",
         limit_choices_to={"nazev_heslare": HESLAR_POCASI},
@@ -581,7 +664,7 @@ class Let(models.Model):
     )
     dohlednost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="dohlednost",
         related_name="let_dohlednost",
         limit_choices_to={"nazev_heslare": HESLAR_DOHLEDNOST},
@@ -589,7 +672,7 @@ class Let(models.Model):
     )
     fotoaparat = models.TextField(blank=True, null=True)
     organizace = models.ForeignKey(
-        Organizace, models.DO_NOTHING, db_column="organizace", null=True,
+        Organizace, models.RESTRICT, db_column="organizace", null=True,
     )
     ident_cely = models.TextField(unique=True)
 
@@ -602,9 +685,12 @@ class Let(models.Model):
 
 
 def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+    """
+    Funkce pro získaní správného jména souboru.
+    """
     my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
     files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
-    logger.debug(files)
+    logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
@@ -615,7 +701,7 @@ def get_dokument_soubor_name(dokument, filename, add_to_index=1):
                 split_file = os.path.splitext(file.nazev)
                 list_last_char.append(split_file[0][-1])
             last_char = max(list_last_char)
-            logger.debug(last_char)
+            logger.debug("dokument.models.get_dokument_soubor_name", extra={"last_char": last_char})
             if last_char != "Z" or add_to_index == 0:
                 return (
                     dokument.ident_cely.replace("-", "")
@@ -623,9 +709,8 @@ def get_dokument_soubor_name(dokument, filename, add_to_index=1):
                     + os.path.splitext(filename)[1]
                 )
             else:
-                logger.error(
-                    "Neni mozne nahrat soubor. Soubor s poslednim moznym Nazvem byl uz nahran."
-                )
+                logger.warning("dokument.models.get_dokument_soubor_name.cannot_be_loaded",
+                               extra={"last_char": last_char})
                 return False
 
         else:

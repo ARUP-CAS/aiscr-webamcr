@@ -7,6 +7,9 @@ from django_tables2_column_shifter.tables import (
 
 
 class HistorieTable(ColumnShiftTableBootstrap4):
+    """
+    Class pro definování tabulky pro zobrazení historie.
+    """
     datum_zmeny = columns.DateTimeColumn(format ='Y-m-d, H:i',default="")
     typ_zmeny = columns.Column(default="")
     poznamka = columns.Column(default="")

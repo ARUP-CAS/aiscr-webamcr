@@ -2,12 +2,12 @@ import json
 import os
 from pathlib import Path
 
-import structlog
+
 from core.message_constants import AUTOLOGOUT_AFTER_LOGOUT
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
+LOG_PATH = "/run/logs/"
 
 def get_secret(setting, default_value=None):
     file_path = (
@@ -20,14 +20,17 @@ def get_secret(setting, default_value=None):
 
     with open(file_path, "r") as f:
         secrets = json.load(f)
-    if default_value is None:
-        try:
-            return secrets[setting]
-        except KeyError:
-            error_msg = error_msg = f"Add {setting} variable to {file_path} file"
-            raise ImproperlyConfigured(error_msg)
+    if setting != "RECAPTCHA_PRIVATE_KEY":
+        if default_value is None:
+            try:
+                return secrets[setting]
+            except KeyError:
+                error_msg = error_msg = f"Add {setting} variable to {file_path} file"
+                raise ImproperlyConfigured(error_msg)
+        else:
+            secrets.get(setting, default_value)
     else:
-        secrets.get(setting, default_value)
+        return secrets.get(setting, "X")
 
 
 def get_mail_secret(setting, default_value=None):
@@ -36,7 +39,9 @@ def get_mail_secret(setting, default_value=None):
         if os.path.exists("/run/secrets/mail_conf")
         # else path will be used in case a docker secret is not used during instantiation.
         # Doesn't catch case where docker secrets points to missing file on local disk.
-        else os.path.join(BASE_DIR, "webclient/settings/sample_secrets_mail_client.json")
+        else os.path.join(
+            BASE_DIR, "webclient/settings/sample_secrets_mail_client.json"
+        )
     )
     with open(file_mail_path, "r") as file:
         secrets_mail = json.load(file)
@@ -45,32 +50,35 @@ def get_mail_secret(setting, default_value=None):
             return secrets_mail[setting]
         except KeyError:
             error_msg = f"Add {setting} variable to {file_mail_path} file"
-            raise ImproperlyConfigured(error_msg)
+            if not DEBUG:
+                raise ImproperlyConfigured(error_msg)
     else:
         secrets_mail.get(setting, default_value)
 
-#REDIS SETTINGS
+
+# REDIS SETTINGS
 def get_redis_pass(default_value=""):
     if os.path.exists("/run/secrets/redis_pass"):
         with open("/run/secrets/redis_pass", "r") as file:
-            return ":"+file.readline().rstrip()+"@"
+            return ":" + file.readline().rstrip() + "@"
     else:
         return default_value
 
-redis_url = os.getenv("REDIS_URL","redis:6379")
+
+redis_url = os.getenv("REDIS_URL", "redis:6379")
 
 SECRET_KEY = get_secret("SECRET_KEY")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "ENGINE": "django_prometheus.db.backends.postgis",
         "NAME": get_secret("DB_NAME"),
         "USER": get_secret("DB_USER"),
         "PASSWORD": get_secret("DB_PASS"),
         "HOST": get_secret("DB_HOST"),
         "PORT": get_secret("DB_PORT"),
         "ATOMIC_REQUESTS": True,
-        'DISABLE_SERVER_SIDE_CURSORS': True,
+        "DISABLE_SERVER_SIDE_CURSORS": True,
     },
 }
 
@@ -79,8 +87,6 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    "dal",
-    "dal_select2",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -89,13 +95,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.sessions.backends.signed_cookies",
-    "django_filters",
-    "django_tables2",
-    "django_tables2_column_shifter",
-    "crispy_forms",
-    "django_registration",
-    "compressor",
-    "captcha",
     "core.apps.CoreConfig",
     "uzivatel.apps.UzivatelConfig",
     "ez",
@@ -112,20 +111,34 @@ INSTALLED_APPS = [
     "pas.apps.PasConfig",
     "komponenta",
     "dj",
+    "lokalita",
+    "notifikace_projekty",
+    "dal",
+    "dal_select2",
+    "django_filters",
+    "django_tables2",
+    "django_tables2_column_shifter",
+    "crispy_forms",
+    "crispy_bootstrap4",
+    "django_registration",
+    "compressor",
+    "captcha",
     "simple_history",
     "widget_tweaks",
     "rosetta",
-    "django_cron",
-    "lokalita",
     "bs4",
     "django_extensions",
     "django_celery_beat",
-    'django_select2',
-    "notifikace_projekty",
-    "django_celery_results"
+    "django_celery_results",
+    'django_prometheus',
+    "cron",
+    'rest_framework',
+    'rest_framework.authtoken',
+    "django_object_actions"
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -134,9 +147,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "django_structlog.middlewares.RequestMiddleware",
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 CRON_CLASSES = [
@@ -209,12 +222,8 @@ TIME_ZONE = "Europe/Prague"
 USE_I18N = True
 
 USE_L10N = False
-DATE_FORMAT = "%d.%m.%Y"
-DATE_INPUT_FORMATS = [
-    "%d.%m.%Y",
-    "%d/%m/%Y",
-    "%Y-%m-%d"
-]
+DATE_FORMAT = "d.m.Y"
+DATE_INPUT_FORMATS = ["%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d"]
 
 USE_TZ = True
 
@@ -227,6 +236,7 @@ ROSETTA_UWSGI_AUTO_RELOAD = True
 
 def rosetta_translation_rights(user):
     from core.constants import ROLE_UPRAVA_TEXTU
+
     return user.groups.filter(id=ROLE_UPRAVA_TEXTU).count() > 0
 
 
@@ -239,6 +249,7 @@ MEDIA_URL = "/static/media/"
 STATIC_ROOT = "/vol/web/static"
 MEDIA_ROOT = "/vol/web/media"
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 AUTH_USER_MODEL = "uzivatel.User"
 
@@ -251,104 +262,127 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "json_formatter": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.JSONRenderer(),
-        },
         "timestamp": {
             "format": "{asctime} {levelname} {message}",
             "style": "{",
         },
     },
     "handlers": {
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.TCPLogstashHandler',
+            'host': 'logstash',
+            'port': 5959,
+            'version': 1,
+            'message_type': 'logstash',
+            'fqdn': False,
+        },
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "timestamp",
-        },
+        }
     },
     "loggers": {
         "django": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
+            "level": "INFO",
             "propagate": True,
         },
+        "django.request": {
+            "handlers": ["logstash", "console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "tests": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
         "historie": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "oznameni": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "projekt": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "heslar": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "core": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "cron": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "ez": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "pian": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "uzivatel": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "arch_z": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "dokument": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "dj": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "komponenta": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "nalez": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "adb": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "pas": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "lokalita": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "neidentakce": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "services": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
         "django_cron": {
-            "handlers": ["console"],
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "notifikace_projekty": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "xml_generator": {
+            "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
     },
@@ -366,7 +400,7 @@ EMAIL_HOST = get_mail_secret("EMAIL_HOST")
 EMAIL_PORT = get_mail_secret("EMAIL_PORT")
 EMAIL_HOST_USER = get_mail_secret("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = get_mail_secret("EMAIL_HOST_PASSWORD")
-EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME")
+EMAIL_SERVER_DOMAIN_NAME = get_mail_secret("EMAIL_SERVER_DOMAIN_NAME", "mailtrap.io")
 # DEFAULT_FROM_EMAIL = "noreply@amcr.cz"
 
 ACCOUNT_ACTIVATION_DAYS = 10
@@ -375,8 +409,8 @@ AUTHENTICATION_BACKENDS = ["core.authenticators.AMCRAuthUser"]
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
-        "LOCATION": "memcached:11211",
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://" + get_redis_pass() + redis_url,
     }
 }
 
@@ -390,23 +424,6 @@ DIGI_LINKS = {
     "ARUB_MAIL": "<a href='mailto:oznameni@arub.cas.cz'>oznameni@arub.cz</a>",
 }
 
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-    ],
-    context_class=structlog.threadlocal.wrap_dict(dict),
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
 # auto logout settings
 AUTO_LOGOUT = {
     "IDLE_TIME": 3600,
@@ -425,6 +442,24 @@ CELERY_REDIRECT_STDOUTS = False
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+SKIP_SELENIUM_TESTS = False
+
 CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+FEDORA_USER = get_secret("FEDORA_USER")
+FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD")
+FEDORA_SERVER_HOSTNAME = get_secret("FEDORA_SERVER_HOSTNAME")
+FEDORA_SERVER_NAME = get_secret("FEDORA_SERVER_NAME")
+FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER")
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+SKIP_RECAPTCHA = False

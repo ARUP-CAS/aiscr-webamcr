@@ -1,6 +1,6 @@
 import logging
 
-import structlog
+
 from arch_z.forms import CreateArchZForm
 from arch_z.models import ArcheologickyZaznam
 from arch_z.views import (
@@ -39,14 +39,19 @@ from .models import Lokalita
 from .tables import LokalitaTable
 
 logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
 
 
 class LokalitaIndexView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro zobrazení domovské stránky lokalit s navigačními možnostmi.
+    """
     template_name = "lokalita/index.html"
 
 
 class LokalitaListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s lokalitami.
+    """
     table_class = LokalitaTable
     model = Lokalita
     filterset_class = LokalitaFilter
@@ -65,18 +70,30 @@ class LokalitaListView(SearchListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related("druh", "typ_lokality", "zachovalost", "jistota")
+        qs = qs.select_related(
+            "druh",
+            "typ_lokality",
+            "zachovalost",
+            "jistota",
+            "archeologicky_zaznam__hlavni_katastr",
+            "archeologicky_zaznam__hlavni_katastr__okres",
+            "archeologicky_zaznam",
+            "archeologicky_zaznam__pristupnost",
+        ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
         return qs
 
 
 class LokalitaDetailView(LoginRequiredMixin, DetailView):
+    """
+    Třida pohledu pro zobrazení detailu lokality.
+    """
     model = Lokalita
     template_name = "lokalita/lokalita_detail.html"
     slug_field = "archeologicky_zaznam__ident_cely"
 
     def get_context_data(self, **kwargs):
-        logger_s.debug(self.slug_field)
-        logger_s.debug(self.get_object())
+        logger.debug(self.slug_field)
+        logger.debug(self.get_object())
         lokalita_obj = self.get_object()
         context = get_arch_z_context(
             self.request,
@@ -99,13 +116,16 @@ class LokalitaDetailView(LoginRequiredMixin, DetailView):
 
 
 class LokalitaCreateView(LoginRequiredMixin, CreateView):
+    """
+    Třida pohledu pro vytvoření lokality.
+    """
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        logger_s.debug("context is called")
+        logger.debug("context is called")
         required_fields = get_required_fields()
         required_fields_next = get_required_fields(next=1)
         context["form"] = LokalitaForm(
@@ -124,12 +144,12 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        logger_s.debug(CreateArchZForm(self.request.POST))
+        logger.debug(CreateArchZForm(self.request.POST))
         form_az = CreateArchZForm(self.request.POST)
         if form_az.is_valid():
-            logger_s.debug("Form to save new Lokalita and AZ OK")
+            logger.debug("Form to save new Lokalita and AZ OK")
             az = form_az.save(commit=False)
-            logger_s.debug(az)
+            logger.debug(az)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             lokalita = form.save(commit=False)
@@ -146,22 +166,25 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             messages.add_message(
                 self.request, messages.SUCCESS, LOKALITA_USPESNE_ZAPSANA
             )
-            logger_s.debug(
+            logger.debug(
                 f"arch_z.views.zapsat: {LOKALITA_USPESNE_ZAPSANA}, ID akce: {lokalita.pk}."
             )
         else:
-            logger_s.debug(form_az.errors)
+            logger.debug(form_az.errors)
             self.form_invalid(form)
         return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_VYTVORIT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("main form is invalid")
+        logger.debug(form.errors)
         return super().form_invalid(form)
 
 
 class LokalitaEditView(LoginRequiredMixin, UpdateView):
+    """
+    Třida pohledu pro editaci lokality.
+    """
     model = Lokalita
     template_name = "lokalita/create.html"
     form_class = LokalitaForm
@@ -170,7 +193,7 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         required_fields = get_required_fields()
-        logger_s.debug(required_fields[0:-1])
+        logger.debug(required_fields[0:-1])
         required_fields_next = get_required_fields(next=1)
         context["form"] = LokalitaForm(
             instance=self.object,
@@ -190,30 +213,33 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        logger_s.debug("Lokalita.EditForm is valid")
+        logger.debug("Lokalita.EditForm is valid")
         form_az = CreateArchZForm(
             self.request.POST, instance=self.object.archeologicky_zaznam
         )
         if form_az.is_valid():
-            logger_s.debug("Lokalita.EditFormAz is valid")
+            logger.debug("Lokalita.EditFormAz is valid")
             form_az.save()
             messages.add_message(
                 self.request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN
             )
         else:
-            logger_s.debug("AZ form is invalid")
-            logger_s.debug(form_az.errors)
+            logger.debug("AZ form is invalid")
+            logger.debug(form_az.errors)
             self.form_invalid(form)
         return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.add_message(self.request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
-        logger_s.debug("main form is invalid")
-        logger_s.debug(form.errors)
+        logger.debug("main form is invalid")
+        logger.debug(form.errors)
         return super().form_invalid(form)
 
 
 class LokalitaRelatedView(LokalitaDetailView):
+    """
+    Třida pohledu pro získaní relací lokality, která je dedená v dalších pohledech.
+    """
     model = Lokalita
     slug_field = "archeologicky_zaznam__ident_cely"
 
@@ -245,6 +271,9 @@ class LokalitaRelatedView(LokalitaDetailView):
 
 
 class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
+    """
+    Třida pohledu pro vytvoření dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
@@ -256,11 +285,14 @@ class LokalitaDokumentacniJednotkaCreateView(LokalitaRelatedView):
 
 
 class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
+    """
+    Třida pohledu pro získaní dokumentačních jednotek lokality, která je dedená v dalších pohledech.
+    """
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug(
+        logger.debug(
             "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            dj_ident_cely=dj_ident_cely,
+            extra={"dj_ident_cely": dj_ident_cely}
         )
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
@@ -272,6 +304,9 @@ class LokalitaDokumentacniJednotkaRelatedView(LokalitaRelatedView):
 
 
 class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro editaci dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
@@ -283,6 +318,9 @@ class LokalitaDokumentacniJednotkaUpdateView(LokalitaDokumentacniJednotkaRelated
 
 
 class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro vytvoření komponenty lokality.
+    """
     template_name = "lokalita/dj/komponenta_create.html"
 
     def get_context_data(self, **kwargs):
@@ -295,6 +333,9 @@ class LokalitaKomponentaCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro editaci komponenty lokality.
+    """
     template_name = "lokalita/dj/komponenta_detail.html"
 
     def get_komponenta(self):
@@ -315,6 +356,9 @@ class LokalitaKomponentaUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro vytvoření pianu dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/pian_create.html"
 
     def get_context_data(self, **kwargs):
@@ -324,6 +368,9 @@ class LokalitaPianCreateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
+    """
+    Třida pohledu pro editaci pianu dokumentační jednotky lokality.
+    """
     template_name = "lokalita/dj/pian_update.html"
 
     def get_pian(self):
@@ -338,6 +385,17 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
 
 def get_required_fields(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu lokality.
+
+    Args:     
+        zaznam (Lokalita): model Lokalita pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav

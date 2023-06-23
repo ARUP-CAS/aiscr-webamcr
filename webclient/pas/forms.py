@@ -1,4 +1,4 @@
-import structlog
+
 
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.forms import TwoLevelSelectField
@@ -11,22 +11,29 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.forms import ValidationError
 from django.forms import ModelChoiceField
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 from heslar.hesla import (
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
-    TYP_PROJEKTU_PRUZKUM_ID,
 )
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.views import heslar_12
 from pas.models import SamostatnyNalez
 from projekt.models import Projekt
 from uzivatel.models import User
 
-logger_s = structlog.get_logger(__name__)
+import logging
+import logstash
+
+logger = logging.getLogger(__name__)
 
 
 def validate_uzivatel_email(email):
+    """
+    Funkce pro validaci zadaného emailu uživatele.
+    """
     user = User.objects.filter(email=email)
     if not user.exists():
         raise ValidationError(
@@ -35,10 +42,9 @@ def validate_uzivatel_email(email):
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     ):
-        logger_s.debug(
+        logger.debug(
             "validate_uzivatel_email.ValidationError",
-            email=email,
-            hlavni_role_id=user[0].hlavni_role.pk,
+            extra={"email": email, "hlavni_role_id": user[0].hlavni_role.pk},
         )
         raise ValidationError(
             _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
@@ -46,11 +52,17 @@ def validate_uzivatel_email(email):
 
 
 class ProjectModelChoiceField(ModelChoiceField):
+    """
+    Třída pro správne zobrazení label.
+    """
     def label_from_instance(self, obj):
         return "%s (%s)" % (obj.ident_cely, obj.vedouci_projektu)
 
 
 class PotvrditNalezForm(forms.ModelForm):
+    """
+    Hlavní formulář pro potvrzení nálezu lokality.
+    """
     predano = forms.BooleanField(
         required=False,
         widget=forms.Select(
@@ -132,11 +144,13 @@ class PotvrditNalezForm(forms.ModelForm):
                     self.fields[key].widget.template_name = "core/select_to_text.html"
             if self.fields[key].disabled is True:
                 self.fields[key].help_text = ""
+                self.fields[key].required = False
 
 
 class CreateSamostatnyNalezForm(forms.ModelForm):
-    # latitude = forms.FloatField(required=False, widget=HiddenInput())
-    # longitude = forms.FloatField(required=False, widget=HiddenInput())
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení samostatnýho nálezu.
+    """
     katastr = forms.CharField(
         max_length=50,
         label=_("Katastrální území"),
@@ -256,7 +270,7 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             nalezce_div = Div(
                 AppendedText(
                     "nalezce",
-                    '<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                    mark_safe('<button id="create-nalezce-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                 ),
                 css_class="col-sm-4 input-osoba select2-input",
             )
@@ -308,6 +322,9 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
 
 
 class CreateZadostForm(forms.Form):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení žádosti o spoluprácu.
+    """
     email_uzivatele = forms.EmailField(
         label=_("Uživatel"),
         widget=forms.EmailInput(

@@ -1,12 +1,18 @@
 from django.contrib import admin
+from django.http import StreamingHttpResponse
 
 from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMaterialRada, HeslarOdkaz, RuianKraj, \
     RuianOkres, RuianKatastr, HeslarHierarchie
 from uzivatel.models import Osoba, Organizace
+from django_object_actions import DjangoObjectActions, action
 
 
 @admin.register(HeslarNazev)
 class HeslarNazevAdmin(admin.ModelAdmin):
+    """
+    Admin část pro prohlížení modelu heslař název.
+    Práva na změnu jsou zakázaná.
+    """
     list_display = ("nazev", "povolit_zmeny")
     fields = ("nazev", "povolit_zmeny")
     list_filter = ("povolit_zmeny",)
@@ -24,6 +30,9 @@ class HeslarNazevAdmin(admin.ModelAdmin):
 
 @admin.register(Heslar)
 class HeslarAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu heslař.
+    """
     list_display = ("ident_cely", "nazev_heslare", "heslo", "zkratka", "heslo_en", "zkratka_en", "razeni")
     fields = ("nazev_heslare", "ident_cely", "heslo",
               "popis", "zkratka", "heslo_en", "popis_en", "zkratka_en", "razeni")
@@ -56,6 +65,9 @@ class HeslarAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarDatace)
 class HeslarDataceAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu heslař datace.
+    """
     list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
@@ -64,6 +76,10 @@ class HeslarDataceAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarDokumentTypMaterialRada)
 class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
+    """
+    Admin část pro prohlížení modelu heslař dokument typ material.
+    Práva na změnu jsou zakázaná.
+    """
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
     fields = ("dokument_rada", "dokument_typ", "dokument_material")
@@ -82,6 +98,9 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarOdkaz)
 class HeslarOdkazAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu heslař odkaz.
+    """
     list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
     fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
     search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
@@ -89,6 +108,9 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
 
 @admin.register(HeslarHierarchie)
 class HeslarHierarchieAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu heslař hierarchie.
+    """
     list_display = ("heslo_podrazene", "heslo_nadrazene", "typ")
     fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
     search_fields = ("heslo_podrazene", "heslo_nadrazene", "typ")
@@ -97,6 +119,9 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
 
 @admin.register(Osoba)
 class OsobaAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu osob.
+    """
     list_display = ("jmeno", "prijmeni", "ident_cely", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely",
                     "rodne_prijmeni")
     fields = ("jmeno", "prijmeni", "ident_cely", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti",
@@ -113,6 +138,9 @@ class OsobaAdmin(admin.ModelAdmin):
 
 @admin.register(Organizace)
 class OrganizaceAdmin(admin.ModelAdmin):
+    """
+    Admin část pro správu modelu organizace.
+    """
     list_display = ("nazev_zkraceny", "typ_organizace", "ident_cely", "oao", "zanikla", "nazev", "nazev_zkraceny_en",
                     "nazev_en", "soucast", "ico", "adresa", "email", "telefon", "zverejneni_pristupnost",
                     "mesicu_do_zverejneni")
@@ -129,7 +157,18 @@ class OrganizaceAdmin(admin.ModelAdmin):
         return super().has_delete_permission(request)
 
 
-class HeslarRuianAdmin(admin.ModelAdmin):
+class HeslarRuianAdmin(DjangoObjectActions, admin.ModelAdmin):
+    @action(label="Metadata", description="Download of metadata")
+    def metadata(self, request, obj):
+        metadata = obj.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -139,9 +178,14 @@ class HeslarRuianAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
+    change_actions = ("metadata",)
+
 
 @admin.register(RuianKraj)
 class HeslarRuianKrajAdmin(HeslarRuianAdmin):
+    """
+    Admin část pro správu modelu ruian kraj.
+    """
     list_display = ("nazev", "kod", "rada_id", "nazev_en")
     fields = ("nazev", "kod", "rada_id", "definicni_bod", "nazev_en")
     search_fields = ("nazev", "kod", "rada_id", "nazev_en")
@@ -149,6 +193,9 @@ class HeslarRuianKrajAdmin(HeslarRuianAdmin):
 
 @admin.register(RuianOkres)
 class HeslarRuianOkresAdmin(HeslarRuianAdmin):
+    """
+    Admin část pro správu modelu ruian okres.
+    """
     list_display = ("nazev", "kraj", "spz", "kod", "nazev_en")
     fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
     search_fields = ("nazev", "kraj", "spz", "kod", "nazev_en")
@@ -157,9 +204,10 @@ class HeslarRuianOkresAdmin(HeslarRuianAdmin):
 
 @admin.register(RuianKatastr)
 class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
+    """
+    Admin část pro správu modelu ruian katastr.
+    """
     list_display = ("nazev", "okres", "pian_ident_cely", "kod", "nazev_stary")
     fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
     search_fields = ("okres", "aktualni", "nazev", "kod", "nazev_stary")
     list_filter = ("okres", "okres__kraj", "aktualni")
-
-

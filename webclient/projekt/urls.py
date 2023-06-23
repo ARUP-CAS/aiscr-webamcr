@@ -13,7 +13,6 @@ from .views import (
     generovat_oznameni,
     index,
     navrhnout_ke_zruseni,
-    odebrat_sloupec_z_vychozich,
     odpojit_dokument,
     post_ajax_get_projects_limit,
     prihlasit,
@@ -68,11 +67,6 @@ urlpatterns = [
         "akce-get-projekty",
         post_ajax_get_projects_limit,
         name="post_ajax_get_projects_limit",
-    ),
-    path(
-        "odebrat-sloupec-z-vychozich",
-        odebrat_sloupec_z_vychozich,
-        name="odebrat_sloupec_z_vychozich",
     ),
     path(
         "odpojit/dokument/<str:ident_cely>/<str:proj_ident_cely>",

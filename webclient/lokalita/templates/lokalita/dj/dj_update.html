@@ -64,6 +64,9 @@
             {% trans 'Smazat ADB' %}
           </button>
           {% endif %}
+          {% if j.adb_pk %}
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_pk %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
+          {% endif %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">
             {% trans 'Smazat DJ' %}

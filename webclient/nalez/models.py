@@ -8,9 +8,13 @@ from heslar.hesla import (
 )
 from heslar.models import Heslar
 from komponenta.models import Komponenta
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class NalezObjekt(models.Model):
+class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
+    """
+    Class pro db model nalez objekt.
+    """
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,
@@ -19,7 +23,7 @@ class NalezObjekt(models.Model):
     )
     druh = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="druh",
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH},
         verbose_name=_("Druh objektu"),
@@ -27,7 +31,7 @@ class NalezObjekt(models.Model):
     )
     specifikace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="specifikace",
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE},
         verbose_name=_("Specifikace objektu"),
@@ -45,7 +49,10 @@ class NalezObjekt(models.Model):
         return self.druh.heslo
 
 
-class NalezPredmet(models.Model):
+class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
+    """
+    Class pro db model nalez predmet.
+    """
     komponenta = models.ForeignKey(
         Komponenta,
         on_delete=models.CASCADE,
@@ -54,7 +61,7 @@ class NalezPredmet(models.Model):
     )
     druh = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="druh",
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
         verbose_name=_("Druh předmětu"),
@@ -62,7 +69,7 @@ class NalezPredmet(models.Model):
     )
     specifikace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="specifikace",
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
         verbose_name=_("Specifikace předmětu"),

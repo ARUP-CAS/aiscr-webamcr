@@ -71,11 +71,11 @@ insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_podan
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_archivace, 8, odpovedny_pracovnik_archivace, historie from akce where odpovedny_pracovnik_archivace is not null;
 
 -- Dokument
--- 1. dokument.odpovedny_pracovnik_vlozeni (typ_tranzakce = 2), odpovedny_pracovnik_archivace (typ_tranzakce = 3)
+-- 1. dokument.odpovedny_pracovnik_vlozeni (typ_tranzakce = 1), odpovedny_pracovnik_archivace (typ_tranzakce = 3)
 -- 2. dokument.datum_vlozeni, datum_archivace
 insert into historie_vazby(typ_vazby) select 'dokument' from dokument;
 update dokument d set historie = sub.rn from (select id, (select count(*) from akce) +row_number() OVER (order by id) as rn from dokument) sub where d.id = sub.id;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_vlozeni::int) * INTERVAL '1 second'), 2, odpovedny_pracovnik_vlozeni, historie from dokument where odpovedny_pracovnik_vlozeni is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_vlozeni::int) * INTERVAL '1 second'), 1, odpovedny_pracovnik_vlozeni, historie from dokument where odpovedny_pracovnik_vlozeni is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_archivace::int) * INTERVAL '1 second'), 3, odpovedny_pracovnik_archivace, historie from dokument where odpovedny_pracovnik_archivace is not null;
 
 -- Externi_zdroj
@@ -86,11 +86,11 @@ update externi_zdroj e set historie = sub.rn from (select id, (select count(*) f
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select datum_vlozeni, 1, odpovedny_pracovnik_vlozeni, historie from externi_zdroj where odpovedny_pracovnik_vlozeni is not null;
 
 -- Lokalita
--- 1. lokalita.odpovedny_pracovnik_zapisu (typ_tranzakce = 2), odpovedny_pracovnik_archivace (typ_tranzakce = 3)
+-- 1. lokalita.odpovedny_pracovnik_zapisu (typ_tranzakce = 1), odpovedny_pracovnik_archivace (typ_tranzakce = 3)
 -- 2. lokalita.datum_zapisu, lokalita.datum_archivace
 insert into historie_vazby(typ_vazby) select 'lokalita' from lokalita;
 update lokalita l set historie = sub.rn from (select id, (select count(*) from akce) + (select count(*) from dokument) + (select count(*) from externi_zdroj) + row_number() OVER (order by id) as rn from lokalita) sub where l.id = sub.id;
-insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_zapisu::int) * INTERVAL '1 second'), 2, odpovedny_pracovnik_zapisu, historie from lokalita where odpovedny_pracovnik_zapisu is not null;
+insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_zapisu::int) * INTERVAL '1 second'), 1, odpovedny_pracovnik_zapisu, historie from lokalita where odpovedny_pracovnik_zapisu is not null;
 insert into historie(datum_zmeny, typ_zmeny, uzivatel, vazba) select (SELECT TIMESTAMP 'epoch' + (datum_archivace::int) * INTERVAL '1 second'), 3, odpovedny_pracovnik_archivace, historie from lokalita where odpovedny_pracovnik_archivace is not null;
 
 -- Pian

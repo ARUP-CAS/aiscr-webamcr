@@ -78,7 +78,7 @@
     <div class="row mb-3">
       <div class="col-sm-4">
         <div class="card app-card-form app-card-dokumentacni-jednotka">
-          <div id="karta-dokumentacni-jednotky" class="card-header" id="dj_list_card_header">
+          <div class="card-header" id="dj_list_card_header">
             <div class="app-fx app-left">
               {% trans "Dokumentační jednotky" %}
             </div>
@@ -276,7 +276,10 @@
 //            map_show_edit(true, false)
 //            loadGeomToEdit(form_id.replace("detail_pian_form_",""))
           }
-          document.getElementById("karta-dokumentacni-jednotky").scrollIntoView();
+          try {document.getElementById("dj_list_card_header").scrollIntoView();}
+            catch (e) {
+              console.log(e);
+            }
       }
       // Na rozdil od show_form je potreba priradit akci formam ktere vytvari child element komponenty
       function show_create_child_form(url, form_id, form_to_show_next) {

@@ -22,6 +22,7 @@ services:
       - ./webclient:/code
       - ./vol/web:/vol/web
       - locale_data:/vol/web/locale
+      - logs_volume:/run/logs
     ports:
       - "8000:8000"
       - "5678:5678"
@@ -59,6 +60,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DB
+      args:
+        DB_BACKUP_FILE: backup_file_db_v4.tar
     ports:
       - "5432:5432"
     secrets:
@@ -72,26 +75,6 @@ services:
       test: ./healthcheck.sh
       retries: 30
       interval: '10s'
-
-  pgadmin:
-    image: dpage/pgadmin4
-    secrets:
-      - pg_admin_pass
-    ports:
-      - 88:80
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.net
-      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pg_admin_pass
-    volumes:
-      - pg_admin_vol:/var/lib/pgadmin/
-    depends_on:
-      db:
-        condition: service_healthy
-
-  memcached:
-    image: memcached:latest
-    ports:
-      - "11211:11211"
 
   redis:
     build: ./redis
@@ -144,7 +127,9 @@ volumes:
   locale_data:
   pg_admin_vol:
   db_dev_data:
-
+  logs_volume:
+  elasticsearch_volume:
+  grafana_data:
 
 secrets:
   pg_admin_pass:
@@ -164,3 +149,5 @@ secrets:
     file: ./secrets/redis_pass.txt
     # production environment
     # external: true
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt

@@ -58,23 +58,3 @@ CREATE TABLE IF NOT EXISTS auth_user_notification_types
             REFERENCES auth_user (id)
             ON DELETE SET NULL
 );
-
-CREATE TABLE IF NOT EXISTS "notifications_log"
-(
-    "id" bigserial NOT NULL PRIMARY KEY,
-    "object_id" integer NOT NULL CHECK ("object_id" >= 0), "created_at" date NOT NULL,
-    "notification_type_id" integer NOT NULL,
-    "content_type_id" integer NOT NULL
-    );
-
-CREATE INDEX "notifications_log_order_content_43c3a2_idx" ON "notifications_log" ("content_type_id", "object_id");
-
-ALTER TABLE "notifications_log" ADD CONSTRAINT "notifications_log_notification_type_id_2eefa8d4_fk_dump_notification_type_id" FOREIGN KEY ("notification_type_id") REFERENCES "uzivatel_notifikace_typ" ("id") DEFERRABLE INITIALLY DEFERRED;
-
-ALTER TABLE "notifications_log" ADD CONSTRAINT "notifications_log_content_type_id_0d88bca2_fk_django_content_type_id" FOREIGN KEY ("content_type_id") REFERENCES "django_content_type" ("id") DEFERRABLE INITIALLY DEFERRED;
-
-CREATE INDEX "notifications_log_notification_type_id_2eefa8d4" ON "notifications_log" ("notification_type_id");
-
-CREATE INDEX "notifications_log_content_type_id_0d88bca2" ON "notifications_log" ("content_type_id");
-
-INSERT INTO "django_content_type" (app_label, model) VALUES ('uzivatel', 'usernotificationtype');

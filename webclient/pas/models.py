@@ -1,3 +1,5 @@
+from django.db.models import CheckConstraint, Q
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -13,7 +15,7 @@ from core.constants import (
     VRACENI_SN,
     ZAPSANI_SN,
 )
-from core.models import SouborVazby
+from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.urls import reverse
@@ -24,15 +26,19 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
-    TYP_PROJEKTU_PRUZKUM_ID,
 )
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from projekt.models import Projekt
 from uzivatel.models import Organizace, Osoba, User
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class SamostatnyNalez(models.Model):
+class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithMetadata):
+    """
+    Class pro db model samostantý nález.
+    """
     PAS_STATES = [
         (SN_ZAPSANY, _("SN1 - zapsaný")),
         (SN_ODESLANY, _("SN2 - odeslaný")),  # Odeslaný
@@ -54,7 +60,7 @@ class SamostatnyNalez(models.Model):
     )
     katastr = models.ForeignKey(
         RuianKatastr,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="katastr",
         blank=True,
         null=True,
@@ -64,7 +70,7 @@ class SamostatnyNalez(models.Model):
     hloubka = models.PositiveIntegerField(blank=True, null=True)
     okolnosti = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="okolnosti",
         blank=True,
         null=True,
@@ -76,14 +82,14 @@ class SamostatnyNalez(models.Model):
     geom_system = models.TextField(default='wgs84')
     pristupnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="pristupnost",
         limit_choices_to={"nazev_heslare": HESLAR_PRISTUPNOST},
 
     )
     obdobi = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="obdobi",
         blank=True,
         null=True,
@@ -93,7 +99,7 @@ class SamostatnyNalez(models.Model):
     presna_datace = models.TextField(blank=True, null=True)
     druh_nalezu = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="druh_nalezu",
         blank=True,
         null=True,
@@ -102,7 +108,7 @@ class SamostatnyNalez(models.Model):
     )
     specifikace = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="specifikace",
         blank=True,
         null=True,
@@ -111,14 +117,14 @@ class SamostatnyNalez(models.Model):
     )
     poznamka = models.TextField(blank=True, null=True)
     nalezce = models.ForeignKey(
-        Osoba, models.DO_NOTHING, db_column="nalezce", blank=True, null=True
+        Osoba, models.RESTRICT, db_column="nalezce", blank=True, null=True
     )
     datum_nalezu = models.DateField(blank=True, null=True)
     stav = models.SmallIntegerField(choices=PAS_STATES)
     predano = models.BooleanField(blank=True, null=True, default=False, choices=PREDANO_BOOLEAN)
     predano_organizace = models.ForeignKey(
         Organizace,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="predano_organizace",
         blank=True,
         null=True,
@@ -141,10 +147,13 @@ class SamostatnyNalez(models.Model):
         null=True,
         related_name="sn_historie",
     )
-    geom_updated_at = models.DateField(null=True, blank=True)
-    geom_sjtsk_updated_at = models.DateField(null=True, blank=True)
+    geom_updated_at = models.DateTimeField(null=True, blank=True)
+    geom_sjtsk_updated_at = models.DateTimeField(null=True, blank=True)
 
     def set_zapsany(self, user):
+        """
+        Metóda pro nastavení stavu zapsaný a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_ZAPSANY
         Historie(
             typ_zmeny=ZAPSANI_SN,
@@ -154,6 +163,9 @@ class SamostatnyNalez(models.Model):
         self.save()
 
     def set_vracen(self, user, new_state, poznamka):
+        """
+        Metóda pro vrácení o jeden stav méně a uložení změny do historie pro samostatný nález.
+        """
         self.stav = new_state
         Historie(
             typ_zmeny=VRACENI_SN,
@@ -164,6 +176,9 @@ class SamostatnyNalez(models.Model):
         self.save()
 
     def set_odeslany(self, user):
+        """
+        Metóda pro nastavení stavu odeslaný a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_ODESLANY
         Historie(
             typ_zmeny=ODESLANI_SN,
@@ -173,6 +188,9 @@ class SamostatnyNalez(models.Model):
         self.save()
 
     def set_potvrzeny(self, user):
+        """
+        Metóda pro nastavení stavu potvrzený a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_POTVRZENY
         Historie(
             typ_zmeny=POTVRZENI_SN,
@@ -182,6 +200,9 @@ class SamostatnyNalez(models.Model):
         self.save()
 
     def set_archivovany(self, user):
+        """
+        Metóda pro nastavení stavu archivovaný a uložení změny do historie pro samostatný nález.
+        """
         self.stav = SN_ARCHIVOVANY
         Historie(
             typ_zmeny=ARCHIVACE_SN,
@@ -191,9 +212,19 @@ class SamostatnyNalez(models.Model):
         self.save()
 
     def get_absolute_url(self):
+        """
+        Metóda pro získaní absolut url záznamu podle identu.
+        """
         return reverse("pas:detail", kwargs={"ident_cely": self.ident_cely})
 
     def check_pred_odeslanim(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu odeslaný:
+
+            polia: obdobi, datum_nalezu, lokalizace, okolnosti, specifikace, druh_nalezu, nalezce, geom, hloubka, katastr jsou vyplněna.
+            
+            Samostaný nález má připojený alespoň jeden soubor.
+        """
         resp = []
         if not self.obdobi:
             resp.append(_("Nález před odesláním musí mít vyplneno období."))
@@ -221,6 +252,14 @@ class SamostatnyNalez(models.Model):
 
     class Meta:
         db_table = "samostatny_nalez"
+        constraints = [
+            CheckConstraint(
+                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
+                name='samostatny_nalez_geom_check',
+            ),
+        ]
 
     def __str__(self):
         if self.ident_cely:
@@ -229,7 +268,10 @@ class SamostatnyNalez(models.Model):
             return "Samostatny nalez [ident_cely not yet assigned]"
 
 
-class UzivatelSpoluprace(models.Model):
+class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
+    """
+    Class pro db model spolupráce.
+    """
     SPOLUPRACE_STATES = [
         (SPOLUPRACE_NEAKTIVNI, _("neaktivní")),
         (SPOLUPRACE_AKTIVNI, _("aktivní")),
@@ -237,20 +279,20 @@ class UzivatelSpoluprace(models.Model):
 
     spolupracovnik = models.ForeignKey(
         User,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="spolupracovnik",
         related_name="spoluprace_badatelu",
     )
     vedouci = models.ForeignKey(
         User,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="vedouci",
         related_name="spoluprace_archeologu",
     )
     stav = models.SmallIntegerField(choices=SPOLUPRACE_STATES)
     historie = models.OneToOneField(
         HistorieVazby,
-        models.DO_NOTHING,
+        models.SET_NULL,
         db_column="historie",
         blank=True,
         null=True,
@@ -258,6 +300,9 @@ class UzivatelSpoluprace(models.Model):
     )
 
     def set_aktivni(self, user):
+        """
+        Metóda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.
+        """
         self.stav = SPOLUPRACE_AKTIVNI
         Historie(
             typ_zmeny=SPOLUPRACE_AKTIVACE,
@@ -267,6 +312,9 @@ class UzivatelSpoluprace(models.Model):
         self.save()
 
     def set_neaktivni(self, user):
+        """
+        Metóda pro nastavení stavu neaktivní a uložení změny do historie pro spolupráci.
+        """
         self.stav = SPOLUPRACE_NEAKTIVNI
         Historie(
             typ_zmeny=SPOLUPRACE_DEAKTIVACE,
@@ -276,12 +324,20 @@ class UzivatelSpoluprace(models.Model):
         self.save()
 
     def check_pred_aktivaci(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu aktivní.
+        Kontrola že stav není aktivný.
+        """
         result = []
         if self.stav == SPOLUPRACE_AKTIVNI:
             result.append(_("Spolupráce již je aktivní."))
         return result
 
     def check_pred_deaktivaci(self):
+        """
+        Metóda na kontrolu prerekvizit pred posunem do stavu neaktivní.
+        Kontrola že stav není neaktivný.
+        """
         result = []
         if self.stav == SPOLUPRACE_NEAKTIVNI:
             result.append(_("Spolupráce již je neaktivní."))

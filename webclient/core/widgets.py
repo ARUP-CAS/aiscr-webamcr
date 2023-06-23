@@ -2,6 +2,10 @@ from django import forms
 
 
 class ForeignKeyReadOnlyTextInput(forms.TextInput):
+    """
+    Widget pro textinput pro vazbu cizí klíč.
+    """
+
     def __init__(self, value=None, attrs=None):
         if attrs is None:
             attrs = {}

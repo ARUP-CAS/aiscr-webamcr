@@ -78,6 +78,7 @@
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="projekt-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat projekt" %}</button>
           <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.id %}">{% trans "projekt.detail.toolbar.MetadataDownload" %}</a>
           {% if projekt.expert_list_can_be_created and user.is_archiver_or_more %}
             <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "Expertní list" %}</a>
           {% endif %}

@@ -10,7 +10,6 @@ secrets_backup.json
 
 # Pycharm project files
 .idea/
-*.ini
 
 # VsCode project files
 .vscode/
@@ -93,3 +92,12 @@ secrets
 Dockerfile-DB-MAC
 docker-compose-mac-dev-local-db.yml
 pg_hba.conf
+docker-compose-debug-vscode.yml
+
+# kibana config
+kibana/kibana.yml
+
+# logstash config
+logstash/logstash.conf
+/scripts/test_preparaton.sh
+/redis_pass.txt

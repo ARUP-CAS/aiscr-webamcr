@@ -70,12 +70,13 @@ urlpatterns = [
     path("ext-zdroj/", include("ez.urls")),
     path("neident-akce/", include("neidentakce.urls")),
     path("notifikace_projekty/",  include("notifikace_projekty.urls")),
-    path("select2/", include("django_select2.urls"))
+    path('', include('django_prometheus.urls')),
 ]
+urlpatterns+=[re_path(r'^healthcheck/', include("healthcheck.urls"))]
+
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]
 
-# if settings.DEBUG:
-#     import debug_toolbar
-#
-#     urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]

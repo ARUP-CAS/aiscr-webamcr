@@ -46,10 +46,13 @@ from core.constants import (
 from django.db import models
 from django.utils.translation import gettext as _
 from uzivatel.models import User
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class Historie(models.Model):
-
+class Historie(ExportModelOperationsMixin("historie"), models.Model):
+    """
+    Class pro db model historie.
+    """
     CHOICES = (
         # Project related choices
         (OZNAMENI_PROJ, "Oznámení projektu"),
@@ -98,9 +101,9 @@ class Historie(models.Model):
     )
 
     datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))
-    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"))
+    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"),db_index=True)
     uzivatel = models.ForeignKey(
-        User, on_delete=models.DO_NOTHING, db_column="uzivatel", verbose_name=_("Uživatel")
+        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("Uživatel")
     )
     poznamka = models.TextField(blank=True, null=True, verbose_name=_("Poznámka"))
     vazba = models.ForeignKey(
@@ -112,8 +115,11 @@ class Historie(models.Model):
         verbose_name = "historie"
 
 
-class HistorieVazby(models.Model):
-
+class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
+    """
+    Class pro db model historie vazby.
+    Model se používa k napojení na jednotlivé záznamy.
+    """
     CHOICES = (
         (PROJEKT_RELATION_TYPE, "Projekt"),
         (DOKUMENT_RELATION_TYPE, "Dokument"),
@@ -125,7 +131,7 @@ class HistorieVazby(models.Model):
         (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, "Archeologický záznam"),
     )
 
-    typ_vazby = models.TextField(max_length=24, choices=CHOICES)
+    typ_vazby = models.TextField(max_length=24, choices=CHOICES,db_index=True)
 
     class Meta:
         db_table = "historie_vazby"
@@ -135,6 +141,9 @@ class HistorieVazby(models.Model):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type):
+        """
+        Metóda pro zjištení datumu posledné transakce daného typu.
+        """
         resp = {}
         if isinstance(transaction_type, list):
             tranzakce_list = (

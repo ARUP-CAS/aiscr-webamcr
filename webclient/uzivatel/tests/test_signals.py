@@ -1,6 +1,6 @@
 from core.tests.runner import TYP_ORGANIZACE_MUZEUM_ID
 from django.test import TestCase
-from heslar.hesla import PRISTUPNOST_ANONYM_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID
 from heslar.models import Heslar
 from uzivatel.models import Organizace, User
 

@@ -1,7 +1,6 @@
 import logging
-
 import simplejson as json
-import structlog
+
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
 from arch_z.filters import AkceFilter
@@ -37,7 +36,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
-from core.ident_cely import get_project_event_ident
+from core.ident_cely import get_project_event_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_AKCII_DOSAZENO,
     PRISTUP_ZAKAZAN,
@@ -70,7 +69,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.http import is_safe_url
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django.views import View
 from django.views.decorators.http import require_http_methods
@@ -80,8 +79,6 @@ from dokument.views import get_komponenta_form_detail, odpojit, pripojit
 from heslar.hesla import (
     HESLAR_AREAL,
     HESLAR_AREAL_KAT,
-    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
-    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
     HESLAR_OBDOBI,
     HESLAR_OBDOBI_KAT,
     HESLAR_OBJEKT_DRUH,
@@ -91,6 +88,10 @@ from heslar.hesla import (
     HESLAR_PREDMET_DRUH,
     HESLAR_PREDMET_DRUH_KAT,
     HESLAR_PREDMET_SPECIFIKACE,
+)
+from heslar.hesla_dynamicka import (
+    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+    HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
     SPECIFIKACE_DATA_PRESNE,
     TYP_DJ_KATASTR,
     TYP_DJ_SONDA_ID,
@@ -112,62 +113,40 @@ from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
 
+
 logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
-
-
-@login_required
-@require_http_methods(["GET"])
-def detail(request, ident_cely):
-    zaznam = get_object_or_404(
-        ArcheologickyZaznam.objects.select_related("hlavni_katastr")
-        .select_related("akce")
-        .select_related("akce__vedlejsi_typ")
-        .select_related("akce__hlavni_typ")
-        .select_related("pristupnost"),
-        ident_cely=ident_cely,
-    )
-    context = get_arch_z_context(request, ident_cely, zaznam, app="akce")
-    ostatni_vedouci_objekt_formset = inlineformset_factory(
-        Akce,
-        AkceVedouci,
-        form=create_akce_vedouci_objekt_form(readonly=True),
-        extra=0,
-        can_delete=False,
-    )
-    ostatni_vedouci_objekt_formset = ostatni_vedouci_objekt_formset(
-        instance=zaznam.akce,
-        prefix="",
-    )
-    akce_zaznam_ostatni_vedouci = []
-    for vedouci in AkceVedouci.objects.filter(akce=zaznam.akce).order_by("id"):
-        vedouci: AkceVedouci
-        akce_zaznam_ostatni_vedouci.append(
-            [str(vedouci.vedouci), str(vedouci.organizace)]
-        )
-    context["ostatni_vedouci_objekt_formset"] = ostatni_vedouci_objekt_formset
-    context["ostatni_vedouci_objekt_formset_helper"] = AkceVedouciFormSetHelper()
-    context["ostatni_vedouci_objekt_formset_readonly"] = True
-    context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
-
-    return render(request, "arch_z/arch_z_detail.html", context)
 
 
 def get_obdobi_choices():
+    """
+    Funkce která vrací dvou stupňový heslař pro období.
+    """
     return heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)
 
 
 def get_areal_choices():
+    """
+    Funkce která vrací dvou stupňový heslař pro areál.
+    """
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
 
 
 class AkceRelatedRecordUpdateView(TemplateView):
+    """
+    Třida, která se dedí a která obsahuje metódy pro získaní relací akce.
+    """
     def get_shows(self):
+        """
+        Metóda pro získaní informací které části stránky mají být zobrazeny.
+        """
         return get_detail_template_shows(
             self.get_archeologicky_zaznam(), self.get_jednotky(), self.request.user
         )
 
     def get_archeologicky_zaznam(self):
+        """
+        Metóda pro získaní akce z db.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(
             ArcheologickyZaznam.objects.select_related("hlavni_katastr")
@@ -179,6 +158,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_jednotky(self):
+        """
+        Metóda pro získaní dokumentační jednotky navázané na akci.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return (
             DokumentacniJednotka.objects.filter(
@@ -197,6 +179,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_dokumenty(self):
+        """
+        Metóda pro získaní dokumentů navázaných na akci.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return (
             Dokument.objects.filter(casti__archeologicky_zaznam__ident_cely=ident_cely)
@@ -206,6 +191,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_externi_odkazy(self):
+        """
+        Metóda pro získaní externích odkazů navázaných na akci.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return (
             ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
@@ -214,6 +202,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
 
     def get_vedouci(self, context):
+        """
+        Metóda pro získaní dalších vedoucích navázaných na akci.
+        """
         ostatni_vedouci_objekt_formset = inlineformset_factory(
             Akce,
             AkceVedouci,
@@ -239,6 +230,9 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["akce_zaznam_ostatni_vedouci"] = akce_zaznam_ostatni_vedouci
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní contextu akci pro template.
+        """
         context = super().get_context_data(**kwargs)
         zaznam = self.get_archeologicky_zaznam()
         context["zaznam"] = zaznam
@@ -267,13 +261,22 @@ class AkceRelatedRecordUpdateView(TemplateView):
 
 
 class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateView):
+    """
+    Třída pohledu pro zobrazení detailu akce.
+    """
     template_name = "arch_z/dj/arch_z_detail.html"
 
     def get_archeologicky_zaznam(self):
+        """
+        Metóda pro získani záznamu akce z db podle ident_cely.
+        """
         ident_cely = self.kwargs.get("ident_cely")
         return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde.
+        """
         context = super().get_context_data(**kwargs)
         context["warnings"] = self.request.session.pop("temp_data", None)
         context["arch_projekt_link"] = (
@@ -283,30 +286,42 @@ class ArcheologickyZaznamDetailView(LoginRequiredMixin, AkceRelatedRecordUpdateV
 
 
 class DokumentacniJednotkaRelatedUpdateView(AkceRelatedRecordUpdateView):
+    """
+    Třida, která se dedí a která obsahuje metódy pro získaní relací DJ.
+    """
     template_name = "arch_z/dj/dj_update.html"
 
     def get_dokumentacni_jednotka(self):
+        """
+        Metóda pro získani záznamu DJ z db podle ident_cely.
+        """
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug(
-            "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            dj_ident_cely=dj_ident_cely,
-        )
+        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"dj_ident_cely": dj_ident_cely})
         objects = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return objects
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat DJ navíc oproti přepisované metóde, záznam DJ.
+        """
         context = super().get_context_data(**kwargs)
         context["active_dj_ident"] = self.get_dokumentacni_jednotka().ident_cely
         return context
 
 
 class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdateView):
+    """
+    Třída pohledu pro vytvoření dokumentační jednotky.
+    """
     template_name = "arch_z/dj/dj_create.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření DJ.
+        """
         context = super().get_context_data(**kwargs)
         typ_akce = None
-        logger.debug("self")
+        logger.debug("arch_z.views.DokumentacniJednotkaCreateView.get_context_data")
         try:
             self.get_archeologicky_zaznam()
             if (
@@ -327,9 +342,15 @@ class DokumentacniJednotkaCreateView(LoginRequiredMixin, AkceRelatedRecordUpdate
 class DokumentacniJednotkaUpdateView(
     LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView
 ):
+    """
+    Třída pohledu pro zobrazení detailu dokumentační jednotky s možností její úpravy.
+    """
     template_name = "arch_z/dj/dj_update.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat DJ navíc oproti přepisované metóde, pro zobrazení správneho detailu.
+        """
         context = super().get_context_data(**kwargs)
         old_adb_post = self.request.session.pop("_old_adb_post", None)
 
@@ -344,44 +365,54 @@ class DokumentacniJednotkaUpdateView(
 
 
 class KomponentaCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
+    """
+    Třida pohledu pro vytvoření komponenty dokumentační jednotky.
+    """
     template_name = "arch_z/dj/komponenta_create.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář na vytvoření komponenty.
+        """
         context = super().get_context_data(**kwargs)
-        jednotka: DokumentacniJednotka = self.get_dokumentacni_jednotka()
         context["komponenta_form_create"] = CreateKomponentaForm(
             get_obdobi_choices(), get_areal_choices()
         )
-        # check po MR
         context["j"] = self.get_dokumentacni_jednotka()
         return context
 
 
 class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
+    """
+    Třida pohledu pro editaci komponenty dokumentační jednotky.
+    """
     template_name = "arch_z/dj/komponenta_detail.html"
 
     def get_komponenta(self):
+        """
+        Metóda pro získani záznamu komponenty z db podle ident_cely.
+        """
         dj_ident_cely = self.kwargs["komponenta_ident_cely"]
         object = get_object_or_404(Komponenta, ident_cely=dj_ident_cely)
         return object
 
     def get_dokumentacni_jednotka(self):
         dj_ident_cely = self.kwargs["dj_ident_cely"]
-        logger_s.debug(
-            "arch_z.views.DokumentacniJednotkaUpdateView.get_object",
-            dj_ident_cely=dj_ident_cely,
-        )
+        logger.debug("arch_z.views.DokumentacniJednotkaUpdateView.get_object", extra={"dj_ident_cely": dj_ident_cely})
         object = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
         return object
-
+        
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro úpravu komponenty,
+        případne data poslaného chybného formuláře.
+        """
         context = super().get_context_data(**kwargs)
         komponenta = self.get_komponenta()
         old_nalez_post = self.request.session.pop("_old_nalez_post", None)
         komp_ident_cely = self.request.session.pop("komp_ident_cely", None)
         show = self.get_shows()
 
-        # check po MR
         context["k"] = get_komponenta_form_detail(
             komponenta, show, old_nalez_post, komp_ident_cely
         )
@@ -391,9 +422,15 @@ class KomponentaUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdate
 
 
 class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
+    """
+    Třida pohledu pro vytvoření PIANu dokumentační jednotky.
+    """
     template_name = "arch_z/dj/pian_create.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření PIANu.
+        """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
         context["pian_form_create"] = PianCreateForm()
@@ -401,9 +438,15 @@ class PianCreateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
 
 class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
+    """
+    Třida pohledu pro editaci PIANu dokumentační jednotky.
+    """
     template_name = "arch_z/dj/pian_update.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro editaci PIANu.
+        """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
         context["pian_form_update"] = PianCreateForm()
@@ -411,9 +454,15 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
 
 
 class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
+    """
+    Třida pohledu pro vytvoření PIANu dokumentační jednotky.
+    """
     template_name = "arch_z/dj/adb_create.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní context dat navíc oproti přepisované metóde, formulář pro vytvoření ADB.
+        """
         context = super().get_context_data(**kwargs)
         context["j"] = self.get_dokumentacni_jednotka()
         context["adb_form_create"] = CreateADBForm()
@@ -423,6 +472,11 @@ class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení a spracováni editace akce.
+    Na začátku se kontroluje jestli stav není archivovaný.
+    Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
+    """
     zaznam = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if zaznam.stav == AZ_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -455,7 +509,7 @@ def edit(request, ident_cely):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("ArchZ.Form is valid:1")
+            logger.debug("arch_z.views.edit.form_valid")
             form_az.save()
             form_akce.save()
             ostatni_vedouci_objekt_formset.save()
@@ -463,9 +517,8 @@ def edit(request, ident_cely):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("arch_z:detail", ident_cely=ident_cely)
         else:
-            logger.warning("Form is not valid")
-            logger.debug(form_az.errors)
-            logger.debug(form_akce.errors)
+            logger.warning("arch_z.views.edit.form_az_valid", extra={"form_az_errors": form_az.errors,
+                                                                     "form_akce_errors": form_akce.errors})
     else:
         form_az = CreateArchZForm(instance=zaznam)
         form_akce = CreateAkceForm(
@@ -508,7 +561,12 @@ def edit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odeslat(request, ident_cely):
-    logger.debug("arch_z.views.odeslat start")
+    """
+    Funkce pohledu pro zobrazení a spracováni odeslání akce.
+    Na začátku se kontroluje jestli stav není jiný než zapsaný nebo nekdo nezmenil stav akce počas odesílaní.
+    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metódy na modelu.
+    Po post volání se volá metóda na modelu pro posun stavu do odeslaná.
+    """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ZAPSANY:
         logger.debug("arch_z.views.odeslat permission denied")
@@ -517,9 +575,8 @@ def odeslat(request, ident_cely):
             {"redirect": az.get_absolute_url()},
             status=403,
         )
-    # Momentalne zbytecne, kdyz tak to padne hore
     if check_stav_changed(request, az):
-        logger.debug("arch_z.views.odeslat redirec to arch_z:detail")
+        logger.debug("arch_z.views.odeslat.redirec_to_arch_z:detail")
         return JsonResponse(
             {"redirect": az.get_absolute_url()},
             status=403,
@@ -530,23 +587,19 @@ def odeslat(request, ident_cely):
         messages.add_message(
             request, messages.SUCCESS, get_message(az, "USPESNE_ODESLANA")
         )
-        logger.debug(
-            "arch_z.views.odeslat akce uspesne odeslana "
-            + get_message(az, "USPESNE_ODESLANA")
-        )
+        logger.debug("arch_z.views.odeslat.akce_uspesne_odeslana",
+                     extra={"info": get_message(az, "USPESNE_ODESLANA")})
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_odeslanim()
-        logger.debug(
-            "arch_z.views.odeslat warnings " + ident_cely + " " + str(warnings)
-        )
+        logger.debug("arch_z.views.odeslat.warnings", extra={"ident_cely": ident_cely, "warnings": str(warnings)})
 
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(
                 request, messages.ERROR, get_message(az, "NELZE_ODESLAT")
             )
-            logger.debug("arch_z.views.odeslat akci nelze odeslat AKCE_NELZE_ODESLAT")
+            logger.debug("arch_z.views.odeslat_akci_nelze_odeslat")
             return JsonResponse(
                 {"redirect": az.get_absolute_url()},
                 status=403,
@@ -565,6 +618,12 @@ def odeslat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení a spracováni archivace akce.
+    Na začátku se kontroluje jestli stav není jiný než odeslaný nebo nekdo nezmenil stav akce počas archivace.
+    Při get volání se kontrolují vyplnená pole akce a její relaci pomoci metódy na modelu.
+    Po post volání se volá metóda na modelu pro posun stavu do odeslaná.
+    """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -579,10 +638,7 @@ def archivovat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        # TODO BR-A-5
         az.set_archivovany(request.user)
-        if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA and az.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
-            az.set_lokalita_permanent_ident_cely()
         az.save()
         if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             all_akce = Akce.objects.filter(projekt=az.akce.projekt).exclude(
@@ -597,7 +653,7 @@ def archivovat(request, ident_cely):
         return JsonResponse({"redirect": az.get_absolute_url()})
     else:
         warnings = az.check_pred_archivaci()
-        logger.debug(warnings)
+        logger.debug("arch_z.views.archivovat", extra={"warnings": warnings})
         if warnings:
             request.session["temp_data"] = warnings
             messages.add_message(
@@ -621,6 +677,13 @@ def archivovat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení a spracováni vrácení stacu akce o jedno naspátek.
+    Na začátku se kontroluje jestli nekdo nezmenil stav akce počas vrácení.
+    Pro vrácení se používa formulář pro vrácení, který je jednotný napríč aplikací.
+    Po post volání se volá metóda na modelu pro posun stavu naspátek.
+    Pokud se jedná o projektovou akci, tak se vrací i stav projektu ze stavu uzavřený nebo archivovaný.
+    """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if az.stav != AZ_STAV_ODESLANY and az.stav != AZ_STAV_ARCHIVOVANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -644,18 +707,13 @@ def vratit(request, ident_cely):
             if az.stav == AZ_STAV_ODESLANY and projekt is not None:
                 #  Return also project from the states P6 or P5 to P4
                 projekt_stav = projekt.stav
+                logger.debug("arch_z.views.vratit.valid", extra={"ident": ident_cely, "stav": projekt.stav})
                 if projekt_stav == PROJEKT_STAV_UZAVRENY:
-                    logger.debug(
-                        "Automaticky vracím projekt do stavu " + str(projekt_stav - 1)
-                    )
                     projekt.set_vracen(
                         request.user, projekt_stav - 1, "Automatické vrácení projektu"
                     )
                     projekt.save()
                 if projekt_stav == PROJEKT_STAV_ARCHIVOVANY:
-                    logger.debug(
-                        "Automaticky vracím projekt do stavu " + str(projekt_stav - 2)
-                    )
                     projekt.set_vracen(
                         request.user, projekt_stav - 1, "Automatické vrácení projektu"
                     )
@@ -674,8 +732,7 @@ def vratit(request, ident_cely):
             )
             return JsonResponse({"redirect": az.get_absolute_url()})
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("arch_z.views.vratit.not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": az.stav})
     context = {
@@ -691,13 +748,17 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zapsat(request, projekt_ident_cely=None):
+    """
+    Funkce pohledu pro vytvoření akce.
+    Na začátku se kontroluje jestli jde o vytvoření projektové nebo samostatné akce a případne či je možné vytvořit projektovou akci.
+    Zobrazení pozostáva ze 3 formulářů: CreateArchZForm, CreateAkceForm, formset na další vedoucí.
+    """
     if projekt_ident_cely:
         projekt = get_object_or_404(Projekt, ident_cely=projekt_ident_cely)
         # Projektove akce lze pridavat pouze pokud je projekt jiz prihlasen
         if not PROJEKT_STAV_ZAPSANY < projekt.stav < PROJEKT_STAV_ARCHIVOVANY:
             logger.debug(
-                "arch_z.views.zapsat: "
-                f"Status of project {projekt_ident_cely} is {projekt.stav} and action cannot be added."
+                "arch_z.views.zapsat.stav_error", extra={"projekt_ident_cely": projekt_ident_cely, "stav": projekt.stav}
             )
             raise PermissionDenied(
                 "Nelze pridat akci k projektu ve stavu " + str(projekt.stav)
@@ -705,8 +766,8 @@ def zapsat(request, projekt_ident_cely=None):
         # Projektove akce nelze vytvorit pro projekt typu pruzkum
         if projekt.typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
             logger.debug(
-                "arch_z.views.zapsat: "
-                f"Type of project {projekt_ident_cely} is {projekt.typ_projektu} and action cannot be added."
+                "arch_z.views.zapsat.typ_projektu_error", extra={"projekt_ident_cely": projekt_ident_cely,
+                                                                 "stav": projekt.stav}
             )
             raise PermissionDenied(
                 f"Nelze pridat akci k projektu typu {projekt.typ_projektu}"
@@ -754,7 +815,7 @@ def zapsat(request, projekt_ident_cely=None):
             and form_akce.is_valid()
             and ostatni_vedouci_objekt_formset.is_valid()
         ):
-            logger.debug("ArchZ.Form is valid:2")
+            logger.debug("arch_z.views.zapsat.form_valid", extra={"projekt_ident_cely": projekt_ident_cely})
             az = form_az.save(commit=False)
             az.stav = AZ_STAV_ZAPSANY
             az.typ_zaznamu = ArcheologickyZaznam.TYP_ZAZNAMU_AKCE
@@ -764,8 +825,8 @@ def zapsat(request, projekt_ident_cely=None):
                     typ_akce = Akce.TYP_AKCE_PROJEKTOVA
                 else:
                     az.save()
-                    az.ident_cely = get_akce_ident(
-                        az.hlavni_katastr.okres.kraj.rada_id, True, az.id
+                    az.ident_cely = get_temp_akce_ident(
+                        az.hlavni_katastr.okres.kraj.rada_id
                     )
                     typ_akce = Akce.TYP_AKCE_SAMOSTATNA
             except MaximalEventCount:
@@ -801,22 +862,18 @@ def zapsat(request, projekt_ident_cely=None):
                 if ostatni_vedouci_objekt_formset.is_valid():
                     ostatni_vedouci_objekt_formset.save()
                 else:
-                    logger.warning("arch_z.views.zapsat: " "Form is not valid")
-                    logger.debug(ostatni_vedouci_objekt_formset.errors)
+                    logger.debug("arch_z.views.zapsat.form_not_valid",
+                                 extra={"errors": ostatni_vedouci_objekt_formset.errors})
 
                 messages.add_message(
                     request, messages.SUCCESS, get_message(az, "USPESNE_ZAPSANA")
                 )
-                logger.debug(
-                    f"arch_z.views.zapsat: AKCE_USPESNE_ZAPSANA, ID akce: {akce.pk}, "
-                    f"projekt: {projekt_ident_cely}"
-                )
+                logger.debug("arch_z.views.zapsat.success", extra={"akce": akce.pk, "projekt": projekt_ident_cely})
                 return redirect("arch_z:detail", az.ident_cely)
 
         else:
-            logger.warning("arch_z.views.zapsat: " "Form is not valid")
-            logger.debug(form_az.errors)
-            logger.debug(form_akce.errors)
+            logger.debug("arch_z.views.zapsat.not_valid", extra={"form_az_errors": form_az,
+                                                                 "form_akce_errors": form_akce.errors})
 
     else:
         ostatni_vedouci_objekt_formset = inlineformset_factory(
@@ -858,6 +915,11 @@ def zapsat(request, projekt_ident_cely=None):
 @login_required
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení a spracováni smazání akce.
+    Na začátku se kontroluje jestli nekdo nezmenil stav akce počas smazání.
+    Po post volání se volá metóda na modelu pro smazání akce, historických vazeb, komponent, externích odkazů a DJ.
+    """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
         return JsonResponse(
@@ -881,8 +943,7 @@ def smazat(request, ident_cely):
         historie_vazby.delete()
         for komponenta_vazba in komponenty_jednotek_vazby:
             komponenta_vazba.delete()
-
-        logger.debug("Byl smazán archeologicky zaznam: " + str(ident_cely))
+        logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
 
         if projekt:
@@ -910,12 +971,20 @@ def smazat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def pripojit_dokument(request, arch_z_ident_cely, proj_ident_cely=None):
+    """
+    Funkce pohledu pro připojení dokumentu do akce.
+    Funkce volá další funkci pro připojení s parametrem třídou modelu navíc.
+    """
     return pripojit(request, arch_z_ident_cely, proj_ident_cely, ArcheologickyZaznam)
 
 
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
+    """
+    Funkce pohledu pro odpojení dokumentu do akce.
+    Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
+    """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
     if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         return odpojit(request, ident_cely, arch_z_ident_cely, az)
@@ -926,11 +995,13 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_pians(request):
+    """
+    Vypada nepouzito check s J. Bartos
+    """
     body = json.loads(request.body.decode("utf-8"))
     pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
     for pian in pians:
-        # logger.debug('%s %s %s',projekt.ident_cely,projekt.lat,projekt.lng)
         back.append(
             {
                 "id": pian.id,
@@ -948,6 +1019,9 @@ def post_ajax_get_pians(request):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_pians_limit(request):
+    """
+    Funkce pohledu pro získaní pianu pro zobrazení heat mapy.
+    """
     body = json.loads(request.body.decode("utf-8"))
     num = get_num_pians_from_envelope(
         body["southEast"]["lng"],
@@ -956,8 +1030,7 @@ def post_ajax_get_pians_limit(request):
         body["southEast"]["lat"],
     )
     clusters = num >= 500
-    logger.debug("pocet geometrii")
-    logger.debug(num)
+    logger.debug("arch_z.views.post_ajax_get_pians_limit.pocet_geometrii", extra={"num": num})
     if num < 5000:
         pians = get_pians_from_envelope(
             body["southEast"]["lng"],
@@ -968,7 +1041,6 @@ def post_ajax_get_pians_limit(request):
         )
         back = []
         for pian in pians:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             back.append(
                 {
                     "id": pian.id,
@@ -1003,7 +1075,7 @@ def post_ajax_get_pians_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        logger.debug("density %s", density)
+        logger.debug("arch_z.views.post_ajax_get_pians_limit.density", extra={"density": density})
 
         heats = get_heatmap_pian(
             body["southEast"]["lng"],
@@ -1015,7 +1087,6 @@ def post_ajax_get_pians_limit(request):
         back = []
         cid = 0
         for heat in heats:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             cid += 1
             back.append(
                 {
@@ -1033,8 +1104,11 @@ def post_ajax_get_pians_limit(request):
 
 @require_http_methods(["POST"])
 def post_akce2kat(request):
+    """
+    Funkce pohledu pro získaní souradnic katastru akce.
+    """
     body = json.loads(request.body.decode("utf-8"))
-    logger.debug(body)
+    logger.debug("arch_z.views.post_akce2kat.start", extra={"body": body})
     katastr_name = body["cadastre"]
     pian_ident_cely = body["pian"]
 
@@ -1057,6 +1131,15 @@ def post_akce2kat(request):
 
 
 def get_history_dates(historie_vazby):
+    """
+    Funkce pro získaní dátumů pro historii.
+
+    Args:     
+        historie_vazby (HistorieVazby): model historieVazby dané akce.
+    
+    Returns:
+        historie: dictionary dátumů k historii.
+    """
     historie = {
         "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
         "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
@@ -1065,8 +1148,22 @@ def get_history_dates(historie_vazby):
     return historie
 
 
-# Fix  function call user je povinnny
 def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akce"):
+    """
+    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
+
+    Args:     
+        archeologicky_zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se dané akce počítají.
+
+        dok_jednotky (DokumentacniJednotka): model DokumentacniJednotka pro který se dané akce počítají.
+
+        user (AuthUser): uživatel pro kterého se dané akce počítají.
+
+        app (string): druh archeologického záznamu ro který se dané akce počítají.
+    
+    Returns:
+        historie: dictionary možností pro zobrazení.
+    """
     show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
     show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
     show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce"
@@ -1110,6 +1207,17 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
 
 
 def get_required_fields(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu arch záznamů.
+
+    Args:     
+        zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav
@@ -1132,14 +1240,17 @@ def get_required_fields(zaznam=None, next=0):
 @login_required
 @require_http_methods(["GET"])
 def smazat_akce_vedoucí(request, akce_vedouci_id):
+    """
+    Funkce pohledu pro smazání dalšího vedoucího akce.
+    """
     zaznam = AkceVedouci.objects.get(id=akce_vedouci_id)
     zaznam.delete()
     next_url = request.GET.get("next")
     if next_url:
-        if is_safe_url(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
+        if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
             response = next_url
         else:
-            logger.warning("Redirect to URL " + str(next_url) + " is not safe!!")
+            logger.debug("arch_z.views.smazat_akce_vedoucí.redirect", extra={"next_url": next_url})
             response = reverse("core:home")
     messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
     response = redirect(next_url)
@@ -1149,6 +1260,9 @@ def smazat_akce_vedoucí(request, akce_vedouci_id):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_akce_other_katastr(request):
+    """
+    Funkce pohledu pro získaní souradnic dalších katastrů akce.
+    """
     body = json.loads(request.body.decode("utf-8"))
     dis = get_all_pians_with_akce(body["akce_ident_cely"])
     back = []
@@ -1169,6 +1283,19 @@ def post_ajax_get_akce_other_katastr(request):
 
 
 def get_arch_z_context(request, ident_cely, zaznam, app):
+    """
+    Funkce pro získaní dictionary contextu archeologického záznamu.
+
+    Args:     
+        ident_cely (string): string ident celý záznamu.
+        
+        zaznam (ArcheologickyZaznam): model ArcheologickyZaznam pro který se daný context počítá.
+
+        app (string): druh archeologického záznamu ro který se daný context počítá.
+
+    Returns:
+        context: dictionary kontextu pro správné zobrazení stránky.
+    """
     context = {"warnings": request.session.pop("temp_data", None)}
     if app == "akce":
         context["arch_projekt_link"] = request.session.pop("arch_projekt_link", None)
@@ -1287,7 +1414,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             "show_pripojit_pian": True if jednotka.pian is None else False,
         }
         if has_adb:
-            logger.debug(jednotka.ident_cely)
+            logger.debug("arch_z.views.get_arch_z_context.adb", extra={"jednotka_ident_cely": jednotka.ident_cely})
             dj_form_detail["adb_form"] = (
                 CreateADBForm(
                     old_adb_post,
@@ -1303,6 +1430,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
                 )
             )
             dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely
+            dj_form_detail["adb_pk"] = jednotka.adb.pk
             dj_form_detail["vyskovy_bod_formset"] = vyskovy_bod_formset(
                 instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
             )
@@ -1387,10 +1515,16 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
 
 
 class AkceIndexView(LoginRequiredMixin, TemplateView):
+    """
+    Třida pohledu pro zobrazení domovské stránky akcií s navigačními možnostmi.
+    """
     template_name = "arch_z/index.html"
 
 
 class AkceListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s akcemi.
+    """
     table_class = AkceTable
     model = Akce
     filterset_class = AkceFilter
@@ -1407,11 +1541,30 @@ class AkceListView(SearchListView):
     default_header = _("akce.vyber.header.default")
     toolbar_name = _("akce.template.toolbar.title")
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = (
+            qs.all()
+            .select_related(
+                "archeologicky_zaznam__hlavni_katastr",
+                "archeologicky_zaznam__hlavni_katastr__okres",
+                "organizace",
+                "hlavni_vedouci",  
+            ).prefetch_related("archeologicky_zaznam__katastry","archeologicky_zaznam__katastry__okres")
+        )
+        return qs
+
 
 class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
+    """
+    Třida pohledu pro zmenu projektové akce na samostatnou.
+    """
     template_name = "core/transakce_modal.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
@@ -1424,6 +1577,9 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """
+        Metóda pro vrácení stránky pri voláni GET.
+        """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
@@ -1433,6 +1589,13 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Metóda po potvrzení zmeny akce na samostatnou.
+        Pri zavolíní se kontroluje, že akce nebyla změnena v mezičase potvrzení.
+        Po úspešné kontrole se odebere projekt, nastaví typ akce na samostatnú a nastaví nový ident celý.
+        Celá událost je zapsaná do historie.
+        Uživatel je presmerován na detail akce.
+        """
         context = self.get_context_data(**kwargs)
         az = context["object"]
         if check_stav_changed(request, az):
@@ -1449,7 +1612,7 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             az.set_akce_ident(get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id))
         else:
             az.set_akce_ident(
-                get_akce_ident(az.hlavni_katastr.okres.kraj.rada_id, True, az.id)
+                get_temp_akce_ident(az.hlavni_katastr.okres.kraj.rada_id)
             )
         az.save()
         Historie(
@@ -1458,19 +1621,22 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
             poznamka=f"{old_ident} -> {az.ident_cely}",
             vazba=az.historie,
         ).save()
-
-        logger.debug(
-            "Byl zmenenena projektova akce na samostatnou: " + str(az.ident_cely)
-        )
+        logger.debug("arch_z.views.ProjektAkceChange.post", extra={"az_ident_cely": str(az.ident_cely)})
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
 
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
 class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
+    """
+    Třida pohledu pro zmenu samostatní akce na projektovou.
+    """
     template_name = "core/transakce_table_modal.html"
 
     def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
         az = self.get_archeologicky_zaznam()
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
@@ -1483,6 +1649,9 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        """
+        Metóda pro vrácení stránky pri voláni GET s formulářem pro výber projektu.
+        """
         context = self.get_context_data(**kwargs)
         if check_stav_changed(request, context["object"]):
             return JsonResponse(
@@ -1495,6 +1664,13 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
+        """
+        Metóda po potvrzení zmeny akce na projektovou.
+        Pri zavolíní se kontroluje, že akce nebyla změnena v mezičase potvrzení.
+        Po úspešné kontrole se napojí projekt, nastaví typ akce na projektovou a nastaví nový ident celý.
+        Celá událost je zapsaná do historie.
+        Uživatel je presmerován na detail akce.
+        """
         context = self.get_context_data(**kwargs)
         az = context["object"]
         if check_stav_changed(request, context["object"]):
@@ -1517,20 +1693,20 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
                 poznamka=f"{old_ident} -> {az.ident_cely}",
                 vazba=az.historie,
             ).save()
-
-            logger.debug(
-                "Byl zmenenena samostatna akce na projektovou: " + str(az.ident_cely)
-            )
+            logger.debug("arch_z.views.SamostatnaAkceChange.post.valid", extra={"az_ident_cely": str(az.ident_cely)})
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
         else:
-            logger.debug(form.errors)
-            logger.debug(form.non_field_errors())
+            logger.debug("arch_z.views.SamostatnaAkceChange.post.not_valid", extra={"errors": form.errors, 
+                                                                                    "form_non_field_errors": form.non_field_errors})
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_EDITOVAT)
 
         return redirect(az.get_absolute_url())
 
 
 class ArchZAutocomplete(autocomplete.Select2QuerySetView):
+    """
+    Třida pohledu pro vrácení výsledku pro autocomplete arch záznamů.
+    """
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return ArcheologickyZaznam.objects.none()
@@ -1549,6 +1725,9 @@ class ArchZAutocomplete(autocomplete.Select2QuerySetView):
 
 
 class ArchZTableRowView(LoginRequiredMixin, View):
+    """
+    Třida pohledu pro vrácení řádku tabulky s arch záznamem.
+    """
     def get(self, request):
         zaznam = ArcheologickyZaznam.objects.get(id=request.GET.get("id", ""))
         context = {"arch_z": zaznam}
@@ -1562,6 +1741,23 @@ class ArchZTableRowView(LoginRequiredMixin, View):
 
 
 def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None):
+    """
+    Funkce pro získaní dictionary contextu dokumentační jednotky.
+
+    Args:     
+        app (string): druh archeologického záznamu ro který se daný context počítá.
+        
+        jednotka (DokumentacniJednotka): model DokumentacniJednotka pro který se daný context počítá.
+
+        jednotky (DokumentacniJednotka): list modelů DokumentacniJednotka použit pro správne zobrazení možnosti zmeny typu DJ.
+
+        show (dictionary): dictionary pro zobrazení možnosti uživatele na stránce.
+
+        old_adb_post (CreateADBForm): staré volání CreateADBForm pro správne zobrazení chyb formuláře.
+
+    Returns:
+        dj_form_detail: dictionary kontextu DJ pro správné zobrazení stránky.
+    """
     vyskovy_bod_formset = inlineformset_factory(
         Adb,
         VyskovyBod,
@@ -1613,7 +1809,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         "show_change_katastr": True if jednotka.typ.id == TYP_DJ_KATASTR else False,
     }
     if has_adb and app != "lokalita":
-        logger.debug(jednotka.ident_cely)
+        logger.debug("arch_z.views.get_dj_form_detail", extra={"jednotka_ident_cely": jednotka.ident_cely})
         dj_form_detail["adb_form"] = CreateADBForm(
             old_adb_post,
             instance=jednotka.adb,
@@ -1625,5 +1821,6 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
             instance=jednotka.adb, prefix=jednotka.adb.ident_cely + "_vb"
         )
         dj_form_detail["vyskovy_bod_formset_helper"] = VyskovyBodFormSetHelper()
+        dj_form_detail["adb_pk"] = jednotka.adb.pk
         dj_form_detail["show_remove_adb"] = True if show["editovat"] else False
     return dj_form_detail
