@@ -133,7 +133,8 @@ INSTALLED_APPS = [
     'django_prometheus',
     "cron",
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    "django_object_actions"
 ]
 
 MIDDLEWARE = [
@@ -377,6 +378,10 @@ LOGGING = {
             "level": "DEBUG",
         },
         "notifikace_projekty": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
+        "xml_generator": {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },

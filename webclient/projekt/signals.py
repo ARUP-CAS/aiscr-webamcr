@@ -60,10 +60,11 @@ def create_projekt_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Projekt)
 def projekt_post_save(sender, instance: Projekt, **kwargs):
-    instance.save_metadata()
     """
         Metóda pro odeslání emailu hlídacího psa pri založení projektu.
     """
+    instance.save_metadata()
+
     if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
             and instance.stav != instance.__original_stav:
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",

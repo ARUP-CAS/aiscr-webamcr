@@ -468,6 +468,12 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
             "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
         )
 
+    def save_metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        self.projekt.save_metadata()
+        connector = FedoraRepositoryConnector(self)
+        return connector.save_metadata(True)
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """

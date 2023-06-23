@@ -124,7 +124,7 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector._check_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
-        if result.status_code == 404:
+        if result.status_code == 404 or "not found" in result.text:
             self._create_container()
             self._create_link()
         logger.debug("core_repository_connector._check_container.end", extra={"ident_cely": self.record.ident_cely})
@@ -146,7 +146,7 @@ class FedoraRepositoryConnector:
         self._check_container()
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTAINER)
-        if result.status_code == 404:
+        if result.status_code == 404 or "not found" in result.text:
             self._create_binary_file_container()
         logger.debug("core_repository_connector._check_binary_file_container.end",
                      extra={"ident_cely": self.record.ident_cely})
@@ -171,19 +171,24 @@ class FedoraRepositoryConnector:
     def save_metadata(self, update=True):
         logger.debug("core_repository_connector.save_metadata.start", extra={"ident_cely": self.record.ident_cely})
         self._check_container()
-        url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
-        document, hash512 = self._generate_metadata()
-        headers = {
-            'Content-Type': 'application/xml',
-            'Content-Disposition': 'attachment; filename="metadata.xml"',
-            'Digest': f'sha-512={hash512}',
-            'Slug': self.record.ident_cely
-        }
+        url = self._get_request_url(FedoraRequestType.GET_METADATA)
         result = self._send_request(url, FedoraRequestType.GET_METADATA)
-        if result.status_code == 404:
+
+        def generate_metadata():
+            document_func, hash512 = self._generate_metadata()
+            headers_func = {
+                "Content-Type": "application/xml",
+                "Content-Disposition": 'attachment; filename="metadata.xml"',
+                "Digest": f"sha-512={hash512}"
+            }
+            return document_func, headers_func
+        if result.status_code == 404 or "not found" in result.text:
+            document, headers = generate_metadata()
+            headers["slug"] = "metadata"
             url = self._get_request_url(FedoraRequestType.CREATE_METADATA)
             self._send_request(url, FedoraRequestType.CREATE_METADATA, headers=headers, data=document)
         elif update is True:
+            document, headers = generate_metadata()
             url = self._get_request_url(FedoraRequestType.UPDATE_METADATA)
             self._send_request(url, FedoraRequestType.UPDATE_METADATA, headers=headers, data=document)
         logger.debug("core_repository_connector.save_metadata.end", extra={"ident_cely": self.record.ident_cely})

@@ -1,8 +1,10 @@
 from django.contrib import admin
+from django.http import StreamingHttpResponse
 
 from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMaterialRada, HeslarOdkaz, RuianKraj, \
     RuianOkres, RuianKatastr, HeslarHierarchie
 from uzivatel.models import Osoba, Organizace
+from django_object_actions import DjangoObjectActions, action
 
 
 @admin.register(HeslarNazev)
@@ -155,7 +157,18 @@ class OrganizaceAdmin(admin.ModelAdmin):
         return super().has_delete_permission(request)
 
 
-class HeslarRuianAdmin(admin.ModelAdmin):
+class HeslarRuianAdmin(DjangoObjectActions, admin.ModelAdmin):
+    @action(label="Metadata", description="Download of metadata")
+    def metadata(self, request, obj):
+        metadata = obj.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -164,6 +177,8 @@ class HeslarRuianAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    change_actions = ("metadata",)
 
 
 @admin.register(RuianKraj)
@@ -196,5 +211,3 @@ class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
     fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
     search_fields = ("okres", "aktualni", "nazev", "kod", "nazev_stary")
     list_filter = ("okres", "okres__kraj", "aktualni")
-
-

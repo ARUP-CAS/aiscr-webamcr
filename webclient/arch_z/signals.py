@@ -1,8 +1,8 @@
 import logging
 
-from arch_z.models import ArcheologickyZaznam
+from arch_z.models import ArcheologickyZaznam, Akce
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 
@@ -21,3 +21,10 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         hv = HistorieVazby(typ_vazby=ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE)
         hv.save()
         instance.historie = hv
+
+@receiver(post_save, sender=Akce)
+def create_arch_z_vazby(sender, instance, **kwargs):
+    """
+        Metóda pro aktualizaci metadat.
+    """
+    instance.save_metadata()

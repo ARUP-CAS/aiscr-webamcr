@@ -222,7 +222,7 @@ class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadat
 
     @property
     def ident_cely(self):
-        return self.kod
+        return f"ruian-{self.kod}"
 
 
 class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
@@ -251,7 +251,7 @@ class RuianKraj(ExportModelOperationsMixin("ruian_kraj"), ModelWithMetadata):
 
     @property
     def ident_cely(self):
-        return self.kod
+        return f"ruian-{self.kod}"
 
 
 class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
@@ -277,4 +277,4 @@ class RuianOkres(ExportModelOperationsMixin("ruian_okres"), ModelWithMetadata):
 
     @property
     def ident_cely(self):
-        return self.kod
+        return f"ruian-{self.kod}"
