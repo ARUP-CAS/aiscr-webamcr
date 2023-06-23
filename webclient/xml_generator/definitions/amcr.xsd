@@ -162,7 +162,7 @@
       <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
-      <xs:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:ez-ext_odkazType"/> <!-- "{ExterniOdkaz}" -->
+      <xs:element name="ext_odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:ez-ext_odkazType"/> <!-- "{externi_odkazy_zdroje}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="pianType">
@@ -360,7 +360,7 @@
    	  <xs:element name="rozsah" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rozsah}" -->
    	  <xs:element name="size_mb" minOccurs="1" maxOccurs="1" type="xs:decimal"/> <!-- "{size_mb}" -->
       <xs:element name="sha_512" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{sha_512}" -->
-   	  <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- historie.Historie -->
+   	  <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- historie.historie_set -->
    	</xs:sequence>     
   </xs:complexType>
   <xs:complexType name="az-chranene_udajeType">

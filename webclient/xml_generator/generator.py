@@ -90,11 +90,12 @@ class DocumentGenerator:
 
     @staticmethod
     def _get_prefix(comment_text: str) -> str:
-        if ":" not in comment_text:
+        if "-" not in comment_text:
             return ""
-        comment_text_split = comment_text.split("|")
-        comment_text = comment_text_split[0]
-        attribute_prefix = comment_text[:comment_text.find(":") + 1]
+        if "|" in comment_text:
+            comment_text_split = comment_text.split("|")
+            comment_text = comment_text_split[0]
+        attribute_prefix = comment_text[:comment_text.find("-") + 1]
         attribute_prefix = attribute_prefix.replace("\"", "").replace("{", "").replace("}", "").strip()
         return attribute_prefix
 
@@ -103,7 +104,7 @@ class DocumentGenerator:
         attribute_list = comment_text.split("|")
         attribute_list = [text.replace("\"", "").replace("{", "").replace("}", "").strip().lower()
                           for text in attribute_list]
-        attribute_list = [text[text.find(":") + 1:] if ":" in text else text for text in attribute_list]
+        attribute_list = [text[text.find("-") + 1:] if "-" in text else text for text in attribute_list]
         if len(attribute_list) == 2:
             return attribute_list
         elif len(attribute_list) == 1:
@@ -229,8 +230,8 @@ class DocumentGenerator:
 
     @staticmethod
     def _create_many_to_many_ref_elements(schema_element, parent_element, related_records, id_field_name=None,
-                                          prefix=""):
-        for record in related_records:
+                                          prefix="", related_records_ids=None):
+        for i, record in enumerate(related_records):
             new_sub_element = ET.SubElement(parent_element,
                                             f"{{{AMCR_NAMESPACE_URL}}}" + schema_element.attrib["name"])
             if record.__class__.__name__ == "_Element":
@@ -240,8 +241,9 @@ class DocumentGenerator:
                     new_sub_element.text = str(record).lower()
                 else:
                     new_sub_element.text = str(record)
-            if id_field_name is not None:
-                new_sub_element.attrib[f"{prefix}id"] = str(record)
+            if id_field_name is not None and related_records_ids is not None \
+                    and len(related_records_ids) > i and related_records_ids[i] is not None:
+                new_sub_element.attrib["id"] = f"{prefix}{related_records_ids[i]}"
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
         if schema_element.__class__.__name__ == "_Element":
@@ -253,7 +255,8 @@ class DocumentGenerator:
                 if schema_element.attrib["maxOccurs"] == "1":
                     if field_name is not None:
                         if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
-                                                             "xs:dateTime", "amcr:gmlType", "amcr:wktType"):
+                                                             "xs:dateTime", "amcr:gmlType", "amcr:wktType",
+                                                             "xs:boolean"):
                             self._create_element(schema_element, parent_element, field_name, id_field_name,
                                                  id_field_prefix=prefix)
                         else:
@@ -274,9 +277,11 @@ class DocumentGenerator:
                                                                        id_field_name if id_field_name else None,
                                                                        prefix)
                     else:
-                        print("Unknown field", "next_element.text")
+                        logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element."
+                                     "unkown_element", extra={"next_element_text": next_element.text})
             else:
-                print("Element without comment", schema_element.attrib["name"])
+                logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element.without_comment",
+                             extra={"schema_element_attrib": schema_element.attrib})
 
     def _iterate_unbound_records(self, related_records, schema_element, parent_element):
         child_schema_element = self._parse_schema(schema_element.attrib["type"])
@@ -300,8 +305,21 @@ class DocumentGenerator:
                     else:
                         related_records = self._get_attribute_of_record_unbounded(document_object, field_name,
                                                                                   child_schema_element)
+                        if id_field_name is not None:
+                            related_records_ids = self._get_attribute_of_record_unbounded(document_object,
+                                                                                          id_field_name,
+                                                                                          child_schema_element)
+                        else:
+                            related_records_ids = None
                         if related_records is not None and len(related_records) > 0:
-                            self._iterate_unbound_records(related_records, child_schema_element, child_parent_element)
+                            if child_schema_element.attrib["type"] != "amcr:refType":
+                                self._iterate_unbound_records(related_records, child_schema_element,
+                                                              child_parent_element)
+                            else:
+                                self._create_many_to_many_ref_elements(child_schema_element, child_parent_element,
+                                                                       related_records,
+                                                                       id_field_name if id_field_name else None,
+                                                                       prefix, related_records_ids)
 
     def generate_document(self):
         ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
@@ -317,8 +335,8 @@ class DocumentGenerator:
                     ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}")
                 for child_schema_element in children[0][0]:
                     self._parse_scheme_create_element(child_schema_element, inner_document_element)
-        return minidom.parseString(ET.tostring(self.document_root, encoding='utf-8', method='xml')).toprettyxml()\
-            .encode("utf-8")
+        return minidom.parseString(ET.tostring(self.document_root, encoding='utf-8', xml_declaration=True))\
+            .toprettyxml(encoding="utf-8")
 
     def __init__(self, document_object):
         from projekt.models import Projekt

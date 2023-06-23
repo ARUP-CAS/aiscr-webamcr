@@ -5,8 +5,9 @@ from typing import Union
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import StreamingHttpResponse
+from django_object_actions import DjangoObjectActions, action
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
 from historie.models import Historie
@@ -53,6 +54,7 @@ class UserNotificationTypeInline(admin.TabularInline):
     def __init__(self, parent_model, admin_site):
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
+
 class PesNotificationTypeInline(admin.TabularInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele.
@@ -68,6 +70,7 @@ class PesNotificationTypeInline(admin.TabularInline):
         )
         return queryset
 
+
 class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro kraj.
@@ -77,6 +80,7 @@ class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     verbose_name = _("admin.uzivatel.form.notifikace.kraj")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.kraje")
 
+
 class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro okres.
@@ -85,7 +89,8 @@ class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     form = create_pes_form(model_typ=model_type)
     verbose_name = _("admin.uzivatel.form.notifikace.okres")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.okresy")
-    
+
+
 class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro katastr.
@@ -95,7 +100,8 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     verbose_name = _("admin.uzivatel.form.notifikace.katastr")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.katastry")
 
-class CustomUserAdmin(UserAdmin):
+
+class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """
     Admin panel pro správu uživatele.
     """
@@ -147,6 +153,18 @@ class CustomUserAdmin(UserAdmin):
     "email", "organizace__nazev_zkraceny", "ident_cely", "first_name", "last_name",
     "telefon")
     ordering = ("email",)
+    change_actions = ("metadata",)
+
+    @action(label="Metadata", description="Download of metadata")
+    def metadata(self, request, obj):
+        metadata = obj.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
 
     def has_delete_permission(self, request, obj=None):
         if obj:

@@ -161,3 +161,16 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
             resp["datum"] = tranzakce_list[0].datum_zmeny
             resp["uzivatel"] = tranzakce_list[0].uzivatel
         return resp
+
+    @property
+    def navazany_objekt(self):
+        return {
+            PROJEKT_RELATION_TYPE: self.projekt_historie,
+            DOKUMENT_RELATION_TYPE: self.dokument_historie,
+            SAMOSTATNY_NALEZ_RELATION_TYPE: self.sn_historie,
+            UZIVATEL_RELATION_TYPE: self.uzivatelhistorievazba,
+            PIAN_RELATION_TYPE: self.pian_historie,
+            UZIVATEL_SPOLUPRACE_RELATION_TYPE: self.spoluprace_historie,
+            EXTERNI_ZDROJ_RELATION_TYPE: self.externizdroj,
+            ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: self.archeologickyzaznam,
+        }.get(self.typ_vazby, None)

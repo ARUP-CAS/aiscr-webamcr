@@ -1,6 +1,7 @@
 import hashlib
 import io
 import logging
+import re
 from enum import Enum
 from typing import Union, Optional
 
@@ -46,16 +47,16 @@ class FedoraRequestType(Enum):
 class FedoraRepositoryConnector:
     def __init__(self, record):
         from core.models import ModelWithMetadata
-        from projekt.models import Projekt
 
         record: ModelWithMetadata
         self.record = record
 
     def _get_model_name(self):
-        from projekt.models import Projekt
-
-        if isinstance(self.record, Projekt):
-            return "projekt"
+        class_name = self.record.__class__.__name__.lower()
+        # Conversion of capitals
+        # https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
+        name = re.sub(r'(?<!^)(?=[A-Z])', '-', class_name).lower()
+        return name
 
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None) -> Optional[str]:
         base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/" \

@@ -7,6 +7,21 @@ from uzivatel.models import Osoba, Organizace
 from django_object_actions import DjangoObjectActions, action
 
 
+class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
+    @action(label="Metadata", description="Download of metadata")
+    def metadata(self, request, obj):
+        metadata = obj.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
+    change_actions = ("metadata",)
+
+
 @admin.register(HeslarNazev)
 class HeslarNazevAdmin(admin.ModelAdmin):
     """
@@ -118,7 +133,7 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
 
 
 @admin.register(Osoba)
-class OsobaAdmin(admin.ModelAdmin):
+class OsobaAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu osob.
     """
@@ -137,7 +152,7 @@ class OsobaAdmin(admin.ModelAdmin):
 
 
 @admin.register(Organizace)
-class OrganizaceAdmin(admin.ModelAdmin):
+class OrganizaceAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu organizace.
     """
@@ -157,18 +172,7 @@ class OrganizaceAdmin(admin.ModelAdmin):
         return super().has_delete_permission(request)
 
 
-class HeslarRuianAdmin(DjangoObjectActions, admin.ModelAdmin):
-    @action(label="Metadata", description="Download of metadata")
-    def metadata(self, request, obj):
-        metadata = obj.metadata
-
-        def context_processor(content):
-            yield content
-
-        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
-        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
-        return response
-
+class HeslarRuianAdmin(ObjectWithMetadataAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -177,8 +181,6 @@ class HeslarRuianAdmin(DjangoObjectActions, admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
-
-    change_actions = ("metadata",)
 
 
 @admin.register(RuianKraj)

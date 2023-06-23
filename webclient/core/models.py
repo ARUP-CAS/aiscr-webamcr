@@ -122,12 +122,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
-        from projekt.models import Projekt
 
-        record = None
-        vazba: SouborVazby = self.vazba
-        if vazba.navazany_objekt is not None and isinstance(vazba, Projekt):
-            record = vazba.projekt_souboru
+        record = self.vazba.navazany_objekt
         if record is not None and self.repository_uuid is not None:
             logger.debug("core.models.Soubor.get_repository_content", extra={"record_ident_cely": record.ident_cely,
                                                                              "repository_uuid": self.repository_uuid})

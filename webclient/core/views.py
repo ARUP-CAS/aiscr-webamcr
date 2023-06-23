@@ -126,7 +126,7 @@ def download_file(request, pk):
     """
     soubor: Soubor = get_object_or_404(Soubor, id=pk)
     rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
-    if rep_bin_file is not None:
+    if soubor.repository_uuid is not None:
         # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
         response = FileResponse(rep_bin_file.content, filename=soubor.nazev_zkraceny)
         response["Content-Length"] = rep_bin_file.size
