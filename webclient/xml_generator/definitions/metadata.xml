@@ -82,7 +82,7 @@
       <amcr:hlavni_vedouci id="OS-123456">Novák, Jan</amcr:hlavni_vedouci>
       <amcr:organizace id="ORG-123456">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
       <amcr:vedouci_akce_ostatni>
-        <amcr:id>vedo:1</amcr:id>
+        <amcr:id>vedo-1</amcr:id>
         <amcr:vedouci id="OS-123456">Novotný, Petr</amcr:vedouci>
         <amcr:organizace id="ORG-123456">Hornické muzeum Příbram, p.o.</amcr:organizace>
       </amcr:vedouci_akce_ostatni>
@@ -132,14 +132,14 @@
         <amcr:aktivita id="HES-123456">sídlištní</amcr:aktivita>
         <amcr:poznamka>Spousta domů.</amcr:poznamka>
         <amcr:nalez_objekt>
-          <amcr:id>nalo:1</amcr:id>
+          <amcr:id>nalo-1</amcr:id>
           <amcr:druh id="HES-123456">(polo)zemnice</amcr:druh>
           <amcr:specifikace id="HES-123456">konstrukce dřevěná</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
           <amcr:poznamka>Nedokopáno.</amcr:poznamka>
         </amcr:nalez_objekt>
         <amcr:nalez_predmet>
-          <amcr:id>nalp:1</amcr:id>
+          <amcr:id>nalp-1</amcr:id>
           <amcr:druh id="HES-123456">zlomek keramiky nesp.</amcr:druh>
           <amcr:specifikace id="HES-123456">keramika nesp.</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
@@ -148,7 +148,7 @@
       </amcr:komponenta>
     </amcr:dokumentacni_jednotka>
     <amcr:ext_odkaz>
-      <amcr:id>exto:1</amcr:id>
+      <amcr:id>exto-1</amcr:id>
       <amcr:ext_zdroj id="BIB-123456">BIB-123456</amcr:ext_zdroj>
       <amcr:paginace>121</amcr:paginace>
     </amcr:ext_odkaz>
@@ -272,7 +272,7 @@
       <amcr:geom_wkt EPSG="4326">POINT(X Y)</amcr:geom_wkt>
     </amcr:extra_data>
     <amcr:tvar>
-      <amcr:id>tvar:1</amcr:id>
+      <amcr:id>tvar-1</amcr:id>
       <amcr:tvar id="HES-123456">shluk bodových objektů</amcr:tvar>
       <amcr:poznamka>Takové puntíky.</amcr:poznamka>
     </amcr:tvar>
@@ -290,14 +290,14 @@
         <amcr:aktivita id="HES-123456">sídlištní</amcr:aktivita>
         <amcr:poznamka>Spousta domů.</amcr:poznamka>
         <amcr:nalez_objekt>
-          <amcr:id>nalo:1</amcr:id>
+          <amcr:id>nalo-1</amcr:id>
           <amcr:druh id="HES-123456">(polo)zemnice</amcr:druh>
           <amcr:specifikace id="HES-123456">konstrukce dřevěná</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
           <amcr:poznamka>Nedokopáno.</amcr:poznamka>
         </amcr:nalez_objekt>
         <amcr:nalez_predmet>
-          <amcr:id>nalp:1</amcr:id>
+          <amcr:id>nalp-1</amcr:id>
           <amcr:druh id="HES-123456">zlomek keramiky nesp.</amcr:druh>
           <amcr:specifikace id="HES-123456">keramika nesp.</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
@@ -348,7 +348,7 @@
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:ext_odkaz>
-      <amcr:id>exto:1</amcr:id>
+      <amcr:id>exto-1</amcr:id>
       <amcr:archeologicky_zaznam id="C-N901234567">C-N901234567</amcr:archeologicky_zaznam>
       <amcr:paginace>121</amcr:paginace>
     </amcr:ext_odkaz>
@@ -469,7 +469,7 @@
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:spoluprace_nadrizeni>
-      <amcr:id>spol:1</amcr:id>
+      <amcr:id>spol-1</amcr:id>
       <amcr:vedouci id="U-123456">U-123456</amcr:vedouci>
       <amcr:stav>2</amcr:stav>
       <amcr:historie>
@@ -481,7 +481,7 @@
       </amcr:historie>
     </amcr:spoluprace_nadrizeni>
     <amcr:spoluprace_podrizeni>
-      <amcr:id>spol:1</amcr:id>
+      <amcr:id>spol-1</amcr:id>
       <amcr:spolupracovnik id="U-123456">U-123456</amcr:spolupracovnik>
       <amcr:stav>2</amcr:stav>
       <amcr:historie>
@@ -504,17 +504,17 @@
     <amcr:zkratka_en>set</amcr:zkratka_en>
     <amcr:razeni>1</amcr:razeni>
     <amcr:hierarchie_vyse>
-      <amcr:id>hier:1</amcr:id>
+      <amcr:id>hier-1</amcr:id>
       <amcr:heslo_nadrazene id="HES-123456">nějaké heslo</amcr:heslo_nadrazene>
       <amcr:typ>podřízenost</amcr:typ>
     </amcr:hierarchie_vyse>
     <amcr:hierarchie_nize>
-      <amcr:id>hier:1</amcr:id>
+      <amcr:id>hier-1</amcr:id>
       <amcr:heslo_podrazene id="HES-123456">sídliště nesp.</amcr:heslo_podrazene>
       <amcr:typ>podřízenost</amcr:typ>
     </amcr:hierarchie_nize>
     <amcr:dokument_typ_material_rada>
-      <amcr:id>hdtm:1</amcr:id>
+      <amcr:id>hdtm-1</amcr:id>
       <amcr:dokument_typ id="HES-123456">nálezová zpráva</amcr:dokument_typ>
       <amcr:dokument_material id="HES-123456">primárně digitální</amcr:dokument_material>
     </amcr:dokument_typ_material_rada>
@@ -526,7 +526,7 @@
       <amcr:poznamka>Odhadem.</amcr:poznamka>
     </amcr:datace>
     <amcr:odkaz>
-      <amcr:id>hodk:1</amcr:id>
+      <amcr:id>hodk-1</amcr:id>
       <amcr:zdroj>Getty AAT</amcr:zdroj>
       <amcr:nazev_kodu>sysno</amcr:nazev_kodu>
       <amcr:kod>1234</amcr:kod>
