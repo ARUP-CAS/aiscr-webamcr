@@ -391,7 +391,7 @@
   </xs:complexType>
   <xs:complexType name="vedouci_akce_ostatniType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "vedo:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "vedo-{id}" -->
       <xs:element name="vedouci" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{vedouci.ident_cely}" | "{vedouci.vypis_cely}" -->
       <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
     </xs:sequence>
@@ -431,14 +431,14 @@
   </xs:complexType>
   <xs:complexType name="az-ext_odkazType">
    	<xs:sequence>      	
-   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "exto:{id}" -->
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "exto-{id}" -->
    	  <xs:element name="ext_zdroj" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{externi_zdroj.ident_cely}" | "{externi_zdroj.ident_cely}" -->
    	  <xs:element name="paginace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{paginace}" -->
    	</xs:sequence>     
   </xs:complexType>
   <xs:complexType name="ez-ext_odkazType">
    	<xs:sequence>      	
-   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "exto:{id}" -->
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "exto-{id}" -->
    	  <xs:element name="archeologicky_zaznam" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{archeologicky_zaznam.ident_cely}" | "{archeologicky_zaznam.ident_cely}" -->
    	  <xs:element name="paginace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{paginace}" -->
    	</xs:sequence>     
@@ -486,7 +486,7 @@
   </xs:complexType>
   <xs:complexType name="tvarType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "tvar:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "tvar-{id}" -->
       <xs:element name="tvar" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{tvar.ident_cely}" | "{tvar.heslo}" -->
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
     </xs:sequence>
@@ -531,7 +531,7 @@
   </xs:complexType>
   <xs:complexType name="nalez_objektType">
    	<xs:sequence>      	
-   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "nalo:{id}" -->
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "nalo-{id}" -->
    	  <xs:element name="druh" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{druh.ident_cely}" | "{druh.heslo}" -->
    	  <xs:element name="specifikace" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{specifikace.ident_cely}" | "{specifikace.heslo}" -->
    	  <xs:element name="pocet" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{pocet}" -->
@@ -540,7 +540,7 @@
   </xs:complexType>
   <xs:complexType name="nalez_predmetType">
    	<xs:sequence>      	
-   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "nalp:{id}" -->
+   	  <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "nalp-{id}" -->
    	  <xs:element name="druh" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{druh.ident_cely}" | "{druh.heslo}" -->
    	  <xs:element name="specifikace" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{specifikace.ident_cely}" | "{specifikace.heslo}" -->
    	  <xs:element name="pocet" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{pocet}" -->
@@ -568,7 +568,7 @@
   </xs:complexType>
   <xs:complexType name="spoluprace_nadrizeniType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "spol:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "spol-{id}" -->
       <xs:element name="vedouci" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{vedouci.ident_cely}" | "{vedouci.ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
@@ -576,7 +576,7 @@
   </xs:complexType>
   <xs:complexType name="spoluprace_podrizeniType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "spol:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "spol-{id}" -->
       <xs:element name="spolupracovnik" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{spolupracovnik.ident_cely}" | "{spolupracovnik.ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
@@ -584,21 +584,21 @@
   </xs:complexType>
   <xs:complexType name="hierarchie_vyseType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
       <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{heslo_nadrazene.ident_cely}" | "{heslo_nadrazene.heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->      
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="hierarchie_nizeType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
       <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{heslo_podrazene.ident_cely}" | "{heslo_podrazene.heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->         
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="dokument_typ_material_radaType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hdtm:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hdtm-{id}" -->
       <xs:element name="dokument_typ" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{dokument_typ.ident_cely}" | "{dokument_typ.heslar.heslo}" -->
       <xs:element name="dokument_material" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{dokument_material.ident_cely}" | "{dokument_material.heslo}" -->        
     </xs:sequence>
@@ -614,7 +614,7 @@
   </xs:complexType>
   <xs:complexType name="odkazType">
     <xs:sequence>
-      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hodk:{id}" -->
+      <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hodk-{id}" -->
       <xs:element name="zdroj" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{zdroj}" -->
       <xs:element name="nazev_kodu" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_kodu}" -->
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{kod}" -->
