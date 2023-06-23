@@ -235,14 +235,12 @@ alter table ruian_kraj rename column id_c_m to rada_id;
 alter table ruian_okres rename column full_name to nazev;
 -- 14. soubor.uzivatelske_oznaceni -> nazev_puvodni
 alter table soubor rename column uzivatelske_oznaceni to nazev_puvodni;
--- 15. soubor.nazev -> nazev_zkraceny
-alter table soubor rename column nazev to nazev_zkraceny;
--- 16. soubor.filepath -> nazev
-alter table soubor rename column filepath to nazev;
 -- 17. uzivatel_spoluprace.badatel -> spolupracovnik
 alter table uzivatel_spoluprace rename column badatel to spolupracovnik;
 -- 18. uzivatel_spoluprace.archeolog -> vedouci
 alter table uzivatel_spoluprace rename column archeolog to vedouci;
+-- 19. soubor.sha_512
+ALTER TABLE soubor ADD COLUMN sha_512 text;
 
 -- Pridat not null
 -- 109. uzivatel.role COMMENT: tohle se zatim jmenuje auth_level
