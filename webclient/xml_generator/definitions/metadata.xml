@@ -195,7 +195,7 @@
         <amcr:ident_cely>ADB-PRAH10-001234-V1234</amcr:ident_cely>
         <amcr:typ id="HES-123456" xml:lang="cs">podloží</amcr:typ>
         <amcr:geom_gml>
-          <gml:Point srsName="EPSG:4326">
+          <gml:Point srsName="EPSG:5514">
             <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
           </gml:Point>
         </amcr:geom_gml>
@@ -357,7 +357,7 @@
     <amcr:ident_cely>P-1234-123456</amcr:ident_cely>
     <amcr:stav>2</amcr:stav>
     <amcr:typ id="HES-123456" xml:lang="cs">plocha</amcr:typ>
-    <amcr:presnost id="HES-123456" xml:lang="cs">1</amcr:presnost>
+    <amcr:presnost id="HES-123456" xml:lang="cs">jednotky metrů</amcr:presnost>
     <amcr:geom_system>wgs84</amcr:geom_system>
     <amcr:geom_updated_at>2023-02-01T16:58:50Z</amcr:geom_updated_at>
     <amcr:geom_sjtsk_updated_at>2023-02-01T16:58:50Z</amcr:geom_sjtsk_updated_at>
@@ -371,7 +371,9 @@
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(X Y)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
-        <gml:xxx/>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+        </gml:Point>
       </amcr:geom_sjtsk_gml>
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(X Y)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
@@ -416,7 +418,9 @@
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(X Y)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
-        <gml:xxx/>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+        </gml:Point>
       </amcr:geom_sjtsk_gml>
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(X Y)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
