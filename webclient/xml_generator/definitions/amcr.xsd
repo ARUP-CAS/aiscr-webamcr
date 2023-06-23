@@ -386,7 +386,7 @@
       <xs:element name="vedlejsi_typ" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{vedlejsi_typ.ident_cely}" | "{vedlejsi_typ.heslo}" -->
       <xs:element name="ulozeni_nalezu" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{ulozeni_nalezu}" -->
       <xs:element name="ulozeni_dokumentace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{ulozeni_dokumentace}" -->
-      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1"/> <!-- SELF -->     
+      <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:akce-chranene_udajeType"/> <!-- SELF -->     
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="vedouci_akce_ostatniType">
