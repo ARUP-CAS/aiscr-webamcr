@@ -117,7 +117,7 @@
       <xs:element name="let" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{let.ident_cely}" | "{let.ident_cely}" -->
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="typ_dokumentu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ_dokumentu.ident_cely}" | "cs" | "{typ_dokumentu.heslo}" -->
-      <xs:element name="material_originalu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{material_originalu.ident_cely}" | "{material_originalu.heslo}" -->
+      <xs:element name="material_originalu" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{material_originalu.ident_cely}" | "cs" | "{material_originalu.heslo}" -->
       <xs:element name="rada" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{rada.ident_cely}" | "cs" | "{rada.heslo}" -->
       <xs:element name="posudek" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> <!-- "{posudky.ident_cely}" | "cs" | "{posudky.heslo}" -->
       <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{autori.ident_cely}" | "{DokumentAutor.poradi}" | "{autori.vypis_cely}" -->
@@ -176,7 +176,7 @@
       <xs:element name="geom_system" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{geom_system}" -->
       <xs:element name="geom_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{geom_updated_at}" -->
       <xs:element name="geom_sjtsk_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{geom_sjtsk_updated_at}" -->
-      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- DEFAULT: "HES-000865" | "anonym"; "{pristupnost_pom.ident_cely}" | "cs" | "{pristupnost_pom.heslo}") -->
+      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- DEFAULT: "HES-000865" | "cs" | "anonym"; "{pristupnost_pom.ident_cely}" | "cs" | "{pristupnost_pom.heslo}") -->
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:pian-chranene_udajeType"/> <!-- SELF -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{DokumentacniJednotka.archeologicky_zaznam.ident_cely}" | "{DokumentacniJednotka.ident_cely}" -->
@@ -225,9 +225,9 @@
       <xs:element name="aktivni" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_active}" -->
       <xs:element name="admin" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_staff}" -->
       <xs:element name="superadmin" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_superuser}" -->   
-      <xs:element name="skupina" minOccurs="1" maxOccurs="unbounded" type="xs:string"/> <!-- TODO - nevím, jak to správně zapsat; "{groups.name}" -->
+      <xs:element name="skupina" minOccurs="1" maxOccurs="unbounded" type="amcr:langstringType"/> <!-- TODO - nevím, jak to správně zapsat; "cs" | "{groups.name}" -->
       <xs:element name="notifikace" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{notification_types.ident_cely}" -->
-      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:vocabType"/> <!-- TODO - nevím, jak to správně zapsat; "{Pes.xxx.ident_cely}" | "cs" | "{Pes.xxx}" -->
+      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="amcr:vocabType"/> <!-- TODO - nevím, jak to správně zapsat; "{Pes.xxx.ident_cely}" | "cs" | "{Pes.xxx}" -->
       <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> <!-- "{date_joined}" -->
       <xs:element name="datum_prihlaseni" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{last_login}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
@@ -238,13 +238,13 @@
   <xs:complexType name="hesloType">
     <xs:sequence>
       <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{ident_cely}" -->
-      <xs:element name="nazev_heslare" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_heslare.nazev}" -->
-      <xs:element name="heslo" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{heslo}" -->
-      <xs:element name="heslo_en" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{heslo_en}" -->
-      <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{popis}" -->
-      <xs:element name="popis_en" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{popis_en}" -->
-      <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka}" -->
-      <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka_en}" -->
+      <xs:element name="nazev_heslare" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{nazev_heslare.nazev}" -->
+      <xs:element name="heslo" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{heslo}" -->
+      <xs:element name="heslo_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{heslo_en}" -->
+      <xs:element name="popis" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{popis}" -->
+      <xs:element name="popis_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{popis_en}" -->
+      <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{zkratka}" -->
+      <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{zkratka_en}" -->
       <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{razeni}" -->
       <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- FILTER: "{HeslarHierarchie.heslo_podrazene}" -->
       <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- FILTER: "{HeslarHierarchie.heslo_nadrazene}" -->   
@@ -256,8 +256,8 @@
   <xs:complexType name="ruian_krajType">
     <xs:sequence>
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "ruian-{kod}" -->
-      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
-      <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_en}" -->
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{nazev}" -->
+      <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{nazev_en}" -->
       <xs:element name="rada_id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{rada_id}" -->
       <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{definicni_bod}") -->
       <xs:element name="definicni_bod_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{definicni_bod}") | ST_AsText("{definicni_bod}") -->
@@ -268,8 +268,8 @@
   <xs:complexType name="ruian_okresType">
     <xs:sequence>
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "ruian-{kod}" -->
-      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
-      <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_en}" -->
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{nazev}" -->
+      <xs:element name="nazev_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{nazev_en}" -->
       <xs:element name="spz" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{spz}" -->
       <xs:element name="kraj" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "ruian-{kraj.kod}" | "cs" | "{kraj.nazev}" -->
       <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{definicni_bod}") -->
@@ -281,7 +281,7 @@
   <xs:complexType name="ruian_katastrType">
     <xs:sequence>
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "ruian-{kod}" -->
-      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{nazev}" -->
       <xs:element name="okres" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "ruian-{okres.kod}" | "cs" | "{okres.nazev}" -->
       <xs:element name="pian" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{pian.ident_cely}" | "{pian.ident_cely}" -->
       <xs:element name="definicni_bod_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{definicni_bod}") -->
@@ -293,10 +293,10 @@
   <xs:complexType name="organizaceType">
     <xs:sequence>
       <xs:element name="ident_cely" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{ident_cely}" -->
-      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
-      <xs:element name="nazev_en" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{nazev_en}" -->
-      <xs:element name="nazev_zkraceny" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_zkraceny}" -->
-      <xs:element name="nazev_zkraceny_en" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_zkraceny_en}" -->
+      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{nazev}" -->
+      <xs:element name="nazev_en" minOccurs="0" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{nazev_en}" -->
+      <xs:element name="nazev_zkraceny" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{nazev_zkraceny}" -->
+      <xs:element name="nazev_zkraceny_en" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "en" | "{nazev_zkraceny_en}" -->
       <xs:element name="typ_organizace" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{typ_organizace.ident_cely}" | "cs" | "{typ_organizace.heslo}" -->
       <xs:element name="oao" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{oao}" -->
       <xs:element name="mesicu_do_zverejneni" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{mesicu_do_zverejneni}" -->
@@ -499,7 +499,7 @@
       <xs:choice minOccurs="0" maxOccurs="1">
         <xs:element name="archeologicky_zaznam" type="amcr:refType"/> <!-- "{archeologicky_zaznam.ident_cely}" | "{archeologicky_zaznam.ident_cely}" -->
         <xs:element name="projekt" type="amcr:refType"/> <!-- "{projekt.ident_cely}" | "{projekt.ident_cely}" -->
-      </xs:choice>  
+      </xs:choice>
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
       <xs:element name="komponenta" minOccurs="0" maxOccurs="unbounded" type="amcr:komponentaType"/> <!-- "{komponenty.Komponenta}" -->
       <xs:element name="neident_akce" minOccurs="0" maxOccurs="1" type="amcr:neident_akceType"/> <!-- "{NeidentAkce}" -->
@@ -588,14 +588,14 @@
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier:{id}" -->
       <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{heslo_nadrazene.ident_cely}" | "cs" | "{heslo_nadrazene.heslo}" -->
-      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->      
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{typ}" -->      
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="hierarchie_nizeType">
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier:{id}" -->
       <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{heslo_podrazene.ident_cely}" | "cs" | "{heslo_podrazene.heslo}" -->
-      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->         
+      <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:langstringType"/> <!-- "cs" | "{typ}" -->         
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="dokument_typ_material_radaType">
@@ -620,7 +620,7 @@
       <xs:element name="zdroj" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{zdroj}" -->
       <xs:element name="nazev_kodu" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_kodu}" -->
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{kod}" -->
-      <xs:element name="uri" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uri}" -->          	         
+      <xs:element name="uri" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uri}" -->
     </xs:sequence>
   </xs:complexType>
 
