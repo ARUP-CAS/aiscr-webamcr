@@ -1,6 +1,6 @@
 import logging
 
-from arch_z.models import ArcheologickyZaznam, Akce
+from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
@@ -22,9 +22,18 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         hv.save()
         instance.historie = hv
 
-@receiver(post_save, sender=Akce)
-def create_arch_z_vazby(sender, instance, **kwargs):
+@receiver(post_save, sender=ArcheologickyZaznam)
+def create_arch_z_metadata(sender, instance, **kwargs):
     """
-        Metóda pro aktualizaci metadat.
+        Funkce pro aktualizaci metadat archeologického záznamu.
     """
     instance.save_metadata()
+
+
+@receiver(post_save, sender=ExterniOdkaz)
+def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
+    """
+        Funkce pro aktualizaci metadat externího odkazu.
+    """
+    instance.archeologicky_zaznam.save_metadata()
+    instance.externi_zdroj.save_metadata()
