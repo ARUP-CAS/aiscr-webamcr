@@ -164,13 +164,19 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
 
     @property
     def navazany_objekt(self):
-        return {
-            PROJEKT_RELATION_TYPE: self.projekt_historie,
-            DOKUMENT_RELATION_TYPE: self.dokument_historie,
-            SAMOSTATNY_NALEZ_RELATION_TYPE: self.sn_historie,
-            UZIVATEL_RELATION_TYPE: self.uzivatelhistorievazba,
-            PIAN_RELATION_TYPE: self.pian_historie,
-            UZIVATEL_SPOLUPRACE_RELATION_TYPE: self.spoluprace_historie,
-            EXTERNI_ZDROJ_RELATION_TYPE: self.externizdroj,
-            ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE: self.archeologickyzaznam,
-        }.get(self.typ_vazby, None)
+        if hasattr(self, "projekt_historie"):
+            return self.projekt_historie
+        elif hasattr(self, "dokument_historie"):
+            return self.dokument_historie
+        elif hasattr(self, "sn_historie"):
+            return self.sn_historie
+        elif hasattr(self, "uzivatelhistorievazba"):
+            return self.uzivatelhistorievazba
+        elif hasattr(self, "pian_historie"):
+            return self.pian_historie
+        elif hasattr(self, "spoluprace_historie"):
+            return self.spoluprace_historie
+        elif hasattr(self, "externizdroj"):
+            return self.externizdroj
+        elif hasattr(self, "archeologickyzaznam"):
+            return self.archeologickyzaznam

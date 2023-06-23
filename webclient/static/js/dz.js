@@ -86,6 +86,7 @@ window.onload = function () {
         maxFilesize: 100, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,
+        timeout: 10000000,
         init: function () {
             this.on("success", function (file, response) {
                 file.id = response.id

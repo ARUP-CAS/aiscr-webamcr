@@ -206,7 +206,7 @@ class FedoraRepositoryConnector:
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
             "Content-Type": content_type,
-            "Content-Disposition": f'attachment; filename="{file_name}"',
+            "Content-Disposition": f'attachment; filename="{file_name}"'.encode("utf-8"),
             "Digest": f"sha-512={file_sha_512}",
             "Slug": "orig"
         }

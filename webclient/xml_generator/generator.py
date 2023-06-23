@@ -252,7 +252,7 @@ class DocumentGenerator:
             if next_element.__class__.__name__ == "_Comment":
                 id_field_name, field_name = self._parse_comment(next_element.text)
                 prefix = self._get_prefix(next_element.text)
-                if schema_element.attrib["maxOccurs"] == "1":
+                if "maxOccurs" not in schema_element.attrib or schema_element.attrib["maxOccurs"] == "1":
                     if field_name is not None:
                         if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
                                                              "xs:dateTime", "amcr:gmlType", "amcr:wktType",
@@ -279,6 +279,9 @@ class DocumentGenerator:
                     else:
                         logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element."
                                      "unkown_element", extra={"next_element_text": next_element.text})
+            elif "choice" in schema_element.tag.lower():
+                for child_schema_element in schema_element:
+                    self._parse_scheme_create_element(child_schema_element, parent_element)
             else:
                 logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element.without_comment",
                              extra={"schema_element_attrib": schema_element.attrib})
