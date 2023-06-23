@@ -216,7 +216,7 @@
     <amcr:organizace id="ORG-123456" xml:lang="cs">Archeologický ústav AV ČR, Brno, v. v. i.</amcr:organizace>
     <amcr:pristupnost id="HES-123456" xml:lang="cs">badatel</amcr:pristupnost>
     <amcr:datum_zverejneni>2021-01-01</amcr:datum_zverejneni>
-    <amcr:jazyk_dokumentu id="HES-123456" xml:lang="cs">CS</amcr:jazyk_dokumentu>
+    <amcr:jazyk_dokumentu id="HES-123456" xml:lang="cs">čeština</amcr:jazyk_dokumentu>
     <amcr:ulozeni_originalu id="HES-123456" xml:lang="cs">primárně digitální dokument</amcr:ulozeni_originalu>
     <amcr:oznaceni_originalu>1234/2018</amcr:oznaceni_originalu>
     <amcr:popis>Nálezovka o ničem.</amcr:popis>
@@ -497,11 +497,11 @@
     <amcr:ident_cely>HES-123456</amcr:ident_cely>
     <amcr:nazev_heslare xml:lang="cs">aktivita</amcr:nazev_heslare>
     <amcr:heslo xml:lang="cs">sídlištní</amcr:heslo>
-    <amcr:heslo_enxml:lang="en">settlement</amcr:heslo_en>
+    <amcr:heslo_en xml:lang="en">settlement</amcr:heslo_en>
     <amcr:popis xml:lang="cs">sídlištní aktivita</amcr:popis>
-    <amcr:popis_enxml:lang="en">settlement activity</amcr:popis_en>
+    <amcr:popis_en xml:lang="en">settlement activity</amcr:popis_en>
     <amcr:zkratka xml:lang="cs">síd</amcr:zkratka>
-    <amcr:zkratka_enxml:lang="en">set</amcr:zkratka_en>
+    <amcr:zkratka_en xml:lang="en">set</amcr:zkratka_en>
     <amcr:razeni>1</amcr:razeni>
     <amcr:hierarchie_vyse>
       <amcr:id>hier:1</amcr:id>
@@ -536,14 +536,18 @@
   <amcr:ruian_kraj>
     <amcr:kod>ruian-27</amcr:kod>
     <amcr:nazev xml:lang="cs">Středočeský kraj</amcr:nazev>
-    <amcr:nazev_en xml:lang="en">Středočeský kraj</amcr:nazev_en>
+    <amcr:nazev_en xml:lang="en">Central Bohemia Region</amcr:nazev_en>
     <amcr:rada_id>C</amcr:rada_id>
     <amcr:definicni_bod_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:definicni_bod_gml>
     <amcr:definicni_bod_wkt EPSG="4326">POINT(X Y)</amcr:definicni_bod_wkt>
     <amcr:hranice_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
   </amcr:ruian_kraj>
@@ -554,11 +558,15 @@
     <amcr:spz>BN</amcr:spz>
     <amcr:kraj id="ruian-27" xml:lang="cs">Středočeský kraj</amcr:kraj>
     <amcr:definicni_bod_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:definicni_bod_gml>
     <amcr:definicni_bod_wkt EPSG="4326">POINT(X Y)</amcr:definicni_bod_wkt>
     <amcr:hranice_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
   </amcr:ruian_okres>
@@ -568,11 +576,15 @@
     <amcr:okres id="ruian-3201" xml:lang="cs">Benešov</amcr:okres>
     <amcr:pian id="P-1234-923456">P-1234-923456</amcr:pian>
     <amcr:definicni_bod_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:definicni_bod_gml>
     <amcr:definicni_bod_wkt EPSG="4326">POINT(X Y)</amcr:definicni_bod_wkt>
     <amcr:hranice_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
   </amcr:ruian_katastr>
