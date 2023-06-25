@@ -1,15 +1,16 @@
 import datetime
 import logging
 import os
-
-import xml.etree.ElementTree as ET
+import re
+# import xml.etree.ElementTree as ET
 from typing import Union
-from xml.dom import minidom
 
-from django.contrib.gis.db.models.functions import AsGML, AsGeoJSON, GeoFunc
 from django.contrib.gis.db import models
+from django.contrib.gis.db.models.functions import AsGML, GeoFunc
 from lxml import etree
+from lxml import etree as ET
 
+from heslar.models import RuianKraj, RuianOkres
 from xml_generator.models import ModelWithMetadata
 
 AMCR_NAMESPACE_URL = "https://api.aiscr.cz/schema/amcr/2.0/"
@@ -19,11 +20,19 @@ SCHEMA_LOCATION = "https://api.aiscr.cz/schema/amcr/2.0/ https://api.aiscr.cz/sc
                   "http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd"
 logger = logging.getLogger(__name__)
 
+
 class AsText(GeoFunc):
     output_field = models.TextField()
 
 
 class DocumentGenerator:
+    _nsmap = {
+        "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        "gml": "https://www.opengis.net/gml/3.2",
+        "amcr": AMCR_NAMESPACE_URL
+    }
+    attribute_names = {}
+
     @classmethod
     def generate_metadata(cls):
         for current_class in cls._get_schema_dict():
@@ -100,7 +109,7 @@ class DocumentGenerator:
         return attribute_prefix
 
     @staticmethod
-    def _parse_comment(comment_text: str) -> list:
+    def _parse_comment(comment_text: str):
         attribute_list = comment_text.split("|")
         attribute_list = [text.replace("\"", "").replace("{", "").replace("}", "").strip().lower()
                           for text in attribute_list]
@@ -109,8 +118,8 @@ class DocumentGenerator:
             return attribute_list
         elif len(attribute_list) == 1:
             return [None] + attribute_list
-        else:
-            return [None, None]
+        elif len(attribute_list) == 3:
+            return attribute_list[:-1], attribute_list[-1]
 
     def _get_attribute_of_record(self, attribute_name, record=None):
         logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.start",
@@ -130,22 +139,21 @@ class DocumentGenerator:
             from heslar.models import RuianKatastr
             logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.geom",
                          extra={"attribute_name": attribute_name, "pk": record.pk})
-            if isinstance(record, DokumentExtraData):
-                record = DokumentExtraData.objects\
-                    .annotate(geom_st_asgml=AsGML("geom"), geom_st_wkt=AsGML("geom")).get(pk=record.pk)
+            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData):
+                record = record.__class__.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
+                                                           geom_st_astext=AsText("geom")) \
+                    .get(pk=record.pk)
             elif isinstance(record, SamostatnyNalez):
-                record = SamostatnyNalez.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsText("geom"),
-                                                          geom_sjtsk_st_asgml=AsGML("geom_sjtsk"),
-                                                          geom_sjtsk_st_astext=AsText("geom_sjtsk"))\
+                record = SamostatnyNalez.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
+                                                          geom_st_astext=AsText("geom"),
+                                                          geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                                                          geom_sjtsk_st_astext=AsText("geom_sjtsk")) \
                     .get(pk=record.pk)
-            elif isinstance(record, Projekt):
-                record = Projekt.objects.annotate(geom_st_asgml=AsGML("geom"), geom_st_astext=AsText("geom"))\
-                    .get(pk=record.pk)
-            elif isinstance(record, RuianKatastr):
-                record = RuianKatastr.objects.annotate(definicni_bod_st_asgml=AsGML("definicni_bod"),
-                                                       definicni_bod_st_astext=AsText("definicni_bod"),
-                                                       hranice_st_asgml=AsGML("hranice"),
-                                                       hranice_st_astext=AsText("hranice"))\
+            elif isinstance(record, RuianKatastr) or isinstance(record, RuianKraj) or isinstance(record, RuianOkres):
+                record = record.__class__.objects.annotate(definicni_bod_st_asgml=AsGML("definicni_bod", nprefix="gml"),
+                                                           definicni_bod_st_astext=AsText("definicni_bod"),
+                                                           hranice_st_asgml=AsGML("hranice", nprefix="gml"),
+                                                           hranice_st_astext=AsText("hranice")) \
                     .get(pk=record.pk)
             if "st_asgml" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_asgml", "").replace("(", "").replace(")", "")
@@ -156,10 +164,10 @@ class DocumentGenerator:
             elif "st_srid" in attribute_name.lower():
                 field_name = attribute_name.lower().replace("st_srid", "").replace("(", "").replace(")", "")
                 attribute_value = getattr(record, f"{field_name}").srid
-            parser = ET.XMLParser()
             if attribute_value is not None and "st_asgml" in attribute_name.lower():
+                # ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
                 attribute_value = attribute_value.replace(">", ' xmlns:gml="http://www.opengis.net/gml/3.2">', 1)
-                attribute_value = ET.fromstring(attribute_value, parser)
+                attribute_value = ET.fromstring(attribute_value)
         else:
             record_name_split = attribute_name.split(".")
             if len(record_name_split) == 2:
@@ -176,20 +184,30 @@ class DocumentGenerator:
         attributes = []
         record_name_split = attribute_name.split(".")
         if len(record_name_split) == 1:
-            record_attribute = getattr(record, record_name_split[0], None)
+            record_attribute = getattr(record, record_name_split[0])
             if hasattr(record_attribute, "all"):
                 attributes = [x for x in record_attribute.all()]
+            else:
+                attributes = [record_attribute]
         elif len(record_name_split) == 2:
-            related_record = getattr(record, record_name_split[0], None)
+            related_record = getattr(record, record_name_split[0])
             if hasattr(related_record, "all"):
-                attributes = [getattr(x, record_name_split[1], None) for x in related_record.all()]
+                from dokument.models import Dokument
+                if record_name_split[0] == "autori" and isinstance(record, Dokument):
+                    from dokument.models import Dokument
+                    dokument = Dokument.objects.get(pk=1476694)
+                    for item in dokument.autori.all():
+                        attributes.append(item.vypis_cely + " " + str(record.pk))
+                else:
+                    for item in related_record.all():
+                        attributes.append(getattr(item, record_name_split[1], None))
             else:
                 related_record = getattr(record, record_name_split[0], None)
                 related_record = getattr(related_record, record_name_split[1], None)
                 if hasattr(related_record, "all"):
                     attributes = [x for x in related_record.all()]
         elif len(record_name_split) == 3:
-            related_record = getattr(record, record_name_split[0], None)
+            related_record = getattr(record, record_name_split[0])
             if hasattr(related_record, "all"):
                 for record in related_record.all():
                     first_related = getattr(record, record_name_split[1], None)
@@ -205,15 +223,17 @@ class DocumentGenerator:
         return attributes
 
     def _create_element(self, schema_element, parent_element, field_name, id_field_name=None, document_object=None,
-                        id_field_prefix=""):
+                        id_field_prefix="", ref_type=None):
         if document_object is None:
             document_object = self.document_object
         attribute_value = self._get_attribute_of_record(field_name, document_object)
+        if id_field_name is None and id_field_prefix:
+            attribute_value = id_field_prefix + str(attribute_value)
         if attribute_value is not None and len(str(attribute_value)) > 0:
             new_sub_element = ET.SubElement(parent_element,
-                                            f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}")
-            print("_create_element", attribute_value, attribute_value.__class__.__name__)
-            if attribute_value.__class__.__name__ == "Element":
+                                            f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}",
+                                            nsmap=self._nsmap)
+            if attribute_value.__class__.__name__ == "_Element":
                 new_sub_element.append(attribute_value)
             elif isinstance(attribute_value, datetime.datetime):
                 new_sub_element.text = attribute_value.isoformat()
@@ -223,27 +243,37 @@ class DocumentGenerator:
                 else:
                     new_sub_element.text = str(attribute_value)
             if id_field_name is not None:
-                new_sub_element.attrib["id"] = \
-                    f"{id_field_prefix}{self._get_attribute_of_record(id_field_name, document_object)}"
-        else:
-            print("Unknown field", field_name, attribute_value, document_object)
+                if isinstance(id_field_name, list):
+                    new_sub_element.attrib["id"] = \
+                        f"{id_field_prefix}{self._get_attribute_of_record(id_field_name[0], document_object)}"
+                    attribute_name = self.get_ref_type_attribute_name(ref_type)
+                    new_sub_element.attrib[attribute_name] = \
+                        f"{id_field_prefix}{self._get_attribute_of_record(id_field_name[1], document_object)}"
+                else:
+                    attribute_name = self.get_ref_type_attribute_name(ref_type)
+                    new_sub_element.attrib[attribute_name] = \
+                        f"{id_field_prefix}{self._get_attribute_of_record(id_field_name, document_object)}"
 
-    @staticmethod
-    def _create_many_to_many_ref_elements(schema_element, parent_element, related_records, id_field_name=None,
-                                          prefix="", related_records_ids=None):
+    def _create_many_to_many_ref_elements(self, schema_element, parent_element, related_records, id_field_name=None,
+                                          prefix="", related_records_ids=None, ref_type=None):
         for i, record in enumerate(related_records):
             new_sub_element = ET.SubElement(parent_element,
-                                            f"{{{AMCR_NAMESPACE_URL}}}" + schema_element.attrib["name"])
+                                            f"{{{AMCR_NAMESPACE_URL}}}" + schema_element.attrib["name"],
+                                            nsmap=self._nsmap)
             if record.__class__.__name__ == "_Element":
                 new_sub_element.append(record)
             else:
+                record_text = str(record)
+                if id_field_name is None and prefix:
+                    record = prefix + record_text
                 if isinstance(record, bool):
-                    new_sub_element.text = str(record).lower()
+                    new_sub_element.text = record_text.lower()
                 else:
-                    new_sub_element.text = str(record)
+                    new_sub_element.text = record_text
             if id_field_name is not None and related_records_ids is not None \
                     and len(related_records_ids) > i and related_records_ids[i] is not None:
-                new_sub_element.attrib["id"] = f"{prefix}{related_records_ids[i]}"
+                attribute_name = self.get_ref_type_attribute_name(ref_type)
+                new_sub_element.attrib[attribute_name] = f"{prefix}{related_records_ids[i]}"
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
         if schema_element.__class__.__name__ == "_Element":
@@ -256,9 +286,9 @@ class DocumentGenerator:
                     if field_name is not None:
                         if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
                                                              "xs:dateTime", "amcr:gmlType", "amcr:wktType",
-                                                             "xs:boolean"):
+                                                             "amcr:autorType", "xs:boolean"):
                             self._create_element(schema_element, parent_element, field_name, id_field_name,
-                                                 id_field_prefix=prefix)
+                                                 id_field_prefix=prefix, ref_type=schema_element.attrib["type"])
                         else:
                             obj = self._get_attribute_of_record(field_name)
                             if obj is not None:
@@ -269,13 +299,23 @@ class DocumentGenerator:
                     if field_name is not None:
                         related_records = self._get_attribute_of_record_unbounded(self.document_object, field_name,
                                                                                   schema_element)
+                        if id_field_name is not None:
+                            related_records_ids = self._get_attribute_of_record_unbounded(self.document_object,
+                                                                                          id_field_name, schema_element)
+                        else:
+                            related_records_ids = None
                         if related_records is not None:
-                            if schema_element.attrib["type"] != "amcr:refType":
+                            if "refType" not in schema_element.attrib["type"] and \
+                                    "autorType" not in schema_element.attrib["type"] and \
+                                    "wktType" not in schema_element.attrib["type"] and \
+                                    "gmlType" not in schema_element.attrib["type"]:
                                 self._iterate_unbound_records(related_records, schema_element, parent_element)
                             else:
                                 self._create_many_to_many_ref_elements(schema_element, parent_element, related_records,
-                                                                       id_field_name if id_field_name else None,
-                                                                       prefix)
+                                                                       id_field_name=id_field_name,
+                                                                       related_records_ids=related_records_ids,
+                                                                       prefix=prefix,
+                                                                       ref_type=schema_element.attrib["type"])
                     else:
                         logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element."
                                      "unkown_element", extra={"next_element_text": next_element.text})
@@ -294,7 +334,8 @@ class DocumentGenerator:
 
     def _parse_scheme_create_nested_element(self, schema_element, parent_element, document_object,
                                             child_parent_element_name):
-        child_parent_element = ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{child_parent_element_name}")
+        child_parent_element = ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{child_parent_element_name}",
+                                             nsmap=self._nsmap)
         for child_schema_element in schema_element:
             if child_schema_element.__class__.__name__ == "_Element":
                 next_element = child_schema_element.getnext()
@@ -304,7 +345,7 @@ class DocumentGenerator:
                     if child_schema_element.attrib["maxOccurs"] == "1":
                         if field_name is not None:
                             self._create_element(child_schema_element, child_parent_element, field_name, id_field_name,
-                                                 document_object, prefix)
+                                                 document_object, prefix, ref_type=child_schema_element.attrib["type"])
                     else:
                         related_records = self._get_attribute_of_record_unbounded(document_object, field_name,
                                                                                   child_schema_element)
@@ -315,33 +356,67 @@ class DocumentGenerator:
                         else:
                             related_records_ids = None
                         if related_records is not None and len(related_records) > 0:
-                            if child_schema_element.attrib["type"] != "amcr:refType":
+                            if "refType" not in child_schema_element.attrib["type"] and \
+                                    "autorType" not in child_schema_element.attrib["type"] and \
+                                    "wktType" not in child_schema_element.attrib["type"] and \
+                                    "gmlType" not in child_schema_element.attrib["type"]:
                                 self._iterate_unbound_records(related_records, child_schema_element,
                                                               child_parent_element)
                             else:
                                 self._create_many_to_many_ref_elements(child_schema_element, child_parent_element,
                                                                        related_records,
                                                                        id_field_name if id_field_name else None,
-                                                                       prefix, related_records_ids)
+                                                                       prefix, related_records_ids,
+                                                                       child_schema_element.attrib["type"])
+
+    def get_ref_type_attribute_name(self, type_name):
+        parser = etree.XMLParser()
+        type_name = type_name.replace("amcr:", "")
+        if type_name not in self.attribute_names:
+            tree = etree.parse(self.get_path_to_schema(), parser)
+            xpath_query = f"//*[@name='{type_name}']/*/*/*"
+            elements = tree.xpath(xpath_query)
+            if "name" in elements[0].attrib:
+                self.attribute_names[type_name] = elements[0].attrib["name"]
+        return self.attribute_names.get(type_name, "id")
+
+    @staticmethod
+    def _replace_redundant_namespaces(xml_string):
+        pattern = r'\sxmlns:gml="[^"]*"'
+        counter = [0]
+
+        def replace(match):
+            if counter[0] > 0:
+                return ""
+            else:
+                counter[0] += 1
+                return match.group()
+
+        xml_string = re.sub(pattern, replace, xml_string.decode("utf-8"))
+        xml_string = ET.fromstring(xml_string)
+        xml_string = ET.tostring(xml_string, encoding='utf-8', xml_declaration=True, pretty_print=True)
+        return xml_string
 
     def generate_document(self):
-        ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
-        ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
-        ET.register_namespace("amcr", AMCR_NAMESPACE_URL)
         self.document_root.attrib[f"{{http://www.w3.org/2001/XMLSchema-instance}}schemaLocation"] = SCHEMA_LOCATION
-        parent_element = ET.SubElement(self.document_root, f"{{{AMCR_NAMESPACE_URL}}}{self._get_schema_name()}")
+        parent_element = ET.SubElement(self.document_root, f"{{{AMCR_NAMESPACE_URL}}}{self._get_schema_name()}",
+                                       nsmap=self._nsmap)
         for schema_element in self._parse_schema(self._get_schema_name()):
             self._parse_scheme_create_element(schema_element, parent_element)
             children = list(schema_element)
             if len(children) == 1:
                 inner_document_element = \
-                    ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}")
+                    ET.SubElement(parent_element, f"{{{AMCR_NAMESPACE_URL}}}{schema_element.attrib['name']}",
+                                  nsmap=self._nsmap)
                 for child_schema_element in children[0][0]:
                     self._parse_scheme_create_element(child_schema_element, inner_document_element)
-        return minidom.parseString(ET.tostring(self.document_root, encoding='utf-8', xml_declaration=True))\
-            .toprettyxml(encoding="utf-8")
+        xml_string = ET.tostring(self.document_root)
+        xml_string = self._replace_redundant_namespaces(xml_string)
+        return xml_string
 
     def __init__(self, document_object):
-        from projekt.models import Projekt
         self.document_object = document_object
-        self.document_root = ET.Element(f"{{{AMCR_NAMESPACE_URL}}}amcr")
+        ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        ET.register_namespace("gml", "https://www.opengis.net/gml/3.2")
+        ET.register_namespace("amcr", AMCR_NAMESPACE_URL)
+        self.document_root = ET.Element(f"{{{AMCR_NAMESPACE_URL}}}amcr", nsmap=self._nsmap)

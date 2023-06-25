@@ -118,7 +118,7 @@
       <xs:element name="material_originalu" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{material_originalu.ident_cely}" | "{material_originalu.heslo}" -->
       <xs:element name="rada" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{rada.ident_cely}" | "{rada.heslo}" -->
       <xs:element name="posudek" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{posudky.ident_cely}" | "{posudky.heslo}" -->
-      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{autori.ident_cely}" | "{DokumentAutor.poradi}" | "{autori.vypis_cely}" -->
+      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{autori.ident_cely}"  | "{autori.vypis_cely}" -->
       <xs:element name="rok_vzniku" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_vzniku}" -->
       <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="pristupnost" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{pristupnost.ident_cely}" | "{pristupnost.heslo}" -->
@@ -378,7 +378,7 @@
       <xs:element name="odlozena_nz" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{odlozena_nz}" -->
       <xs:element name="hlavni_vedouci" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{hlavni_vedouci.ident_cely}" | "{hlavni_vedouci.vypis_cely}" -->
       <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
-      <xs:element name="vedouci_akce_ostatni" minOccurs="0" maxOccurs="unbounded" type="amcr:vedouci_akce_ostatniType"/> <!-- "{AkceVedouci}" -->          
+      <xs:element name="vedouci_akce_ostatni" minOccurs="0" maxOccurs="unbounded" type="amcr:vedouci_akce_ostatniType"/> <!-- "{akcevedouci_set}" -->
       <xs:element name="specifikace_data" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{specifikace_data.ident_cely}" | "{specifikace_data.heslo}" -->
       <xs:element name="datum_zahajeni" minOccurs="0" maxOccurs="1" type="xs:date"/> <!-- "{datum_zahajeni}" -->
       <xs:element name="datum_ukonceni" minOccurs="0" maxOccurs="1" type="xs:date"/> <!-- "{datum_ukonceni}" -->
