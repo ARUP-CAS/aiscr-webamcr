@@ -102,5 +102,5 @@ logstash/logstash.conf
 /scripts/test_preparaton.sh
 /redis_pass.txt
 
-# preklady reqrite
+# rewrite preklady
 /preklady

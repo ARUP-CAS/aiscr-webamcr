@@ -6,7 +6,7 @@
 <div class="card app-card-form" id="create_dj_form">
   <div class="card-header">
     <div class="app-fx app-left">
-      {% trans "Nová dokumentační jednotka" %}
+      {% trans "arch_z.templates.arch_z.dj.partials.dj_create.novaDJ.label" %}
     </div>
   </div>
   <div class="card-body">
@@ -14,7 +14,7 @@
           onsubmit="newDjSubmitButton.disabled = true; return true;">
       {% crispy dj_form_create %}
       <button type="submit" id="newDjSubmitButton"
-              class="btn btn-primary">{% trans "Vytvořit jednotku" %}
+              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.dj_create.button.vytovritDJ.label" %}
       </button>
     </form>
   </div>
