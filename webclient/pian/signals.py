@@ -31,6 +31,6 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
     Metóda se volá pred uložením záznamu.
     """
     instance.save_metadata()
-    for dj in instance.dokumentacni_jednotky_pianu:
+    for dj in instance.dokumentacni_jednotky_pianu.all():
         dj: DokumentacniJednotka
         dj.archeologicky_zaznam.save_metadata()

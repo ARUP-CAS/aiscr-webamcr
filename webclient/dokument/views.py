@@ -1,5 +1,7 @@
 import logging
 import os
+
+from django.db.models.signals import post_save
 from django.views import View
 
 
@@ -971,7 +973,6 @@ def edit(request, ident_cely):
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
             #save autors with order
             instance_d.autori.clear()
-            instance_d.save()
             i = 1
             for autor in form_d.cleaned_data["autori"]:
                 DokumentAutor(
@@ -982,6 +983,7 @@ def edit(request, ident_cely):
                 i = i + 1
             # form_d.save_m2m()
             form_extra.save()
+            instance_d.save()
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)

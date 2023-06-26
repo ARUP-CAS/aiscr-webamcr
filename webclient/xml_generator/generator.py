@@ -2,8 +2,9 @@ import datetime
 import logging
 import os
 import re
+from dataclasses import dataclass
 # import xml.etree.ElementTree as ET
-from typing import Union
+from typing import Union, Optional
 
 from django.contrib.gis.db import models
 from django.contrib.gis.db.models.functions import AsGML, GeoFunc
@@ -24,6 +25,11 @@ logger = logging.getLogger(__name__)
 class AsText(GeoFunc):
     output_field = models.TextField()
 
+
+@dataclass
+class ParsedComment:
+    value_field_name: str
+    attribute_field_names: list = None
 
 class DocumentGenerator:
     _nsmap = {
@@ -109,17 +115,17 @@ class DocumentGenerator:
         return attribute_prefix
 
     @staticmethod
-    def _parse_comment(comment_text: str):
+    def _parse_comment(comment_text: str) -> Optional[ParsedComment]:
         attribute_list = comment_text.split("|")
         attribute_list = [text.replace("\"", "").replace("{", "").replace("}", "").strip().lower()
                           for text in attribute_list]
         attribute_list = [text[text.find("-") + 1:] if "-" in text else text for text in attribute_list]
         if len(attribute_list) == 2:
-            return attribute_list
+            return ParsedComment(attribute_list[1], [attribute_list[0]])
         elif len(attribute_list) == 1:
-            return [None] + attribute_list
+            return ParsedComment(attribute_list[0])
         elif len(attribute_list) == 3:
-            return attribute_list[:-1], attribute_list[-1]
+            return ParsedComment(attribute_list[-1], attribute_list[:-1])
 
     def _get_attribute_of_record(self, attribute_name, record=None):
         logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.start",
@@ -137,17 +143,18 @@ class DocumentGenerator:
             from pas.models import SamostatnyNalez
             from projekt.models import Projekt
             from heslar.models import RuianKatastr
+            from pian.models import Pian
             logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.geom",
                          extra={"attribute_name": attribute_name, "pk": record.pk})
             if isinstance(record, Projekt) or isinstance(record, DokumentExtraData):
                 record = record.__class__.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
                                                            geom_st_astext=AsText("geom")) \
                     .get(pk=record.pk)
-            elif isinstance(record, SamostatnyNalez):
-                record = SamostatnyNalez.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
-                                                          geom_st_astext=AsText("geom"),
-                                                          geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
-                                                          geom_sjtsk_st_astext=AsText("geom_sjtsk")) \
+            elif isinstance(record, SamostatnyNalez) or isinstance(record, Pian):
+                record = record.__class__.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
+                                                           geom_st_astext=AsText("geom"),
+                                                           geom_sjtsk_st_asgml=AsGML("geom_sjtsk", nprefix="gml"),
+                                                           geom_sjtsk_st_astext=AsText("geom_sjtsk")) \
                     .get(pk=record.pk)
             elif isinstance(record, RuianKatastr) or isinstance(record, RuianKraj) or isinstance(record, RuianOkres):
                 record = record.__class__.objects.annotate(definicni_bod_st_asgml=AsGML("definicni_bod", nprefix="gml"),
@@ -180,54 +187,55 @@ class DocumentGenerator:
         return attribute_value
 
     @staticmethod
-    def _get_attribute_of_record_unbounded(record, attribute_name, schema_element) -> list:
-        attributes = []
-        record_name_split = attribute_name.split(".")
-        if len(record_name_split) == 1:
-            record_attribute = getattr(record, record_name_split[0])
-            if hasattr(record_attribute, "all"):
-                attributes = [x for x in record_attribute.all()]
-            else:
-                attributes = [record_attribute]
-        elif len(record_name_split) == 2:
-            related_record = getattr(record, record_name_split[0])
-            if hasattr(related_record, "all"):
-                from dokument.models import Dokument
-                if record_name_split[0] == "autori" and isinstance(record, Dokument):
-                    from dokument.models import Dokument
-                    dokument = Dokument.objects.get(pk=1476694)
-                    for item in dokument.autori.all():
-                        attributes.append(item.vypis_cely + " " + str(record.pk))
+    def _get_attribute_of_record_unbounded(record, parsed_comment: ParsedComment, schema_element) -> dict:
+        attributes_dict = {}
+        def get_attribute(record, attribute_name):
+            attributes = []
+            record_name_split = attribute_name.split(".")
+            if len(record_name_split) == 1:
+                record_attribute = getattr(record, record_name_split[0])
+                if hasattr(record_attribute, "all"):
+                    attributes = [x for x in record_attribute.all()]
                 else:
+                    attributes = [record_attribute]
+            elif len(record_name_split) == 2:
+                related_record = getattr(record, record_name_split[0])
+                if hasattr(related_record, "all"):
                     for item in related_record.all():
                         attributes.append(getattr(item, record_name_split[1], None))
-            else:
-                related_record = getattr(record, record_name_split[0], None)
-                related_record = getattr(related_record, record_name_split[1], None)
+                else:
+                    related_record = getattr(record, record_name_split[0], None)
+                    related_record = getattr(related_record, record_name_split[1], None)
+                    if hasattr(related_record, "all"):
+                        attributes = [x for x in related_record.all()]
+            elif len(record_name_split) == 3:
+                related_record = getattr(record, record_name_split[0])
                 if hasattr(related_record, "all"):
-                    attributes = [x for x in related_record.all()]
-        elif len(record_name_split) == 3:
-            related_record = getattr(record, record_name_split[0])
-            if hasattr(related_record, "all"):
-                for record in related_record.all():
-                    first_related = getattr(record, record_name_split[1], None)
-                    if first_related is not None:
-                        second_related = getattr(first_related, record_name_split[2], None)
-                        attributes.append(second_related)
-            else:
-                related_record = getattr(related_record, record_name_split[1], None)
-                if hasattr(related_record, "all"):
-                    attributes = [x for x in related_record.all()]
-        if schema_element.attrib["type"] == "xs:date":
-            attributes = [x.date() for x in attributes]
-        return attributes
+                    for record in related_record.all():
+                        first_related = getattr(record, record_name_split[1], None)
+                        if first_related is not None:
+                            second_related = getattr(first_related, record_name_split[2], None)
+                            attributes.append(second_related)
+                else:
+                    related_record = getattr(related_record, record_name_split[1], None)
+                    if hasattr(related_record, "all"):
+                        attributes = [x for x in related_record.all()]
+            if schema_element.attrib["type"] == "xs:date":
+                attributes = [x.date() for x in attributes]
+            return attributes
 
-    def _create_element(self, schema_element, parent_element, field_name, id_field_name=None, document_object=None,
+        attributes_dict["value"] = get_attribute(record, parsed_comment.value_field_name)
+        if parsed_comment.attribute_field_names:
+            for key in parsed_comment.attribute_field_names:
+                attributes_dict[key] = get_attribute(record, key)
+        return attributes_dict
+
+    def _create_element(self, schema_element, parent_element, parsed_comment: ParsedComment, document_object=None,
                         id_field_prefix="", ref_type=None):
         if document_object is None:
             document_object = self.document_object
-        attribute_value = self._get_attribute_of_record(field_name, document_object)
-        if id_field_name is None and id_field_prefix:
+        attribute_value = self._get_attribute_of_record(parsed_comment.value_field_name, document_object)
+        if parsed_comment.attribute_field_names is None and id_field_prefix:
             attribute_value = id_field_prefix + str(attribute_value)
         if attribute_value is not None and len(str(attribute_value)) > 0:
             new_sub_element = ET.SubElement(parent_element,
@@ -242,21 +250,15 @@ class DocumentGenerator:
                     new_sub_element.text = str(attribute_value).lower()
                 else:
                     new_sub_element.text = str(attribute_value)
-            if id_field_name is not None:
-                if isinstance(id_field_name, list):
-                    new_sub_element.attrib["id"] = \
-                        f"{id_field_prefix}{self._get_attribute_of_record(id_field_name[0], document_object)}"
+            if parsed_comment.attribute_field_names is not None:
+                for attribute_field_name in parsed_comment.attribute_field_names:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
                     new_sub_element.attrib[attribute_name] = \
-                        f"{id_field_prefix}{self._get_attribute_of_record(id_field_name[1], document_object)}"
-                else:
-                    attribute_name = self.get_ref_type_attribute_name(ref_type)
-                    new_sub_element.attrib[attribute_name] = \
-                        f"{id_field_prefix}{self._get_attribute_of_record(id_field_name, document_object)}"
+                        f"{id_field_prefix}{self._get_attribute_of_record(attribute_field_name, document_object)}"
 
-    def _create_many_to_many_ref_elements(self, schema_element, parent_element, related_records, id_field_name=None,
-                                          prefix="", related_records_ids=None, ref_type=None):
-        for i, record in enumerate(related_records):
+    def _create_many_to_many_ref_elements(self, schema_element, parent_element, related_records,
+                                          parsed_comment: ParsedComment, prefix="", ref_type=None):
+        for i, record in enumerate(related_records["value"]):
             new_sub_element = ET.SubElement(parent_element,
                                             f"{{{AMCR_NAMESPACE_URL}}}" + schema_element.attrib["name"],
                                             nsmap=self._nsmap)
@@ -264,56 +266,53 @@ class DocumentGenerator:
                 new_sub_element.append(record)
             else:
                 record_text = str(record)
-                if id_field_name is None and prefix:
+                if parsed_comment.attribute_field_names is None and prefix:
                     record = prefix + record_text
                 if isinstance(record, bool):
                     new_sub_element.text = record_text.lower()
                 else:
                     new_sub_element.text = record_text
-            if id_field_name is not None and related_records_ids is not None \
-                    and len(related_records_ids) > i and related_records_ids[i] is not None:
-                attribute_name = self.get_ref_type_attribute_name(ref_type)
-                new_sub_element.attrib[attribute_name] = f"{prefix}{related_records_ids[i]}"
+            if parsed_comment.attribute_field_names is not None:
+                new_sub_element.attrib["id"] = \
+                    f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"
+                if len(parsed_comment.attribute_field_names) == 2:
+                    attribute_name = self.get_ref_type_attribute_name(ref_type)
+                    new_sub_element.attrib[attribute_name] = \
+                        f"{prefix}{related_records[parsed_comment.attribute_field_names[1]][i]}"
 
     def _parse_scheme_create_element(self, schema_element, parent_element):
         if schema_element.__class__.__name__ == "_Element":
             next_element = schema_element.getnext()
             # The comment should be the very next element
             if next_element.__class__.__name__ == "_Comment":
-                id_field_name, field_name = self._parse_comment(next_element.text)
+                parsed_comment: ParsedComment = self._parse_comment(next_element.text)
                 prefix = self._get_prefix(next_element.text)
                 if "maxOccurs" not in schema_element.attrib or schema_element.attrib["maxOccurs"] == "1":
-                    if field_name is not None:
+                    if parsed_comment.value_field_name is not None:
                         if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
                                                              "xs:dateTime", "amcr:gmlType", "amcr:wktType",
                                                              "amcr:autorType", "xs:boolean"):
-                            self._create_element(schema_element, parent_element, field_name, id_field_name,
+                            self._create_element(schema_element, parent_element, parsed_comment,
                                                  id_field_prefix=prefix, ref_type=schema_element.attrib["type"])
                         else:
-                            obj = self._get_attribute_of_record(field_name)
+                            obj = self._get_attribute_of_record(parsed_comment.value_field_name)
                             if obj is not None:
                                 child_schema_element = self._parse_schema(schema_element.attrib["type"])
                                 self._parse_scheme_create_nested_element(child_schema_element, parent_element, obj,
                                                                          schema_element.attrib["name"])
                 elif schema_element.attrib["maxOccurs"] == "unbounded":
-                    if field_name is not None:
-                        related_records = self._get_attribute_of_record_unbounded(self.document_object, field_name,
-                                                                                  schema_element)
-                        if id_field_name is not None:
-                            related_records_ids = self._get_attribute_of_record_unbounded(self.document_object,
-                                                                                          id_field_name, schema_element)
-                        else:
-                            related_records_ids = None
-                        if related_records is not None:
-                            if "refType" not in schema_element.attrib["type"] and \
-                                    "autorType" not in schema_element.attrib["type"] and \
-                                    "wktType" not in schema_element.attrib["type"] and \
-                                    "gmlType" not in schema_element.attrib["type"]:
-                                self._iterate_unbound_records(related_records, schema_element, parent_element)
+                    if parsed_comment.value_field_name is not None:
+                        related_records_dict = self._get_attribute_of_record_unbounded(self.document_object,
+                                                                                       parsed_comment,
+                                                                                       schema_element)
+                        if related_records_dict and related_records_dict["value"]:
+                            if schema_element.attrib["type"].replace("amcr:", "") \
+                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string"):
+                                self._iterate_unbound_records(related_records_dict, schema_element, parent_element)
                             else:
-                                self._create_many_to_many_ref_elements(schema_element, parent_element, related_records,
-                                                                       id_field_name=id_field_name,
-                                                                       related_records_ids=related_records_ids,
+                                self._create_many_to_many_ref_elements(schema_element, parent_element,
+                                                                       related_records_dict,
+                                                                       parsed_comment=parsed_comment,
                                                                        prefix=prefix,
                                                                        ref_type=schema_element.attrib["type"])
                     else:
@@ -328,7 +327,7 @@ class DocumentGenerator:
 
     def _iterate_unbound_records(self, related_records, schema_element, parent_element):
         child_schema_element = self._parse_schema(schema_element.attrib["type"])
-        for obj in related_records:
+        for obj in related_records["value"]:
             self._parse_scheme_create_nested_element(child_schema_element, parent_element, obj,
                                                      schema_element.attrib["name"])
 
@@ -340,33 +339,25 @@ class DocumentGenerator:
             if child_schema_element.__class__.__name__ == "_Element":
                 next_element = child_schema_element.getnext()
                 if next_element.__class__.__name__ == "_Comment":
-                    id_field_name, field_name = self._parse_comment(next_element.text)
+                    parsed_comment: ParsedComment = self._parse_comment(next_element.text)
                     prefix = self._get_prefix(next_element.text)
                     if child_schema_element.attrib["maxOccurs"] == "1":
-                        if field_name is not None:
-                            self._create_element(child_schema_element, child_parent_element, field_name, id_field_name,
-                                                 document_object, prefix, ref_type=child_schema_element.attrib["type"])
+                        if parsed_comment.value_field_name is not None:
+                            self._create_element(child_schema_element, child_parent_element,
+                                                 parsed_comment, document_object, prefix,
+                                                 ref_type=child_schema_element.attrib["type"])
                     else:
-                        related_records = self._get_attribute_of_record_unbounded(document_object, field_name,
+                        related_records_dict = self._get_attribute_of_record_unbounded(document_object,
+                                                                                  parsed_comment,
                                                                                   child_schema_element)
-                        if id_field_name is not None:
-                            related_records_ids = self._get_attribute_of_record_unbounded(document_object,
-                                                                                          id_field_name,
-                                                                                          child_schema_element)
-                        else:
-                            related_records_ids = None
-                        if related_records is not None and len(related_records) > 0:
-                            if "refType" not in child_schema_element.attrib["type"] and \
-                                    "autorType" not in child_schema_element.attrib["type"] and \
-                                    "wktType" not in child_schema_element.attrib["type"] and \
-                                    "gmlType" not in child_schema_element.attrib["type"]:
-                                self._iterate_unbound_records(related_records, child_schema_element,
+                        if related_records_dict is not None and len(related_records_dict) > 0:
+                            if child_schema_element.attrib["type"].replace("amcr:", "") \
+                                    not in ("refType", "autorType", "wktType", "gmlType"):
+                                self._iterate_unbound_records(related_records_dict, child_schema_element,
                                                               child_parent_element)
                             else:
                                 self._create_many_to_many_ref_elements(child_schema_element, child_parent_element,
-                                                                       related_records,
-                                                                       id_field_name if id_field_name else None,
-                                                                       prefix, related_records_ids,
+                                                                       related_records_dict, parsed_comment, prefix,
                                                                        child_schema_element.attrib["type"])
 
     def get_ref_type_attribute_name(self, type_name):

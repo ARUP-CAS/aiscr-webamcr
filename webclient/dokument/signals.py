@@ -45,12 +45,8 @@ def create_dokument_cast_vazby(sender, instance, **kwargs):
 @receiver(post_save, sender=Dokument)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
     instance.save_metadata()
-    for item in instance.casti.all():
-        item: DokumentCast
-        arch_z: ArcheologickyZaznam = item.archeologicky_zaznam
-        arch_z.save_metadata()
 
 
 @receiver(post_save, sender=Let)
-def dokument_save_metadata(sender, instance: Let, **kwargs):
+def let_save_metadata(sender, instance: Let, **kwargs):
     instance.save_metadata()

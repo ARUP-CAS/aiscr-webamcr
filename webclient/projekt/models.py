@@ -558,6 +558,13 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def pristupnost(self):
         return Heslar.objects.get(ident_cely="HES-000865")
 
+    @property
+    def planovane_zahajeni_str(self):
+        if self.planovane_zahajeni:
+            return f"{self.planovane_zahajeni.lower} - {self.planovane_zahajeni.upper}"
+        else:
+            return ""
+
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
     """

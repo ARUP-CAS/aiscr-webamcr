@@ -36,7 +36,7 @@
       <xs:element name="typ_projektu" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{typ_projektu.ident_cely}" | "{typ_projektu.heslo}" -->
       <xs:element name="okres" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{hlavni_katastr.okres.kod}" | "{hlavni_katastr.okres.nazev}" -->
       <xs:element name="podnet" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{podnet}" -->
-      <xs:element name="planovane_zahajeni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{planovane_zahajeni}" -->
+      <xs:element name="planovane_zahajeni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{planovane_zahajeni_str}" -->
       <xs:element name="vedouci_projektu" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{vedouci_projektu.ident_cely}" | "{vedouci_projektu.vypis_cely}" -->
       <xs:element name="organizace" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uzivatelske_oznaceni}" -->
@@ -118,7 +118,7 @@
       <xs:element name="material_originalu" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{material_originalu.ident_cely}" | "{material_originalu.heslo}" -->
       <xs:element name="rada" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{rada.ident_cely}" | "{rada.heslo}" -->
       <xs:element name="posudek" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{posudky.ident_cely}" | "{posudky.heslo}" -->
-      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{autori.ident_cely}"  | "{autori.vypis_cely}" -->
+      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{dokumentautor_set.autor.ident_cely}"  | "{dokumentautor_set.poradi}" | "{dokumentautor_set.autor.vypis_cely}" -->
       <xs:element name="rok_vzniku" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{rok_vzniku}" -->
       <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
       <xs:element name="pristupnost" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{pristupnost.ident_cely}" | "{pristupnost.heslo}" -->
@@ -177,7 +177,7 @@
       <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- DEFAULT: "HES-000865" | "anonym"; "{pristupnost_pom.ident_cely}" | "{pristupnost_pom.heslo}") -->
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:pian-chranene_udajeType"/> <!-- SELF -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
-      <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{DokumentacniJednotka.archeologicky_zaznam.ident_cely}" | "{DokumentacniJednotka.ident_cely}" -->
+      <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{dokumentacni_jednotky_pianu.archeologicky_zaznam.ident_cely}" | "{dokumentacni_jednotky_pianu.ident_cely}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="samostatny_nalezType">
@@ -223,14 +223,14 @@
       <xs:element name="aktivni" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_active}" -->
       <xs:element name="admin" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_staff}" -->
       <xs:element name="superadmin" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_superuser}" -->   
-      <xs:element name="skupina" minOccurs="1" maxOccurs="unbounded" type="xs:string"/> <!-- TODO - nevím, jak to správně zapsat; "{groups.name}" -->
+      <xs:element name="skupina" minOccurs="1" maxOccurs="unbounded" type="xs:string"/> <!-- "{groups.name}" -->
       <xs:element name="notifikace" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{notification_types.ident_cely}" -->
-      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- TODO - nevím, jak to správně zapsat; "{Pes.xxx}" -->
+      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{pes_set.content_object}" -->
       <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> <!-- "{date_joined}" -->
       <xs:element name="datum_prihlaseni" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{last_login}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
-      <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> <!-- FILTER: "{UzivatelSpoluprace.spolupracovnik}" -->
-      <xs:element name="spoluprace_podrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_podrizeniType"/> <!-- FILTER: "{UzivatelSpoluprace.vedouci}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie_set}" -->
+      <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> <!-- "{spoluprace_badatelu}" -->
+      <xs:element name="spoluprace_podrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_podrizeniType"/> <!-- "{spoluprace_archeologu}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="hesloType">
@@ -244,11 +244,11 @@
       <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka}" -->
       <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka_en}" -->
       <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{razeni}" -->
-      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- FILTER: "{HeslarHierarchie.heslo_podrazene}" -->
-      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- FILTER: "{HeslarHierarchie.heslo_nadrazene}" -->   
-      <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> <!-- FILTER: "{HeslarDokumentTypMaterialRada.dokument_rada}" -->
+      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{hierarchie}" -->
+      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{nadrazene}" -->
+      <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> <!-- "{rada}" -->
       <xs:element name="datace" minOccurs="0" maxOccurs="1" type="amcr:dataceType"/> <!-- "{heslar_datace}" -->
-      <xs:element name="odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:odkazType"/> <!-- "{HeslarOdkaz}" -->
+      <xs:element name="odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:odkazType"/> <!-- "{heslar_odkaz}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="ruian_krajType">

@@ -22,6 +22,9 @@ class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
     change_actions = ("metadata",)
 
 
+class HeslarWithMetadataAdmin(ObjectWithMetadataAdmin):
+    pass
+
 @admin.register(HeslarNazev)
 class HeslarNazevAdmin(admin.ModelAdmin):
     """
@@ -44,7 +47,7 @@ class HeslarNazevAdmin(admin.ModelAdmin):
 
 
 @admin.register(Heslar)
-class HeslarAdmin(admin.ModelAdmin):
+class HeslarAdmin(HeslarWithMetadataAdmin):
     """
     Admin část pro správu modelu heslař.
     """

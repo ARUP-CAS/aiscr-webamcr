@@ -1,5 +1,5 @@
 import logging
-
+from io import StringIO
 
 from dal import autocomplete
 from django.contrib import messages
@@ -22,7 +22,7 @@ from django_registration.backends.activation.views import RegistrationView
 from services.mailer import Mailer
 from django_registration.backends.activation.views import ActivationView
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_xml.renderers import XMLRenderer
@@ -305,42 +305,22 @@ class MyXMLRenderer(XMLRenderer):
     """
     Override třídy pro nastavení správnych tagů.
     """
-    root_tag_name = 'amcr:uzivatel'
 
-    def _to_xml(self, xml, data):
-        if isinstance(data, (list, tuple)):
-            for item in data:
-                xml.startElement(self.item_tag_name, {})
-                self._to_xml(xml, item)
-                xml.endElement(self.item_tag_name)
-
-        elif isinstance(data, dict):
-            for key, value in data.items():
-                if isinstance(value, dict) and "idRef" in value:
-                    xml.startElement(key, {"id":value.pop("idRef")})
-                    self._to_xml(xml, value["value"])
-                else:
-                    xml.startElement(key, {})
-                    self._to_xml(xml, value)
-                xml.endElement(key)
-
-        elif data is None:
-            # Don't output any value
-            pass
-
-        else:
-            xml.characters(force_str(data))
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        """
+        Renders `data` into serialized XML.
+        """
+        return data
 
 class GetUserInfo(APIView):
     """
     Třída podlehu pro získaní základních info o uživately.
     """
-    authentication_classes = [TokenAuthenticationBearer]
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
     renderer_classes = [MyXMLRenderer,]
     http_method_names = ["get",]
     
     def get(self, request, format=None):
         user = request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+        return Response(user.metadata)

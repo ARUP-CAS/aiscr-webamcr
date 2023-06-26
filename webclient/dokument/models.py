@@ -381,6 +381,12 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)
 
+    def save_metadata(self):
+        super(Dokument, self).save_metadata()
+        for item in self.casti.all():
+            arch_z: ArcheologickyZaznam = item.archeologicky_zaznam
+            arch_z.save_metadata()
+
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """
@@ -531,7 +537,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     class Meta:
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
-        ordering = (["poradi"],)
+        ordering = ("poradi",)
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
