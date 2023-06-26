@@ -211,7 +211,7 @@ class ExterniZdrojEditView(LoginRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        super().form_valid(form)
+        self.object = form.save(commit=False)
         self.object.autori.clear()
         self.object.editori.clear()
         self.object.save()
@@ -675,6 +675,7 @@ def save_autor_editor(zaznam, form):
             poradi=i,
         )
         i = i + 1
+    i = 1
     for editor in form.cleaned_data["editori"]:
         ExterniZdrojEditor.objects.create(
             externi_zdroj=zaznam,
