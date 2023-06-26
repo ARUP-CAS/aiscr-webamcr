@@ -101,3 +101,6 @@ kibana/kibana.yml
 logstash/logstash.conf
 /scripts/test_preparaton.sh
 /redis_pass.txt
+
+# preklady reqrite
+/preklady
