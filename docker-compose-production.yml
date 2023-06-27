@@ -59,8 +59,9 @@ services:
       - mail_conf
       - redis_pass
     volumes:
-      - ./webclient:/code
-      - ./vol/web:/vol/web
+      - static_data:/vol/web
+      - locale_data:/vol/web/locale
+      - nginx_data:/vol/web/nginx/data
     networks:
       - prod-net
     healthcheck:
@@ -78,8 +79,9 @@ services:
       - mail_conf
       - redis_pass
     volumes:
-      - ./webclient:/code
-      - ./vol/web:/vol/web
+      - static_data:/vol/web
+      - locale_data:/vol/web/locale
+      - nginx_data:/vol/web/nginx/data
     networks:
       - prod-net
     healthcheck:
