@@ -3,6 +3,8 @@ import traceback
 
 from celery import shared_task
 
+from adb.models import Adb
+from arch_z.models import ArcheologickyZaznam
 from core.constants import ODESLANI_SN, ARCHIVACE_SN
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
@@ -10,9 +12,14 @@ from cron.functions import collect_en01_en02
 from django.db import connection
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
+from dokument.models import Dokument, Let
+from ez.models import ExterniZdroj
+from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
 from pas.models import SamostatnyNalez
 from pian.models import Pian
+from projekt.models import Projekt
 from services.mailer import Mailer
+from uzivatel.models import Organizace, Osoba
 
 logger = logging.getLogger(__name__)
 
@@ -365,3 +372,46 @@ def nalez_to_wsg84(self):
             return None
     except Exception as e:
         logger.debug(e)
+
+
+@shared_task
+def save_record_metadata(class_name, record_pk):
+    logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
+    from xml_generator.models import ModelWithMetadata
+    if class_name == "Projekt":
+        record = Projekt.objects.get(pk=record_pk)
+    elif class_name == "SamostatnyNalez":
+        record = SamostatnyNalez.objects.get(pk=record_pk)
+    elif class_name == "Heslar":
+        record = Heslar.objects.get(pk=record_pk)
+    elif class_name == "RuianKatastr":
+        record = RuianKatastr.objects.get(pk=record_pk)
+    elif class_name == "RuianKraj":
+        record = RuianKraj.objects.get(pk=record_pk)
+    elif class_name == "RuianOkres":
+        record = RuianOkres.objects.get(pk=record_pk)
+    elif class_name == "ArcheologickyZaznam":
+        record = ArcheologickyZaznam.objects.get(pk=record_pk)
+    elif class_name == "ExterniZdroj":
+        record = ExterniZdroj.objects.get(pk=record_pk)
+    elif class_name == "Adb":
+        record = Adb.objects.get(pk=record_pk)
+    elif class_name == "Pian":
+        record = Pian.objects.get(pk=record_pk)
+    elif class_name == "Dokument":
+        record = Dokument.objects.get(pk=record_pk)
+    elif class_name == "Let":
+        record = Let.objects.get(pk=record_pk)
+    elif class_name == "Organizace":
+        record = Organizace.objects.get(pk=record_pk)
+    elif class_name == "Osoba":
+        record = Osoba.objects.get(pk=record_pk)
+    else:
+        logger.debug("cron.send_notifications.do.error.unknown_class",
+                     extra={"class_name": class_name, "record_pk": record_pk})
+        return
+    record: ModelWithMetadata
+    from core.repository_connector import FedoraRepositoryConnector
+    connector = FedoraRepositoryConnector(record)
+    connector.save_metadata(True)
+    logger.debug("cron.send_notifications.do.end")
