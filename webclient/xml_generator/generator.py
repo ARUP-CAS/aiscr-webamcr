@@ -11,6 +11,7 @@ from django.contrib.gis.db.models.functions import AsGML, GeoFunc
 from lxml import etree
 from lxml import etree as ET
 
+from adb.models import VyskovyBod
 from heslar.models import RuianKraj, RuianOkres
 from xml_generator.models import ModelWithMetadata
 
@@ -146,7 +147,8 @@ class DocumentGenerator:
             from pian.models import Pian
             logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.geom",
                          extra={"attribute_name": attribute_name, "pk": record.pk})
-            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData):
+            if isinstance(record, Projekt) or isinstance(record, DokumentExtraData) \
+                    or isinstance(record, VyskovyBod):
                 record = record.__class__.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
                                                            geom_st_astext=AsText("geom")) \
                     .get(pk=record.pk)
