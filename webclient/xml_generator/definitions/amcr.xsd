@@ -450,7 +450,7 @@
       <xs:element name="cislo_popisne" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{cislo_popisne}" -->
       <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{parcelni_cislo}" -->
       <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
-      <xs:element name="vyskovy_bod" minOccurs="0" maxOccurs="unbounded" type="amcr:vyskovy_bodType"/> <!-- "{VyskovyBod}" -->
+      <xs:element name="vyskovy_bod" minOccurs="0" maxOccurs="unbounded" type="amcr:vyskovy_bodType"/> <!-- "{vyskove_body}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="vyskovy_bodType">
