@@ -6,6 +6,8 @@ from typing import Optional
 
 from django.db import models
 from django.forms import ValidationError
+from django.utils.functional import cached_property
+
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from django.utils.translation import gettext as _
@@ -96,6 +98,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.FileField(upload_to=get_upload_to, max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     repository_uuid = models.CharField(max_length=36, null=True, blank=True, db_index=True)
+
+    @cached_property
+    def sha_512(self):
+        repository_content = self.get_repository_content()
+        if repository_content is not None:
+            return repository_content.sha_512()
+        return ""
 
     class Meta:
         db_table = "soubor"

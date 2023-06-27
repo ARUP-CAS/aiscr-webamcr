@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class RepositoryBinaryFile:
+    def sha_512(self) -> str:
+        data = self.content.read()
+        sha_512 = hashlib.sha512(data).hexdigest()
+        self.content.seek(0)
+        return sha_512
+
     @property
     def size_mb(self):
         return self.size / 1024 ** 2
