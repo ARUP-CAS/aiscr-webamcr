@@ -523,7 +523,7 @@
    	  <xs:element name="jistota" minOccurs="0" maxOccurs="1" type="xs:boolean"/> <!-- "{jistota}" -->
    	  <xs:element name="presna_datace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{presna_datace}" -->
    	  <xs:element name="areal" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{areal.ident_cely}" | "{areal.heslo}" -->
-   	  <xs:element name="aktivita" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{aktivita_set.ident_cely}" | "{aktivita_set.heslo}" -->
+   	  <xs:element name="aktivita" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{aktivity.ident_cely}" | "{aktivity.heslo}" -->
    	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
    	  <xs:element name="nalez_objekt" minOccurs="0" maxOccurs="unbounded" type="amcr:nalez_objektType"/> <!-- "{objekty}" -->
    	  <xs:element name="nalez_predmet" minOccurs="0" maxOccurs="unbounded" type="amcr:nalez_predmetType"/><!-- "{predmety}" -->
