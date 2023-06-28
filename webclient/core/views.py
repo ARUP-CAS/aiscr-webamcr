@@ -55,6 +55,7 @@ from core.utils import (
 from dokument.models import Dokument, get_dokument_soubor_name
 from ez.models import ExterniZdroj
 from pas.models import SamostatnyNalez
+from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import User
 from django_tables2.export import ExportMixin
@@ -749,6 +750,22 @@ class StahnoutMetadataView(LoginRequiredMixin, View):
             record: SamostatnyNalez = SamostatnyNalez.objects.get(pk=pk)
         elif model_name == "externi_zdroj":
             record: ExterniZdroj = ExterniZdroj.objects.get(pk=pk)
+        else:
+            raise Http404
+        metadata = record.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
+
+class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
+    def get(self, request, model_name, ident_cely):
+        if model_name == "pian":
+            record: Pian = Pian.objects.get(ident_cely=ident_cely)
         else:
             raise Http404
         metadata = record.metadata

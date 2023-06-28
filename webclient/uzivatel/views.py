@@ -241,7 +241,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
-        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", request_data=request_data)
+        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", extra={"request_data": request_data})
         form = self.form_class(data=request.POST, instance=self.request.user)
         if form.is_valid():
             obj = form.save(commit=False)
@@ -276,6 +276,7 @@ def update_notifications(request):
         user.notification_types.set(notifications)
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.update_notifications.post.success"))
+        user.save_metadata()
         return redirect("/upravit-uzivatele/")
 
 
