@@ -150,7 +150,7 @@ def detail(request, ident_cely):
         )
         if formset.is_valid():
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
-            instances = formset.save()
+            instances = formset.save(commit=False)
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
                 vyskovy_bod_form = list(filter(lambda x: x.instance == vyskovy_bod, formset.forms))[0]
@@ -159,10 +159,10 @@ def detail(request, ident_cely):
                     logger.debug("dj.views.detail.adb_zapsat_vyskove_body.save",
                                  extra={"vyskovy_bod": vyskovy_bod.__dict__,
                                         "vyskovy_bod_form": vyskovy_bod_form.__dict__})
-                    vyskovy_bod.save()
                     vyskovy_bod.set_geom(vyskovy_bod_form.cleaned_data.get("northing", 0),
                                          vyskovy_bod_form.cleaned_data.get("easting", 0),
                                          vyskovy_bod_form.cleaned_data.get("niveleta", 0))
+                vyskovy_bod.save()
         if formset.is_valid():
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
             if (
