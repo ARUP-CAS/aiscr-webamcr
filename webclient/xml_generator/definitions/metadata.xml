@@ -460,7 +460,6 @@
     <amcr:notifikace>E-U-01</amcr:notifikace>
     <amcr:hlidaci_pes>Beroun</amcr:hlidaci_pes>
     <amcr:datum_registrace>2023-02-01T16:58:50Z</amcr:datum_registrace>
-    <amcr:datum_prihlaseni>2023-02-01T16:58:50Z</amcr:datum_prihlaseni>
     <amcr:historie>
       <amcr:id>hist-1</amcr:id>
       <amcr:datum_zmeny>2023-02-01T16:58:50Z</amcr:datum_zmeny>
