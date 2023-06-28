@@ -244,8 +244,8 @@
       <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka}" -->
       <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka_en}" -->
       <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{razeni}" -->
-      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{hierarchie}" -->
-      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{nadrazene}" -->
+      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{nadrazene.heslo_podrazene}" -->
+      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{hierarchie.heslo_nadrazene}" -->
       <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> <!-- "{rada}" -->
       <xs:element name="datace" minOccurs="0" maxOccurs="1" type="amcr:dataceType"/> <!-- "{heslar_datace}" -->
       <xs:element name="odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:odkazType"/> <!-- "{heslar_odkaz}" -->
@@ -585,14 +585,14 @@
   <xs:complexType name="hierarchie_vyseType">
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
-      <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{heslo_nadrazene.ident_cely}" | "{heslo_nadrazene.heslo}" -->
+      <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{ident_cely}" | "{heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->      
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="hierarchie_nizeType">
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
-      <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{heslo_podrazene.ident_cely}" | "{heslo_podrazene.heslo}" -->
+      <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{ident_cely}" | "{heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->         
     </xs:sequence>
   </xs:complexType>
