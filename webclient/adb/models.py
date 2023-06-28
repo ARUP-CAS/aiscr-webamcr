@@ -161,7 +161,6 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
             logger.debug(
                 "adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom}
             )
-            self.save()
 
     def save(self, *args, **kwargs):
         """
