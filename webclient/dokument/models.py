@@ -629,7 +629,6 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
         constraints = [
             models.UniqueConstraint(fields=['rada', 'region','rok'], name='unique_sekvence_dokument'),
         ]
-        
 
 
 class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
@@ -685,6 +684,7 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     class Meta:
         db_table = "let"
         ordering = ["ident_cely"]
+        verbose_name_plural = "Lety"
 
     def __str__(self):
         return self.ident_cely
