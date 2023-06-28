@@ -89,7 +89,7 @@
       <xs:element name="pocasi" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{pocasi.ident_cely}" | "{pocasi.heslo}" -->
       <xs:element name="dohlednost" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "{dohlednost.ident_cely}" | "{dohlednost.heslo}" -->
       <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uzivatelske_oznaceni}" -->
-      <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{Dokument.ident_cely}" | "{Dokument.ident_cely}" -->
+      <xs:element name="dokument" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{dokument_set.ident_cely}" | "{dokument_set.ident_cely}" -->
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="adbType">
@@ -143,14 +143,14 @@
       <xs:element name="stav" minOccurs="1" maxOccurs="1" type="xs:integer"/> <!-- "{stav}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{typ.ident_cely}" | "{typ.heslo}" -->
       <xs:element name="sysno" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{sysno}" -->
-      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{autori.ident_cely}" | "{ExterniZdrojAutor.poradi}" | "{autori.vypis_cely}" -->
+      <xs:element name="autor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{externizdrojautor_set.autor.ident_cely}" | "{externizdrojautor_set.poradi}" | "{externizdrojautor_set.autor.vypis_cely}" -->
       <xs:element name="nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
       <xs:element name="edice_rada" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{edice_rada}" -->
       <xs:element name="rok_vydani_vzniku" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{rok_vydani_vzniku}" -->
       <xs:element name="isbn" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{isbn}" -->
       <xs:element name="issn" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{issn}" -->
       <xs:element name="vydavatel" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{vydavatel}" -->
-      <xs:element name="editor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{editori.ident_cely}" | "{ExterniZdrojEditor.poradi}" | "{editori.vypis_cely}" -->
+      <xs:element name="editor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{externizdrojeditor_set.autor.ident_cely}" | "{externizdrojeditor_set.poradi}" | "{externizdrojeditor_set.autor.vypis_cely}" -->
       <xs:element name="sbornik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{sbornik_nazev}" -->
       <xs:element name="misto" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{misto}" -->
       <xs:element name="casopis_denik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{casopis_denik_nazev}" -->
@@ -228,7 +228,7 @@
       <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{pes_set.content_object}" -->
       <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> <!-- "{date_joined}" -->
       <xs:element name="datum_prihlaseni" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{last_login}" -->
-      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie_set}" -->
+      <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{history_vazba.historie_set}" -->
       <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> <!-- "{spoluprace_badatelu}" -->
       <xs:element name="spoluprace_podrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_podrizeniType"/> <!-- "{spoluprace_archeologu}" -->
     </xs:sequence>

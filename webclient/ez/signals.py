@@ -2,7 +2,7 @@ import logging
 
 from .models import ExterniZdroj
 from core.constants import EXTERNI_ZDROJ_RELATION_TYPE
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=ExterniZdroj)
-def create_ez_vazby(sender, instance, **kwargs):
+def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
     """
     Metóda pro vytvoření historických vazeb externího zdroje.
     Metóda se volá pred uložením záznamu.
@@ -20,3 +20,8 @@ def create_ez_vazby(sender, instance, **kwargs):
         hv = HistorieVazby(typ_vazby=EXTERNI_ZDROJ_RELATION_TYPE)
         hv.save()
         instance.historie = hv
+
+
+@receiver(post_save, sender=ExterniZdroj)
+def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
+    instance.save_metadata()
