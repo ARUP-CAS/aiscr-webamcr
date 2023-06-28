@@ -55,7 +55,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 and cleaned_data.get("organizace", None) is None
             ):
                 raise forms.ValidationError(
-                    _("create_akce_vedouci_objekt_form.clean.error")
+                    _("arch_z.forms.CreateAkceVedouciObjektForm.clean.error")
                 )
 
         class Meta:
@@ -63,8 +63,8 @@ def create_akce_vedouci_objekt_form(readonly=True):
             fields = ["vedouci", "organizace"]
 
             labels = {
-                "vedouci": _("Vedoucí"),
-                "organizace": _("Organizace"),
+                "vedouci": _("arch_z.forms.CreateAkceVedouciObjektForm.vedouci.label"),
+                "organizace": _("arch_z.forms.CreateAkceVedouciObjektForm.organizace.label"),
             }
             if readonly:
                 widgets = {
@@ -90,8 +90,8 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 }
 
             help_texts = {
-                "vedouci": _("arch_z.form.vedouci.tooltip"),
-                "organizace": _("arch_z.form.organizace.tooltip"),
+                "vedouci": _("arch_z.forms.CreateAkceVedouciObjektForm.vedouci.tooltip"),
+                "organizace": _("arch_z.forms.CreateAkceVedouciObjektForm.organizace.tooltip"),
             }
 
         def __init__(self, *args, **kwargs):
@@ -117,10 +117,10 @@ class CreateArchZForm(forms.ModelForm):
         )
 
         labels = {
-            "hlavni_katastr": _("Hlavní katastr"),
-            "pristupnost": _("Přístupnost"),
-            "uzivatelske_oznaceni": _("Uživatelské označení"),
-            "katastry": _("Další katastry"),
+            "hlavni_katastr": _("arch_z.forms.CreateArchZForm.hlavni_katastr.label"),
+            "pristupnost": _("arch_z.forms.CreateArchZForm.pristupnost.label"),
+            "uzivatelske_oznaceni": _("arch_z.forms.CreateArchZForm.uzivatelske_oznaceni.label"),
+            "katastry": _("arch_z.forms.CreateArchZForm.katastry.label"),
         }
         widgets = {
             "hlavni_katastr": autocomplete.ModelSelect2(
@@ -139,10 +139,10 @@ class CreateArchZForm(forms.ModelForm):
             ),
         }
         help_texts = {
-            "hlavni_katastr": _("arch_z.form.hlavni_katastr.tooltip"),
-            "pristupnost": _("arch_z.form.pristupnost.tooltip"),
-            "uzivatelske_oznaceni": _("arch_z.form.uzivatelske_oznaceni.tooltip"),
-            "katastry": _("arch_z.form.katastry.tooltip"),
+            "hlavni_katastr": _("arch_z.forms.CreateArchZForm.hlavni_katastr.tooltip"),
+            "pristupnost": _("arch_z.forms.CreateArchZForm.pristupnost.tooltip"),
+            "uzivatelske_oznaceni": _("arch_z.forms.CreateArchZForm.uzivatelske_oznaceni.tooltip"),
+            "katastry": _("arch_z.forms.CreateArchZForm.katastry.tooltip"),
         }
 
     def __init__(
@@ -172,14 +172,14 @@ class CreateArchZForm(forms.ModelForm):
                 pass
         try:
             self.fields["hlavni_katastr_show"] = forms.CharField(
-                label=_("Hlavní katastr"),
-                help_text=_("arch_z.form.hlavni_katastr.tooltip"),
+                label=_("arch_z.forms.CreateArchZForm.hlavni_katastr.label"),
+                help_text=_("arch_z.forms.CreateArchZForm.hlavni_katastr.tooltip"),
                 required=False,
                 disabled=True,
             )
             self.fields["katastry_show"] = forms.CharField(
-                label=_("Další katastry"),
-                help_text=_("arch_z.form.katastry.tooltip"),
+                label=_("arch_z.forms.CreateArchZForm.katastry.label"),
+                help_text=_("arch_z.forms.CreateArchZForm.katastry.tooltip"),
                 required=False,
                 disabled=True,
             )
@@ -283,10 +283,10 @@ class CreateAkceForm(forms.ModelForm):
     Hlavní formulář pro vytvoření, editaci a zobrazení akce.
     """
     datum_zahajeni = StartDateInput(
-        help_text=_("arch_z.form.datum_zahajeni.tooltip"),
+        help_text=_("arch_z.forms.CreateAkceForm.datum_zahajeni.tooltip"),
     )
     datum_ukonceni = EndDateInput(
-        help_text=_("arch_z.form.datum_ukonceni.tooltip"),
+        help_text=_("arch_z.forms.CreateAkceForm.datum_ukonceni.tooltip"),
         required=False,
     )
 
@@ -300,7 +300,7 @@ class CreateAkceForm(forms.ModelForm):
             and cleaned_data.get("datum_zahajeni") is None
         ):
             raise forms.ValidationError(
-                _("Je-li vyplněno datum ukončení, musí být vyplněno i datum zahájení")
+                _("arch_z.forms.CreateAkceForm.validation.datum_zahajeni.error")
             )
         elif (
             cleaned_data.get("datum_ukonceni") is not None
@@ -308,7 +308,7 @@ class CreateAkceForm(forms.ModelForm):
         ):
             if cleaned_data.get("datum_zahajeni") > cleaned_data.get("datum_ukonceni"):
                 raise forms.ValidationError(
-                    _("Datum zahájení nemůže být po datu ukončení")
+                    _("arch_z.forms.CreateAkceForm.validation.datum_ukonceni.error")
                 )
         return self.cleaned_data
 
@@ -331,16 +331,16 @@ class CreateAkceForm(forms.ModelForm):
         )
 
         labels = {
-            "hlavni_vedouci": _("Hlavní vedoucí"),
-            "datum_zahajeni": _("Datum zahájení"),
-            "datum_ukonceni": _("Datum ukončení"),
-            "lokalizace_okolnosti": _("Lokalizace/okolnosti"),
-            "ulozeni_nalezu": _("Uložení nálezů"),
-            "souhrn_upresneni": _("Poznámka"),
-            "je_nz": _("Odeslat ZAA jako NZ"),
-            "specifikace_data": _("Specifikace data"),
-            "ulozeni_dokumentace": _("Uložení dokumentace"),
-            "odlozena_nz": _("arch_z.form.odlozenaNZ.label"),
+            "hlavni_vedouci": _("arch_z.forms.CreateAkceForm.hlavni_vedouci.label"),
+            "datum_zahajeni": _("arch_z.forms.CreateAkceForm.datum_zahajeni.label"),
+            "datum_ukonceni": _("arch_z.forms.CreateAkceForm.datum_ukonceni.label"),
+            "lokalizace_okolnosti": _("arch_z.forms.CreateAkceForm.lokalizace_okolnosti.label"),
+            "ulozeni_nalezu": _("arch_z.forms.CreateAkceForm.ulozeni_nalezu.label"),
+            "souhrn_upresneni": _("arch_z.forms.CreateAkceForm.souhrn_upresneni.label"),
+            "je_nz": _("arch_z.forms.CreateAkceForm.je_nz.label"),
+            "specifikace_data": _("arch_z.forms.CreateAkceForm.specifikace_data.label"),
+            "ulozeni_dokumentace": _("arch_z.forms.CreateAkceForm.ulozeni_dokumentace.label"),
+            "odlozena_nz": _("arch_z.forms.CreateAkceForm.odlozena_nz.label"),
         }
 
         widgets = {
@@ -363,7 +363,7 @@ class CreateAkceForm(forms.ModelForm):
             "souhrn_upresneni": forms.Textarea(attrs={"rows": 4, "cols": 40}),
             "ulozeni_dokumentace": forms.TextInput(),
             "je_nz": forms.Select(
-                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                choices=[("False", _("arch_z.forms.CreateAkceForm.je_nz.choice.ne.label")), ("True", _("arch_z.forms.CreateAkceForm.je_nz.choice.ano.label"))],
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
@@ -378,7 +378,7 @@ class CreateAkceForm(forms.ModelForm):
                 },
             ),
             "odlozena_nz": forms.Select(
-                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                choices=[("False", _("arch_z.forms.CreateAkceForm.odlozena_nz.choice.ne.label")), ("True", _("arch_z.forms.CreateAkceForm.odlozena_nz.choice.ano.label"))],
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
@@ -388,15 +388,15 @@ class CreateAkceForm(forms.ModelForm):
         }
 
         help_texts = {
-            "hlavni_vedouci": _("arch_z.form.hlavni_vedouci.tooltip"),
-            "organizace": _("arch_z.form.organizace.tooltip"),
-            "lokalizace_okolnosti": _("arch_z.form.lokalizace_okolnosti.tooltip"),
-            "ulozeni_nalezu": _("arch_z.form.ulozeni_nalezu.tooltip"),
-            "souhrn_upresneni": _("arch_z.form.souhrn_upresneni.tooltip"),
-            "je_nz": _("arch_z.form.je_nz.tooltip"),
-            "specifikace_data": _("arch_z.form.specifikace_data.tooltip"),
-            "ulozeni_dokumentace": _("arch_z.form.ulozeni_dokumentace.tooltip"),
-            "odlozena_nz": _("arch_z.form.odlozenaNZ.tooltip"),
+            "hlavni_vedouci": _("arch_z.forms.CreateAkceForm.hlavni_vedouci.tooltip"),
+            "organizace": _("arch_z.forms.CreateAkceForm.organizace.tooltip"),
+            "lokalizace_okolnosti": _("arch_z.forms.CreateAkceForm.lokalizace_okolnosti.tooltip"),
+            "ulozeni_nalezu": _("arch_z.forms.CreateAkceForm.ulozeni_nalezu.tooltip"),
+            "souhrn_upresneni": _("arch_z.forms.CreateAkceForm.souhrn_upresneni.tooltip"),
+            "je_nz": _("arch_z.forms.CreateAkceForm.je_nz.tooltip"),
+            "specifikace_data": _("arch_z.forms.CreateAkceForm.specifikace_data.tooltip"),
+            "ulozeni_dokumentace": _("arch_z.forms.CreateAkceForm.ulozeni_dokumentace.tooltip"),
+            "odlozena_nz": _("arch_z.forms.CreateAkceForm.odlozena_nz.tooltip"),
         }
 
     def __init__(self, *args, required=None, required_next=None, **kwargs):
@@ -412,7 +412,7 @@ class CreateAkceForm(forms.ModelForm):
         """
         choices = heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)
         self.fields["hlavni_typ"] = TwoLevelSelectField(
-            label=_("Hlavní typ"),
+            label=_("arch_z.forms.CreateAkceForm.hlavni_typ.label"),
             widget=forms.Select(
                 choices=choices,
                 attrs={
@@ -421,10 +421,10 @@ class CreateAkceForm(forms.ModelForm):
                     "data-live-search": "true",
                 },
             ),
-            help_text=_("arch_z.form.hlavni_typ.tooltip"),
+            help_text=_("arch_z.forms.CreateAkceForm.hlavni_typ.tooltip"),
         )
         self.fields["vedlejsi_typ"] = TwoLevelSelectField(
-            label=_("Vedlejší typ"),
+            label=_("arch_z.forms.CreateAkceForm.vedlejsi_typ.label"),
             widget=forms.Select(
                 choices=choices,
                 attrs={
@@ -433,7 +433,7 @@ class CreateAkceForm(forms.ModelForm):
                     "data-live-search": "true",
                 },
             ),
-            help_text=_("arch_z.form.vedlejsi_typ.tooltip"),
+            help_text=_("arch_z.forms.CreateAkceForm.vedlejsi_typ.tooltip"),
         )
         if projekt:
             self.fields["hlavni_vedouci"].initial = projekt.vedouci_projektu
@@ -507,7 +507,7 @@ class CreateAkceForm(forms.ModelForm):
         je_nz = self.cleaned_data["je_nz"]
         odlozena_nz = self.cleaned_data["odlozena_nz"]
         if odlozena_nz and je_nz:
-            raise ValidationError(_("arch_z.form.odlozenaNz.error"))
+            raise ValidationError(_("arch_z.forms.CreateAkceForm.clean.odlozenaNz.error"))
         return odlozena_nz
 
     def clean_datum_zahajeni(self):

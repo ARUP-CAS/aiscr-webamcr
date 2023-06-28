@@ -6,7 +6,7 @@
 <div class="card app-card-form" id="detail_dj_form_{{ j.ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">
-      {% trans "Dokumentační jednotka" %} {{ j.ident_cely }}
+      {% trans "arch_z.templates.arch_z.dj.partials.dj_update.cardHeader.label" %} {{ j.ident_cely }}
     </div>
     <div class="app-fx app-right">
       {% if show.editovat %}
@@ -14,30 +14,30 @@
         <div class="dropdown-menu" aria-labelledby="others">
           {% if j.show_add_komponenta %}
           <a class="dropdown-item" href="{% url 'arch_z:create-komponenta' zaznam.ident_cely j.ident_cely %}">
-            {% trans 'Přidat komponentu' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label' %}
           </a>
           {% endif %}
           {% if j.show_add_pian %}
           <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'arch_z:create-pian' zaznam.ident_cely j.ident_cely %}">
-            {% trans 'Přidat nový pian' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatNovyPian.label' %}
           </a>
           {% endif %}
           {% if j.show_add_pian %}
                     <a id="show_menu_ku_from_map_id"  class="dropdown-item" href="#"
                        onclick="show_grap_geom_from_map('ku')">
-                      {% trans 'Nastav Katarální uzemí z mapy' %}
+                      {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.nastavKatastrZMapy.label' %}
                     </a>
           {% endif %}
           {% if j.show_add_pian %}
           <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
              onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
-            {% trans 'Připojit pian z mapy' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pripojitPianZMapy.label' %}
           </a>
           {% endif %}
           {% if j.show_approve_pian %}
           <button id="pian-potvrdit-{{j.pian_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
                   name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
-            {% trans 'Potvrdit pian' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.potvrditPian.label' %}
           </button>
           {% endif %}
           {% if j.pian_ident_cely %}
@@ -45,24 +45,24 @@
           {% endif %}
           {% if j.show_uprav_pian and j.pian_ident_cely %}
           <a id="pian-upravit-{{j.pian_ident_cely}}"  class="dropdown-item" href="{% url 'arch_z:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
-            {% trans 'Upravit pian' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.upravitPian.label' %}
           </a>
           {% endif %}
           {% if j.show_remove_pian %}
           <button id="pian-odpojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
                   name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
-            {% trans 'Odpojit pian' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.odpojitPian.label' %}
           </button>
           {% endif %}
           {% if j.show_add_adb %}
           <a class="dropdown-item" href="{% url 'arch_z:create-adb' zaznam.ident_cely j.ident_cely %}">
-            {% trans 'Přidat ADB' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatADB.label' %}
           </a>
           {% endif %}
           {% if j.show_remove_adb %}
           <button id="adb-smazat-{{j.adb_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button"
                   href="{% url 'adb:smazat' j.adb_ident_cely %}">
-            {% trans 'Smazat ADB' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatADB.label' %}
           </button>
           {% endif %}
           {% if j.adb_pk %}
@@ -70,23 +70,23 @@
           {% endif %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">
-            {% trans 'Smazat DJ' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatDJ.label' %}
           </button>
           {% if j.show_pripojit_pian %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
                   name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
-            {% trans 'Připojit PIAN podle ID' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pripojitPianPodleID.label' %}
           </button>
           {% endif %}
           {% if j.show_change_katastr %}
           <button id="zmenit-katastr-{{j.ident_cely}}" class="dropdown-item zmenit-katastr-btn" type="button"
                   name="button" href="{% url 'dj:zmenit-katastr' j.ident_cely %}")>
-            {% trans 'dj.moreOptions.zmenitKatastr.label' %}
+            {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.zmenitKatastr.label' %}
           </button>
           {% endif %}
         </div>
         <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}"
+                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.dalsiNabidka.label' %}"
                 onclick="filtrAkci()">
           <span class="material-icons">more_vert</span>
         </button>
@@ -101,7 +101,7 @@
       {% crispy j.form %}
       {% if show.editovat %}
       <button type="submit" id="editDjSubmitButton"
-              class="btn btn-primary">{% trans "Uložit změny" %}
+              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editButtons.ulozitZmeny.label" %}
       </button>
       {% endif %}
     </form>
@@ -114,20 +114,20 @@
       <div class="card app-card-form app-card-inner">
         <div class="card-header">
           <div class="app-fx app-left">
-            {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+            {% trans "arch_z.templates.arch_z.dj.partials.dj_update.editADB.cardHeader.ADB.label" %} {{ j.adb_ident_cely }}
           </div>
         </div>
         <div class="card-body formset-table">
           <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}"/>
           {% crispy j.adb_form %}
-          <h5>{% trans "Výškové body" %}</h5>
+          <h5>{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editADB.vyskoveBody.label" %}</h5>
           <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}"/>
           {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
         </div>
       </div>
       {% if show.editovat %}
       <button type="submit" id="editDjSubmitButton"
-              class="btn btn-primary">{% trans "Uložit změny" %}
+              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editADB.ulozitZmeny.label" %}
       </button>
       {% endif %}
     </form>
