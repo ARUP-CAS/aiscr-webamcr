@@ -182,19 +182,19 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         result = []
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             required_fields = [
-                (self.akce.datum_zahajeni, _("Datum zahájení není vyplněn.")),
-                (self.akce.datum_ukonceni, _("Datum ukončení není vyplněn.")),
+                (self.akce.datum_zahajeni, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.datum_zahajeni.text")),
+                (self.akce.datum_ukonceni, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.datum_ukonceni.text")),
                 (
                     self.akce.lokalizace_okolnosti,
-                    _("Lokalizace okolností není vyplněna."),
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.lokalizace_okolnosti.text"),
                 ),
-                (self.akce.specifikace_data, _("Specifikace data není vyplněna.")),
-                (self.akce.organizace, _("Organizace není vyplněna.")),
-                (self.akce.hlavni_typ, _("Hlavní typ není vyplněn.")),
-                (self.akce.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
+                (self.akce.specifikace_data, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.specifikace_data.text")),
+                (self.akce.organizace, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.organizace.text")),
+                (self.akce.hlavni_typ, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_typ.text")),
+                (self.akce.hlavni_vedouci, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_vedouci.text")),
                 (
                     self.akce.archeologicky_zaznam.hlavni_katastr,
-                    _("Hlavní katastr není vyplněn."),
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_katastr.text"),
                 ),
             ]
             for req_field in required_fields:
@@ -205,13 +205,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                     dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
                 )
             ) == 0 and not (self.akce.je_nz or self.akce.odlozena_nz):
-                result.append(_("Nemá nálezovou zprávu."))
+                result.append(_("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.nz.text"))
                 logger.info("arch_z.models.ArcheologickyZaznam.nema_nalezovou_zpravu",
                             extra={"ident_cely": self.ident_cely})
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.dokumentacni_jednotky_akce.all()) == 0:
-            result.append(_("Nemá žádnou dokumentační jednotku."))
+            result.append(_("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.dj.text"))
             logger.info("arch_z.models.ArcheologickyZaznam.nema_dokumentacni_jednotku",
                         extra={"ident_cely": self.ident_cely})
         for dj in self.dokumentacni_jednotky_akce.all():
@@ -219,9 +219,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             # documentation unit must be negative.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
-                    _("Pozitivní dokumentační jednotka ")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text1")
                     + str(dj.ident_cely)
-                    + _(" nemá zadanou žádnou komponentu.")
+                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text2")
                 )
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"dj": dj.ident_cely}
@@ -229,9 +229,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             # Each documentation unit associated with the project event must have a valid PIAN relation.
             if dj.pian is None:
                 result.append(
-                    _("Dokumentační jednotka ")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text1")
                     + str(dj.ident_cely)
-                    + _(" nemá zadaný pian.")
+                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text2")
                 )
                 logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"dj": dj.ident_cely})
         for dokument_cast in self.casti_dokumentu.all():
@@ -260,18 +260,18 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
                     _(
-                        "Dokument "
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1"
                         + dc.dokument.ident_cely
-                        + " musí být nejdřív archivován."
+                        + "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2"
                     )
                 )
         for dj in self.dokumentacni_jednotky_akce.all():
             if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
-                        "Dokumentační jednotka "
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text1"
                         + str(dj.ident_cely)
-                        + " má nepotvrzený pian."
+                        + "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2"
                     )
                 )
         return result
