@@ -227,7 +227,6 @@
       <xs:element name="notifikace" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{notification_types.ident_cely}" -->
       <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{pes_set.content_object}" -->
       <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> <!-- "{date_joined}" -->
-      <xs:element name="datum_prihlaseni" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{last_login}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{history_vazba.historie_set}" -->
       <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> <!-- "{spoluprace_badatelu}" -->
       <xs:element name="spoluprace_podrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_podrizeniType"/> <!-- "{spoluprace_archeologu}" -->
