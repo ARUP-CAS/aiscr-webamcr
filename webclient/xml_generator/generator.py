@@ -129,8 +129,6 @@ class DocumentGenerator:
             return ParsedComment(attribute_list[-1], attribute_list[:-1])
 
     def _get_attribute_of_record(self, attribute_name, record=None):
-        logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.start",
-                     extra={"attribute_name": attribute_name})
         attribute_value = None
         if record is None:
             record = self.document_object
@@ -145,8 +143,6 @@ class DocumentGenerator:
             from projekt.models import Projekt
             from heslar.models import RuianKatastr
             from pian.models import Pian
-            logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.geom",
-                         extra={"attribute_name": attribute_name, "pk": record.pk})
             if isinstance(record, Projekt) or isinstance(record, DokumentExtraData) \
                     or isinstance(record, VyskovyBod):
                 record = record.__class__.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
@@ -317,15 +313,9 @@ class DocumentGenerator:
                                                                        parsed_comment=parsed_comment,
                                                                        prefix=prefix,
                                                                        ref_type=schema_element.attrib["type"])
-                    else:
-                        logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element."
-                                     "unkown_element", extra={"next_element_text": next_element.text})
             elif "choice" in schema_element.tag.lower():
                 for child_schema_element in schema_element:
                     self._parse_scheme_create_element(child_schema_element, parent_element)
-            else:
-                logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element.without_comment",
-                             extra={"schema_element_attrib": schema_element.attrib})
 
     def _iterate_unbound_records(self, related_records, schema_element, parent_element):
         child_schema_element = self._parse_schema(schema_element.attrib["type"])

@@ -77,8 +77,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         related_name="samostatne_nalezy_okolnosti",
         limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
     )
-    geom = pgmodels.PointField(blank=True, null=True)
-    geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=4326)
+    geom = pgmodels.PointField(blank=True, null=True, srid=4326)
+    geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=5514)
     geom_system = models.TextField(default='wgs84')
     pristupnost = models.ForeignKey(
         Heslar,
