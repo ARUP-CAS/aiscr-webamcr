@@ -48,6 +48,9 @@ class FedoraRequestType(Enum):
     CREATE_BINARY_FILE_PREVIEW = 11
     GET_BINARY_FILE_CONTENT = 12
     UPDATE_BINARY_FILE_CONTENT = 13
+    GET_LINK = 14
+    DELETE_CONTAINER = 15
+    DELETE_TOMBSTONE = 16
 
 
 class FedoraRepositoryConnector:
@@ -70,9 +73,9 @@ class FedoraRepositoryConnector:
         if request_type == FedoraRequestType.CREATE_CONTAINER:
             return f"{base_url}/record/"
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.CREATE_METADATA,
-                              FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
+                              FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, FedoraRequestType.DELETE_CONTAINER):
             return f"{base_url}/record/{self.record.ident_cely}"
-        elif request_type == FedoraRequestType.CREATE_LINK:
+        elif request_type in (FedoraRequestType.CREATE_LINK, FedoraRequestType.GET_LINK):
             return f"{base_url}/model/{self._get_model_name()}/member"
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.GET_METADATA):
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
@@ -82,17 +85,23 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
+        elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
+            return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         logger.debug("core_repository_connector._send_request.start", extra={"url": url, "request_type": request_type})
-        auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
+        if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE):
+            auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
+        else:
+            auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
         response = None
         if request_type in (FedoraRequestType.CREATE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE_CONTAINER):
             response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
-                              FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT):
+                              FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
+                              FedoraRequestType.GET_LINK):
             response = requests.get(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.CREATE_LINK,):
             response = requests.post(url, headers=headers, data=data.encode('utf-8'), auth=auth, verify=False)
@@ -102,8 +111,10 @@ class FedoraRepositoryConnector:
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
             response = requests.post(url, auth=auth, verify=False)
-        logger.debug("core_repository_connector._send_request.response", extra={"text": response.text,
-                                                                                "status_code": response.status_code})
+        elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE):
+            response = requests.delete(url, auth=auth)
+        logger.debug("core_repository_connector._send_request.response",
+                     extra={"text": response.text, "status_code": response.status_code})
         return response
 
     def _create_container(self):
@@ -133,6 +144,9 @@ class FedoraRepositoryConnector:
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
         if result.status_code == 404 or "not found" in result.text:
             self._create_container()
+        url = self._get_request_url(FedoraRequestType.GET_LINK)
+        result = self._send_request(url, FedoraRequestType.GET_LINK)
+        if result.status_code == 404 or "not found" in result.text:
             self._create_link()
         logger.debug("core_repository_connector._check_container.end", extra={"ident_cely": self.record.ident_cely})
 
@@ -249,3 +263,11 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.save_binary_file.end",
                      extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
+
+    def delete_container(self):
+        logger.debug("core_repository_connector.delete_container.start", extra={"ident_cely": self.record.ident_cely})
+        url = self._get_request_url(FedoraRequestType.DELETE_CONTAINER)
+        self._send_request(url, FedoraRequestType.DELETE_CONTAINER)
+        url = self._get_request_url(FedoraRequestType.DELETE_TOMBSTONE)
+        self._send_request(url, FedoraRequestType.DELETE_TOMBSTONE)
+        logger.debug("core_repository_connector.delete_container.end", extra={"ident_cely": self.record.ident_cely})
