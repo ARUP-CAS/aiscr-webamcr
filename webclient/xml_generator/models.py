@@ -19,20 +19,22 @@ class ModelWithMetadata(models.Model):
 
     def save_metadata(self):
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata")
-        from cron.tasks import save_record_metadata
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
         i = app.control.inspect()
-        scheduled = i.scheduled()
+        queues = (i.scheduled(), i.active())
 
-        for queue_name, queue_tasks in scheduled.items():
-            for task in queue_tasks:
-                if task.get("name") == "cron.tasks.save_record_metadata" and tuple(task.get("args")) \
-                        == (self.__class__.__name__, self.pk):
-                    logger.debug("xml_generator.models.ModelWithMetadata.already_scheduled",
-                                 extra={"class_name": self.__class__.__name__, "pk": self.pk})
-                    return
+        for queue in queues:
+            print(queue.items())
+            for queue_name, queue_tasks in queue.items():
+                for task in queue_tasks:
+                    if "save_record_metadata" in task.get("request").get("name").lower() \
+                            and tuple(task.get("request").get("args")) == (self.__class__.__name__, self.pk):
+                        logger.debug("xml_generator.models.ModelWithMetadata.already_scheduled",
+                                     extra={"class_name": self.__class__.__name__, "pk": self.pk})
+                        return
+        from cron.tasks import save_record_metadata
         save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
         logger.debug("xml_generator.models.ModelWithMetadata.end")
 

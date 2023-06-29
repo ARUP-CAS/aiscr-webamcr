@@ -11,6 +11,7 @@ from django.db import IntegrityError
 from django.db.models import F, Value, CharField, IntegerField
 from django.db.models import Q
 from django.db.models.functions import Concat
+from django.forms.renderers import BaseRenderer
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -19,7 +20,6 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
-from services.mailer import Mailer
 from django_registration.backends.activation.views import ActivationView
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
@@ -39,7 +39,6 @@ from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, A
 from uzivatel.models import Osoba, User
 from .serializers import UserSerializer
 from django.utils.encoding import force_str
-
 
 logger = logging.getLogger(__name__)
 
@@ -290,22 +289,29 @@ class UserActivationView(ActivationView):
         user.save()
         return user
 
+
 class UserPasswordResetView(PasswordResetView):
     """
     Třída pohledu pro resetování hesla.
     """
     form_class = UserPasswordResetForm
-    
+
+
 class TokenAuthenticationBearer(TokenAuthentication):
     """
     Override třídy pro nastavení názvu tokenu na Bearer.
     """
     keyword = "Bearer"
-    
-class MyXMLRenderer(XMLRenderer):
+
+
+class MyXMLRenderer(BaseRenderer):
     """
     Override třídy pro nastavení správnych tagů.
     """
+
+    media_type = "application/xml"
+    format = "xml"
+    charset = "utf-8"
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """
@@ -313,14 +319,15 @@ class MyXMLRenderer(XMLRenderer):
         """
         return data
 
+
 class GetUserInfo(APIView):
     """
     Třída podlehu pro získaní základních info o uživately.
     """
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [IsAuthenticated]
-    renderer_classes = [MyXMLRenderer,]
-    http_method_names = ["get",]
+    renderer_classes = [MyXMLRenderer, ]
+    http_method_names = ["get", ]
     
     def get(self, request, format=None):
         user = request.user
