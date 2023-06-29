@@ -112,9 +112,9 @@ def delete_file(request, pk):
     else:
         context = {
             "object": s,
-            "title": _("core.modalForm.smazaniSouboru.title.text"),
+            "title": _("core.views.delete_file.title.text"),
             "id_tag": "smazat-soubor-form",
-            "button": _("core.modalForm.smazaniSouboru.submit.button"),
+            "button": _("core.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -303,11 +303,11 @@ def post_upload(request):
                 return JsonResponse(
                     {
                         "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                            "core.views.post_upload.duplikat.text1"
                         )
                         + parent_ident
                         + ". "
-                        + _("Zkontrolujte prosím duplicitu."),
+                        + _("core.views.post_upload.duplikat.text2"),
                         "filename": s.nazev_zkraceny,
                         "id": s.pk,
                     },
@@ -352,11 +352,11 @@ def post_upload(request):
                 return JsonResponse(
                     {
                         "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                            "core.views.post_upload.duplikat2.text1"
                         )
                         + parent_ident
                         + ". "
-                        + _("Zkontrolujte prosím duplicitu."),
+                        + _("core.views.post_upload.duplikat2.text2"),
                         "filename": s.nazev_zkraceny,
                         "id": s.pk,
                     },
@@ -603,7 +603,7 @@ def redirect_ident_view(request, ident_cely):
         logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
 
-    messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
+    messages.error(request, _("core.views.redirectView.identnotmatchingregex.message.text"))
     return redirect("core:home")
 
 
@@ -676,17 +676,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
-    page_title = _("lokalita.vyber.pageTitle")
-    app = "lokalita"
+    page_title = _("core.views.AkceListView.page_title.text")
+    app = "core"
     toolbar = "toolbar_akce.html"
-    search_sum = _("lokalita.vyber.pocetVyhledanych")
-    pick_text = _("lokalita.vyber.pickText")
-    hasOnlyVybrat_header = _("lokalita.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("lokalita.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("lokalita.vyber.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("lokalita.vyber.header.hasOnlyPotvrdit")
-    default_header = _("lokalita.vyber.header.default")
-    toolbar_name = _("lokalita.template.toolbar.title")
+    search_sum = _("core.views.AkceListView.search_sum.text")
+    pick_text = _("core.views.AkceListView.pick_text.text")
+    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+    default_header = _("core.views.AkceListView.default_header.text")
+    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)

@@ -107,7 +107,7 @@ def auto_logout_client(request):
             )
         else:
             ctx["redirect_to_login_immediately"] = mark_safe(
-                "$('#time').html('%s');" % _("nav.autologout.expired.text")
+                "$('#time').html('%s');" % _("core.context_processors.autologout.expired.text")
             )
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
