@@ -220,15 +220,15 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
     """
     Model pro tabulku s odstávkami systému.
     """
-    info_od = models.DateField(_("model.odstavka.infoOd"))
-    datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
-    cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
-    status = models.BooleanField(_("model.odstavka.status"), default=True)
+    info_od = models.DateField(_("core.model.OdstavkaSystemu.infoOd.label"))
+    datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
+    cas_odstavky = models.TimeField(_("core.model.OdstavkaSystemu.casOdstavky.label"))
+    status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
 
     class Meta:
         db_table = "odstavky_systemu"
-        verbose_name = _("model.odstavka.modelTitle")
-        verbose_name_plural = _("model.odstavka.modelTitle")
+        verbose_name = _("core.model.OdstavkaSystemu.modelTitle.label")
+        verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
 
     def clean(self):
         """
@@ -238,12 +238,12 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         if odstavky.count() > 0 and self.status:
             if odstavky.first().pk != self.pk:
                 raise ValidationError(
-                    _("model.odstavka.jenJednaAktivniOdstavkaPovolena.text")
+                    _("core.model.OdstavkaSystemu.jenJednaAktivniOdstavkaPovolena.text")
                 )
         super(OdstavkaSystemu, self).clean()
 
     def __str__(self) -> str:
-        return "{}: {} {}".format(_("Odstavka"), self.datum_odstavky, self.cas_odstavky)
+        return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
 
 
 class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):
