@@ -81,7 +81,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
     Model pro soubor. Obsahuje jeho základné data, vazbu na historii a souborovů vazbu.
     """
-    nazev_zkraceny = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
     mimetype = models.TextField(db_index=True)
@@ -98,6 +97,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.FileField(upload_to=get_upload_to, max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     repository_uuid = models.CharField(max_length=36, null=True, blank=True, db_index=True)
+    sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
 
     @cached_property
     def sha_512(self):

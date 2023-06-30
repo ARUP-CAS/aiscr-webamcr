@@ -133,7 +133,6 @@ class SouborMetadataForm(forms.ModelForm):
     Formulář pro zobrazení detailu metadat souboru.
     """
 
-    nazev_zkraceny = forms.CharField()
     nazev = forms.CharField()
     mimetype = forms.CharField()
     size_mb = forms.CharField(widget=DecimalTextWideget())
@@ -141,7 +140,7 @@ class SouborMetadataForm(forms.ModelForm):
     class Meta:
         model = Soubor
         fields = (
-            "nazev_zkraceny",
+            "nazev",
             "rozsah",
             "nazev",
             "mimetype",
@@ -153,7 +152,6 @@ class SouborMetadataForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("nazev_zkraceny", css_class="col-sm-2"),
                 Div("rozsah", css_class="col-sm-1"),
                 Div("nazev", css_class="col-sm-2"),
                 Div("mimetype", css_class="col-sm-2"),

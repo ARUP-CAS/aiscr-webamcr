@@ -334,7 +334,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.ident_cely = perm_ident_cely
         for file in (
             self.soubory.soubory.all()
-            .filter(nazev_zkraceny__startswith="X")
+            .filter(nazev__startswith="X")
             .order_by("id")
         ):
             new_name = get_dokument_soubor_name(self, file.path.name, add_to_index=1)
@@ -343,8 +343,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 file.path.seek(0)
                 # After calculating checksum, must move pointer to the beginning
                 old_nazev = file.nazev
-                file.nazev = checksum + "_" + new_name
-                file.nazev_zkraceny = new_name
+                file.nazev = new_name
                 old_path = file.path.storage.path(file.path.name)
                 new_path = old_path.replace(old_nazev, file.nazev)
                 file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
@@ -700,7 +699,7 @@ def get_dokument_soubor_name(dokument, filename, add_to_index=1):
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
-        filtered_files = files.filter(nazev_zkraceny__iregex=r"(([A-Z]\.\w+)$)")
+        filtered_files = files.filter(nazev__iregex=r"(([A-Z]\.\w+)$)")
         if filtered_files.exists():
             list_last_char = []
             for file in filtered_files:
