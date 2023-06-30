@@ -98,3 +98,14 @@ def delete_profile(sender, instance, *args, **kwargs):
     Signál pro zaslání emailu uživately o jeho smazání.
     """
     Mailer.send_eu03(user=instance)
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Osoba)
+def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Organizace)
+def osoba_delete_repository_container(sender, instance: Organizace, **kwargs):
+    instance.record_deletion()

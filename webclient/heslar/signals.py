@@ -34,7 +34,24 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
 
 @receiver(post_save, sender=RuianOkres)
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
-    """
-    Funkce pro uložení metadat okresu.
-    """
     instance.save_metadata()
+
+
+@receiver(post_save, sender=Heslar)
+def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_save, sender=RuianKatastr)
+def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_save, sender=RuianKraj)
+def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_save, sender=RuianOkres)
+def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
+    instance.record_deletion()

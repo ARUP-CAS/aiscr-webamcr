@@ -3,7 +3,7 @@ import logging
 from arch_z.models import ArcheologickyZaznam
 from core.constants import DOKUMENT_CAST_RELATION_TYPE, DOKUMENT_RELATION_TYPE
 from core.models import SouborVazby
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from dokument.models import Dokument, DokumentAutor, DokumentCast, Let
 from historie.models import HistorieVazby
@@ -50,3 +50,13 @@ def dokument_save_metadata(sender, instance: Dokument, **kwargs):
 @receiver(post_save, sender=Let)
 def let_save_metadata(sender, instance: Let, **kwargs):
     instance.save_metadata()
+
+
+@receiver(post_delete, sender=Dokument)
+def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Let)
+def let_delete_repository_container(sender, instance: Let, **kwargs):
+    instance.record_deletion()
