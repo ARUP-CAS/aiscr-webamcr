@@ -320,26 +320,30 @@
   </xs:complexType>
  
   <!-- generic-clasess -->
-  <xs:complexType name="projekt-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="hlavni_katastr" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{hlavni_katastr.kod}" | "{hlavni_katastr.nazev}" -->
-      <xs:element name="dalsi_katastr" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "ruian-{katastry.kod}" | "{katastry.nazev}" -->
-      <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{lokalizace}" -->
-      <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{parcelni_cislo}" -->
-      <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom}") -->
-      <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom}") | ST_AsText("{geom}") -->
-      <xs:element name="kulturni_pamatka_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{kulturni_pamatka_cislo}" -->
-      <xs:element name="kulturni_pamatka_popis" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{kulturni_pamatka_popis}" -->
-    </xs:sequence>
+  <xs:complexType name="projekt-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="hlavni_katastr" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{hlavni_katastr.kod}" | "{hlavni_katastr.nazev}" -->
+        <xs:element name="dalsi_katastr" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "ruian-{katastry.kod}" | "{katastry.nazev}" -->
+        <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{lokalizace}" -->
+        <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{parcelni_cislo}" -->
+        <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom}") -->
+        <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom}") | ST_AsText("{geom}") -->
+        <xs:element name="kulturni_pamatka_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{kulturni_pamatka_cislo}" -->
+        <xs:element name="kulturni_pamatka_popis" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{kulturni_pamatka_popis}" -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
-  <xs:complexType name="oznamovatelType">          
-    <xs:sequence>
-      <xs:element name="oznamovatel" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{oznamovatel}" -->
-      <xs:element name="odpovedna_osoba" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{odpovedna_osoba}" -->
-      <xs:element name="adresa" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{adresa}" -->
-      <xs:element name="telefon" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{telefon}" -->
-      <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{email}" -->
-      </xs:sequence>          
+  <xs:complexType name="oznamovatelType" mixed="true">        
+    <xs:choice minOccurs="0" maxOccurs="1">            
+      <xs:sequence>
+        <xs:element name="oznamovatel" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{oznamovatel}" -->
+        <xs:element name="odpovedna_osoba" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{odpovedna_osoba}" -->
+        <xs:element name="adresa" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{adresa}" -->
+        <xs:element name="telefon" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{telefon}" -->
+        <xs:element name="email" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{email}" -->
+      </xs:sequence>
+    </xs:choice>              
   </xs:complexType>
   <xs:complexType name="historieType">
    	<xs:sequence>      	
@@ -362,12 +366,14 @@
    	  <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- historie.historie_set -->
    	</xs:sequence>     
   </xs:complexType>
-  <xs:complexType name="az-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="hlavni_katastr" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{hlavni_katastr.kod}" | "{hlavni_katastr.nazev}" -->
-      <xs:element name="dalsi_katastr" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "ruian-{katastry.kod}" | "{katastry.nazev}" -->
-      <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uzivatelske_oznaceni}" -->
-    </xs:sequence>
+  <xs:complexType name="az-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="hlavni_katastr" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{hlavni_katastr.kod}" | "{hlavni_katastr.nazev}" -->
+        <xs:element name="dalsi_katastr" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "ruian-{katastry.kod}" | "{katastry.nazev}" -->
+        <xs:element name="uzivatelske_oznaceni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uzivatelske_oznaceni}" -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="akceType">
     <xs:sequence>
@@ -395,11 +401,13 @@
       <xs:element name="organizace" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{organizace.ident_cely}" | "{organizace.nazev}" -->
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="akce-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="lokalizace_okolnosti" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{lokalizace_okolnosti}" -->
-      <xs:element name="souhrn_upresneni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{souhrn_upresneni}" -->
-    </xs:sequence>
+  <xs:complexType name="akce-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="lokalizace_okolnosti" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{lokalizace_okolnosti}" -->
+        <xs:element name="souhrn_upresneni" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{souhrn_upresneni}" -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="lokalitaType">
     <xs:sequence>
@@ -410,12 +418,14 @@
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:lok-chranene_udajeType"/> <!-- SELF -->	
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="lok-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
-      <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{popis}" -->
-      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
-    </xs:sequence>
+  <xs:complexType name="lok-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="nazev" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev}" -->
+        <xs:element name="popis" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{popis}" -->
+        <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="dokumentacni_jednotkaType">
     <xs:sequence>
@@ -442,15 +452,17 @@
    	  <xs:element name="paginace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{paginace}" -->
    	</xs:sequence>     
   </xs:complexType>
-  <xs:complexType name="adb-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="uzivatelske_oznaceni_sondy" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uzivatelske_oznaceni_sondy}" -->
-      <xs:element name="trat" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{trat}" -->
-      <xs:element name="cislo_popisne" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{cislo_popisne}" -->
-      <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{parcelni_cislo}" -->
-      <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
-      <xs:element name="vyskovy_bod" minOccurs="0" maxOccurs="unbounded" type="amcr:vyskovy_bodType"/> <!-- "{vyskove_body}" -->
-    </xs:sequence>
+  <xs:complexType name="adb-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="uzivatelske_oznaceni_sondy" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uzivatelske_oznaceni_sondy}" -->
+        <xs:element name="trat" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{trat}" -->
+        <xs:element name="cislo_popisne" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{cislo_popisne}" -->
+        <xs:element name="parcelni_cislo" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{parcelni_cislo}" -->
+        <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
+        <xs:element name="vyskovy_bod" minOccurs="0" maxOccurs="unbounded" type="amcr:vyskovy_bodType"/> <!-- "{vyskove_body}" -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="vyskovy_bodType">
     <xs:sequence>
@@ -546,24 +558,28 @@
    	  <xs:element name="poznamka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{poznamka}" -->
    	</xs:sequence>     
   </xs:complexType>
-  <xs:complexType name="pian-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="zm10" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{zm10.cislo}" -->
-      <xs:element name="geom_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom}") -->
-      <xs:element name="geom_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom}") | ST_AsText("{geom}") -->
-      <xs:element name="geom_sjtsk_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom_sjtsk}") -->
-      <xs:element name="geom_sjtsk_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom_sjtsk}") | ST_AsText("{geom_sjtsk}") -->
-    </xs:sequence>
+  <xs:complexType name="pian-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="zm10" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{zm10.cislo}" -->
+        <xs:element name="geom_gml" minOccurs="1" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom}") -->
+        <xs:element name="geom_wkt" minOccurs="1" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom}") | ST_AsText("{geom}") -->
+        <xs:element name="geom_sjtsk_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom_sjtsk}") -->
+        <xs:element name="geom_sjtsk_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom_sjtsk}") | ST_AsText("{geom_sjtsk}") -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
-  <xs:complexType name="sn-chranene_udajeType">
-    <xs:sequence>
-      <xs:element name="katastr" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{katastr.kod}" | "{katastr.nazev}" -->
-      <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{lokalizace}" -->        	
-      <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom}") -->
-      <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom}") | ST_AsText("{geom}") -->
-      <xs:element name="geom_sjtsk_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom_sjtsk}") -->
-      <xs:element name="geom_sjtsk_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom_sjtsk}") | ST_AsText("{geom_sjtsk}") -->
-    </xs:sequence>
+  <xs:complexType name="sn-chranene_udajeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="1">
+      <xs:sequence>
+        <xs:element name="katastr" minOccurs="0" maxOccurs="1" type="amcr:refType"/> <!-- "ruian-{katastr.kod}" | "{katastr.nazev}" -->
+        <xs:element name="lokalizace" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{lokalizace}" -->        	
+        <xs:element name="geom_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom}") -->
+        <xs:element name="geom_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom}") | ST_AsText("{geom}") -->
+        <xs:element name="geom_sjtsk_gml" minOccurs="0" maxOccurs="1" type="amcr:gmlType"/> <!-- ST_AsGML("{geom_sjtsk}") -->
+        <xs:element name="geom_sjtsk_wkt" minOccurs="0" maxOccurs="1" type="amcr:wktType"/> <!-- ST_SRID("{geom_sjtsk}") | ST_AsText("{geom_sjtsk}") -->
+      </xs:sequence>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="spoluprace_nadrizeniType">
     <xs:sequence>
