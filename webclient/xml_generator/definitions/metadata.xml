@@ -17,6 +17,7 @@
     <amcr:termin_odevzdani_nz>2021-05-31</amcr:termin_odevzdani_nz>
     <amcr:pristupnost_pom id="HES-123456">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
+      HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
       <amcr:hlavni_katastr id="ruian-123">HOŘOVICE</amcr:hlavni_katastr>
       <amcr:dalsi_katastr id="ruian-123">RPETY</amcr:dalsi_katastr>
       <amcr:lokalizace>Někde v obci.</amcr:lokalizace>
@@ -38,6 +39,7 @@
       <amcr:typ_zmeny>AZ01</amcr:typ_zmeny>
     </amcr:historie>
     <amcr:oznamovatel>
+      HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
       <amcr:oznamovatel>ARÚ Praha</amcr:oznamovatel>
       <amcr:odpovedna_osoba>Jan Novák</amcr:odpovedna_osoba>
       <amcr:adresa>Letenská 123/4</amcr:adresa>
@@ -70,6 +72,7 @@
     <amcr:okres id="ruian-12">Beroun</amcr:okres>
     <amcr:pristupnost id="HES-123456">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
+      HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
       <amcr:hlavni_katastr id="ruian-123">RPETY</amcr:hlavni_katastr>
       <amcr:dalsi_katastr id="ruian-123">FELBABKA</amcr:dalsi_katastr>
       <amcr:uzivatelske_oznaceni>Test-xml akce</amcr:uzivatelske_oznaceni>
@@ -94,6 +97,7 @@
       <amcr:ulozeni_nalezu>Muzeum Beroun</amcr:ulozeni_nalezu>
       <amcr:ulozeni_dokumentace>archiv ARÚ</amcr:ulozeni_dokumentace>
       <amcr:chranene_udaje>
+        HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
         <amcr:lokalizace_okolnosti>Na kopečku za rybníkem.</amcr:lokalizace_okolnosti>
         <amcr:souhrn_upresneni>Bylo tam toho hodně a bylo to pěkné.</amcr:souhrn_upresneni>
       </amcr:chranene_udaje>
@@ -104,6 +108,7 @@
       <amcr:zachovalost id="HES-123456">nadzemní relikty</amcr:zachovalost>
       <amcr:jistota id="HES-123456">jistá (100 %)</amcr:jistota>
       <amcr:chranene_udaje>
+        HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
         <amcr:nazev>Rovný - zaniklá vesnice</amcr:nazev>
         <amcr:popis>Je tam vesnice, tedy byla a v ní tvrz a dvůr a mlýn a tak.</amcr:popis>
         <amcr:poznamka>Radost pohledět.</amcr:poznamka>
@@ -186,6 +191,7 @@
     <amcr:sm5>PRAH10</amcr:sm5>
     <amcr:pristupnost_pom id="HES-123456">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
+      HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
       <amcr:uzivatelske_oznaceni_sondy>V1</amcr:uzivatelske_oznaceni_sondy>
       <amcr:trat>Za lesem</amcr:trat>
       <amcr:cislo_popisne>8</amcr:cislo_popisne>
@@ -363,6 +369,7 @@
     <amcr:geom_sjtsk_updated_at>2023-02-01T16:58:50Z</amcr:geom_sjtsk_updated_at>
     <amcr:pristupnost_pom id="HES-123456">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
+      HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
       <amcr:zm10>10-01-18</amcr:zm10>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
@@ -407,6 +414,7 @@
     <amcr:geom_sjtsk_updated_at>2023-02-01T16:58:50Z</amcr:geom_sjtsk_updated_at>
     <amcr:pristupnost id="HES-123456">badatel</amcr:pristupnost>
     <amcr:chranene_udaje>
+      HTTP/1.1 403 Forbidden <!-- pouze v OAI-PMH API-->
       <amcr:katastr id="ruian-123">CHUDOSLAVICE</amcr:katastr>
       <amcr:lokalizace>U sedmikrasek</amcr:lokalizace>
       <amcr:geom_gml>
