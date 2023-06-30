@@ -3,7 +3,7 @@ import logging
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
 from core.models import SouborVazby
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 from projekt.models import Projekt
@@ -70,3 +70,8 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",
                      extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)
+
+
+@receiver(post_delete, sender=Projekt)
+def projekt_post_delete(sender, instance: Projekt, **kwargs):
+    instance.record_deletion()

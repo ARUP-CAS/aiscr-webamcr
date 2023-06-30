@@ -18,7 +18,7 @@ class ModelWithMetadata(models.Model):
         return connector.get_metadata()
 
     def save_metadata(self):
-        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata")
+        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start")
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
@@ -29,14 +29,21 @@ class ModelWithMetadata(models.Model):
             print(queue.items())
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
-                    if "save_record_metadata" in task.get("request").get("name").lower() \
+                    if "request" in task and "save_record_metadata" in task.get("request").get("name").lower() \
                             and tuple(task.get("request").get("args")) == (self.__class__.__name__, self.pk):
-                        logger.debug("xml_generator.models.ModelWithMetadata.already_scheduled",
+                        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
                                      extra={"class_name": self.__class__.__name__, "pk": self.pk})
                         return
         from cron.tasks import save_record_metadata
         save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
-        logger.debug("xml_generator.models.ModelWithMetadata.end")
+        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end")
+
+    def record_deletion(self):
+        logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.start")
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
+        return connector.record_deletion()
 
     class Meta:
         abstract = True

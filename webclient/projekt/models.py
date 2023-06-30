@@ -192,10 +192,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_schvaleny(self, user,old_ident):
+    def set_schvaleny(self, user, old_ident):
         """
         Metóda pro nastavení stavu schvýlený a uložení změny do historie.
         """
+        logger.debug("projekt.models.Projekt.set_schvaleny.start", extra={"old_ident": old_ident})
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
             typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
@@ -204,6 +205,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
+        self.record_ident_change(old_ident)
+        logger.debug("projekt.models.Projekt.set_schvaleny.end", extra={"old_ident": old_ident})
 
     def set_zapsany(self, user):
         """
@@ -564,6 +567,21 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             return f"{self.planovane_zahajeni.lower} - {self.planovane_zahajeni.upper}"
         else:
             return ""
+
+    def record_ident_change(self, old_ident_cely):
+        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start")
+        from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_mime_type
+        from core.views import get_projekt_soubor_name
+        connector = FedoraRepositoryConnector(self)
+        connector.record_ident_change(old_ident_cely)
+        for soubor in self.soubory.soubory.all():
+            soubor: Soubor
+            repository_binary_file = soubor.get_repository_content()
+            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev_zkraceny),
+                                                      get_mime_type(soubor.nazev_zkraceny),
+                                                      repository_binary_file.content)
+        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end")
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

@@ -1,7 +1,7 @@
 import logging
 
 from core.constants import PIAN_RELATION_TYPE
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
@@ -34,3 +34,8 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
     for dj in instance.dokumentacni_jednotky_pianu.all():
         dj: DokumentacniJednotka
         dj.archeologicky_zaznam.save_metadata()
+
+
+@receiver(post_delete, sender=Pian)
+def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
+    instance.record_deletion()

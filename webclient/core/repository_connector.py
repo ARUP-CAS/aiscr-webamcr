@@ -51,6 +51,12 @@ class FedoraRequestType(Enum):
     GET_LINK = 14
     DELETE_CONTAINER = 15
     DELETE_TOMBSTONE = 16
+    RECORD_DELETION_MOVE_MEMBERS = 17
+    RECORD_DELETION_ADD_MARK = 18
+    CHANGE_IDENT_CONNECT_RECORDS_1 = 19
+    CHANGE_IDENT_CONNECT_RECORDS_2 = 20
+    CHANGE_IDENT_CONNECT_RECORDS_3 = 21
+    CHANGE_IDENT_CONNECT_RECORDS_4 = 22
 
 
 class FedoraRepositoryConnector:
@@ -67,13 +73,14 @@ class FedoraRepositoryConnector:
         name = re.sub(r'(?<!^)(?=[A-Z])', '-', class_name).lower()
         return name
 
-    def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None) -> Optional[str]:
+    def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
         base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/" \
                    f"{settings.FEDORA_SERVER_NAME}"
         if request_type == FedoraRequestType.CREATE_CONTAINER:
             return f"{base_url}/record/"
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.CREATE_METADATA,
-                              FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, FedoraRequestType.DELETE_CONTAINER):
+                              FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, FedoraRequestType.DELETE_CONTAINER,
+                              FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS):
             return f"{base_url}/record/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.CREATE_LINK, FedoraRequestType.GET_LINK):
             return f"{base_url}/model/{self._get_model_name()}/member"
@@ -87,6 +94,13 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
+        elif request_type in (FedoraRequestType.RECORD_DELETION_ADD_MARK,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
+            return f"{base_url}/model/deleted/member"
+        elif request_type in (FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
+            return f"{base_url}/record/{ident_cely}"
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
@@ -105,7 +119,9 @@ class FedoraRepositoryConnector:
             response = requests.get(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.CREATE_LINK,):
             response = requests.post(url, headers=headers, data=data.encode('utf-8'), auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.CREATE_BINARY_FILE_CONTENT):
+        elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
+                              FedoraRequestType.RECORD_DELETION_ADD_MARK,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
             response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
@@ -113,6 +129,11 @@ class FedoraRepositoryConnector:
             response = requests.post(url, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE):
             response = requests.delete(url, auth=auth)
+        elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
+            response = requests.patch(url, auth=auth, headers=headers, data=data)
         logger.debug("core_repository_connector._send_request.response",
                      extra={"text": response.text, "status_code": response.status_code})
         return response
@@ -271,3 +292,54 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.DELETE_TOMBSTONE)
         self._send_request(url, FedoraRequestType.DELETE_TOMBSTONE)
         logger.debug("core_repository_connector.delete_container.end", extra={"ident_cely": self.record.ident_cely})
+
+    def record_deletion(self):
+        headers = {
+            "Content-Type": "application/sparql-update"
+        }
+        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+        url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
+        self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,headers=headers, data=data)
+        headers = {
+            "Slug": self.record.ident_cely,
+            "Content-Type": "text/turtle"
+        }
+        data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
+                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
+        url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
+        self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
+
+    def record_ident_change(self, ident_cely_old):
+        logger.debug("core_repository_connector.record_ident_change.start", extra={"ident_cely": self.record.ident_cely,
+                                                                                   "ident_cely_old": ident_cely_old})
+        ident_cely_new = self.record.ident_cely
+        data = f"INSERT DATA {{<> <http://purl.org/dc/terms/isReplacedBy> " \
+               f"'https://fedora.aiscr.cz/rest/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_new}'}}"
+        headers = {
+            "Content-Type": "application/sparql-update"
+        }
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, ident_cely=ident_cely_old)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, headers=headers, data=data)
+        data = f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> " \
+                f"'https://fedora.aiscr.cz/rest/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}'}}"
+        headers = {
+            "Content-Type": "application/sparql-update"
+        }
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, ident_cely=ident_cely_new)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2, headers=headers, data=data)
+        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'renamed'}"
+        headers = {
+            "Content-Type": "application/sparql-update"
+        }
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, ident_cely=ident_cely_new)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, headers=headers, data=data)
+        headers = {
+            "Slug": ident_cely_old,
+            "Content-Type": "text/turtle"
+        }
+        data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
+               f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}> ."
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, ident_cely=ident_cely_new)
+        self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
+        logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
+                                                                                 "ident_cely_old": ident_cely_old})

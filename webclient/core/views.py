@@ -267,7 +267,7 @@ def post_upload(request):
         if not update:
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
-            rep_bin_file = conn.save_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name), soubor.file)
+            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor.file)
             s = Soubor(
                 vazba=objekt.soubory,
                 nazev=rep_bin_file.filename,
