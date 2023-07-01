@@ -155,7 +155,7 @@ class FedoraRepositoryConnector:
             'Content-Type': 'text/turtle'
         }
         data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> " \
-               f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely()}>"
+               f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
         logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely})
 
