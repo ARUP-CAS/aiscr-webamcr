@@ -83,6 +83,8 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
+    # Will be removed
+    nazev_zkraceny = models.TextField()
     mimetype = models.TextField(db_index=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
@@ -99,8 +101,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     repository_uuid = models.CharField(max_length=36, null=True, blank=True, db_index=True)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
 
-    @cached_property
-    def sha_512(self):
+    def calculate_sha_512(self):
         repository_content = self.get_repository_content()
         if repository_content is not None:
             return repository_content.sha_512()

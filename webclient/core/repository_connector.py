@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from requests.auth import HTTPBasicAuth
 
+from core.utils import get_mime_type
 from xml_generator.generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
@@ -254,6 +255,37 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         logger.debug("core_repository_connector.save_binary_file.end",
+                     extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
+        return rep_bin_file
+
+    def migrate_binary_file(self, soubor):
+        from core.models import Soubor
+        soubor: Soubor
+        logger.debug("core_repository_connector.migrate_binary_file.start",
+                     extra={"soubor": soubor.pk})
+        if soubor.repository_uuid is not None:
+            return None
+        self._check_binary_file_container()
+        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
+        result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
+        uuid = result.text.split("/")[-1]
+        with open(soubor.path.path, mode="rb") as file:
+            data = file.read()
+        data = io.BytesIO(data)
+        soubor.nazev = soubor.nazev_zkraceny
+        soubor.save()
+        content_type = get_mime_type(soubor.name)
+        rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev_zkraceny)
+        file_sha_512 = hashlib.sha512(data).hexdigest()
+        headers = {
+            "Content-Type": content_type,
+            "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
+            "Digest": f"sha-512={file_sha_512}",
+            "Slug": "orig"
+        }
+        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
+        self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+        logger.debug("core_repository_connector.migrate_binary_file.end",
                      extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 

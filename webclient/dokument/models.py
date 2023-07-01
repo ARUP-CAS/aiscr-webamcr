@@ -28,7 +28,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
-from core.models import SouborVazby, ModelWithMetadata
+from core.models import SouborVazby, ModelWithMetadata, Soubor
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -331,28 +331,21 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         perm_ident_cely = (
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )
+        old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
-        for file in (
-            self.soubory.soubory.all()
-            .filter(nazev__startswith="X")
-            .order_by("id")
-        ):
-            new_name = get_dokument_soubor_name(self, file.path.name, add_to_index=1)
-            try:
-                checksum = calculate_crc_32(file.path)
-                file.path.seek(0)
-                # After calculating checksum, must move pointer to the beginning
-                old_nazev = file.nazev
-                file.nazev = new_name
-                old_path = file.path.storage.path(file.path.name)
-                new_path = old_path.replace(old_nazev, file.nazev)
-                file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
-                os.rename(old_path, str(new_path))
-                file.save()
-            except FileNotFoundError as err:
-                logger.warning("dokument.models.Dokument.set_permanent_ident_cely.FileNotFoundError",
-                               extra={"err": err})
-                raise FileNotFoundError()
+        self.save()
+
+        from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_mime_type
+        from core.views import get_projekt_soubor_name
+        connector = FedoraRepositoryConnector(self)
+        connector.record_ident_change(old_ident_cely)
+        for soubor in self.soubory.soubory.all():
+            soubor: Soubor
+            repository_binary_file = soubor.get_repository_content()
+            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                      get_mime_type(soubor.nazev),
+                                                      repository_binary_file.content)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
