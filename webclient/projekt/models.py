@@ -524,7 +524,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 vazba=self.soubory,
                 nazev=rep_bin_file.filename,
                 mimetype="application/pdf",
-                repository_uuid=rep_bin_file.uuid,
+                path=rep_bin_file.url,
                 size_mb=rep_bin_file.size_mb,
                 sha_512=rep_bin_file.sha_512(),
             )

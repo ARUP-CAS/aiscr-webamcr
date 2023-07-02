@@ -166,7 +166,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     search_fields = ("nazev", "nazev_zkraceny", "typ_organizace__heslo", "zverejneni_pristupnost__heslo", "ident_cely")
     fields = ("nazev", "nazev_zkraceny", "typ_organizace", "oao", "mesicu_do_zverejneni",
               "zverejneni_pristupnost", "nazev_zkraceny_en", "email", "telefon", "adresa", "ico",
-              "nazev_en", "zanikla")
+              "nazev_en", "soucast", "zanikla")
     readonly_fields = ("ident_cely", )
 
     def has_delete_permission(self, request, obj=None):

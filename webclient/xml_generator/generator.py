@@ -132,8 +132,8 @@ class DocumentGenerator:
         attribute_value = None
         if record is None:
             record = self.document_object
-        if attribute_name == "self":
-            return self.document_object
+        if attribute_name.lower() == "self":
+            return record
         if "." not in attribute_name and "(" not in attribute_name:
             attribute_value = getattr(record, attribute_name, None)
         elif "st_asgml" in attribute_name.lower() or "st_astext" in attribute_name.lower() \
@@ -335,16 +335,27 @@ class DocumentGenerator:
                     prefix = self._get_prefix(next_element.text)
                     if child_schema_element.attrib["maxOccurs"] == "1":
                         if parsed_comment.value_field_name is not None:
-                            self._create_element(child_schema_element, child_parent_element,
-                                                 parsed_comment, document_object, prefix,
-                                                 ref_type=child_schema_element.attrib["type"])
+                            if child_schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer",
+                                                                       "amcr:refType", "xs:dateTime", "amcr:gmlType",
+                                                                       "amcr:wktType", "amcr:autorType", "xs:boolean"):
+                                self._create_element(child_schema_element, child_parent_element,
+                                                     parsed_comment, document_object, prefix,
+                                                     ref_type=child_schema_element.attrib["type"])
+                            else:
+                                obj = self._get_attribute_of_record(parsed_comment.value_field_name,
+                                                                    record=document_object)
+                                if obj is not None:
+                                    inner_child_schema_element = self._parse_schema(child_schema_element.attrib["type"])
+                                    self._parse_scheme_create_nested_element(inner_child_schema_element,
+                                                                             child_parent_element, obj,
+                                                                             child_schema_element.attrib["name"])
                     else:
                         related_records_dict = self._get_attribute_of_record_unbounded(document_object,
                                                                                   parsed_comment,
                                                                                   child_schema_element)
                         if related_records_dict is not None and len(related_records_dict) > 0:
                             if child_schema_element.attrib["type"].replace("amcr:", "") \
-                                    not in ("refType", "autorType", "wktType", "gmlType"):
+                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string"):
                                 self._iterate_unbound_records(related_records_dict, child_schema_element,
                                                               child_parent_element)
                             else:
