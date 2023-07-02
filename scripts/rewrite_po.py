@@ -30,7 +30,7 @@ def find_v2(po_file, st, by="msgid", include_obsolete_entries=False, msgctxt=Fal
     matches = []
     for e in entries:
         if by == "occurrences":
-            if st[0] in e.occurrences:
+            if len(st)>0 and st[0] in e.occurrences:
                 if msgctxt is not False and e.msgctxt != msgctxt:
                     continue
                 matches.append(e)
@@ -55,15 +55,13 @@ def find_v2(po_file, st, by="msgid", include_obsolete_entries=False, msgctxt=Fal
 
 
 BASE_DIR = Path(__file__).resolve()
-print(BASE_DIR.parent.parent)
-
 path_new = os.path.join(BASE_DIR.parent.parent, "preklady/new_django.po.cs/django.po")
 path_old = os.path.join(
     BASE_DIR.parent.parent, "preklady/django.po.cs_backup/django.po"
 )
-print(path_new)
 po_file_new = pofile(path_new)
 po_file_old = pofile(path_old)
+print("Not found entries")
 for entry_new in po_file_new:
     entry_old = find_v2(po_file_old, entry_new.occurrences, "occurrences")
     if entry_old:
@@ -72,5 +70,5 @@ for entry_new in po_file_new:
         else:
             entry_new.msgstr = entry_old.msgid
     else:
-        print(entry_new.occurrences)
+        print(f"entry: {entry_new.msgid}, occurences: {entry_new.occurrences}")
 po_file_new.save()
