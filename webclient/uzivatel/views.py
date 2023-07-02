@@ -22,10 +22,16 @@ from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
 from django_registration.backends.activation.views import ActivationView
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework_xml.renderers import XMLRenderer
+from rest_framework import exceptions
+from django.conf import settings
+import datetime
+from django.utils import timezone
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
 
 from core.decorators import odstavka_in_progress
 from core.message_constants import (
@@ -37,8 +43,6 @@ from core.message_constants import (
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User
-from .serializers import UserSerializer
-from django.utils.encoding import force_str
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +307,21 @@ class TokenAuthenticationBearer(TokenAuthentication):
     """
     keyword = "Bearer"
 
+    def authenticate_credentials(self, key):
+        model = self.get_model()
+        try:
+            token = model.objects.select_related('user').get(key=key)
+        except model.DoesNotExist:
+            raise exceptions.AuthenticationFailed(_('Invalid token.'))
+
+        if not token.user.is_active:
+            raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+
+        if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
+            raise exceptions.AuthenticationFailed(_('User token too old.'))
+
+        return (token.user, token)
+
 
 class MyXMLRenderer(BaseRenderer):
     """
@@ -332,3 +351,14 @@ class GetUserInfo(APIView):
     def get(self, request, format=None):
         user = request.user
         return Response(user.metadata)
+
+class ObtainAuthTokenWithUpdate(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
+            token.delete()
+            token.save()
+        return Response({'token': token.key})
