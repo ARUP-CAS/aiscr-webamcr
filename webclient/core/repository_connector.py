@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class RepositoryBinaryFile:
+    @property
+    def uuid(self):
+        return self.url.split("/")[-1]
+
     def sha_512(self) -> str:
         data = self.content.read()
         sha_512 = hashlib.sha512(data).hexdigest()
@@ -27,8 +31,8 @@ class RepositoryBinaryFile:
     def size_mb(self):
         return self.size / 1024 ** 2
 
-    def __init__(self, uuid: str, content: io.BytesIO, filename: Union[str, None] = None):
-        self.uuid = uuid
+    def __init__(self, url: str, content: io.BytesIO, filename: Union[str, None] = None):
+        self.url = url
         self.content = content
         self.filename = filename
         self.size = content.getbuffer().nbytes
@@ -83,8 +87,10 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, FedoraRequestType.DELETE_CONTAINER,
                               FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS):
             return f"{base_url}/record/{self.record.ident_cely}"
-        elif request_type in (FedoraRequestType.CREATE_LINK, FedoraRequestType.GET_LINK):
+        elif request_type in (FedoraRequestType.CREATE_LINK, ):
             return f"{base_url}/model/{self._get_model_name()}/member"
+        elif request_type in (FedoraRequestType.GET_LINK, ):
+            return f"{base_url}/model/{self._get_model_name()}/member/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.GET_METADATA):
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
@@ -243,7 +249,7 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
         uuid = result.text.split("/")[-1]
-        rep_bin_file = RepositoryBinaryFile(uuid, file, file_name)
+        rep_bin_file = RepositoryBinaryFile(result.text, file, file_name)
         data = file.read()
         file_sha_512 = hashlib.sha512(data).hexdigest()
         headers = {
@@ -255,7 +261,7 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         logger.debug("core_repository_connector.save_binary_file.end",
-                     extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
+                     extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
     def migrate_binary_file(self, soubor):
@@ -286,18 +292,18 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         logger.debug("core_repository_connector.migrate_binary_file.end",
-                     extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
+                     extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
     def get_binary_file(self, uuid) -> RepositoryBinaryFile:
-        logger.debug("core_repository_connector.get_binary_file.start", extra={"uuid": uuid})
+        logger.debug("core_repository_connector.get_binary_file.start", extra={"url": uuid})
         url = self._get_request_url(FedoraRequestType.GET_BINARY_FILE_CONTENT, uuid=uuid)
         response = self._send_request(url, FedoraRequestType.GET_BINARY_FILE_CONTENT)
         file = io.BytesIO()
         file.write(response.content)
         file.seek(0)
         rep_bin_file = RepositoryBinaryFile(uuid, file)
-        logger.debug("core_repository_connector.get_binary_file.end", extra={"uuid": uuid})
+        logger.debug("core_repository_connector.get_binary_file.end", extra={"url": uuid})
         return rep_bin_file
 
     def update_binary_file(self, file_name, content_type, file: io.BytesIO, uuid: str) -> RepositoryBinaryFile:
@@ -314,7 +320,7 @@ class FedoraRepositoryConnector:
         url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
         logger.debug("core_repository_connector.save_binary_file.end",
-                     extra={"uuid": uuid, "ident_cely": self.record.ident_cely})
+                     extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
     def delete_container(self):

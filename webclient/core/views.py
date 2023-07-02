@@ -79,7 +79,6 @@ def delete_file(request, pk):
     """
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
-        s.path.delete()
         items_deleted = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
@@ -274,7 +273,7 @@ def post_upload(request):
                 # Short name is new name without checksum
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
-                repository_uuid=rep_bin_file.uuid
+                path=rep_bin_file.url
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():

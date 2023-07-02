@@ -96,10 +96,14 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         related_name="soubor_historie",
         null=True,
     )
-    path = models.FileField(upload_to=get_upload_to, max_length=500, null=True)
+    path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
-    repository_uuid = models.CharField(max_length=36, null=True, blank=True, db_index=True)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+
+    @property
+    def repository_uuid(self):
+        if "http" in self.path.lower():
+            return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
         repository_content = self.get_repository_content()
