@@ -129,10 +129,10 @@ def download_file(request, pk):
     rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
     if soubor.repository_uuid is not None:
         # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
-        response = FileResponse(rep_bin_file.content, filename=soubor.nazev_zkraceny)
+        response = FileResponse(rep_bin_file.content, filename=soubor.nazev)
         response["Content-Length"] = rep_bin_file.size
         response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev_zkraceny
+                "attachment; filename=" + soubor.nazev
         )
         return response
 
@@ -146,7 +146,7 @@ def download_file(request, pk):
             response = HttpResponse(soubor.path, content_type=content_type)
             response["Content-Length"] = str(len(soubor.path))
             response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev_zkraceny
+                "attachment; filename=" + soubor.nazev
             )
             return response
     else:
@@ -259,7 +259,7 @@ def post_upload(request):
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
-        new_name = s.nazev_zkraceny
+        new_name = s.nazev
     soubor = request.FILES.get("file")
     if soubor:
         checksum = calculate_crc_32(soubor)
@@ -270,9 +270,8 @@ def post_upload(request):
             rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor.file)
             s = Soubor(
                 vazba=objekt.soubory,
-                nazev=rep_bin_file.filename,
+                nazev=new_name,
                 # Short name is new name without checksum
-                nazev_zkraceny=new_name,
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
                 repository_uuid=rep_bin_file.uuid
@@ -287,7 +286,7 @@ def post_upload(request):
                 else:
                     s.zaznamenej_nahrani(request.user)
                 return JsonResponse(
-                    {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
+                    {"filename": s.nazev, "id": s.pk}, status=200
                 )
             else:
                 logger.warning("core.views.post_upload.already_exists", extra={"s": s})
@@ -308,7 +307,7 @@ def post_upload(request):
                         + parent_ident
                         + ". "
                         + _("core.views.post_upload.duplikat.text2"),
-                        "filename": s.nazev_zkraceny,
+                        "filename": s.nazev,
                         "id": s.pk,
                     },
                     status=200,
@@ -334,8 +333,7 @@ def post_upload(request):
                 soubor.name = checksum + "_" + new_name
                 s.nazev = checksum + "_" + new_name
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
-                s.nazev = checksum + "_" + new_name
-                s.nazev_zkraceny = new_name
+                s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
                 s.save()
@@ -357,14 +355,14 @@ def post_upload(request):
                         + parent_ident
                         + ". "
                         + _("core.views.post_upload.duplikat2.text2"),
-                        "filename": s.nazev_zkraceny,
+                        "filename": s.nazev,
                         "id": s.pk,
                     },
                     status=200,
                 )
             else:
                 return JsonResponse(
-                    {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
+                    {"filename": s.nazev, "id": s.pk}, status=200
                 )
     else:
         logger.warning("core.views.post_upload.no_file")

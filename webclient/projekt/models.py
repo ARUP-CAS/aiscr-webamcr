@@ -279,7 +279,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             # making txt file with deleted files
             today = datetime.datetime.now()
             soubory = self.soubory.soubory.exclude(
-                nazev_zkraceny__regex="^log_dokumentace_"
+                nazev__regex="^log_dokumentace_"
             )
             if soubory.count() > 0:
                 filename = (
@@ -290,15 +290,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                         "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
                         % today.strftime("%d. %m. %Y")
                 )
-                file_content += "\n".join(soubory.values_list("nazev_zkraceny", flat=True))
+                file_content += "\n".join(soubory.values_list("nazev", flat=True))
                 prev = 0
                 prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
                 new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
                 myfile = ContentFile(content=file_content, name=new_filename)
                 aktual_soubor = Soubor(
                     vazba=self.soubory,
-                    nazev=new_filename,
-                    nazev_zkraceny=filename,
+                    nazev=filename,
                     mimetype="text/plain",
                     size_mb=myfile.size/1024/1024,
                 )
@@ -524,10 +523,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             soubor = Soubor(
                 vazba=self.soubory,
                 nazev=rep_bin_file.filename,
-                nazev_zkraceny=rep_bin_file.filename,
                 mimetype="application/pdf",
                 repository_uuid=rep_bin_file.uuid,
                 size_mb=rep_bin_file.size_mb,
+                sha_512=rep_bin_file.sha_512(),
             )
             soubor.save()
             if user:
@@ -578,8 +577,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         for soubor in self.soubory.soubory.all():
             soubor: Soubor
             repository_binary_file = soubor.get_repository_content()
-            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev_zkraceny),
-                                                      get_mime_type(soubor.nazev_zkraceny),
+            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                      get_mime_type(soubor.nazev),
                                                       repository_binary_file.content)
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end")
 

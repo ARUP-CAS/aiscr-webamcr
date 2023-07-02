@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-  <h1>{% trans "core.templates.delete_file.header.text" %}{{ soubor.nazev_zkraceny }}?</h1>
+  <h1>{% trans "core.templates.delete_file.header.text" %}{{ soubor.nazev }}?</h1>
   <form method="POST">
     {% csrf_token %}
       <input name="next" type="hidden" value="{{ request.GET.next }}">

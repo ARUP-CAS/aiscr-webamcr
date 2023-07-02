@@ -1351,11 +1351,11 @@ def archivovat(request, ident_cely):
         logger.debug("dokument.views.archivovat.check_stav_changed", extra={"ident_cely": ident_cely})
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
+        old_ident = d.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
             try:
-                old_ident = d.ident_cely
                 d.set_permanent_ident_cely(d.ident_cely[2], rada)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
@@ -1372,7 +1372,7 @@ def archivovat(request, ident_cely):
             else:
                 d.save()
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": d.ident_cely})
-        d.set_archivovany(request.user,old_ident)
+        d.set_archivovany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         Mailer.send_ek01(document=d)
         return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})
