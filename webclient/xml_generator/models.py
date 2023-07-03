@@ -26,7 +26,6 @@ class ModelWithMetadata(models.Model):
         queues = (i.scheduled(), i.active())
 
         for queue in queues:
-            print(queue.items())
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
                     if "request" in task and "save_record_metadata" in task.get("request").get("name").lower() \

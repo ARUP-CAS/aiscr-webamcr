@@ -150,7 +150,7 @@
       <xs:element name="isbn" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{isbn}" -->
       <xs:element name="issn" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{issn}" -->
       <xs:element name="vydavatel" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{vydavatel}" -->
-      <xs:element name="editor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{externizdrojeditor_set.autor.ident_cely}" | "{externizdrojeditor_set.poradi}" | "{externizdrojeditor_set.autor.vypis_cely}" -->
+      <xs:element name="editor" minOccurs="0" maxOccurs="unbounded" type="amcr:autorType"/> <!-- "{externizdrojeditor_set.editor.ident_cely}" | "{externizdrojeditor_set.poradi}" | "{externizdrojeditor_set.editor.vypis_cely}" -->
       <xs:element name="sbornik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{sbornik_nazev}" -->
       <xs:element name="misto" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{misto}" -->
       <xs:element name="casopis_denik_nazev" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{casopis_denik_nazev}" -->
@@ -174,7 +174,7 @@
       <xs:element name="geom_system" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{geom_system}" -->
       <xs:element name="geom_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{geom_updated_at}" -->
       <xs:element name="geom_sjtsk_updated_at" minOccurs="0" maxOccurs="1" type="xs:dateTime"/> <!-- "{geom_sjtsk_updated_at}" -->
-      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- DEFAULT: "HES-000865" | "anonym"; "{pristupnost_pom.ident_cely}" | "{pristupnost_pom.heslo}") -->
+      <xs:element name="pristupnost_pom" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{pristupnost_pom.ident_cely}" | "{pristupnost_pom.heslo}" -->
       <xs:element name="chranene_udaje" minOccurs="0" maxOccurs="1" type="amcr:pian-chranene_udajeType"/> <!-- SELF -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{historie.historie_set}" -->
       <xs:element name="dokumentacni_jednotka" minOccurs="0" maxOccurs="unbounded" type="amcr:refType"/> <!-- "{dokumentacni_jednotky_pianu.archeologicky_zaznam.ident_cely}" | "{dokumentacni_jednotky_pianu.ident_cely}" -->
@@ -225,7 +225,7 @@
       <xs:element name="superadmin" minOccurs="1" maxOccurs="1" type="xs:boolean"/> <!-- "{is_superuser}" -->   
       <xs:element name="skupina" minOccurs="1" maxOccurs="unbounded" type="xs:string"/> <!-- "{groups.name}" -->
       <xs:element name="notifikace" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{notification_types.ident_cely}" -->
-      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{pes_set.content_object}" -->
+      <xs:element name="hlidaci_pes" minOccurs="0" maxOccurs="unbounded" type="xs:string"/> <!-- "{pes_set}" -->
       <xs:element name="datum_registrace" minOccurs="1" maxOccurs="1" type="xs:dateTime"/> <!-- "{date_joined}" -->
       <xs:element name="historie" minOccurs="0" maxOccurs="unbounded" type="amcr:historieType"/> <!-- "{history_vazba.historie_set}" -->
       <xs:element name="spoluprace_nadrizeni" minOccurs="0" maxOccurs="unbounded" type="amcr:spoluprace_nadrizeniType"/> <!-- "{spoluprace_badatelu}" -->
@@ -243,10 +243,10 @@
       <xs:element name="zkratka" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka}" -->
       <xs:element name="zkratka_en" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{zkratka_en}" -->
       <xs:element name="razeni" minOccurs="0" maxOccurs="1" type="xs:integer"/> <!-- "{razeni}" -->
-      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{nadrazene.heslo_podrazene}" -->
-      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{hierarchie.heslo_nadrazene}" -->
-      <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> <!-- "{rada}" -->
-      <xs:element name="datace" minOccurs="0" maxOccurs="1" type="amcr:dataceType"/> <!-- "{heslar_datace}" -->
+      <xs:element name="hierarchie_vyse" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_vyseType"/> <!-- "{nadrazena_hesla}" -->
+      <xs:element name="hierarchie_nize" minOccurs="0" maxOccurs="unbounded" type="amcr:hierarchie_nizeType"/> <!-- "{podrazena_hesla}" -->
+      <xs:element name="dokument_typ_material_rada" minOccurs="0" maxOccurs="unbounded" type="amcr:dokument_typ_material_radaType"/> <!-- "{dokument_typ_material_rada}" -->
+      <xs:element name="datace" minOccurs="0" maxOccurs="1" type="amcr:dataceType"/> <!-- "{datace_obdobi}" -->
       <xs:element name="odkaz" minOccurs="0" maxOccurs="unbounded" type="amcr:odkazType"/> <!-- "{heslar_odkaz}" -->
     </xs:sequence>
   </xs:complexType>
@@ -584,14 +584,14 @@
   <xs:complexType name="hierarchie_vyseType">
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
-      <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{ident_cely}" | "{heslo}" -->
+      <xs:element name="heslo_nadrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{heslo_nadrazene.ident_cely}" | "{heslo_nadrazene.heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->      
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="hierarchie_nizeType">
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hier-{id}" -->
-      <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{ident_cely}" | "{heslo}" -->
+      <xs:element name="heslo_podrazene" minOccurs="1" maxOccurs="1" type="amcr:refType"/> <!-- "{heslo_podrazene.ident_cely}" | "{heslo_podrazene.heslo}" -->
       <xs:element name="typ" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{typ}" -->         
     </xs:sequence>
   </xs:complexType>

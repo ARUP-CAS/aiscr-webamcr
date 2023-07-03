@@ -62,6 +62,8 @@ class FedoraRequestType(Enum):
     CHANGE_IDENT_CONNECT_RECORDS_2 = 20
     CHANGE_IDENT_CONNECT_RECORDS_3 = 21
     CHANGE_IDENT_CONNECT_RECORDS_4 = 22
+    DELETE_LINK_CONTAINER = 23
+    DELETE_LINK_TOMBSTONE = 24
 
 
 class FedoraRepositoryConnector:
@@ -89,7 +91,7 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.CREATE_LINK, ):
             return f"{base_url}/model/{self._get_model_name()}/member"
-        elif request_type in (FedoraRequestType.GET_LINK, ):
+        elif request_type in (FedoraRequestType.GET_LINK, FedoraRequestType.DELETE_LINK_CONTAINER):
             return f"{base_url}/model/{self._get_model_name()}/member/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.GET_METADATA):
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
@@ -101,6 +103,8 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
         elif request_type == FedoraRequestType.DELETE_TOMBSTONE:
             return f"{base_url}/record/{self.record.ident_cely}/fcr:tombstone"
+        elif request_type == FedoraRequestType.DELETE_LINK_TOMBSTONE:
+            return f"{base_url}/model/{self._get_model_name()}/member/{self.record.ident_cely}/fcr:tombstone"
         elif request_type in (FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
             return f"{base_url}/model/deleted/member"
@@ -113,7 +117,8 @@ class FedoraRepositoryConnector:
     def _send_request(url: str, request_type: FedoraRequestType, *,
                       headers=None, data=None) -> Optional[requests.Response]:
         logger.debug("core_repository_connector._send_request.start", extra={"url": url, "request_type": request_type})
-        if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE):
+        if request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
+                            FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
             auth = HTTPBasicAuth(settings.FEDORA_ADMIN_USER, settings.FEDORA_ADMIN_USER_PASSWORD)
         else:
             auth = HTTPBasicAuth(settings.FEDORA_USER, settings.FEDORA_USER_PASSWORD)
@@ -134,7 +139,8 @@ class FedoraRepositoryConnector:
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
             response = requests.post(url, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE):
+        elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
+                              FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
             response = requests.delete(url, auth=auth)
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
@@ -324,12 +330,21 @@ class FedoraRepositoryConnector:
         return rep_bin_file
 
     def delete_container(self):
+        self._delete_link()
         logger.debug("core_repository_connector.delete_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.DELETE_CONTAINER)
         self._send_request(url, FedoraRequestType.DELETE_CONTAINER)
         url = self._get_request_url(FedoraRequestType.DELETE_TOMBSTONE)
         self._send_request(url, FedoraRequestType.DELETE_TOMBSTONE)
         logger.debug("core_repository_connector.delete_container.end", extra={"ident_cely": self.record.ident_cely})
+
+    def _delete_link(self):
+        logger.debug("core_repository_connector.delete_link.start", extra={"ident_cely": self.record.ident_cely})
+        url = self._get_request_url(FedoraRequestType.DELETE_LINK_CONTAINER)
+        self._send_request(url, FedoraRequestType.DELETE_LINK_CONTAINER)
+        url = self._get_request_url(FedoraRequestType.DELETE_LINK_TOMBSTONE)
+        self._send_request(url, FedoraRequestType.DELETE_LINK_TOMBSTONE)
+        logger.debug("core_repository_connector.delete_link.end", extra={"ident_cely": self.record.ident_cely})
 
     def record_deletion(self):
         headers = {
