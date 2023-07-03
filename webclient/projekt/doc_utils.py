@@ -407,10 +407,7 @@ class OznameniPDFCreator(DocumentCreator):
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
 
-        if self.additional:
-            postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        else:
-            postfix = ""
+        postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
         file = io.BytesIO()
         file.write(pdf_value)
