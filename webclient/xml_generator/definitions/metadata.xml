@@ -3,22 +3,22 @@
   <amcr:projekt>
     <amcr:ident_cely>C-201901234</amcr:ident_cely>
     <amcr:stav>6</amcr:stav>
-    <amcr:typ_projektu id="HES-123456">záchranný</amcr:typ_projektu>
-    <amcr:okres id="ruian-12">Beroun</amcr:okres>
+    <amcr:typ_projektu id="HES-123456" xml:lang="cs">záchranný</amcr:typ_projektu>
+    <amcr:okres id="ruian-12" xml:lang="cs">Beroun</amcr:okres>
     <amcr:podnet>Stavba RD.</amcr:podnet>
     <amcr:planovane_zahajeni>2018-01-01;2018-03-13</amcr:planovane_zahajeni>
     <amcr:vedouci_projektu id="OS-123456">Novák, Jan</amcr:vedouci_projektu>
-    <amcr:organizace id="ORG-123456">Archeologický ústav AV ČR, Brno, v. v. i.</amcr:organizace>
+    <amcr:organizace id="ORG-123456" xml:lang="cs">Archeologický ústav AV ČR, Brno, v. v. i.</amcr:organizace>
     <amcr:uzivatelske_oznaceni>test-xml</amcr:uzivatelske_oznaceni>
     <amcr:oznaceni_stavby>abc123</amcr:oznaceni_stavby>
-    <amcr:kulturni_pamatka id="HES-123456">kulturní památka</amcr:kulturni_pamatka>
+    <amcr:kulturni_pamatka id="HES-123456" xml:lang="cs">kulturní památka</amcr:kulturni_pamatka>
     <amcr:datum_zahajeni>2018-05-01</amcr:datum_zahajeni>
     <amcr:datum_ukonceni>2018-05-31</amcr:datum_ukonceni>
     <amcr:termin_odevzdani_nz>2021-05-31</amcr:termin_odevzdani_nz>
-    <amcr:pristupnost_pom id="HES-123456">anonym</amcr:pristupnost_pom>
+    <amcr:pristupnost_pom id="HES-123456" xml:lang="cs">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr id="ruian-123">HOŘOVICE</amcr:hlavni_katastr>
-      <amcr:dalsi_katastr id="ruian-123">RPETY</amcr:dalsi_katastr>
+      <amcr:hlavni_katastr id="ruian-123" xml:lang="cs">HOŘOVICE</amcr:hlavni_katastr>
+      <amcr:dalsi_katastr id="ruian-123" xml:lang="cs">RPETY</amcr:dalsi_katastr>
       <amcr:lokalizace>Někde v obci.</amcr:lokalizace>
       <amcr:parcelni_cislo>123/4</amcr:parcelni_cislo>
       <amcr:geom_gml>
@@ -67,11 +67,11 @@
   <amcr:archeologicky_zaznam>
     <amcr:ident_cely>C-201901234A</amcr:ident_cely>
     <amcr:stav>3</amcr:stav>
-    <amcr:okres id="ruian-12">Beroun</amcr:okres>
-    <amcr:pristupnost id="HES-123456">anonym</amcr:pristupnost>
+    <amcr:okres id="ruian-12" xml:lang="cs">Beroun</amcr:okres>
+    <amcr:pristupnost id="HES-123456" xml:lang="cs">anonym</amcr:pristupnost>
     <amcr:chranene_udaje>
-      <amcr:hlavni_katastr id="ruian-123">RPETY</amcr:hlavni_katastr>
-      <amcr:dalsi_katastr id="ruian-123">FELBABKA</amcr:dalsi_katastr>
+      <amcr:hlavni_katastr id="ruian-123" xml:lang="cs">RPETY</amcr:hlavni_katastr>
+      <amcr:dalsi_katastr id="ruian-123" xml:lang="cs">FELBABKA</amcr:dalsi_katastr>
       <amcr:uzivatelske_oznaceni>Test-xml akce</amcr:uzivatelske_oznaceni>
     </amcr:chranene_udaje>
     <amcr:akce>
@@ -80,17 +80,17 @@
       <amcr:je_nz>0</amcr:je_nz>
       <amcr:odlozena_nz>0</amcr:odlozena_nz>
       <amcr:hlavni_vedouci id="OS-123456">Novák, Jan</amcr:hlavni_vedouci>
-      <amcr:organizace id="ORG-123456">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
+      <amcr:organizace id="ORG-123456" xml:lang="cs">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
       <amcr:vedouci_akce_ostatni>
         <amcr:id>vedo-1</amcr:id>
         <amcr:vedouci id="OS-123456">Novotný, Petr</amcr:vedouci>
-        <amcr:organizace id="ORG-123456">Hornické muzeum Příbram, p.o.</amcr:organizace>
+        <amcr:organizace id="ORG-123456" xml:lang="cs">Hornické muzeum Příbram, p.o.</amcr:organizace>
       </amcr:vedouci_akce_ostatni>
-      <amcr:specifikace_data id="HES-123456">přesně</amcr:specifikace_data>
+      <amcr:specifikace_data id="HES-123456" xml:lang="cs">přesně</amcr:specifikace_data>
       <amcr:datum_zahajeni>2018-05-03</amcr:datum_zahajeni>
       <amcr:datum_ukonceni>2018-05-18</amcr:datum_ukonceni>
-      <amcr:hlavni_typ id="HES-123456">plošný odkryv</amcr:hlavni_typ>
-      <amcr:vedlejsi_typ id="HES-123456">povrchový sběr</amcr:vedlejsi_typ>
+      <amcr:hlavni_typ id="HES-123456" xml:lang="cs">plošný odkryv</amcr:hlavni_typ>
+      <amcr:vedlejsi_typ id="HES-123456" xml:lang="cs">povrchový sběr</amcr:vedlejsi_typ>
       <amcr:ulozeni_nalezu>Muzeum Beroun</amcr:ulozeni_nalezu>
       <amcr:ulozeni_dokumentace>archiv ARÚ</amcr:ulozeni_dokumentace>
       <amcr:chranene_udaje>
@@ -99,10 +99,10 @@
       </amcr:chranene_udaje>
     </amcr:akce>
     <amcr:lokalita>
-      <amcr:typ_lokality id="HES-123456">nemovitá památka</amcr:typ_lokality>
-      <amcr:druh id="HES-123456">zaniklý areál s nadzemními relikty</amcr:druh>
-      <amcr:zachovalost id="HES-123456">nadzemní relikty</amcr:zachovalost>
-      <amcr:jistota id="HES-123456">jistá (100 %)</amcr:jistota>
+      <amcr:typ_lokality id="HES-123456" xml:lang="cs">nemovitá památka</amcr:typ_lokality>
+      <amcr:druh id="HES-123456" xml:lang="cs">zaniklý areál s nadzemními relikty</amcr:druh>
+      <amcr:zachovalost id="HES-123456" xml:lang="cs">nadzemní relikty</amcr:zachovalost>
+      <amcr:jistota id="HES-123456" xml:lang="cs">jistá (100 %)</amcr:jistota>
       <amcr:chranene_udaje>
         <amcr:nazev>Rovný - zaniklá vesnice</amcr:nazev>
         <amcr:popis>Je tam vesnice, tedy byla a v ní tvrz a dvůr a mlýn a tak.</amcr:popis>
@@ -119,29 +119,29 @@
     <amcr:dokumentacni_jednotka>
       <amcr:ident_cely>C-201901234A-D01</amcr:ident_cely>
       <amcr:pian id="P-1234-123456">P-1234-123456</amcr:pian>
-      <amcr:typ id="HES-123456">Celek akce</amcr:typ>
+      <amcr:typ id="HES-123456" xml:lang="cs">Celek akce</amcr:typ>
       <amcr:negativni_jednotka>0</amcr:negativni_jednotka>
       <amcr:nazev>sbíraná plocha</amcr:nazev>
       <amcr:adb id="ADB-PRAH10-001234">ADB-PRAH10-001234</amcr:adb>
       <amcr:komponenta>
         <amcr:ident_cely>C-201901234A-K001</amcr:ident_cely>
-        <amcr:obdobi id="HES-123456">doba bronzová</amcr:obdobi>
+        <amcr:obdobi id="HES-123456" xml:lang="cs">doba bronzová</amcr:obdobi>
         <amcr:jistota>1</amcr:jistota>
         <amcr:presna_datace>5000 BC</amcr:presna_datace>
-        <amcr:areal id="HES-123456">sídliště nesp.</amcr:areal>
-        <amcr:aktivita id="HES-123456">sídlištní</amcr:aktivita>
+        <amcr:areal id="HES-123456" xml:lang="cs">sídliště nesp.</amcr:areal>
+        <amcr:aktivita id="HES-123456" xml:lang="cs">sídlištní</amcr:aktivita>
         <amcr:poznamka>Spousta domů.</amcr:poznamka>
         <amcr:nalez_objekt>
           <amcr:id>nalo-1</amcr:id>
-          <amcr:druh id="HES-123456">(polo)zemnice</amcr:druh>
-          <amcr:specifikace id="HES-123456">konstrukce dřevěná</amcr:specifikace>
+          <amcr:druh id="HES-123456" xml:lang="cs">(polo)zemnice</amcr:druh>
+          <amcr:specifikace id="HES-123456" xml:lang="cs">konstrukce dřevěná</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
           <amcr:poznamka>Nedokopáno.</amcr:poznamka>
         </amcr:nalez_objekt>
         <amcr:nalez_predmet>
           <amcr:id>nalp-1</amcr:id>
-          <amcr:druh id="HES-123456">zlomek keramiky nesp.</amcr:druh>
-          <amcr:specifikace id="HES-123456">keramika nesp.</amcr:specifikace>
+          <amcr:druh id="HES-123456" xml:lang="cs">zlomek keramiky nesp.</amcr:druh>
+          <amcr:specifikace id="HES-123456" xml:lang="cs">keramika nesp.</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
           <amcr:poznamka>Nedokopáno.</amcr:poznamka>
         </amcr:nalez_predmet>
@@ -160,15 +160,15 @@
     <amcr:hodina_zacatek>09:00</amcr:hodina_zacatek>
     <amcr:hodina_konec>13:00</amcr:hodina_konec>
     <amcr:pozorovatel id="OS-123456">Gojda, Martin</amcr:pozorovatel>
-    <amcr:organizace id="ORG-123456">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
+    <amcr:organizace id="ORG-123456" xml:lang="cs">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
     <amcr:fotoaparat>Nikon</amcr:fotoaparat>
     <amcr:pilot>Janíček, Tomáš</amcr:pilot>
     <amcr:typ_letounu>Cessna</amcr:typ_letounu>
     <amcr:ucel_letu>pozorování</amcr:ucel_letu>
-    <amcr:letiste_start id="HES-123456">Sazená</amcr:letiste_start>
-    <amcr:letiste_cil id="HES-123456">Praha-Kbely</amcr:letiste_cil>
-    <amcr:pocasi id="HES-123456">slunečno</amcr:pocasi>
-    <amcr:dohlednost id="HES-123456">90-100 km</amcr:dohlednost>
+    <amcr:letiste_start id="HES-123456" xml:lang="cs">Sazená</amcr:letiste_start>
+    <amcr:letiste_cil id="HES-123456" xml:lang="cs">Praha-Kbely</amcr:letiste_cil>
+    <amcr:pocasi id="HES-123456" xml:lang="cs">slunečno</amcr:pocasi>
+    <amcr:dohlednost id="HES-123456" xml:lang="cs">90-100 km</amcr:dohlednost>
     <amcr:uzivatelske_oznaceni>abc4</amcr:uzivatelske_oznaceni>
     <amcr:dokument id="C-TX-201901234">C-TX-201901234</amcr:dokument>
   </amcr:let>
@@ -176,15 +176,15 @@
     <amcr:ident_cely>ADB-PRAH10-001234</amcr:ident_cely>
     <amcr:dokumentacni_jednotka id="C-201901234A">C-201901234A-D01</amcr:dokumentacni_jednotka>
     <amcr:stav_pom>3</amcr:stav_pom>
-    <amcr:typ_sondy id="HES-123456">vrt</amcr:typ_sondy>
-    <amcr:podnet id="HES-123456">badatelský záměr</amcr:podnet>
+    <amcr:typ_sondy id="HES-123456" xml:lang="cs">vrt</amcr:typ_sondy>
+    <amcr:podnet id="HES-123456" xml:lang="cs">badatelský záměr</amcr:podnet>
     <amcr:stratigraficke_jednotky>4</amcr:stratigraficke_jednotky>
     <amcr:autor_popisu id="OS-123456">Novák, Jan</amcr:autor_popisu>
     <amcr:rok_popisu>2018</amcr:rok_popisu>
     <amcr:autor_revize id="OS-123456">Hasil, Jan</amcr:autor_revize>
     <amcr:rok_revize>2019</amcr:rok_revize>
     <amcr:sm5>PRAH10</amcr:sm5>
-    <amcr:pristupnost_pom id="HES-123456">anonym</amcr:pristupnost_pom>
+    <amcr:pristupnost_pom id="HES-123456" xml:lang="cs">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
       <amcr:uzivatelske_oznaceni_sondy>V1</amcr:uzivatelske_oznaceni_sondy>
       <amcr:trat>Za lesem</amcr:trat>
@@ -193,9 +193,9 @@
       <amcr:poznamka>Nešlo to zatloukat.</amcr:poznamka>
       <amcr:vyskovy_bod>
         <amcr:ident_cely>ADB-PRAH10-001234-V1234</amcr:ident_cely>
-        <amcr:typ id="HES-123456">podloží</amcr:typ>
+        <amcr:typ id="HES-123456" xml:lang="cs">podloží</amcr:typ>
         <amcr:geom_gml>
-          <gml:Point srsName="EPSG:4326">
+          <gml:Point srsName="EPSG:5514">
             <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
           </gml:Point>
         </amcr:geom_gml>
@@ -207,21 +207,21 @@
     <amcr:ident_cely>C-TX-201901234</amcr:ident_cely>
     <amcr:let id="LET-12345">LET-12345</amcr:let>
     <amcr:stav>3</amcr:stav>
-    <amcr:typ_dokumentu id="HES-123456">nálezová zpráva</amcr:typ_dokumentu>
-    <amcr:material_originalu id="HES-123456">digitální soubor</amcr:material_originalu>
-    <amcr:rada id="HES-123456">TX</amcr:rada>
-    <amcr:posudek id="HES-123456">geofyzikální</amcr:posudek>
+    <amcr:typ_dokumentu id="HES-123456" xml:lang="cs">nálezová zpráva</amcr:typ_dokumentu>
+    <amcr:material_originalu id="HES-123456" xml:lang="cs">digitální soubor</amcr:material_originalu>
+    <amcr:rada id="HES-123456" xml:lang="cs">TX</amcr:rada>
+    <amcr:posudek id="HES-123456" xml:lang="cs">geofyzikální</amcr:posudek>
     <amcr:autor id="OS-123456" poradi="1">Novák, Jan</amcr:autor>
     <amcr:rok_vzniku>2018</amcr:rok_vzniku>
-    <amcr:organizace id="ORG-123456">Archeologický ústav AV ČR, Brno, v. v. i.</amcr:organizace>
-    <amcr:pristupnost id="HES-123456">badatel</amcr:pristupnost>
+    <amcr:organizace id="ORG-123456" xml:lang="cs">Archeologický ústav AV ČR, Brno, v. v. i.</amcr:organizace>
+    <amcr:pristupnost id="HES-123456" xml:lang="cs">badatel</amcr:pristupnost>
     <amcr:datum_zverejneni>2021-01-01</amcr:datum_zverejneni>
-    <amcr:jazyk_dokumentu id="HES-123456">CS</amcr:jazyk_dokumentu>
-    <amcr:ulozeni_originalu id="HES-123456">primárně digitální dokument</amcr:ulozeni_originalu>
+    <amcr:jazyk_dokumentu id="HES-123456" xml:lang="cs">čeština</amcr:jazyk_dokumentu>
+    <amcr:ulozeni_originalu id="HES-123456" xml:lang="cs">primárně digitální dokument</amcr:ulozeni_originalu>
     <amcr:oznaceni_originalu>1234/2018</amcr:oznaceni_originalu>
     <amcr:popis>Nálezovka o ničem.</amcr:popis>
     <amcr:poznamka>Je to prázdné.</amcr:poznamka>
-    <amcr:licence>CC BY-NC 4.0</amcr:licence>
+    <amcr:licence>https://creativecommons.org/licenses/by-nc/4.0/</amcr:licence>
     <amcr:osoba id="OS-123456">Novotný, Alois</amcr:osoba>
     <amcr:historie>
       <amcr:id>hist-1</amcr:id>
@@ -248,18 +248,18 @@
     </amcr:soubor>
     <amcr:extra_data>
       <amcr:cislo_objektu>120001</amcr:cislo_objektu>
-      <amcr:format id="HES-123456">A4 (21x30)</amcr:format>
+      <amcr:format id="HES-123456" xml:lang="cs">A4 (21x30)</amcr:format>
       <amcr:meritko>1:1000</amcr:meritko>
       <amcr:vyska>30</amcr:vyska>
       <amcr:sirka>21</amcr:sirka>
-      <amcr:zachovalost id="HES-123456">1</amcr:zachovalost>
-      <amcr:nahrada id="HES-123456">2</amcr:nahrada>
+      <amcr:zachovalost id="HES-123456" xml:lang="cs">1</amcr:zachovalost>
+      <amcr:nahrada id="HES-123456" xml:lang="cs">2</amcr:nahrada>
       <amcr:pocet_variant_originalu>3</amcr:pocet_variant_originalu>
       <amcr:odkaz>text</amcr:odkaz>
       <amcr:datum_vzniku>2018-07-01</amcr:datum_vzniku>
-      <amcr:udalost_typ id="HES-123456">zahraniční výzkum</amcr:udalost_typ>
+      <amcr:udalost_typ id="HES-123456" xml:lang="cs">zahraniční výzkum</amcr:udalost_typ>
       <amcr:udalost>Expedice Rokycansko.</amcr:udalost>
-      <amcr:zeme id="HES-123456">Česká republika</amcr:zeme>
+      <amcr:zeme id="HES-123456" xml:lang="cs">Česká republika</amcr:zeme>
       <amcr:region>Rokycansko</amcr:region>
       <amcr:rok_od>2017</amcr:rok_od>
       <amcr:rok_do>2018</amcr:rok_do>
@@ -273,7 +273,7 @@
     </amcr:extra_data>
     <amcr:tvar>
       <amcr:id>tvar-1</amcr:id>
-      <amcr:tvar id="HES-123456">shluk bodových objektů</amcr:tvar>
+      <amcr:tvar id="HES-123456" xml:lang="cs">shluk bodových objektů</amcr:tvar>
       <amcr:poznamka>Takové puntíky.</amcr:poznamka>
     </amcr:tvar>
     <amcr:dokument_cast>
@@ -283,30 +283,30 @@
       <amcr:poznamka>1. část</amcr:poznamka>
       <amcr:komponenta>
         <amcr:ident_cely>C-TX-201901234-K001</amcr:ident_cely>
-        <amcr:obdobi id="HES-123456">doba bronzová</amcr:obdobi>
+        <amcr:obdobi id="HES-123456" xml:lang="cs">doba bronzová</amcr:obdobi>
         <amcr:jistota>1</amcr:jistota>
         <amcr:presna_datace>5000 BC</amcr:presna_datace>
-        <amcr:areal id="HES-123456">sídliště nesp.</amcr:areal>
-        <amcr:aktivita id="HES-123456">sídlištní</amcr:aktivita>
+        <amcr:areal id="HES-123456" xml:lang="cs">sídliště nesp.</amcr:areal>
+        <amcr:aktivita id="HES-123456" xml:lang="cs">sídlištní</amcr:aktivita>
         <amcr:poznamka>Spousta domů.</amcr:poznamka>
         <amcr:nalez_objekt>
           <amcr:id>nalo-1</amcr:id>
-          <amcr:druh id="HES-123456">(polo)zemnice</amcr:druh>
-          <amcr:specifikace id="HES-123456">konstrukce dřevěná</amcr:specifikace>
+          <amcr:druh id="HES-123456" xml:lang="cs">(polo)zemnice</amcr:druh>
+          <amcr:specifikace id="HES-123456" xml:lang="cs">konstrukce dřevěná</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
           <amcr:poznamka>Nedokopáno.</amcr:poznamka>
         </amcr:nalez_objekt>
         <amcr:nalez_predmet>
           <amcr:id>nalp-1</amcr:id>
-          <amcr:druh id="HES-123456">zlomek keramiky nesp.</amcr:druh>
-          <amcr:specifikace id="HES-123456">keramika nesp.</amcr:specifikace>
+          <amcr:druh id="HES-123456" xml:lang="cs">zlomek keramiky nesp.</amcr:druh>
+          <amcr:specifikace id="HES-123456" xml:lang="cs">keramika nesp.</amcr:specifikace>
           <amcr:pocet>xx</amcr:pocet>
           <amcr:poznamka>Nedokopáno.</amcr:poznamka>
         </amcr:nalez_predmet>
       </amcr:komponenta>
       <amcr:neident_akce>
-        <amcr:okres id="ruian-12">Kladno</amcr:okres>
-        <amcr:katastr id="ruian-123">HRADEČNO</amcr:katastr>
+        <amcr:okres id="ruian-12" xml:lang="cs">Kladno</amcr:okres>
+        <amcr:katastr id="ruian-123" xml:lang="cs">HRADEČNO</amcr:katastr>
         <amcr:vedouci id="OS-123456">Novák, Jan</amcr:vedouci>
         <amcr:rok_zahajeni>2015</amcr:rok_zahajeni>
         <amcr:rok_ukonceni>2016</amcr:rok_ukonceni>
@@ -320,7 +320,7 @@
   <amcr:ext_zdroj>
     <amcr:ident_cely>BIB-123456</amcr:ident_cely>
     <amcr:stav>1</amcr:stav>
-    <amcr:typ id="HES-123456">kniha</amcr:typ>
+    <amcr:typ id="HES-123456" xml:lang="cs">kniha</amcr:typ>
     <amcr:sysno>9874-1</amcr:sysno>
     <amcr:autor id="OS-123456" poradi="1">Novák, Jan</amcr:autor>
     <amcr:nazev>Knížka</amcr:nazev>
@@ -337,8 +337,8 @@
     <amcr:datum_rd>2018-01-05</amcr:datum_rd>
     <amcr:paginace_titulu>151-153</amcr:paginace_titulu>
     <amcr:link>http://amapa.cz/</amcr:link>
-    <amcr:typ_dokumentu id="HES-123456">text jiný</amcr:typ_dokumentu>
-    <amcr:organizace id="HES-123456">Muzeum Mělník</amcr:organizace>
+    <amcr:typ_dokumentu id="HES-123456" xml:lang="cs">text jiný</amcr:typ_dokumentu>
+    <amcr:organizace id="HES-123456" xml:lang="cs">Muzeum Mělník</amcr:organizace>
     <amcr:poznamka>Už nevím co psát.</amcr:poznamka>
     <amcr:historie>
       <amcr:id>hist-1</amcr:id>
@@ -356,12 +356,12 @@
   <amcr:pian>
     <amcr:ident_cely>P-1234-123456</amcr:ident_cely>
     <amcr:stav>2</amcr:stav>
-    <amcr:typ id="HES-123456">plocha</amcr:typ>
-    <amcr:presnost id="HES-123456">1</amcr:presnost>
+    <amcr:typ id="HES-123456" xml:lang="cs">plocha</amcr:typ>
+    <amcr:presnost id="HES-123456" xml:lang="cs">jednotky metrů</amcr:presnost>
     <amcr:geom_system>wgs84</amcr:geom_system>
     <amcr:geom_updated_at>2023-02-01T16:58:50Z</amcr:geom_updated_at>
     <amcr:geom_sjtsk_updated_at>2023-02-01T16:58:50Z</amcr:geom_sjtsk_updated_at>
-    <amcr:pristupnost_pom id="HES-123456">anonym</amcr:pristupnost_pom>
+    <amcr:pristupnost_pom id="HES-123456" xml:lang="cs">anonym</amcr:pristupnost_pom>
     <amcr:chranene_udaje>
       <amcr:zm10>10-01-18</amcr:zm10>
       <amcr:geom_gml>
@@ -371,7 +371,9 @@
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(X Y)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
-        <gml:xxx/>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+        </gml:Point>
       </amcr:geom_sjtsk_gml>
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(X Y)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
@@ -388,26 +390,26 @@
     <amcr:ident_cely>C-201901234-N00001</amcr:ident_cely>
     <amcr:evidencni_cislo>CH+AV</amcr:evidencni_cislo>
     <amcr:projekt id="C-201901234">C-201901234</amcr:projekt>
-    <amcr:okres id="ruian-12">Praha-východ</amcr:okres>
+    <amcr:okres id="ruian-12" xml:lang="cs">Praha-východ</amcr:okres>
     <amcr:hloubka>0</amcr:hloubka>
-    <amcr:okolnosti id="HES-123456">povrch</amcr:okolnosti>
-    <amcr:obdobi id="HES-123456">micoquien</amcr:obdobi>
+    <amcr:okolnosti id="HES-123456" xml:lang="cs">povrch</amcr:okolnosti>
+    <amcr:obdobi id="HES-123456" xml:lang="cs">micoquien</amcr:obdobi>
     <amcr:presna_datace>Přesná datace</amcr:presna_datace>
-    <amcr:druh_nalezu id="HES-123456">amorfní zlomek/předmět nesp.</amcr:druh_nalezu>
-    <amcr:specifikace id="HES-123456">cín</amcr:specifikace>
+    <amcr:druh_nalezu id="HES-123456" xml:lang="cs">amorfní zlomek/předmět nesp.</amcr:druh_nalezu>
+    <amcr:specifikace id="HES-123456" xml:lang="cs">cín</amcr:specifikace>
     <amcr:pocet>0</amcr:pocet>
     <amcr:poznamka>Bližší popis</amcr:poznamka>
     <amcr:nalezce id="OS-123456">Badatel, Jan</amcr:nalezce>
     <amcr:datum_nalezu>2019-12-02</amcr:datum_nalezu>
     <amcr:stav>4</amcr:stav>
     <amcr:predano>1</amcr:predano>
-    <amcr:predano_organizace id="OS-123456">Muzeum Roztoky</amcr:predano_organizace>
+    <amcr:predano_organizace id="ORG-123456" xml:lang="cs">Muzeum Roztoky</amcr:predano_organizace>
     <amcr:geom_system>wgs84</amcr:geom_system>
     <amcr:geom_updated_at>2023-02-01T16:58:50Z</amcr:geom_updated_at>
     <amcr:geom_sjtsk_updated_at>2023-02-01T16:58:50Z</amcr:geom_sjtsk_updated_at>
-    <amcr:pristupnost id="HES-123456">badatel</amcr:pristupnost>
+    <amcr:pristupnost id="HES-123456" xml:lang="cs">badatel</amcr:pristupnost>
     <amcr:chranene_udaje>
-      <amcr:katastr id="ruian-123">CHUDOSLAVICE</amcr:katastr>
+      <amcr:katastr id="ruian-123" xml:lang="cs">CHUDOSLAVICE</amcr:katastr>
       <amcr:lokalizace>U sedmikrasek</amcr:lokalizace>
       <amcr:geom_gml>
         <gml:Point srsName="EPSG:4326">
@@ -416,7 +418,9 @@
       </amcr:geom_gml>
       <amcr:geom_wkt EPSG="4326">POINT(X Y)</amcr:geom_wkt>
       <amcr:geom_sjtsk_gml>
-        <gml:xxx/>
+        <gml:Point srsName="EPSG:5514">
+          <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+        </gml:Point>
       </amcr:geom_sjtsk_gml>
       <amcr:geom_sjtsk_wkt EPSG="5514">POINT(X Y)</amcr:geom_sjtsk_wkt>
     </amcr:chranene_udaje>
@@ -450,16 +454,17 @@
     <amcr:prijmeni>Novák</amcr:prijmeni>
     <amcr:email>novak@test.cz</amcr:email>
     <amcr:osoba id="OS-123456">Novák, Jan</amcr:osoba>
-    <amcr:organizace id="ORG-123456">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
-    <amcr:jazyk>CS</amcr:jazyk>
+    <amcr:organizace id="ORG-123456" xml:lang="cs">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:organizace>
+    <amcr:jazyk>cs</amcr:jazyk>
     <amcr:telefon>+420123456789</amcr:telefon>
     <amcr:aktivni>1</amcr:aktivni>
     <amcr:admin>0</amcr:admin>
     <amcr:superadmin>0</amcr:superadmin>
-    <amcr:skupina>badatel</amcr:skupina>
+    <amcr:skupina xml:lang="cs">badatel</amcr:skupina>
     <amcr:notifikace>E-U-01</amcr:notifikace>
-    <amcr:hlidaci_pes>Beroun</amcr:hlidaci_pes>
+    <amcr:hlidaci_pes id="ruian-3201" xml:lang="cs">Beroun</amcr:hlidaci_pes>
     <amcr:datum_registrace>2023-02-01T16:58:50Z</amcr:datum_registrace>
+    <amcr:datum_prihlaseni>2023-02-01T16:58:50Z</amcr:datum_prihlaseni>
     <amcr:historie>
       <amcr:id>hist-1</amcr:id>
       <amcr:datum_zmeny>2023-02-01T16:58:50Z</amcr:datum_zmeny>
@@ -494,28 +499,28 @@
   </amcr:uzivatel>
   <amcr:heslo>
     <amcr:ident_cely>HES-123456</amcr:ident_cely>
-    <amcr:nazev_heslare>aktivita</amcr:nazev_heslare>
-    <amcr:heslo>sídlištní</amcr:heslo>
-    <amcr:heslo_en>settlement</amcr:heslo_en>
-    <amcr:popis>sídlištní aktivita</amcr:popis>
-    <amcr:popis_en>settlement activity</amcr:popis_en>
-    <amcr:zkratka>síd</amcr:zkratka>
-    <amcr:zkratka_en>set</amcr:zkratka_en>
+    <amcr:nazev_heslare xml:lang="cs">aktivita</amcr:nazev_heslare>
+    <amcr:heslo xml:lang="cs">sídlištní</amcr:heslo>
+    <amcr:heslo_en xml:lang="en">settlement</amcr:heslo_en>
+    <amcr:popis xml:lang="cs">sídlištní aktivita</amcr:popis>
+    <amcr:popis_en xml:lang="en">settlement activity</amcr:popis_en>
+    <amcr:zkratka xml:lang="cs">síd</amcr:zkratka>
+    <amcr:zkratka_en xml:lang="en">set</amcr:zkratka_en>
     <amcr:razeni>1</amcr:razeni>
     <amcr:hierarchie_vyse>
       <amcr:id>hier-1</amcr:id>
-      <amcr:heslo_nadrazene id="HES-123456">nějaké heslo</amcr:heslo_nadrazene>
-      <amcr:typ>podřízenost</amcr:typ>
+      <amcr:heslo_nadrazene id="HES-123456" xml:lang="cs">nějaké heslo</amcr:heslo_nadrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
     </amcr:hierarchie_vyse>
     <amcr:hierarchie_nize>
       <amcr:id>hier-1</amcr:id>
-      <amcr:heslo_podrazene id="HES-123456">sídliště nesp.</amcr:heslo_podrazene>
-      <amcr:typ>podřízenost</amcr:typ>
+      <amcr:heslo_podrazene id="HES-123456" xml:lang="cs">sídliště nesp.</amcr:heslo_podrazene>
+      <amcr:typ xml:lang="cs">podřízenost</amcr:typ>
     </amcr:hierarchie_nize>
     <amcr:dokument_typ_material_rada>
       <amcr:id>hdtm-1</amcr:id>
-      <amcr:dokument_typ id="HES-123456">nálezová zpráva</amcr:dokument_typ>
-      <amcr:dokument_material id="HES-123456">primárně digitální</amcr:dokument_material>
+      <amcr:dokument_typ id="HES-123456" xml:lang="cs">nálezová zpráva</amcr:dokument_typ>
+      <amcr:dokument_material id="HES-123456" xml:lang="cs">primárně digitální</amcr:dokument_material>
     </amcr:dokument_typ_material_rada>
     <amcr:datace>
       <amcr:rok_od_min>-1500</amcr:rok_od_min>
@@ -534,62 +539,74 @@
   </amcr:heslo>
   <amcr:ruian_kraj>
     <amcr:kod>ruian-27</amcr:kod>
-    <amcr:nazev>Středočeský kraj</amcr:nazev>
-    <amcr:nazev_en>Středočeský kraj</amcr:nazev_en>
+    <amcr:nazev xml:lang="cs">Středočeský kraj</amcr:nazev>
+    <amcr:nazev_en xml:lang="en">Central Bohemia Region</amcr:nazev_en>
     <amcr:rada_id>C</amcr:rada_id>
     <amcr:definicni_bod_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:definicni_bod_gml>
     <amcr:definicni_bod_wkt EPSG="4326">POINT(X Y)</amcr:definicni_bod_wkt>
     <amcr:hranice_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
   </amcr:ruian_kraj>
   <amcr:ruian_okres>
     <amcr:kod>ruian-3201</amcr:kod>
-    <amcr:nazev>Benešov</amcr:nazev>
-    <amcr:nazev_en>Benešov</amcr:nazev_en>
+    <amcr:nazev xml:lang="cs">Benešov</amcr:nazev>
+    <amcr:nazev_en xml:lang="en">Benešov</amcr:nazev_en>
     <amcr:spz>BN</amcr:spz>
-    <amcr:kraj id="ruian-27">Středočeský kraj</amcr:kraj>
+    <amcr:kraj id="ruian-27" xml:lang="cs">Středočeský kraj</amcr:kraj>
     <amcr:definicni_bod_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:definicni_bod_gml>
     <amcr:definicni_bod_wkt EPSG="4326">POINT(X Y)</amcr:definicni_bod_wkt>
     <amcr:hranice_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
   </amcr:ruian_okres>
   <amcr:ruian_katastr>
     <amcr:kod>ruian-778109</amcr:kod>
-    <amcr:nazev>VELIŠ</amcr:nazev>
-    <amcr:okres id="ruian-3201">Benešov</amcr:okres>
+    <amcr:nazev xml:lang="cs">VELIŠ</amcr:nazev>
+    <amcr:okres id="ruian-3201" xml:lang="cs">Benešov</amcr:okres>
     <amcr:pian id="P-1234-923456">P-1234-923456</amcr:pian>
     <amcr:definicni_bod_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:definicni_bod_gml>
     <amcr:definicni_bod_wkt EPSG="4326">POINT(X Y)</amcr:definicni_bod_wkt>
     <amcr:hranice_gml>
-      <gml:xxx/>
+      <gml:Point srsName="EPSG:4326">
+        <gml:coordinates>14.40152174,50.87052213</gml:coordinates>
+      </gml:Point>
     </amcr:hranice_gml>
     <amcr:hranice_wkt EPSG="4326">MULTIPOLYGON(X Y)</amcr:hranice_wkt>
   </amcr:ruian_katastr>
   <amcr:organizace>
     <amcr:ident_cely>ORG-123456</amcr:ident_cely>
-    <amcr:nazev>Archeologický ústav AV ČR, Praha, v. v. i.</amcr:nazev>
-    <amcr:nazev_en>Institute of Archaeology of the Czech Academy of Sciences, Prague</amcr:nazev_en>
-    <amcr:nazev_zkraceny>Archeologický ústav Praha</amcr:nazev_zkraceny>
-    <amcr:nazev_zkraceny_en>Institute of Archaeology CAS, Prague</amcr:nazev_zkraceny_en>
-    <amcr:typ_organizace id="HES-123456">výzkumná organizace</amcr:typ_organizace>
+    <amcr:nazev xml:lang="cs">Archeologický ústav AV ČR, Praha, v. v. i.</amcr:nazev>
+    <amcr:nazev_en xml:lang="en">Institute of Archaeology of the Czech Academy of Sciences, Prague</amcr:nazev_en>
+    <amcr:nazev_zkraceny xml:lang="cs">Archeologický ústav Praha</amcr:nazev_zkraceny>
+    <amcr:nazev_zkraceny_en xml:lang="en">Institute of Archaeology CAS, Prague</amcr:nazev_zkraceny_en>
+    <amcr:typ_organizace id="HES-123456" xml:lang="cs">výzkumná organizace</amcr:typ_organizace>
     <amcr:oao>1</amcr:oao>
     <amcr:mesicu_do_zverejneni>36</amcr:mesicu_do_zverejneni>
-    <amcr:zverejneni_pristupnost id="HES-123456">badatel</amcr:zverejneni_pristupnost>
+    <amcr:zverejneni_pristupnost id="HES-123456" xml:lang="cs">badatel</amcr:zverejneni_pristupnost>
     <amcr:email>sekretariat@arup.cas.cz</amcr:email>
     <amcr:telefon>+420123456789</amcr:telefon>
     <amcr:adresa>Letenská 123/4, 118 01 Praha 1</amcr:adresa>
     <amcr:ico>67985912</amcr:ico>
-    <amcr:soucast id="ORG-123456">Akademie věd České republiky</amcr:soucast>
+    <amcr:soucast id="ORG-123456" xml:lang="cs">Akademie věd České republiky</amcr:soucast>
     <amcr:zanikla>0</amcr:zanikla>
   </amcr:organizace>
   <amcr:osoba>
