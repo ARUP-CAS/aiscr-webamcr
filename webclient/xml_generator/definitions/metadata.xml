@@ -530,6 +530,7 @@
       <amcr:nazev_kodu>sysno</amcr:nazev_kodu>
       <amcr:kod>1234</amcr:kod>
       <amcr:uri>https://a.cz/id/1234</amcr:uri>
+      <amcr:skos_mapping_relation>skos:exactMatch</amcr:skos_mapping_relation>
     </amcr:odkaz>
   </amcr:heslo>
   <amcr:ruian_kraj>
