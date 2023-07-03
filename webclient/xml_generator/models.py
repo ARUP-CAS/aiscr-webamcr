@@ -23,7 +23,7 @@ class ModelWithMetadata(models.Model):
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
         i = app.control.inspect()
-        queues = (i.scheduled(), i.active())
+        queues = (i.scheduled(), )
 
         for queue in queues:
             for queue_name, queue_tasks in queue.items():
