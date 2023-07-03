@@ -74,11 +74,14 @@ class FedoraRepositoryConnector:
         self.record = record
 
     def _get_model_name(self):
-        class_name = self.record.__class__.__name__.lower()
-        # Conversion of capitals
-        # https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
-        name = re.sub(r'(?<!^)(?=[A-Z])', '-', class_name).lower()
-        return name
+        class_name = self.record.__class__.__name__
+        converted_last_name = class_name[0].lower()
+        for letter in class_name[1:]:
+            if letter.isupper():
+                converted_last_name += f"_{letter.lower()}"
+            else:
+                converted_last_name += letter
+        return converted_last_name
 
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
         base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/" \
@@ -129,11 +132,10 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                               FedoraRequestType.GET_LINK):
             response = requests.get(url, headers=headers, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.CREATE_LINK,):
-            response = requests.post(url, headers=headers, data=data.encode('utf-8'), auth=auth, verify=False)
         elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
                               FedoraRequestType.RECORD_DELETION_ADD_MARK,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4):
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
+                              FedoraRequestType.CREATE_LINK):
             response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
@@ -158,6 +160,7 @@ class FedoraRepositoryConnector:
             'Slug': self.record.ident_cely
         }
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
+        self._create_link()
         logger.debug("core_repository_connector._create_container.end", extra={"ident_cely": self.record.ident_cely})
 
     def _create_link(self):
@@ -167,7 +170,7 @@ class FedoraRepositoryConnector:
             'Slug': self.record.ident_cely,
             'Content-Type': 'text/turtle'
         }
-        data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> " \
+        data = "@prefix ore: <http://www.openarchives.org/ore/terms/> " \
                f". <> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
         logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely})
