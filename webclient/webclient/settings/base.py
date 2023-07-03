@@ -464,6 +464,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ]
 }
-TOKEN_EXPIRATION_HOURS = 168
+TOKEN_EXPIRATION_HOURS = 24
 
 SKIP_RECAPTCHA = False
