@@ -41,8 +41,7 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     @property
     def dokument_typ_material_rada(self):
-        return HeslarDokumentTypMaterialRada.objects.filter(Q(dokument_rada=self) | Q(dokument_typ=self)
-                                                    | Q(dokument_material=self))
+        return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
 
     @property
     def podrazena_hesla(self):

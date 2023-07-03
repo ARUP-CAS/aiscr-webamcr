@@ -41,15 +41,21 @@ class DocumentGenerator:
     attribute_names = {}
 
     @classmethod
-    def generate_metadata(cls, model_class=None):
+    def generate_metadata(cls, model_class=None, limit=None):
         if not model_class:
             for current_class in cls._get_schema_dict():
-                for obj in current_class.objects.all():
+                queryset = current_class.objects.all()
+                if limit is not None:
+                    queryset = queryset[:limit]
+                for obj in queryset:
                     from uzivatel.models import User
                     obj: Union[ModelWithMetadata, User]
                     obj.save_metadata()
         else:
-            for obj in model_class.objects.all():
+            queryset = model_class.objects.all()
+            if limit is not None:
+                queryset = queryset[:limit]
+            for obj in queryset:
                 from uzivatel.models import User
                 obj: Union[ModelWithMetadata, User]
                 obj.save_metadata()

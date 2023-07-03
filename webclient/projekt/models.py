@@ -563,7 +563,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def planovane_zahajeni_str(self):
         if self.planovane_zahajeni:
-            return f"[{self.planovane_zahajeni.lower} - {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
+            return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
         else:
             return ""
 
