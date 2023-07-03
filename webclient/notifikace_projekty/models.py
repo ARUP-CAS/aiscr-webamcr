@@ -15,6 +15,9 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
     content_object = GenericForeignKey("content_type", "object_id")
     created_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return str(self.content_object)
+
     class Meta:
         indexes = [
             models.Index(fields=["content_type", "object_id"]),

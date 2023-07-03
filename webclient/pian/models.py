@@ -76,6 +76,15 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     geom_updated_at = models.DateTimeField(blank=True, null=True)
     geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
 
+    @property
+    def pristupnost_pom(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None \
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
+                return dok_jednotka.archeologicky_zaznam.pristupnost
+        return Heslar.objects.get(ident_cely="HES-000865")
+
     class Meta:
         db_table = "pian"
         constraints = [

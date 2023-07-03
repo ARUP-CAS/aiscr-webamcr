@@ -39,6 +39,19 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     ident_prefix = "HES"
 
+    @property
+    def dokument_typ_material_rada(self):
+        return HeslarDokumentTypMaterialRada.objects.filter(Q(dokument_rada=self) | Q(dokument_typ=self)
+                                                    | Q(dokument_material=self))
+
+    @property
+    def podrazena_hesla(self):
+        return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
+
+    @property
+    def nadrazena_hesla(self):
+        return HeslarHierarchie.objects.filter(heslo_podrazene=self)
+
     class Meta:
         db_table = "heslar"
         unique_together = (

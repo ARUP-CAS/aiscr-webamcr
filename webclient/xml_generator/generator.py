@@ -41,9 +41,15 @@ class DocumentGenerator:
     attribute_names = {}
 
     @classmethod
-    def generate_metadata(cls):
-        for current_class in cls._get_schema_dict():
-            for obj in current_class.objects.all():
+    def generate_metadata(cls, model_class=None):
+        if not model_class:
+            for current_class in cls._get_schema_dict():
+                for obj in current_class.objects.all():
+                    from uzivatel.models import User
+                    obj: Union[ModelWithMetadata, User]
+                    obj.save_metadata()
+        else:
+            for obj in model_class.objects.all():
                 from uzivatel.models import User
                 obj: Union[ModelWithMetadata, User]
                 obj.save_metadata()
@@ -182,6 +188,11 @@ class DocumentGenerator:
                 related_record = getattr(record, record_name_split[0], None)
                 second_related_record = getattr(related_record, record_name_split[1], None)
                 attribute_value = getattr(second_related_record, record_name_split[2], None)
+            elif len(record_name_split) == 4:
+                related_record_1 = getattr(record, record_name_split[0], None)
+                related_record_2 = getattr(related_record_1, record_name_split[1], None)
+                related_record_3 = getattr(related_record_2, record_name_split[2], None)
+                attribute_value = getattr(related_record_3, record_name_split[3], None)
         return attribute_value
 
     @staticmethod
