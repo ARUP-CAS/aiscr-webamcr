@@ -43,8 +43,12 @@ class DocumentGenerator:
 
     @classmethod
     def generate_metadata(cls, model_class=None, limit=None):
+        logger.debug("xml_generator.generator.generate_metadata.start", extra={"model_class": model_class,
+                                                                               "limit": limit})
         if not model_class:
             for current_class in cls._get_schema_dict():
+                logger.debug("xml_generator.generator.generate_metadata.loop.strart",
+                             extra={"limit": limit, "current_class": str(current_class)})
                 queryset = current_class.objects.all()
                 if limit is not None:
                     queryset = queryset[:limit]
@@ -52,7 +56,11 @@ class DocumentGenerator:
                     from uzivatel.models import User
                     obj: Union[ModelWithMetadata, User]
                     obj.save_metadata()
+                logger.debug("xml_generator.generator.generate_metadata.loop.end",
+                             extra={"limit": limit, "current_class": str(current_class)})
         else:
+            logger.debug("xml_generator.generator.generate_metadata.loop.strart",
+                         extra={"model_class": model_class, "limit": limit})
             queryset = model_class.objects.all()
             if limit is not None:
                 queryset = queryset[:limit]
@@ -60,6 +68,10 @@ class DocumentGenerator:
                 from uzivatel.models import User
                 obj: Union[ModelWithMetadata, User]
                 obj.save_metadata()
+            logger.debug("xml_generator.generator.generate_metadata.loop.end",
+                         extra={"model_class": model_class, "limit": limit})
+        logger.debug("xml_generator.generator.generate_metadata.end", extra={"model_class": model_class,
+                                                                             "limit": limit})
 
     @classmethod
     def _get_schema_dict(cls):
