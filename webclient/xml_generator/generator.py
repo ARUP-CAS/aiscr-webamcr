@@ -55,7 +55,7 @@ class DocumentGenerator:
                 for obj in queryset:
                     from uzivatel.models import User
                     obj: Union[ModelWithMetadata, User]
-                    obj.save_metadata()
+                    obj.save_metadata(use_celery=False)
                 logger.debug("xml_generator.generator.generate_metadata.loop.end",
                              extra={"limit": limit, "current_class": str(current_class)})
         else:
@@ -67,7 +67,7 @@ class DocumentGenerator:
             for obj in queryset:
                 from uzivatel.models import User
                 obj: Union[ModelWithMetadata, User]
-                obj.save_metadata()
+                obj.save_metadata(use_celery=False)
             logger.debug("xml_generator.generator.generate_metadata.loop.end",
                          extra={"model_class": model_class, "limit": limit})
         logger.debug("xml_generator.generator.generate_metadata.end", extra={"model_class": model_class,
