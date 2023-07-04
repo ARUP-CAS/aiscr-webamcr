@@ -135,22 +135,20 @@ def download_file(request, pk):
         )
         return response
 
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
+    path = os.path.join(settings.MEDIA_ROOT, soubor.path)
     if os.path.exists(path):
-        path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
-        if os.path.exists(path):
-            content_type = mimetypes.guess_type(soubor.path.name)[
-                0
-            ]  # Use mimetypes to get file type
-            response = HttpResponse(soubor.path, content_type=content_type)
-            response["Content-Length"] = str(len(soubor.path))
-            response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev
-            )
-            return response
+        content_type = mimetypes.guess_type(soubor.nazev)[
+            0
+        ]  # Use mimetypes to get file type
+        response = HttpResponse(soubor.path, content_type=content_type)
+        response["Content-Length"] = str(len(soubor.path))
+        response["Content-Disposition"] = (
+            "attachment; filename=" + soubor.nazev
+        )
+        return response
     else:
         logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
-    raise Http404
+    return HttpResponse("")
 
 
 @login_required
