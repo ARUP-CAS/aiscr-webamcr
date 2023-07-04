@@ -31,7 +31,6 @@ class AsText(GeoFunc):
 class ParsedComment:
     value_field_name: str
     attribute_field_names: list = None
-
 class DocumentGenerator:
     _nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -39,6 +38,8 @@ class DocumentGenerator:
         "amcr": AMCR_NAMESPACE_URL
     }
     attribute_names = {}
+    _simple_element_types = ("xs:string", "xs:date", "xs:integer", "amcr:refType", "xs:dateTime", "amcr:gmlType",
+                             "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType")
 
     @classmethod
     def generate_metadata(cls, model_class=None, limit=None):
@@ -277,6 +278,10 @@ class DocumentGenerator:
                     new_sub_element.text = str(attribute_value).lower()
                 else:
                     new_sub_element.text = str(attribute_value)
+            if "vocabType" in ref_type:
+                new_sub_element.attrib["lang"] = "cs"
+            if "langstringType" in ref_type:
+                new_sub_element.attrib["lang"] = "en" if parsed_comment.value_field_name.endswith("_en") else "cs"
             if parsed_comment.attribute_field_names is not None:
                 for attribute_field_name in parsed_comment.attribute_field_names:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
@@ -299,6 +304,11 @@ class DocumentGenerator:
                     new_sub_element.text = record_text.lower()
                 else:
                     new_sub_element.text = record_text
+            if "vocabType" in ref_type:
+                new_sub_element.attrib["lang"] = "cs"
+            if "langstringType" in ref_type:
+                new_sub_element.attrib["lang"] = \
+                    "en" if parsed_comment.attribute_field_names[0].endswith("_en") else "cs"
             if parsed_comment.attribute_field_names is not None:
                 new_sub_element.attrib["id"] = \
                     f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"
@@ -316,9 +326,7 @@ class DocumentGenerator:
                 prefix = self._get_prefix(next_element.text)
                 if "maxOccurs" not in schema_element.attrib or schema_element.attrib["maxOccurs"] == "1":
                     if parsed_comment.value_field_name is not None:
-                        if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
-                                                             "xs:dateTime", "amcr:gmlType", "amcr:wktType",
-                                                             "amcr:autorType", "xs:boolean"):
+                        if schema_element.attrib["type"] in self._simple_element_types:
                             self._create_element(schema_element, parent_element, parsed_comment,
                                                  id_field_prefix=prefix, ref_type=schema_element.attrib["type"])
                         else:
@@ -364,9 +372,7 @@ class DocumentGenerator:
                     prefix = self._get_prefix(next_element.text)
                     if child_schema_element.attrib["maxOccurs"] == "1":
                         if parsed_comment.value_field_name is not None:
-                            if child_schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer",
-                                                                       "amcr:refType", "xs:dateTime", "amcr:gmlType",
-                                                                       "amcr:wktType", "amcr:autorType", "xs:boolean"):
+                            if child_schema_element.attrib["type"] in self._simple_element_types:
                                 self._create_element(child_schema_element, child_parent_element,
                                                      parsed_comment, document_object, prefix,
                                                      ref_type=child_schema_element.attrib["type"])

@@ -273,7 +273,7 @@ def post_upload(request):
                 # Short name is new name without checksum
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
-                path=rep_bin_file.url
+                path=rep_bin_file.url_without_domain
             )
             duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
             if not duplikat.exists():

@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 class RepositoryBinaryFile:
     @property
+    def url_without_domain(self):
+        return "/".join(self.url.split("/")[3:])
+
+    @property
     def uuid(self):
         return self.url.split("/")[-1]
 
@@ -75,13 +79,23 @@ class FedoraRepositoryConnector:
 
     def _get_model_name(self):
         class_name = self.record.__class__.__name__
-        converted_last_name = class_name[0].lower()
-        for letter in class_name[1:]:
-            if letter.isupper():
-                converted_last_name += f"_{letter.lower()}"
-            else:
-                converted_last_name += letter
-        return converted_last_name
+        return {
+            "Adb": "adb",
+            "ArcheologickyZaznam": "archeologicky_zaznam",
+            "Dokument": "dokument",
+            "ExterniZdroj": "ext_zdroj",
+            "Heslar": "heslo",
+            "Let": "let",
+            "Organizace": "organizace",
+            "Osoba": "osoba",
+            "Pian": "pian",
+            "Projekt": "projekt",
+            "RuianKatastr": "ruian_katastr",
+            "RuianKraj": "ruian_kraj",
+            "RuianOkres": "ruian_okres",
+            "SamostatnyNalez": "samostatny_nalez",
+            "User": "uzivatel",
+        }.get(class_name)
 
     def _get_request_url(self, request_type: FedoraRequestType, *, uuid=None, ident_cely=None) -> Optional[str]:
         base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/" \
