@@ -6,7 +6,7 @@ simplejson==3.18.4
 django-crispy-forms==2.0
 crispy-bootstrap4
 django-recaptcha==3.0.0
-django_registration==3.3
+django_registration==3.4
 django-filter==22.1
 django-tables2==2.5.3
 django-tables2-column-shifter==2.0.3
