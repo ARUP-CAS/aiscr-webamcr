@@ -35,7 +35,8 @@ class DocumentGenerator:
     _nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "gml": "https://www.opengis.net/gml/3.2",
-        "amcr": AMCR_NAMESPACE_URL
+        "amcr": AMCR_NAMESPACE_URL,
+        "xml": "http://www.w3.org/XML/1998/namespace"
     }
     attribute_names = {}
     _simple_element_types = ("xs:string", "xs:date", "xs:integer", "amcr:refType", "xs:dateTime", "amcr:gmlType",
@@ -58,7 +59,7 @@ class DocumentGenerator:
                 for obj in queryset:
                     from uzivatel.models import User
                     obj: Union[ModelWithMetadata, User]
-                    obj.save_metadata(use_celery=False)
+                    obj.save_metadata(use_celery=False, include_files=True)
                 logger.debug("xml_generator.generator.generate_metadata.loop.end",
                              extra={"limit": limit, "current_class": str(current_class)})
         else:
@@ -100,7 +101,7 @@ class DocumentGenerator:
             for obj in queryset:
                 from uzivatel.models import User
                 obj: Union[ModelWithMetadata, User]
-                obj.save_metadata(use_celery=False)
+                obj.save_metadata(use_celery=False, include_files=True)
             logger.debug("xml_generator.generator.generate_metadata.loop.end",
                          extra={"model_class": model_class, "limit": limit})
         logger.debug("xml_generator.generator.generate_metadata.end", extra={"model_class": model_class,
@@ -312,9 +313,10 @@ class DocumentGenerator:
                 else:
                     new_sub_element.text = str(attribute_value)
             if "vocabType" in ref_type:
-                new_sub_element.attrib["lang"] = "cs"
+                new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
             if "langstringType" in ref_type:
-                new_sub_element.attrib["lang"] = "en" if parsed_comment.value_field_name.endswith("_en") else "cs"
+                new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = \
+                    "en" if parsed_comment.value_field_name.endswith("_en") else "cs"
             if parsed_comment.attribute_field_names is not None:
                 for attribute_field_name in parsed_comment.attribute_field_names:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
@@ -338,13 +340,13 @@ class DocumentGenerator:
                 else:
                     new_sub_element.text = record_text
             if "vocabType" in ref_type:
-                new_sub_element.attrib["lang"] = "cs"
+                new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
             if "langstringType" in ref_type:
                 if parsed_comment.attribute_field_names is not None:
-                    new_sub_element.attrib["lang"] = \
+                    new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = \
                         "en" if parsed_comment.attribute_field_names[0].endswith("_en") else "cs"
                 else:
-                    new_sub_element.attrib["lang"] = "cs"
+                    new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
             if parsed_comment.attribute_field_names is not None:
                 new_sub_element.attrib["id"] = \
                     f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"

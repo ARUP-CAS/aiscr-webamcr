@@ -17,9 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class RepositoryBinaryFile:
+    @staticmethod
+    def get_url_without_domain(url):
+        return "/".join(url.split("/")[3:])
+
     @property
     def url_without_domain(self):
-        return "/".join(self.url.split("/")[3:])
+        return self.get_url_without_domain(self.url)
 
     @property
     def uuid(self):
@@ -287,36 +291,38 @@ class FedoraRepositoryConnector:
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
-    def migrate_binary_file(self, soubor):
+    def migrate_binary_file(self, soubor, include_content=True) -> Optional[RepositoryBinaryFile]:
         from core.models import Soubor
         soubor: Soubor
-        logger.debug("core_repository_connector.migrate_binary_file.start",
-                     extra={"soubor": soubor.pk})
+        logger.debug("core_repository_connector.migrate_binary_file.start", extra={"soubor": soubor.pk})
         if soubor.repository_uuid is not None:
             return None
         self._check_binary_file_container()
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
         uuid = result.text.split("/")[-1]
-        with open(soubor.path.path, mode="rb") as file:
-            data = file.read()
-        data = io.BytesIO(data)
-        soubor.nazev = soubor.nazev_zkraceny
+        soubor.path = RepositoryBinaryFile.get_url_without_domain(result.text)
         soubor.save()
-        content_type = get_mime_type(soubor.name)
-        rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev_zkraceny)
-        file_sha_512 = hashlib.sha512(data).hexdigest()
-        headers = {
-            "Content-Type": content_type,
-            "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
-            "Digest": f"sha-512={file_sha_512}",
-            "Slug": "orig"
-        }
-        url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
-        self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-        logger.debug("core_repository_connector.migrate_binary_file.end",
-                     extra={"url": uuid, "ident_cely": self.record.ident_cely})
-        return rep_bin_file
+        if include_content:
+            with open(soubor.path, mode="rb") as file:
+                data = file.read()
+            data = io.BytesIO(data)
+            soubor.nazev = soubor.nazev_zkraceny
+            soubor.save()
+            content_type = get_mime_type(soubor.name)
+            rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev_zkraceny)
+            file_sha_512 = hashlib.sha512(data).hexdigest()
+            headers = {
+                "Content-Type": content_type,
+                "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
+                "Digest": f"sha-512={file_sha_512}",
+                "Slug": "orig"
+            }
+            url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE_CONTENT, uuid=uuid)
+            self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE_CONTENT, headers=headers, data=data)
+            logger.debug("core_repository_connector.migrate_binary_file.end",
+                         extra={"url": uuid, "ident_cely": self.record.ident_cely})
+            return rep_bin_file
 
     def get_binary_file(self, uuid) -> RepositoryBinaryFile:
         logger.debug("core_repository_connector.get_binary_file.start", extra={"url": uuid})

@@ -103,7 +103,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def repository_uuid(self):
-        if settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
+        if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):

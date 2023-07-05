@@ -17,7 +17,7 @@ class ModelWithMetadata(models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, use_celery=True):
+    def save_metadata(self, use_celery=True, include_files=False):
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start")
         if use_celery:
             app = Celery("webclient")
@@ -40,6 +40,13 @@ class ModelWithMetadata(models.Model):
             from core.repository_connector import FedoraRepositoryConnector
             connector = FedoraRepositoryConnector(self)
             connector.save_metadata(True)
+            if include_files:
+                from core.models import SouborVazby
+                if hasattr(self, "soubory") and isinstance(self.soubory, SouborVazby):
+                    for soubor in self.soubory.soubory.all():
+                        from core.models import Soubor
+                        soubor: Soubor
+                        connector.migrate_binary_file(soubor, include_content=False)
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end")
 
     def record_deletion(self):
