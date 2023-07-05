@@ -42,14 +42,17 @@ class DocumentGenerator:
                              "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType")
 
     @classmethod
-    def generate_metadata(cls, model_class=None, limit=None):
+    def generate_metadata(cls, model_class=None, limit=None, start_with_pk=None):
         logger.debug("xml_generator.generator.generate_metadata.start", extra={"model_class": model_class,
                                                                                "limit": limit})
         if not model_class:
             for current_class in cls._get_schema_dict():
                 logger.debug("xml_generator.generator.generate_metadata.loop.strart",
                              extra={"limit": limit, "current_class": str(current_class)})
-                queryset = current_class.objects.all()
+                if not start_with_pk:
+                    queryset = current_class.objects.all().order_by("pk")
+                else:
+                    queryset = current_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
                 if limit is not None:
                     queryset = queryset[:limit]
                 for obj in queryset:
@@ -61,7 +64,37 @@ class DocumentGenerator:
         else:
             logger.debug("xml_generator.generator.generate_metadata.loop.strart",
                          extra={"model_class": model_class, "limit": limit})
-            queryset = model_class.objects.all()
+            from adb.models import Adb
+            from arch_z.models import ArcheologickyZaznam
+            from dokument.models import Dokument
+            from projekt.models import Projekt
+            from pas.models import SamostatnyNalez
+            from ez.models import ExterniZdroj
+            from dokument.models import Let
+            from uzivatel.models import User, Organizace, Osoba
+            from heslar.models import Heslar, RuianKraj, RuianKatastr, RuianOkres
+            from pian.models import Pian
+            model_class = {
+                "Projekt": Projekt,
+                "ArcheologickyZaznam": ArcheologickyZaznam,
+                "Let": Let,
+                "Adb": Adb,
+                "Dokument": Dokument,
+                "ExterniZdroj": ExterniZdroj,
+                "Pian": Pian,
+                "SamostatnyNalez": SamostatnyNalez,
+                "User": User,
+                "Heslar": Heslar,
+                "RuianKraj": RuianKraj,
+                "RuianOkres": RuianOkres,
+                "RuianKatastr": RuianKatastr,
+                "Organizace": Organizace,
+                "Osoba": Osoba,
+            }.get(model_class)
+            if not start_with_pk:
+                queryset = model_class.objects.order_by("pk").all()
+            else:
+                queryset = model_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
             if limit is not None:
                 queryset = queryset[:limit]
             for obj in queryset:
@@ -342,7 +375,8 @@ class DocumentGenerator:
                                                                                        schema_element)
                         if related_records_dict and related_records_dict["value"]:
                             if schema_element.attrib["type"].replace("amcr:", "") \
-                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string"):
+                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string",
+                                            "langstringType", "vocabType"):
                                 self._iterate_unbound_records(related_records_dict, schema_element, parent_element)
                             else:
                                 self._create_many_to_many_ref_elements(schema_element, parent_element,
@@ -390,7 +424,8 @@ class DocumentGenerator:
                                                                                   child_schema_element)
                         if related_records_dict is not None and len(related_records_dict) > 0:
                             if child_schema_element.attrib["type"].replace("amcr:", "") \
-                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string"):
+                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string",
+                                            "langstringType", "vocabType"):
                                 self._iterate_unbound_records(related_records_dict, child_schema_element,
                                                               child_parent_element)
                             else:
