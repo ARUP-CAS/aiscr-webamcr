@@ -340,8 +340,11 @@ class DocumentGenerator:
             if "vocabType" in ref_type:
                 new_sub_element.attrib["lang"] = "cs"
             if "langstringType" in ref_type:
-                new_sub_element.attrib["lang"] = \
-                    "en" if parsed_comment.attribute_field_names[0].endswith("_en") else "cs"
+                if parsed_comment.attribute_field_names is not None:
+                    new_sub_element.attrib["lang"] = \
+                        "en" if parsed_comment.attribute_field_names[0].endswith("_en") else "cs"
+                else:
+                    new_sub_element.attrib["lang"] = "cs"
             if parsed_comment.attribute_field_names is not None:
                 new_sub_element.attrib["id"] = \
                     f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"
