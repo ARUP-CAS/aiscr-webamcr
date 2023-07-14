@@ -56,20 +56,20 @@ class CoordinatesDokumentForm(forms.Form):
     Hlavní formulář pro editaci souradnic u modelu 3D.
     """
     detector_system_coordinates = forms.ChoiceField(
-        label=_("Souř. systém"),
+        label=_("dokument.forms.coordinatesDokumentForm.detector.label"),
         choices=COORDINATE_SYSTEM,
         required=False,
-        help_text=_("dokument.form.coordinates.detector.tooltip"),
+        help_text=_("dokument.forms.coordinatesDokumentForm.detector.tooltip"),
     )
     detector_coordinates_x = forms.CharField(
-        label=_("Šířka (N / Y)"),
+        label=_("dokument.forms.coordinatesDokumentForm.cor_x.label"),
         required=False,
-        help_text=_("dokument.form.coordinates.cor_x.tooltip"),
+        help_text=_("dokument.forms.coordinatesDokumentForm.cor_x.tooltip"),
     )
     detector_coordinates_y = forms.CharField(
-        label=_("Délka (E / X)"),
+        label=_("dokument.forms.coordinatesDokumentForm.cor_y.label"),
         required=False,
-        help_text=_("dokument.form.coordinates.cor_y.tooltip"),
+        help_text=_("dokument.forms.coordinatesDokumentForm.cor_y.tooltip"),
     )
 
     coordinate_wgs84_x = forms.FloatField(required=False, widget=HiddenInput())
@@ -85,7 +85,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
     """
     Hlavní formulář pro vytvoření, editaci a zobrazení Extra dat u dokumentu a modelu 3D.
     """
-    rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.form.dokumentExtraData.rada.tooltip"),)
+    rada = forms.CharField(label="Řada", required=False, help_text=_("dokument.forms.editDokumentExtraDataForm.rada.tooltip"),)
 
     class Meta:
         model = DokumentExtraData
@@ -131,44 +131,44 @@ class EditDokumentExtraDataForm(forms.ModelForm):
             "odkaz": forms.TextInput(),
         }
         labels = {
-            "datum_vzniku": _("Datum vzniku"),
-            "zachovalost": _("Zachovalost"),
-            "nahrada": _("Náhrada"),
-            "pocet_variant_originalu": _("Počet variant originálu"),
-            "odkaz": _("Odkaz"),
-            "format": _("Formát plánu/foto"),
-            "meritko": _("Měřítko plánu"),
-            "vyska": _("Výška plánu"),
-            "sirka": _("Šířka plánu"),
-            "cislo_objektu": _("Objekt/kontext"),
-            "zeme": _("Země"),
-            "region": _("Region"),
-            "udalost": _("Událost"),
-            "udalost_typ": _("Typ události"),
-            "rok_od": _("Rok od"),
-            "rok_do": _("Rok do"),
-            "duveryhodnost": _("Důvěryhodnost"),
+            "datum_vzniku": _("dokument.forms.editDokumentExtraDataForm.datumVzniku.label"),
+            "zachovalost": _("dokument.forms.editDokumentExtraDataForm.zachovalost.label"),
+            "nahrada": _("dokument.forms.editDokumentExtraDataForm.nahrada.label"),
+            "pocet_variant_originalu": _("dokument.forms.editDokumentExtraDataForm.pocetVariantOriginalu.label"),
+            "odkaz": _("dokument.forms.editDokumentExtraDataForm.odkaz.label"),
+            "format": _("dokument.forms.editDokumentExtraDataForm.format.label"),
+            "meritko": _("dokument.forms.editDokumentExtraDataForm.meritko.label"),
+            "vyska": _("dokument.forms.editDokumentExtraDataForm.vyska.label"),
+            "sirka": _("dokument.forms.editDokumentExtraDataForm.sirka.label"),
+            "cislo_objektu": _("dokument.forms.editDokumentExtraDataForm.cisloObjektu.label"),
+            "zeme": _("dokument.forms.editDokumentExtraDataForm.zeme.label"),
+            "region": _("dokument.forms.editDokumentExtraDataForm.region.label"),
+            "udalost": _("dokument.forms.editDokumentExtraDataForm.udalost.label"),
+            "udalost_typ": _("dokument.forms.editDokumentExtraDataForm.typUdalosti.label"),
+            "rok_od": _("dokument.forms.editDokumentExtraDataForm.rokOd.label"),
+            "rok_do": _("dokument.forms.editDokumentExtraDataForm.rokDo.label"),
+            "duveryhodnost": _("dokument.forms.editDokumentExtraDataForm.duveryhodnost.label"),
         }
         help_texts = {
-            "datum_vzniku": _("dokument.form.dokumentExtraData.datum_vzniku.tooltip"),
-            "zachovalost": _("dokument.form.dokumentExtraData.zachovalost.tooltip"),
-            "nahrada": _("dokument.form.dokumentExtraData.nahrada.tooltip"),
+            "datum_vzniku": _("dokument.forms.editDokumentExtraDataForm.datumVzniku.tooltip"),
+            "zachovalost": _("dokument.forms.editDokumentExtraDataForm.zachovalost.tooltip"),
+            "nahrada": _("dokument.forms.editDokumentExtraDataForm.nahrada.tooltip"),
             "pocet_variant_originalu": _(
-                "dokument.form.dokumentExtraData.pocet_variant_originalu.tooltip"
+                "dokument.forms.editDokumentExtraDataForm.pocetVariantOriginalu.tooltip"
             ),
-            "odkaz": _("dokument.form.dokumentExtraData.odkaz.tooltip"),
-            "format": _("dokument.form.dokumentExtraData.format.tooltip"),
-            "meritko": _("dokument.form.dokumentExtraData.meritko.tooltip"),
-            "vyska": _("dokument.form.dokumentExtraData.vyska.tooltip"),
-            "sirka": _("dokument.form.dokumentExtraData.sirka.tooltip"),
-            "cislo_objektu": _("dokument.form.dokumentExtraData.cislo_objektu.tooltip"),
-            "zeme": _("dokument.form.dokumentExtraData.zeme.tooltip"),
-            "region": _("dokument.form.dokumentExtraData.region.tooltip"),
-            "udalost": _("dokument.form.dokumentExtraData.udalost.tooltip"),
-            "udalost_typ": _("dokument.form.dokumentExtraData.udalost_typ.tooltip"),
-            "rok_od": _("dokument.form.dokumentExtraData.rok_od.tooltip"),
-            "rok_do": _("dokument.form.dokumentExtraData.rok_do.tooltip"),
-            "duveryhodnost": _("dokument.form.dokumentExtraData.duveryhodnost.tooltip"),
+            "odkaz": _("dokument.forms.editDokumentExtraDataForm.odkaz.tooltip"),
+            "format": _("dokument.forms.editDokumentExtraDataForm.format.tooltip"),
+            "meritko": _("dokument.forms.editDokumentExtraDataForm.meritko.tooltip"),
+            "vyska": _("dokument.forms.editDokumentExtraDataForm.vyska.tooltip"),
+            "sirka": _("dokument.forms.editDokumentExtraDataForm.sirka.tooltip"),
+            "cislo_objektu": _("dokument.forms.editDokumentExtraDataForm.cisloObjektu.tooltip"),
+            "zeme": _("dokument.forms.editDokumentExtraDataForm.zeme.tooltip"),
+            "region": _("dokument.forms.editDokumentExtraDataForm.region.tooltip"),
+            "udalost": _("dokument.forms.editDokumentExtraDataForm.udalost.tooltip"),
+            "udalost_typ": _("dokument.forms.editDokumentExtraDataForm.udalostTyp.tooltip"),
+            "rok_od": _("dokument.forms.editDokumentExtraDataForm.rokOd.tooltip"),
+            "rok_do": _("dokument.forms.editDokumentExtraDataForm.rokDo.tooltip"),
+            "duveryhodnost": _("dokument.forms.editDokumentExtraDataForm.duveryhodnost.tooltip"),
         }
 
     def __init__(
@@ -185,7 +185,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 label="Dokumentované osoby",
                 required=False,
                 widget=autocomplete.Select2Multiple(url="heslar:osoba-autocomplete-choices"),
-                help_text=_("dokument.form.dokumentExtraData.dokument_osoba.tooltip"),
+                help_text=_("dokument.forms.editDokumentExtraDataForm.dokumentOsoba.tooltip"),
             )
             self.fields["let"] = forms.ChoiceField(
                 choices=tuple(
@@ -196,7 +196,7 @@ class EditDokumentExtraDataForm(forms.ModelForm):
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
-                help_text=_("dokument.form.dokumentExtraData.let.tooltip"),
+                help_text=_("dokument.forms.editDokumentExtraDataForm.let.tooltip"),
             )
         except utils.ProgrammingError:
             self.fields["dokument_osoba"] = forms.MultipleChoiceField(
@@ -292,15 +292,15 @@ class EditDokumentForm(forms.ModelForm):
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            help_text= _("dokument.form.createDokument.autori.tooltip"),
-            label = _("Autoři"),)
-    region = forms.ChoiceField(choices=[("C-",_("dokument.create.regionCech.text")),("M-",_("dokument.create.regionMorava.text"))],
-                label=_("dokument.form.createDokument.region.label"),
+            help_text= _("dokument.forms.editDokumentForm.autori.tooltip"),
+            label = _("dokument.forms.editDokumentForm.autori.label"),)
+    region = forms.ChoiceField(choices=[("C-",_("dokument.forms.editDokumentForm.region.C.option")),("M-",_("dokument.forms.editDokumentForm.region.M.option"))],
+                label=_("dokument.forms.editDokumentForm.region.label"),
                 required=False,
                 widget=forms.Select(
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
                 ),
-                help_text= _("dokument.form.createDokument.region.tooltip"),)
+                help_text= _("dokument.forms.editDokumentForm.region.tooltip"),)
     class Meta:
         model = Dokument
         fields = (
@@ -351,40 +351,40 @@ class EditDokumentForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
         }
         labels = {
-            "organizace": _("Organizace"),
-            "rok_vzniku": _("Rok vzniku"),
-            "material_originalu": _("Materiál originálu"),
-            "typ_dokumentu": _("Typ dokumentu"),
-            "popis": _("Popis"),
-            "poznamka": _("Poznámka"),
-            "ulozeni_originalu": _("Uložení originálu"),
-            "oznaceni_originalu": _("Označení originálu"),
-            "pristupnost": _("Přístupnost"),
-            "datum_zverejneni": _("Datum zveřejnění"),
-            "licence": _("Licence"),
+            "organizace": _("dokument.forms.editDokumentForm.organizace.label"),
+            "rok_vzniku": _("dokument.forms.editDokumentForm.rokVzniku.label"),
+            "material_originalu": _("dokument.forms.editDokumentForm.materialOriginalu.label"),
+            "typ_dokumentu": _("dokument.forms.editDokumentForm.typDokumentu.label"),
+            "popis": _("dokument.forms.editDokumentForm.popis.label"),
+            "poznamka": _("dokument.forms.editDokumentForm.poznamka.label"),
+            "ulozeni_originalu": _("dokument.forms.editDokumentForm.ulozeniOriginalu.label"),
+            "oznaceni_originalu": _("dokument.forms.editDokumentForm.oznaceniOriginalu.label"),
+            "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.label"),
+            "datum_zverejneni": _("dokument.forms.editDokumentForm.datumZverejneni.label"),
+            "licence": _("dokument.forms.editDokumentForm.licence.label"),
         }
         help_texts = {
-            "organizace": _("dokument.form.createDokument.organizace.tooltip"),
-            "rok_vzniku": _("dokument.form.createDokument.rok_vzniku.tooltip"),
+            "organizace": _("dokument.forms.editDokumentForm.organizace.tooltip"),
+            "rok_vzniku": _("dokument.forms.editDokumentForm.rokVzniku.tooltip"),
             "material_originalu": _(
-                "dokument.form.createDokument.material_originalu.tooltip"
+                "dokument.forms.editDokumentForm.materialOriginalu.tooltip"
             ),
-            "typ_dokumentu": _("dokument.form.createDokument.typ_dokumentu.tooltip"),
-            "popis": _("dokument.form.createDokument.popis.tooltip"),
-            "poznamka": _("dokument.form.createDokument.poznamka.tooltip"),
+            "typ_dokumentu": _("dokument.forms.editDokumentForm.typDokumentu.tooltip"),
+            "popis": _("dokument.forms.editDokumentForm.popis.tooltip"),
+            "poznamka": _("dokument.forms.editDokumentForm.poznamka.tooltip"),
             "ulozeni_originalu": _(
-                "dokument.form.createDokument.ulozeni_originalu.tooltip"
+                "dokument.forms.editDokumentForm.ulozeniOriginalu.tooltip"
             ),
             "oznaceni_originalu": _(
-                "dokument.form.createDokument.oznaceni_originalu.tooltip"
+                "dokument.forms.editDokumentForm.oznaceniOriginalu.tooltip"
             ),
-            "pristupnost": _("dokument.form.createDokument.pristupnost.tooltip"),
+            "pristupnost": _("dokument.forms.editDokumentForm.pristupnost.tooltip"),
             "datum_zverejneni": _(
-                "dokument.form.createDokument.datum_zverejneni.tooltip"
+                "dokument.forms.editDokumentForm.datumZverejneni.tooltip"
             ),
-            "licence": _("dokument.form.createDokument.licence.tooltip"),
-            "jazyky": _("dokument.form.createDokument.jazyky.tooltip"),
-            "posudky": _("dokument.form.createDokument.posudky.tooltip"),
+            "licence": _("dokument.forms.editDokumentForm.licence.tooltip"),
+            "jazyky": _("dokument.forms.editDokumentForm.jazyky.tooltip"),
+            "posudky": _("dokument.forms.editDokumentForm.posudky.tooltip"),
         }
 
     def __init__(
@@ -518,24 +518,24 @@ class CreateModelDokumentForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
         }
         labels = {
-            "typ_dokumentu": _("Typ dokumentu"),
-            "organizace": _("Organizace"),
-            "oznaceni_originalu": _("Označení originálu"),
-            "popis": _("Popis"),
-            "poznamka": _("Poznámka"),
-            "autori": _("Autoři"),
-            "rok_vzniku": _("Rok vzniku"),
+            "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.label"),
+            "organizace": _("dokument.forms.createModelDokumentForm.organizace.label"),
+            "oznaceni_originalu": _("dokument.forms.createModelDokumentForm.oznaceniOriginalu.label"),
+            "popis": _("dokument.forms.createModelDokumentForm.popis.label"),
+            "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.label"),
+            "autori": _("dokument.forms.createModelDokumentForm.autori.label"),
+            "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.label"),
         }
         help_texts = {
-            "typ_dokumentu": _("dokument.form.createModel.typ_dokumentu.tooltip"),
-            "organizace": _("dokument.form.createModel.organizace.tooltip"),
+            "typ_dokumentu": _("dokument.forms.createModelDokumentForm.typDokumentu.tooltip"),
+            "organizace": _("dokument.forms.createModelDokumentForm.organizace.tooltip"),
             "oznaceni_originalu": _(
-                "dokument.form.createModel.oznaceni_originalu.tooltip"
+                "dokument.forms.createModelDokumentForm.oznaceniOriginalu.tooltip"
             ),
-            "popis": _("dokument.form.createModel.popis.tooltip"),
-            "poznamka": _("dokument.form.createModel.poznamka.tooltip"),
-            "autori": _("dokument.form.createModel.autori.tooltip"),
-            "rok_vzniku": _("dokument.form.createModel.rok_vzniku.tooltip"),
+            "popis": _("dokument.forms.createModelDokumentForm.popis.tooltip"),
+            "poznamka": _("dokument.forms.createModelDokumentForm.poznamka.tooltip"),
+            "autori": _("dokument.forms.createModelDokumentForm.autori.tooltip"),
+            "rok_vzniku": _("dokument.forms.createModelDokumentForm.rokVzniku.tooltip"),
         }
 
     def __init__(
@@ -633,22 +633,22 @@ class CreateModelExtraDataForm(forms.ModelForm):
             ),
         }
         labels = {
-            "format": _("Formát"),
-            "duveryhodnost": _("Důvěryhodnost"),
-            "odkaz": _("Odkaz na úložiště modelu (např. Sketchfab)"),
-            "zeme": _("Země"),
-            "region": _("Region"),
-            "vyska": _("Délka"),
-            "sirka": _("Šířka"),
+            "format": _("dokument.forms.createModelExtraDataForm.format.label"),
+            "duveryhodnost": _("dokument.forms.createModelExtraDataForm.duveryhodnost.label"),
+            "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.label"),
+            "zeme": _("dokument.forms.createModelExtraDataForm.zeme.label"),
+            "region": _("dokument.forms.createModelExtraDataForm.region.label"),
+            "vyska": _("dokument.forms.createModelExtraDataForm.delka.label"),
+            "sirka": _("dokument.forms.createModelExtraDataForm.sirka.label"),
         }
         help_texts = {
-            "format": _("dokument.form.modelExtraData.format.tooltip"),
-            "duveryhodnost": _("dokument.form.modelExtraData.duveryhodnost.tooltip"),
-            "odkaz": _("dokument.form.modelExtraData.odkaz.tooltip"),
-            "zeme": _("dokument.form.modelExtraData.zeme.tooltip"),
-            "region": _("dokument.form.modelExtraData.region.tooltip"),
-            "vyska": _("dokument.form.modelExtraData.vyska.tooltip"),
-            "sirka": _("dokument.form.modelExtraData.sirka.tooltip"),
+            "format": _("dokument.forms.createModelExtraDataForm.format.tooltip"),
+            "duveryhodnost": _("dokument.forms.createModelExtraDataForm.duveryhodnost.tooltip"),
+            "odkaz": _("dokument.forms.createModelExtraDataForm.odkaz.tooltip"),
+            "zeme": _("dokument.forms.createModelExtraDataForm.zeme.tooltip"),
+            "region": _("dokument.forms.createModelExtraDataForm.region.tooltip"),
+            "vyska": _("dokument.forms.createModelExtraDataForm.vyska.tooltip"),
+            "sirka": _("dokument.forms.createModelExtraDataForm.sirka.tooltip"),
         }
 
     def __init__(
@@ -706,7 +706,7 @@ class PripojitDokumentForm(forms.Form):
     def __init__(self, projekt=None, *args, **kwargs):
         super(PripojitDokumentForm, self).__init__(projekt, *args, **kwargs)
         self.fields["dokument"] = forms.MultipleChoiceField(
-            label=_("Vyberte dokument k připojení"),
+            label=_("dokument.forms.pripojitDokumentForm.dokument.label"),
             choices=list(
                 Dokument.objects.filter(
                     stav__in=(D_STAV_ARCHIVOVANY, D_STAV_ODESLANY)
@@ -715,7 +715,7 @@ class PripojitDokumentForm(forms.Form):
             widget=autocomplete.Select2Multiple(
                 url="dokument:dokument-autocomplete-bez-zapsanych"
             ),
-            help_text=_("dokument.form.pripojitDokument.tooltip")
+            help_text=_("dokument.forms.pripojitDokumentForm.dokument.tooltip")
         )
         self.fields["dokument"].required = True
         self.helper = FormHelper(self)
@@ -727,8 +727,8 @@ class DokumentCastForm(forms.ModelForm):
     Hlavní formulář pro zobrazení Dokument části.
     """
     poznamka = forms.CharField(
-        help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
-        label=_("dokument.form.castDokumentu.poznamka.label"),
+        help_text=_("dokument.forms.dokumentCastForm.poznamka.tooltip"),
+        label=_("dokument.forms.dokumentCastForm.poznamka.label"),
         required=False,
     )
     class Meta:
@@ -752,8 +752,8 @@ class DokumentCastCreateForm(forms.Form):
     Hlavní formulář pro vytvoření, editaci Dokument části.
     """
     poznamka = forms.CharField(
-        help_text=_("dokument.form.castDokumentu.poznamka.tooltip"),
-        label=_("dokument.form.castDokumentu.poznamka.label"),
+        help_text=_("dokument.forms.dokumentCastCreateForm.poznamka.tooltip"),
+        label=_("dokument.forms.dokumentCastCreateForm.poznamka.label"),
         required=False,
     )
 
@@ -772,7 +772,7 @@ def create_tvar_form(not_readonly=True):
         class Meta:
             model = Tvar
             fields = ["tvar", "poznamka"]
-            labels = {"tvar": _("Tvar"), "poznamka": _("Poznámka")}
+            labels = {"tvar": _("dokument.forms.tvarForm.tvar.label"), "poznamka": _("dokument.forms.tvarForm.poznamka.label")}
             widgets = {
                 "poznamka": forms.TextInput(),
                 "tvar": forms.Select(
@@ -784,8 +784,8 @@ def create_tvar_form(not_readonly=True):
                 ),
             }
             help_texts = {
-                "tvar": _("tvar.form.tvar.tooltip"),
-                "poznamka": _("tvar.form.poznamka.tooltip"),
+                "tvar": _("dokument.forms.tvarForm.tvar.tooltip"),
+                "poznamka": _("dokument.forms.tvarForm.poznamka.tooltip"),
             }
 
         def __init__(self, *args, **kwargs):

@@ -240,9 +240,9 @@ def smazat(request, ident_cely):
     else:
         context = {
             "object": dj,
-            "title": _("dj.modalForm.smazani.title.text"),
+            "title": _("dj.views.smazat.title.text"),
             "id_tag": "smazat-dj-form",
-            "button": _("dj.modalForm.smazani.submit.button"),
+            "button": _("dj.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -251,9 +251,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     Třída pohledu pro editaci katastru dokumentační jednotky.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dj.modalForm.zmenitKatastr.title.text")
+    title = _("dj.views.ChangeKatastrView.title.text")
     id_tag = "zmenit-katastr-form"
-    button = _("dj.modalForm.zmenitKatastr.submit.button")
+    button = _("dj.views.ChangeKatastrView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
