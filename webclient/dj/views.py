@@ -109,6 +109,10 @@ def detail(request, ident_cely):
             dj.save()
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
+        if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
+            dj.pian.save_metadata()
+        if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
+            pian_db.save_metadata()
 
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors})
