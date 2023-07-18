@@ -22,10 +22,27 @@
       <div class="form-group">
         <a class="btn btn-primary app-entity-soubor-btn"
            href="{{ back_url }}">{% trans "core.tempaltes.upload_file.submitButton.text" %}</a>
-        <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "core.tempaltes.upload_file.backButton.text" %}</button>
+        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#file-upload-modal">{% trans "core.tempaltes.upload_file.help.text" %}</button>
       </div>
     </div>
+  </div>
 
+  <div class="modal fade" id="file-upload-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {% trans "core.tempaltes.upload_file.modal.text" %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "core.tempaltes.upload_file.modal.close" %}</button>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}
 

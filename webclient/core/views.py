@@ -224,7 +224,7 @@ def post_upload(request):
     update = "fileID" in request.POST
     s = None
     if not update:
-        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST["objectID"]})
+        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None)})
         projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
         samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])

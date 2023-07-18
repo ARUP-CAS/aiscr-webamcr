@@ -458,6 +458,24 @@ form {
   }
 }
 
+.alert {
+  &.app-alert-floating-file-upload {
+    box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.2);
+    border-color: initial;
+    position: fixed;
+    top: 15px;
+    left: calc(300px + 15%);
+    z-index: 1000;
+    width: calc(70% - 300px);
+    text-align: center;
+  }
+
+  ul {
+    @extend .m-0, .p-0;
+    list-style-position: inside;
+  }
+}
+
 // tooltip
 .tooltip {
   a {
