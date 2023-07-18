@@ -373,13 +373,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)
 
-    def save_metadata(self, use_celery=True, include_files=False):
-        super(Dokument, self).save_metadata(use_celery, include_files)
-        for item in self.casti.all():
-            arch_z: ArcheologickyZaznam = item.archeologicky_zaznam
-            if isinstance(arch_z, ArcheologickyZaznam):
-                arch_z.save_metadata()
-
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """

@@ -3,9 +3,10 @@ import logging
 import mimetypes
 import os
 import re
-from io import StringIO
+from io import StringIO, BytesIO
 
 import unicodedata
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -257,14 +258,15 @@ def post_upload(request):
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
         new_name = s.nazev
-    soubor = request.FILES.get("file")
+    soubor: TemporaryUploadedFile = request.FILES.get("file")
+    soubor.seek(0)
+    soubor_data = BytesIO(soubor.read())
     if soubor:
         checksum = calculate_crc_32(soubor)
-        soubor.file.seek(0)
         if not update:
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
-            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor.file)
+            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
             s = Soubor(
                 vazba=objekt.soubory,
                 nazev=new_name,
@@ -325,7 +327,7 @@ def post_upload(request):
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
                 rep_bin_file = conn.update_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name),
-                                                       soubor.file, s.repository_uuid)
+                                                       soubor_data, s.repository_uuid)
                 name_without_checksum = soubor.name
                 soubor.name = checksum + "_" + new_name
                 s.nazev = checksum + "_" + new_name

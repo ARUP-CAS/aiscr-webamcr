@@ -5,7 +5,7 @@ from celery import Celery
 
 
 logger = logging.getLogger(__name__)
-METADATA_UPDATE_TIMEOUT = 20
+METADATA_UPDATE_TIMEOUT = 30
 
 
 class ModelWithMetadata(models.Model):

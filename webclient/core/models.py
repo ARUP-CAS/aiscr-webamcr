@@ -84,8 +84,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
-    # Will be removed
-    nazev_zkraceny = models.TextField()
     mimetype = models.TextField(db_index=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"

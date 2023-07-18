@@ -598,7 +598,7 @@
   <xs:complexType name="dokument_typ_material_radaType">
     <xs:sequence>
       <xs:element name="id" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "hdtm-{id}" -->
-      <xs:element name="dokument_typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{dokument_typ.ident_cely}" | "{dokument_typ.heslar.heslo}" -->
+      <xs:element name="dokument_typ" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{dokument_typ.ident_cely}" | "{dokument_typ.heslo}" -->
       <xs:element name="dokument_material" minOccurs="1" maxOccurs="1" type="amcr:vocabType"/> <!-- "{dokument_material.ident_cely}" | "{dokument_material.heslo}" -->        
     </xs:sequence>
   </xs:complexType>
