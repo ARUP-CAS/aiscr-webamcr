@@ -11,36 +11,18 @@
 
 {% block content %}
   <div>
-    <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone"
+    <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
           enctype="multipart/form-data">
       {% csrf_token %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
       </div>
     </form>
+    <small class="form-text text-muted">{% trans "core.templates.upload_file.tooltip" %}</small>
     <div class="mt-3">
       <div class="form-group">
         <a class="btn btn-primary app-entity-soubor-btn"
-           href="{{ back_url }}">{% trans "core.tempaltes.upload_file.submitButton.text" %}</a>
-        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#file-upload-modal">{% trans "core.tempaltes.upload_file.help.text" %}</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="file-upload-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          {% trans "core.tempaltes.upload_file.modal.text" %}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "core.tempaltes.upload_file.modal.close" %}</button>
-        </div>
+           href="{{ back_url }}">{% trans "core.templates.upload_file.submitButton.text" %}</a>
       </div>
     </div>
   </div>

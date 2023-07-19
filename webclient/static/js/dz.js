@@ -31,10 +31,12 @@ const show_upload_successful_message = (file, result=UploadResultsEnum.success, 
         const message_container_element = collection[0];
         // <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
         const alert_element = document.createElement("div");
+        const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
+        const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
         if (result === UploadResultsEnum.success || result === UploadResultsEnum.duplicate) {
-            alert_element.setAttribute("class", "alert alert-success alert-dismissible fade show app-alert-floating-file-upload");
+            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show ${floating_class}`);
         } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
-            alert_element.setAttribute("class", "alert alert-danger alert-dismissible fade show app-alert-floating-file-upload");
+            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show ${floating_class}`);
         }
         alert_element.setAttribute("role", "alert");
         if (result === UploadResultsEnum.success) {

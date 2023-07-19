@@ -476,6 +476,12 @@ form {
   }
 }
 
+.app-alert-floating-file-upload-oznameni {
+  @extend .app-alert-floating-file-upload;
+  left: 15%;
+  width: 70%;
+}
+
 // tooltip
 .tooltip {
   a {
