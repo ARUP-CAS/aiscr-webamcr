@@ -617,7 +617,8 @@
       <xs:element name="zdroj" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{zdroj}" -->
       <xs:element name="nazev_kodu" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{nazev_kodu}" -->
       <xs:element name="kod" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{kod}" -->
-      <xs:element name="uri" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uri}" -->          	         
+      <xs:element name="uri" minOccurs="0" maxOccurs="1" type="xs:string"/> <!-- "{uri}" -->
+      <xs:element name="skos_mapping_relation" minOccurs="1" maxOccurs="1" type="xs:string"/> <!-- "{skos_mapping_relation}" -->
     </xs:sequence>
   </xs:complexType>
 
