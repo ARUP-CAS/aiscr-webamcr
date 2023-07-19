@@ -268,15 +268,17 @@ def post_upload(request):
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
             rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
+            sha_512 = rep_bin_file.sha_512
             s = Soubor(
                 vazba=objekt.soubory,
                 nazev=new_name,
                 # Short name is new name without checksum
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
-                path=rep_bin_file.url_without_domain
+                path=rep_bin_file.url_without_domain,
+                sha_512=sha_512,
             )
-            duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
+            duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
                 s.save()
@@ -336,11 +338,12 @@ def post_upload(request):
                 s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
+                s.sha_512 = rep_bin_file.sha_512
                 s.save()
                 s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
             if rep_bin_file is not None:
                 duplikat = (
-                    Soubor.objects.filter(sha_512=rep_bin_file.sha_512())
+                    Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
                     .filter(~Q(id=s.id))
                     .order_by("pk")
                 )
