@@ -149,6 +149,11 @@ services:
       - prod-net
     secrets:
       - elastic_pass
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: "2G"
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.7.0
