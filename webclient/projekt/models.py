@@ -544,8 +544,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path = elc.build_document()
-        return path
+        output = elc.build_document()
+        return output
 
     @property
     def should_generate_confirmation_document(self):
