@@ -1,5 +1,5 @@
 asgiref==3.6.0
-Django==4.1.9
+Django==4.2.3
 psycopg2-binary==2.9.6
 pytz==2022.7.1
 simplejson==3.18.4
@@ -16,7 +16,7 @@ django-autocomplete-light==3.9.0rc4
 django-widget-tweaks==1.4.12
 tablib[all]==3.5.0
 django-simple-history==3.3.0
-distlib==0.3.6
+distlib==0.3.7
 django-rosetta==0.9.9
 django-structlog==5.0.0
 django-auto-logout==0.5.1

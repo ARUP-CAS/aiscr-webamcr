@@ -28,14 +28,14 @@ class ExterniZdrojForm(forms.ModelForm):
     autori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            label=_("externiZdroj.forms.autori.label"),
-            help_text=_("externiZdroj.forms.autori.tooltip"),
+            label=_("ez.forms.externiZdrojForm.autori.label"),
+            help_text=_("ez.forms.externiZdrojForm.autori.tooltip"),
             )
     editori = AutoriField(Osoba.objects.all(), widget=autocomplete.Select2Multiple(
                 url="heslar:osoba-autocomplete-choices",
             ),
-            label=_("externiZdroj.forms.editori.label"),
-            help_text=_("externiZdroj.forms.editori.tooltip"),)
+            label=_("ez.forms.externiZdrojForm.editori.label"),
+            help_text=_("ez.forms.externiZdrojForm.editori.tooltip"),)
     class Meta:
         model = ExterniZdroj
         fields = (
@@ -62,24 +62,24 @@ class ExterniZdrojForm(forms.ModelForm):
         )
 
         labels = {
-            "typ": _("externiZdroj.forms.typ.label"),
-            "rok_vydani_vzniku": _("externiZdroj.forms.rokVydaniVzniku.label"),
-            "nazev": _("externiZdroj.forms.nazev.label"),
-            "casopis_denik_nazev": _("externiZdroj.forms.casopisNazev.label"),
-            "casopis_rocnik": _("externiZdroj.forms.casopisRocnik.label"),
-            "datum_rd": _("externiZdroj.forms.datumRd.label"),
-            "paginace_titulu": _("externiZdroj.forms.paginaceTitulu.label"),
-            "sbornik_nazev": _("externiZdroj.forms.sbornikNazev.label"),
-            "edice_rada": _("externiZdroj.forms.ediceRada.label"),
-            "misto": _("externiZdroj.forms.misto.label"),
-            "vydavatel": _("externiZdroj.forms.vydavatel.label"),
-            "isbn": _("externiZdroj.forms.isbn.label"),
-            "issn": _("externiZdroj.forms.issn.label"),
-            "typ_dokumentu": _("externiZdroj.forms.typDokumentu.label"),
-            "organizace": _("externiZdroj.forms.organizace.label"),
-            "link": _("externiZdroj.forms.link.label"),
-            "poznamka": _("externiZdroj.forms.poznamka.label"),
-            "sysno": _("externiZdroj.forms.sysno.label"),
+            "typ": _("ez.forms.externiZdrojForm.typ.label"),
+            "rok_vydani_vzniku": _("ez.forms.externiZdrojForm.rokVydaniVzniku.label"),
+            "nazev": _("ez.forms.externiZdrojForm.nazev.label"),
+            "casopis_denik_nazev": _("ez.forms.externiZdrojForm.casopisNazev.label"),
+            "casopis_rocnik": _("ez.forms.externiZdrojForm.casopisRocnik.label"),
+            "datum_rd": _("ez.forms.externiZdrojForm.datumRd.label"),
+            "paginace_titulu": _("ez.forms.externiZdrojForm.paginaceTitulu.label"),
+            "sbornik_nazev": _("ez.forms.externiZdrojForm.sbornikNazev.label"),
+            "edice_rada": _("ez.forms.externiZdrojForm.ediceRada.label"),
+            "misto": _("ez.forms.externiZdrojForm.misto.label"),
+            "vydavatel": _("ez.forms.externiZdrojForm.vydavatel.label"),
+            "isbn": _("ez.forms.externiZdrojForm.isbn.label"),
+            "issn": _("ez.forms.externiZdrojForm.issn.label"),
+            "typ_dokumentu": _("ez.forms.externiZdrojForm.typDokumentu.label"),
+            "organizace": _("ez.forms.externiZdrojForm.organizace.label"),
+            "link": _("ez.forms.externiZdrojForm.link.label"),
+            "poznamka": _("ez.forms.externiZdrojForm.poznamka.label"),
+            "sysno": _("ez.forms.externiZdrojForm.sysno.label"),
         }
 
         widgets = {
@@ -110,24 +110,24 @@ class ExterniZdrojForm(forms.ModelForm):
         }
 
         help_texts = {
-            "typ": _("externiZdroj.forms.typ.tooltip"),
-            "rok_vydani_vzniku": _("externiZdroj.forms.rokVydaniVzniku.tooltip"),
-            "nazev": _("externiZdroj.forms.nazev.tooltip"),
-            "casopis_denik_nazev": _("externiZdroj.forms.casopisNazev.tooltip"),
-            "casopis_rocnik": _("externiZdroj.forms.casopisRocnik.tooltip"),
-            "datum_rd": _("externiZdroj.forms.datumRd.tooltip"),
-            "paginace_titulu": _("externiZdroj.forms.paginaceTitulu.tooltip"),
-            "sbornik_nazev": _("externiZdroj.forms.sbornikNazev.tooltip"),
-            "edice_rada": _("externiZdroj.forms.ediceRada.tooltip"),
-            "misto": _("externiZdroj.forms.misto.tooltip"),
-            "vydavatel": _("externiZdroj.forms.vydavatel.tooltip"),
-            "isbn": _("externiZdroj.forms.isbn.tooltip"),
-            "issn": _("externiZdroj.forms.issn.tooltip"),
-            "typ_dokumentu": _("externiZdroj.forms.typDokumentu.tooltip"),
-            "organizace": _("externiZdroj.forms.organizace.tooltip"),
-            "link": _("externiZdroj.forms.link.tooltip"),
-            "poznamka": _("externiZdroj.forms.poznamka.tooltip"),
-            "sysno": _("externiZdroj.forms.sysno.tooltip"),
+            "typ": _("ez.forms.externiZdrojForm.typ.tooltip"),
+            "rok_vydani_vzniku": _("ez.forms.externiZdrojForm.rokVydaniVzniku.tooltip"),
+            "nazev": _("ez.forms.externiZdrojForm.nazev.tooltip"),
+            "casopis_denik_nazev": _("ez.forms.externiZdrojForm.casopisNazev.tooltip"),
+            "casopis_rocnik": _("ez.forms.externiZdrojForm.casopisRocnik.tooltip"),
+            "datum_rd": _("ez.forms.externiZdrojForm.datumRd.tooltip"),
+            "paginace_titulu": _("ez.forms.externiZdrojForm.paginaceTitulu.tooltip"),
+            "sbornik_nazev": _("ez.forms.externiZdrojForm.sbornikNazev.tooltip"),
+            "edice_rada": _("ez.forms.externiZdrojForm.ediceRada.tooltip"),
+            "misto": _("ez.forms.externiZdrojForm.misto.tooltip"),
+            "vydavatel": _("ez.forms.externiZdrojForm.vydavatel.tooltip"),
+            "isbn": _("ez.forms.externiZdrojForm.isbn.tooltip"),
+            "issn": _("ez.forms.externiZdrojForm.issn.tooltip"),
+            "typ_dokumentu": _("ez.forms.externiZdrojForm.typDokumentu.tooltip"),
+            "organizace": _("ez.forms.externiZdrojForm.organizace.tooltip"),
+            "link": _("ez.forms.externiZdrojForm.link.tooltip"),
+            "poznamka": _("ez.forms.externiZdrojForm.poznamka.tooltip"),
+            "sysno": _("ez.forms.externiZdrojForm.sysno.tooltip"),
         }
 
     def __init__(
@@ -230,7 +230,7 @@ class ExterniOdkazForm(forms.ModelForm):
         model = ExterniOdkaz
         fields = ("paginace",)
         labels = {
-            "paginace": _("externiOdkaz.forms.paginace.label"),
+            "paginace": _("ez.forms.ExterniOdkazForm.paginace.label"),
         }
         widgets = {
             "paginace": forms.TextInput(),
@@ -249,10 +249,10 @@ class PripojitArchZaznamForm(forms.Form, ExterniOdkazForm):
     def __init__(self, type_arch=None, dok=False, *args, **kwargs):
         super(PripojitArchZaznamForm, self).__init__(*args, **kwargs)
         if dok:
-            ez_label = _("dokument.forms.vyberArchz.label")
+            ez_label = _("ez.forms.pripojitArchZaznamForm.dokument.vyberArchz.label")
             pagin = Div()
         else:
-            ez_label = _("externiZdroj.forms.vyberArchz.label")
+            ez_label = _("ez.forms.pripojitArchZaznamForm.ez.vyberArchz.label")
             pagin = Div("paginace", css_class="col-sm-4")
         if type_arch == "akce":
             new_choices = list(
@@ -294,7 +294,7 @@ class PripojitExterniOdkazForm(forms.Form, ExterniOdkazForm):
             ExterniZdroj.objects.filter().values_list("id", "ident_cely")
         )
         self.fields["ez"] = forms.ChoiceField(
-            label=_("externiZdroj.forms.vyberEZ.label"),
+            label=_("ez.forms.pripojitExterniOdkazForm.vyberEZ.label"),
             choices=new_choices,
             widget=autocomplete.ListSelect2(url=reverse("ez:ez-autocomplete")),
         )

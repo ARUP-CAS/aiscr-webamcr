@@ -27,7 +27,7 @@ class CreateDJForm(forms.ModelForm):
         max_length=100,
         required=False,
         disabled=True,
-        label=_("PIAN"),
+        label=_("dj.forms.createDjForm.pianText.label"),
     )
 
     def get_typ_queryset(
@@ -91,10 +91,10 @@ class CreateDJForm(forms.ModelForm):
         fields = ("typ", "negativni_jednotka", "nazev", "pian")
 
         labels = {
-            "typ": _("Typ"),
-            "negativni_jednotka": _("Negativni jednotka"),
-            "nazev": _("Název"),
-            "pian": _("PIAN"),
+            "typ": _("dj.forms.createDjForm.typ.label"),
+            "negativni_jednotka": _("dj.forms.createDjForm.negativni_jednotka.label"),
+            "nazev": _("dj.forms.createDjForm.nazev.label"),
+            "pian": _("dj.forms.createDjForm.pian.label"),
         }
 
         widgets = {
@@ -110,7 +110,7 @@ class CreateDJForm(forms.ModelForm):
                 url="pian:pian-autocomplete",
             ),
             "negativni_jednotka": forms.Select(
-                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                choices=[("False", _("dj.forms.createDjForm.negativniJednotka.choices.ne.label")), ("True", _("dj.forms.createDjForm.negativniJednotka.choices.ano.label"))],
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
@@ -119,11 +119,11 @@ class CreateDJForm(forms.ModelForm):
             ),
         }
         help_texts = {
-            "typ": _("dj.form.typ.tooltip"),
-            "negativni_jednotka": _("dj.form.negativni_jednotka.tooltip"),
-            "nazev": _("dj.form.nazev.tooltip"),
-            "pian": _("dj.form.pian.tooltip"),
-            "pian_text": _("dj.form.pian.tooltip"),
+            "typ": _("dj.forms.createDjForm.typ.tooltip"),
+            "negativni_jednotka": _("dj.forms.createDjForm.negativni_jednotka.tooltip"),
+            "nazev": _("dj.forms.createDjForm.nazev.tooltip"),
+            "pian": _("dj.forms.createDjForm.pian.tooltip"),
+            "pian_text": _("dj.forms.createDjForm.pianText.tooltip"),
         }
 
     def __init__(
@@ -145,7 +145,7 @@ class CreateDJForm(forms.ModelForm):
             queryset=self.get_typ_queryset(
                 jednotky, self.instance, typ_arch_z, typ_akce
             ),
-            help_text=_("dj.form.typ.tooltip"),
+            help_text=_("dj.forms.createDjForm.typ.tooltip"),
             widget=forms.Select(
                 attrs={
                     "class": "selectpicker",
@@ -195,10 +195,10 @@ class ChangeKatastrForm(forms.Form):
     Formulář pro editaci katastru u archeologického záznamu.
     """
     katastr = forms.ModelChoiceField(
-        label=_("dj.form.katastrChange.label"),
+        label=_("dj.forms.ChangeKatastrForm.katastr.label"),
         widget=autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),
         queryset=RuianKatastr.objects.all(),
-        help_text=_("dj.form.katastrChange.tooltip"),
+        help_text=_("dj.forms.ChangeKatastrForm.katastr.tooltip"),
         required=True,
     )
 

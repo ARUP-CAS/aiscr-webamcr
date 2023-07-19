@@ -17,6 +17,51 @@ const get_description = () => {
     }
     return "";
 };
+
+const UploadResultsEnum = {
+	success: 0,
+    duplicate: 1,
+    reject: 2,
+    error: 3,
+}
+
+const show_upload_successful_message = (file, result=UploadResultsEnum.success, message="") => {
+    const collection = document.getElementsByClassName("message-container");
+    if (collection.length > 0) {
+        const message_container_element = collection[0];
+        // <div class="alert alert-success alert-dismissible fade show app-alert-floating" role="alert">
+        const alert_element = document.createElement("div");
+        const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
+        const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
+        if (result === UploadResultsEnum.success || result === UploadResultsEnum.duplicate) {
+            alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show ${floating_class}`);
+        } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
+            alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show ${floating_class}`);
+        }
+        alert_element.setAttribute("role", "alert");
+        if (result === UploadResultsEnum.success) {
+            alert_element.textContent = `alerts.upload_succesfull.part_1 ${file.name} alerts.upload_succesfull.part_2`;
+        } else if (result === UploadResultsEnum.duplicate) {
+            alert_element.textContent = message;
+        } else if (result === UploadResultsEnum.reject) {
+            alert_element.textContent = `alerts.upload_reject.part_1 ${file.name} alerts.upload_reject.part_2`;
+        } else if (result === UploadResultsEnum.error) {
+            alert_element.textContent = `alerts.upload_error.part_1 ${file.name} alerts.upload_error.part_2`;
+        }
+        const button_element = document.createElement("button");
+        button_element.setAttribute('type', 'button');
+        button_element.setAttribute('class', 'close');
+        button_element.setAttribute('data-dismiss', 'alert');
+        button_element.setAttribute('aria-label', 'Close');
+        const span_element = document.createElement("span");
+        span_element.setAttribute('aria-hidden', 'true');
+        span_element.innerHTML = "&times;";
+        button_element.appendChild(span_element);
+        alert_element.appendChild(button_element);
+        message_container_element.appendChild(alert_element);
+    }
+}
+
 window.onload = function () {
     const xhttp = new XMLHttpRequest();
     var csrfcookie = function () {
@@ -92,9 +137,12 @@ window.onload = function () {
                 file.id = response.id
                 file.previewElement.lastChild.style.display = null
                 if (response.duplicate) {
+                    show_upload_successful_message(file, UploadResultsEnum.success, response.duplicate);
                     alert(response.duplicate)
                     console.log("success > " + file.name);
 
+                } else {
+                    show_upload_successful_message(file, UploadResultsEnum.success);
                 }
             });
             this.on("removedfile", function (file) {
@@ -113,10 +161,10 @@ window.onload = function () {
         error: function (file, response) {
             console.log(response);
             if (response.includes('reject')) {
-                alert(response)
+                show_upload_successful_message(file, UploadResultsEnum.reject, response);
             }
             else {
-                alert(upload_error)
+                show_upload_successful_message(file, UploadResultsEnum.error, upload_error);
             }
             this.removeFile(file);
 

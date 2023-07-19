@@ -109,6 +109,10 @@ def detail(request, ident_cely):
             dj.save()
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
+        if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
+            dj.pian.save_metadata()
+        if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
+            pian_db.save_metadata()
 
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors})
@@ -240,9 +244,9 @@ def smazat(request, ident_cely):
     else:
         context = {
             "object": dj,
-            "title": _("dj.modalForm.smazani.title.text"),
+            "title": _("dj.views.smazat.title.text"),
             "id_tag": "smazat-dj-form",
-            "button": _("dj.modalForm.smazani.submit.button"),
+            "button": _("dj.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -251,9 +255,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     Třída pohledu pro editaci katastru dokumentační jednotky.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dj.modalForm.zmenitKatastr.title.text")
+    title = _("dj.views.ChangeKatastrView.title.text")
     id_tag = "zmenit-katastr-form"
-    button = _("dj.modalForm.zmenitKatastr.submit.button")
+    button = _("dj.views.ChangeKatastrView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")

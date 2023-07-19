@@ -79,10 +79,13 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     @property
     def pristupnost_pom(self):
         dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        pristupnosti_ids = set()
         for dok_jednotka in dok_jednotky:
             if dok_jednotka.archeologicky_zaznam is not None \
                     and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
-                return dok_jednotka.archeologicky_zaznam.pristupnost
+                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
 
     class Meta:

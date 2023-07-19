@@ -219,7 +219,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self):
+    def save_metadata(self, **kwargs):
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
