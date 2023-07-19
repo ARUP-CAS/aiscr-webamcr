@@ -135,9 +135,9 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
     Class pro db model heslar hierarchie.
     """
     TYP_CHOICES = [
-        ('podřízenost', _('HeslarHierarchie.TYP_CHOICES.podrizenost')),
-        ('uplatnění', _('HeslarHierarchie.TYP_CHOICES.uplatneni')),
-        ('výchozí hodnota', _('HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
+        ('podřízenost', _('heslar.models.HeslarHierarchie.TYP_CHOICES.podrizenost')),
+        ('uplatnění', _('heslar.models.HeslarHierarchie.TYP_CHOICES.uplatneni')),
+        ('výchozí hodnota', _('heslar.models.HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
     ]
 
     heslo_podrazene = models.ForeignKey(

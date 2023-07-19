@@ -1,13 +1,11 @@
 import hashlib
 import io
 import logging
-import re
 from enum import Enum
 from typing import Union, Optional
 
 import requests
 from django.conf import settings
-from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from requests.auth import HTTPBasicAuth
 
 from core.utils import get_mime_type
@@ -307,10 +305,10 @@ class FedoraRepositoryConnector:
             with open(soubor.path, mode="rb") as file:
                 data = file.read()
             data = io.BytesIO(data)
-            soubor.nazev = soubor.nazev_zkraceny
+            soubor.nazev = soubor.nazev
             soubor.save()
             content_type = get_mime_type(soubor.name)
-            rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev_zkraceny)
+            rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev)
             file_sha_512 = hashlib.sha512(data).hexdigest()
             headers = {
                 "Content-Type": content_type,
