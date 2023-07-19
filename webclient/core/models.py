@@ -107,7 +107,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     def calculate_sha_512(self):
         repository_content = self.get_repository_content()
         if repository_content is not None:
-            return repository_content.sha_512()
+            return repository_content.sha_512
         return ""
 
     class Meta:

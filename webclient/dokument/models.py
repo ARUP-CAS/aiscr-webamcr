@@ -676,12 +676,11 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
         return self.ident_cely
 
 
-def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
     """
-    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
-    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]

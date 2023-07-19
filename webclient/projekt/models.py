@@ -526,7 +526,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 mimetype="application/pdf",
                 path=rep_bin_file.url_without_domain,
                 size_mb=rep_bin_file.size_mb,
-                sha_512=rep_bin_file.sha_512(),
+                sha_512=rep_bin_file.sha_512,
             )
             soubor.save()
             if user:

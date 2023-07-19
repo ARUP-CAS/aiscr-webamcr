@@ -33,8 +33,10 @@ const show_upload_successful_message = (file, result=UploadResultsEnum.success, 
         const alert_element = document.createElement("div");
         const sidebar_element_query = document.getElementsByClassName("app-sidebar-wrapper");
         const floating_class = sidebar_element_query.length > 0 ? "app-alert-floating-file-upload" : "app-alert-floating-file-upload-oznameni";
-        if (result === UploadResultsEnum.success || result === UploadResultsEnum.duplicate) {
+        if (result === UploadResultsEnum.success) {
             alert_element.setAttribute("class", `alert alert-success alert-dismissible fade show ${floating_class}`);
+        } else if (result === UploadResultsEnum.duplicate) {
+            alert_element.setAttribute("class", `alert alert-warning alert-dismissible fade show ${floating_class}`);
         } else if (result === UploadResultsEnum.reject || result === UploadResultsEnum.error) {
             alert_element.setAttribute("class", `alert alert-danger alert-dismissible fade show ${floating_class}`);
         }
@@ -44,9 +46,9 @@ const show_upload_successful_message = (file, result=UploadResultsEnum.success, 
         } else if (result === UploadResultsEnum.duplicate) {
             alert_element.textContent = message;
         } else if (result === UploadResultsEnum.reject) {
-            alert_element.textContent = `alerts.upload_reject.part_1 ${file.name} alerts.upload_reject.part_2`;
+            alert_element.textContent = `alerts.upload_reject.part_1 ${file.name} alerts.upload_reject.part_2 ${message}`;
         } else if (result === UploadResultsEnum.error) {
-            alert_element.textContent = `alerts.upload_error.part_1 ${file.name} alerts.upload_error.part_2`;
+            alert_element.textContent = `alerts.upload_error.part_1 ${file.name} alerts.upload_error.part_2 ${message}`;
         }
         const button_element = document.createElement("button");
         button_element.setAttribute('type', 'button');
@@ -131,14 +133,14 @@ window.onload = function () {
         maxFilesize: 100, // MB
         maxFiles: maxFiles,
         addRemoveLinks: addRemoveLinks,
+        parallelUploads: 1,
         timeout: 10000000,
         init: function () {
             this.on("success", function (file, response) {
                 file.id = response.id
                 file.previewElement.lastChild.style.display = null
                 if (response.duplicate) {
-                    show_upload_successful_message(file, UploadResultsEnum.success, response.duplicate);
-                    alert(response.duplicate)
+                    show_upload_successful_message(file, UploadResultsEnum.duplicate, response.duplicate);
                     console.log("success > " + file.name);
 
                 } else {
@@ -160,12 +162,15 @@ window.onload = function () {
         },
         error: function (file, response) {
             console.log(response);
-            if (response.includes('reject')) {
+            if (Array.isArray(response) && response.includes('reject')) {
                 show_upload_successful_message(file, UploadResultsEnum.reject, response);
             }
-            else {
-                show_upload_successful_message(file, UploadResultsEnum.error, upload_error);
+            else if (response.hasOwnProperty("error")) {
+                show_upload_successful_message(file, UploadResultsEnum.error, response.error);
+            } else {
+                show_upload_successful_message(file, UploadResultsEnum.error);
             }
+
             this.removeFile(file);
 
         },

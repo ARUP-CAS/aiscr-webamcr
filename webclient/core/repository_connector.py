@@ -27,11 +27,11 @@ class RepositoryBinaryFile:
     def uuid(self):
         return self.url.split("/")[-1]
 
-    def sha_512(self) -> str:
+    def _calculate_sha_512(self):
         data = self.content.read()
         sha_512 = hashlib.sha512(data).hexdigest()
         self.content.seek(0)
-        return sha_512
+        self.sha_512 = sha_512
 
     @property
     def size_mb(self):
@@ -43,6 +43,7 @@ class RepositoryBinaryFile:
         self.filename = filename
         self.size = content.getbuffer().nbytes
         self.content.seek(0)
+        self._calculate_sha_512()
 
 
 class FedoraRequestType(Enum):
