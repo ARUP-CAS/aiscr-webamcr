@@ -6,5 +6,5 @@ app_name = "oznameni"
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("oznameni-zjisti-katastr", views.post_poi2kat, name="post_poi2kat"),
+    path("mapa-zjisti-katastr", views.post_poi2kat, name="post_poi2kat"),
 ]

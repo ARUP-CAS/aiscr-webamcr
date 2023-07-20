@@ -479,7 +479,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                     logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_found")
                     response.delete_cookie("zpet")
             elif (
-                "nahrat-soubor" in referer
+                "soubor/nahrat" in referer
                 and context["dokument"].ident_cely in referer_next
             ):
                 logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_changed")

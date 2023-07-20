@@ -82,7 +82,7 @@ window.onload = function () {
         return cookieValue;
     };
     var currentLocation = window.location.pathname;
-    if (currentLocation.includes("nahrat-soubor/pas/")) {
+    if (currentLocation.includes("soubor/nahrat/pas/")) {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
     } else if (currentLocation.includes("nahrat-soubor/dokument/")) {
@@ -149,7 +149,7 @@ window.onload = function () {
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
-                    xhttp.open("POST", "/smazat-soubor/" + file.id);
+                    xhttp.open("POST", "/soubor/smazat/" + file.id);
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
                     xhttp.send("dropzone=true");

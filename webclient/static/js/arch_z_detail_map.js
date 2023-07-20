@@ -534,7 +534,7 @@ var clickOnMap=(e)=>{
             var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
 
             let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/pas/pas-zjisti-katastr-with-geom');
+            xhr.open('POST', '/pas/mapa-zjisti-katastr-geom');
             xhr.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -582,7 +582,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
                 map.spin(true);
                 $.ajax({
                     type: "GET",
-                    url:"/pian/seznam-pian/?q="+getContent(e),
+                    url:"/pian/autocomplete/?q="+getContent(e),
                     dataType: 'json',
                     success: function(data){
                     if(data.results.length>0){
@@ -895,7 +895,7 @@ switchMap = function (overview = false) {
             addLogText("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/arch-z/katastr-zjisti-piany');
+            xhr.open('POST', '/arch-z/mapa-pian');
             xhr.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -969,7 +969,7 @@ switchMap = function (overview = false) {
 function loadKatastry() {
     akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/arch-z/akce-ostatni-katastry');
+    xhr.open('POST', '/arch-z/mapa-dalsi-katastry');
     xhr.setRequestHeader('Content-type', 'application/json');
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);

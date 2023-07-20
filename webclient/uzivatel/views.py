@@ -304,7 +304,7 @@ def update_notifications(request):
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.views.update_notifications.post.success"))
         user.save_metadata()
-        return redirect("/upravit-uzivatele/")
+        return redirect("/uzivatel/edit/")
 
 
 class UserActivationView(ActivationView):

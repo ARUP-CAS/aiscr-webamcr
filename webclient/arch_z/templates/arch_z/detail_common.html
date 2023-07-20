@@ -208,7 +208,7 @@
   <script src="{% static 'leaflet.measure.js' %}"></script>
   <script>
       function get_create_pain_form_action(selected_dj_ident) {
-          const url = "/pian/create/1";
+          const url = "/pian/zapsat/1";
           url.replace("1", selected_dj_ident);
           document.getElementById("create_pian_form_id").action = url;
       }
@@ -255,7 +255,7 @@
           if (form_id.includes("detail_dj_form_")) {
               pian_id = form_id.replace("detail_dj_form_", "")
               let xhr = new XMLHttpRequest();
-              xhr.open('POST', '/arch-z/akce-zjisti-katastr');
+              xhr.open('POST', '/arch-z/mapa-zoom');
               xhr.setRequestHeader('Content-type', 'application/json');
               if (typeof global_csrftoken !== 'undefined') {
                   xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
