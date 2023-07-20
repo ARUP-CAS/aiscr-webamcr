@@ -333,7 +333,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         )
         old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
+        self.suppress_signal = True
         self.save()
+        self.save_metadata(use_celery=False)
 
         from core.repository_connector import FedoraRepositoryConnector
         from core.utils import get_mime_type
@@ -343,9 +345,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         for soubor in self.soubory.soubory.all():
             soubor: Soubor
             repository_binary_file = soubor.get_repository_content()
-            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                      get_mime_type(soubor.nazev),
-                                                      repository_binary_file.content)
+            if repository_binary_file is not None:
+                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                          get_mime_type(soubor.nazev),
+                                                          repository_binary_file.content)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():

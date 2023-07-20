@@ -10,6 +10,7 @@ METADATA_UPDATE_TIMEOUT = 30
 
 class ModelWithMetadata(models.Model):
     ident_cely = models.TextField(unique=True)
+    suppress_signal = False
 
     @property
     def metadata(self):

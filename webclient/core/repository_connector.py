@@ -15,7 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class FedoraError(Exception):
-    pass
+    def __init__(self, message, code):
+        self.message = message
+        self.code = code
+        super().__init__(self.message)
 
 
 class RepositoryBinaryFile:
@@ -180,7 +183,11 @@ class FedoraRepositoryConnector:
             else:
                 logger.error("core_repository_connector._send_request.response.error",
                              extra={"text": response.text, "status_code": response.status_code})
-                raise FedoraError
+                if data is not None:
+                    print(data)
+                if headers is not None:
+                    print(headers)
+                raise FedoraError(response.text, response.status_code)
         else:
             logger.debug("core_repository_connector._send_request.response",
                          extra={"text": response.text, "status_code": response.status_code})
