@@ -14,6 +14,10 @@ from xml_generator.generator import DocumentGenerator
 logger = logging.getLogger(__name__)
 
 
+class FedoraError(Exception):
+    pass
+
+
 class RepositoryBinaryFile:
     @staticmethod
     def get_url_without_domain(url):
@@ -149,11 +153,12 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                               FedoraRequestType.GET_LINK):
             response = requests.get(url, headers=headers, auth=auth, verify=False)
-        elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.CREATE_BINARY_FILE_CONTENT,
-                              FedoraRequestType.RECORD_DELETION_ADD_MARK,
+        elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                               FedoraRequestType.CREATE_LINK):
             response = requests.post(url, headers=headers, data=data, auth=auth, verify=False)
+        elif request_type in (FedoraRequestType.CREATE_BINARY_FILE_CONTENT, ):
+            response = requests.post(url, headers=headers, data=data, auth=auth, verify=False, timeout=10)
         elif request_type in (FedoraRequestType.UPDATE_METADATA, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             response = requests.put(url, headers=headers, data=data, auth=auth, verify=False)
         elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
@@ -166,15 +171,27 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
-        logger.debug("core_repository_connector._send_request.response",
-                     extra={"text": response.text, "status_code": response.status_code})
+        if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
+                                FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
+                                FedoraRequestType.GET_LINK):
+            if str(response.status_code)[0] == "2":
+                logger.debug("core_repository_connector._send_request.response.ok",
+                             extra={"text": response.text, "status_code": response.status_code})
+            else:
+                logger.error("core_repository_connector._send_request.response.error",
+                             extra={"text": response.text, "status_code": response.status_code})
+                raise FedoraError
+        else:
+            logger.debug("core_repository_connector._send_request.response",
+                         extra={"text": response.text, "status_code": response.status_code})
         return response
 
     def _create_container(self):
         logger.debug("core_repository_connector._create_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.CREATE_CONTAINER)
         headers = {
-            'Slug': self.record.ident_cely
+            'Slug': self.record.ident_cely,
+            'Link': '<http://fedora.info/definitions/v4/repository#ArchivalGroup>;rel="type"'
         }
         self._send_request(url, FedoraRequestType.CREATE_CONTAINER, headers=headers)
         self._create_link()
