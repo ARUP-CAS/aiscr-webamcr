@@ -40,7 +40,8 @@ class DocumentGenerator:
     }
     attribute_names = {}
     _simple_element_types = ("xs:string", "xs:date", "xs:integer", "amcr:refType", "xs:dateTime", "amcr:gmlType",
-                             "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType")
+                             "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType",
+                             "xs:decimal")
 
     @classmethod
     def generate_metadata(cls, model_class=None, limit=None, start_with_pk=None):

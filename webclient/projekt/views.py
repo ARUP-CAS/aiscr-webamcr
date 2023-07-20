@@ -72,7 +72,7 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -1106,9 +1106,10 @@ def generovat_expertni_list(request, ident_cely):
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    path = projekt.create_expert_list(popup_parametry)
-    file = open(path, "rb")
-    return FileResponse(file)
+    output = projekt.create_expert_list(popup_parametry)
+    response = StreamingHttpResponse(output, content_type="text/rtf")
+    response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
+    return response
 
 
 def get_history_dates(historie_vazby):

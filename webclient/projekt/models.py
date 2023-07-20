@@ -526,7 +526,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 mimetype="application/pdf",
                 path=rep_bin_file.url_without_domain,
                 size_mb=rep_bin_file.size_mb,
-                sha_512=rep_bin_file.sha_512(),
+                sha_512=rep_bin_file.sha_512,
             )
             soubor.save()
             if user:
@@ -544,8 +544,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path = elc.build_document()
-        return path
+        output = elc.build_document()
+        return output
 
     @property
     def should_generate_confirmation_document(self):

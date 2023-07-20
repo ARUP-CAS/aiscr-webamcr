@@ -101,7 +101,7 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
     fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    search_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
@@ -119,8 +119,8 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař odkaz.
     """
-    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
-    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
+    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
 
