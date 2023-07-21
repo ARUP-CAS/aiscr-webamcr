@@ -507,10 +507,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             else:
                 sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
         sequence.save()
+        old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
         self.save()
+        self.record_ident_change(old_ident)
 
     def create_confirmation_document(self, additional=False, user=None):
         """
@@ -567,20 +569,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
-    def record_ident_change(self, old_ident_cely):
-        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start")
-        from core.repository_connector import FedoraRepositoryConnector
-        from core.utils import get_mime_type
-        from core.views import get_projekt_soubor_name
-        connector = FedoraRepositoryConnector(self)
-        connector.record_ident_change(old_ident_cely)
-        for soubor in self.soubory.soubory.all():
-            soubor: Soubor
-            repository_binary_file = soubor.get_repository_content()
-            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                      get_mime_type(soubor.nazev),
-                                                      repository_binary_file.content)
-        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end")
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

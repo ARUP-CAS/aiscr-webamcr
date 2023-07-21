@@ -6,6 +6,7 @@ from celery import shared_task
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
 from core.constants import ODESLANI_SN, ARCHIVACE_SN
+from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
@@ -374,10 +375,7 @@ def nalez_to_wsg84(self):
         logger.debug(e)
 
 
-@shared_task
-def save_record_metadata(class_name, record_pk):
-    logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
-    from xml_generator.models import ModelWithMetadata
+def get_record(class_name, record_pk):
     if class_name == "Projekt":
         record = Projekt.objects.get(pk=record_pk)
     elif class_name == "SamostatnyNalez":
@@ -409,9 +407,39 @@ def save_record_metadata(class_name, record_pk):
     else:
         logger.debug("cron.send_notifications.do.error.unknown_class",
                      extra={"class_name": class_name, "record_pk": record_pk})
-        return
-    record: ModelWithMetadata
-    from core.repository_connector import FedoraRepositoryConnector
-    connector = FedoraRepositoryConnector(record)
-    connector.save_metadata(True)
+        record = None
+    return record
+
+
+@shared_task
+def save_record_metadata(class_name, record_pk):
+    logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
+    from xml_generator.models import ModelWithMetadata
+    record = get_record(class_name, record_pk)
+    if record is not None:
+        record: ModelWithMetadata
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(record)
+        connector.save_metadata(True)
     logger.debug("cron.send_notifications.do.end")
+
+
+@shared_task
+def record_ident_change(class_name, record_pk, old_ident):
+    logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
+                                                             "old_ident": old_ident})
+    from core.repository_connector import FedoraRepositoryConnector
+    from core.utils import get_mime_type
+    from core.views import get_projekt_soubor_name
+    record = get_record(class_name, record_pk)
+    connector = FedoraRepositoryConnector(record)
+    connector.record_ident_change(old_ident)
+    if hasattr(record, "soubory"):
+        for soubor in record.soubory.soubory.all():
+            soubor: Soubor
+            repository_binary_file = soubor.get_repository_content()
+            if repository_binary_file is not None:
+                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                          get_mime_type(soubor.nazev),
+                                                          repository_binary_file.content)
+    logger.debug("cron.record_ident_change.do.end")

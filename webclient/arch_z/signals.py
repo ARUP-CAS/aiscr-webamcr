@@ -1,6 +1,6 @@
 import logging
 
-from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
+from arch_z.models import ArcheologickyZaznam, ExterniZdroj
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
@@ -27,11 +27,12 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
 
 
-@receiver(post_save, sender=ExterniOdkaz)
-def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
+@receiver(post_save, sender=ExterniZdroj)
+def create_externi_zdroj_metadata(sender, instance: ExterniZdroj, **kwargs):
     """
         Funkce pro aktualizaci metadat externího odkazu.
     """
@@ -47,8 +48,8 @@ def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=ExterniOdkaz)
-def delete_externi_odkaz_repository_container(sender, instance: ArcheologickyZaznam, **kwargs):
+@receiver(post_delete, sender=ExterniZdroj)
+def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """

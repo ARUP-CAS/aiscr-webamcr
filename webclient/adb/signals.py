@@ -10,8 +10,9 @@ logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=Adb)
 def adb_save_metadata(sender, instance: Adb, **kwargs):
-    instance.save_metadata()
-    instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
+        instance.dokumentacni_jednotka.archeologicky_zaznam.save_metadata()
 
 
 @receiver(post_delete, sender=Adb)

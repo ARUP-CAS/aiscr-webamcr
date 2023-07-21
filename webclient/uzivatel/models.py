@@ -224,6 +224,13 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
 
+    def record_deletion(self):
+        logger.debug("uzivatel.models.User.delete_repository_container.start")
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        logger.debug("uzivatel.models.User.delete_repository_container.end")
+        return connector.record_deletion()
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"

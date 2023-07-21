@@ -38,4 +38,5 @@ def pian_save_metadata(sender, instance: Pian, **kwargs):
 
 @receiver(post_delete, sender=Pian)
 def samostatny_nalez_okres_delete_repository_container(sender, instance: Pian, **kwargs):
-    instance.record_deletion()
+    if not instance.suppress_signal:
+        instance.record_deletion()
