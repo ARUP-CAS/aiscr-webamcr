@@ -78,6 +78,8 @@ class FedoraRequestType(Enum):
     CHANGE_IDENT_CONNECT_RECORDS_4 = 22
     DELETE_LINK_CONTAINER = 23
     DELETE_LINK_TOMBSTONE = 24
+    DELETE_BINARY_FILE = 25
+    DELETE_BINARY_FILE_COMPLETELY = 26
 
 
 class FedoraRepositoryConnector:
@@ -124,7 +126,8 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/{self.record.ident_cely}/metadata"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.CREATE_BINARY_FILE):
             return f"{base_url}/record/{self.record.ident_cely}/file"
-        elif request_type == FedoraRequestType.CREATE_BINARY_FILE_CONTENT:
+        elif request_type in (FedoraRequestType.CREATE_BINARY_FILE_CONTENT, FedoraRequestType.DELETE_BINARY_FILE,
+                              FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}"
         elif request_type in (FedoraRequestType.GET_BINARY_FILE_CONTENT, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT):
             return f"{base_url}/record/{self.record.ident_cely}/file/{uuid}/orig"
@@ -167,12 +170,14 @@ class FedoraRepositoryConnector:
         elif request_type == FedoraRequestType.CREATE_BINARY_FILE:
             response = requests.post(url, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
-                              FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE):
+                              FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
+                              FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY):
             response = requests.delete(url, auth=auth)
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
+                              FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3,
+                              FedoraRequestType.DELETE_BINARY_FILE):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
@@ -370,6 +375,30 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.save_binary_file.end",
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
+
+    def delete_binary_file(self, soubor):
+        from core.models import Soubor
+        soubor: Soubor
+        logger.debug("core_repository_connector.delete_binary_file.start",
+                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+        headers = {
+            'Content-Type': 'application/sparql-update'
+        }
+        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+        url = self._get_request_url(FedoraRequestType.DELETE_BINARY_FILE, uuid=soubor.repository_uuid)
+        self._send_request(url, FedoraRequestType.DELETE_BINARY_FILE, headers=headers, data=data)
+        logger.debug("core_repository_connector.delete_binary_file.end",
+                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+
+    def delete_binary_file_completely(self, soubor):
+        logger.debug("core_repository_connector.delete_binary_file_completely.start",
+                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
+        from core.models import Soubor
+        soubor: Soubor
+        url = self._get_request_url(FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY, uuid=soubor.repository_uuid)
+        self._send_request(url, FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY)
+        logger.debug("core_repository_connector.delete_binary_file_completely.end",
+                     extra={"uuid": soubor.repository_uuid, "ident_cely": self.record.ident_cely})
 
     def delete_container(self):
         self._delete_link()

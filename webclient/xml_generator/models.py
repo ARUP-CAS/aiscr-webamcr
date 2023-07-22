@@ -12,6 +12,7 @@ IDENT_CHANGE_UPDATE_TIMEOUT = 120
 class ModelWithMetadata(models.Model):
     ident_cely = models.TextField(unique=True)
     suppress_signal = False
+    soubory = None
 
     @property
     def metadata(self):
@@ -55,6 +56,12 @@ class ModelWithMetadata(models.Model):
         logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.start")
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
+        from core.models import SouborVazby
+        if isinstance(self.soubory, SouborVazby):
+            for soubor in self.soubory.soubory.all():
+                from core.models import Soubor
+                soubor: Soubor
+                connector.delete_binary_file(soubor)
         logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
         return connector.record_deletion()
 
