@@ -1,5 +1,6 @@
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from celery import Celery
 
@@ -56,13 +57,16 @@ class ModelWithMetadata(models.Model):
         logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.start")
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
-        from core.models import SouborVazby
-        if isinstance(self.soubory, SouborVazby):
-            for soubor in self.soubory.soubory.all():
-                from core.models import Soubor
-                soubor: Soubor
-                connector.delete_binary_file(soubor)
-        logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
+        try:
+            from core.models import SouborVazby
+            if hasattr(self, "soubory") and self.soubory is not None and isinstance(self.soubory, SouborVazby):
+                for soubor in self.soubory.soubory.all():
+                    from core.models import Soubor
+                    soubor: Soubor
+                    connector.delete_binary_file(soubor)
+            logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
+        except ObjectDoesNotExist as err:
+            logger.debug("xml_generator.models.ModelWithMetadata.no_files_to_delete.end", extra={"err": err})
         return connector.record_deletion()
 
     def record_ident_change(self, old_ident_cely):
