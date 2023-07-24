@@ -50,9 +50,12 @@ def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **
     instance.record_deletion()
 
 
-@receiver(post_delete, sender=ExterniZdroj)
-def delete_externi_zdroj_repository_container(sender, instance: ExterniZdroj, **kwargs):
+@receiver(post_delete, sender=ExterniOdkaz)
+def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
-    instance.record_deletion()
+    if instance.archeologicky_zaznam is not None:
+        instance.archeologicky_zaznam.save_metadata()
+    if instance.externi_zdroj is not None:
+        instance.externi_zdroj.save_metadata()
