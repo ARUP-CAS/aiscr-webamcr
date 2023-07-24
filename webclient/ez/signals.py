@@ -24,4 +24,5 @@ def create_ez_vazby(sender, instance: ExterniZdroj, **kwargs):
 
 @receiver(post_save, sender=ExterniZdroj)
 def externi_zdroj_save_metadata(sender, instance: ExterniZdroj, **kwargs):
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()

@@ -97,6 +97,8 @@ def delete_file(request, pk):
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
+            connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
+            connector.delete_binary_file_completely(s)
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         next_url = request.POST.get("next")

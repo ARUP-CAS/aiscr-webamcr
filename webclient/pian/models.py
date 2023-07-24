@@ -139,10 +139,12 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
                 )
             else:
                 break
+        old_ident = self.ident_cely
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
         sequence.save()
         self.save()
+        self.record_ident_change(old_ident)
 
     def set_vymezeny(self, user):
         """

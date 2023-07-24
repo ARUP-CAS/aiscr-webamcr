@@ -147,6 +147,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             poznamka = historie_poznamka,
         ).save()
         self.save()
+        self.record_ident_change(old_ident)
 
     def set_zapsany(self, user):
         """

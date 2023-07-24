@@ -6,11 +6,13 @@ from celery import Celery
 
 logger = logging.getLogger(__name__)
 METADATA_UPDATE_TIMEOUT = 30
+IDENT_CHANGE_UPDATE_TIMEOUT = 120
 
 
 class ModelWithMetadata(models.Model):
     ident_cely = models.TextField(unique=True)
     suppress_signal = False
+    soubory = None
 
     @property
     def metadata(self):
@@ -54,8 +56,22 @@ class ModelWithMetadata(models.Model):
         logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.start")
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
+        from core.models import SouborVazby
+        if isinstance(self.soubory, SouborVazby):
+            for soubor in self.soubory.soubory.all():
+                from core.models import Soubor
+                soubor: Soubor
+                connector.delete_binary_file(soubor)
         logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
         return connector.record_deletion()
+
+    def record_ident_change(self, old_ident_cely):
+        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start")
+        if old_ident_cely is not None:
+            from cron.tasks import record_ident_change
+            record_ident_change.apply_async([self.__class__.__name__, self.pk, old_ident_cely],
+                                            countdown=IDENT_CHANGE_UPDATE_TIMEOUT)
+        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end")
 
     class Meta:
         abstract = True

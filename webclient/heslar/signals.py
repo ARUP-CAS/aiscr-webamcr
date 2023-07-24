@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres
@@ -37,21 +37,21 @@ def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     instance.save_metadata()
 
 
-@receiver(post_save, sender=Heslar)
+@receiver(post_delete, sender=Heslar)
 def heslar_delete_repository_container(sender, instance: Heslar, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_save, sender=RuianKatastr)
+@receiver(post_delete, sender=RuianKatastr)
 def ruian_katastr_delete_repository_container(sender, instance: RuianKatastr, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_save, sender=RuianKraj)
+@receiver(post_delete, sender=RuianKraj)
 def ruian_kraj_delete_repository_container(sender, instance: RuianKraj, **kwargs):
     instance.record_deletion()
 
 
-@receiver(post_save, sender=RuianOkres)
+@receiver(post_delete, sender=RuianOkres)
 def ruian_okres_delete_repository_container(sender, instance: RuianOkres, **kwargs):
     instance.record_deletion()

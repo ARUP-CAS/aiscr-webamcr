@@ -44,12 +44,14 @@ def create_dokument_cast_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Dokument)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
 
 
 @receiver(post_save, sender=Let)
 def let_save_metadata(sender, instance: Let, **kwargs):
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
 
 
 @receiver(post_delete, sender=Dokument)
