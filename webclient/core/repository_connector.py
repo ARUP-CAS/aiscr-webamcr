@@ -80,6 +80,7 @@ class FedoraRequestType(Enum):
     DELETE_LINK_TOMBSTONE = 24
     DELETE_BINARY_FILE = 25
     DELETE_BINARY_FILE_COMPLETELY = 26
+    GET_DELETED_LINK = 27
 
 
 class FedoraRepositoryConnector:
@@ -142,6 +143,8 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
             return f"{base_url}/record/{ident_cely}"
+        elif request_type == FedoraRequestType.GET_DELETED_LINK:
+            return f"{base_url}/model/deleted/member/{ident_cely}"
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
@@ -157,7 +160,7 @@ class FedoraRepositoryConnector:
             response = requests.post(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
-                              FedoraRequestType.GET_LINK):
+                              FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK):
             response = requests.get(url, headers=headers, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
@@ -418,34 +421,45 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector.delete_link.end", extra={"ident_cely": self.record.ident_cely})
 
     def record_deletion(self):
-        headers = {
-            "Content-Type": "application/sparql-update"
-        }
-        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
-        url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
-        self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,headers=headers, data=data)
-        headers = {
-            "Slug": self.record.ident_cely,
-            "Content-Type": "text/turtle"
-        }
-        data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
-                f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
-        url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
-        self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
+        logger.debug("core_repository_connector.record_deletion.start", extra={"ident_cely": self.record.ident_cely})
+        url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK)
+        result = self._send_request(url, FedoraRequestType.GET_DELETED_LINK)
+        if result.status_code == 404 or "not found" in result.text:
+            logger.debug("core_repository_connector.record_deletion.already_exists",
+                         extra={"ident_cely": self.record.ident_cely})
+        else:
+            logger.debug("core_repository_connector.record_deletion.adding_link",
+                         extra={"ident_cely": self.record.ident_cely})
+            headers = {
+                "Content-Type": "application/sparql-update"
+            }
+            data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+            url = self._get_request_url(FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS)
+            self._send_request(url, FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,headers=headers, data=data)
+            headers = {
+                "Slug": self.record.ident_cely,
+                "Content-Type": "text/turtle"
+            }
+            data = f"@prefix ore: <http://www.openarchives.org/ore/terms/> . " \
+                    f"<> ore:proxyFor <info:fedora/{settings.FEDORA_SERVER_NAME}/record/{self.record.ident_cely}>"
+            url = self._get_request_url(FedoraRequestType.RECORD_DELETION_ADD_MARK)
+            self._send_request(url, FedoraRequestType.RECORD_DELETION_ADD_MARK, headers=headers, data=data)
+        logger.debug("core_repository_connector.record_deletion.end", extra={"ident_cely": self.record.ident_cely})
 
     def record_ident_change(self, ident_cely_old):
         logger.debug("core_repository_connector.record_ident_change.start", extra={"ident_cely": self.record.ident_cely,
                                                                                    "ident_cely_old": ident_cely_old})
+        base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/isReplacedBy> " \
-               f"'https://fedora.aiscr.cz/rest/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_new}'}}"
+               f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_new}'}}"
         headers = {
             "Content-Type": "application/sparql-update"
         }
         url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, ident_cely=ident_cely_old)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1, headers=headers, data=data)
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/replaces> " \
-                f"'https://fedora.aiscr.cz/rest/{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}'}}"
+                f"'{base_url}{settings.FEDORA_SERVER_NAME}/record/{ident_cely_old}'}}"
         headers = {
             "Content-Type": "application/sparql-update"
         }
@@ -455,7 +469,7 @@ class FedoraRepositoryConnector:
         headers = {
             "Content-Type": "application/sparql-update"
         }
-        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, ident_cely=ident_cely_new)
+        url = self._get_request_url(FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, ident_cely=ident_cely_old)
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, headers=headers, data=data)
         headers = {
             "Slug": ident_cely_old,

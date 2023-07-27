@@ -6,8 +6,8 @@ from celery import Celery
 
 
 logger = logging.getLogger(__name__)
-METADATA_UPDATE_TIMEOUT = 30
-IDENT_CHANGE_UPDATE_TIMEOUT = 120
+METADATA_UPDATE_TIMEOUT = 10
+IDENT_CHANGE_UPDATE_TIMEOUT = 15
 
 
 class ModelWithMetadata(models.Model):

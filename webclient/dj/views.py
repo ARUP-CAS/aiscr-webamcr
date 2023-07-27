@@ -14,7 +14,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
 )
 from core.utils import (
     update_all_katastr_within_akce_or_lokalita,
@@ -24,7 +24,7 @@ from dj.forms import ChangeKatastrForm, CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -228,15 +228,23 @@ def smazat(request, ident_cely):
     """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
-        resp = dj.delete()
-        update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
-        if resp:
-            logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
-        else:
-            logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        try:
+            resp = dj.delete()
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            if resp:
+                logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
+            else:
+                logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely})
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+                return JsonResponse(
+                    {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
+                    status=403,
+                )
+        except RestrictedError as err:
+            logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely, "err": err})
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
                 status=403,

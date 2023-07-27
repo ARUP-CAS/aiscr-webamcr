@@ -80,7 +80,7 @@ def delete_file(request, pk):
     """
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
-        items_deleted = s.delete()
+        items_deleted: Soubor = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
@@ -98,9 +98,11 @@ def delete_file(request, pk):
         else:
             logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
             connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
-            connector.delete_binary_file_completely(s)
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                connector.delete_binary_file(s)
+            else:
+                connector.delete_binary_file_completely(s)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
