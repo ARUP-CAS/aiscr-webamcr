@@ -140,6 +140,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             old_ident = self.ident_cely
             self.ident_cely = get_ez_ident()
             historie_poznamka = f"{old_ident} -> {self.ident_cely}"
+            self.record_ident_change(old_ident)
         Historie(
             typ_zmeny=POTVRZENI_EXT_ZD,
             uzivatel=user,
@@ -147,7 +148,6 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
             poznamka = historie_poznamka,
         ).save()
         self.save()
-        self.record_ident_change(old_ident)
 
     def set_zapsany(self, user):
         """

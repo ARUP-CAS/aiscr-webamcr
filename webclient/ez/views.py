@@ -38,7 +38,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
-    ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.exceptions import MaximalIdentNumberError
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
@@ -323,6 +323,9 @@ class ExterniZdrojSmazatView(TransakceView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
+        if hasattr(zaznam, "container_creation_queued") and zaznam.container_creation_queued():
+            messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+            return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=403)
         historie_vazby = zaznam.historie
         for eo in zaznam.externi_odkazy_zdroje.all():
             eo.delete()

@@ -56,7 +56,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_heatmap_project,
@@ -382,6 +382,9 @@ def smazat(request, ident_cely):
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
+    elif projekt.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:

@@ -434,7 +434,7 @@ def record_ident_change(class_name, record_pk, old_ident):
     record = get_record(class_name, record_pk)
     connector = FedoraRepositoryConnector(record)
     connector.record_ident_change(old_ident)
-    if hasattr(record, "soubory"):
+    if hasattr(record, "soubory") and record.soubory is not None:
         for soubor in record.soubory.soubory.all():
             soubor: Soubor
             repository_binary_file = soubor.get_repository_content()
