@@ -20,7 +20,7 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -404,8 +404,10 @@ def get_record(class_name, record_pk):
         record = Organizace.objects.get(pk=record_pk)
     elif class_name == "Osoba":
         record = Osoba.objects.get(pk=record_pk)
+    elif class_name == "User":
+        record = User.objects.get(pk=record_pk)
     else:
-        logger.debug("cron.send_notifications.do.error.unknown_class",
+        logger.debug("cron.tasks.get_record.error.unknown_class",
                      extra={"class_name": class_name, "record_pk": record_pk})
         record = None
     return record

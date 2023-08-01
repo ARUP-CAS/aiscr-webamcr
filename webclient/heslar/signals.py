@@ -3,7 +3,8 @@ import logging
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
-from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres
+from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres, HeslarDatace, HeslarHierarchie, \
+    HeslarDokumentTypMaterialRada
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,33 @@ def save_metadata_kraj(sender, instance: RuianKraj, **kwargs):
 @receiver(post_save, sender=RuianOkres)
 def save_metadata_okres(sender, instance: RuianOkres, **kwargs):
     instance.save_metadata()
+
+
+@receiver(post_save, sender=HeslarDatace)
+def save_metadata_heslar_datace(sender, instance: HeslarDatace, **kwargs):
+    """
+    Funkce pro uložení metadat heslář - datace.
+    """
+    instance.obdobi.save_metadata()
+
+
+@receiver(post_save, sender=HeslarHierarchie)
+def save_metadata_heslar_hierarchie(sender, instance: HeslarHierarchie, **kwargs):
+    """
+    Funkce pro uložení metadat heslář - hierarchie.
+    """
+    instance.heslo_podrazene.save_metadata()
+    instance.heslo_nadrazene.save_metadata()
+
+
+@receiver(post_save, sender=HeslarDokumentTypMaterialRada)
+def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDokumentTypMaterialRada, **kwargs):
+    """
+    Funkce pro uložení metadat heslář - hierarchie.
+    """
+    instance.dokument_rada.save_metadata()
+    instance.dokument_typ.save_metadata()
+    instance.dokument_material.save_metadata()
 
 
 @receiver(post_delete, sender=Heslar)

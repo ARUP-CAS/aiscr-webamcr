@@ -342,6 +342,8 @@ class DocumentGenerator:
                     new_sub_element.text = record_text
             if "vocabType" in ref_type:
                 new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
+                if record.ident_cely is not None:
+                    new_sub_element.attrib["id"] = record.ident_cely
             if "langstringType" in ref_type:
                 if parsed_comment.attribute_field_names is not None:
                     new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = \
