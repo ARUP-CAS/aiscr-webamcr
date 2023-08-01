@@ -21,23 +21,35 @@ class ModelWithMetadata(models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
+    def container_creation_queued(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        if not connector.container_exists() and self.update_queued():
+            return True
+        return False
+
+    def update_queued(self):
+        app = Celery("webclient")
+        app.config_from_object("django.conf:settings", namespace="CELERY")
+        app.autodiscover_tasks()
+        i = app.control.inspect()
+        queues = (i.scheduled(),)
+
+        for queue in queues:
+            for queue_name, queue_tasks in queue.items():
+                for task in queue_tasks:
+                    if "request" in task and "save_record_metadata" in task.get("request").get("name").lower() \
+                            and tuple(task.get("request").get("args")) == (self.__class__.__name__, self.pk):
+                        logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
+                                     extra={"class_name": self.__class__.__name__, "pk": self.pk})
+                        return True
+        return False
+
     def save_metadata(self, use_celery=True, include_files=False):
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start")
         if use_celery:
-            app = Celery("webclient")
-            app.config_from_object("django.conf:settings", namespace="CELERY")
-            app.autodiscover_tasks()
-            i = app.control.inspect()
-            queues = (i.scheduled(), )
-
-            for queue in queues:
-                for queue_name, queue_tasks in queue.items():
-                    for task in queue_tasks:
-                        if "request" in task and "save_record_metadata" in task.get("request").get("name").lower() \
-                                and tuple(task.get("request").get("args")) == (self.__class__.__name__, self.pk):
-                            logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
-                                         extra={"class_name": self.__class__.__name__, "pk": self.pk})
-                            return
+            if self.update_queued():
+                return
             from cron.tasks import save_record_metadata
             save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
         else:

@@ -220,6 +220,17 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CREATE_LINK, headers=headers, data=data)
         logger.debug("core_repository_connector._create_link.end", extra={"ident_cely": self.record.ident_cely})
 
+    def container_exists(self):
+        logger.debug("core_repository_connector._container_exists.start", extra={"ident_cely": self.record.ident_cely})
+        url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
+        result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
+        if result.status_code == 404 or "not found" in result.text:
+            logger.debug("core_repository_connector._container_exists.false",
+                         extra={"ident_cely": self.record.ident_cely})
+            return False
+        logger.debug("core_repository_connector._container_exists.true", extra={"ident_cely": self.record.ident_cely})
+        return True
+
     def _check_container(self):
         logger.debug("core_repository_connector._check_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)

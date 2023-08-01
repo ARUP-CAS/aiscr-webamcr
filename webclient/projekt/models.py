@@ -416,7 +416,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return {}
 
-    def check_pred_smazanim(self):
+    def check_pred_smazanim(self) -> list:
         """
         Metóda na kontrolu prerekvizit pred smazaním projektu:
 

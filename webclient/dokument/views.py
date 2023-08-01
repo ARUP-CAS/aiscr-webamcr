@@ -47,7 +47,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.views import SearchListView, check_stav_changed
 from dal import autocomplete
@@ -1442,6 +1442,9 @@ def smazat(request, ident_cely):
     """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if check_stav_changed(request, d):
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
+    if d.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
 
