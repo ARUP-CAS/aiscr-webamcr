@@ -192,13 +192,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
-
-        if self.is_active:
-            try:
-                self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
-            except ValueError:
-                self.is_staff = self.is_superuser
-
         if self.history_vazba is None:
             from historie.models import HistorieVazby
             historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
