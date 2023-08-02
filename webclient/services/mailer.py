@@ -621,5 +621,8 @@ class Mailer():
             "site_url": settings.SITE_URL
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
-        if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        if first_log_entry:
+            if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+                cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        else:
+            logger.warning("services.mailer.send_ek02.no_log_found", extra={"ident_cely": IDENT_CELY})
