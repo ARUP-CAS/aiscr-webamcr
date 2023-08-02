@@ -98,6 +98,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+    suppress_signal = False
 
     @property
     def repository_uuid(self):

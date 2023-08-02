@@ -45,7 +45,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import logging
 
-from xml_generator.models import ModelWithMetadata
+from xml_generator.models import ModelWithMetadata, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -220,9 +220,10 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return connector.get_metadata()
 
     def save_metadata(self, **kwargs):
-        from core.repository_connector import FedoraRepositoryConnector
-        connector = FedoraRepositoryConnector(self)
-        return connector.save_metadata(True)
+        if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
+            return
+        from cron.tasks import save_record_metadata
+        save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
 
     def record_deletion(self):
         logger.debug("uzivatel.models.User.delete_repository_container.start")

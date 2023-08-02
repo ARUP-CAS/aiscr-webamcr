@@ -340,6 +340,7 @@ class FedoraRepositoryConnector:
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
         uuid = result.text.split("/")[-1]
         soubor.path = RepositoryBinaryFile.get_url_without_domain(result.text)
+        soubor.suppress_signal = True
         soubor.save()
         if include_content:
             with open(soubor.path, mode="rb") as file:
