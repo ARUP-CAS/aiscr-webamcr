@@ -87,6 +87,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař datace.
     """
     list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    readonly_fields = ("obdobi", )
     fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     list_filter = ("obdobi", )
