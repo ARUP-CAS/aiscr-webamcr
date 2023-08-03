@@ -87,11 +87,43 @@
       </div>
     </div>
 
+    <div class="app-collapse-akce collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardSamostatnaAkce.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardSamostatnaAkce.text" %}
+      </div>
+    </div>
+    
+    <div class="app-collapse-lokalita collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardLokalita.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardLokalita.text" %}
+      </div>
+    </div>
+
     <div class="app-collapse-knihovna_3d collapse">
       <div class="p-3">
         <h4>{% trans "core.templates.index.cardKnihovna3D.text.title" %}</h4>
         <hr />
         {% trans "core.templates.index.cardKnihovna3D.text" %}
+      </div>
+    </div>
+    
+    <div class="app-collapse-dokument collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardDokument.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardDokument.text" %}
+      </div>
+    </div>
+    
+    <div class="app-collapse-ext-zdroj collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardExtZdroj.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardExtZdroj.text" %}
       </div>
     </div>
 
@@ -112,11 +144,35 @@
       $(".app-entity-projekt").mouseover(function(){
         $(".app-collapse-projekt").show(100);
       });
+      $(".app-entity-akce").mouseleave(function(){
+        $(".app-collapse-akce").hide(100);
+      });
+      $(".app-entity-akce").mouseover(function(){
+        $(".app-collapse-akce").show(100);
+      });
+      $(".app-entity-lokalita").mouseleave(function(){
+        $(".app-collapse-lokalita").hide(100);
+      });
+      $(".app-entity-lokalita").mouseover(function(){
+        $(".app-collapse-lokalita").show(100);
+      });
       $(".app-entity-knihovna_3d").mouseleave(function(){
         $(".app-collapse-knihovna_3d").hide(100);
       });
       $(".app-entity-knihovna_3d").mouseover(function(){
         $(".app-collapse-knihovna_3d").show(100);
+      });
+      $(".app-entity-dokument").mouseleave(function(){
+        $(".app-collapse-dokument").hide(100);
+      });
+      $(".app-entity-dokument").mouseover(function(){
+        $(".app-collapse-dokument").show(100);
+      });
+      $(".app-entity-ext_zdroj").mouseleave(function(){
+        $(".app-collapse-ext-zdroj").hide(100);
+      });
+      $(".app-entity-ext_zdroj").mouseover(function(){
+        $(".app-collapse-ext-zdroj").show(100);
       });
       $(".app-entity-samostatny_nalez").mouseleave(function(){
         $(".app-collapse-samostatny_nalez").hide(100);
