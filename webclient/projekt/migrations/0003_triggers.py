@@ -23,7 +23,8 @@ class Migration(migrations.Migration):
                 VOLATILE NOT LEAKPROOF
             AS $BODY$
                     BEGIN
-                        IF EXISTS (SELECT FROM soubor_vazby AS sv inner join soubor AS s ON s.vazba = sv.id WHERE s.projekt = OLD.id) THEN
+                        IF EXISTS (SELECT FROM soubor_vazby AS sv inner join soubor AS s ON s.vazba = sv.id
+                        inner join projekt AS p on p.soubory = sv.id WHERE p.id = OLD.id) THEN
                             RAISE EXCEPTION 'Nelze smazat projekt s projektovou dokumentací!';
                         END IF;
                         RETURN OLD;

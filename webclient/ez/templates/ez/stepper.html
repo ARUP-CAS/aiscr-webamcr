@@ -6,7 +6,7 @@
       <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
         <span class="bs-stepper-label">
-              {% trans "Zapsaný" %}
+              {% trans "ez.templates.stepper.zapsany.label" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_zapsani.uzivatel }}">
                 {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -19,7 +19,7 @@
       <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
         <span class="bs-stepper-label">
-              {% trans "Odeslaný" %}
+              {% trans "ez.templates.stepper.odeslany.label" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_odeslani.uzivatel }}">
                 {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -32,7 +32,7 @@
       <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:ez' zaznam.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
         <span class="bs-stepper-label">
-              {% trans "Potvrzený" %}
+              {% trans "ez.templates.stepper.potvrzeny.label" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_potvrzeni.uzivatel }}">
                 {{ history_dates.datum_potvrzeni.datum|date:'Y-m-d'|default_if_none:"" }}

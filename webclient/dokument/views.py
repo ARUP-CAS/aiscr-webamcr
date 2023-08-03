@@ -1,5 +1,7 @@
 import logging
 import os
+
+from django.db.models.signals import post_save
 from django.views import View
 
 
@@ -45,7 +47,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.views import SearchListView, check_stav_changed
 from dal import autocomplete
@@ -250,17 +252,17 @@ class Model3DListView(SearchListView):
     model = Dokument
     filterset_class = Model3DFilter
     export_name = "export_modely_"
-    page_title = _("knihovna3d.vyber.pageTitle")
+    page_title = _("dokument.views.Model3DListView.pageTitle.text")
     app = "knihovna_3d"
     toolbar = "toolbar_dokument.html"
-    search_sum = _("knihovna3d.vyber.pocetVyhledanych")
-    pick_text = _("knihovna3d.vyber.pickText")
-    hasOnlyVybrat_header = _("knihovna3d.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("knihovna3d.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("knihovna3d.vyber.header.default")
-    hasOnlyPotvrdit_header = _("knihovna3d.vyber.header.default")
-    default_header = _("knihovna3d.vyber.header.default")
-    toolbar_name = _("knihovna3d.template.toolbar.title")
+    search_sum = _("dokument.views.Model3DListView.search_sum.text")
+    pick_text = _("dokument.views.Model3DListView.pick_text.text")
+    hasOnlyVybrat_header = _("dokument.views.Model3DListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("dokument.views.Model3DListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("dokument.views.Model3DListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
+    default_header = _("dokument.views.Model3DListView.default_header.text")
+    toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -291,17 +293,17 @@ class DokumentListView(SearchListView):
     model = Dokument
     filterset_class = DokumentFilter
     export_name = "export_dokumenty_"
-    page_title = _("dokument.vyber.pageTitle")
+    page_title = _("dokument.views.DokumentListView.pageTitle.text")
     app = "dokument"
     toolbar = "toolbar_dokument.html"
-    search_sum = _("dokument.vyber.pocetVyhledanych")
-    pick_text = _("dokument.vyber.pickText")
-    hasOnlyVybrat_header = _("dokument.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("dokument.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("dokument.vyber.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("dokument.vyber.header.default")
-    default_header = _("dokument.vyber.header.default")
-    toolbar_name = _("dokument.template.toolbar.title")
+    search_sum = _("dokument.views.DokumentListView.search_sum.text")
+    pick_text = _("dokument.views.DokumentListView.pick_text.text")
+    hasOnlyVybrat_header = _("dokument.views.DokumentListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("dokument.views.DokumentListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("dokument.views.DokumentListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
+    default_header = _("dokument.views.DokumentListView.default_header.text")
+    toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -512,9 +514,9 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     """
     model = DokumentCast
     template_name = "core/transakce_modal.html"
-    title = _("dokumentCast.modalForm.zmenitPoznamku.title.text")
+    title = _("dokument.views.DokumentCastEditView.title.text"),
     id_tag = "edit-cast-form"
-    button = _("dokumentCast.modalForm.zmenitPoznamku.submit.button")
+    button = _("dokument.views.DokumentCastEditView.submitButton.text"),
     form_class = DokumentCastForm
     slug_field = "ident_cely"
 
@@ -630,9 +632,9 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro smazání tvaru dokumentu pomocí modalu.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dokument.modalForm.smazatTvar.title.text")
+    title = _("dokument.views.TvarSmazatView.title.text"),
     id_tag = "smazat-tvar-form"
-    button = _("dokument.modalForm.smazatTvar.submit.button")
+    button = _("dokument.views.TvarSmazatView.submitButton.text"),
 
     def get_zaznam(self):
         id = self.kwargs.get("pk")
@@ -669,9 +671,9 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro vytvoření části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dokument.modalForm.vytvoritCast.title.text")
+    title = _("dokument.views.VytvoritCastView.title.text"),
     id_tag = "vytvor-cast-form"
-    button = _("dokument.modalForm.vytvoritCast.submit.button")
+    button = _("dokument.views.VytvoritCastView.submitButton.text"),
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -789,9 +791,9 @@ class DokumentCastPripojitAkciView(TransakceView):
     Třida pohledu pro připojení akce do části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("dokument.modalForm.pripojitAZ.title.text")
+    title = _("dokument.views.DokumentCastPripojitAkciView.title.text"),
     id_tag = "pripojit-eo-form"
-    button = _("dokument.modalForm.pripojitAZ.submit.button")
+    button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text"),
     success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
@@ -827,9 +829,9 @@ class DokumentCastPripojitProjektView(TransakceView):
     Třida pohledu pro připojení projektu do části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("dokument.modalForm.pripojitProjekt.title.text")
+    title = _("dokument.views.DokumentCastPripojitProjektView.title.text"),
     id_tag = "pripojit-projekt-form"
-    button = _("dokument.modalForm.pripojitProjekt.submit.button")
+    button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text"),
     success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
@@ -858,9 +860,9 @@ class DokumentCastOdpojitView(TransakceView):
     """
     Třida pohledu pro odpojení části dokumentu pomoci modalu.
     """
-    title = _("dokument.modalForm.odpojitVazbuCast.title.text")
+    title = _("dokument.views.DokumentCastOdpojitView.title.text"),
     id_tag = "odpojit-cast-form"
-    button = _("dokument.modalForm.odpojitVazbuCast.submit.button")
+    button = _("dokument.views.DokumentCastOdpojitView.submitButton.text"),
     success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
@@ -891,9 +893,9 @@ class DokumentCastSmazatView(TransakceView):
     """
     Třida pohledu pro smazání části dokumentu pomoci modalu.
     """
-    title = _("dokument.modalForm.smazatCast.title.text")
+    title = _("dokument.views.DokumentCastSmazatView.title.text"),
     id_tag = "smazat-cast-form"
-    button = _("dokument.modalForm.smazatCast.submit.button")
+    button = _("dokument.views.DokumentCastSmazatView.submitButton.text"),
     success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
@@ -913,9 +915,9 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     """
     Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
     """
-    title = _("dokument.modalForm.smazatNeidentAkce.title.text")
+    title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text"),
     id_tag = "smazat-neident-akce-form"
-    button = _("dokument.modalForm.smazatNeidentAkce.submit.button")
+    button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text"),
     success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
 
     def get_context_data(self, **kwargs):
@@ -971,7 +973,6 @@ def edit(request, ident_cely):
                 instance_d.let = Let.objects.get(id=form_extra.cleaned_data["let"])
             #save autors with order
             instance_d.autori.clear()
-            instance_d.save()
             i = 1
             for autor in form_d.cleaned_data["autori"]:
                 DokumentAutor(
@@ -982,6 +983,7 @@ def edit(request, ident_cely):
                 i = i + 1
             # form_d.save_m2m()
             form_extra.save()
+            instance_d.save()
             if form_d.has_changed() or form_extra.has_changed():
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("dokument:detail", ident_cely=dokument.ident_cely)
@@ -1125,9 +1127,9 @@ def edit_model_3D(request, ident_cely):
                     "formDokument": form_d,
                     "formExtraData": form_extra,
                     "formKomponenta": form_komponenta,
-                    "title": _("Editace modelu 3D"),
-                    "header": _("Editace modelu 3D"),
-                    "button": _("Upravit model"),
+                    "title": _("dokument.views.edit_model_3D.title"),
+                    "header": _("dokument.views.edit_model_3D.header"),
+                    "button": _("dokument.views.edit_model_3D.submitButton.text"),
                 },
             )
 
@@ -1139,9 +1141,9 @@ def edit_model_3D(request, ident_cely):
             "formDokument": form_d,
             "formExtraData": form_extra,
             "formKomponenta": form_komponenta,
-            "title": _("Editace modelu 3D"),
-            "header": _("Editace modelu 3D"),
-            "button": _("Upravit model"),
+            "title": _("dokument.views.edit_model_3D.title"),
+            "header": _("dokument.views.edit_model_3D.header"),
+            "button": _("dokument.views.edit_model_3D.submitButton.text"),
         },
     )
 
@@ -1282,9 +1284,9 @@ def create_model_3D(request):
             "formDokument": form_d,
             "formExtraData": form_extra,
             "formKomponenta": form_komponenta,
-            "title": _("Nový model 3D"),
-            "header": _("Nový model 3D"),
-            "button": _("Vytvořit model"),
+            "header": _("dokument.views.create_model_3D.title"),
+            "header": _("dokument.views.create_model_3D.header"),
+            "header": _("dokument.views.create_model_3D.submitButton.text"),
         },
     )
 
@@ -1323,9 +1325,9 @@ def odeslat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
     context = {
         "object": d,
-        "title": _("dokument.modalForm.odeslat.title.text"),
+        "title": _("dokument.views.odeslat.title"),
         "id_tag": "odeslat-dokument-form",
-        "button": _("dokument.modalForm.odeslat.submit.button"),
+        "button": _("dokument.views.odeslat.submitButton.text"),
         "form_check": form_check,
     }
     logger.debug("dokument.views.odeslat.finish", extra={"ident_cely": ident_cely})
@@ -1349,11 +1351,11 @@ def archivovat(request, ident_cely):
         logger.debug("dokument.views.archivovat.check_stav_changed", extra={"ident_cely": ident_cely})
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
+        old_ident = d.ident_cely
         # Nastav identifikator na permanentny
         if ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             rada = get_dokument_rada(d.typ_dokumentu, d.material_originalu)
             try:
-                old_ident = d.ident_cely
                 d.set_permanent_ident_cely(d.ident_cely[2], rada)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
@@ -1370,7 +1372,7 @@ def archivovat(request, ident_cely):
             else:
                 d.save()
                 logger.debug("dokument.views.archivovat.permanent", extra={"ident_cely": d.ident_cely})
-        d.set_archivovany(request.user,old_ident)
+        d.set_archivovany(request.user, old_ident)
         messages.add_message(request, messages.SUCCESS, DOKUMENT_USPESNE_ARCHIVOVAN)
         Mailer.send_ek01(document=d)
         return JsonResponse({"redirect": get_detail_json_view(d.ident_cely)})
@@ -1386,9 +1388,9 @@ def archivovat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
     context = {
         "object": d,
-        "title": _("dokument.modalForm.archivovat.title.text"),
+        "title": _("dokument.views.archivovat.title"),
         "id_tag": "archivovat-dokument-form",
-        "button": _("dokument.modalForm.archivovat.submit.button"),
+        "button": _("dokument.views.archivovat.submitButton.text"),
         "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
@@ -1425,9 +1427,9 @@ def vratit(request, ident_cely):
     context = {
         "object": d,
         "form": form,
-        "title": _("dokument.modalForm.vraceni.title.text"),
+        "title": _("dokument.views.vratit.title"),
         "id_tag": "vratit-dokument-form",
-        "button": _("dokument.modalForm.vraceni.submit.button"),
+        "button": _("dokument.views.vratit.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -1440,6 +1442,9 @@ def smazat(request, ident_cely):
     """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
     if check_stav_changed(request, d):
+        return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
+    if d.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if request.method == "POST":
 
@@ -1469,9 +1474,9 @@ def smazat(request, ident_cely):
         form_check = CheckStavNotChangedForm(initial={"old_stav": d.stav})
         context = {
             "object": d,
-            "title": _("dokument.modalForm.smazani.title.text"),
+            "title": _("dokument.views.smazat.title"),
             "id_tag": "smazat-dokument-form",
-            "button": _("dokument.modalForm.smazani.submit.button"),
+            "button": _("dokument.views.smazat.submitButton.text"),
             "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
@@ -1690,9 +1695,9 @@ def odpojit(request, ident_doku, ident_zaznamu, zaznam):
             {
                 "object": relace_dokumentu[0],
                 "warnings": warnings,
-                "title": _("dokument.modalForm.odpojit.title.text"),
+                "title": _("dokument.views.odpojit.title"),
                 "id_tag": "odpojit-dokument-form",
-                "button": _("dokument.modalForm.odpojit.submit.button"),
+                "button": _("dokument.views.odpojit.submitButton.text"),
             },
         )
 
@@ -1710,9 +1715,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         redirect_name = zaznam.get_absolute_url()
         context = {
             "object": zaznam,
-            "title": _("dokument.modalForm.pripojitDoAkce.title.text"),
+            "title": _("dokument.views.pripojit.pripojitDoAkce.title"),
             "id_tag": "pripojit-dokument-form",
-            "button": _("dokument.modalForm.pripojitDoAkce.submit.button"),
+            "button": _("dokument.views.pripojit.pripojitDoAkce.submitButton.text"),
         }
     else:
         casti_zaznamu = DokumentCast.objects.filter(projekt__ident_cely=ident_zaznam)
@@ -1720,9 +1725,9 @@ def pripojit(request, ident_zaznam, proj_ident_cely, typ):
         redirect_name = reverse("projekt:detail", kwargs={"ident_cely": ident_zaznam})
         context = {
             "object": zaznam,
-            "title": _("dokument.modalForm.pripojitDoProjektu.title.text"),
+            "title": _("dokument.views.pripojit.pripojitDoProjektu.title"),
             "id_tag": "pripojit-dokument-form",
-            "button": _("dokument.modalForm.pripojitDoProjektu.submit.button"),
+            "button": _("dokument.views.pripojit.pripojitDoProjektu.submitButton.text"),
         }
     if request.method == "POST":
         dokument_ids = request.POST.getlist("dokument")

@@ -6,8 +6,8 @@ UPDATE heslar SET heslo_en = 'chain necklace' WHERE ident_cely = 'HES-000756';
 UPDATE heslar SET heslo_en = 'chopper' WHERE ident_cely = 'HES-000801';
 UPDATE organizace SET nazev_zkraceny_en = 'translate: ' || id WHERE (nazev_zkraceny_en Is Null);
 
--- Doplnění správných nových cest souborů a jejich přejmenování
-WITH soubor_cesta AS
+-- Přejmenování souborů a doplnění správných nových cest (příprava před migrací do Fedory)
+WITH soubor_prejm AS
 (
 	SELECT soubor.id as soubor_id,
 	CASE
@@ -15,38 +15,47 @@ WITH soubor_cesta AS
 		WHEN soubor_vazby.typ_vazby = 'projekt'
 		THEN
 			CASE
-				WHEN nazev ~ '\d*_oznameni_[C,M]-\d{9}\.pdf'
-					OR nazev ~ '\d*_oznameni_[C,M]-\d{9}[A-Z]\.pdf'
-					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}\.pdf'
-					OR nazev ~ '\d*_oznameni_X-[C,M]-\d{9}[A-Z]\.pdf'
-					OR nazev ~ '\d*_log_dokumentace.pdf'
-				THEN 'soubory/AG/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
+				WHEN nazev ~ 'oznameni_[C,M]-\d{9}\.pdf'
+					OR nazev ~ 'oznameni_[C,M]-\d{9}[A-Z]\.pdf'
+					OR nazev ~ 'oznameni_X-[C,M]-\d{9}\.pdf'
+					OR nazev ~ 'oznameni_X-[C,M]-\d{9}[A-Z]\.pdf'
+					OR nazev ~ 'log_dokumentace.pdf'
+				THEN soubor.nazev
 		-- PD - napojeno na
 				ELSE
 					CASE
 						WHEN position('.' in reverse(soubor.nazev)) = 0
-						THEN 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(soubor.nazev, 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g')
-						ELSE 'soubory/PD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || regexp_replace(normalize(translate(substring(soubor.nazev from 1 for length(soubor.nazev) - position('.' in reverse(soubor.nazev))), 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g') || '.' || substring(soubor.nazev from '\.([^\.]*)$')
+						THEN regexp_replace(normalize(translate(soubor.nazev, 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g')
+						ELSE regexp_replace(normalize(translate(substring(soubor.nazev from 1 for length(soubor.nazev) - position('.' in reverse(soubor.nazev))), 'ěščřžýáíéňťóúůďĚŠČŘŽÝÁÍÉŇŤÓÚŮĎŹäüöÄÜÖßˇ', 'escrzyaientouudESCRZYAIENTOUUDZauoAUOs_'), NFKD), '[^[:alnum:]_]', '_', 'g') || '.' || substring(soubor.nazev from '\.([^\.]*)$')
 					END
 			END
 		-- FN - vše co má vazbu na samostatný nález
 		WHEN soubor_vazby.typ_vazby = 'samostatny_nalez'
-		THEN 'soubory/FN/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || replace(regexp_replace(soubor.nazev, 'F([0-9])[^0-9]*(\.[a-zA-Z0-9]+)$', 'F0\1\2'), '-', '')
+		THEN replace(regexp_replace(soubor.nazev, 'F([0-9])[^0-9]*(\.[a-zA-Z0-9]+)$', 'F0\1\2'), '-', '')
 		-- SD - vše co má vazbu na DT Dokument
 		WHEN soubor_vazby.typ_vazby = 'dokument'
 		THEN
 			CASE
 				WHEN heslar_typ_dokumetu.zkratka IN ('ZA', 'ZL') THEN '!DO NOT MIGRATE'
-				ELSE 'soubory/SD/' || TO_CHAR(soubor.vytvoreno, 'YYYY/MM/DD/') || soubor.nazev
+				ELSE soubor.nazev
 			END
-	END AS cesta
+	END AS nazev_novy
 	FROM soubor
 	INNER JOIN soubor_vazby on soubor.vazba = soubor_vazby.id
 	LEFT OUTER JOIN dokument on dokument.soubory = soubor_vazby.id
 	LEFT OUTER JOIN heslar as heslar_typ_dokumetu on heslar_typ_dokumetu.id = dokument.rada
 )
-UPDATE soubor SET path = soubor_cesta.cesta FROM soubor_cesta WHERE soubor.id = soubor_cesta.soubor_id;
-UPDATE soubor SET nazev_zkraceny = substr(split_part(path, '/', 6), strpos(split_part(path, '/', 6), '_') + 1), nazev = split_part(path, '/', 6);
+UPDATE soubor SET nazev = soubor_prejm.nazev_novy FROM soubor_prejm WHERE soubor.id = soubor_prejm.soubor_id;
+WITH soubor_parent_id AS
+(
+	SELECT dokument.ident_cely as ident_cely, soubor.id as id FROM dokument INNER JOIN soubor ON dokument.soubory = soubor.vazba
+	UNION
+	SELECT samostatny_nalez.ident_cely as ident_cely, soubor.id as id FROM samostatny_nalez INNER JOIN soubor ON samostatny_nalez.soubory = soubor.vazba
+	UNION
+	SELECT projekt.ident_cely as ident_cely, soubor.id as id FROM projekt INNER JOIN soubor ON projekt.soubory = soubor.vazba
+)
+UPDATE soubor SET path = soubor_parent_id.ident_cely || '/soubor' FROM soubor_parent_id WHERE soubor.id = soubor_parent_id.id;
+
 
 -- Migrace soubor.vlastnik a soubor.vytvoreno do historie
 INSERT INTO historie_vazby (typ_vazby) SELECT 'soubor' FROM soubor where soubor.historie IS null;

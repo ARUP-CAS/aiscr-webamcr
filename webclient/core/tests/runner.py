@@ -803,7 +803,6 @@ class AMCRBaseTestRunner(BaseRunner):
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
         soubor = Soubor(
-            nazev_zkraceny="x",
             nazev="x",
             mimetype="x",
             size_mb=1,

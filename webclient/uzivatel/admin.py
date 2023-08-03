@@ -5,8 +5,9 @@ from typing import Union
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import StreamingHttpResponse
+from django_object_actions import DjangoObjectActions, action
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
 from historie.models import Historie
@@ -53,6 +54,7 @@ class UserNotificationTypeInline(admin.TabularInline):
     def __init__(self, parent_model, admin_site):
         super(UserNotificationTypeInline, self).__init__(parent_model, admin_site)
 
+
 class PesNotificationTypeInline(admin.TabularInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele.
@@ -68,6 +70,7 @@ class PesNotificationTypeInline(admin.TabularInline):
         )
         return queryset
 
+
 class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro kraj.
@@ -77,6 +80,7 @@ class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     verbose_name = _("admin.uzivatel.form.notifikace.kraj")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.kraje")
 
+
 class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro okres.
@@ -85,7 +89,8 @@ class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     form = create_pes_form(model_typ=model_type)
     verbose_name = _("admin.uzivatel.form.notifikace.okres")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.okresy")
-    
+
+
 class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     """
     Inline panel pro nastavení hlídacích psů uživatele pro katastr.
@@ -95,7 +100,8 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     verbose_name = _("admin.uzivatel.form.notifikace.katastr")
     verbose_name_plural = _("admin.uzivatel.form.notifikace.katastry")
 
-class CustomUserAdmin(UserAdmin):
+
+class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     """
     Admin panel pro správu uživatele.
     """
@@ -104,6 +110,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
+    readonly_fields = ("ident_cely", "is_superuser")
     inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
     fieldsets = (
         (
@@ -133,7 +140,6 @@ class CustomUserAdmin(UserAdmin):
                     "password1",
                     "password2",
                     "is_active",
-                    "is_superuser",
                     "organizace",
                     "first_name",
                     "last_name",
@@ -147,6 +153,18 @@ class CustomUserAdmin(UserAdmin):
     "email", "organizace__nazev_zkraceny", "ident_cely", "first_name", "last_name",
     "telefon")
     ordering = ("email",)
+    change_actions = ("metadata",)
+
+    @action(label="Metadata", description="Download of metadata")
+    def metadata(self, request, obj):
+        metadata = obj.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
 
     def has_delete_permission(self, request, obj=None):
         if obj:
@@ -164,9 +182,23 @@ class CustomUserAdmin(UserAdmin):
         except ObjectDoesNotExist as err:
             user_db = None
         user_db: Union[User, None]
+        form_groups = form.cleaned_data["groups"]
+        if obj.is_active:
+            if form_groups.filter(id=ROLE_ADMIN_ID).count() == 1:
+                if not request.user.is_superuser:
+                    obj.groups.remove(Group.objects.get(pk=ROLE_ADMIN_ID))
+                else:
+                    obj.is_superuser = True
+                    obj.is_staff = True
+            else:
+                if request.user.is_superuser:
+                    obj.is_superuser = False
+                    obj.is_staff = False
+        else:
+            obj.is_superuser = False
+            obj.is_staff = False
         super().save_model(request, obj, form, change)
 
-        form_groups = form.cleaned_data["groups"]
         groups = form_groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         other_groups = form_groups.filter(~Q(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
                                                       ROLE_ADMIN_ID])))
@@ -217,13 +249,6 @@ class CustomUserAdmin(UserAdmin):
                      extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True)})
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
                      extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
-
-    def get_readonly_fields(self, request, obj=None):
-        if request.user.is_superuser:
-            readonly_fields = ("ident_cely",)
-        else:
-            readonly_fields = ("ident_cely", "is_superuser")
-        return readonly_fields
 
 
 class CustomGroupAdmin(admin.ModelAdmin):

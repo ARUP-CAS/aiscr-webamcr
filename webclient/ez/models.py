@@ -21,17 +21,19 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
 
+from xml_generator.models import ModelWithMetadata
+
 logger = logging.getLogger(__name__)
 
 
-class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
+class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadata):
     """
     Class pro db model externí zdroj.
     """
     STATES = (
-        (EZ_STAV_ZAPSANY, _("EZ1 - Zapsána")),
-        (EZ_STAV_ODESLANY, _("EZ2 - Odeslána")),
-        (EZ_STAV_POTVRZENY, _("EZ3 - Potvrzená")),
+        (EZ_STAV_ZAPSANY, _("ez.models.externiZdroj.states.zapsany.label")),
+        (EZ_STAV_ODESLANY, _("ez.models.externiZdroj.states.odeslany.label")),
+        (EZ_STAV_POTVRZENY, _("ez.models.externiZdroj.states.potvrzeny.label")),
     )
 
     sysno = models.TextField(blank=True, null=True)
@@ -138,6 +140,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), models.Model):
             old_ident = self.ident_cely
             self.ident_cely = get_ez_ident()
             historie_poznamka = f"{old_ident} -> {self.ident_cely}"
+            self.record_ident_change(old_ident)
         Historie(
             typ_zmeny=POTVRZENI_EXT_ZD,
             uzivatel=user,
