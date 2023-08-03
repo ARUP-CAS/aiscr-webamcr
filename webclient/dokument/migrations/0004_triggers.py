@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("dokument", "0003_initial"),
+        ("neidentakce", "0001_initial"),
     ]
 
     operations = [
@@ -22,7 +23,7 @@ class Migration(migrations.Migration):
             AS $BODY$
                 BEGIN
                     DELETE FROM komponenta_vazby WHERE komponenta_vazby.id = old.komponenty;
-                    RETURN NEW;
+                    RETURN OLD;
                 END;    
             $BODY$;
             """,
@@ -36,7 +37,7 @@ class Migration(migrations.Migration):
                 FOR EACH ROW
                 EXECUTE FUNCTION delete_related_komponenta();
             """,
-            reverse_sql="DROP TRIGGER public.delete_related_komponenta;",
+            reverse_sql="DROP TRIGGER public.delete_related_komponenta_dokument_cast;",
         ),
         migrations.RunSQL(
             sql="""
@@ -60,10 +61,63 @@ class Migration(migrations.Migration):
                     DELETE FROM neident_akce AS na
                     WHERE na.dokument_cast = old.id
                     ;
+                    return OLD;
+                END;    
+            $BODY$;
+            """,
+            reverse_sql="DROP FUNCTION public.delete_related_neident_dokument_cast;",
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE TRIGGER trigger_delete_related_neident_dokument_cast
+                BEFORE DELETE
+                ON dokument_cast
+                FOR EACH ROW
+                EXECUTE FUNCTION delete_related_neident_dokument_cast();
+            """,
+            reverse_sql="DROP TRIGGER public.trigger_delete_related_neident_dokument_cast;",
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE OR REPLACE FUNCTION public.delete_related_neident_vedouci()
+                RETURNS trigger
+                LANGUAGE 'plpgsql'
+                COST 100
+                VOLATILE NOT LEAKPROOF
+            AS $BODY$
+                BEGIN
                     DELETE FROM neident_akce_vedouci AS nav
-                    WHERE nav.neident_akce = old.id
+                    WHERE nav.neident_akce = old.dokument_cast
                     ;
-                    return null
+                    return OLD;
+                END;    
+            $BODY$;
+            """,
+            reverse_sql="DROP FUNCTION public.delete_related_neident_vedouci;",
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE TRIGGER trigger_delete_related_neident_vedouci
+                BEFORE DELETE
+                ON neident_akce
+                FOR EACH ROW
+                EXECUTE FUNCTION delete_related_neident_vedouci();
+            """,
+            reverse_sql="DROP TRIGGER public.trigger_delete_related_neident_vedouci;",
+        ),
+        migrations.RunSQL(
+            sql="""
+            CREATE OR REPLACE FUNCTION public.delete_related_dokument_cast()
+                RETURNS trigger
+                LANGUAGE 'plpgsql'
+                COST 100
+                VOLATILE NOT LEAKPROOF
+            AS $BODY$
+                BEGIN
+                    DELETE FROM dokument_cast AS dc
+                    WHERE dc.dokument = old.id
+                    ;
+                    return OLD
                     ;
                 END;    
             $BODY$;
@@ -72,12 +126,12 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL(
             sql="""
-            CREATE TRIGGER delete_related_neident_dokument_cast
-                AFTER DELETE
-                ON dokument_cast
+            CREATE TRIGGER trigger_delete_related_dokument_cast
+                BEFORE DELETE
+                ON dokument
                 FOR EACH ROW
-                EXECUTE FUNCTION delete_related_neident_dokument_cast();
+                EXECUTE FUNCTION delete_related_dokument_cast();
             """,
-            reverse_sql="DROP TRIGGER public.delete_related_neident_dokument_cast;",
+            reverse_sql="DROP TRIGGER public.trigger_delete_related_dokument_cast;",
         ),
     ]

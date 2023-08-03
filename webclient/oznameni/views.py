@@ -18,7 +18,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar
 from projekt.models import Projekt
 from django.views.generic import TemplateView
@@ -32,6 +32,7 @@ from core.decorators import odstavka_in_progress
 from .forms import FormWithCaptcha, OznamovatelForm, ProjektOznameniForm
 from .models import Oznamovatel
 from services.mailer import Mailer
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +65,12 @@ def index(request, test_run=False):
         if (
             form_ozn.is_valid()
             and form_projekt.is_valid()
-            and (test_run or form_captcha.is_valid())
+            and (test_run or settings.SKIP_RECAPTCHA or form_captcha.is_valid())
         ):
             logger.debug("oznameni.views.index.all_forms_valid")
             o = form_ozn.save(commit=False)
-            p = form_projekt.save(commit=False)
+            p: Projekt = form_projekt.save(commit=False)
+            p.suppress_signal = True
             p.typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
             dalsi_katastry = form_projekt.cleaned_data["katastry"]
             p.geom = Point(
@@ -77,10 +79,10 @@ def index(request, test_run=False):
             )
             p.hlavni_katastr = get_cadastre_from_point(p.geom)
             logger.debug("oznameni.views.index.hlavni_katastr", extra={"hlavni_katastr": p.hlavni_katastr})
-            p.save()
+            # p.save()
             if p.hlavni_katastr is not None:
                 p.ident_cely = get_temporary_project_ident(
-                    p, p.hlavni_katastr.okres.kraj.rada_id
+                    p.hlavni_katastr.okres.kraj.rada_id
                 )
             else:
                 logger.debug("oznameni.views.index.unknow_location", extra={"point": str(p.geom)})
@@ -89,6 +91,7 @@ def index(request, test_run=False):
             o.save()
             p.set_vytvoreny()
             p.katastry.add(*[i for i in dalsi_katastry])
+            p.save_metadata(False)
 
             confirmation = {
                 "oznamovatel": o.oznamovatel,
@@ -107,7 +110,7 @@ def index(request, test_run=False):
             }
 
             context = {"confirm": confirmation}
-            if p.ident_cely[2:3] == "C":
+            if p.ident_cely[2].upper() == "C":
                 Mailer.send_eo01(project=p)
             else:
                 Mailer.send_eo02(project=p)

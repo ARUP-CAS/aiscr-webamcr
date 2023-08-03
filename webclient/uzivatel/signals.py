@@ -1,30 +1,40 @@
 import logging
 
-from django.contrib.auth.models import Group
-
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 
 from services.mailer import Mailer
-from uzivatel.models import User
+from uzivatel.models import Organizace, Osoba, User
+from rest_framework.authtoken.models import Token
 
 logger = logging.getLogger(__name__)
 
 
+@receiver(post_save, sender=Organizace)
+def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
+    instance.save_metadata()
+
+
+@receiver(post_save, sender=Osoba)
+def osoba_save_metadata(sender, instance: Osoba, **kwargs):
+    instance.save_metadata()
+
+
 @receiver(pre_save, sender=User)
 def create_ident_cely(sender, instance, **kwargs):
-    # check if the updated fields exist and if you're not creating a new object
+    """
+    Přidelení identu celý pro usera.
+    """
     if not kwargs['update_fields'] and instance.id:
         # Save it, so it can be used in post_save
-        try:
-            instance.old = User.objects.get(id=instance.id)
-        except ObjectDoesNotExist as err:
-            # Primary for the automatic testing where a new instance is created with ID
-            logger.error("uzivatel.signals.create_ident_cely.ObjectDoesNotExist", extra={"err": err})
+        database_user_query = User.objects.filter(id=instance.id)
+        if database_user_query.count() > 0:
+            instance.old = database_user_query.first()
+        else:
+            instance.old = None
     if instance.pk is None:
         instance.model_is_updated = False
-        logger.error("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
+        logger.debug("uzivatel.signals.create_ident_cely.running_create_ident_cely_receiver")
         if not instance.ident_cely:
             users = User.objects.all().order_by("-ident_cely")
             if users.count() > 0:
@@ -37,8 +47,27 @@ def create_ident_cely(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=User)
+def user_post_save_method(sender, instance: User, **kwargs):
+    instance.save_metadata()
+    send_deactivation_email(sender, instance, **kwargs)
+    send_new_user_email_to_admin(sender, instance, **kwargs)
+    send_account_confirmed_email(sender, instance, **kwargs)
+    # Create or change token when user changed.
+    try:
+        old_token = Token.objects.get(user=instance)
+    except Token.DoesNotExist:
+        Token.objects.create(user=instance)
+    else:
+        old_token.delete()
+        Token.objects.create(user=instance)
+
+
+
 def send_deactivation_email(sender, instance: User, **kwargs):
-    if not kwargs.get('update_fields') and hasattr(instance, 'old'):
+    """
+    Signál pro poslání deaktivačního emailu uživately.
+    """
+    if not kwargs.get('update_fields') and hasattr(instance, 'old') and instance.old is not None:
         kwargs['update_fields'] = []
         if instance.is_active != instance.old.is_active:
             kwargs['update_fields'].append('is_active')
@@ -47,18 +76,36 @@ def send_deactivation_email(sender, instance: User, **kwargs):
             Mailer.send_eu03(user=instance)
 
 
-@receiver(post_save, sender=User)
 def send_new_user_email_to_admin(sender, instance: User, **kwargs):
+    """
+    Signál pro zaslání info o nově registrovaném uživately adminovy.
+    """
     if kwargs.get('created') is True and instance.created_from_admin_panel is False:
         Mailer.send_eu04(user=instance)
 
 
-@receiver(post_save, sender=User)
 def send_account_confirmed_email(sender, instance: User, **kwargs):
+    """
+    signál pro zaslání emailu uživately o jeho konfirmaci.
+    """
     if kwargs.get('created') is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
 
 
 @receiver(post_delete, sender=User)
 def delete_profile(sender, instance, *args, **kwargs):
+    """
+    Signál pro zaslání emailu uživately o jeho smazání.
+    """
     Mailer.send_eu03(user=instance)
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Osoba)
+def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Organizace)
+def osoba_delete_repository_container(sender, instance: Organizace, **kwargs):
+    instance.record_deletion()

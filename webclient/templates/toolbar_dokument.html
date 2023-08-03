@@ -43,6 +43,7 @@
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="dokument-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat dokument" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'dokument' d.id %}">{% trans "dokument.detail.toolbar.MetadataDownload" %}</a>
           <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "dokument.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>

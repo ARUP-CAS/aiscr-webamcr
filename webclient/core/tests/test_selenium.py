@@ -51,8 +51,6 @@ class BaseSeleniumTestClass(StaticLiveServerTestCase):
 
         )
         self.driver.implicitly_wait(5)
-        AMCRSeleniumTestRunner.save_geographical_data()
-        AMCRSeleniumTestRunner.create_common_test_records()
 
 
     def tearDown(self):

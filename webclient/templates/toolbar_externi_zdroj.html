@@ -35,6 +35,7 @@
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="ez-smazat" class="dropdown-item" type="button" name="button">{% trans "externiZdroj.toolbar.smazat.label" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'externi_zdroj' zaznam.id %}">{% trans "externi_zdroj.detail.toolbar.MetadataDownload" %}</a>
           <a class="dropdown-item" href="{% url 'historie:ez' zaznam.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "externiZdroj.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>

@@ -104,7 +104,7 @@ class Migration(migrations.Migration):
                 ('ico', models.CharField(blank=True, max_length=100, null=True, verbose_name='uzivatel.models.Organizace.ico')),
                 ('nazev_en', models.CharField(blank=True, max_length=255, null=True, verbose_name='uzivatel.models.Organizace.nazev_en')),
                 ('zanikla', models.BooleanField(default=False, verbose_name='uzivatel.models.Organizace.zanikla')),
-                ('ident_cely', models.CharField(max_length=10, unique=True)),
+                ('ident_cely', models.CharField(max_length=20, unique=True)),
             ],
             options={
                 'verbose_name': 'Organizace',
@@ -230,5 +230,12 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='notificationslog',
             index=models.Index(fields=['content_type', 'object_id'], name='notifikace__content_009350_idx'),
+        ),
+        migrations.AddConstraint(
+            model_name="organizace",
+            constraint=models.CheckConstraint(
+                check=models.Q(("mesicu_do_zverejneni__lte", 1200)),
+                name="organizace_mesicu_do_zverejneni_max_value_check",
+            ),
         ),
     ]

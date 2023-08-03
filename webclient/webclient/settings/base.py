@@ -132,6 +132,9 @@ INSTALLED_APPS = [
     "django_celery_results",
     'django_prometheus',
     "cron",
+    'rest_framework',
+    'rest_framework.authtoken',
+    "django_object_actions"
 ]
 
 MIDDLEWARE = [
@@ -378,6 +381,10 @@ LOGGING = {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
+        "xml_generator": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
     },
 }
 
@@ -441,3 +448,22 @@ SKIP_SELENIUM_TESTS = False
 CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+FEDORA_USER = get_secret("FEDORA_USER", "")
+FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD", "")
+FEDORA_SERVER_HOSTNAME = get_secret("FEDORA_SERVER_HOSTNAME", "")
+FEDORA_SERVER_NAME = get_secret("FEDORA_SERVER_NAME", "")
+FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER", "")
+FEDORA_ADMIN_USER = get_secret("FEDORA_ADMIN_USER", "")
+FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+TOKEN_EXPIRATION_HOURS = 24
+
+SKIP_RECAPTCHA = False

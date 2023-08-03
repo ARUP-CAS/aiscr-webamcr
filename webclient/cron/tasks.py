@@ -3,16 +3,24 @@ import traceback
 
 from celery import shared_task
 
+from adb.models import Adb
+from arch_z.models import ArcheologickyZaznam
 from core.constants import ODESLANI_SN, ARCHIVACE_SN
+from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
 from django.db import connection
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
+from dokument.models import Dokument, Let
+from ez.models import ExterniZdroj
+from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
 from pas.models import SamostatnyNalez
 from pian.models import Pian
+from projekt.models import Projekt
 from services.mailer import Mailer
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -365,3 +373,75 @@ def nalez_to_wsg84(self):
             return None
     except Exception as e:
         logger.debug(e)
+
+
+def get_record(class_name, record_pk):
+    if class_name == "Projekt":
+        record = Projekt.objects.get(pk=record_pk)
+    elif class_name == "SamostatnyNalez":
+        record = SamostatnyNalez.objects.get(pk=record_pk)
+    elif class_name == "Heslar":
+        record = Heslar.objects.get(pk=record_pk)
+    elif class_name == "RuianKatastr":
+        record = RuianKatastr.objects.get(pk=record_pk)
+    elif class_name == "RuianKraj":
+        record = RuianKraj.objects.get(pk=record_pk)
+    elif class_name == "RuianOkres":
+        record = RuianOkres.objects.get(pk=record_pk)
+    elif class_name == "ArcheologickyZaznam":
+        record = ArcheologickyZaznam.objects.get(pk=record_pk)
+    elif class_name == "ExterniZdroj":
+        record = ExterniZdroj.objects.get(pk=record_pk)
+    elif class_name == "Adb":
+        record = Adb.objects.get(pk=record_pk)
+    elif class_name == "Pian":
+        record = Pian.objects.get(pk=record_pk)
+    elif class_name == "Dokument":
+        record = Dokument.objects.get(pk=record_pk)
+    elif class_name == "Let":
+        record = Let.objects.get(pk=record_pk)
+    elif class_name == "Organizace":
+        record = Organizace.objects.get(pk=record_pk)
+    elif class_name == "Osoba":
+        record = Osoba.objects.get(pk=record_pk)
+    elif class_name == "User":
+        record = User.objects.get(pk=record_pk)
+    else:
+        logger.debug("cron.tasks.get_record.error.unknown_class",
+                     extra={"class_name": class_name, "record_pk": record_pk})
+        record = None
+    return record
+
+
+@shared_task
+def save_record_metadata(class_name, record_pk):
+    logger.debug("cron.send_notifications.do.start", extra={"class_name": class_name, "record_pk": record_pk})
+    from xml_generator.models import ModelWithMetadata
+    record = get_record(class_name, record_pk)
+    if record is not None:
+        record: ModelWithMetadata
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(record)
+        connector.save_metadata(True)
+    logger.debug("cron.send_notifications.do.end")
+
+
+@shared_task
+def record_ident_change(class_name, record_pk, old_ident):
+    logger.debug("cron.record_ident_change.do.start", extra={"class_name": class_name, "record_pk": record_pk,
+                                                             "old_ident": old_ident})
+    from core.repository_connector import FedoraRepositoryConnector
+    from core.utils import get_mime_type
+    from core.views import get_projekt_soubor_name
+    record = get_record(class_name, record_pk)
+    connector = FedoraRepositoryConnector(record)
+    connector.record_ident_change(old_ident)
+    if hasattr(record, "soubory") and record.soubory is not None:
+        for soubor in record.soubory.soubory.all():
+            soubor: Soubor
+            repository_binary_file = soubor.get_repository_content()
+            if repository_binary_file is not None:
+                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                          get_mime_type(soubor.nazev),
+                                                          repository_binary_file.content)
+    logger.debug("cron.record_ident_change.do.end")

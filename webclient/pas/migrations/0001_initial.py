@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('lokalizace', models.TextField(blank=True, null=True)),
                 ('hloubka', models.PositiveIntegerField(blank=True, null=True)),
                 ('geom', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326)),
-                ('geom_sjtsk', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326)),
+                ('geom_sjtsk', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=5514)),
                 ('geom_system', models.TextField(default='wgs84')),
                 ('presna_datace', models.TextField(blank=True, null=True)),
                 ('poznamka', models.TextField(blank=True, null=True)),

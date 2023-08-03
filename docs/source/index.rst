@@ -16,9 +16,12 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    :caption: Obsah:
    
    nasazovani
+   logy
    monitoring
    file_documentation
+   automaticke_testy
    code_documentation
+   identy
 
 
 

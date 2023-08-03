@@ -45,6 +45,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import logging
 
+from xml_generator.models import ModelWithMetadata, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,9 @@ def only_notification_groups():
 
 
 class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixin):
+    """
+    Class pro db model user.
+    """
     password = models.CharField(max_length=128)
     last_login = models.DateTimeField(blank=True, null=True)
     is_superuser = models.BooleanField(default=False, verbose_name="Globální administrátor")
@@ -167,6 +171,9 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return self.hlavni_role.pk in (ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID)
 
     def save(self, *args, **kwargs):
+        """
+        save metóda pro přidelení identu celý.
+        """
         logger.debug("User.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
@@ -185,13 +192,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
-
-        if self.is_active:
-            try:
-                self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
-            except ValueError:
-                self.is_staff = self.is_superuser
-
         if self.history_vazba is None:
             from historie.models import HistorieVazby
             historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
@@ -206,13 +206,35 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                     id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
             self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
 
+    @property
+    def metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata()
+
+    def save_metadata(self, **kwargs):
+        if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
+            return
+        from cron.tasks import save_record_metadata
+        save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+
+    def record_deletion(self):
+        logger.debug("uzivatel.models.User.delete_repository_container.start")
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        logger.debug("uzivatel.models.User.delete_repository_container.end")
+        return connector.record_deletion()
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
 
 
-class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToManyRestrictedClassMixin):
+class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
+    """
+    Class pro db model organizace.
+    """
     nazev = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev"), max_length=255)
     nazev_zkraceny = models.CharField(verbose_name=_("uzivatel.models.Organizace.nazev_zkraceny"), max_length=255,
                                       unique=True)
@@ -248,9 +270,12 @@ class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToM
     nazev_en = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"),
                                 max_length=255)
     zanikla = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.zanikla"))
-    ident_cely = models.CharField(max_length=10, unique=True)
+    ident_cely = models.CharField(max_length=20, unique=True)
 
     def save(self, *args, **kwargs):
+        """
+        save metóda pro přidelení identu celý.
+        """
         logger.debug("Organizace.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
@@ -268,14 +293,22 @@ class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToM
         ordering = [Collate('nazev_zkraceny', 'cs-CZ-x-icu')]
         verbose_name = "Organizace"
         verbose_name_plural = "Organizace"
+        constraints = [
+            CheckConstraint(
+                check = Q(mesicu_do_zverejneni__lte=1200),
+                name = "organizace_mesicu_do_zverejneni_max_value_check",
+            ),
+        ]
 
 
-
-class Osoba(ExportModelOperationsMixin("osoba"), models.Model, ManyToManyRestrictedClassMixin):
+class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
+    """
+    Class pro db model osoba.
+    """
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
     prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)
     vypis = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis"), max_length=200)
-    vypis_cely = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"), max_length=200)
+    vypis_cely = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"), max_length=200, db_index=True)
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
     rodne_prijmeni = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"),
@@ -283,6 +316,9 @@ class Osoba(ExportModelOperationsMixin("osoba"), models.Model, ManyToManyRestric
     ident_cely = models.CharField(max_length=20, unique=True)
 
     def save(self, *args, **kwargs):
+        """
+        save metóda pro přidelení identu celý.
+        """
         logger.debug("Osoba.save.start")
         # Random string is temporary before the id is assigned
         if self._state.adding and not self.ident_cely:
@@ -308,6 +344,9 @@ class Osoba(ExportModelOperationsMixin("osoba"), models.Model, ManyToManyRestric
 
 
 class UserNotificationType(ExportModelOperationsMixin("user_notification_type"), models.Model):
+    """
+    Class pro db model typ user notifikace.
+    """
     ident_cely = models.TextField(unique=True)
     zasilat_neaktivnim = models.BooleanField(default=False)
     predmet = models.TextField()
@@ -322,6 +361,9 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
 
 
 class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Model):
+    """
+    Class pro db model logu notifikací.
+    """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()

@@ -338,12 +338,14 @@ class Mailer():
         })
         logger.debug("services.mailer._send_ep01",
                      extra={"html": html, "cesta_sablony": notification_type.cesta_sablony})
-        project_files = projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
-                                                            nazev__icontains=f"oznameni_{project.ident_cely}",
-                                                            nazev__endswith=".pdf")
-        # project_files = sorted(project_files,
-        #                        key=lambda x: x.historie.get_last_transaction_date(NAHRANI_SBR), reverse=True)
-        project_file = list(project_files)[0]
+        project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
+                                                            nazev__startswith=f"oznameni_{project.ident_cely}",
+                                                            nazev__endswith=".pdf"))
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno))
+        if len(project_files) > 0:
+            project_file = project_files[0]
+        else:
+            project_file = None
         if project.has_oznamovatel():
             attachment_path = None
             if project_file:
@@ -621,5 +623,8 @@ class Mailer():
             "site_url": settings.SITE_URL
         })
         first_log_entry = Historie.objects.filter(vazba=document.historie, typ_zmeny=ZAPSANI_DOK).first()
-        if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        if first_log_entry:
+            if cls._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
+                cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        else:
+            logger.warning("services.mailer.send_ek02.no_log_found", extra={"ident_cely": IDENT_CELY})

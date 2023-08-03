@@ -1,9 +1,0 @@
--r base.txt # includes the base.txt requirements file
-
-pre-commit==3.2.1
-isort==5.11.2
-coverage==7.2.2
-django-debug-toolbar==3.8.1
-black==23.1.0
-django-livereload-server==0.4
-django-debug-toolbar-template-profiler==2.1.0

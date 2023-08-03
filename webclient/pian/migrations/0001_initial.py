@@ -49,8 +49,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('geom', django.contrib.gis.db.models.fields.GeometryField(srid=4326)),
                 ('geom_sjtsk', django.contrib.gis.db.models.fields.GeometryField(blank=True, null=True, srid=5514)),
-                ('geom_system', models.TextField(max_length=6)),
-                ('ident_cely', models.TextField(unique=True)),
+                ('geom_system', models.CharField(default="wgs84", max_length=6)),
+                ('ident_cely', models.CharField(unique=True, max_length=13)),
                 ('stav', models.SmallIntegerField(choices=[(1, 'Nepotvrzený'), (2, 'Potvrzený')], default=1)),
                 ('historie', models.OneToOneField(null=True, db_column='historie', on_delete=django.db.models.deletion.SET_NULL, related_name='pian_historie', to='historie.historievazby')),
                 ('presnost', models.ForeignKey(db_column='presnost', limit_choices_to=models.Q(('nazev_heslare', 24), ('zkratka__lt', '4')), on_delete=django.db.models.deletion.RESTRICT, related_name='piany_presnosti', to='heslar.heslar')),
@@ -71,5 +71,9 @@ class Migration(migrations.Migration):
                                models.Q(('geom_system', 'wgs84'), ('geom__isnull', False)),
                                models.Q(('geom_sjtsk__isnull', True), ('geom__isnull', True)), _connector='OR'),
                 name='pian_geom_check'),
+        ),
+        migrations.AlterUniqueTogether(
+            name="piansekvence",
+            unique_together={("kladyzm50", "sekvence", "katastr")},
         ),
     ]

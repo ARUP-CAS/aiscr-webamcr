@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             name='NeidentAkceVedouci',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('neident_akce', models.ForeignKey(db_column='neident_akce', on_delete=django.db.models.deletion.CASCADE, to='neidentakce.neidentakce')),
+                ('neident_akce', models.IntegerField()),
             ],
             options={
                 'db_table': 'neident_akce_vedouci',

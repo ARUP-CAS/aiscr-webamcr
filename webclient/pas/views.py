@@ -1,7 +1,6 @@
 import logging
 
 import simplejson as json
-
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -37,7 +36,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import SearchListView, check_stav_changed
@@ -51,15 +50,15 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.forms import CoordinatesDokumentForm
-from heslar.hesla import PRISTUPNOST_ARCHEOLOG_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ARCHEOLOG_ID
 from heslar.models import Heslar
 from historie.models import Historie, HistorieVazby
 from pas.filters import SamostatnyNalezFilter, UzivatelSpolupraceFilter
 from pas.forms import CreateSamostatnyNalezForm, CreateZadostForm, PotvrditNalezForm
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from pas.tables import SamostatnyNalezTable, UzivatelSpolupraceTable
-from uzivatel.models import Organizace, User
 from services.mailer import Mailer
+from uzivatel.models import Organizace, User
 
 logger = logging.getLogger(__name__)
 
@@ -121,9 +120,12 @@ def create(request, ident_cely=None):
                 sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
                 sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
                 if sjtsk_dx > 0 and sjtsk_dy > 0:
-                    geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
+                    geom_sjtsk = Point(-1 * sjtsk_dx, -1 * sjtsk_dy)
             except Exception:
-                logger.info("pas.views.create.corrd_format_error", extra={"geom": geom, "geom_sjtsk": geom_sjtsk})
+                logger.info(
+                    "pas.views.create.corrd_format_error",
+                    extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
+                )
             sn = form.save(commit=False)
             try:
                 sn.ident_cely = get_sn_ident(sn.projekt)
@@ -204,19 +206,26 @@ def detail(request, ident_cely):
             if sn.geom_system == "wgs84"
             else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
         )
-        logger.debug("pas.views.create.detail", extra={"sn_geom_system": sn.geom_system, "system": system})
+        logger.debug(
+            "pas.views.create.detail",
+            extra={"sn_geom_system": sn.geom_system, "system": system},
+        )
+        gx_wgs = geom.split(" ")[1]
+        gy_wgs = geom.split(" ")[0]
+        gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
+        gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+        gx = gx_wgs if system == "WGS-84" else gx_sjtsk
+        gy = gy_wgs if system == "WGS-84" else gy_sjtsk
+        if float(gy_sjtsk) > float(gx_sjtsk):
+            gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
         context["formCoor"] = CoordinatesDokumentForm(
             initial={
-                "detector_coordinates_x": geom.split(" ")[1]
-                if (system == "WGS-84")
-                else geom_sjtsk.split(" ")[1],
-                "detector_coordinates_y": geom.split(" ")[0]
-                if (system == "WGS-84")
-                else geom_sjtsk.split(" ")[0],
-                "coordinate_wgs84_x": geom.split(" ")[1],
-                "coordinate_wgs84_y": geom.split(" ")[0],
-                "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
-                "coordinate_sjtsk_y": geom_sjtsk.split(" ")[0],
+                "detector_coordinates_x": gx,
+                "detector_coordinates_y": gy,
+                "coordinate_wgs84_x": gx_wgs,
+                "coordinate_wgs84_y": gy_wgs,
+                "coordinate_sjtsk_x": gx_sjtsk,
+                "coordinate_sjtsk_y": gy_sjtsk,
                 "coordinate_system": system,
             }
         )  # Zmen musis poslat data do formulare
@@ -260,9 +269,12 @@ def edit(request, ident_cely):
             sjtsk_dx = float(form_coor.data.get("coordinate_sjtsk_x"))
             sjtsk_dy = float(form_coor.data.get("coordinate_sjtsk_y"))
             if sjtsk_dx > 0 and sjtsk_dy > 0:
-                geom_sjtsk = Point(sjtsk_dy, sjtsk_dx)
+                geom_sjtsk = Point(-1 * sjtsk_dx, -1 * sjtsk_dy)
         except Exception as e:
-            logger.info("pas.views.edit.corrd_format_error", extra={"geom": geom, "geom_sjtsk": geom_sjtsk})
+            logger.info(
+                "pas.views.edit.corrd_format_error",
+                extra={"geom": geom, "geom_sjtsk": geom_sjtsk},
+            )
         if form.is_valid():
             logger.debug("pas.views.edit.form_valid")
             sn.geom_system = form_coor.data.get("coordinate_system")
@@ -273,11 +285,16 @@ def edit(request, ident_cely):
                 sn.geom_sjtsk = geom_sjtsk
             form.save()
             if form.changed_data:
-                logger.debug("pas.views.edit.form_changed_data", extra={"changed_data": form.changed_data})
+                logger.debug(
+                    "pas.views.edit.form_changed_data",
+                    extra={"changed_data": form.changed_data},
+                )
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("pas:detail", ident_cely=ident_cely)
         else:
-            logger.info("pas.views.edit.form_invalid", extra={"form_errors": form.errors})
+            logger.info(
+                "pas.views.edit.form_invalid", extra={"form_errors": form.errors}
+            )
 
     else:
         form = CreateSamostatnyNalezForm(
@@ -301,16 +318,22 @@ def edit(request, ident_cely):
                 if sn.geom_system == "wgs84"
                 else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
             )
-            gx = geom.split(" ")[1] if system == "WGS-84" else geom_sjtsk.split(" ")[1]
-            gy = geom.split(" ")[0] if system == "WGS-84" else geom_sjtsk.split(" ")[0]
+            gx_wgs = geom.split(" ")[1]
+            gy_wgs = geom.split(" ")[0]
+            gx_sjtsk = geom_sjtsk.split(" ")[1].replace("-", "")
+            gy_sjtsk = geom_sjtsk.split(" ")[0].replace("-", "")
+            gx = gx_wgs if system == "WGS-84" else gx_sjtsk
+            gy = gy_wgs if system == "WGS-84" else gy_sjtsk
+            if float(gy_sjtsk) > float(gx_sjtsk):
+                gx_sjtsk_t, gy_sjtsk = gy_sjtsk, gx_sjtsk
             form_coor = CoordinatesDokumentForm(
                 initial={
                     "detector_coordinates_x": gx,
                     "detector_coordinates_y": gy,
-                    "coordinate_wgs84_x": geom.split(" ")[1],
-                    "coordinate_wgs84_y": geom.split(" ")[0],
-                    "coordinate_sjtsk_x": geom_sjtsk.split(" ")[1],
-                    "coordinate_sjtsk_y": geom_sjtsk.split(" ")[0],
+                    "coordinate_wgs84_x": gx_wgs,
+                    "coordinate_wgs84_y": gy_wgs,
+                    "coordinate_sjtsk_x": gx_sjtsk,
+                    "coordinate_sjtsk_y": gy_sjtsk,
                     "coordinate_system": system,
                 }
             )  # Zmen musis poslat data do formulare
@@ -352,13 +375,19 @@ def edit_ulozeni(request, ident_cely):
             )
             formObj.save()
             if form.changed_data:
-                logger.debug("pas.views.edit_ulozeni.form_changed_data", extra={"changed_data": form.changed_data})
+                logger.debug(
+                    "pas.views.edit_ulozeni.form_changed_data",
+                    extra={"changed_data": form.changed_data},
+                )
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
         else:
-            logger.info("pas.views.edit_ulozeni.form_invalid", extra={"form_errors": form.errors})
+            logger.info(
+                "pas.views.edit_ulozeni.form_invalid",
+                extra={"form_errors": form.errors},
+            )
     else:
         form = PotvrditNalezForm(
             instance=sn,
@@ -407,7 +436,9 @@ def vratit(request, ident_cely):
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
         else:
-            logger.info("pas.views.vratit.form_invalid", extra={"form_errors": form.errors})
+            logger.info(
+                "pas.views.vratit.form_invalid", extra={"form_errors": form.errors}
+            )
     else:
         form = VratitForm(initial={"old_stav": sn.stav})
     context = {
@@ -510,7 +541,9 @@ def potvrdit(request, ident_cely):
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
             )
         else:
-            logger.info("pas.views.potvrdit.form_invalid", extra={"form_errors": form.errors})
+            logger.info(
+                "pas.views.potvrdit.form_invalid", extra={"form_errors": form.errors}
+            )
     else:
         form = PotvrditNalezForm(
             instance=sn, initial={"old_stav": sn.stav}, predano_hidden=True
@@ -565,6 +598,7 @@ class SamostatnyNalezListView(SearchListView):
     """
     Třída pohledu pro zobrazení přehledu samostatných nálezu s filtrem v podobe tabulky.
     """
+
     table_class = SamostatnyNalezTable
     model = SamostatnyNalez
     template_name = "pas/samostatny_nalez_list.html"
@@ -609,6 +643,9 @@ def smazat(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    if nalez.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory
@@ -617,11 +654,16 @@ def smazat(request, ident_cely):
         resp3 = soubory.delete()
 
         if resp1:
-            logger.info("pas.views.smazat.deleted", extra={"resp1": resp1, "resp2": resp2, "resp3": resp3})
+            logger.info(
+                "pas.views.smazat.deleted",
+                extra={"resp1": resp1, "resp2": resp2, "resp3": resp3},
+            )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("core:home")})
         else:
-            logger.warning("pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely})
+            logger.warning(
+                "pas.views.smazat.not_deleted", extra={"ident_cely": ident_cely}
+            )
             messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
@@ -661,7 +703,10 @@ def zadost(request):
                 messages.add_message(
                     request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
                 )
-                logger.debug("pas.views.zadost.post.error", extra={"error": _("Nelze vytvořit spolupráci sám se sebou")})
+                logger.debug(
+                    "pas.views.zadost.post.error",
+                    extra={"error": _("Nelze vytvořit spolupráci sám se sebou")},
+                )
             elif exists:
                 messages.add_message(
                     request,
@@ -672,8 +717,13 @@ def zadost(request):
                         + " již existuje."
                     ),
                 )
-                logger.debug("pas.views.zadost.post.error", extra={"error": _("Spoluprace jiz existuje"),
-                                                         "email": uzivatel_email})
+                logger.debug(
+                    "pas.views.zadost.post.error",
+                    extra={
+                        "error": _("Spoluprace jiz existuje"),
+                        "email": uzivatel_email,
+                    },
+                )
 
             else:
                 hv = HistorieVazby(typ_vazby=UZIVATEL_SPOLUPRACE_RELATION_TYPE)
@@ -695,15 +745,22 @@ def zadost(request):
                 messages.add_message(
                     request, messages.SUCCESS, ZADOST_O_SPOLUPRACI_VYTVORENA
                 )
-                logger.debug("pas.views.zadost.post.success",
-                             extra={"hv_id": hv.pk, "s_id": s.pk, "hist_id": hist.pk})
+                logger.debug(
+                    "pas.views.zadost.post.success",
+                    extra={"hv_id": hv.pk, "s_id": s.pk, "hist_id": hist.pk},
+                )
 
                 Mailer.send_en05(
-                    email_to=uzivatel_email, reason=uzivatel_text, user=request.user, spoluprace_id=s.pk
+                    email_to=uzivatel_email,
+                    reason=uzivatel_text,
+                    user=request.user,
+                    spoluprace_id=s.pk,
                 )
                 return redirect("pas:spoluprace_list")
         else:
-            logger.info("pas.views.zadost.form_invalid", extra={"form_errors": form.errors})
+            logger.info(
+                "pas.views.zadost.form_invalid", extra={"form_errors": form.errors}
+            )
     else:
         form = CreateZadostForm()
 
@@ -718,6 +775,7 @@ class UzivatelSpolupraceListView(SearchListView):
     """
     Třída pohledu pro zobrazení přehledu spoluprác s filtrem v podobe tabulky.
     """
+
     table_class = UzivatelSpolupraceTable
     model = UzivatelSpoluprace
     template_name = "pas/uzivatel_spoluprace_list.html"
@@ -732,7 +790,13 @@ class UzivatelSpolupraceListView(SearchListView):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related("vedouci", "spolupracovnik","vedouci__organizace","historie","spolupracovnik__organizace")
+        qs = qs.select_related(
+            "vedouci",
+            "spolupracovnik",
+            "vedouci__organizace",
+            "historie",
+            "spolupracovnik__organizace",
+        )
         return qs.order_by("id")
 
     def get_table_kwargs(self):
@@ -825,7 +889,10 @@ def smazat_spolupraci(request, pk):
         resp2 = historie.delete()
 
         if resp1:
-            logger.info("pas.views.smazat_spolupraci.deleted", extra={"resp1": resp1, "resp2": resp2})
+            logger.info(
+                "pas.views.smazat_spolupraci.deleted",
+                extra={"resp1": resp1, "resp2": resp2},
+            )
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
             return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
         else:
@@ -931,7 +998,7 @@ def get_required_fields(zaznam=None, next=0):
     """
     Funkce pro získaní dictionary povinných polí podle stavu samostatného nálezu.
 
-    Args:     
+    Args:
         zaznam (PAS): model samostatního nálezu pro který se dané pole počítají.
 
         next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.

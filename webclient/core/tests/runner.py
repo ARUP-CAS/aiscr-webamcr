@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 
 import psycopg2
+from django.db import IntegrityError
 
 from arch_z.models import Akce, ArcheologickyZaznam, ExterniOdkaz
 from core.constants import (
@@ -36,10 +37,8 @@ from dokument.models import (
     DokumentJazyk,
     Tvar,
 )
-from heslar import hesla
+from heslar import hesla, hesla_dynamicka
 from heslar.hesla import (
-    GEOMETRY_BOD,
-    GEOMETRY_PLOCHA,
     HESLAR_AKCE_TYP,
     HESLAR_AREAL,
     HESLAR_DATUM_SPECIFIKACE,
@@ -60,15 +59,19 @@ from heslar.hesla import (
     HESLAR_PRISTUPNOST,
     HESLAR_PROJEKT_TYP,
     HESLAR_LETFOTO_TVAR,
+    HESLAR_DOKUMENT_ULOZENI,
+    HESLAR_PREDMET_SPECIFIKACE,
+    HESLAR_PREDMET_DRUH,
+    HESLAR_OBDOBI_KAT,
+)
+from heslar.hesla_dynamicka import (
+    GEOMETRY_BOD,
+    GEOMETRY_PLOCHA,
     PRISTUPNOST_ANONYM_ID,
     PRISTUPNOST_ARCHEOLOG_ID,
     SPECIFIKACE_DATA_PRESNE,
     TYP_PROJEKTU_PRUZKUM_ID,
     TYP_PROJEKTU_ZACHRANNY_ID,
-    HESLAR_DOKUMENT_ULOZENI,
-    HESLAR_PREDMET_SPECIFIKACE,
-    HESLAR_PREDMET_DRUH,
-    HESLAR_OBDOBI_KAT,
 )
 from heslar.models import (
     Heslar,
@@ -173,8 +176,8 @@ class AMCRBaseTestRunner(BaseRunner):
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
         projektove_sekvence = []
         for rok in sekvence_roku:
-            projektove_sekvence.append(ProjektSekvence(rada="C", rok=rok, sekvence=1))
-            projektove_sekvence.append(ProjektSekvence(rada="M", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region="C", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region="M", rok=rok, sekvence=1))
         ProjektSekvence.objects.bulk_create(projektove_sekvence)
 
         user_notifications = (
@@ -210,9 +213,13 @@ class AMCRBaseTestRunner(BaseRunner):
         )
 
         for ident, template in user_notifications:
-            UserNotificationType(ident_cely=ident, zasilat_neaktivnim=False,
-                                 predmet=f"Selenium test {ident}",
-                                 cesta_sablony=template).save()
+            try:
+                UserNotificationType(ident_cely=ident, zasilat_neaktivnim=False,
+                                     predmet=f"Selenium test {ident}",
+                                     cesta_sablony=template).save()
+            except IntegrityError as err:
+                logger.debug("core.tests.runner.AMCRBaseTestRunner.notification.already_exists",
+                             extra={"err": err, "ident": ident})
 
         hn = HeslarNazev(id=HESLAR_PROJEKT_TYP, nazev="heslar_typ_projektu")
         hp = HeslarNazev(id=HESLAR_PIAN_PRESNOST, nazev="heslar_presnost")
@@ -272,11 +279,11 @@ class AMCRBaseTestRunner(BaseRunner):
             n.save()
 
         Heslar(
-            id=hesla.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="záchranný", ident_cely="XXX1",
+            id=hesla_dynamicka.TYP_PROJEKTU_ZACHRANNY_ID, nazev_heslare=hn, heslo="záchranný", ident_cely="XXX1",
             heslo_en="en_1"
         ).save()
         Heslar(
-            id=hesla.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="průzkumný", ident_cely="XXX2",
+            id=hesla_dynamicka.TYP_PROJEKTU_PRUZKUM_ID, nazev_heslare=hn, heslo="průzkumný", ident_cely="XXX2",
             heslo_en="en_2"
         ).save()
         Heslar(id=PRESNOST_DESITKY_METRU_ID, nazev_heslare=hp, zkratka=1, ident_cely="XXX3", heslo="cz_3",
@@ -457,7 +464,7 @@ class AMCRBaseTestRunner(BaseRunner):
         user_archeolog.save()
         user_archeolog.groups.add(archeolog_group)
 
-        praha = RuianKatastr.objects.filter(nazev="JOSEFOV").first()
+        praha = RuianKatastr.objects.get(nazev="JOSEFOV")
         # PROJEKT
         p = Projekt(
             typ_projektu=Heslar.objects.get(id=TYP_PROJEKTU_ZACHRANNY_ID),
@@ -580,6 +587,7 @@ class AMCRBaseTestRunner(BaseRunner):
             hlavni_katastr=praha,
             ident_cely=EXISTING_EVENT_IDENT_INCOMPLETE,
             stav=AZ_STAV_ZAPSANY,
+            pristupnost=Heslar.objects.get(pk=PRISTUPNOST_ANONYM_ID),
         )
         az_incoplete.save()
         a_incomplete = Akce(
@@ -609,6 +617,7 @@ class AMCRBaseTestRunner(BaseRunner):
             hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
             hlavni_vedouci=Osoba.objects.first(),
             organizace=o,
+            odlozena_nz=True,
         )
         a.projekt = p
         a.save()
@@ -794,7 +803,6 @@ class AMCRBaseTestRunner(BaseRunner):
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
         soubor = Soubor(
-            nazev_zkraceny="x",
             nazev="x",
             mimetype="x",
             size_mb=1,
@@ -836,8 +844,8 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
         return temp_return
 
     def save_geographical_data(self):
-        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, )
-        kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2)
+        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, nazev_en="Praha")
+        kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2, nazev_en="Brno")
         okres_praha = RuianOkres(
             id=162, nazev="Praha", kraj=kraj_brno, spz="1", kod=3,
             definicni_bod=GEOSGeometry(

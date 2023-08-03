@@ -1,5 +1,5 @@
+import logging
 from math import fabs
-
 
 from core.exceptions import MaximalIdentNumberError
 from dj.models import DokumentacniJednotka
@@ -11,9 +11,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 from heslar.hesla import HESLAR_ADB_PODNET, HESLAR_ADB_TYP, HESLAR_VYSKOVY_BOD_TYP
 from heslar.models import Heslar
 from uzivatel.models import Osoba
-
-import logging
-import logstash
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +22,10 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     """
 
     gid = models.IntegerField(primary_key=True)
-    id = models.DecimalField(max_digits=1000, decimal_places=1000)
+    id = models.IntegerField()
     mapname = models.TextField()
     mapno = models.TextField()
-    podil = models.DecimalField(max_digits=1000, decimal_places=1000)
+    podil = models.DecimalField(max_digits=10, decimal_places=9)
     geom = pgmodels.PolygonField(srid=5514)
     cislo = models.TextField()
 
@@ -35,7 +33,7 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
         db_table = "kladysm5"
 
 
-class Adb(models.Model):
+class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     """
     Class pre db model ADB.
     Obsahuje vazbu na dokumentační jednotku.
@@ -102,7 +100,7 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
         adb (adb): adb objekt pro získaní základu identu.
 
         offset (int): offset k pripočtení k poslednímu VB
-        
+
     Returns:
         string: nový ident celý
     """
@@ -119,7 +117,10 @@ def get_vyskovy_bod(adb: Adb, offset=1) -> str:
         nejvyssi_postfix = str(nejvyssi_postfix).zfill(last_digit_count)
         return f"{adb.ident_cely}-V{nejvyssi_postfix}"
     else:
-        logger.error("adb.models.get_vyskovy_bod.maximal_number_reached", extra={"max": str(MAXIMAL_VYSKOVY_BOD)})
+        logger.error(
+            "adb.models.get_vyskovy_bod.maximal_number_reached",
+            extra={"max": str(MAXIMAL_VYSKOVY_BOD)},
+        )
         raise MaximalIdentNumberError(max_count)
 
 
@@ -146,17 +147,20 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
         """
         Metóda na nastavení geomu (súradnic).
         """
-        
-        logger.debug("adb.models.VyskovyBod.set_geom", extra={"northing": northing, "easting": easting,
-                                                                "nivelete": niveleta})
+
+        logger.debug(
+            "adb.models.VyskovyBod.set_geom",
+            extra={"northing": northing, "easting": easting, "nivelete": niveleta},
+        )
         if northing != 0.0:
             self.geom = Point(
-                x=fabs(northing),
-                y=fabs(easting),
+                x=-1 * fabs(northing),
+                y=-1 * fabs(easting),
                 z=fabs(niveleta),
             )
-            logger.debug("adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom})
-            self.save()
+            logger.debug(
+                "adb.models.VyskovyBod.set_geom.point", extra={"point": self.geom}
+            )
 
     def save(self, *args, **kwargs):
         """
@@ -177,8 +181,8 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
         if self.geom is not None:
             geom_length = len(self.geom)
             if geom_length > 1:
-                self.northing = -1 * round(self.geom[0], 2)
-                self.easting = -1 * round(self.geom[1], 2)
+                self.northing = -1 * fabs(round(self.geom[0], 2))
+                self.easting = -1 * fabs(round(self.geom[1], 2))
             if geom_length == 3:
                 self.niveleta = round(self.geom[2], 2)
 

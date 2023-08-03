@@ -4,40 +4,40 @@ from django.utils.translation import gettext as _
 
 # Stavy
 # Projekty
-PROJEKT_STAV_VYTVORENY: Final = -1
-PROJEKT_STAV_OZNAMENY: Final = 0
-PROJEKT_STAV_ZAPSANY: Final = 1
-PROJEKT_STAV_PRIHLASENY: Final = 2
-PROJEKT_STAV_ZAHAJENY_V_TERENU: Final = 3
-PROJEKT_STAV_UKONCENY_V_TERENU: Final = 4
-PROJEKT_STAV_UZAVRENY: Final = 5
-PROJEKT_STAV_ARCHIVOVANY: Final = 6
-PROJEKT_STAV_NAVRZEN_KE_ZRUSENI: Final = 7
-PROJEKT_STAV_ZRUSENY: Final = 8
+PROJEKT_STAV_VYTVORENY: Final = -1  # P-1
+PROJEKT_STAV_OZNAMENY: Final = 0  # P0
+PROJEKT_STAV_ZAPSANY: Final = 1  # P1
+PROJEKT_STAV_PRIHLASENY: Final = 2  # P2
+PROJEKT_STAV_ZAHAJENY_V_TERENU: Final = 3  # P3
+PROJEKT_STAV_UKONCENY_V_TERENU: Final = 4  # P4
+PROJEKT_STAV_UZAVRENY: Final = 5  # P5
+PROJEKT_STAV_ARCHIVOVANY: Final = 6  # P6
+PROJEKT_STAV_NAVRZEN_KE_ZRUSENI: Final = 7  # P7
+PROJEKT_STAV_ZRUSENY: Final = 8  # P8
 # Akce + Lokalita (archeologicke zaznamy)
-AZ_STAV_ZAPSANY: Final = 1
-AZ_STAV_ODESLANY: Final = 2
-AZ_STAV_ARCHIVOVANY: Final = 3
+AZ_STAV_ZAPSANY: Final = 1  # AZ1
+AZ_STAV_ODESLANY: Final = 2  # AZ2
+AZ_STAV_ARCHIVOVANY: Final = 3  # AZ3
 # Dokumenty
-D_STAV_ZAPSANY: Final = 1
-D_STAV_ODESLANY: Final = 2
-D_STAV_ARCHIVOVANY: Final = 3
+D_STAV_ZAPSANY: Final = 1  # D1
+D_STAV_ODESLANY: Final = 2  # D2
+D_STAV_ARCHIVOVANY: Final = 3  # D3
 # Samostatny nalezy
-SN_ZAPSANY: Final = 1
-SN_ODESLANY: Final = 2
-SN_POTVRZENY: Final = 3
-SN_ARCHIVOVANY: Final = 4
+SN_ZAPSANY: Final = 1  # SN1
+SN_ODESLANY: Final = 2  # SN2
+SN_POTVRZENY: Final = 3  # SN3
+SN_ARCHIVOVANY: Final = 4  # SN4
 # Uzivatel
 # Pian
-PIAN_NEPOTVRZEN: Final = 1
-PIAN_POTVRZEN: Final = 2
+PIAN_NEPOTVRZEN: Final = 1  # PN
+PIAN_POTVRZEN: Final = 2  # PP
 # Uzivatel_spoluprace
-SPOLUPRACE_NEAKTIVNI: Final = 1
-SPOLUPRACE_AKTIVNI: Final = 2
+SPOLUPRACE_NEAKTIVNI: Final = 1  # US1
+SPOLUPRACE_AKTIVNI: Final = 2  # US2
 # Externi zdroje
-EZ_STAV_ZAPSANY: Final = 1
-EZ_STAV_ODESLANY: Final = 2
-EZ_STAV_POTVRZENY: Final = 3
+EZ_STAV_ZAPSANY: Final = 1  # EZ1
+EZ_STAV_ODESLANY: Final = 2  # EZ2
+EZ_STAV_POTVRZENY: Final = 3  # EZ3
 
 # Transakce historie
 # Projekty
@@ -112,7 +112,7 @@ OBLAST_CHOICES = (
 
 CESKY = "cs"
 ANGLICKY = "en"
-JAZYKY = ((CESKY, _("Česky")), (ANGLICKY, _("Anglicky")))
+JAZYKY = ((CESKY, _("core.constants.cs.text")), (ANGLICKY, _("core.constants.cs.text")))
 
 # Typy vazeb
 PROJEKT_RELATION_TYPE: Final = "projekt"
@@ -155,19 +155,19 @@ KLADYZM_KATEGORIE = (
 # Podporovane souradnicove systemy
 COORDINATE_SYSTEM = [(2, "S-JTSK"), (1, "WGS-84")]
 
-DOK_MESTO = (_("constants.dok.mesto_praha"), _("constants.dok.mesto_brno"))
-DOK_VE_MESTE = (_("constants.dok.v_praze"), _("constants.dok.v_brne"))
-DOK_ADRESA = (_("constants.dok.adresa_praha"), _("constants.dok.adresa_brno"))
+DOK_MESTO = (_("core.constants.dok.mesto_praha"), _("core.constants.dok.mesto_brno"))
+DOK_VE_MESTE = (_("core.constants.dok.v_praze"), _("core.constants.dok.v_brne"))
+DOK_ADRESA = (_("core.constants.dok.adresa_praha"), _("core.constants.dok.adresa_brno"))
 DOK_TELEFON = {
-    0: _("constants.dok.telefon"),
-    116: _("constants.dok.telefon_k116"),
-    141: _("constants.dok.telefon_k141"),
-    108: _("constants.dok.telefon_k108"),
-    124: _("constants.dok.telefon_k124"),
-    132: _("constants.dok.telefon_k132"),
+    0: _("core.constants.dok.telefon"),
+    116: _("core.constants.dok.telefon_k116"),
+    141: _("core.constants.dok.telefon_k141"),
+    108: _("core.constants.dok.telefon_k108"),
+    124: _("core.constants.dok.telefon_k124"),
+    132: _("core.constants.dok.telefon_k132"),
 }
-DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
-DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
-DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
+DOK_EMAIL = (_("core.constants.dok.email_praha"), _("core.constants.dok.email_brno"))
+DOC_KOMU = (_("core.constants.dok.komu_praha"), _("core.constants.dok.komu_brno"))
+DOC_REDITEL = (_("core.constants.dok.reditel_praha"), _("core.constants.dok.reditel_brno"))
 
 ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT = 36

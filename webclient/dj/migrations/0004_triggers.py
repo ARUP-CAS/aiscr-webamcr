@@ -2,11 +2,10 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('dj', '0003_initial'),
+        ("dj", "0003_initial"),
     ]
 
     operations = [
@@ -25,11 +24,11 @@ class Migration(migrations.Migration):
                         SELECT FROM dokumentacni_jednotka
                         WHERE pian.id = dokumentacni_jednotka.pian
                     );
-                    RETURN NEW;
+                    RETURN OLD;
                 END;
             $BODY$;
             """,
-            reverse_sql="DROP FUNCTION public.delete_unconfirmed_pian;"
+            reverse_sql="DROP FUNCTION public.delete_unconfirmed_pian;",
         ),
         migrations.RunSQL(
             sql="""
@@ -39,6 +38,6 @@ class Migration(migrations.Migration):
                 FOR EACH ROW
                 EXECUTE FUNCTION delete_unconfirmed_pian();
             """,
-            reverse_sql="DROP TRIGGER public.delete_unconfirmed_pian;"
+            reverse_sql="DROP TRIGGER public.delete_unconfirmed_pian;",
         ),
     ]

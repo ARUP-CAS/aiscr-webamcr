@@ -58,7 +58,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_heatmap_project,
@@ -74,14 +74,14 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
-from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
@@ -108,12 +108,18 @@ logger = logging.getLogger(__name__)
 @login_required
 @require_http_methods(["GET"])
 def index(request):
+    """
+    Funkce pohledu pro zobrazení indexu s navigací projektu.
+    """
     return render(request, "projekt/index.html")
 
 
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení detailu projektu.
+    """
     context = {"warnings": request.session.pop("temp_data", None)}
     projekt = get_object_or_404(
         Projekt.objects.select_related(
@@ -155,6 +161,9 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
+    """
+    Funkce pohledu pro získaní heatmapy.
+    """
     body = json.loads(request.body.decode("utf-8"))
     num = get_num_projects_from_envelope(
         body["southEast"]["lng"],
@@ -221,6 +230,9 @@ def post_ajax_get_projects_limit(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
+    """
+    Funkce pohledu pro vytvoření projektu.
+    """
     logger.debug("projekt.views.create.start")
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
@@ -300,6 +312,9 @@ def create(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro editaci projektu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -360,6 +375,9 @@ def edit(request, ident_cely):
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro smazání projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
         return JsonResponse(
@@ -370,6 +388,9 @@ def smazat(request, ident_cely):
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
+    elif projekt.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:
@@ -394,30 +415,11 @@ def smazat(request, ident_cely):
         return render(request, "core/transakce_modal.html", context)
 
 
-@login_required
-@require_http_methods(["POST"])
-def odebrat_sloupec_z_vychozich(request):
-    if request.method == "POST":
-        if "projekt_vychozi_skryte_sloupce" not in request.session:
-            request.session["projekt_vychozi_skryte_sloupce"] = []
-        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
-        zmena = json.loads(request.body.decode("utf8"))["zmena"]
-        skryte_sloupce = request.session["projekt_vychozi_skryte_sloupce"]
-        if zmena == "zobraz":
-            try:
-                skryte_sloupce.remove(sloupec)
-            except ValueError:
-                logger.error(
-                    f"projekt.views.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
-                )
-                HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
-        else:
-            skryte_sloupce.append(sloupec)
-        request.session.modified = True
-    return HttpResponse("Odebráno")
-
 
 class ProjektListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s projektami.
+    """
     table_class = ProjektTable
     model = Projekt
     template_name = "projekt/projekt_list.html"
@@ -470,6 +472,9 @@ class ProjektListView(SearchListView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def schvalit(request, ident_cely):
+    """
+    Funkce pohledu pro schválení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -484,7 +489,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.set_schvaleny(request.user)
+        old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
@@ -501,6 +506,7 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
                                                                          "permIdent_cely": projekt.ident_cely})
+        projekt.set_schvaleny(request.user,old_ident)
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -530,6 +536,9 @@ def schvalit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def prihlasit(request, ident_cely):
+    """
+    Funkce pohledu pro přihlášení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -580,6 +589,9 @@ def prihlasit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
+    """
+    Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -629,6 +641,9 @@ def zahajit_v_terenu(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def ukoncit_v_terenu(request, ident_cely):
+    """
+    Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -677,6 +692,9 @@ def ukoncit_v_terenu(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def uzavrit(request, ident_cely):
+    """
+    Funkce pohledu pro uzavření projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -751,6 +769,9 @@ def uzavrit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
+    """
+    Funkce pohledu pro archivaci projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -811,6 +832,9 @@ def archivovat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def navrhnout_ke_zruseni(request, ident_cely):
+    """
+    Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -883,6 +907,9 @@ def navrhnout_ke_zruseni(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
+    """
+    Funkce pohledu pro zrušení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -949,6 +976,9 @@ def zrusit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
+    """
+    Funkce pohledu pro vrácení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -995,6 +1025,9 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit_navrh_zruseni(request, ident_cely):
+    """
+    Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
 
     if projekt.stav not in [
@@ -1043,6 +1076,9 @@ def vratit_navrh_zruseni(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, proj_ident_cely):
+    """
+    Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     return odpojit(request, ident_cely, proj_ident_cely, projekt)
 
@@ -1050,12 +1086,18 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def pripojit_dokument(request, proj_ident_cely):
+    """
+    Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
+    """
     return pripojit(request, proj_ident_cely, None, Projekt)
 
 
 @login_required
 @require_http_methods(["POST"])
 def generovat_oznameni(request, ident_cely):
+    """
+    Funkce pohledu pro generování oznámení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     projekt.create_confirmation_document(additional=True, user=request.user)
     if projekt.ident_cely[0] == "C":
@@ -1082,15 +1124,27 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
 @login_required
 @require_http_methods(["POST"])
 def generovat_expertni_list(request, ident_cely):
+    """
+    Funkce pohledu pro generování expertního listu projektu pomoci modalu.
+    """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    path = projekt.create_expert_list(popup_parametry)
-    file = open(path, "rb")
-    return FileResponse(file)
+    output = projekt.create_expert_list(popup_parametry)
+    response = StreamingHttpResponse(output, content_type="text/rtf")
+    response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
+    return response
 
 
 def get_history_dates(historie_vazby):
-    # Transakce do stavu "Zapsan" jsou 2
+    """
+    Funkce pro získaní dátumů pro historii.
+
+    Args:     
+        historie_vazby (HistorieVazby): model historieVazby daného projektu.
+    
+    Returns:
+        historie: dictionary dátumů k historii.
+    """
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
@@ -1119,6 +1173,17 @@ def get_history_dates(historie_vazby):
 
 
 def get_detail_template_shows(projekt, user):
+    """
+    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
+
+    Args:     
+        projekt (Projekt): model projekt pro který se dané akce počítají.
+
+        user (AuthUser): uživatel pro kterého se dané akce počítají.
+    
+    Returns:
+        historie: dictionary možností pro zobrazení.
+    """
     show_oznamovatel = (
         projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
         and projekt.has_oznamovatel()
@@ -1209,6 +1274,17 @@ def get_detail_template_shows(projekt, user):
 
 
 def get_required_fields(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu projektu.
+
+    Args:     
+        zaznam (Projekt): model projekt pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav
@@ -1249,6 +1325,9 @@ def get_required_fields(zaznam=None, next=0):
 
 
 def katastr_text_to_id(request):
+    """
+    Funkce podlehu pro získaní ID katastru podle názvu katastru.
+    """
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
     hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
     okres_name = (
@@ -1272,6 +1351,9 @@ def katastr_text_to_id(request):
 
 
 class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu získaní projektů pro autocomplete pro připojení do dokumentu.
+    """
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
@@ -1302,6 +1384,9 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
 
 
 class ProjectTableRowView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    """
     def get(self, request):
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))

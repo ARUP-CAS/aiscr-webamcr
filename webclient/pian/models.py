@@ -12,7 +12,8 @@ from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext as _
-from heslar.hesla import GEOMETRY_PLOCHA, HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP, PIAN_PRESNOST_KATASTR
+from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
+from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar
 from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
@@ -20,10 +21,12 @@ from uzivatel.models import User
 from django.db.models import Q, CheckConstraint
 from django_prometheus.models import ExportModelOperationsMixin
 
+from xml_generator.models import ModelWithMetadata
+
 logger = logging.getLogger(__name__)
 
 
-class Pian(ExportModelOperationsMixin("pian"), models.Model):
+class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     """
     Class pro db model pian.
     """
@@ -48,7 +51,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
     geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
-    geom_system = models.TextField(max_length=6, default="wgs84")
+    geom_system = models.CharField(max_length=6, default="wgs84")
     zm10 = models.ForeignKey(
         "Kladyzm",
         models.RESTRICT,
@@ -61,7 +64,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         db_column="zm50",
         related_name="pian_zm50",
     )
-    ident_cely = models.TextField(unique=True)
+    ident_cely = models.CharField(unique=True, max_length=16)
     historie = models.OneToOneField(
         HistorieVazby,
         on_delete=models.SET_NULL,
@@ -72,6 +75,18 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
     stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
     geom_updated_at = models.DateTimeField(blank=True, null=True)
     geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
+
+    @property
+    def pristupnost_pom(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        pristupnosti_ids = set()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None \
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
+                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        return Heslar.objects.get(ident_cely="HES-000865")
 
     class Meta:
         db_table = "pian"
@@ -102,7 +117,7 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
                 "P-"
                 + str(self.zm50.cislo).replace("-", "").zfill(4)
                 + "-"
-                + "{0}".format(sequence.sekvence).zfill(6)
+                + f"{sequence.sekvence:06}"
             )
         else:
             raise MaximalIdentNumberError(MAXIMUM)
@@ -120,14 +135,16 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
                     "P-"
                     + str(self.zm50.cislo).replace("-", "").zfill(4)
                     + "-"
-                    + "{0}".format(sequence.sekvence).zfill(6)
+                    + f"{sequence.sekvence:06}"
                 )
             else:
                 break
+        old_ident = self.ident_cely
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
         sequence.save()
         self.save()
+        self.record_ident_change(old_ident)
 
     def set_vymezeny(self, user):
         """
@@ -136,12 +153,12 @@ class Pian(ExportModelOperationsMixin("pian"), models.Model):
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
 
-    def set_potvrzeny(self, user):
+    def set_potvrzeny(self, user, old_ident):
         """
         Metóda pro nastavení stavu potvrzený.
         """
         self.stav = PIAN_POTVRZEN
-        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie).save()
+        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie, poznamka=f"{old_ident} -> {self.ident_cely}").save()
         self.save()
 
     def zaznamenej_zapsani(self, user):
@@ -181,6 +198,9 @@ class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
 
     class Meta:
         db_table = "pian_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['kladyzm50','katastr'], name='unique_sekvence_pian'),
+        ]
 
 
 def vytvor_pian(katastr):
