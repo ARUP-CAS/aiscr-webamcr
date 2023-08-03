@@ -34,7 +34,7 @@ class ExterniZdrojFilter(HistorieFilter):
     stav = MultipleChoiceFilter(
         choices=ExterniZdroj.STATES,
         field_name="stav",
-        label=_("externiZdroj.filter.stav.label"),
+        label=_("ez.filters.stav.label"),
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -42,19 +42,19 @@ class ExterniZdrojFilter(HistorieFilter):
     ident_cely = CharFilter(
         field_name="ident_cely",
         lookup_expr="icontains",
-        label=_("externiZdroj.filter.identCely.label"),
+        label=_("ez.filters.identCely.label"),
         distinct=True,
     )
 
     sysno = CharFilter(
-        label=_("externiZdroj.filter.sysno.label"),
+        label=_("ez.filters.sysno.label"),
         lookup_expr="icontains",
         distinct=True,
     )
 
     typ = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_EXTERNI_ZDROJ_TYP),
-        label=_("externiZdroj.filter.typ.label"),
+        label=_("ez.filters.typ.label"),
         field_name="typ",
         widget=SelectMultipleSeparator(),
         distinct=True,
@@ -62,7 +62,7 @@ class ExterniZdrojFilter(HistorieFilter):
 
     autori = MultipleChoiceFilter(
         field_name="externizdrojautor__autor__id",
-        label=_("externiZdroj.filter.autori.label"),
+        label=_("ez.filters.autori.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",
@@ -72,7 +72,7 @@ class ExterniZdrojFilter(HistorieFilter):
 
     editori = MultipleChoiceFilter(
         field_name="externizdrojeditor__editor__id",
-        label=_("externiZdroj.filter.editori.label"),
+        label=_("ez.filters.editori.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",
@@ -82,7 +82,7 @@ class ExterniZdrojFilter(HistorieFilter):
 
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP),
-        label=_("externiZdroj.filter.typDokumentu.label"),
+        label=_("ez.filters.typDokumentu.label"),
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
@@ -100,7 +100,7 @@ class ExterniZdrojFilter(HistorieFilter):
     )
 
     popisne_udaje = CharFilter(
-        label=_("externiZdroj.filter.popisneUdaje.label"),
+        label=_("ez.filters.popisneUdaje.label"),
         method="filter_popisne_udaje",
     )
 
@@ -120,13 +120,13 @@ class ExterniZdrojFilter(HistorieFilter):
 
     akce_ident = CharFilter(
         method="filter_akce_ident",
-        label=_("externiZdroj.filter.idAkce.label"),
+        label=_("ez.filters.idAkce.label"),
         distinct=True,
     )
 
     lokalita_ident = CharFilter(
         method="filter_lokalita_ident",
-        label=_("externiZdroj.filter.idLokalita.label"),
+        label=_("ez.filters.idLokalita.label"),
         distinct=True,
     )
 
@@ -199,10 +199,10 @@ class ExterniZdrojFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"externiZdroj.filter.history.divider.label")
+        "translation": _(u"ez.filters.history.divider.label")
     }
     souvis_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"externiZdroj.filter.souvisejiciZaznamy.divider.label")
+        "translation": _(u"ez.filters.souvisejiciZaznamy.divider.label")
     }
     layout = Layout(
         Div(

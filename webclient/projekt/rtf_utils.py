@@ -1,5 +1,5 @@
 import datetime
-import struct
+import io
 import sys
 
 from PyRTF.Elements import Renderer, Document, Section, StyleSheet, ParagraphStyle
@@ -8,7 +8,6 @@ from PyRTF.Styles import TextStyle, TextPropertySet
 from PyRTF.document.paragraph import Cell, Paragraph, Table
 from historie.models import Historie
 from projekt.doc_utils import DocumentCreator
-from webclient.settings.base import MEDIA_ROOT
 
 sys.path.append('../')
 
@@ -208,12 +207,13 @@ class ExpertniListCreator(DocumentCreator):
     def _open_file(name):
         return open(name, 'w')
 
-    def build_document(self):
+    def build_document(self) -> io.StringIO:
         self._generate_text()
-        path = f"{MEDIA_ROOT}/expertni_list_{self.projekt.ident_cely}.rtf"
+        output = io.StringIO()
         DR = Renderer()
-        DR.Write(self.docucment, self._open_file(path))
-        return path
+        DR.Write(self.docucment, output)
+        output.seek(0)
+        return output
 
     def __init__(self, projekt, popup_parametry=None):
         from projekt.models import Projekt

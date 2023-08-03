@@ -1,5 +1,6 @@
 import logging
 import simplejson as json
+from django.db.models import RestrictedError
 
 from adb.forms import CreateADBForm, VyskovyBodFormSetHelper, create_vyskovy_bod_form
 from adb.models import Adb, VyskovyBod
@@ -42,7 +43,7 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_USPESNE_EDITOVAN,
-    ZAZNAM_USPESNE_SMAZAN,
+    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_all_pians_with_akce,
@@ -548,9 +549,9 @@ def edit(request, ident_cely):
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "ostatni_vedouci_objekt_formset_readonly": False,
-            "title": _("Editace archeologického záznamu"),
-            "header": _("Archeologický záznam"),
-            "button": _("Uložit změny"),
+            "title": _("arch_z.views.edit.title.text"),
+            "header": _("arch_z.views.edit.header.text"),
+            "button": _("arch_z.views.edit.submitButton.text"),
             "sam_akce": False if zaznam.akce.projekt else True,
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
@@ -607,9 +608,9 @@ def odeslat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
     context = {
         "object": az,
-        "title": _("arch_z.modalForm.odeslatArchz.title.text"),
+        "title": _("arch_z.views.odeslat.title.text"),
         "id_tag": "odeslat-akci-form",
-        "button": _("arch_z.modalForm.odeslatArchz.submit.button"),
+        "button": _("arch_z.views.odeslat.submitButton.text"),
         "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
@@ -666,9 +667,9 @@ def archivovat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
     context = {
         "object": az,
-        "title": _("arch_z.modalForm.archivovatArchz.title.text"),
+        "title": _("arch_z.views.archivovat.title.text"),
         "id_tag": "archivovat-akci-form",
-        "button": _("arch_z.modalForm.archivovatArchz.submit.button"),
+        "button": _("arch_z.views.archivovat.submitButton.text"),
         "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
@@ -738,9 +739,9 @@ def vratit(request, ident_cely):
     context = {
         "object": az,
         "form": form,
-        "title": _("arch_z.modalForm.vratitArchz.title.text"),
+        "title": _("arch_z.views.vratit.title.text"),
         "id_tag": "vratit-akci-form",
-        "button": _("arch_z.modalForm.vratitArchz.submit.button"),
+        "button": _("arch_z.views.vratit.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -774,16 +775,16 @@ def zapsat(request, projekt_ident_cely=None):
             )
         uzamknout_specifik = True
         context = {
-            "title": _("Nová projektová akce"),
-            "header": _("Nová projektová akce"),
+            "title": _("arch_z.views.zapsat.projektovaAkce.title.text"),
+            "header": _("arch_z.views.zapsat.projektovaAkce.header.text"),
             "create_akce": False,
         }
     else:
         projekt = None
         uzamknout_specifik = False
         context = {
-            "title": _("Nová samostatna akce"),
-            "header": _("Nová samostatna akce"),
+            "title": _("arch_z.views.zapsat.samostatnaAkce.title.text"),
+            "header": _("arch_z.views.zapsat.samostatnaAkce.header.text"),
             "create_akce": True,
             "sam_akce": True,
         }
@@ -902,7 +903,7 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "ostatni_vedouci_objekt_formset_readonly": True,
-            "button": _("Vytvoř akci"),
+            "button": _("arch_z.views.zapsat.submitButton.text"),
         }
     )
     return render(
@@ -923,9 +924,12 @@ def smazat(request, ident_cely):
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if check_stav_changed(request, az):
         return JsonResponse(
-            {"redirect": az.archeologicky_zaznam.get_absolute_url()},
+            {"redirect": az.get_absolute_url()},
             status=403,
         )
+    if az.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
     if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         projekt = az.akce.projekt
     else:
@@ -939,12 +943,20 @@ def smazat(request, ident_cely):
                 komponenty_jednotek_vazby.append(dj.komponenty)
         for eo in az.externi_odkazy.all():
             eo.delete()
-        az.delete()
-        historie_vazby.delete()
-        for komponenta_vazba in komponenty_jednotek_vazby:
-            komponenta_vazba.delete()
-        logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
-        messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        try:
+            az.delete()
+            historie_vazby.delete()
+            for komponenta_vazba in komponenty_jednotek_vazby:
+                komponenta_vazba.delete()
+            logger.debug("arch_z.views.smazat.success", extra={"ident_cely": ident_cely})
+            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+        except RestrictedError as err:
+            logger.debug("arch_z.views.smazat.error", extra={"ident_cely": ident_cely})
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
+            return JsonResponse(
+                {"redirect": az.get_absolute_url()},
+                status=403,
+            )
 
         if projekt:
             return JsonResponse(
@@ -960,9 +972,9 @@ def smazat(request, ident_cely):
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
             "object": az,
-            "title": _("arch_z.modalForm.smazani.title.text"),
+            "title": _("arch_z.views.smazat.title.text"),
             "id_tag": "smazat-akci-form",
-            "button": _("arch_z.modalForm.smazani.submit.button"),
+            "button": _("arch_z.views.smazat.submitButton.text"),
             "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
@@ -1529,17 +1541,17 @@ class AkceListView(SearchListView):
     model = Akce
     filterset_class = AkceFilter
     export_name = "export_akce_"
-    page_title = _("akce.vyber.pageTitle")
+    page_title = _("arch_z.views.AkceListView.page_title.text")
     app = "akce"
     toolbar = "toolbar_akce.html"
-    search_sum = _("akce.vyber.pocetVyhledanych")
-    pick_text = _("akce.vyber.pickText")
-    hasOnlyVybrat_header = _("akce.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("akce.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("akce.vyber.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("akce.vyber.header.default")
-    default_header = _("akce.vyber.header.default")
-    toolbar_name = _("akce.template.toolbar.title")
+    search_sum = _("arch_z.views.AkceListView.search_sum.text")
+    pick_text = _("arch_z.views.AkceListView.pick_text.text")
+    hasOnlyVybrat_header = _("arch_z.views.AkceListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("arch_z.views.AkceListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("arch_z.views.AkceListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
+    default_header = _("arch_z.views.AkceListView.default_header.text")
+    toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -1569,9 +1581,9 @@ class ProjektAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
             "object": az,
-            "title": _("arch_z.modalForm.zmenaProjektoveAkce.title.text"),
+            "title": _("arch_z.views.ProjektAkceChange.title.text"),
             "id_tag": "zmenit-akci-form",
-            "button": _("arch_z.modalForm.zmenaProjektoveAkce.submit.button"),
+            "button": _("arch_z.views.ProjektAkceChange.submitButton.text"),
             "form_check": form_check,
         }
         return context
@@ -1641,9 +1653,9 @@ class SamostatnaAkceChange(LoginRequiredMixin, AkceRelatedRecordUpdateView):
         form_check = CheckStavNotChangedForm(initial={"old_stav": az.stav})
         context = {
             "object": az,
-            "title": _("arch_z.modalForm.zmenaSamostatneAkce.title.text"),
+            "title": _("arch_z.views.SamostatnaAkceChange.title.text"),
             "id_tag": "akce-change-form",
-            "button": _("arch_z.modalForm.zmenaSamostatneAkce.submit.button"),
+            "button": _("arch_z.views.SamostatnaAkceChange.submitButton.text"),
             "form_check": form_check,
         }
         return context

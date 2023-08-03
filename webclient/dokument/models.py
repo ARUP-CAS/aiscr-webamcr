@@ -28,7 +28,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
-from core.models import SouborVazby, ModelWithMetadata
+from core.models import SouborVazby, ModelWithMetadata, Soubor
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -244,29 +244,29 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
         if "3D" in self.ident_cely:
             if not self.extra_data.format:
-                result.append(_("dokument.formCheckOdeslani.missingFormat.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingFormat.text"))
             if not self.popis:
-                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.extra_data.duveryhodnost:
-                result.append(_("dokument.formCheckOdeslani.missingDuveryhodnost.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingDuveryhodnost.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].obdobi:
-                result.append(_("dokument.formCheckOdeslani.missingObdobi.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingObdobi.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].areal:
-                result.append(_("dokument.formCheckOdeslani.missingAreal.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingAreal.text"))
         else:
             if not self.pristupnost:
-                result.append(_("dokument.formCheckOdeslani.missingPristupnost.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPristupnost.text"))
             if not self.popis:
-                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.ulozeni_originalu:
                 result.append(
-                    _("dokument.formCheckOdeslani.missingUlozeniOriginalu.text")
+                    _("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text")
                 )
             if self.jazyky.all().count() == 0:
-                result.append(_("dokument.formCheckOdeslani.missingJazyky.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingJazyky.text"))
         # At least one soubor must be attached to the dokument
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+            result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
         return result
 
     def check_pred_archivaci(self):
@@ -278,7 +278,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+            result.append(_("dokument.models.formCheckArchivace.missingSoubor.text"))
         return result
 
     def has_extra_data(self):
@@ -331,29 +331,24 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         perm_ident_cely = (
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )
+        old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
-        for file in (
-            self.soubory.soubory.all()
-            .filter(nazev_zkraceny__startswith="X")
-            .order_by("id")
-        ):
-            new_name = get_dokument_soubor_name(self, file.path.name, add_to_index=1)
-            try:
-                checksum = calculate_crc_32(file.path)
-                file.path.seek(0)
-                # After calculating checksum, must move pointer to the beginning
-                old_nazev = file.nazev
-                file.nazev = checksum + "_" + new_name
-                file.nazev_zkraceny = new_name
-                old_path = file.path.storage.path(file.path.name)
-                new_path = old_path.replace(old_nazev, file.nazev)
-                file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
-                os.rename(old_path, str(new_path))
-                file.save()
-            except FileNotFoundError as err:
-                logger.warning("dokument.models.Dokument.set_permanent_ident_cely.FileNotFoundError",
-                               extra={"err": err})
-                raise FileNotFoundError()
+        self.suppress_signal = True
+        self.save()
+        self.save_metadata(use_celery=False)
+
+        from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_mime_type
+        from core.views import get_projekt_soubor_name
+        connector = FedoraRepositoryConnector(self)
+        connector.record_ident_change(old_ident_cely)
+        for soubor in self.soubory.soubory.all():
+            soubor: Soubor
+            repository_binary_file = soubor.get_repository_content()
+            if repository_binary_file is not None:
+                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                          get_mime_type(soubor.nazev),
+                                                          repository_binary_file.content)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
@@ -531,7 +526,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     class Meta:
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
-        ordering = (["poradi"],)
+        ordering = ("poradi",)
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
@@ -623,7 +618,6 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
         constraints = [
             models.UniqueConstraint(fields=['rada', 'region','rok'], name='unique_sekvence_dokument'),
         ]
-        
 
 
 class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
@@ -679,22 +673,22 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     class Meta:
         db_table = "let"
         ordering = ["ident_cely"]
+        verbose_name_plural = "Lety"
 
     def __str__(self):
         return self.ident_cely
 
 
-def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
     """
-    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
-    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
-        filtered_files = files.filter(nazev_zkraceny__iregex=r"(([A-Z]\.\w+)$)")
+        filtered_files = files.filter(nazev__iregex=r"(([A-Z]\.\w+)$)")
         if filtered_files.exists():
             list_last_char = []
             for file in filtered_files:

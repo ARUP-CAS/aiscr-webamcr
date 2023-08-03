@@ -45,7 +45,7 @@ class HistorieTests(TestCase):
         self.client.force_login(self.existing_user)
         response = self.client.get(reverse("historie:soubor", kwargs={"soubor_id": TESTOVACI_SOUBOR_ID}))
         self.assertEqual(200, response.status_code)
-        self.assertTrue("nazev_zkraceny" in response.content.decode("utf-8"))
+        self.assertTrue("nazev" in response.content.decode("utf-8"))
         self.assertTrue("metadata_form" in response.context)
 
     def test_get_lokalita_historie(self):

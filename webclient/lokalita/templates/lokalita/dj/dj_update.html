@@ -42,6 +42,9 @@
             {% trans 'Potvrdit pian' %}
           </button>
           {% endif %}
+          {% if j.pian_ident_cely %}
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
+          {% endif %}
           {% if j.show_uprav_pian and j.pian_ident_cely %}
           <a id="pian-upravit-{{j.pian_ident_cely}}" class="dropdown-item" href="{% url 'lokalita:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
             {% trans 'Upravit pian' %}

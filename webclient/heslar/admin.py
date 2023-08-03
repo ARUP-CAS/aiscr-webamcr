@@ -22,6 +22,9 @@ class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
     change_actions = ("metadata",)
 
 
+class HeslarWithMetadataAdmin(ObjectWithMetadataAdmin):
+    pass
+
 @admin.register(HeslarNazev)
 class HeslarNazevAdmin(admin.ModelAdmin):
     """
@@ -44,7 +47,7 @@ class HeslarNazevAdmin(admin.ModelAdmin):
 
 
 @admin.register(Heslar)
-class HeslarAdmin(admin.ModelAdmin):
+class HeslarAdmin(HeslarWithMetadataAdmin):
     """
     Admin část pro správu modelu heslař.
     """
@@ -84,6 +87,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař datace.
     """
     list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    readonly_fields = ("obdobi", )
     fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     list_filter = ("obdobi", )
@@ -98,7 +102,7 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
     fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    search_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
@@ -116,8 +120,8 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař odkaz.
     """
-    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
-    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
+    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
 
@@ -163,7 +167,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     search_fields = ("nazev", "nazev_zkraceny", "typ_organizace__heslo", "zverejneni_pristupnost__heslo", "ident_cely")
     fields = ("nazev", "nazev_zkraceny", "typ_organizace", "oao", "mesicu_do_zverejneni",
               "zverejneni_pristupnost", "nazev_zkraceny_en", "email", "telefon", "adresa", "ico",
-              "nazev_en", "zanikla")
+              "nazev_en", "soucast", "zanikla")
     readonly_fields = ("ident_cely", )
 
     def has_delete_permission(self, request, obj=None):

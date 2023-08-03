@@ -236,7 +236,7 @@ def create(request, dj_ident_cely):
             + " "
             + get_validation_messages(validation_results),
         )
-        logger.debug("pian.views.create", extra={"message": PIAN_NEVALIDNI_GEOMETRIE})
+        logger.debug("pian.views.create", extra={"error_message": PIAN_NEVALIDNI_GEOMETRIE})
     elif form.is_valid():
         logger.debug("pian.views.create.form_valid")
         pian = form.save(commit=False)

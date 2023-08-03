@@ -39,6 +39,18 @@ class Heslar(ExportModelOperationsMixin("heslar"), ModelWithMetadata, ManyToMany
 
     ident_prefix = "HES"
 
+    @property
+    def dokument_typ_material_rada(self):
+        return HeslarDokumentTypMaterialRada.objects.filter(dokument_rada=self)
+
+    @property
+    def podrazena_hesla(self):
+        return HeslarHierarchie.objects.filter(heslo_nadrazene=self)
+
+    @property
+    def nadrazena_hesla(self):
+        return HeslarHierarchie.objects.filter(heslo_podrazene=self)
+
     class Meta:
         db_table = "heslar"
         unique_together = (
@@ -117,15 +129,21 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         )
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
+    def __init__(self, *args, **kwargs):
+        super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
+        self.initial_dokument_rada = self.dokument_rada
+        self.initial_dokument_typ = self.dokument_typ
+        self.initial_dokument_material = self.dokument_material
+
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
     """
     Class pro db model heslar hierarchie.
     """
     TYP_CHOICES = [
-        ('podřízenost', _('HeslarHierarchie.TYP_CHOICES.podrizenost')),
-        ('uplatnění', _('HeslarHierarchie.TYP_CHOICES.uplatneni')),
-        ('výchozí hodnota', _('HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
+        ('podřízenost', _('heslar.models.HeslarHierarchie.TYP_CHOICES.podrizenost')),
+        ('uplatnění', _('heslar.models.HeslarHierarchie.TYP_CHOICES.uplatneni')),
+        ('výchozí hodnota', _('heslar.models.HeslarHierarchie.TYP_CHOICES.vychozi_hodnota')),
     ]
 
     heslo_podrazene = models.ForeignKey(
@@ -151,6 +169,11 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
             ),
         ]
 
+    def __init__(self, *args, **kwargs):
+        super(HeslarHierarchie, self).__init__(*args, **kwargs)
+        self.initial_heslo_podrazene = self.heslo_podrazene
+        self.initial_heslo_nadrazene = self.heslo_nadrazene
+
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
     """
@@ -171,11 +194,23 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
     """
     Class pro db model heslar odkaz.
     """
-    heslo = models.ForeignKey(Heslar, models.CASCADE, db_column="heslo", verbose_name=_("heslar.models.HeslarOdkaz.heslo"))
+
+    SKOS_MAPPING_RELATION_CHOICES = [
+        ("skos:closeMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.skos_closeMatch")),
+        ("skos:exactMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.exactMatch")),
+        ("skos:broadMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.broadMatch")),
+        ("skos:narrowMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.narrowMatch")),
+        ("skos:relatedMatch", _("heslar.models.HeslarOdkaz.skos_mapping_relation_choices.relatedMatch")),
+    ]
+
+    heslo = models.ForeignKey(Heslar, models.CASCADE, db_column="heslo", verbose_name=_("heslar.models.HeslarOdkaz.heslo"), related_name="heslar_odkaz")
     zdroj = models.CharField(max_length=255, verbose_name=_("heslar.models.HeslarOdkaz.zdroj"))
     nazev_kodu = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.nazev_kodu"))
     kod = models.CharField(max_length=100, verbose_name=_("heslar.models.HeslarOdkaz.kod"))
     uri = models.TextField(blank=True, null=True, verbose_name=_("heslar.models.HeslarOdkaz.uri"))
+    skos_mapping_relation = models.CharField(max_length=20,
+                                             verbose_name=_("heslar.models.HeslarOdkaz.skos_mapping_relation"),
+                                             choices=SKOS_MAPPING_RELATION_CHOICES)
 
     class Meta:
         db_table = "heslar_odkaz"

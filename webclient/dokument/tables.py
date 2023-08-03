@@ -81,7 +81,7 @@ class DokumentTable(SearchTable):
     ident_cely = tables.Column(linkify=True)
     typ_dokumentu = tables.columns.Column(default="")
     organizace__nazev_zkraceny = tables.columns.Column(
-        default="", verbose_name=_("Organizace")
+        default="", verbose_name=_("dokument.tables.dokumentTable.organizace.label")
     )
     popis = tables.columns.Column(default="")
     rok_vzniku = tables.columns.Column(default="")
@@ -103,7 +103,7 @@ class DokumentTable(SearchTable):
             "th": {"class": "white"},
         },
         orderable=False,
-        verbose_name=_("dokument.list.soubory.label"),
+        verbose_name=_("dokument.tables.dokumentTable.soubory.label"),
     )
     columns_to_hide = (
         "rada",
