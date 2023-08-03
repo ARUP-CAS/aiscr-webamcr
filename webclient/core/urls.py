@@ -46,4 +46,6 @@ urlpatterns = [
         views.SearchListChangeColumnsView.as_view(),
         name="zmena_sloupcu_listu",
     ),
+    path("stahnout-metadata/<str:model_name>/<int:pk>", views.StahnoutMetadataView.as_view(), name="stahnout_metadata"),
+    path("stahnout-metadata/<str:model_name>/<str:ident_cely>", views.StahnoutMetadataIdentCelyView.as_view(), name="stahnout_metadata"),
 ]

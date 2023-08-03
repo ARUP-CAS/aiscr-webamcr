@@ -120,6 +120,7 @@ class PesCreateView(LoginRequiredMixin, View):
             messages.add_message(
                 request, messages.ERROR, HLIDACI_PES_NEUSPESNE_VYTVOREN
             )
+        request.user.save_metadata()
         return redirect("notifikace_projekty:list")
 
 
@@ -164,4 +165,5 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_NEUSPESNE_SMAZAN
             )
+        request.user.save_metadata()
         return JsonResponse({"redirect": reverse("notifikace_projekty:list")})

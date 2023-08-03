@@ -8,7 +8,8 @@ DROP TRIGGER IF EXISTS delete_connected_documents_2 on archeologicky_zaznam;
 --  1 - Projekt nejde smazat, dokud neodstraním projektovou dokumentaci (je to speciální jen kvůli tomu, že je tam ta obrácená vazba, jinak by to byl klasický RESTRICT).
 CREATE OR REPLACE FUNCTION prevent_project_deletion() RETURNS trigger LANGUAGE plpgsql AS $prevent_project_deletion$
         BEGIN
-            IF EXISTS (SELECT FROM soubor_vazby AS sv inner join soubor AS s ON s.vazba = sv.id WHERE s.projekt = OLD.id) THEN
+            IF EXISTS (SELECT FROM soubor_vazby AS sv inner join soubor AS s ON s.vazba = sv.id
+                inner join projekt AS p on p.soubory = sv.id WHERE p.id = OLD.id) THEN
                 RAISE EXCEPTION 'Nelze smazat projekt s projektovou dokumentací!';
             END IF;
             RETURN OLD;
