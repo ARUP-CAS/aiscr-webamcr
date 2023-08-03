@@ -11,6 +11,7 @@ from django.db import IntegrityError
 from django.db.models import F, Value, CharField, IntegerField
 from django.db.models import Q
 from django.db.models.functions import Concat
+from django.forms.renderers import BaseRenderer
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -19,13 +20,18 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import UpdateView
 from django_registration.backends.activation.views import RegistrationView
-from services.mailer import Mailer
 from django_registration.backends.activation.views import ActivationView
 from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-from rest_framework_xml.renderers import XMLRenderer
+from rest_framework import exceptions
+from django.conf import settings
+import datetime
+from django.utils import timezone
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+
 
 from core.decorators import odstavka_in_progress
 from core.message_constants import (
@@ -37,9 +43,6 @@ from core.message_constants import (
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User
-from .serializers import UserSerializer
-from django.utils.encoding import force_str
-
 
 logger = logging.getLogger(__name__)
 
@@ -241,7 +244,7 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
 
     def post(self, request, *args, **kwargs):
         request_data = dict(request.POST)
-        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", request_data=request_data)
+        logger.debug("uzivatel.views.UserAccountUpdateView.post.start", extra={"request_data": request_data})
         form = self.form_class(data=request.POST, instance=self.request.user)
         if form.is_valid():
             obj = form.save(commit=False)
@@ -276,6 +279,7 @@ def update_notifications(request):
         user.notification_types.set(notifications)
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.update_notifications.post.success"))
+        user.save_metadata()
         return redirect("/upravit-uzivatele/")
 
 
@@ -289,22 +293,44 @@ class UserActivationView(ActivationView):
         user.save()
         return user
 
+
 class UserPasswordResetView(PasswordResetView):
     """
     Třída pohledu pro resetování hesla.
     """
     form_class = UserPasswordResetForm
-    
+
+
 class TokenAuthenticationBearer(TokenAuthentication):
     """
     Override třídy pro nastavení názvu tokenu na Bearer.
     """
     keyword = "Bearer"
-    
-class MyXMLRenderer(XMLRenderer):
+
+    def authenticate_credentials(self, key):
+        model = self.get_model()
+        try:
+            token = model.objects.select_related('user').get(key=key)
+        except model.DoesNotExist:
+            raise exceptions.AuthenticationFailed(_('Invalid token.'))
+
+        if not token.user.is_active:
+            raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+
+        if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
+            raise exceptions.AuthenticationFailed(_('User token too old.'))
+
+        return (token.user, token)
+
+
+class MyXMLRenderer(BaseRenderer):
     """
     Override třídy pro nastavení správnych tagů.
     """
+
+    media_type = "application/xml"
+    format = "xml"
+    charset = "utf-8"
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """
@@ -312,15 +338,27 @@ class MyXMLRenderer(XMLRenderer):
         """
         return data
 
+
 class GetUserInfo(APIView):
     """
     Třída podlehu pro získaní základních info o uživately.
     """
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [TokenAuthenticationBearer]
     permission_classes = [IsAuthenticated]
-    renderer_classes = [MyXMLRenderer,]
-    http_method_names = ["get",]
+    renderer_classes = [MyXMLRenderer, ]
+    http_method_names = ["get", ]
     
     def get(self, request, format=None):
         user = request.user
         return Response(user.metadata)
+
+class ObtainAuthTokenWithUpdate(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
+            token.delete()
+            token.save()
+        return Response({'token': token.key})

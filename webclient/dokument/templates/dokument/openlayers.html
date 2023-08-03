@@ -10,8 +10,8 @@
 
 <div id="{{ id }}_div_map">
     <div id="{{ id }}_map"></div>
-    {% if not disabled %}<span class="clear_features"><a href="javascript:{{ module }}.clearFeatures()">{% translate "Delete all Features" %}</a></span>{% endif %}
-    {% if display_raw %}<p>{% translate "Debugging window (serialized value)" %}</p>{% endif %}
+    {% if not disabled %}<span class="clear_features"><a href="javascript:{{ module }}.clearFeatures()">{% translate "dokument.templates.openlayers.deleteAllFeature.text" %}</a></span>{% endif %}
+    {% if display_raw %}<p>{% translate "dokument.templates.openlayers.debuggingWindow.text" %}</p>{% endif %}
     <textarea id="{{ id }}" class="vSerializedField required" cols="150" rows="10" name="{{ name }}">{{ serialized }}</textarea>
     <script>
         {% block map_options %}var map_options = {};{% endblock %}

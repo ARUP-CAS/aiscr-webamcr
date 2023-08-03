@@ -1,8 +1,8 @@
 import logging
 
-from arch_z.models import ArcheologickyZaznam, Akce, ExterniOdkaz
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 
@@ -23,11 +23,12 @@ def create_arch_z_vazby(sender, instance, **kwargs):
         instance.historie = hv
 
 @receiver(post_save, sender=ArcheologickyZaznam)
-def create_arch_z_metadata(sender, instance, **kwargs):
+def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Funkce pro aktualizaci metadat archeologického záznamu.
     """
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
 
 
 @receiver(post_save, sender=ExterniOdkaz)
@@ -35,5 +36,26 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
     """
         Funkce pro aktualizaci metadat externího odkazu.
     """
-    instance.archeologicky_zaznam.save_metadata()
-    instance.externi_zdroj.save_metadata()
+    if instance.archeologicky_zaznam is not None:
+        instance.archeologicky_zaznam.save_metadata()
+    if instance.externi_zdroj is not None:
+        instance.externi_zdroj.save_metadata()
+
+
+@receiver(post_delete, sender=ArcheologickyZaznam)
+def delete_arch_z_repository_container(sender, instance: ArcheologickyZaznam, **kwargs):
+    """
+        Funkce pro aktualizaci metadat archeologického záznamu.
+    """
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=ExterniOdkaz)
+def delete_externi_odkaz_repository_container(sender, instance: ExterniOdkaz, **kwargs):
+    """
+        Funkce pro aktualizaci metadat archeologického záznamu.
+    """
+    if instance.archeologicky_zaznam is not None:
+        instance.archeologicky_zaznam.save_metadata()
+    if instance.externi_zdroj is not None:
+        instance.externi_zdroj.save_metadata()

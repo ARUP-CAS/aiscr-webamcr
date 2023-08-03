@@ -6,7 +6,7 @@
 {% load template_filters %}
 {% load crispy_forms_field %}
 
-{% block title %}{% trans "Detail dokumentu" %}{% endblock %}
+{% block title %}{% trans "dokument.templates.detail_model_3D.detailDokumentu.title" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
 {% endblock %}
@@ -20,14 +20,14 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Náhledy 3D modelu / Obrázky s texturou" %}
+          {% trans "dokument.templates.detail_model_3D.nahledy3dModelu.cardHeader" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
                rel="tooltip"
-               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+               data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.nahledy3dModelu.nahratSoubor.tooltip' %}">
               <span class="material-icons">publish</span>
             </a>
           </div>
@@ -40,7 +40,7 @@
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
-            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+            {% trans "dokument.templates.detail_model_3D.nahledy3dModelu.dokumentBezSouboru.text" %}
           </div>
         {% endif %}
       </div>
@@ -49,13 +49,13 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Detail" %}
+          {% trans "dokument.templates.detail_model_3D..detail.cardHeader" %}
         </div>
         {% if show.editovat %}
           <div class="app-fx app-right">
             <div class="btn-group" role="group">
               <a class="btn" href="{% url 'dokument:edit-model-3D' dokument.ident_cely %}" rel="tooltip"
-                 data-placement="top" title="{% trans 'Upravit' %}">
+                 data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.detail.upravit.tooltip' %}">
                 <span class="material-icons">edit</span>
               </a>
             </div>
@@ -105,7 +105,7 @@
           {% include "dokument/coor_doc.html" %}
           <div class="row">
             <div class="col-sm-12">
-              <span class="app-divider-label">{% trans "dokument.template.komponentaDivider.text" %}</span>
+              <span class="app-divider-label">{% trans "dokument.templates.detail_model_3D.detail.komponentaDivider.text" %}</span>
               <hr class="mt-0"/>
             </div>
             <div class="form-group col-sm-2">
@@ -133,11 +133,11 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Bližší specifikace obsahu (předměty a objekty)" %}
+          {% trans "dokument.templates.detail_model_3D.predmetyObjekty.cardHeader" %}
         </div>
       </div>
       <div class="card-body formset-table">
-        <h5>{% trans "Objekty" %}</h5>
+        <h5>{% trans "dokument.templates.detail_model_3D.predmetyObjekty.Objekty" %}</h5>
         <form class="mb-3" method="POST" action="{% url 'nalez:edit_nalez' komponenta.ident_cely %}"
               onsubmit="editNalezSubmitButton.disabled = true; return true;">
           {% if formset.objekt.forms %}
@@ -145,21 +145,21 @@
           {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
-            {% trans "Dokument neobsahuje žádné objekty." %}
+            {% trans "dokument.templates.detail_model_3D.predmetyObjekty.dokumentBezObjektu.text" %}
           </div>
           {% endif %}
-        <h5>{% trans "Předměty" %}</h5>
+        <h5>{% trans "dokument.templates.detail_model_3D.predmetyObjekty.Predmety" %}</h5>
           {% if formset.predmet.forms %}
           {% crispy formset.predmet formset.helper_predmet %}
           {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
-            {% trans "Dokument neobsahuje žádné předměty." %}
+            {% trans "dokument.templates.detail_model_3D.predmetyObjekty.dokumentBezPredmetu.text" %}
           </div>
           {% endif %}
           {% if show.editovat %}
           <button type="submit" id="editNalezSubmitButton"
-                  class="btn btn-primary">{% trans "Upravit nalezy" %}</button>
+                  class="btn btn-primary">{% trans "dokument.templates.detail_model_3D.predmetyObjekty.submitButton.text" %}</button>
           {% endif %}
         </form>
       </div>

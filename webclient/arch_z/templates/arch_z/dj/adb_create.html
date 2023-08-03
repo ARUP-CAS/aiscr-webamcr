@@ -8,7 +8,7 @@
 <div class="card app-card-form" id="create_adb_form">
   <div class="card-header">
     <div class="app-fx app-left">
-      {% trans "Nový archeologický dokumentační bod" %}
+      {% trans "arch_z.templates.arch_z.dj.adb_create.novyADB.label" %}
     </div>
   </div>
   <div class="card-body">
@@ -16,7 +16,7 @@
       <!-- Action is filled using javascript -->
       {% crispy adb_form_create %}
       <button type="submit" id="createAdbSubmitButton"
-              class="btn btn-primary">{% trans "Vytvořit ADB" %}
+              class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.adb_create.editButtons.vytvoritADB.label" %}
       </button>
     </form>
   </div>
