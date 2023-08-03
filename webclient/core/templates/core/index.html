@@ -12,7 +12,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Projekty" %}
+          {% trans "core.templates.index.cardProjekt.label" %}
         </div>
       </a>
     </div>
@@ -22,7 +22,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Samostatné akce" %}
+          {% trans "core.templates.index.cardSamostatneAkce.label" %}
         </div>
       </a>
     </div>
@@ -32,7 +32,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Lokality" %}
+          {% trans "core.templates.index.cardLokality.label" %}
         </div>
       </a>
     </div>
@@ -42,7 +42,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Samostatné nálezy" %}
+          {% trans "core.templates.index.cardSamostatneNalezy.label" %}
         </div>
       </a>
     </div>
@@ -52,7 +52,7 @@
         <img src="{% static 'logo-am-mark.png' %}" />
       </div>
       <div class="card-footer">
-        {% trans "Knihovna 3D" %}
+        {% trans "core.templates.index.cardKnihovna3D.label" %}
       </div>
     </a>
   </div>
@@ -62,7 +62,7 @@
         <img src="{% static 'logo-am-mark.png' %}" />
       </div>
       <div class="card-footer">
-        {% trans "Dokumeny" %}
+        {% trans "core.templates.index.cardDokumenty.label" %}
       </div>
     </a>
   </div>
@@ -72,7 +72,7 @@
         <img src="{% static 'logo-am-mark.png' %}" />
       </div>
       <div class="card-footer">
-        {% trans "Externí zdroje" %}
+        {% trans "core.templates.index.cardExterniZdroje.label" %}
       </div>
     </a>
   </div>
@@ -81,28 +81,25 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "Projekty" %}</h4>
+        <h4>{% trans "core.templates.index.cardProjekt.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "core.templates.index.cardProjekt.text" %}
       </div>
     </div>
 
     <div class="app-collapse-knihovna_3d collapse">
       <div class="p-3">
-        <h4>{% trans "Knihovna 3D" %}</h4>
+        <h4>{% trans "core.templates.index.cardKnihovna3D.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "core.templates.index.cardKnihovna3D.text" %}
       </div>
     </div>
 
     <div class="app-collapse-samostatny_nalez collapse">
       <div class="p-3">
-        <h4>{% trans "Samostatné nálezy" %}</h4>
+        <h4>{% trans "core.templates.index.cardSamostatneNalezy.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "core.templates.index.cardSamostatneNalezy.text" %}
       </div>
     </div>
   </div>

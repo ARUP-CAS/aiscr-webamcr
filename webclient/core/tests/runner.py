@@ -176,8 +176,8 @@ class AMCRBaseTestRunner(BaseRunner):
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
         projektove_sekvence = []
         for rok in sekvence_roku:
-            projektove_sekvence.append(ProjektSekvence(rada="C", rok=rok, sekvence=1))
-            projektove_sekvence.append(ProjektSekvence(rada="M", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region="C", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region="M", rok=rok, sekvence=1))
         ProjektSekvence.objects.bulk_create(projektove_sekvence)
 
         user_notifications = (
@@ -617,6 +617,7 @@ class AMCRBaseTestRunner(BaseRunner):
             hlavni_typ=Heslar.objects.get(pk=HLAVNI_TYP_SONDA_ID),
             hlavni_vedouci=Osoba.objects.first(),
             organizace=o,
+            odlozena_nz=True,
         )
         a.projekt = p
         a.save()
@@ -802,7 +803,6 @@ class AMCRBaseTestRunner(BaseRunner):
         vazba_soubory = SouborVazby(typ_vazby=DOKUMENT_RELATION_TYPE)
         vazba_soubory.save()
         soubor = Soubor(
-            nazev_zkraceny="x",
             nazev="x",
             mimetype="x",
             size_mb=1,

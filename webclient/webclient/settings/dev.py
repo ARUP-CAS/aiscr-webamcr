@@ -61,3 +61,4 @@ SITE_URL = 'http://localhost:8000'
 
 # Fake key
 RECAPTCHA_PRIVATE_KEY = "OtKcTKoJwtIyCm0XFEf0EA5kVMV4hHaDaJfmyr"
+SKIP_RECAPTCHA = True

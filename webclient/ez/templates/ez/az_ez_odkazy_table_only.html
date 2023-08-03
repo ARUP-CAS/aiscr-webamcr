@@ -2,15 +2,15 @@
 <table class="table table-striped table-hover table-sm mb-0">
     <thead>
     <tr>
-      <th>{% trans "externiZdroj.azOdkazyTable.ID.header" %}</th>
-      <th>{% trans "externiZdroj.azOdkazyTable.autor.header" %}</th>
-      <th>{% trans "externiZdroj.azOdkazyTable.rok.header" %}</th>
-      <th>{% trans "externiZdroj.azOdkazyTable.nazev.header" %}</th>
+      <th>{% trans "ez.templates.azEzOdkazyTableOnly.Id.label" %}</th>
+      <th>{% trans "ez.templates.azEzOdkazyTableOnly.autor.label" %}</th>
+      <th>{% trans "ez.templates.azEzOdkazyTableOnly.rok.label" %}</th>
+      <th>{% trans "ez.templates.azEzOdkazyTableOnly.nazev.label" %}</th>
       {% if hide_paginace != "True" %}
-      <th>{% trans "externiZdroj.azOdkazyTable.paginace.header" %}</th>
+      <th>{% trans "ez.templates.azEzOdkazyTableOnly.paginace.label" %}</th>
       {% endif %}
       {% if show.editovat %}
-      <th>{% trans "externiZdroj.odkazyTable.odpojit.header" %}</th>
+      <th>{% trans "ez.templates.azEzOdkazyTableOnly.odpojit.label" %}</th>
       {% endif %}
     </tr>
     </thead>

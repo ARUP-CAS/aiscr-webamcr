@@ -108,9 +108,9 @@ def get_katastr_name(value):
 @register.filter
 def true_false(value):
     if value and value == True:
-        return _("Ano")
+        return _("core.template_filters.true_false.true.label")
     else:
-        return _("Ne")
+        return _("core.template_filters.true_false.false.label")
 
 
 @register.filter
