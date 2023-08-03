@@ -20,7 +20,7 @@ from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
 from services.mailer import Mailer
-from uzivatel.models import Organizace, Osoba
+from uzivatel.models import Organizace, Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -404,8 +404,10 @@ def get_record(class_name, record_pk):
         record = Organizace.objects.get(pk=record_pk)
     elif class_name == "Osoba":
         record = Osoba.objects.get(pk=record_pk)
+    elif class_name == "User":
+        record = User.objects.get(pk=record_pk)
     else:
-        logger.debug("cron.send_notifications.do.error.unknown_class",
+        logger.debug("cron.tasks.get_record.error.unknown_class",
                      extra={"class_name": class_name, "record_pk": record_pk})
         record = None
     return record
@@ -434,7 +436,7 @@ def record_ident_change(class_name, record_pk, old_ident):
     record = get_record(class_name, record_pk)
     connector = FedoraRepositoryConnector(record)
     connector.record_ident_change(old_ident)
-    if hasattr(record, "soubory"):
+    if hasattr(record, "soubory") and record.soubory is not None:
         for soubor in record.soubory.soubory.all():
             soubor: Soubor
             repository_binary_file = soubor.get_repository_content()

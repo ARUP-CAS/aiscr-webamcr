@@ -43,7 +43,7 @@ from core.message_constants import (
     PRISTUP_ZAKAZAN,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
     ZAZNAM_USPESNE_EDITOVAN,
-    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
+    ZAZNAM_USPESNE_SMAZAN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_all_pians_with_akce,
@@ -927,6 +927,9 @@ def smazat(request, ident_cely):
             {"redirect": az.get_absolute_url()},
             status=403,
         )
+    if az.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": az.get_absolute_url()}, status=403)
     if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
         projekt = az.akce.projekt
     else:
