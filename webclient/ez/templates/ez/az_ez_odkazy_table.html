@@ -3,12 +3,12 @@
 <div class="card app-card-form app-card-ext_zdroj app-table-list-container">
     <div class="card-header">
       <div class="app-fx app-left">
-        {% trans "archZ.externiOdkazy.table.title" %}
+        {% trans "ez.templates.azEzOdakzytable.table.cardHeader" %}
       </div>
       {% if show.editovat %}
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
-          <button class="btn" id="eo-pripojit-do-az" type="button" type="button" rel="tooltip" data-placement="top" title="{% trans "archZ.externiOdkazy.pridat.label" %}" name="button" href="{% url 'ez:pripojit_eo_do_az' zaznam.ident_cely %}">
+          <button class="btn" id="eo-pripojit-do-az" type="button" type="button" rel="tooltip" data-placement="top" title="{% trans "ez.templates.azEzOdakzytable.pridat.label" %}" name="button" href="{% url 'ez:pripojit_eo_do_az' zaznam.ident_cely %}">
             <span class="material-icons">add</span>
           </button>
         </div>
@@ -21,7 +21,7 @@
     {% else %}
     <div class="app-note">
       <span class="material-icons">info</span>
-      {% trans "archZ.externiOdkazy.tableNoOdkaz.text" %}
+      {% trans "ez.templates.azEzOdakzytable.tableNoOdkaz.text" %}
     </div>
     {% endif %}
   </div>

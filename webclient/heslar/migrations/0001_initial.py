@@ -75,6 +75,30 @@ class Migration(migrations.Migration):
                 ('nazev_kodu', models.CharField(max_length=100, verbose_name='heslar.models.HeslarOdkaz.nazev_kodu')),
                 ('kod', models.CharField(max_length=100, verbose_name='heslar.models.HeslarOdkaz.kod')),
                 ('uri', models.TextField(blank=True, null=True, verbose_name='heslar.models.HeslarOdkaz.uri')),
+                ('skos_mapping_relation', models.CharField(max_length=20, verbose_name="heslar.models.HeslarOdkaz.skos_mapping_relation",
+                                                           choices=[
+                                                               (
+                                                                   "skos:closeMatch",
+                                                                   "heslar.models.HeslarOdkaz.skos_mapping_relation_choices.skos_closeMatch",
+                                                               ),
+                                                               (
+                                                                   "skos:exactMatch",
+                                                                   "heslar.models.HeslarOdkaz.skos_mapping_relation_choices.exactMatch",
+                                                               ),
+                                                               (
+                                                                   "skos:broadMatch",
+                                                                   "heslar.models.HeslarOdkaz.skos_mapping_relation_choices.broadMatch",
+                                                               ),
+                                                               (
+                                                                   "skos:narrowMatch",
+                                                                   "heslar.models.HeslarOdkaz.skos_mapping_relation_choices.narrowMatch",
+                                                               ),
+                                                               (
+                                                                   "skos:relatedMatch",
+                                                                   "heslar.models.HeslarOdkaz.skos_mapping_relation_choices.relatedMatch",
+                                                               ),
+                                                           ],
+                                                           )),
             ],
             options={
                 'verbose_name_plural': 'Heslář odkaz',

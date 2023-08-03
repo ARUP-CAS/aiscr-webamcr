@@ -15,7 +15,7 @@ class AkceTable(SearchTable):
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
     katastr = tables.Column(
-        verbose_name=_("Katastrální území"),
+        verbose_name=_("arch_z.tables.AkceTable.katastr.label"),
         default="",
         accessor="archeologicky_zaznam__hlavni_katastr",
     )
@@ -25,12 +25,12 @@ class AkceTable(SearchTable):
     )
     hlavni_vedouci = tables.columns.Column(default="")
     uzivatelske_oznaceni = tables.Column(
-        verbose_name=_("Uživatelské označení"),
+        verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
         accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
     dalsi_katastry = DalsiKatastryColumn(
-        verbose_name=_("Další katastry"),
+        verbose_name=_("arch_z.tables.AkceTable.dalsi_katastry.label"),
         default="",
         accessor="archeologicky_zaznam__katastry__all",
     )

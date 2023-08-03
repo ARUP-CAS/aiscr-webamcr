@@ -103,9 +103,9 @@ class VratitForm(forms.Form):
     """
 
     reason = forms.CharField(
-        label=_("Zdůvodnění vrácení"),
+        label=_("core.forms.VratitForm.reason.label"),
         required=True,
-        help_text=_("core.forms.vratit.tooltip"),
+        help_text=_("core.forms.VratitForm.reason.tooltip"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -133,7 +133,6 @@ class SouborMetadataForm(forms.ModelForm):
     Formulář pro zobrazení detailu metadat souboru.
     """
 
-    nazev_zkraceny = forms.CharField()
     nazev = forms.CharField()
     mimetype = forms.CharField()
     size_mb = forms.CharField(widget=DecimalTextWideget())
@@ -141,7 +140,7 @@ class SouborMetadataForm(forms.ModelForm):
     class Meta:
         model = Soubor
         fields = (
-            "nazev_zkraceny",
+            "nazev",
             "rozsah",
             "nazev",
             "mimetype",
@@ -153,7 +152,6 @@ class SouborMetadataForm(forms.ModelForm):
         self.helper = FormHelper(self)
         self.helper.layout = Layout(
             Div(
-                Div("nazev_zkraceny", css_class="col-sm-2"),
                 Div("rozsah", css_class="col-sm-1"),
                 Div("nazev", css_class="col-sm-2"),
                 Div("mimetype", css_class="col-sm-2"),
@@ -173,27 +171,27 @@ class OdstavkaSystemuForm(forms.ModelForm):
     """
 
     error_text_cs = forms.CharField(
-        label=_("core.forms.odstavkaSystemu.errorTextCs"),
+        label=_("core.forms.OdstavkaSystemuForm.errorTextCs.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
     error_text_en = forms.CharField(
-        label=_("core.forms.odstavkaSystemu.errorTextEn"),
+        label=_("core.forms.OdstavkaSystemuForm.errorTextEn.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
     error_text_oznam_cs = forms.CharField(
-        label=_("core.forms.odstavkaSystemu.errorTextOznamCs"),
+        label=_("core.forms.OdstavkaSystemuForm.errorTextOznamCs.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
     error_text_oznam_en = forms.CharField(
-        label=_("core.forms.odstavkaSystemu.errorTextOznamEn"),
+        label=_("core.forms.OdstavkaSystemuForm.errorTextOznamEn.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
     text_cs = forms.CharField(
-        label=_("base.odstavka.textCZ.label"),
+        label=_("core.forms.OdstavkaSystemuForm.textCs.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
     text_en = forms.CharField(
-        label=_("base.odstavka.textEN.label"),
+        label=_("core.forms.OdstavkaSystemuForm.textEn.label"),
         widget=forms.Textarea(attrs={"rows": 10, "cols": 81}),
     )
 

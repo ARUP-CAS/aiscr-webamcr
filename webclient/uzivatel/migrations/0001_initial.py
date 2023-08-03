@@ -104,7 +104,7 @@ class Migration(migrations.Migration):
                 ('ico', models.CharField(blank=True, max_length=100, null=True, verbose_name='uzivatel.models.Organizace.ico')),
                 ('nazev_en', models.CharField(blank=True, max_length=255, null=True, verbose_name='uzivatel.models.Organizace.nazev_en')),
                 ('zanikla', models.BooleanField(default=False, verbose_name='uzivatel.models.Organizace.zanikla')),
-                ('ident_cely', models.CharField(max_length=10, unique=True)),
+                ('ident_cely', models.CharField(max_length=20, unique=True)),
             ],
             options={
                 'verbose_name': 'Organizace',
