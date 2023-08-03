@@ -43,7 +43,6 @@
             <ul>
               <li><a href="{% url 'projekt:index' %}">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'projekt:create' %}">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "Přihlásit projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "Zahájit výzkum" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Ukončit terén" %}</a></li>
@@ -51,6 +50,7 @@
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Uzavřít projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}">{% trans "Vybrat projekty" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "Naše projekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "Archivovat projekty" %}</a></li>
             </ul>
           </div>
@@ -161,8 +161,8 @@
             <ul>
               <li><a href="{% url 'dokument:index' %}" title="">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje dokumenty" %}</a></li>
               <li><a href="{% url 'dokument:list' %}" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje dokumenty" %}</a></li>
               <li><a href="{% url 'dokument:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
             </ul>
           </div>
