@@ -155,6 +155,7 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             vazba=self.historie,
             poznamka=poznamka_historie,
         ).save()
+        self.record_ident_change(old_ident)
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -298,10 +299,12 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             else:
                 sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
         sequence.save()
+        old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
         self.save()
+        self.record_ident_change(old_ident)
 
     def set_akce_ident(self, ident=None):
         """

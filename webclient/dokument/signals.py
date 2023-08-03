@@ -44,12 +44,14 @@ def create_dokument_cast_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Dokument)
 def dokument_save_metadata(sender, instance: Dokument, **kwargs):
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
 
 
 @receiver(post_save, sender=Let)
 def let_save_metadata(sender, instance: Let, **kwargs):
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
 
 
 @receiver(post_delete, sender=Dokument)
@@ -60,3 +62,13 @@ def dokument_delete_repository_container(sender, instance: Dokument, **kwargs):
 @receiver(post_delete, sender=Let)
 def let_delete_repository_container(sender, instance: Let, **kwargs):
     instance.record_deletion()
+
+
+@receiver(post_save, sender=DokumentCast)
+def let_save_metadata(sender, instance: DokumentCast, created, **kwargs):
+    if created:
+        instance.dokument.save_metadata()
+        if instance.archeologicky_zaznam is not None:
+            instance.archeologicky_zaznam.save_metadata()
+        if instance.projekt is not None:
+            instance.projekt.save_metadata()

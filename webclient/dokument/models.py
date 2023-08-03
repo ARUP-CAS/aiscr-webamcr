@@ -244,29 +244,29 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
 
         if "3D" in self.ident_cely:
             if not self.extra_data.format:
-                result.append(_("dokument.formCheckOdeslani.missingFormat.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingFormat.text"))
             if not self.popis:
-                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.extra_data.duveryhodnost:
-                result.append(_("dokument.formCheckOdeslani.missingDuveryhodnost.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingDuveryhodnost.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].obdobi:
-                result.append(_("dokument.formCheckOdeslani.missingObdobi.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingObdobi.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].areal:
-                result.append(_("dokument.formCheckOdeslani.missingAreal.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingAreal.text"))
         else:
             if not self.pristupnost:
-                result.append(_("dokument.formCheckOdeslani.missingPristupnost.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPristupnost.text"))
             if not self.popis:
-                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.ulozeni_originalu:
                 result.append(
-                    _("dokument.formCheckOdeslani.missingUlozeniOriginalu.text")
+                    _("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text")
                 )
             if self.jazyky.all().count() == 0:
-                result.append(_("dokument.formCheckOdeslani.missingJazyky.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingJazyky.text"))
         # At least one soubor must be attached to the dokument
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+            result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
         return result
 
     def check_pred_archivaci(self):
@@ -278,7 +278,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+            result.append(_("dokument.models.formCheckArchivace.missingSoubor.text"))
         return result
 
     def has_extra_data(self):
@@ -333,7 +333,9 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         )
         old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
+        self.suppress_signal = True
         self.save()
+        self.save_metadata(use_celery=False)
 
         from core.repository_connector import FedoraRepositoryConnector
         from core.utils import get_mime_type
@@ -343,9 +345,10 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         for soubor in self.soubory.soubory.all():
             soubor: Soubor
             repository_binary_file = soubor.get_repository_content()
-            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                      get_mime_type(soubor.nazev),
-                                                      repository_binary_file.content)
+            if repository_binary_file is not None:
+                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                          get_mime_type(soubor.nazev),
+                                                          repository_binary_file.content)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
@@ -372,13 +375,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         last_day_of_month = calendar.monthrange(new_date.year, month)[1]
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)
-
-    def save_metadata(self, use_celery=True, include_files=False):
-        super(Dokument, self).save_metadata(use_celery, include_files)
-        for item in self.casti.all():
-            arch_z: ArcheologickyZaznam = item.archeologicky_zaznam
-            if isinstance(arch_z, ArcheologickyZaznam):
-                arch_z.save_metadata()
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
@@ -683,12 +679,11 @@ class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
         return self.ident_cely
 
 
-def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
     """
-    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
-    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]

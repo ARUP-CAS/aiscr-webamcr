@@ -40,7 +40,8 @@ class DocumentGenerator:
     }
     attribute_names = {}
     _simple_element_types = ("xs:string", "xs:date", "xs:integer", "amcr:refType", "xs:dateTime", "amcr:gmlType",
-                             "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType")
+                             "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType",
+                             "xs:decimal")
 
     @classmethod
     def generate_metadata(cls, model_class=None, limit=None, start_with_pk=None):
@@ -341,6 +342,8 @@ class DocumentGenerator:
                     new_sub_element.text = record_text
             if "vocabType" in ref_type:
                 new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
+                if getattr(record, "ident_cely", None) is not None:
+                    new_sub_element.attrib["id"] = record.ident_cely
             if "langstringType" in ref_type:
                 if parsed_comment.attribute_field_names is not None:
                     new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = \

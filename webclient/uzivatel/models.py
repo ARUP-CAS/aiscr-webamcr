@@ -45,7 +45,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import logging
 
-from xml_generator.models import ModelWithMetadata
+from xml_generator.models import ModelWithMetadata, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -192,13 +192,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
-
-        if self.is_active:
-            try:
-                self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
-            except ValueError:
-                self.is_staff = self.is_superuser
-
         if self.history_vazba is None:
             from historie.models import HistorieVazby
             historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
@@ -220,9 +213,17 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         return connector.get_metadata()
 
     def save_metadata(self, **kwargs):
+        if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
+            return
+        from cron.tasks import save_record_metadata
+        save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+
+    def record_deletion(self):
+        logger.debug("uzivatel.models.User.delete_repository_container.start")
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
-        return connector.save_metadata(True)
+        logger.debug("uzivatel.models.User.delete_repository_container.end")
+        return connector.record_deletion()
 
     class Meta:
         db_table = "auth_user"

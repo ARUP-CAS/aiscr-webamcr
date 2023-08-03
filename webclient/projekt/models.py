@@ -416,7 +416,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return {}
 
-    def check_pred_smazanim(self):
+    def check_pred_smazanim(self) -> list:
         """
         Metóda na kontrolu prerekvizit pred smazaním projektu:
 
@@ -507,10 +507,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             else:
                 sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
         sequence.save()
+        old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
         self.save()
+        self.record_ident_change(old_ident)
 
     def create_confirmation_document(self, additional=False, user=None):
         """
@@ -526,7 +528,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 mimetype="application/pdf",
                 path=rep_bin_file.url_without_domain,
                 size_mb=rep_bin_file.size_mb,
-                sha_512=rep_bin_file.sha_512(),
+                sha_512=rep_bin_file.sha_512,
             )
             soubor.save()
             if user:
@@ -544,8 +546,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path = elc.build_document()
-        return path
+        output = elc.build_document()
+        return output
 
     @property
     def should_generate_confirmation_document(self):
@@ -567,20 +569,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
-    def record_ident_change(self, old_ident_cely):
-        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start")
-        from core.repository_connector import FedoraRepositoryConnector
-        from core.utils import get_mime_type
-        from core.views import get_projekt_soubor_name
-        connector = FedoraRepositoryConnector(self)
-        connector.record_ident_change(old_ident_cely)
-        for soubor in self.soubory.soubory.all():
-            soubor: Soubor
-            repository_binary_file = soubor.get_repository_content()
-            rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                      get_mime_type(soubor.nazev),
-                                                      repository_binary_file.content)
-        logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.end")
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

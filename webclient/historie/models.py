@@ -100,12 +100,12 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         (NAHRANI_SBR, "Nahrání souboru"),
     )
 
-    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))
-    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"),db_index=True)
+    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"))
+    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"),db_index=True)
     uzivatel = models.ForeignKey(
-        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("Uživatel")
+        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label")
     )
-    poznamka = models.TextField(blank=True, null=True, verbose_name=_("Poznámka"))
+    poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"))
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
     )
@@ -121,14 +121,14 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     Model se používa k napojení na jednotlivé záznamy.
     """
     CHOICES = (
-        (PROJEKT_RELATION_TYPE, "Projekt"),
-        (DOKUMENT_RELATION_TYPE, "Dokument"),
-        (SAMOSTATNY_NALEZ_RELATION_TYPE, "Samostatný nález"),
-        (UZIVATEL_RELATION_TYPE, "Uživatel"),
-        (PIAN_RELATION_TYPE, "Pian"),
-        (UZIVATEL_SPOLUPRACE_RELATION_TYPE, "Uživatel spolupráce"),
-        (EXTERNI_ZDROJ_RELATION_TYPE, "Externí zdroj"),
-        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, "Archeologický záznam"),
+        (PROJEKT_RELATION_TYPE, _("Projekt")),
+        (DOKUMENT_RELATION_TYPE, _("Dokument")),
+        (SAMOSTATNY_NALEZ_RELATION_TYPE, _("Samostatný nález")),
+        (UZIVATEL_RELATION_TYPE, _("Uživatel")),
+        (PIAN_RELATION_TYPE, _("Pian")),
+        (UZIVATEL_SPOLUPRACE_RELATION_TYPE, _("Uživatel spolupráce")),
+        (EXTERNI_ZDROJ_RELATION_TYPE, _("Externí zdroj")),
+        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, _("Archeologický záznam")),
     )
 
     typ_vazby = models.TextField(max_length=24, choices=CHOICES,db_index=True)

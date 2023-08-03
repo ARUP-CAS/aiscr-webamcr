@@ -3,9 +3,10 @@ import logging
 import mimetypes
 import os
 import re
-from io import StringIO
+from io import StringIO, BytesIO
 
 import unicodedata
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -79,7 +80,7 @@ def delete_file(request, pk):
     """
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
-        items_deleted = s.delete()
+        items_deleted: Soubor = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
@@ -96,8 +97,12 @@ def delete_file(request, pk):
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
+            connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                connector.delete_binary_file(s)
+            else:
+                connector.delete_binary_file_completely(s)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -223,7 +228,7 @@ def post_upload(request):
     update = "fileID" in request.POST
     s = None
     if not update:
-        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST["objectID"]})
+        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None)})
         projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
         samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
@@ -244,7 +249,7 @@ def post_upload(request):
                 },
                 status=500,
             )
-        if not new_name:
+        if new_name is False:
             return JsonResponse(
                 {
                     "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
@@ -257,23 +262,27 @@ def post_upload(request):
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
         new_name = s.nazev
-    soubor = request.FILES.get("file")
+    soubor: TemporaryUploadedFile = request.FILES.get("file")
+    soubor.seek(0)
+    soubor_data = BytesIO(soubor.read())
+    rep_bin_file = None
     if soubor:
         checksum = calculate_crc_32(soubor)
-        soubor.file.seek(0)
         if not update:
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
-            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor.file)
+            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
+            sha_512 = rep_bin_file.sha_512
             s = Soubor(
                 vazba=objekt.soubory,
                 nazev=new_name,
                 # Short name is new name without checksum
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
-                path=rep_bin_file.url_without_domain
+                path=rep_bin_file.url_without_domain,
+                sha_512=sha_512,
             )
-            duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
+            duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
                 s.save()
@@ -325,7 +334,7 @@ def post_upload(request):
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
                 rep_bin_file = conn.update_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name),
-                                                       soubor.file, s.repository_uuid)
+                                                       soubor_data, s.repository_uuid)
                 name_without_checksum = soubor.name
                 soubor.name = checksum + "_" + new_name
                 s.nazev = checksum + "_" + new_name
@@ -333,30 +342,31 @@ def post_upload(request):
                 s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
+                s.sha_512 = rep_bin_file.sha_512
                 s.save()
                 s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
-
-            duplikat = (
-                Soubor.objects.filter(nazev__icontains=checksum)
-                .filter(~Q(id=s.id))
-                .order_by("pk")
-            )
-            if duplikat.count() > 0:
-                parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
-                    if duplikat.first().vazba.navazany_objekt is not None else ""
-                return JsonResponse(
-                    {
-                        "duplicate": _(
-                            "core.views.post_upload.duplikat2.text1"
-                        )
-                        + parent_ident
-                        + ". "
-                        + _("core.views.post_upload.duplikat2.text2"),
-                        "filename": s.nazev,
-                        "id": s.pk,
-                    },
-                    status=200,
+            if rep_bin_file is not None:
+                duplikat = (
+                    Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
+                    .filter(~Q(id=s.id))
+                    .order_by("pk")
                 )
+                if duplikat.count() > 0:
+                    parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
+                        if duplikat.first().vazba.navazany_objekt is not None else ""
+                    return JsonResponse(
+                        {
+                            "duplicate": _(
+                                "core.views.post_upload.duplikat2.text1"
+                            )
+                            + parent_ident
+                            + ". "
+                            + _("core.views.post_upload.duplikat2.text2"),
+                            "filename": s.nazev,
+                            "id": s.pk,
+                        },
+                        status=200,
+                    )
             else:
                 return JsonResponse(
                     {"filename": s.nazev, "id": s.pk}, status=200

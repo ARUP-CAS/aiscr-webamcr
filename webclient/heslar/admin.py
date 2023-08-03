@@ -87,6 +87,7 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař datace.
     """
     list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    readonly_fields = ("obdobi", )
     fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     list_filter = ("obdobi", )
@@ -101,7 +102,7 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
     fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    search_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
@@ -119,8 +120,8 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař odkaz.
     """
-    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
-    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
+    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
 

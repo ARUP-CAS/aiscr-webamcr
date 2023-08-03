@@ -110,6 +110,7 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
     list_display = ("email", "is_active", "organizace", "ident_cely", "hlavni_role", "first_name", "last_name",
                     "telefon", "is_active", "date_joined", "last_login", "osoba")
     list_filter = ("is_active", "organizace", "groups")
+    readonly_fields = ("ident_cely", "is_superuser")
     inlines = [UserNotificationTypeInline, PesKrajNotificationTypeInline, PesOkresNotificationTypeInline, PesKatastrNotificationTypeInline]
     fieldsets = (
         (
@@ -139,7 +140,6 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                     "password1",
                     "password2",
                     "is_active",
-                    "is_superuser",
                     "organizace",
                     "first_name",
                     "last_name",
@@ -182,9 +182,23 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         except ObjectDoesNotExist as err:
             user_db = None
         user_db: Union[User, None]
+        form_groups = form.cleaned_data["groups"]
+        if obj.is_active:
+            if form_groups.filter(id=ROLE_ADMIN_ID).count() == 1:
+                if not request.user.is_superuser:
+                    obj.groups.remove(Group.objects.get(pk=ROLE_ADMIN_ID))
+                else:
+                    obj.is_superuser = True
+                    obj.is_staff = True
+            else:
+                if request.user.is_superuser:
+                    obj.is_superuser = False
+                    obj.is_staff = False
+        else:
+            obj.is_superuser = False
+            obj.is_staff = False
         super().save_model(request, obj, form, change)
 
-        form_groups = form.cleaned_data["groups"]
         groups = form_groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
         other_groups = form_groups.filter(~Q(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
                                                       ROLE_ADMIN_ID])))
@@ -235,13 +249,6 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
                      extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True)})
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
                      extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
-
-    def get_readonly_fields(self, request, obj=None):
-        if request.user.is_superuser:
-            readonly_fields = ("ident_cely",)
-        else:
-            readonly_fields = ("ident_cely", "is_superuser")
-        return readonly_fields
 
 
 class CustomGroupAdmin(admin.ModelAdmin):
