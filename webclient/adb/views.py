@@ -8,7 +8,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from dj.models import DokumentacniJednotka
 from django.conf import settings
@@ -75,6 +75,9 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         dj: DokumentacniJednotka = adb.dokumentacni_jednotka
         dj_ident_cely = dj.ident_cely
+        if adb.container_creation_queued():
+            messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+            return JsonResponse({"redirect": dj.get_absolute_url()}, status=403)
         resp = adb.delete()
 
         if resp:

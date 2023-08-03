@@ -5,12 +5,14 @@ FORM_NOT_VALID: Final = "Forma není validní."
 
 PRISTUP_ZAKAZAN: Final = "common.message.pristupZakazan.text"
 
+ZAZNAM_NELZE_SMAZAT_FEDORA = "Záznam nelze smazat, protože nebylo dokončeno nahrávání do Fedory.."
 ZAZNAM_USPESNE_VYTVOREN: Final = "Záznam byl úspěšně vytvořen."
 ZAZNAM_SE_NEPOVEDLO_VYTVORIT: Final = "Záznam se nepovedlo vytvořit."
 ZAZNAM_USPESNE_EDITOVAN: Final = "Záznam byl úspěšně upraven."
 ZAZNAM_SE_NEPOVEDLO_EDITOVAT: Final = "Záznam se nepovedlo editovat."
 ZAZNAM_USPESNE_SMAZAN: Final = "Záznam byl úspěšně smazán."
 ZAZNAM_SE_NEPOVEDLO_SMAZAT: Final = "Záznam nebyl smazán."
+ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY: Final = "Záznam nebyl smazán kvůli navázaným záznamům."
 MAXIMUM_IDENT_DOSAZEN: Final = "Byl překročen limit při přidělování identifikátoru. Pro vyřešení problému kontaktujte administrátora AMČR."
 MAXIMUM_AKCII_DOSAZENO: Final = "Byl překročen limit akcií pro jeden projekt."
 MAXIMUM_DJ_DOSAZENO: Final = (

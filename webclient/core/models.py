@@ -4,6 +4,7 @@ import os
 import re
 from typing import Optional
 
+from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
 from django.utils.functional import cached_property
@@ -83,8 +84,6 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
-    # Will be removed
-    nazev_zkraceny = models.TextField()
     mimetype = models.TextField(db_index=True)
     vazba = models.ForeignKey(
         SouborVazby, on_delete=models.CASCADE, db_column="vazba", related_name="soubory"
@@ -99,16 +98,17 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
     sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+    suppress_signal = False
 
     @property
     def repository_uuid(self):
-        if "http" in self.path.lower():
+        if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
             return self.path.split("/")[-1]
 
     def calculate_sha_512(self):
         repository_content = self.get_repository_content()
         if repository_content is not None:
-            return repository_content.sha_512()
+            return repository_content.sha_512
         return ""
 
     class Meta:
