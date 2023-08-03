@@ -24,11 +24,12 @@ class ModelWithMetadata(models.Model):
     def container_creation_queued(self):
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
-        if not connector.container_exists() and self.update_queued():
+        if not connector.container_exists() and self.update_queued(self.__class__.__name__, self.pk):
             return True
         return False
 
-    def update_queued(self):
+    @staticmethod
+    def update_queued(class_name, pk):
         app = Celery("webclient")
         app.config_from_object("django.conf:settings", namespace="CELERY")
         app.autodiscover_tasks()
@@ -39,16 +40,16 @@ class ModelWithMetadata(models.Model):
             for queue_name, queue_tasks in queue.items():
                 for task in queue_tasks:
                     if "request" in task and "save_record_metadata" in task.get("request").get("name").lower() \
-                            and tuple(task.get("request").get("args")) == (self.__class__.__name__, self.pk):
+                            and tuple(task.get("request").get("args")) == (class_name, pk):
                         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.already_scheduled",
-                                     extra={"class_name": self.__class__.__name__, "pk": self.pk})
+                                     extra={"class_name": class_name, "pk": pk})
                         return True
         return False
 
     def save_metadata(self, use_celery=True, include_files=False):
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.start")
         if use_celery:
-            if self.update_queued():
+            if self.update_queued(self.__class__.__name__, self.pk):
                 return
             from cron.tasks import save_record_metadata
             save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
