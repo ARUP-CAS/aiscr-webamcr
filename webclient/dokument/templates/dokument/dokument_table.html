@@ -2,32 +2,32 @@
 <div class="card app-card-form app-card-dokument app-table-list-container">
     <div class="card-header">
       <div class="app-fx app-left">
-        {% trans "Dokumenty" %}
+        {% trans "dokument.templates.dokument_table.cardHeader" %}
       </div>
       {% if show.editovat and show.pripojit_dokumenty %}
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
           <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}">
+                  aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'dokument.templates.dokument_table.dalsiNabidka.tooltip' %}">
             <span class="material-icons">add</span>
           </button>
           <div class="dropdown-menu" aria-labelledby="others">
               {% if type == "arch_z"%}
             <a class="dropdown-item"
-               href="{% url 'dokument:zapsat-do-akce' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
+               href="{% url 'dokument:zapsat-do-akce' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokument.label' %}</a>
             <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely %}">
-              {% trans "Připojit existující dokument" %}
+              {% trans "dokument.templates.dokument_table.pripojitExistDokument.label" %}
             </button>
             {% if app == "pr" %}
             <button id="dokument-pripojit-z-projektu" class="dropdown-item" type="button" name="button" href="{% url 'arch_z:pripojit_dokument' zaznam.ident_cely zaznam.akce.projekt.ident_cely %}">
-              {% trans "Připojit existující dokument z projektu" %}
+              {% trans "dokument.templates.dokument_table.pripojitExistDokumentZProjektu.label" %}
             </button>
             {% endif %}
                {% elif type == "projekt" %}
             <a class="dropdown-item"
-               href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'Přidat nový dokument' %}</a>
+               href="{% url 'dokument:zapsat-do-projektu' zaznam.ident_cely %}">{% trans 'dokument.templates.dokument_table.pridatNovyDokumentDoProjektu.label' %}</a>
             <button id="dokument-pripojit" class="dropdown-item" type="button" name="button" href="{% url 'projekt:pripojit_dokument' zaznam.ident_cely %}">
-              {% trans "Připojit existující dokument" %}
+              {% trans "dokument.templates.dokument_table.pripojitExistDokumentDoProjektu.label" %}
             </button>
                {% endif %}
           </div>
@@ -41,12 +41,12 @@
     {% elif type == "arch_z" %}
     <div class="app-note">
       <span class="material-icons">info</span>
-      {% trans "Akce zatím neobsahuje žádné dokumenty." %}
+      {% trans "dokument.templates.dokument_table.AkceBezDokumentu.text" %}
     </div>
     {% elif type == "projekt" %}
     <div class="app-note">
       <span class="material-icons">info</span>
-      {% trans "Projekt zatím neobsahuje žádné dokumenty." %}
+      {% trans "dokument.templates.dokument_table.ProjektBezDokumentu.text" %}
     </div>
     {% endif %}
   </div>

@@ -4,10 +4,12 @@ import os
 import zlib
 
 from django.contrib.gis.db import models as pgmodels
+from django.contrib.gis.db.models.functions import AsGML, AsWKT
 from django.contrib.postgres.fields import DateRangeField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.base import ContentFile
 from django.db import models
+from django.db.models.functions import Cast, Substr
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -41,6 +43,7 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from core.models import ProjektSekvence, Soubor, SouborVazby
+from core.repository_connector import RepositoryBinaryFile
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
@@ -54,11 +57,12 @@ from historie.models import Historie, HistorieVazby
 from projekt.doc_utils import OznameniPDFCreator
 from projekt.rtf_utils import ExpertniListCreator
 from uzivatel.models import Organizace, Osoba, User
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
 
-class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
+class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     """
     Class pro db model projekt.
     """
@@ -75,7 +79,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
     )
 
     stav = models.SmallIntegerField(
-        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav"),db_index=True
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav"), db_index=True
     )
     typ_projektu = models.ForeignKey(
         Heslar,
@@ -84,6 +88,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
         verbose_name=_("Typ projektů"),
+        db_index=True,
     )
     lokalizace = models.TextField(blank=True, null=True)
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
@@ -100,6 +105,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         blank=True,
         null=True,
         verbose_name=_("Vedoucí projektů"),
+        db_index=True,
     )
     datum_zahajeni = models.DateField(
         blank=True, null=True, verbose_name=_("Datum zahájení")
@@ -115,6 +121,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         null=True,
         limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
         verbose_name=_("Památka"),
+        db_index=True,
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(
@@ -137,7 +144,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         null=True,
     )
     organizace = models.ForeignKey(
-        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True
+        Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True
     )
     oznaceni_stavby = models.TextField(
         blank=True, null=True, verbose_name=_("Označení stavby")
@@ -152,6 +159,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
         verbose_name=_("Hlavní katastr"),
+        db_index=True,
     )
 
     def __str__(self):
@@ -184,17 +192,21 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         ).save()
         self.save()
 
-    def set_schvaleny(self, user):
+    def set_schvaleny(self, user, old_ident):
         """
         Metóda pro nastavení stavu schvýlený a uložení změny do historie.
         """
+        logger.debug("projekt.models.Projekt.set_schvaleny.start", extra={"old_ident": old_ident})
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
             typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
+        self.record_ident_change(old_ident)
+        logger.debug("projekt.models.Projekt.set_schvaleny.end", extra={"old_ident": old_ident})
 
     def set_zapsany(self, user):
         """
@@ -267,7 +279,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
             # making txt file with deleted files
             today = datetime.datetime.now()
             soubory = self.soubory.soubory.exclude(
-                nazev_zkraceny__regex="^log_dokumentace_"
+                nazev__regex="^log_dokumentace_"
             )
             if soubory.count() > 0:
                 filename = (
@@ -278,15 +290,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
                         "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
                         % today.strftime("%d. %m. %Y")
                 )
-                file_content += "\n".join(soubory.values_list("nazev_zkraceny", flat=True))
+                file_content += "\n".join(soubory.values_list("nazev", flat=True))
                 prev = 0
                 prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
                 new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
                 myfile = ContentFile(content=file_content, name=new_filename)
                 aktual_soubor = Soubor(
                     vazba=self.soubory,
-                    nazev=new_filename,
-                    nazev_zkraceny=filename,
+                    nazev=filename,
                     mimetype="text/plain",
                     size_mb=myfile.size/1024/1024,
                 )
@@ -405,7 +416,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         else:
             return {}
 
-    def check_pred_smazanim(self):
+    def check_pred_smazanim(self) -> list:
         """
         Metóda na kontrolu prerekvizit pred smazaním projektu:
 
@@ -481,52 +492,43 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
         region = self.hlavni_katastr.okres.kraj.rada_id
-        logger.debug("projekt.models.Projekt.set_permanent_ident_cely.region_cadastry",
-                     extra={"region": region, "hlavni_katastr": self.hlavni_katastr})
-        sequence = ProjektSekvence.objects.filter(rada=region).filter(rok=current_year)[
-            0
-        ]
-        perm_ident_cely = (
-                region + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
-        )
-        # Loop through all of the idents that have been imported
-        while True:
-            if Projekt.objects.filter(ident_cely=perm_ident_cely).exists():
-                sequence.sekvence += 1
-                logger.warning("projekt.models.Projekt.set_permanent_ident_cely.already_exists",
-                             extra={"perm_ident_cely": perm_ident_cely, "sequence_sekvence": sequence.sekvence})
-                perm_ident_cely = (
-                        region
-                        + "-"
-                        + str(current_year)
-                        + "{0}".format(sequence.sekvence).zfill(5)
-                )
+        try:
+            sequence = ProjektSekvence.objects.get(region=region, rok=current_year)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            projekts = Projekt.objects.filter(ident_cely__startswith=f"{region}-{str(current_year)}")
+            if projekts.count() > 0:
+                last = projekts.annotate(sekv=Cast(Substr("ident_cely", 7), models.IntegerField())).order_by("-sekv")[0]
+                if last.sekv >= MAXIMUM:
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=last.sekv+1)
             else:
-                break
-        if sequence.sekvence >= MAXIMUM:
-            raise MaximalIdentNumberError(MAXIMUM)
-        self.ident_cely = perm_ident_cely
-        sequence.sekvence += 1
+                sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
         sequence.save()
+        old_ident = self.ident_cely
+        self.ident_cely = (
+            sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
+        )
         self.save()
+        self.record_ident_change(old_ident)
 
     def create_confirmation_document(self, additional=False, user=None):
         """
         Metóda na vytvoření oznámovací dokumentace.
         """
-        from core.utils import get_mime_type
         creator = OznameniPDFCreator(self.oznamovatel, self, additional)
-        filename, filename_without_checksum = creator.build_document()
-        filename_without_path = os.path.basename(filename)
-        duplikat = Soubor.objects.filter(nazev=filename)
+        rep_bin_file: RepositoryBinaryFile = creator.build_document()
+        duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
         if not duplikat.exists():
             soubor = Soubor(
-                path=filename,
                 vazba=self.soubory,
-                nazev=filename_without_path,
-                nazev_zkraceny=filename_without_checksum,
-                mimetype=get_mime_type(filename_without_path),
-                size_mb=os.path.getsize(filename)/1024/1024,
+                nazev=rep_bin_file.filename,
+                mimetype="application/pdf",
+                path=rep_bin_file.url_without_domain,
+                size_mb=rep_bin_file.size_mb,
+                sha_512=rep_bin_file.sha_512,
             )
             soubor.save()
             if user:
@@ -544,8 +546,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path = elc.build_document()
-        return path
+        output = elc.build_document()
+        return output
 
     @property
     def should_generate_confirmation_document(self):
@@ -555,6 +557,18 @@ class Projekt(ExportModelOperationsMixin("projekt"), models.Model):
 
     def get_absolute_url(self):
         return reverse("projekt:detail", kwargs={"ident_cely": self.ident_cely})
+
+    @property
+    def pristupnost(self):
+        return Heslar.objects.get(ident_cely="HES-000865")
+
+    @property
+    def planovane_zahajeni_str(self):
+        if self.planovane_zahajeni:
+            return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
+        else:
+            return ""
+
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

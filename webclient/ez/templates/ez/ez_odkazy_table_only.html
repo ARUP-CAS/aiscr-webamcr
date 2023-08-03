@@ -2,20 +2,20 @@
 <table class="table table-striped table-hover table-sm mb-0">
     <thead>
     <tr>
-      <th>{% trans "externiZdroj.odkazyTable.ID.header" %}</th>
-      <th>{% trans "externiZdroj.odkazyTable.katastr.header" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.Id.label" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.katastr.label" %}</th>
       {% if card_type == "akce" %}
-      <th>{% trans "externiZdroj.odkazyTable.vedouci.header" %}</th>
-      <th>{% trans "externiZdroj.odkazyTable.datum.header" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.vedouci.label" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.datum.label" %}</th>
       {% elif card_type == "lokalita" %}
-      <th>{% trans "externiZdroj.odkazyTable.druh.header" %}</th>
-      <th>{% trans "externiZdroj.odkazyTable.nazev.header" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.druh.label" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.nazev.label" %}</th>
       {% endif %}
       {% if show.paginace %}
-      <th>{% trans "externiZdroj.odkazyTable.paginace.header" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.paginace.label" %}</th>
       {% endif %}
       {% if show.odpojit %}
-      <th>{% trans "externiZdroj.odkazyTable.odpojit.header" %}</th>
+      <th>{% trans "ez.templates.ezOdkazyTableOnly.odpojit.label" %}</th>
       {% endif %}
     </tr>
     </thead>

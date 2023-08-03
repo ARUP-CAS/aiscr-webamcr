@@ -1,4 +1,4 @@
-from django.db import migrations
+from django.db import migrations,models
 
 
 class Migration(migrations.Migration):
@@ -10,6 +10,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterField(
+            model_name="pian",
+            name="ident_cely",
+            field=models.CharField(max_length=16, unique=True),
+        ),
         migrations.RunSQL(
             sql="""
             CREATE MATERIALIZED VIEW amcr_heat_pian_l1 as select id,ident_cely,ST_ReducePrecision(st_centroid(st_buffer(geom,1)),0.01) AS geom from public.pian;
