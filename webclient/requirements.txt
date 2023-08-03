@@ -22,7 +22,7 @@ django-structlog==5.3.0
 django-auto-logout==0.5.1
 reportlab==3.6.12
 PyRTF3==0.47.5
-pypdf==3.7.0
+pypdf==3.14.0
 Pillow==10.0.0
 beautifulsoup4==4.12.2
 django-extensions==3.2.3
