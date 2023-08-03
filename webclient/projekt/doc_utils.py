@@ -66,7 +66,7 @@ class DocumentCreator(ABC):
 
 class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
-        dok_index = 0 if "C" in self.projekt.ident_cely else 1
+        dok_index = 0 if "C" in self.projekt.ident_cely.upper() else 1
         self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
         self.texts["header_line_2"] = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
         # Condition check for automated testing
@@ -407,10 +407,7 @@ class OznameniPDFCreator(DocumentCreator):
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
 
-        if self.additional:
-            postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        else:
-            postfix = ""
+        postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
         file = io.BytesIO()
         file.write(pdf_value)

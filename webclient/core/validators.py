@@ -33,7 +33,7 @@ def validate_phone_number(number):
     if not is_valid:
         logger.debug(f"core.validators.validate_phone_number.not_valid", extra={"number": number})
         raise ValidationError(
-            _("%(value)s nesprávný formát čísla. Musí být: +420xxxxxxxxx"),
+            _("%(value)s core.validators.validate_phone_number.not_valid.text"),
             params={"value": number},
         )
     else:

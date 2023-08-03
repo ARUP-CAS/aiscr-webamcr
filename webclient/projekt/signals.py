@@ -1,9 +1,9 @@
 from datetime import timedelta
 import logging
 
-from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY
+from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_VYTVORENY
 from core.models import SouborVazby
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from historie.models import HistorieVazby
 from projekt.models import Projekt
@@ -63,10 +63,17 @@ def projekt_post_save(sender, instance: Projekt, **kwargs):
     """
         Metóda pro odeslání emailu hlídacího psa pri založení projektu.
     """
-    instance.save_metadata()
+    # When projekt is created using the "oznameni" page, the metadata are saved directly without celery
+    if getattr(instance, "suppress_signal", False) is not True:
+        instance.save_metadata()
 
     if instance.stav == PROJEKT_STAV_ZAPSANY and hasattr(instance, "__original_stav") \
             and instance.stav != instance.__original_stav:
         logger.debug("projekt.signals.projekt_post_save.checked_hlidaci_pes",
                      extra={"instance": instance})
         check_hlidaci_pes.delay(instance.pk)
+
+
+@receiver(post_delete, sender=Projekt)
+def projekt_post_delete(sender, instance: Projekt, **kwargs):
+    instance.record_deletion()

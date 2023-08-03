@@ -21,44 +21,44 @@ class CreateKomponentaForm(forms.ModelForm):
         fields = ("presna_datace", "poznamka", "jistota", "aktivity", "obdobi", "areal")
 
         labels = {
-            "presna_datace": _("Přesná datace"),
-            "jistota": _("Jistota"),
-            "aktivity": _("Aktivity"),
-            "poznamka": _("Poznámka"),
+            "presna_datace": _("komponenta.forms.createKomponentaForm.presna_datace.label"),
+            "jistota": _("komponenta.forms.createKomponentaForm.jistota.label"),
+            "aktivity": _("komponenta.forms.createKomponentaForm.aktivity.label"),
+            "poznamka": _("komponenta.forms.createKomponentaForm.poznamka.label"),
         }
 
         widgets = {
             "poznamka": forms.TextInput(),
             "presna_datace": forms.TextInput(),
-            "jistota": forms.Select(choices=[(True, _("Ano")),(False, _("Ne"))], attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
+            "jistota": forms.Select(choices=[(True, _("komponenta.forms.createKomponentaForm.choices.true")),(False, _("komponenta.forms.createKomponentaForm.choices.false"))], attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},),
             "aktivity": forms.SelectMultiple(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
         }
         help_texts = {
-            "presna_datace": _("komponenta.form.presna_datace.tooltip"),
-            "jistota": _("komponenta.form.jistota.tooltip"),
-            "aktivity": _("komponenta.form.aktivity.tooltip"),
-            "poznamka": _("komponenta.form.poznamka.tooltip"),
+            "presna_datace": _("komponenta.forms.createKomponentaForm.presna_datace.tooltip"),
+            "jistota": _("komponenta.forms.createKomponentaForm.jistota.tooltip"),
+            "aktivity": _("komponenta.forms.createKomponentaForm.aktivity.tooltip"),
+            "poznamka": _("komponenta.forms.createKomponentaForm.poznamka.tooltip"),
         }
 
     def __init__(self, obdobi_choices, areal_choices, *args, readonly=False,required=None,required_next=None, **kwargs):
         super(CreateKomponentaForm, self).__init__(*args, **kwargs)
         self.fields["obdobi"] = TwoLevelSelectField(
-            label=_("Období"),
+            label=_("komponenta.form.createKomponentaForm.obdobi.label"),
             widget=forms.Select(
                 choices=obdobi_choices,
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
-            help_text=_("komponenta.form.obdobi.tooltip"),
+            help_text=_("komponenta.form.createKomponentaForm.obdobi.tooltip"),
         )
         self.fields["areal"] = TwoLevelSelectField(
-            label=_("Areál"),
+            label=_("komponenta.form.createKomponentaForm.areal.label"),
             widget=forms.Select(
                 choices=areal_choices,
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
-            help_text=_("komponenta.form.areal.tooltip"),
+            help_text=_("komponenta.form.createKomponentaForm.areal.tooltip"),
         )
         self.fields["aktivity"].queryset = Heslar.objects.filter(
             nazev_heslare=HESLAR_AKTIVITA

@@ -192,10 +192,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
-    def set_schvaleny(self, user,old_ident):
+    def set_schvaleny(self, user, old_ident):
         """
         Metóda pro nastavení stavu schvýlený a uložení změny do historie.
         """
+        logger.debug("projekt.models.Projekt.set_schvaleny.start", extra={"old_ident": old_ident})
         self.stav = PROJEKT_STAV_ZAPSANY
         Historie(
             typ_zmeny=SCHVALENI_OZNAMENI_PROJ,
@@ -204,6 +205,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
+        self.record_ident_change(old_ident)
+        logger.debug("projekt.models.Projekt.set_schvaleny.end", extra={"old_ident": old_ident})
 
     def set_zapsany(self, user):
         """
@@ -276,7 +279,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             # making txt file with deleted files
             today = datetime.datetime.now()
             soubory = self.soubory.soubory.exclude(
-                nazev_zkraceny__regex="^log_dokumentace_"
+                nazev__regex="^log_dokumentace_"
             )
             if soubory.count() > 0:
                 filename = (
@@ -287,15 +290,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                         "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
                         % today.strftime("%d. %m. %Y")
                 )
-                file_content += "\n".join(soubory.values_list("nazev_zkraceny", flat=True))
+                file_content += "\n".join(soubory.values_list("nazev", flat=True))
                 prev = 0
                 prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
                 new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
                 myfile = ContentFile(content=file_content, name=new_filename)
                 aktual_soubor = Soubor(
                     vazba=self.soubory,
-                    nazev=new_filename,
-                    nazev_zkraceny=filename,
+                    nazev=filename,
                     mimetype="text/plain",
                     size_mb=myfile.size/1024/1024,
                 )
@@ -414,7 +416,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return {}
 
-    def check_pred_smazanim(self):
+    def check_pred_smazanim(self) -> list:
         """
         Metóda na kontrolu prerekvizit pred smazaním projektu:
 
@@ -505,10 +507,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             else:
                 sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
         sequence.save()
+        old_ident = self.ident_cely
         self.ident_cely = (
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
         self.save()
+        self.record_ident_change(old_ident)
 
     def create_confirmation_document(self, additional=False, user=None):
         """
@@ -521,10 +525,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             soubor = Soubor(
                 vazba=self.soubory,
                 nazev=rep_bin_file.filename,
-                nazev_zkraceny=rep_bin_file.filename,
                 mimetype="application/pdf",
-                repository_uuid=rep_bin_file.uuid,
+                path=rep_bin_file.url_without_domain,
                 size_mb=rep_bin_file.size_mb,
+                sha_512=rep_bin_file.sha_512,
             )
             soubor.save()
             if user:
@@ -542,8 +546,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     def create_expert_list(self, popup_parametry=None):
         elc = ExpertniListCreator(self, popup_parametry)
-        path = elc.build_document()
-        return path
+        output = elc.build_document()
+        return output
 
     @property
     def should_generate_confirmation_document(self):
@@ -561,9 +565,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     @property
     def planovane_zahajeni_str(self):
         if self.planovane_zahajeni:
-            return f"{self.planovane_zahajeni.lower} - {self.planovane_zahajeni.upper}"
+            return f"[{self.planovane_zahajeni.lower}, {self.planovane_zahajeni.upper + datetime.timedelta(days=-1)}]"
         else:
             return ""
+
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

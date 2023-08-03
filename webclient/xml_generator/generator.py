@@ -31,22 +31,82 @@ class AsText(GeoFunc):
 class ParsedComment:
     value_field_name: str
     attribute_field_names: list = None
-
 class DocumentGenerator:
     _nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
         "gml": "https://www.opengis.net/gml/3.2",
-        "amcr": AMCR_NAMESPACE_URL
+        "amcr": AMCR_NAMESPACE_URL,
+        "xml": "http://www.w3.org/XML/1998/namespace"
     }
     attribute_names = {}
+    _simple_element_types = ("xs:string", "xs:date", "xs:integer", "amcr:refType", "xs:dateTime", "amcr:gmlType",
+                             "amcr:wktType", "amcr:autorType", "xs:boolean", "amcr:langstringType", "amcr:vocabType",
+                             "xs:decimal")
 
     @classmethod
-    def generate_metadata(cls):
-        for current_class in cls._get_schema_dict():
-            for obj in current_class.objects.all():
+    def generate_metadata(cls, model_class=None, limit=None, start_with_pk=None):
+        logger.debug("xml_generator.generator.generate_metadata.start", extra={"model_class": model_class,
+                                                                               "limit": limit})
+        if not model_class:
+            for current_class in cls._get_schema_dict():
+                logger.debug("xml_generator.generator.generate_metadata.loop.strart",
+                             extra={"limit": limit, "current_class": str(current_class)})
+                if not start_with_pk:
+                    queryset = current_class.objects.all().order_by("pk")
+                else:
+                    queryset = current_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
+                if limit is not None:
+                    queryset = queryset[:limit]
+                for obj in queryset:
+                    from uzivatel.models import User
+                    obj: Union[ModelWithMetadata, User]
+                    obj.save_metadata(use_celery=False, include_files=True)
+                logger.debug("xml_generator.generator.generate_metadata.loop.end",
+                             extra={"limit": limit, "current_class": str(current_class)})
+        else:
+            logger.debug("xml_generator.generator.generate_metadata.loop.strart",
+                         extra={"model_class": model_class, "limit": limit})
+            from adb.models import Adb
+            from arch_z.models import ArcheologickyZaznam
+            from dokument.models import Dokument
+            from projekt.models import Projekt
+            from pas.models import SamostatnyNalez
+            from ez.models import ExterniZdroj
+            from dokument.models import Let
+            from uzivatel.models import User, Organizace, Osoba
+            from heslar.models import Heslar, RuianKraj, RuianKatastr, RuianOkres
+            from pian.models import Pian
+            model_class = {
+                "Projekt": Projekt,
+                "ArcheologickyZaznam": ArcheologickyZaznam,
+                "Let": Let,
+                "Adb": Adb,
+                "Dokument": Dokument,
+                "ExterniZdroj": ExterniZdroj,
+                "Pian": Pian,
+                "SamostatnyNalez": SamostatnyNalez,
+                "User": User,
+                "Heslar": Heslar,
+                "RuianKraj": RuianKraj,
+                "RuianOkres": RuianOkres,
+                "RuianKatastr": RuianKatastr,
+                "Organizace": Organizace,
+                "Osoba": Osoba,
+            }.get(model_class)
+            if not start_with_pk:
+                queryset = model_class.objects.order_by("pk").all()
+            else:
+                queryset = model_class.objects.filter(pk__gte=start_with_pk).order_by("pk")
+            if limit is not None:
+                queryset = queryset[:limit]
+            for obj in queryset:
                 from uzivatel.models import User
                 obj: Union[ModelWithMetadata, User]
-                obj.save_metadata()
+                obj.save_metadata(use_celery=False, include_files=True)
+            logger.debug("xml_generator.generator.generate_metadata.loop.end",
+                         extra={"model_class": model_class, "limit": limit})
+        logger.debug("xml_generator.generator.generate_metadata.end", extra={"model_class": model_class,
+                                                                             "limit": limit})
 
     @classmethod
     def _get_schema_dict(cls):
@@ -129,13 +189,11 @@ class DocumentGenerator:
             return ParsedComment(attribute_list[-1], attribute_list[:-1])
 
     def _get_attribute_of_record(self, attribute_name, record=None):
-        logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.start",
-                     extra={"attribute_name": attribute_name})
         attribute_value = None
         if record is None:
             record = self.document_object
-        if attribute_name == "self":
-            return self.document_object
+        if attribute_name.lower() == "self":
+            return record
         if "." not in attribute_name and "(" not in attribute_name:
             attribute_value = getattr(record, attribute_name, None)
         elif "st_asgml" in attribute_name.lower() or "st_astext" in attribute_name.lower() \
@@ -145,8 +203,6 @@ class DocumentGenerator:
             from projekt.models import Projekt
             from heslar.models import RuianKatastr
             from pian.models import Pian
-            logger.debug("xml_generator.DocumentGenerator._get_attribute_of_record.geom",
-                         extra={"attribute_name": attribute_name, "pk": record.pk})
             if isinstance(record, Projekt) or isinstance(record, DokumentExtraData) \
                     or isinstance(record, VyskovyBod):
                 record = record.__class__.objects.annotate(geom_st_asgml=AsGML("geom", nprefix="gml"),
@@ -186,6 +242,11 @@ class DocumentGenerator:
                 related_record = getattr(record, record_name_split[0], None)
                 second_related_record = getattr(related_record, record_name_split[1], None)
                 attribute_value = getattr(second_related_record, record_name_split[2], None)
+            elif len(record_name_split) == 4:
+                related_record_1 = getattr(record, record_name_split[0], None)
+                related_record_2 = getattr(related_record_1, record_name_split[1], None)
+                related_record_3 = getattr(related_record_2, record_name_split[2], None)
+                attribute_value = getattr(related_record_3, record_name_split[3], None)
         return attribute_value
 
     @staticmethod
@@ -252,6 +313,11 @@ class DocumentGenerator:
                     new_sub_element.text = str(attribute_value).lower()
                 else:
                     new_sub_element.text = str(attribute_value)
+            if "vocabType" in ref_type:
+                new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
+            if "langstringType" in ref_type:
+                new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = \
+                    "en" if parsed_comment.value_field_name.endswith("_en") else "cs"
             if parsed_comment.attribute_field_names is not None:
                 for attribute_field_name in parsed_comment.attribute_field_names:
                     attribute_name = self.get_ref_type_attribute_name(ref_type)
@@ -274,6 +340,16 @@ class DocumentGenerator:
                     new_sub_element.text = record_text.lower()
                 else:
                     new_sub_element.text = record_text
+            if "vocabType" in ref_type:
+                new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
+                if getattr(record, "ident_cely", None) is not None:
+                    new_sub_element.attrib["id"] = record.ident_cely
+            if "langstringType" in ref_type:
+                if parsed_comment.attribute_field_names is not None:
+                    new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = \
+                        "en" if parsed_comment.attribute_field_names[0].endswith("_en") else "cs"
+                else:
+                    new_sub_element.attrib[f"{{{self._nsmap['xml']}}}lang"] = "cs"
             if parsed_comment.attribute_field_names is not None:
                 new_sub_element.attrib["id"] = \
                     f"{prefix}{related_records[parsed_comment.attribute_field_names[0]][i]}"
@@ -291,9 +367,7 @@ class DocumentGenerator:
                 prefix = self._get_prefix(next_element.text)
                 if "maxOccurs" not in schema_element.attrib or schema_element.attrib["maxOccurs"] == "1":
                     if parsed_comment.value_field_name is not None:
-                        if schema_element.attrib["type"] in ("xs:string", "xs:date", "xs:integer", "amcr:refType",
-                                                             "xs:dateTime", "amcr:gmlType", "amcr:wktType",
-                                                             "amcr:autorType", "xs:boolean"):
+                        if schema_element.attrib["type"] in self._simple_element_types:
                             self._create_element(schema_element, parent_element, parsed_comment,
                                                  id_field_prefix=prefix, ref_type=schema_element.attrib["type"])
                         else:
@@ -309,7 +383,8 @@ class DocumentGenerator:
                                                                                        schema_element)
                         if related_records_dict and related_records_dict["value"]:
                             if schema_element.attrib["type"].replace("amcr:", "") \
-                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string"):
+                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string",
+                                            "langstringType", "vocabType"):
                                 self._iterate_unbound_records(related_records_dict, schema_element, parent_element)
                             else:
                                 self._create_many_to_many_ref_elements(schema_element, parent_element,
@@ -317,15 +392,9 @@ class DocumentGenerator:
                                                                        parsed_comment=parsed_comment,
                                                                        prefix=prefix,
                                                                        ref_type=schema_element.attrib["type"])
-                    else:
-                        logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element."
-                                     "unkown_element", extra={"next_element_text": next_element.text})
             elif "choice" in schema_element.tag.lower():
                 for child_schema_element in schema_element:
                     self._parse_scheme_create_element(child_schema_element, parent_element)
-            else:
-                logger.debug("xml_generator.generator.DocumentGenerator._parse_scheme_create_element.without_comment",
-                             extra={"schema_element_attrib": schema_element.attrib})
 
     def _iterate_unbound_records(self, related_records, schema_element, parent_element):
         child_schema_element = self._parse_schema(schema_element.attrib["type"])
@@ -345,16 +414,26 @@ class DocumentGenerator:
                     prefix = self._get_prefix(next_element.text)
                     if child_schema_element.attrib["maxOccurs"] == "1":
                         if parsed_comment.value_field_name is not None:
-                            self._create_element(child_schema_element, child_parent_element,
-                                                 parsed_comment, document_object, prefix,
-                                                 ref_type=child_schema_element.attrib["type"])
+                            if child_schema_element.attrib["type"] in self._simple_element_types:
+                                self._create_element(child_schema_element, child_parent_element,
+                                                     parsed_comment, document_object, prefix,
+                                                     ref_type=child_schema_element.attrib["type"])
+                            else:
+                                obj = self._get_attribute_of_record(parsed_comment.value_field_name,
+                                                                    record=document_object)
+                                if obj is not None:
+                                    inner_child_schema_element = self._parse_schema(child_schema_element.attrib["type"])
+                                    self._parse_scheme_create_nested_element(inner_child_schema_element,
+                                                                             child_parent_element, obj,
+                                                                             child_schema_element.attrib["name"])
                     else:
                         related_records_dict = self._get_attribute_of_record_unbounded(document_object,
                                                                                   parsed_comment,
                                                                                   child_schema_element)
                         if related_records_dict is not None and len(related_records_dict) > 0:
                             if child_schema_element.attrib["type"].replace("amcr:", "") \
-                                    not in ("refType", "autorType", "wktType", "gmlType"):
+                                    not in ("refType", "autorType", "wktType", "gmlType", "xs:string",
+                                            "langstringType", "vocabType"):
                                 self._iterate_unbound_records(related_records_dict, child_schema_element,
                                                               child_parent_element)
                             else:

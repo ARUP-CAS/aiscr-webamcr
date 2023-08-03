@@ -3,9 +3,10 @@ import logging
 import mimetypes
 import os
 import re
-from io import StringIO
+from io import StringIO, BytesIO
 
 import unicodedata
+from django.core.files.uploadedfile import TemporaryUploadedFile
 from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -55,6 +56,7 @@ from core.utils import (
 from dokument.models import Dokument, get_dokument_soubor_name
 from ez.models import ExterniZdroj
 from pas.models import SamostatnyNalez
+from pian.models import Pian
 from projekt.models import Projekt
 from uzivatel.models import User
 from django_tables2.export import ExportMixin
@@ -78,8 +80,7 @@ def delete_file(request, pk):
     """
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
-        s.path.delete()
-        items_deleted = s.delete()
+        items_deleted: Soubor = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option
             logger.debug("core.views.delete_file.not_deleted", extra={"file": s})
@@ -96,8 +97,12 @@ def delete_file(request, pk):
             return JsonResponse({"messages": django_messages}, status=400)
         else:
             logger.debug("core.views.delete_file.deleted", extra={"items_deleted": items_deleted})
+            connector = FedoraRepositoryConnector(s.vazba.navazany_objekt)
             if not request.POST.get("dropzone", False):
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                connector.delete_binary_file(s)
+            else:
+                connector.delete_binary_file_completely(s)
         next_url = request.POST.get("next")
         if next_url:
             if url_has_allowed_host_and_scheme(next_url, allowed_hosts=settings.ALLOWED_HOSTS):
@@ -111,9 +116,9 @@ def delete_file(request, pk):
     else:
         context = {
             "object": s,
-            "title": _("core.modalForm.smazaniSouboru.title.text"),
+            "title": _("core.views.delete_file.title.text"),
             "id_tag": "smazat-soubor-form",
-            "button": _("core.modalForm.smazaniSouboru.submit.button"),
+            "button": _("core.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -128,29 +133,27 @@ def download_file(request, pk):
     rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
     if soubor.repository_uuid is not None:
         # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
-        response = FileResponse(rep_bin_file.content, filename=soubor.nazev_zkraceny)
+        response = FileResponse(rep_bin_file.content, filename=soubor.nazev)
         response["Content-Length"] = rep_bin_file.size
         response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev_zkraceny
+                "attachment; filename=" + soubor.nazev
         )
         return response
 
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
+    path = os.path.join(settings.MEDIA_ROOT, soubor.path)
     if os.path.exists(path):
-        path = os.path.join(settings.MEDIA_ROOT, soubor.path.name)
-        if os.path.exists(path):
-            content_type = mimetypes.guess_type(soubor.path.name)[
-                0
-            ]  # Use mimetypes to get file type
-            response = HttpResponse(soubor.path, content_type=content_type)
-            response["Content-Length"] = str(len(soubor.path))
-            response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev_zkraceny
-            )
-            return response
+        content_type = mimetypes.guess_type(soubor.nazev)[
+            0
+        ]  # Use mimetypes to get file type
+        response = HttpResponse(soubor.path, content_type=content_type)
+        response["Content-Length"] = str(len(soubor.path))
+        response["Content-Disposition"] = (
+            "attachment; filename=" + soubor.nazev
+        )
+        return response
     else:
         logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
-    raise Http404
+    return HttpResponse("")
 
 
 @login_required
@@ -225,7 +228,7 @@ def post_upload(request):
     update = "fileID" in request.POST
     s = None
     if not update:
-        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST["objectID"]})
+        logger.debug("core.views.post_upload.start", extra={"objectID": request.POST.get("objectID", None)})
         projekt = Projekt.objects.filter(ident_cely=request.POST["objectID"])
         dokument = Dokument.objects.filter(ident_cely=request.POST["objectID"])
         samostatny_nalez = SamostatnyNalez.objects.filter(ident_cely=request.POST["objectID"])
@@ -246,7 +249,7 @@ def post_upload(request):
                 },
                 status=500,
             )
-        if not new_name:
+        if new_name is False:
             return JsonResponse(
                 {
                     "error": f"Nelze pripojit soubor k objektu {request.POST['objectID']}. Objekt ma prilozen soubor s nejvetsim moznym nazvem"
@@ -258,25 +261,28 @@ def post_upload(request):
         s = get_object_or_404(Soubor, id=request.POST["fileID"])
         logger.debug("core.views.post_upload.update", extra={"s": s.pk})
         objekt = s.vazba.navazany_objekt
-        new_name = s.nazev_zkraceny
-    soubor = request.FILES.get("file")
+        new_name = s.nazev
+    soubor: TemporaryUploadedFile = request.FILES.get("file")
+    soubor.seek(0)
+    soubor_data = BytesIO(soubor.read())
+    rep_bin_file = None
     if soubor:
         checksum = calculate_crc_32(soubor)
-        soubor.file.seek(0)
         if not update:
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
-            rep_bin_file = conn.save_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name), soubor.file)
+            rep_bin_file = conn.save_binary_file(new_name, get_mime_type(soubor.name), soubor_data)
+            sha_512 = rep_bin_file.sha_512
             s = Soubor(
                 vazba=objekt.soubory,
-                nazev=rep_bin_file.filename,
+                nazev=new_name,
                 # Short name is new name without checksum
-                nazev_zkraceny=new_name,
                 mimetype=mimetype,
                 size_mb=rep_bin_file.size_mb,
-                repository_uuid=rep_bin_file.uuid
+                path=rep_bin_file.url_without_domain,
+                sha_512=sha_512,
             )
-            duplikat = Soubor.objects.filter(nazev__contains=checksum).order_by("pk")
+            duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
                 s.save()
@@ -286,7 +292,7 @@ def post_upload(request):
                 else:
                     s.zaznamenej_nahrani(request.user)
                 return JsonResponse(
-                    {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
+                    {"filename": s.nazev, "id": s.pk}, status=200
                 )
             else:
                 logger.warning("core.views.post_upload.already_exists", extra={"s": s})
@@ -302,12 +308,12 @@ def post_upload(request):
                 return JsonResponse(
                     {
                         "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
+                            "core.views.post_upload.duplikat.text1"
                         )
                         + parent_ident
                         + ". "
-                        + _("Zkontrolujte prosím duplicitu."),
-                        "filename": s.nazev_zkraceny,
+                        + _("core.views.post_upload.duplikat.text2"),
+                        "filename": s.nazev,
                         "id": s.pk,
                     },
                     status=200,
@@ -328,42 +334,42 @@ def post_upload(request):
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
                 rep_bin_file = conn.update_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name),
-                                                       soubor.file, s.repository_uuid)
+                                                       soubor_data, s.repository_uuid)
                 name_without_checksum = soubor.name
                 soubor.name = checksum + "_" + new_name
                 s.nazev = checksum + "_" + new_name
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
-                s.nazev = checksum + "_" + new_name
-                s.nazev_zkraceny = new_name
+                s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
+                s.sha_512 = rep_bin_file.sha_512
                 s.save()
                 s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
-
-            duplikat = (
-                Soubor.objects.filter(nazev__icontains=checksum)
-                .filter(~Q(id=s.id))
-                .order_by("pk")
-            )
-            if duplikat.count() > 0:
-                parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
-                    if duplikat.first().vazba.navazany_objekt is not None else ""
-                return JsonResponse(
-                    {
-                        "duplicate": _(
-                            "Soubor jsme uložili, ale soubor stejným jménem a obsahem na servru již existuje a je připojen k záznamu "
-                        )
-                        + parent_ident
-                        + ". "
-                        + _("Zkontrolujte prosím duplicitu."),
-                        "filename": s.nazev_zkraceny,
-                        "id": s.pk,
-                    },
-                    status=200,
+            if rep_bin_file is not None:
+                duplikat = (
+                    Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
+                    .filter(~Q(id=s.id))
+                    .order_by("pk")
                 )
+                if duplikat.count() > 0:
+                    parent_ident = duplikat.first().vazba.navazany_objekt.ident_cely \
+                        if duplikat.first().vazba.navazany_objekt is not None else ""
+                    return JsonResponse(
+                        {
+                            "duplicate": _(
+                                "core.views.post_upload.duplikat2.text1"
+                            )
+                            + parent_ident
+                            + ". "
+                            + _("core.views.post_upload.duplikat2.text2"),
+                            "filename": s.nazev,
+                            "id": s.pk,
+                        },
+                        status=200,
+                    )
             else:
                 return JsonResponse(
-                    {"filename": s.nazev_zkraceny, "id": s.pk}, status=200
+                    {"filename": s.nazev, "id": s.pk}, status=200
                 )
     else:
         logger.warning("core.views.post_upload.no_file")
@@ -602,7 +608,7 @@ def redirect_ident_view(request, ident_cely):
         logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
 
-    messages.error(request, _("core.redirectView.identnotmatchingregex.message.text"))
+    messages.error(request, _("core.views.redirectView.identnotmatchingregex.message.text"))
     return redirect("core:home")
 
 
@@ -675,17 +681,17 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     paginate_by = 100
     allow_empty = True
     export_formats = ["csv", "json", "xlsx"]
-    page_title = _("lokalita.vyber.pageTitle")
-    app = "lokalita"
+    page_title = _("core.views.AkceListView.page_title.text")
+    app = "core"
     toolbar = "toolbar_akce.html"
-    search_sum = _("lokalita.vyber.pocetVyhledanych")
-    pick_text = _("lokalita.vyber.pickText")
-    hasOnlyVybrat_header = _("lokalita.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("lokalita.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("lokalita.vyber.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("lokalita.vyber.header.hasOnlyPotvrdit")
-    default_header = _("lokalita.vyber.header.default")
-    toolbar_name = _("lokalita.template.toolbar.title")
+    search_sum = _("core.views.AkceListView.search_sum.text")
+    pick_text = _("core.views.AkceListView.pick_text.text")
+    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+    default_header = _("core.views.AkceListView.default_header.text")
+    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -749,6 +755,22 @@ class StahnoutMetadataView(LoginRequiredMixin, View):
             record: SamostatnyNalez = SamostatnyNalez.objects.get(pk=pk)
         elif model_name == "externi_zdroj":
             record: ExterniZdroj = ExterniZdroj.objects.get(pk=pk)
+        else:
+            raise Http404
+        metadata = record.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
+
+class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
+    def get(self, request, model_name, ident_cely):
+        if model_name == "pian":
+            record: Pian = Pian.objects.get(ident_cely=ident_cely)
         else:
             raise Http404
         metadata = record.metadata
