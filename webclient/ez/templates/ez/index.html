@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{%trans externiZdroj.template.index.Title%}{% endblock %}
+{% block title %}{%trans ez.templates.index.Title%}{% endblock %}
 
 {% block content %}
   <div class="app-entity-ext_zdroj">
@@ -15,7 +15,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "externiZdroj.template.index.zapsatEZ.label" %}
+            {% trans "ez.templates.index.zapsatEZ.label" %}
           </div>
         </a>
       </div>
@@ -25,7 +25,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "externiZdroj.template.index.vybratEZ.label" %}
+            {% trans "ez.templates.index.vybratEZ.label" %}
           </div>
         </a>
       </div>
@@ -35,7 +35,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "externiZdroj.template.index.mojeEZ.label" %}
+            {% trans "ez.templates.index.mojeEZ.label" %}
           </div>
         </a>
       </div>
@@ -45,7 +45,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "externiZdroj.template.index.potvrditEZ.label" %}
+            {% trans "ez.templates.index.potvrditEZ.label" %}
           </div>
         </a>
       </div>
@@ -55,34 +55,30 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-zapsat-ez collapse">
       <div class="p-3">
-        <h4>{% trans "externiZdroj.template.index.zapsatEZ.label" %}</h4>
+        <h4>{% trans "ez.templates.index.zapsatEZ.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "ez.templates.index.zapsatEZ.text" %}
       </div>
     </div>
     <div class="app-collapse-moje-ez collapse">
       <div class="p-3">
-        <h4>{% trans "externiZdroj.template.index.mojeEZ.label" %}</h4>
+        <h4>{% trans "ez.template.index.mojeEZ.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "ez.template.index.mojeEZ.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
-        <h4>{% trans "externiZdroj.template.index.vybratEZ.label" %}</h4>
+        <h4>{% trans "ez.template.index.vybratEZ.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "ez.template.index.vybratEZ.text" %}
       </div>
     </div>
   <div class="app-collapse-potvrdit collapse">
       <div class="p-3">
-        <h4>{% trans "externiZdroj.template.index.potvrditEZ.label" %}</h4>
+        <h4>{% trans "ez.template.index.potvrditEZ.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "ez.template.index.potvrditEZ.text" %}
       </div>
     </div>
   </div>

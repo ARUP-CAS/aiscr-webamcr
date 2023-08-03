@@ -18,13 +18,13 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Detail" %}
+          {% trans "ez.templates.detail.cardHeader" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'ez:edit' zaznam.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
+               data-placement="top" title="{% trans 'ez.templates.detail.upravit.tooltip' %}">
               <span class="material-icons">edit</span>
             </a>
           </div>
@@ -47,14 +47,14 @@
       </div>
     </div>
     {% if show.ez_odkazy %}
-    {% trans "externiZdroj.detail.odkazy.pridatAkci.label" as pridatLabel %}
-    {% trans "externiZdroj.detail.odkazy.tableAkce.label" as tableLabel %}
-    {% trans "externiZdroj.detail.odkazy.zadnaAkce.text" as tabletext %}
+    {% trans "ez.templates.detail.odkazy.pridatAkci.label" as pridatLabel %}
+    {% trans "ez.templates.detail.odkazy.tableAkce.label" as tableLabel %}
+    {% trans "ez.templates.detail.odkazy.zadnaAkce.text" as tabletext %}
     {% include "ez/ez_odkazy_table.html" with zaznamy=ez_akce type="arch_z" card_type="akce"%}
 
-    {% trans "externiZdroj.detail.odkazy.pridatLokalitu.label" as pridatLabel %}
-    {% trans "externiZdroj.detail.odkazy.tableLokalitu.label" as tableLabel %}
-    {% trans "externiZdroj.detail.odkazy.zadnaLokalitu.text" as tabletext %}
+    {% trans "ez.templates.detail.odkazy.pridatLokalitu.label" as pridatLabel %}
+    {% trans "ez.templates.detail.odkazy.tableLokalitu.label" as tableLabel %}
+    {% trans "ez.templates.detail.odkazy.zadnaLokalitu.text" as tabletext %}
     {% include "ez/ez_odkazy_table.html" with zaznamy=ez_lokality type="lokalita" card_type="lokalita"%}
     {% endif %}
   </div>

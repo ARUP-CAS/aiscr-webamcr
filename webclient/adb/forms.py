@@ -36,18 +36,18 @@ class CreateADBForm(forms.ModelForm):
         )
 
         labels = {
-            "typ_sondy": _("Typ sondy"),
-            "uzivatelske_oznaceni_sondy": _("Uživatelské označení"),
-            "trat": _("Ulice (trať)"),
-            "cislo_popisne": _("Číslo popisné"),
-            "parcelni_cislo": _("Číslo parcely"),
-            "podnet": _("Podnět"),
-            "stratigraficke_jednotky": _("Počet SJ"),
-            "autor_popisu": _("Autor popisu"),
-            "rok_popisu": _("Rok popisu"),
-            "autor_revize": _("Autor revize"),
-            "rok_revize": _("Rok revize"),
-            "poznamka": _("Poznámka"),
+            "typ_sondy": _("adb.forms.createAdbForm.label.typ_sondy"),
+            "uzivatelske_oznaceni_sondy": _("adb.forms.createAdbForm.label.uzivatelske_oznaceni_sondy"),
+            "trat": _("adb.forms.createAdbForm.label.trat"),
+            "cislo_popisne": _("adb.forms.createAdbForm.label.cislo_popisne"),
+            "parcelni_cislo": _("adb.forms.createAdbForm.label.parcelni_cislo"),
+            "podnet": _("adb.forms.createAdbForm.label.podnet"),
+            "stratigraficke_jednotky": _("adb.forms.createAdbForm.label.stratigraficke_jednotky"),
+            "autor_popisu": _("adb.forms.createAdbForm.label.autor_popisu"),
+            "rok_popisu": _("adb.forms.createAdbForm.label.rok_popisu"),
+            "autor_revize": _("adb.forms.createAdbForm.label.autor_revize"),
+            "rok_revize": _("adb.forms.createAdbForm.label.rok_revize"),
+            "poznamka": _("adb.forms.createAdbForm.label.poznamka"),
         }
         widgets = {
             "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
@@ -67,20 +67,20 @@ class CreateADBForm(forms.ModelForm):
         }
 
         help_texts = {
-            "typ_sondy": _("adb.form.typSondy.tooltip"),
+            "typ_sondy": _("adb.forms.createAdbForm.tooltip.typSondy"),
             "uzivatelske_oznaceni_sondy": _(
-                "adb.form.uzivatelske_oznaceni_sondy.tooltip"
+                "adb.forms.createAdbForm.tooltip.uzivatelske_oznaceni_sondy"
             ),
-            "trat": _("adb.form.trat.tooltip"),
-            "cislo_popisne": _("adb.form.cislo_popisne.tooltip"),
-            "parcelni_cislo": _("adb.form.parcelni_cislo.tooltip"),
-            "podnet": _("adb.form.podnet.tooltip"),
-            "stratigraficke_jednotky": _("adb.form.stratigraficke_jednotky.tooltip"),
-            "autor_popisu": _("adb.form.autor_popisu.tooltip"),
-            "rok_popisu": _("adb.form.rok_popisu.tooltip"),
-            "autor_revize": _("adb.form.autor_revize.tooltip"),
-            "rok_revize": _("adb.form.rok_revize.tooltip"),
-            "poznamka": _("adb.form.poznamka.tooltip"),
+            "trat": _("adb.forms.createAdbForm.tooltip.trat"),
+            "cislo_popisne": _("adb.forms.createAdbForm.tooltip.cislo_popisne"),
+            "parcelni_cislo": _("adb.forms.createAdbForm.tooltip.parcelni_cislo"),
+            "podnet": _("adb.forms.createAdbForm.tooltip.podnet"),
+            "stratigraficke_jednotky": _("adb.forms.createAdbForm.tooltip.stratigraficke_jednotky"),
+            "autor_popisu": _("adb.forms.createAdbForm.tooltip.autor_popisu"),
+            "rok_popisu": _("adb.forms.createAdbForm.tooltip.rok_popisu"),
+            "autor_revize": _("adb.forms.createAdbForm.tooltip.autor_revize"),
+            "rok_revize": _("adb.forms.createAdbForm.tooltip.rok_revize"),
+            "poznamka": _("adb.forms.createAdbForm.tooltip.poznamka"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):
@@ -186,16 +186,16 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
         Hlavní formulář pro vytvoření, editaci a zobrazení VB.
         """
         northing = forms.FloatField(
-            label=_("adb.form.vyskovyBod.northing.label"),
-            help_text=_("adb.form.vyskovyBod.northing.tooltip"),
+            label=_("adb.forms.createVyskovyBodForm.label.northing"),
+            help_text=_("adb.forms.createVyskovyBodForm.tooltip.northing"),
         )
         easting = forms.FloatField(
-            label=_("adb.form.vyskovyBod.easting.label"),
-            help_text=_("adb.form.vyskovyBod.easting.tooltip"),
+            label=_("adb.forms.createVyskovyBodForm.label.easting"),
+            help_text=_("adb.forms.createVyskovyBodForm.tooltip.easting"),
         )
         niveleta = forms.FloatField(
-            label=_("adb.form.vyskovyBod.niveleta.label"),
-            help_text=_("adb.form.vyskovyBod.niveleta.tooltip"),
+            label=_("adb.forms.createVyskovyBodForm.label.niveleta"),
+            help_text=_("adb.forms.createVyskovyBodForm.tooltip.niveleta"),
         )
 
         class Meta:
@@ -204,11 +204,11 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             fields = ("ident_cely", "typ", "northing", "easting", "niveleta")
 
             labels = {
-                "ident_cely": _("adb.form.vyskovyBod.ident_cely.label"),
-                "typ": _("adb.form.vyskovyBod.typ.label"),
-                "niveleta": _("adb.form.vyskovyBod.niveleta.label"),
-                "northing": _("adb.form.vyskovyBod.northing.label"),
-                "easting": _("adb.form.vyskovyBod.easting.label"),
+                "ident_cely": _("adb.forms.createVyskovyBodForm.label.ident_cely"),
+                "typ": _("adb.forms.createVyskovyBodForm.label.typ"),
+                "niveleta": _("adb.forms.createVyskovyBodForm.label.niveleta"),
+                "northing": _("adb.forms.createVyskovyBodForm.label.northing"),
+                "easting": _("adb.forms.createVyskovyBodForm.label.easting"),
             }
 
             widgets = {
@@ -216,11 +216,11 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 "typ": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
             }
             help_texts = {
-                "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),
-                "typ": _("adb.form.vyskovyBod.typ.tooltip"),
-                "niveleta": _("adb.form.vyskovyBod.niveleta.tooltip"),
-                "northing": _("adb.form.vyskovyBod.northing.tooltip"),
-                "easting": _("adb.form.vyskovyBod.easting.tooltip"),
+                "ident_cely": _("adb.forms.createVyskovyBodForm.tooltip.ident_cely"),
+                "typ": _("adb.forms.createVyskovyBodForm.tooltip.typ"),
+                "niveleta": _("adb.forms.createVyskovyBodForm.tooltip.niveleta"),
+                "northing": _("adb.forms.createVyskovyBodForm.tooltip.northing"),
+                "easting": _("adb.forms.createVyskovyBodForm.tooltip.easting"),
             }
 
         def _has_initial_values(self):

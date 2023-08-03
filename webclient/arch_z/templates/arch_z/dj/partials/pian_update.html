@@ -6,7 +6,7 @@
 <div class="card app-card-form" id="detail_pian_form_{{ pian_ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">
-      {% trans "Pian" %}  {{ pian_ident_cely }}
+      {% trans "arch_z.templates.arch_z.dj.partials.pian_update.cardHeader.label" %}  {{ pian_ident_cely }}
     </div>
   </div>
   <div class="card-body">
@@ -16,7 +16,7 @@
       {% if show.editovat %}
         <input type="hidden" name="dj_ident_cely" value="{{ dj_ident_cely }}">
         <button type="submit" id="editPianButton"
-                class="btn btn-primary">{% trans "Upravit pian" %}</button>
+                class="btn btn-primary">{% trans "arch_z.templates.arch_z.dj.partials.pian_update.editButtons.upravitPian.label" %}</button>
       {% endif %}
     </form>
   </div>
