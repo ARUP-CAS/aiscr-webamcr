@@ -36,6 +36,7 @@
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="{{type}}-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat akci" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'archeologicky_zaznam' zaznam.id %}">{% trans "akce.detail.toolbar.MetadataDownload" %}</a>
           <a class="dropdown-item" href="{% url 'historie:'|add:type zaznam.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.zmenit_proj_akci %}
           <button id="arch_z-proj-akce-change" class="dropdown-item" type="button" name="button">{% trans "akce.zmenitNaSamostatnou.label" %}</button>

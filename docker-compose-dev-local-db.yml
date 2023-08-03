@@ -76,26 +76,6 @@ services:
       retries: 30
       interval: '10s'
 
-  pgadmin:
-    image: dpage/pgadmin4
-    secrets:
-      - pg_admin_pass
-    ports:
-      - 88:80
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.net
-      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pg_admin_pass
-    volumes:
-      - pg_admin_vol:/var/lib/pgadmin/
-    depends_on:
-      db:
-        condition: service_healthy
-
-  memcached:
-    image: memcached:latest
-    ports:
-      - "11211:11211"
-
   redis:
     build: ./redis
     image: redis:7
@@ -104,28 +84,6 @@ services:
     secrets:
       - redis_pass
     command: sh -c 'redis-server /home/redis/redis.conf'
-
-  grafana:
-    image: grafana/grafana-enterprise:8.2.0
-    restart: always
-    depends_on:
-      - prometheus
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
-    volumes:
-      - grafana_data:/var/lib/grafana
-    secrets:
-      - grafana_admin_password
-    ports:
-      - "3000:3000"
-
-  prometheus:
-    image: prom/prometheus
-    volumes:
-      - ./prometheus:/etc/prometheus
-    ports:
-      - "9090:9090"
 
   celery_worker:
     build:
@@ -164,43 +122,6 @@ services:
         condition: service_healthy
       web:
         condition: service_started
-  selenium:
-    image: selenium/standalone-chrome-debug
-    ports:
-      - 4444:4444
-      - 5900:5900
-    shm_size: '1gb'
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.7.0
-    depends_on:
-      - elasticsearch
-    ports:
-      - 9600:9600
-      - 5959:5959
-    volumes:
-      - logs_volume:/logs:ro
-      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
-    environment:
-      - discovery.type=single-node
-      - http.host=0.0.0.0
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms750m -Xmx750m
-    ports:
-      - 9200:9200
-    volumes:
-      - elasticsearch_volume:/usr/share/elasticsearch/data
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.7.0
-    restart: always
-    ports:
-      - 5601:5601
-    depends_on:
-      - elasticsearch
 
 volumes:
   locale_data:

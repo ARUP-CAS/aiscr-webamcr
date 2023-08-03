@@ -1,3 +1,4 @@
+import io
 import tempfile
 from abc import ABC, abstractmethod
 import datetime
@@ -7,6 +8,7 @@ import os
 
 from django.contrib.staticfiles.storage import staticfiles_storage
 
+from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from core.utils import calculate_crc_32
 from webclient.settings.base import MEDIA_ROOT, STATIC_ROOT
 
@@ -64,7 +66,7 @@ class DocumentCreator(ABC):
 
 class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
-        dok_index = 0 if "C" in self.projekt.ident_cely else 1
+        dok_index = 0 if "C" in self.projekt.ident_cely.upper() else 1
         self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
         self.texts["header_line_2"] = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
         # Condition check for automated testing
@@ -303,7 +305,7 @@ class OznameniPDFCreator(DocumentCreator):
                                        fontSize=10,
                                        fontName="OpenSans"))
 
-    def build_document(self):
+    def build_document(self) -> RepositoryBinaryFile:
         def draw_image(filename, canvas, counter):
             img = utils.ImageReader(filename)
             iw, ih = img.getSize()
@@ -404,27 +406,19 @@ class OznameniPDFCreator(DocumentCreator):
         )
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
-        if not os.path.exists(MEDIA_ROOT):
-            os.makedirs(MEDIA_ROOT)
-        directory = f"{MEDIA_ROOT}/soubory/AG/{datetime.datetime.now().strftime('%Y/%m/%d')}"
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        if self.additional:
-            from core.models import Soubor
-            postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        else:
-            postfix = ""
-        path = f"{directory}/oznameni_{self.projekt.ident_cely}{postfix}.pdf"
-        with open(path, "wb") as file:
-            file.write(pdf_value)
-        with open(path, mode="rb") as file:
-            checksum = calculate_crc_32(file)
-        os.remove(path)
-        path = f"{directory}/{checksum}_oznameni_{self.projekt.ident_cely}{postfix}.pdf"
-        filename_without_checksum = f"oznameni_{self.projekt.ident_cely}{postfix}.pdf"
-        with open(path, "wb") as file:
-            file.write(pdf_value)
-        return path, filename_without_checksum
+
+        postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+        file = io.BytesIO()
+        file.write(pdf_value)
+        file.seek(0)
+        checksum = calculate_crc_32(file)
+        file.seek(0)
+        filename = f"{checksum}_oznameni_{self.projekt.ident_cely}{postfix}.pdf"
+
+        con = FedoraRepositoryConnector(self.projekt)
+        rep_bin_file: RepositoryBinaryFile = con.save_binary_file(filename, "application/pdf", file)
+        return rep_bin_file
 
     def __init__(self, oznamovatel, projekt, additional=False):
         from oznameni.models import Oznamovatel

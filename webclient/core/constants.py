@@ -112,7 +112,7 @@ OBLAST_CHOICES = (
 
 CESKY = "cs"
 ANGLICKY = "en"
-JAZYKY = ((CESKY, _("Česky")), (ANGLICKY, _("Anglicky")))
+JAZYKY = ((CESKY, _("core.constants.cs.text")), (ANGLICKY, _("core.constants.cs.text")))
 
 # Typy vazeb
 PROJEKT_RELATION_TYPE: Final = "projekt"
@@ -155,19 +155,19 @@ KLADYZM_KATEGORIE = (
 # Podporovane souradnicove systemy
 COORDINATE_SYSTEM = [(2, "S-JTSK"), (1, "WGS-84")]
 
-DOK_MESTO = (_("constants.dok.mesto_praha"), _("constants.dok.mesto_brno"))
-DOK_VE_MESTE = (_("constants.dok.v_praze"), _("constants.dok.v_brne"))
-DOK_ADRESA = (_("constants.dok.adresa_praha"), _("constants.dok.adresa_brno"))
+DOK_MESTO = (_("core.constants.dok.mesto_praha"), _("core.constants.dok.mesto_brno"))
+DOK_VE_MESTE = (_("core.constants.dok.v_praze"), _("core.constants.dok.v_brne"))
+DOK_ADRESA = (_("core.constants.dok.adresa_praha"), _("core.constants.dok.adresa_brno"))
 DOK_TELEFON = {
-    0: _("constants.dok.telefon"),
-    116: _("constants.dok.telefon_k116"),
-    141: _("constants.dok.telefon_k141"),
-    108: _("constants.dok.telefon_k108"),
-    124: _("constants.dok.telefon_k124"),
-    132: _("constants.dok.telefon_k132"),
+    0: _("core.constants.dok.telefon"),
+    116: _("core.constants.dok.telefon_k116"),
+    141: _("core.constants.dok.telefon_k141"),
+    108: _("core.constants.dok.telefon_k108"),
+    124: _("core.constants.dok.telefon_k124"),
+    132: _("core.constants.dok.telefon_k132"),
 }
-DOK_EMAIL = (_("constants.dok.email_praha"), _("constants.dok.email_brno"))
-DOC_KOMU = (_("constants.dok.komu_praha"), _("constants.dok.komu_brno"))
-DOC_REDITEL = (_("constants.dok.reditel_praha"), _("constants.dok.reditel_brno"))
+DOK_EMAIL = (_("core.constants.dok.email_praha"), _("core.constants.dok.email_brno"))
+DOC_KOMU = (_("core.constants.dok.komu_praha"), _("core.constants.dok.komu_brno"))
+DOC_REDITEL = (_("core.constants.dok.reditel_praha"), _("core.constants.dok.reditel_brno"))
 
 ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT = 36

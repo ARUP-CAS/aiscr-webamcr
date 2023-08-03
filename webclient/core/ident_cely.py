@@ -1,5 +1,6 @@
 import logging
 from datetime import date
+from django.db import connection
 
 from adb.models import Adb, Kladysm5, AdbSekvence
 from arch_z.models import ArcheologickyZaznam
@@ -22,30 +23,32 @@ from projekt.models import Projekt
 
 logger = logging.getLogger(__name__)
 
+def get_next_sequence(sequence_name: str) -> str:
+    query = (
+        "select nextval(%s)"
+    )
+    cursor = connection.cursor()
+    cursor.execute(query,[sequence_name])
+    return cursor.fetchone()[0]
 
-def get_temporary_project_ident(project: Projekt, region: str) -> str:
+
+def get_temporary_project_ident(region: str) -> str:
     """
     Metóda pro výpočet dočasného identu projektu. Přiděluje se pro projekty vytvoření v rámci oznámení.
 
-    Logika složení je: "X-" + region (M anebo C) + "-" + 9 místne číslo (id z tabulky projekty doplněno na 9 čísel nulama)
+    Logika složení je: "X-" + region (M anebo C) + "-" + 9 místne číslo (id ze sequence projekt_xident_seq doplněno na 9 čísel nulama)
     Příklad: "X-M-000001234"
     """
-    if project.id is not None:
-        id_number = "{0}".format(str(project.id)).zfill(9)
-        return "X-" + region + "-" + id_number
-    else:
-        logger.error("core.ident_cely.get_temporary_project_ident.error",
-                     extra={"message": "Could not assign temporary identifier to project with Null ID",
-                            "projekt": project.ident_cely, "region": region})
-        return None
-
+    id_number = f"{get_next_sequence('projekt_xident_seq'):09}"
+    return "X-" + region + "-" + id_number
+    
 
 def get_project_event_ident(project: Projekt) -> str:
     """
     Metóda pro výpočet identu projektové akce.
 
-    Logika složení je: ident_cely projektu + písmeno abecedy v postoupnosti od A po Z
-    Pri prekročení maxima čísla sekvence (99999) se vráti uživateli na web chybová hláška.
+    Logika složení je: ident_cely projektu + písmeno abecedy v posloupnosti od A po Z
+    Pri překročení maxima čísla sekvence (99999) se vráti uživateli na web chybová hláška.
     Příklad: "M-202100034A"
     """
     MAXIMAL_PROJECT_EVENTS: int = 26
@@ -71,7 +74,7 @@ def get_project_event_ident(project: Projekt) -> str:
 
 def get_dokument_rada(typ, material):
     """
-    Metóda pro získaní rady dokumentu podle typu a materiálu dokumentu.
+    Metoda pro získaní rady dokumentu podle typu a materiálu dokumentu.
     """
     instances = HeslarDokumentTypMaterialRada.objects.filter(
         dokument_typ=typ, dokument_material=material
@@ -87,51 +90,24 @@ def get_dokument_rada(typ, material):
 
 def get_temp_dokument_ident(rada, region):
     """
-    Metóda pro výpočet dočasného identu dokumentu.
+    Metoda pro výpočet dočasného identu dokumentu.
 
-    Logika složení je: "X-" + region (M alebo C) + "-" + řada (TX/DD/3D) + "-" + rok + 5 místne číslo (první volné číslo pro region, řadu a rok z dokumentu).
-    Pri prekročení maxima dokumentov pro daný region, řadu, rok a sekvenci (99999) se vráti uživateli na web chybová hláška.
-    Příklad: "X-M-TX-202100034"
+    Logika složení je: "X-" + region (M anebo C) + "-" + řada (TX/DD/3D) + "-" 9 místní číslo (id ze sequence dokument_xident_seq doplněno na 9 čísel nulami)
+    Příklad: "X-M-TX-000000034"
     """
-    MAXIMAL: int = 99999
-    if rada == "TX" or rada == "DD" or rada == "3D":
-        # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        prefix = str(
-            IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-" + str(date.today().year)
+    sequence = f"{get_next_sequence('dokument_xident_seq'):09}"
+    prefix = str(
+            IDENTIFIKATOR_DOCASNY_PREFIX + region + rada + "-"
         )
-        d = Dokument.objects.filter(
-            ident_cely__regex="^" + prefix + "\\d{5}$"
-        ).order_by("-ident_cely")
-        if d.filter(ident_cely=str(prefix + "00001")).count() == 0:
-            return prefix + "00001"
-        else:
-            # temp number from empty spaces
-            sequence = d[d.count() - 1].ident_cely[-5:]
-            logger.error("core.ident_cely.get_temp_dokument_ident.warning", extra={"sequence": sequence})
-            while True:
-                if d.filter(ident_cely=prefix + sequence).exists():
-                    old_sequence = sequence
-                    sequence = str(int(sequence) + 1).zfill(5)
-                    logger.error("core.ident_cely.get_temp_dokument_ident.already_exists",
-                                 extra={"prefix": prefix, "old_sequence": old_sequence, "sequence": str(sequence)})
-                else:
-                    break
-            if int(sequence) >= MAXIMAL:
-                logger.error("core.ident_cely.get_temp_dokument_ident.maximal_temporary_document_ident",
-                             extra={"maximum": str(MAXIMAL)})
-                raise MaximalIdentNumberError(MAXIMAL)
-            return prefix + sequence
-    else:
-        # TODO dodelat dalsi rady
-        raise NeocekavanaRadaError("Neocekavana rada dokumentu: " + rada)
+    return prefix + sequence
 
 
 def get_cast_dokumentu_ident(dokument: Dokument) -> str:
     """
-    Metóda pro výpočet identu části dokumentu.
+    Metoda pro výpočet identu části dokumentu.
 
-    Logika složení je: ident_cely dokumentu + "-D" + poradové číslo části per dokument doplněno na 3 číslice nulama.
-    Pri prekročení maxima DJ u dokumentu (999) se vráti uživateli na web chybová hláška.
+    Logika složení je: ident_cely dokumentu + "-D" + pořadové číslo části per dokument doplněno na 3 číslice nulami.
+    Pri překročení maxima DJ u dokumentu (999) se vráti uživateli na web chybová hláška.
     Příklad: "M-DD-202100034-D001"
     """
     MAXIMUM: int = 999
@@ -152,10 +128,10 @@ def get_cast_dokumentu_ident(dokument: Dokument) -> str:
 
 def get_dj_ident(event: ArcheologickyZaznam) -> str:
     """
-    Metóda pro výpočet identu dokumentační jednotky akce.
+    Metoda pro výpočet identu dokumentační jednotky akce.
 
-    Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulama.
-    Pri prekročení maxima DJ u arch záznamu (99) se vráti uživateli na web chybová hláška.
+    Logika složení je: ident_cely arch záznamu + "-D" + pořadové číslo DJ per arch záznam doplněno na 2 číslice nulami.
+    Pri překročení maxima DJ u arch záznamu (99) se vráti uživateli na web chybová hláška.
     Příklad: "M-202100034A-D01"
     """
     MAXIMAL_EVENT_DJS: int = 99
@@ -175,7 +151,7 @@ def get_dj_ident(event: ArcheologickyZaznam) -> str:
 
 def get_komponenta_ident(zaznam) -> str:
     """
-    Metóda pro výpočet identu komponenty DJ a dokument části.
+    Metoda pro výpočet identu komponenty DJ a dokument části.
 
     Logika složení je: ident_cely arch záznamu anebo dokumentu + "-D" + pořadové číslo komponenty per záznam doplněno na 3 číslice nulama.
     Pri prekročení maxima komponent u záznamu (999) se vráti uživateli na web chybová hláška.
@@ -220,45 +196,14 @@ def get_sm_from_point(point):
 
 def get_temporary_pian_ident(zm50) -> str:
     """
-    Metóda pro výpočet dočasného identu pianu.
+    Metoda pro výpočet dočasného identu pianu.
 
-    Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 6 místne číslo (první volné číslo pro zm50)
-    Pri prekročení maxima pian pro daní zm50 (999999) se vráti uživateli na web chybová hláška.
-    Příklad: "N-1224-001234"
+    Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo ze sekvence pian_xident_seq doplněno na 9 číslic.
+    Příklad: "N-1224-000123456"
     """
-    MAXIMAL_PIANS: int = 999999
-    last_digit_count = 6
-    max_count = 0
-    start = "N-" + str(zm50.cislo).replace("-", "").zfill(4) + "-"
-    pian = (
-        Pian.objects.filter(ident_cely__startswith=start).all().order_by("-ident_cely")
-    )
-    if (
-        pian.filter(ident_cely=str(start + str("1").zfill(last_digit_count))).count()
-        == 0
-    ):
-        return start + str("1").zfill(last_digit_count)
-    else:
-        # temp number from empty spaces
-        sequence = pian[pian.count() - 1].ident_cely[-last_digit_count:]
-        logger.warning("core.ident_cely.get_temporary_pian_ident.warning", extra={"sequence": sequence})
-        while True:
-            if pian.filter(ident_cely=start + sequence).exists():
-                old_sequence = sequence
-                sequence = str(int(sequence) + 1).zfill(last_digit_count)
-                logger.warning("core.ident_cely.get_temporary_pian_ident.warning",
-                               extra={"start": start, "old_sequence": old_sequence, "sequence": sequence})
-            else:
-                break
-        if int(sequence) >= MAXIMAL_PIANS:
-            logger.error(
-                "Maximal number of temporary document ident is "
-                + str(MAXIMAL_PIANS)
-                + "for given region and rada"
-            )
-            logger.warning("core.ident_cely.get_temporary_pian_ident.warning", extra={"maximal_pints": MAXIMAL_PIANS})
-            raise MaximalIdentNumberError(MAXIMAL_PIANS)
-        return start + sequence
+    prefix = "N-" + str(zm50.cislo).replace("-", "").zfill(4) + "-"
+    sequence = f"{get_next_sequence('pian_xident_seq'):09}"
+    return prefix + sequence
 
 
 def get_sn_ident(projekt: Projekt) -> str:
@@ -310,7 +255,7 @@ def get_adb_ident(pian: Pian) -> str:
         sequence = AdbSekvence.objects.get(kladysm5=sm5)
     except AdbSekvence.DoesNotExist:
         sequence = AdbSekvence.objects.create(kladysm5=sm5, sekvence=1)
-    perm_ident_cely = record_list + "-" + "{0}".format(sequence.sekvence).zfill(6)
+    perm_ident_cely = record_list + "-" + f"{sequence.sekvence:06}"
     # Loop through all of the idents that have been imported
     while True:
         if Adb.objects.filter(ident_cely=perm_ident_cely).exists():
@@ -318,7 +263,7 @@ def get_adb_ident(pian: Pian) -> str:
             logger.warning("core.ident_cely.get_adb_ident.already_exists",
                            extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence})
             perm_ident_cely = (
-                record_list + "-" + "{0}".format(sequence.sekvence).zfill(6)
+                record_list + "-" + f"{sequence.sekvence:06}"
             )
         else:
             break
@@ -336,17 +281,32 @@ def get_temp_lokalita_ident(typ, region, lokalita):
     """
     Metóda pro výpočet dočasného identu lokality.
 
-    Logika složení je: "X-" + region (M anebo C) + "-" + typ + 7 místne číslo (id z tabulky lokality doplněno na 7 čísel nulama)
-    Příklad: "X-M-L0001234"
+    Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence lokalita_xident_seq doplněno na 9 číslic.
+    
+    Příklad: "X-M-L000123456"
     """
-    MAXIMAL: int = 9999999
-    # [region] - [typ] - [7 mistne cislo]
     prefix = str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-" + typ)
-    if lokalita.id is not None:
-        id_number = "{0}".format(str(lokalita.id)).zfill(7)
-        return prefix + id_number
-    else:
-        logger.error("Could not assign temporary identifier to lokalita with Null ID")
-        logger.error("core.ident_cely.get_temp_lokalita_ident.null_id_error",
-                     extra={"typ": typ, "region": region, "lokalita": lokalita})
-        return None
+    sequence = f"{get_next_sequence('lokalita_xident_seq'):09}"
+    return prefix + sequence
+
+def get_temp_akce_ident(region):
+    """
+    Metóda pro výpočet dočasného identu samostatný akce.
+
+    Logika složení je: "X-" + region (M anebo C) + "-9" + 9 místní číslo ze sekvence akce_xident_seq doplněno na 9 číslic -A.
+    
+    Příklad: "X-M-9000123456A"
+    """
+    id_number = f"{get_next_sequence('akce_xident_seq'):09}"
+    return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + id_number + "A")
+
+def get_temp_ez_ident():
+    """
+    Metóda pro výpočet dočasného identu externího zdroje.
+
+    Logika složení je: "X-BIB" + 9 místní číslo ze sekvence externi_zdroj_xident_seq doplněno na 9 číslic.
+    
+    Příklad: "X-BIB-000123456"
+    """
+    id_number = f"{get_next_sequence('externi_zdroj_xident_seq'):09}"
+    return str(IDENTIFIKATOR_DOCASNY_PREFIX + "BIB-" + id_number)
