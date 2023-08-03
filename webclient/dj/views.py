@@ -6,7 +6,7 @@ from adb.models import Adb, VyskovyBod
 from arch_z.models import ArcheologickyZaznam, get_akce_ident
 from core.constants import AZ_STAV_ARCHIVOVANY, DOKUMENTACNI_JEDNOTKA_RELATION_TYPE
 from core.exceptions import MaximalIdentNumberError
-from core.ident_cely import get_dj_ident
+from core.ident_cely import get_dj_ident, get_temp_akce_ident
 from core.message_constants import (
     MAXIMUM_DJ_DOSAZENO,
     ZAZNAM_SE_NEPOVEDLO_EDITOVAT,
@@ -14,7 +14,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_VYTVORIT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY,
 )
 from core.utils import (
     update_all_katastr_within_akce_or_lokalita,
@@ -24,7 +24,7 @@ from dj.forms import ChangeKatastrForm, CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.db.models import Q, RestrictedError
 from django.forms import inlineformset_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -109,6 +109,10 @@ def detail(request, ident_cely):
             dj.save()
             if len(new_ku) > 3:
                 update_main_katastr_within_ku(dj.ident_cely, new_ku)
+        if dj.pian is not None and (pian_db is None or pian_db.pk != dj.pian.pk):
+            dj.pian.save_metadata()
+        if pian_db is not None and (dj.pian is None or dj.pian.pk != pian_db.pk):
+            pian_db.save_metadata()
 
     else:
         logger.warning("dj.views.detail.form_is_not_valid", extra={"errors": form.errors})
@@ -150,7 +154,7 @@ def detail(request, ident_cely):
         )
         if formset.is_valid():
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
-            instances = formset.save()
+            instances = formset.save(commit=False)
             for i in range(0, len(instances)):
                 vyskovy_bod = instances[i]
                 vyskovy_bod_form = list(filter(lambda x: x.instance == vyskovy_bod, formset.forms))[0]
@@ -159,10 +163,10 @@ def detail(request, ident_cely):
                     logger.debug("dj.views.detail.adb_zapsat_vyskove_body.save",
                                  extra={"vyskovy_bod": vyskovy_bod.__dict__,
                                         "vyskovy_bod_form": vyskovy_bod_form.__dict__})
-                    vyskovy_bod.save()
                     vyskovy_bod.set_geom(vyskovy_bod_form.cleaned_data.get("northing", 0),
                                          vyskovy_bod_form.cleaned_data.get("easting", 0),
                                          vyskovy_bod_form.cleaned_data.get("niveleta", 0))
+                vyskovy_bod.save()
         if formset.is_valid():
             logger.debug("dj.views.detail.adb_zapsat_vyskove_body.form_set_is_valid")
             if (
@@ -224,15 +228,23 @@ def smazat(request, ident_cely):
     """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
-        resp = dj.delete()
-        update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
-        if resp:
-            logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
-            messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
-            return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
-        else:
-            logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely})
-            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+        try:
+            resp = dj.delete()
+            update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
+            if resp:
+                logger.debug("dj.views.detail.smazat.deleted", {"resp": resp})
+                messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
+                return JsonResponse({"redirect": dj.archeologicky_zaznam.get_absolute_url()})
+            else:
+                logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely})
+                messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT)
+                return JsonResponse(
+                    {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
+                    status=403,
+                )
+        except RestrictedError as err:
+            logger.warning("dj.views.detail.smazat.not_deleted", {"ident_cely": ident_cely, "err": err})
+            messages.add_message(request, messages.ERROR, ZAZNAM_SE_NEPOVEDLO_SMAZAT_NAVAZANE_ZAZNAMY)
             return JsonResponse(
                 {"redirect": dj.archeologicky_zaznam.get_absolute_url()},
                 status=403,
@@ -240,9 +252,9 @@ def smazat(request, ident_cely):
     else:
         context = {
             "object": dj,
-            "title": _("dj.modalForm.smazani.title.text"),
+            "title": _("dj.views.smazat.title.text"),
             "id_tag": "smazat-dj-form",
-            "button": _("dj.modalForm.smazani.submit.button"),
+            "button": _("dj.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)
 
@@ -251,9 +263,9 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
     Třída pohledu pro editaci katastru dokumentační jednotky.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dj.modalForm.zmenitKatastr.title.text")
+    title = _("dj.views.ChangeKatastrView.title.text")
     id_tag = "zmenit-katastr-form"
-    button = _("dj.modalForm.zmenitKatastr.submit.button")
+    button = _("dj.views.ChangeKatastrView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -297,7 +309,7 @@ class ChangeKatastrView(LoginRequiredMixin, TemplateView):
                     az.set_akce_ident(get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id))
                 else:
                     az.set_akce_ident(
-                        get_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id, True, az.id)
+                        get_temp_akce_ident(form.cleaned_data["katastr"].okres.kraj.rada_id)
                     )
             zaznam.refresh_from_db()
             messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)

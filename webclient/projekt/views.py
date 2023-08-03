@@ -56,7 +56,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_heatmap_project,
@@ -72,7 +72,7 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -382,6 +382,9 @@ def smazat(request, ident_cely):
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
+    elif projekt.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:
@@ -480,7 +483,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.set_schvaleny(request.user)
+        old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
@@ -497,6 +500,7 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
                                                                          "permIdent_cely": projekt.ident_cely})
+        projekt.set_schvaleny(request.user,old_ident)
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -1105,9 +1109,10 @@ def generovat_expertni_list(request, ident_cely):
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    path = projekt.create_expert_list(popup_parametry)
-    file = open(path, "rb")
-    return FileResponse(file)
+    output = projekt.create_expert_list(popup_parametry)
+    response = StreamingHttpResponse(output, content_type="text/rtf")
+    response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
+    return response
 
 
 def get_history_dates(historie_vazby):

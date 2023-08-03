@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Nový dokument" %}{% endblock %}
+{% block title %}{% trans "dokument.templates.create.title" %}{% endblock %}
 {% block head %}
 <!-- Autocomplete media files -->
 <link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
@@ -23,7 +23,7 @@
         <div class="card app-card-form">
           <div class="card-header">
             <div class="app-fx app-left">
-              {% trans "Nový dokument" %}
+              {% trans "dokument.templates.create.novyDokument.cardHeader" %}
             </div>
           </div>
           <div class="card-body">
@@ -32,8 +32,8 @@
         </div>
         <div class="mt-3">
           <div class="form-group">
-            <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "Uložit" %}</button>
-            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+            <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "dokument.templates.create.novyDokument.submitButton.text" %}</button>
+            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "dokument.templates.create.novyDokument.zpetButton.text" %}</button>
           </div>
         </div>
       </div>
@@ -44,7 +44,7 @@
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
       <div class="modal-content form" id="id-modal-region">
         <div class="modal-header">
-          <h5 class="modal-title">{% trans "Generovat nové potvrzení" %}</h5>
+          <h5 class="modal-title">{% trans "dokument.templates.create.generovatNovePotvrzeni.modalHeader" %}</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -56,8 +56,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "Potvrdit" %}</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Zavřít" %}</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">{% trans "dokument.templates.create.generovatNovePotvrzeni.submitButton.text" %}</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "dokument.templates.create.generovatNovePotvrzeni.closeButton.text" %}</button>
           </div>
         </form>
       </div>

@@ -2,16 +2,16 @@
 <table class="table table-striped table-hover table-sm mb-0">
     <thead>
     <tr>
-      <th>{% trans "Identifikátor" %}</th>
-      <th>{% trans "Stav" %}</th>
-      <th>{% trans "Typ dokumentu" %}</th>
-      <th>{% trans "Popis" %}</th>
-      <th>{% trans "Počet souborů" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.identifikator.label" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.stav.label" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.typDokumentu.label" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.popis.label" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.pocetSouboru.label" %}</th>
       {% if show.editovat %}
-      <th>{% trans "Odpojit dokument" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.odpojitDokument.label" %}</th>
       {% endif %}
       {% if pripojit %}
-      <th>{% trans "Pripojit dokument" %}</th>
+      <th>{% trans "dokument.templates.dokument_table_only.pripojitDokument.label" %}</th>
       {% endif %}
     </tr>
     </thead>

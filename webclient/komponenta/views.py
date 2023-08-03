@@ -317,8 +317,8 @@ def smazat(request, ident_cely):
     else:
         context = {
             "object": k,
-            "title": _("komponenta.modalForm.smazani.title.text"),
+            "title": _("komponenta.views..smazat.title.text"),
             "id_tag": "smazat-komponenta-form",
-            "button": _("komponenta.modalForm.smazani.submit.button"),
+            "button": _("komponenta.views.smazat.submitButton.text"),
         }
         return render(request, "core/transakce_modal.html", context)

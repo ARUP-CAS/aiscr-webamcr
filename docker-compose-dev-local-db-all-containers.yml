@@ -1,0 +1,232 @@
+version: "3.8"
+# -----------------------------
+# DISCLAIMER : this file is for local dev. Cannot solve all local dev needs so it might be needed to slightly modify it, if current setup doesn't support desired scenario/setup.
+# Nominal case for this file is that this docker-compose-dev-local-db.yml is triggered via
+# ./scripts/dev_local.sh, use "./scripts/dev_deploy.sh -h" for help how to use this script
+# It is a wrapper script adding some additional parameters for building the docker images, e.g. file for local db restoration from a backup file, etc.
+# -----------------------------
+# !!! Check that secrets at bottom of this compose file are mapped to EXISTING secrets file if not, update path accrodingly !!!! Doesn't need to be in default location as mentioned below.
+#-------------------------------------------
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: sh -c "/scripts/entrypoint.dev.sh"
+    secrets:
+      - db_conf
+      - mail_conf
+      - redis_pass
+    restart: on-failure
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+      - locale_data:/vol/web/locale
+      - logs_volume:/run/logs
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+      - "2525:2525"
+    environment:
+      - DJANGO_SETTINGS_MODULE=webclient.settings.dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  livereload:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: sh -c "python3 manage.py livereload --host=0.0.0.0 --port=35729"
+    volumes:
+      - ./webclient:/code
+    restart: on-failure
+    secrets:
+      - db_conf
+      - mail_conf
+    ports:
+      - "35729:35729"
+    environment:
+      - DJANGO_SETTINGS_MODULE=webclient.settings.dev
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile-DB
+      args:
+        DB_BACKUP_FILE: backup_file_db_v4.tar
+    ports:
+      - "5432:5432"
+    secrets:
+      - local_db_pass
+    environment:
+      - DBNAME=aiscrrestore
+      - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
+    volumes:
+      - db_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ./healthcheck.sh
+      retries: 30
+      interval: '10s'
+
+  pgadmin:
+    image: dpage/pgadmin4
+    secrets:
+      - pg_admin_pass
+    ports:
+      - 88:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.net
+      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pg_admin_pass
+    volumes:
+      - pg_admin_vol:/var/lib/pgadmin/
+    depends_on:
+      db:
+        condition: service_healthy
+
+  memcached:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+
+  redis:
+    build: ./redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    secrets:
+      - redis_pass
+    command: sh -c 'redis-server /home/redis/redis.conf'
+
+  grafana:
+    image: grafana/grafana-enterprise:8.2.0
+    restart: always
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+    secrets:
+      - grafana_admin_password
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient worker -l INFO
+    secrets:
+      - db_conf
+      - redis_pass
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient beat -l INFO
+    secrets:
+      - db_conf
+      - redis_pass
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+  selenium:
+    image: selenium/standalone-chrome-debug
+    ports:
+      - 4444:4444
+      - 5900:5900
+    shm_size: '1gb'
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    depends_on:
+      - elasticsearch
+    ports:
+      - 9600:9600
+      - 5959:5959
+    volumes:
+      - logs_volume:/logs:ro
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    environment:
+      - discovery.type=single-node
+      - http.host=0.0.0.0
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms750m -Xmx750m
+    ports:
+      - 9200:9200
+    volumes:
+      - elasticsearch_volume:/usr/share/elasticsearch/data
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    restart: always
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
+volumes:
+  locale_data:
+  pg_admin_vol:
+  db_dev_data:
+  logs_volume:
+  elasticsearch_volume:
+  grafana_data:
+
+secrets:
+  pg_admin_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password )
+    file: ./secrets/pg_admin_pass
+  local_db_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting DB password for local database, needs to match with db_conf secret if local db is used)
+    file: ./secrets/local_db_pass
+  db_conf:
+    # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying DB connection (doesn't need to be repo root)
+    file: ./secrets.alternative.json
+  mail_conf:
+    # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying mailtrap setting (doesn't need to be repo root)
+    file: ./secrets_mail_client.json
+  redis_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password ) - local dev machine
+    file: ./secrets/redis_pass.txt
+    # production environment
+    # external: true
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt

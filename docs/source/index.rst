@@ -21,6 +21,7 @@ Dokumentace je delená na část popisující nasazování, adresarovou struktur
    file_documentation
    automaticke_testy
    code_documentation
+   identy
 
 
 
