@@ -10,22 +10,22 @@
 
     <div class="row app-entity-cards mb-3">
       <div class="col">
+        <a href="{% url 'pas:spoluprace_list' %}" class="card app-card-entity app-card-spoluprace">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "pas.templates.index.cardSpoluprace.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
         <a href="{% url 'pas:create' %}" class="card app-card-entity app-card-zapsat-nalez">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zapsat nález" %}
-          </div>
-        </a>
-      </div>
-      <div class="col">
-        <a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-nalezy">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "Moje nálezy" %}
+            {% trans "pas.templates.index.cardZapsatNalez.label" %}
           </div>
         </a>
       </div>
@@ -35,17 +35,17 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Vybrat" %}
+            {% trans "pas.templates.index.cardVybrat.label" %}
           </div>
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'pas:spoluprace_list' %}" class="card app-card-entity app-card-spoluprace">
+        <a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-nalezy">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Spolupráce" %}
+            {% trans "pas.templates.index.cardMojeNalezy.label" %}
           </div>
         </a>
       </div>
@@ -55,7 +55,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Potvrdit" %}
+            {% trans "pas.templates.index.cardPotvrdit.label" %}
           </div>
         </a>
       </div>
@@ -65,7 +65,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Archivovat" %}
+            {% trans "pas.templates.index.cardArchivovat.label" %}
           </div>
         </a>
       </div>
@@ -75,50 +75,44 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-zapsat-nalez collapse">
       <div class="p-3">
-        <h4>{% trans "Zapsat nález" %}</h4>
+        <h4>{% trans "pas.templates.index.cardZapsatNalez.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "pas.templates.index.cardZapsatNalez.text" %}
       </div>
     </div>
     <div class="app-collapse-moje-nalezy collapse">
       <div class="p-3">
-        <h4>{% trans "Moje nálezy" %}</h4>
+        <h4>{% trans "pas.templates.index.cardMojeNalezy.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "pas.templates.index.cardMojeNalezy.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
-        <h4>{% trans "Vybrat" %}</h4>
+        <h4>{% trans "pas.templates.index.cardVybrat.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "pas.templates.index.cardVybrat.text" %}
       </div>
     </div>
   <div class="app-collapse-spoluprace collapse">
       <div class="p-3">
-        <h4>{% trans "Spolupráce" %}</h4>
+        <h4>{% trans "pas.templates.index.cardSpolupraceNalez.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "pas.templates.index.cardSpolupraceNalez.text" %}
       </div>
     </div>
   <div class="app-collapse-potvrdit collapse">
       <div class="p-3">
-        <h4>{% trans "Potvrdit" %}</h4>
+        <h4>{% trans "pas.templates.index.cardPotvrdit.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "pas.templates.index.cardPotvrdit.text" %}
       </div>
     </div>
   <div class="app-collapse-archivovat collapse">
       <div class="p-3">
-        <h4>{% trans "Archivovat" %}</h4>
+        <h4>{% trans "pas.templates.index.cardArchivovat.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "pas.templates.index.cardArchivovat.text" %}
       </div>
     </div>
   </div>
