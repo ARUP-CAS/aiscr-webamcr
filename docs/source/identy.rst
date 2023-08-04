@@ -229,9 +229,9 @@ Permanentní ident
 
 * Přiděluje se pro archivované lokality
 
-* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplňeno na 9 číslic.
+* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplňeno na 7 číslic.
 
-* Příklad: "P-1224-100321"
+* Příklad: "C-K9000904"
 
 * Pri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
