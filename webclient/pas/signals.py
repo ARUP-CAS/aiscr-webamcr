@@ -29,9 +29,8 @@ def create_dokument_vazby(sender, instance, **kwargs):
 
 @receiver(post_save, sender=SamostatnyNalez)
 def save_metadata_samostatny_nalez(sender, instance: SamostatnyNalez, **kwargs):
-    if not instance.save_metadata():
-        instance.save_metadata()
-        instance.projekt.save_metadata()
+    instance.save_metadata()
+    instance.projekt.save_metadata()
 
 
 @receiver(post_delete, sender=SamostatnyNalez)

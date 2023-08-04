@@ -15,6 +15,10 @@ class Pes(ExportModelOperationsMixin("pes"), models.Model):
     content_object = GenericForeignKey("content_type", "object_id")
     created_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def ident_cely(self):
+        return getattr(self.content_object, "ident_cely", None)
+
     def __str__(self):
         return str(self.content_object)
 

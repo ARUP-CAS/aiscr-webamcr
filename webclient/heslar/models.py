@@ -129,6 +129,12 @@ class HeslarDokumentTypMaterialRada(ExportModelOperationsMixin("heslar_dokument_
         )
         verbose_name_plural = "Heslář dokument typ materiál řada"
 
+    def __init__(self, *args, **kwargs):
+        super(HeslarDokumentTypMaterialRada, self).__init__(*args, **kwargs)
+        self.initial_dokument_rada = self.dokument_rada
+        self.initial_dokument_typ = self.dokument_typ
+        self.initial_dokument_material = self.dokument_material
+
 
 class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.Model):
     """
@@ -162,6 +168,11 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
                 name='heslar_hierarchie_typ_check',
             ),
         ]
+
+    def __init__(self, *args, **kwargs):
+        super(HeslarHierarchie, self).__init__(*args, **kwargs)
+        self.initial_heslo_podrazene = self.heslo_podrazene
+        self.initial_heslo_nadrazene = self.heslo_nadrazene
 
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):

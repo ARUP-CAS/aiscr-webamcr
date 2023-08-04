@@ -184,7 +184,10 @@ class FedoraRepositoryConnector:
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
-                                FedoraRequestType.GET_LINK):
+                                FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
+                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
+                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3,
+                                ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok",
                              extra={"text": response.text, "status_code": response.status_code})
@@ -340,6 +343,7 @@ class FedoraRepositoryConnector:
         result = self._send_request(url, FedoraRequestType.CREATE_BINARY_FILE)
         uuid = result.text.split("/")[-1]
         soubor.path = RepositoryBinaryFile.get_url_without_domain(result.text)
+        soubor.suppress_signal = True
         soubor.save()
         if include_content:
             with open(soubor.path, mode="rb") as file:
