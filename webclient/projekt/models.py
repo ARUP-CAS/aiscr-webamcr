@@ -498,14 +498,23 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            projekts = Projekt.objects.filter(ident_cely__startswith=f"{region}-{str(current_year)}")
-            if projekts.count() > 0:
-                last = projekts.annotate(sekv=Cast(Substr("ident_cely", 7), models.IntegerField())).order_by("-sekv")[0]
-                if last.sekv >= MAXIMUM:
+            sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
+        finally:
+            prefix = f"{region}-{str(current_year)}"
+            projekts = Projekt.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
+            if projekts.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count()>0:
+                #number from empty spaces
+                idents = list(projekts.values_list("ident_cely", flat=True).order_by("ident_cely"))
+                idents = [sub.replace(prefix, "") for sub in idents]
+                idents = [sub.lstrip("0") for sub in idents]
+                idents = [eval(i) for i in idents]
+                missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+                logger.debug("dokuments.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug(missing[0])
+                if missing[0] >= MAXIMUM:
+                    logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
-                sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=last.sekv+1)
-            else:
-                sequence = ProjektSekvence.objects.create(region=region, rok=current_year, sekvence=1)
+                sequence.sekvence=missing[0]
         sequence.save()
         old_ident = self.ident_cely
         self.ident_cely = (

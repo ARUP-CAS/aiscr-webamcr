@@ -121,7 +121,11 @@
       </div>
     </form>
     {% render_table table 'bootstrap4_table.html' %}
-  <button type="button" class="btn btn-secondary" style="width: 55px;" onclick="goBack();">{% trans "historie.templates.historieList.zpet.label" %}</button>
+    <nav aria-label="Table navigation" class="table-navigation row">
+      <ul class="pagination  jump-page settings col-3">
+  <button type="button" class="btn btn-secondary" style="max-width: fit-content;" onclick="goBack();">{% trans "historie.templates.historieList.zpet.label" %}</button>
+      </ul>
+    </nav>
   </div>
 {% endblock %}
 
