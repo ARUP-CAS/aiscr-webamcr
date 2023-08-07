@@ -494,10 +494,11 @@ form {
   @extend .d-flex, .flex-column, .h-100;
 
   &.app-entity-historie {
-    height: 92% !important;
+    //height: 92% !important;
   }
   &.app-entity-historie.app-entity-soubor {
-    height: 85% !important;
+    //height: 85% !important;
+    padding-bottom: 59px;
   }
 
   &.app-entity-soubor {
@@ -522,12 +523,13 @@ form {
   }
 
   .app-table-list-wrapper {
-    flex: 1 0 auto;
+    flex: 1 0 auto; //
     position: relative;
+    max-height: fit-content;
 
     .app-table-list-inner {
-      position: absolute;
-      height: 100%;
+      position: absolute; //
+      height: 100%; //
       width: 100%;
       overflow: auto;
 
@@ -835,12 +837,7 @@ span.badge-span .badge {
   }
 }
 
-.app-entity-samostatny_nalez {
-  #projectMap{
-    position:absolute;
-  }
-}
-
 #dj_list_card_body {
   max-height: 500px;
 }
+

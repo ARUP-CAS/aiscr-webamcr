@@ -290,14 +290,23 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{region}-{typ.zkratka}")
-            if lokality.count() > 0:
-                last = lokality.annotate(sekv=Cast(Substr("ident_cely", 4), models.IntegerField())).order_by("-sekv")[0]
-                if last.sekv >= MAXIMUM:
+            sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
+        finally:
+            prefix = f"{region}-{typ.zkratka}"
+            lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
+            if lokality.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count()>0:
+                #number from empty spaces
+                idents = list(lokality.values_list("ident_cely", flat=True).order_by("ident_cely"))
+                idents = [sub.replace(prefix, "") for sub in idents]
+                idents = [sub.lstrip("0") for sub in idents]
+                idents = [eval(i) for i in idents]
+                missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+                logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug(missing[0])
+                if missing[0] >= MAXIMUM:
+                    logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
-                sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=last.sekv+1)
-            else:
-                sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
+                sequence.sekvence=missing[0]
         sequence.save()
         old_ident = self.ident_cely
         self.ident_cely = (
@@ -525,14 +534,24 @@ def get_akce_ident(region):
             raise MaximalIdentNumberError(MAXIMUM)
         sequence.sekvence += 1
     except ObjectDoesNotExist:
-        akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{region}-9",ident_cely__endswith="A")
-        if akce.count() > 0:
-            last = akce.annotate(sekv=Cast(Substr("ident_cely", 4, 6), models.IntegerField())).order_by("-sekv")[0]
-            if last.sekv >= MAXIMUM:
+        sequence = AkceSekvence.objects.create(region=region, sekvence=1)
+    finally:
+        prefix = str(region + "-9")
+        akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}",ident_cely__endswith="A").order_by("-ident_cely")
+        if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count()>0:
+            #number from empty spaces
+            idents = list(akce.values_list("ident_cely", flat=True).order_by("ident_cely"))
+            idents = [sub.replace(prefix, "") for sub in idents]
+            idents = [sub.replace("A", "") for sub in idents]
+            idents = [sub.lstrip("0") for sub in idents]
+            idents = [eval(i) for i in idents]
+            missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+            logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+            logger.debug(missing[0])
+            if missing[0] >= MAXIMUM:
+                logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
-            sequence = AkceSekvence.objects.create(region=region, sekvence=last.sekv+1)
-        else:
-            sequence = AkceSekvence.objects.create(region=region, sekvence=1)
+            sequence.sekvence=missing[0]
     sequence.save()
     return (
         sequence.region + "-9" + f"{sequence.sekvence:06}" + "A"

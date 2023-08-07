@@ -43,7 +43,6 @@
             <ul>
               <li><a href="{% url 'projekt:index' %}">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'projekt:create' %}">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "Přihlásit projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "Zahájit výzkum" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Ukončit terén" %}</a></li>
@@ -51,6 +50,7 @@
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Uzavřít projekt" %}</a></li>
               <li><a href="{% url 'projekt:list' %}">{% trans "Vybrat projekty" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "Naše projekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
               <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "Archivovat projekty" %}</a></li>
             </ul>
           </div>
@@ -114,10 +114,10 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'pas:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'pas:create' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje nálezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}" title="">{% trans "Vybrat" %}</a></li>
               <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "Spolupráce" %}</a></li>
+              <li><a href="{% url 'pas:create' %}" title="">{% trans "Zapsat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje nálezy" %}</a></li>
               <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "Potvrdit" %}</a></li>
               <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "Archivovat" %}</a></li>
             </ul>
@@ -139,8 +139,9 @@
             <ul>
               <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje modely" %}</a></li>
               <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje modely" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -160,8 +161,8 @@
             <ul>
               <li><a href="{% url 'dokument:index' %}" title="">{% trans "Domů" %}</a></li>
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje dokumenty" %}</a></li>
               <li><a href="{% url 'dokument:list' %}" title="">{% trans "Vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje dokumenty" %}</a></li>
               <li><a href="{% url 'dokument:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
             </ul>
           </div>
@@ -172,7 +173,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
-              <span class="material-icons">library_books</span> {% trans "Externí zdroje" %}
+              <span class="material-icons">menu_book</span> {% trans "Externí zdroje" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -184,7 +185,7 @@
               <li><a href="{% url 'ez:create' %}" title="">{% trans "Zapsat" %}</a></li>
               <li><a href="{% url 'ez:list' %}" title="">{% trans "Vybrat" %}</a></li>
               <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje Externí Zdroje" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?stav=2" title="">{% trans "Potvrdit" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -193,7 +194,7 @@
         <div class="card-header">
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left .btn-link.collapsed" type="button">
-              <a href="/admin/uzivatel/user/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "Administrace" %}</a>
+              <a href="/admin/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "Administrace" %}</a>
             </button>
           </h2>
         </div>

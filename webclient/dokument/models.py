@@ -319,14 +319,23 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 raise MaximalIdentNumberError(MAXIMUM)
             sequence.sekvence += 1
         except ObjectDoesNotExist:
-            docs = Dokument.objects.filter(ident_cely__startswith=f"{region}-{rada.zkratka}-{str(current_year)}")
-            if docs.count() > 0:
-                last = docs.annotate(sekv=Cast(Substr("ident_cely", 10), IntegerField())).order_by("-sekv")[0]
-                if last.sekv >= MAXIMUM:
+            sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+        finally:
+            prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
+            docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
+            if docs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count()>0:
+                #number from empty spaces
+                idents = list(docs.values_list("ident_cely", flat=True).order_by("ident_cely"))
+                idents = [sub.replace(prefix, "") for sub in idents]
+                idents = [sub.lstrip("0") for sub in idents]
+                idents = [eval(i) for i in idents]
+                missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+                logger.debug("dokuments.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug(missing[0])
+                if missing[0] >= MAXIMUM:
+                    logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                     raise MaximalIdentNumberError(MAXIMUM)
-                sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=last.sekv+1)
-            else:
-                sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+                sequence.sekvence=missing[0]
         sequence.save()
         perm_ident_cely = (
             sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)

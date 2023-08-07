@@ -47,7 +47,7 @@ from core.ident_cely import get_temp_ez_ident
 from .filters import ExterniZdrojFilter
 
 # from .forms import LokalitaForm
-from .models import ExterniZdroj, ExterniZdrojAutor, ExterniZdrojEditor, get_ez_ident
+from .models import ExterniZdroj, ExterniZdrojAutor, ExterniZdrojEditor
 from .tables import ExterniZdrojTable
 from .forms import (
     ExterniOdkazForm,

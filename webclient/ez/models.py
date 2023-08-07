@@ -138,7 +138,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         historie_poznamka = None
         if self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX):
             old_ident = self.ident_cely
-            self.ident_cely = get_ez_ident()
+            self.ident_cely = get_perm_ez_ident()
             historie_poznamka = f"{old_ident} -> {self.ident_cely}"
             self.record_ident_change(old_ident)
         Historie(
@@ -162,7 +162,7 @@ class ExterniZdroj(ExportModelOperationsMixin("externi_zdroj"), ModelWithMetadat
         self.save()
 
 
-def get_ez_ident(zaznam=None):
+def get_perm_ez_ident():
     """
     Funkce pro výpočet ident celý pro externí zdroj.
     Funkce vráti pro permanentní ident id podle sekvence externího zdroje.
@@ -175,14 +175,22 @@ def get_ez_ident(zaznam=None):
             raise MaximalIdentNumberError(MAXIMUM)
         sequence.sekvence += 1
     except ObjectDoesNotExist:
-        akce = ExterniZdroj.objects.filter(ident_cely__startswith=f"{prefix}")
-        if akce.count() > 0:
-            last = akce.annotate(sekv=Cast(Substr("ident_cely", 5), models.IntegerField())).order_by("-sekv")[0]
-            if last.sekv >= MAXIMUM:
+        sequence = ExterniZdrojSekvence.objects.create(sekvence=1)
+    finally:
+        ezs = ExterniZdroj.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
+        if ezs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count()>0:
+            #number from empty spaces
+            idents = list(ezs.values_list("ident_cely", flat=True).order_by("ident_cely"))
+            idents = [sub.replace(prefix, "") for sub in idents]
+            idents = [sub.lstrip("0") for sub in idents]
+            idents = [eval(i) for i in idents]
+            missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+            logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+            logger.debug(missing[0])
+            if missing[0] >= MAXIMUM:
+                logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
                 raise MaximalIdentNumberError(MAXIMUM)
-            sequence = ExterniZdrojSekvence.objects.create(sekvence=last.sekv+1)
-        else:
-            sequence = ExterniZdrojSekvence.objects.create(sekvence=1)
+            sequence.sekvence=missing[0]
     sequence.save()
     return (
         prefix + f"{sequence.sekvence:07}"
