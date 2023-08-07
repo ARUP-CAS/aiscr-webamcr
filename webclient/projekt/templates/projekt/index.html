@@ -15,7 +15,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zapsat projekt" %}
+            {% trans "projekt.templates.index.cardZapsatProjekt.label" %}
           </div>
         </a>
       </div>
@@ -25,7 +25,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Přihlásit projekt" %}
+            {% trans "projekt.templates.index.cardPrihlasitProjekt.label" %}
           </div>
         </a>
       </div>
@@ -35,7 +35,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zahájit výzkum" %}
+            {% trans "projekt.templates.index.cardZahajitVyzkum.label" %}
           </div>
         </a>
       </div>
@@ -45,7 +45,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Ukončit terén" %}
+            {% trans "projekt.templates.index.cardUkoncitTeren.label" %}
           </div>
         </a>
       </div>
@@ -55,7 +55,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Spravovat akce" %}
+            {% trans "projekt.templates.index.cardSpravovatAkce.label" %}
           </div>
         </a>
       </div>
@@ -65,7 +65,17 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Uzavřít projekt" %}
+            {% trans "projekt.templates.index.cardUzavritProjekt.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&organizace={{ user.organizace.id }}" class="card app-card-entity app-card-archivovat-projekt">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "projekt.templates.index.cardArchivovatProjekt.label" %}
           </div>
         </a>
       </div>
@@ -75,50 +85,51 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-zapsat-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "Zapsat projekt" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardZapsatProjekt.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "projekt.templates.index.cardZapsatProjekt.text" %}
       </div>
     </div> 
     <div class="app-collapse-prihlasit-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "Přihlásit projekt" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardPrihlasitProjekt.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "projekt.templates.index.cardPrihlasitProjekt.text" %}
       </div>
     </div>  
     <div class="app-collapse-zahajit-vyzkum collapse">
       <div class="p-3">
-        <h4>{% trans "Zahájit výzkum" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardZahajitVyzkum.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "projekt.templates.index.cardZahajitVyzkum.text" %}
       </div>
     </div>
     <div class="app-collapse-ukoncit-teren collapse">
       <div class="p-3">
-        <h4>{% trans "Ukončit terén" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardUkoncitTeren.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "projekt.templates.index.cardUkoncitTeren.text" %}
       </div>
     </div>
     <div class="app-collapse-spravovat-akce collapse">
       <div class="p-3">
-        <h4>{% trans "Spravovat akce" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardSpravovatAkce.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "projekt.templates.index.cardSpravovatAkce.text" %}
       </div>
     </div>
     <div class="app-collapse-uzavrit-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "Uzavřít projekt" %}</h4>
+        <h4>{% trans "projekt.templates.index.cardUzavritProjekt.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "projekt.templates.index.cardUzavritProjekt.text" %}
+      </div>
+    </div>
+    <div class="app-collapse-archivovat-projekt collapse">
+      <div class="p-3">
+        <h4>{% trans "projekt.templates.index.cardArchivovatProjekt.title" %}</h4>
+        <hr />
+        {% trans "projekt.templates.index.cardArchivovatProjekt.text" %}
       </div>
     </div>
   </div>
@@ -160,6 +171,12 @@
     });
     $(".app-card-uzavrit-projekt").mouseover(function(){
       $(".app-collapse-uzavrit-projekt").show(100);
+    });
+    $(".app-card-archivovat-projekt").mouseleave(function(){
+      $(".app-collapse-archivovat-projekt").hide(100);
+    });
+    $(".app-card-archivovat-projekt").mouseover(function(){
+      $(".app-collapse-archivovat-projekt").show(100);
     });
 </script>
 {% endblock %}
