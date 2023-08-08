@@ -23,9 +23,9 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     """
     model = NeidentAkce
     template_name = "core/transakce_modal.html"
-    title = _("neidentAkce.modalForm.edit.title.text")
+    title = _("neidentAkce.views.neidentAkceEditView.title.text")
     id_tag = "edit-neident-form"
-    button = _("neidentAkce.modalForm.edit.submit.button")
+    button = _("neidentAkce.views.neidentAkceEditView.submitButton")
     allowed_states = []
     success_message = "success"
     form_class = NeidentAkceForm
