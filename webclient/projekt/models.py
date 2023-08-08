@@ -1,4 +1,5 @@
 import datetime
+import io
 import logging
 import os
 import zlib
@@ -43,7 +44,8 @@ from core.constants import (
 )
 from core.exceptions import MaximalIdentNumberError
 from core.models import ProjektSekvence, Soubor, SouborVazby
-from core.repository_connector import RepositoryBinaryFile
+from core.repository_connector import RepositoryBinaryFile, FedoraRepositoryConnector
+from core.utils import get_mime_type
 from heslar.hesla import (
     HESLAR_PAMATKOVA_OCHRANA,
     HESLAR_PROJEKT_TYP,
@@ -285,7 +287,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 filename = (
                         "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
                 )
-                ("soubory/APD/" + filename, "w+")
                 file_content = (
                         "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
                         % today.strftime("%d. %m. %Y")
@@ -294,21 +295,28 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
                 prev = 0
                 prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
                 new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
-                myfile = ContentFile(content=file_content, name=new_filename)
+                file = io.BytesIO()
+                file.write(file_content.encode("utf-8"))
+                file.seek(0)
+                conn = FedoraRepositoryConnector(self)
+                mimetype = get_mime_type(new_filename)
+                rep_bin_file = conn.save_binary_file(new_filename, mimetype, file)
                 aktual_soubor = Soubor(
                     vazba=self.soubory,
-                    nazev=filename,
-                    mimetype="text/plain",
-                    size_mb=myfile.size/1024/1024,
+                    nazev=new_filename,
+                    mimetype=mimetype,
+                    size_mb=rep_bin_file.size_mb,
+                    path=rep_bin_file.url_without_domain,
+                    sha_512=rep_bin_file.sha_512,
                 )
+                file_deleted_pk_list = [x.pk for x in soubory]
                 aktual_soubor.save()
-                aktual_soubor.path.save(name=new_filename, content=myfile)
-                aktual_soubor.zaznamenej_nahrani(user=user)
                 for file in soubory:
-                    file.path.delete()
-                items_deleted = soubory.delete()
+                    if file.repository_uuid is not None:
+                        conn.delete_binary_file(file)
+                    file.delete()
                 logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
-                             extra={"deleted": items_deleted[0]})
+                             extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list})
 
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
@@ -532,6 +540,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         creator = OznameniPDFCreator(self.oznamovatel, self, additional)
         rep_bin_file: RepositoryBinaryFile = creator.build_document()
         duplikat = Soubor.objects.filter(nazev=rep_bin_file.filename)
+        filename = rep_bin_file.filename
         if not duplikat.exists():
             soubor = Soubor(
                 vazba=self.soubory,

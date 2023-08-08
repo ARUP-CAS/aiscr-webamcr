@@ -1,6 +1,9 @@
 import logging
 
 import simplejson as json
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, DetailView
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -428,9 +431,9 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.save()
+            Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
@@ -837,6 +840,17 @@ def aktivace(request, pk):
         "button": _("pas.spoluprace.modalForm.aktivace.submit.button"),
     }
     return render(request, "core/transakce_modal.html", context)
+
+
+class AktivaceEmailView(LoginRequiredMixin, DetailView):
+    template_name = "pas/potvrdit_spolupraci.html"
+    model = UzivatelSpoluprace
+
+    def post(self, request, *args, **kwargs):
+        obj: UzivatelSpoluprace = self.get_object()
+        if not obj.aktivni:
+            obj.set_aktivni(request.user)
+        return redirect(reverse("pas:spoluprace_aktivace", kwargs={"pk": obj.pk}))
 
 
 @login_required

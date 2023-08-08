@@ -9,8 +9,9 @@ from concurrent.futures import ThreadPoolExecutor
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, ARCHIVACE_SN, \
-    POTVRZENI_SN, SN_ARCHIVOVANY, SN_POTVRZENY, NAHRANI_SBR
+from core.constants import OZNAMENI_PROJ, ZAPSANI_DOK, NAVRZENI_KE_ZRUSENI_PROJ, ODESLANI_AZ, \
+    SN_POTVRZENY, SN_ODESLANY, SN_ZAPSANY, AZ_STAV_ZAPSANY, AZ_STAV_ODESLANY, \
+    PROJEKT_STAV_UZAVRENY
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.core.exceptions import ObjectDoesNotExist
@@ -36,7 +37,7 @@ groups = {
     "E-K-01": "S-E-K-01"
 }
 
-always_active = [
+ALWAYS_ACTIVE = [
     "E-P-02",
     "E-U-01",
     "E-U-02",
@@ -64,7 +65,7 @@ always_active = [
 ]
 
 
-class Mailer():
+class Mailer:
     @classmethod
     def __strip_tags(cls, html):
         s = MLStripper()
@@ -83,7 +84,7 @@ class Mailer():
             except ObjectDoesNotExist:
                 logger.debug("services.mailer._notification_should_be_sent.group_not_found",
                              extra={"user": user, "notification_type": notification_type.ident_cely})
-        if notification_type.ident_cely in always_active:
+        if notification_type.ident_cely in ALWAYS_ACTIVE:
             notification_is_enabled = True
         else:
             notification_is_enabled \
@@ -257,9 +258,10 @@ class Mailer():
             "state": zaznam.STATES[zaznam.stav - 1][1],
             "site_url": settings.SITE_URL
         })
-        first_log_entry = Historie.objects.filter(vazba=zaznam.historie).order_by('datum_zmeny').first()
-        if Mailer._notification_should_be_sent(notification_type=notification_type, user=first_log_entry.uzivatel):
-            cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        log_entry = zaznam.historie.historie_set.filter(typ_zmeny=f"AZ{AZ_STAV_ZAPSANY}{AZ_STAV_ODESLANY}")\
+            .order_by("datum_zmeny").last()
+        if Mailer._notification_should_be_sent(notification_type=notification_type, user=log_entry.uzivatel):
+            cls.send(subject=subject, to=log_entry.uzivatel.email, html_content=html)
 
     @classmethod
     def _send_a(cls, obj: Union[projekt.models.Projekt, arch_z.models.ArcheologickyZaznam], notification_type,
@@ -289,7 +291,10 @@ class Mailer():
         IDENT_CELY = 'E-A-01'
         logger.debug("services.mailer.send_ea01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        cls._send_a(project, notification_type, user)
+        log_entry = project.historie.historie_set\
+            .filter(typ_zmeny=f"P{PROJEKT_STAV_UKONCENY_V_TERENU}{PROJEKT_STAV_UZAVRENY}") \
+            .order_by("datum_zmeny").first()
+        cls._send_a(project, notification_type, log_entry.uzivatel)
 
     @classmethod
     def send_ea02(cls, arch_z: 'arch_z.models.ArcheologickyZaznam'):
@@ -392,8 +397,8 @@ class Mailer():
             "lokalita": project.lokalizace,
             "organization": project.organizace.nazev,
         })
-        first_log_entry = Historie.objects.filter(vazba=project.historie).order_by('datum_zmeny').first()
-        cls.send(subject=subject, to=first_log_entry.uzivatel.email, html_content=html)
+        if project.oznamovatel is not None:
+            cls.send(subject=subject, to=project.oznamovatel.email, html_content=html)
 
     @classmethod
     def send_ep03a(cls, project: 'projekt.models.Projekt'):
@@ -442,7 +447,8 @@ class Mailer():
             "state": project.CHOICES[project.stav][1],
         })
         history_log = Historie.objects.filter(
-            vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ).first()
+            vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ)\
+            .order_by("datum_zmeny").last()
         user = history_log.uzivatel
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
@@ -461,7 +467,8 @@ class Mailer():
             "ident_cely": project.ident_cely,
         })
         history_log = Historie.objects.filter(
-            vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ).first()
+            vazba__projekt_historie__ident_cely=project.ident_cely, typ_zmeny=NAVRZENI_KE_ZRUSENI_PROJ)\
+            .order_by("datum_zmeny").last()
         user = history_log.uzivatel
         if Mailer._notification_should_be_sent(notification_type=notification_type, user=user):
             cls.send(subject=subject, to=user.email, html_content=html)
@@ -530,28 +537,27 @@ class Mailer():
 
     @classmethod
     def send_en03_en04(cls, samostatny_nalez: 'pas.models.SamostatnyNalez', reason):
-        IDENT_CELY = 'E-N-03'
-        logger.debug("services.mailer.send_en03_en04", extra={"ident_cely": IDENT_CELY})
-        notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        subject = notification_type.predmet.format(ident_cely=samostatny_nalez.ident_cely)
-        if samostatny_nalez.stav not in (SN_POTVRZENY, SN_ARCHIVOVANY):
-            return
+        logger.debug("services.mailer.send_en03_en04")
+        if samostatny_nalez.stav == SN_ODESLANY:
+            look_for_stav = f"SN{SN_ODESLANY}{SN_POTVRZENY}"
+            notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely="E-N-04")
+        elif samostatny_nalez.stav == SN_ZAPSANY:
+            look_for_stav = f"SN{SN_ZAPSANY}{SN_ODESLANY}"
+            notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely="E-N-03")
         else:
-            look_for_stav = ARCHIVACE_SN
-        if samostatny_nalez.stav == SN_POTVRZENY:
-            look_for_stav = POTVRZENI_SN
+            return
+        subject = notification_type.predmet.format(ident_cely=samostatny_nalez.ident_cely)
         log = Historie.objects.filter(
             vazba__sn_historie__ident_cely=samostatny_nalez.ident_cely, typ_zmeny=look_for_stav
-        ).order_by('datum_zmeny').first()
+        ).order_by('datum_zmeny').last()
         if not log:
             return
         user = log.uzivatel
-        MOVED_TO_STATE = samostatny_nalez.stav - 2
         html = render_to_string(notification_type.cesta_sablony, {
             "title": subject,
             "katastr": samostatny_nalez.katastr.nazev,
             "reason": reason,
-            "state": samostatny_nalez.PAS_STATES[MOVED_TO_STATE][1],
+            "state": list(filter(lambda x: x[0] == samostatny_nalez.stav, samostatny_nalez.PAS_STATES))[0][1],
             "ident_cely": samostatny_nalez.ident_cely,
             "site_url": settings.SITE_URL
         })

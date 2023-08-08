@@ -299,6 +299,10 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         related_name="spoluprace_historie",
     )
 
+    @property
+    def aktivni(self):
+        return self.stav == SPOLUPRACE_AKTIVNI
+
     def set_aktivni(self, user):
         """
         Metóda pro nastavení stavu aktivní a uložení změny do historie pro spolupráci.

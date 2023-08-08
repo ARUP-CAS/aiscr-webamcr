@@ -727,7 +727,7 @@ def vratit(request, ident_cely):
             az.set_vraceny(request.user, az.stav - 1, duvod)
             az.save()
             if before_save_state == AZ_STAV_ODESLANY:
-                Mailer.send_ev01(arch_z=az, reason=duvod)
+                Mailer.send_ev01(zaznam=az, reason=duvod)
             messages.add_message(
                 request, messages.SUCCESS, get_message(az, "USPESNE_VRACENA")
             )

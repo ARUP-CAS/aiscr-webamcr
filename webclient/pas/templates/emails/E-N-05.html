@@ -14,6 +14,6 @@
         <li><b>{% trans "E-N-05.zdůvodnění" %}:</b> {{ message }}</li>
     </ul>
     <p>
-        {% trans "E-N-05.spolupráci_potvrdíte_po_přihlášení_do_amčr-pas_nebo_kliknutím_na_tento_odkaz" %}: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace' spoluprace_id %}">{% url 'pas:spoluprace_aktivace' spoluprace_id %}</a>
+        {% trans "E-N-05.spolupráci_potvrdíte_po_přihlášení_do_amčr-pas_nebo_kliknutím_na_tento_odkaz" %}: <a href="{% get_site_url %}{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}">{% url 'pas:spoluprace_aktivace_email' spoluprace_id %}</a>
     </p>
 {% endblock %}

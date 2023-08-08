@@ -111,6 +111,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return repository_content.sha_512
         return ""
 
+    def delete(self, using=None, keep_parents=False):
+        if self.historie is None:
+            self.create_soubor_vazby()
+        super().delete(using, keep_parents)
+
     class Meta:
         db_table = "soubor"
         indexes = [
@@ -133,7 +138,12 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
 
     @property
     def vytvoreno(self):
-        return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+        if self.historie is not None:
+            return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+        else:
+            self.create_soubor_vazby()
+            logger.warning("core.models.soubor.vytvoreno.error", extra={"pk": self.pk})
+            return None
 
     def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
