@@ -8,7 +8,7 @@
 <div class="card app-card-form" id="detail_dj_form_{{ j.ident_cely }}">
   <div class="card-header">
     <div class="app-fx app-left">
-      {% trans "Dokumentační jednotka" %} {{ j.ident_cely }}
+      {% trans "lokalita.templates.dj.djUpdate.cardHeader.dokumentacniJednotka" %} {{ j.ident_cely }}
     </div>
     <div class="app-fx app-right">
       {% if show.editovat %}
@@ -16,73 +16,73 @@
         <div class="dropdown-menu" aria-labelledby="others">
           {% if j.show_add_komponenta %}
           <a class="dropdown-item" href="{% url 'lokalita:create-komponenta' zaznam.ident_cely j.ident_cely %}">
-            {% trans 'Přidat komponentu' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.pridatKomponentu.label' %}
           </a>
           {% endif %}
           {% if j.show_add_pian %}
           <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'lokalita:create-pian' zaznam.ident_cely j.ident_cely %}">
-            {% trans 'Přidat nový pian' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.pridatNovyPian.label' %}
           </a>
           {% endif %}
           {% if j.show_add_pian %}
                     <a id="show_menu_ku_from_map_id"  class="dropdown-item" href="#"
                        onclick="show_grap_geom_from_map('ku:{{ j.ident_cely}}')">
-                      {% trans 'Nastav Katarální uzemí z mapy' %}
+                      {% trans 'lokalita.templates.dj.djUpdate.moreActions.nastavKatastralniUzemiZMapy.label' %}
                     </a>
           {% endif %}
           {% if j.show_add_pian %}
           <a id="show_menu_pian_from_map_id" class="dropdown-item" href="#"
              onclick="show_grap_geom_from_map('{{ j.ident_cely}}')">
-            {% trans 'Připojit pian z mapy' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojPianZMapy.label' %}
           </a>
           {% endif %}
           {% if j.show_approve_pian %}
           <button id="pian-potvrdit-{{j.pian_ident_cely}}" class="dropdown-item pian-potvrdit-btn" type="button"
                   name="button" href="{% url 'pian:potvrdit' j.ident_cely %}">
-            {% trans 'Potvrdit pian' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.potvrditPian.label' %}
           </button>
           {% endif %}
           {% if j.pian_ident_cely %}
-            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "arch_z.dj.partials.dj_update.download_pian_metadata" %}</a>
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'pian' j.pian_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadPianMetadata.label" %}</a>
           {% endif %}
           {% if j.show_uprav_pian and j.pian_ident_cely %}
           <a id="pian-upravit-{{j.pian_ident_cely}}" class="dropdown-item" href="{% url 'lokalita:update-pian' zaznam.ident_cely j.ident_cely j.pian_ident_cely %}">
-            {% trans 'Upravit pian' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.upravitPian.label' %}
           </a>
           {% endif %}
           {% if j.show_remove_pian %}
           <button id="pian-odpojit-{{j.pian_ident_cely}}" class="dropdown-item pian-odpojit-btn" type="button"
                   name="button" href="{% url 'pian:odpojit' j.ident_cely %}">
-            {% trans 'Odpojit pian' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.odpojitPian.label' %}
           </button>
           {% endif %}
           {% if j.show_add_adb %}
           <a class="dropdown-item" href="{% url 'lokalita:create-adb' zaznam.ident_cely j.ident_cely %}">
-            {% trans 'Přidat ADB' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.pridatAdb.label' %}
           </a>
           {% endif %}
           {% if j.show_remove_adb %}
           <button id="adb-smazat-{{j.adb_ident_cely}}" class="dropdown-item adb-smazat-btn" type="button" name="button"
                   href="{% url 'adb:smazat' j.adb_ident_cely %}">
-            {% trans 'Smazat ADB' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatAdb.label' %}
           </button>
           {% endif %}
           {% if j.adb_pk %}
-            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_pk %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_pk %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
           {% endif %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">
-            {% trans 'Smazat DJ' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.smazatDj.label' %}
           </button>
           {% if j.show_pripojit_pian %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
                   name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
-            {% trans 'Připojit PIAN podle ID' %}
+            {% trans 'lokalita.templates.dj.djUpdate.moreActions.pripojitPianPodleId.label' %}
           </button>
           {% endif %}
         </div>
         <button class="btn" type="button" id="others" type="button" data-toggle="dropdown" aria-haspopup="true"
-                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Další nabídka' %}"
+                aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'lokalita.templates.dj.djUpdate.moreActions.label' %}"
                 onclick="filtrAkci()">
           <span class="material-icons">more_vert</span>
         </button>
@@ -97,7 +97,7 @@
       {% crispy j.form %}
       {% if show.editovat %}
       <button type="submit" id="editDjSubmitButton"
-              class="btn btn-primary">{% trans "Uložit změny" %}
+              class="btn btn-primary">{% trans "lokalita.templates.dj.djUpdate.adbForm.submitButton" %}
       </button>
       {% endif %}
     </form>
@@ -110,20 +110,20 @@
       <div class="card app-card-form app-card-inner">
         <div class="card-header">
           <div class="app-fx app-left">
-            {% trans "Archeologický dokumentační bod" %} {{ j.adb_ident_cely }}
+            {% trans "lokalita.templates.dj.djUpdate.cardheader.Adb" %} {{ j.adb_ident_cely }}
           </div>
         </div>
         <div class="card-body formset-table">
           <input type="hidden" name="adb_detail" value="{{ j.adb_ident_cely }}"/>
           {% crispy j.adb_form %}
-          <h5>{% trans "Výškové body" %}</h5>
+          <h5>{% trans "lokalita.templates.dj.djUpdate.Adb.VyskoveBody.label" %}</h5>
           <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}"/>
           {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
         </div>
       </div>
       {% if show.editovat %}
       <button type="submit" id="editDjSubmitButton"
-              class="btn btn-primary">{% trans "Uložit změny" %}
+              class="btn btn-primary">{% trans "lokalita.templates.dj.djUpdate.Adb.submitButton" %}
       </button>
       {% endif %}
       {% endif %}

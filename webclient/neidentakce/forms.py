@@ -40,24 +40,24 @@ class NeidentAkceForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
         }
         labels = {
-            "katastr": _("neidentAkce.form.katastr.label"),
-            "vedouci": _("neidentAkce.form.vedouci.label"),
-            "rok_zahajeni": _("neidentAkce.form.rok_zahajeni.label"),
-            "rok_ukonceni": _("neidentAkce.form.rok_ukonceni.label"),
-            "pian": _("neidentAkce.form.pian.label"),
-            "lokalizace": _("neidentAkce.form.lokalizace.label"),
-            "popis": _("neidentAkce.form.popis.label"),
-            "poznamka": _("neidentAkce.form.poznamka.label"),
+            "katastr": _("neidentAkce.forms.neidentAkceForm.katastr.label"),
+            "vedouci": _("neidentAkce.forms.neidentAkceForm.vedouci.label"),
+            "rok_zahajeni": _("neidentAkce.forms.neidentAkceForm.rok_zahajeni.label"),
+            "rok_ukonceni": _("neidentAkce.forms.neidentAkceForm.rok_ukonceni.label"),
+            "pian": _("neidentAkce.forms.neidentAkceForm.pian.label"),
+            "lokalizace": _("neidentAkce.forms.neidentAkceForm.lokalizace.label"),
+            "popis": _("neidentAkce.forms.neidentAkceForm.popis.label"),
+            "poznamka": _("neidentAkce.forms.neidentAkceForm.poznamka.label"),
         }
         help_texts = {
-            "katastr": _("neidentAkce.form.katastr.tooltip"),
-            "vedouci": _("neidentAkce.form.vedouci.tooltip"),
-            "rok_zahajeni": _("neidentAkce.form.rok_zahajeni.tooltip"),
-            "rok_ukonceni": _("neidentAkce.form.rok_ukonceni.tooltip"),
-            "pian": _("neidentAkce.form.pian.tooltip"),
-            "lokalizace": _("neidentAkce.form.lokalizace.tooltip"),
-            "popis": _("neidentAkce.form.popis.tooltip"),
-            "poznamka": _("neidentAkce.form.poznamka.tooltip"),
+            "katastr": _("neidentAkce.forms.neidentAkceForm.katastr.tooltip"),
+            "vedouci": _("neidentAkce.forms.neidentAkceForm.vedouci.tooltip"),
+            "rok_zahajeni": _("neidentAkce.forms.neidentAkceForm.rok_zahajeni.tooltip"),
+            "rok_ukonceni": _("neidentAkce.forms.neidentAkceForm.rok_ukonceni.tooltip"),
+            "pian": _("neidentAkce.forms.neidentAkceForm.pian.tooltip"),
+            "lokalizace": _("neidentAkce.forms.neidentAkceForm.lokalizace.tooltip"),
+            "popis": _("neidentAkce.forms.neidentAkceForm.popis.tooltip"),
+            "poznamka": _("neidentAkce.forms.neidentAkceForm.poznamka.tooltip"),
         }
 
     def __init__(self, *args, readonly=False, **kwargs):

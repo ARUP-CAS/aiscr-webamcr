@@ -44,17 +44,17 @@ def smazat_nalez(request, typ, ident_cely):
         zaznam = get_object_or_404(NalezObjekt, id=ident_cely)
         context = {
             "object": zaznam,
-            "title": _("nalez.modalForm.smazaniObjektu.title.text"),
+            "title": _("nalez.views.smazatNalez.objekt.title.text"),
             "id_tag": "smazat-objekt-form",
-            "button": _("nalez.modalForm.smazaniObjektu.submit.button"),
+            "button": _("nalez.views.smazatNalez.objekt.submitButton"),
         }
     if typ == "predmet":
         zaznam = get_object_or_404(NalezPredmet, id=ident_cely)
         context = {
             "object": zaznam,
-            "title": _("nalez.modalForm.smazaniPredmetu.title.text"),
+            "title": _("nalez.views.smazatNalez.predmet.title.text"),
             "id_tag": "smazat-objekt-form",
-            "button": _("nalez.modalForm.smazaniPredmetu.submit.button"),
+            "button": _("nalez.views.smazatNalez.predmet.submitButton"),
         }
     if request.method == "POST":
         resp = zaznam.delete()

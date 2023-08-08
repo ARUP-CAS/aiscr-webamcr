@@ -34,8 +34,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 self.fields["object_id"] = forms.ChoiceField(
                     choices=[("", "")]
                     + list(RuianKraj.objects.all().values_list("id", "nazev")),
-                    label=_("notifikaceProjekty.form.kraj.label"),
-                    help_text=_("notifikaceProjekty.form.kraj.tooltip"),
+                    label=_("notifikaceProjekty.forms.pesForm.kraj.label"),
+                    help_text=_("notifikaceProjekty.forms.pesForm.kraj.tooltip"),
                     required=True,
                     widget=forms.Select(
                         attrs={
@@ -57,8 +57,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     okresy_choices.append(kraj_group)
                 self.fields["object_id"] = forms.ChoiceField(
                     choices=okresy_choices,
-                    label=_("notifikaceProjekty.form.okres.label"),
-                    help_text=_("notifikaceProjekty.form.okres.tooltip"),
+                    label=_("notifikaceProjekty.forms.pesForm.okres.label"),
+                    help_text=_("notifikaceProjekty.forms.pesForm.okres.tooltip"),
                     required=True,
                     widget=forms.Select(
                         attrs={
@@ -79,8 +79,8 @@ def create_pes_form(not_readonly=True, model_typ=None):
                     )
                 ).values_list("pk", "full_name")
                 self.fields["object_id"] = forms.ChoiceField(
-                    label=_("notifikaceProjekty.form.katastr.label"),
-                    help_text=_("notifikaceProjekty.form.katastr.tooltip"),
+                    label=_("notifikaceProjekty.forms.pesForm.katastr.label"),
+                    help_text=_("notifikaceProjekty.forms.pesForm.katastr.tooltip"),
                     widget=autocomplete.ListSelect2(url="heslar:katastr-autocomplete"),
                     choices=katastre_choices,
                     required=True,
@@ -120,7 +120,7 @@ def create_pes_form(not_readonly=True, model_typ=None):
                 duplicates = duplicates.exclude(pk=self.instance.pk)
             if duplicates.exists():
                 raise forms.ValidationError(
-                    _("notifikaceProjekty.form.stejnaJendotka.error")
+                    _("notifikaceProjekty.forms.pesForm.stejnaJendotka.error")
                 )
 
     return PesForm

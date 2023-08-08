@@ -56,17 +56,17 @@ class LokalitaListView(SearchListView):
     model = Lokalita
     filterset_class = LokalitaFilter
     export_name = "export_lokalita_"
-    page_title = _("lokalita.vyber.pageTitle")
+    page_title = _("lokalita.views.lokalitaListView.pageTitle.text")
     app = "lokalita"
     toolbar = "toolbar_akce.html"
-    search_sum = _("lokalita.vyber.pocetVyhledanych")
-    pick_text = _("lokalita.vyber.pickText")
-    hasOnlyVybrat_header = _("lokalita.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("lokalita.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("lokalita.vyber.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("lokalita.vyber.header.hasOnlyPotvrdit")
-    default_header = _("lokalita.vyber.header.default")
-    toolbar_name = _("lokalita.template.toolbar.title")
+    search_sum = _("lokalita.views.lokalitaListView.pocetVyhledanych.text")
+    pick_text = _("lokalita.views.lokalitaListView.pickText.text")
+    hasOnlyVybrat_header = _("lokalita.views.lokalitaListView.header.hasOnlyVybrat.text")
+    hasOnlyVlastnik_header = _("lokalita.views.lokalitaListView.header.hasOnlyVlastnik.text")
+    hasOnlyArchive_header = _("lokalita.views.lokalitaListView.header.hasOnlyArchive.text")
+    hasOnlyPotvrdit_header = _("lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text")
+    default_header = _("lokalita.views.lokalitaListView.header.default.text")
+    toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -109,7 +109,7 @@ class LokalitaDetailView(LoginRequiredMixin, DetailView):
         )
         context["zaznam"] = lokalita_obj.archeologicky_zaznam
         context["app"] = "lokalita"
-        context["page_title"] = _("lokalita.detal.pageTitle")
+        context["page_title"] = _("lokalita.views.lokalitaDetailView.pageTitle")
         context["detail_view"] = True
         context["next_url"] = lokalita_obj.get_absolute_url()
         return context
@@ -138,9 +138,9 @@ class LokalitaCreateView(LoginRequiredMixin, CreateView):
             required=required_fields,
             required_next=required_fields_next,
         )
-        context["toolbar_name"] = _("lokalita.zapsat.toolbar.title")
-        context["header"] = _("lokalita.create.formHeader.label")
-        context["page_title"] = _("lokalita.zapsat.pageTitle")
+        context["toolbar_name"] = _("lokalita.views.lokalitaCreateView.toolbar.title")
+        context["header"] = _("lokalita.views.lokalitaCreateView.formHeader.label")
+        context["page_title"] = _("lokalita.views.lokalitaCreateView.pageTitle")
         return context
 
     def form_valid(self, form):
@@ -205,10 +205,10 @@ class LokalitaEditView(LoginRequiredMixin, UpdateView):
             required=required_fields[0:-1],
             required_next=required_fields_next,
         )
-        context["toolbar_name"] = _("lokalita.edit.toolbar.title")
+        context["toolbar_name"] = _("lokalita.views.lokalitaEditView.toolbar.title")
         context["edit_view"] = True
-        context["page_title"] = _("lokalita.edit.pageTitle")
-        context["header"] = _("lokalita.edit.formHeader.label")
+        context["page_title"] = _("lokalita.views.lokalitaEditView.pageTitle")
+        context["header"] = _("lokalita.views.lokalitaEditView.formHeader.label")
         context["zaznam"] = self.object.archeologicky_zaznam
         return context
 

@@ -30,7 +30,7 @@ def find_v2(po_file, st, by="msgid", include_obsolete_entries=False, msgctxt=Fal
     matches = []
     for e in entries:
         if by == "occurrences":
-            if len(st)>0 and st[0] in e.occurrences:
+            if len(st) > 0 and st[0] in e.occurrences:
                 if msgctxt is not False and e.msgctxt != msgctxt:
                     continue
                 matches.append(e)
@@ -61,14 +61,16 @@ path_old = os.path.join(
 )
 po_file_new = pofile(path_new)
 po_file_old = pofile(path_old)
-print("Not found entries")
+print("Not found entries:")
 for entry_new in po_file_new:
-    entry_old = find_v2(po_file_old, entry_new.occurrences, "occurrences")
-    if entry_old:
-        if entry_old.msgstr:
-            entry_new.msgstr = entry_old.msgstr
+    entry_old_msgid = find_v2(po_file_old, entry_new.msgid)
+    if not entry_old_msgid:
+        entry_old = find_v2(po_file_old, entry_new.occurrences, "occurrences")
+        if entry_old:
+            if entry_old.msgstr:
+                entry_new.msgstr = entry_old.msgstr
+            else:
+                entry_new.msgstr = entry_old.msgid
         else:
-            entry_new.msgstr = entry_old.msgid
-    else:
-        print(f"entry: {entry_new.msgid}, occurences: {entry_new.occurrences}")
+            print(f"entry: {entry_new.msgid}, occurences: {entry_new.occurrences}")
 po_file_new.save()
