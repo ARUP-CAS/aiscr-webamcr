@@ -28,14 +28,14 @@ class LokalitaFilter(ArchZaznamFilter):
     """
     typ_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_TYP),
-        label=_("lokalita.filter.typLokality.label"),
+        label=_("lokalita.filters.typLokality.label"),
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
 
     druh_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LOKALITA_DRUH),
-        label=_("lokalita.filter.druhLokality.label"),
+        label=_("lokalita.filters.druhLokality.label"),
         field_name="druh",
         widget=SelectMultipleSeparator(),
         distinct=True,
@@ -43,7 +43,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
     zachovalost_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_STAV_DOCHOVANI),
-        label=_("lokalita.filter.zachovalostLokality.label"),
+        label=_("lokalita.filters.zachovalostLokality.label"),
         field_name="zachovalost",
         widget=SelectMultipleSeparator(),
         distinct=True,
@@ -51,7 +51,7 @@ class LokalitaFilter(ArchZaznamFilter):
 
     jistota_lokality = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_JISTOTA_URCENI),
-        label=_("lokalita.filter.jistotaLokality.label"),
+        label=_("lokalita.filters.jistotaLokality.label"),
         field_name="jistota",
         widget=SelectMultipleSeparator(),
         distinct=True,
@@ -87,16 +87,16 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     form_method = "GET"
     dj_pian_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"lokalita.filter.djPian.divider.label")
+        "translation": _(u"lokalita.filters.djPian.divider.label")
     }
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"lokalita.filter.history.divider.label")
+        "translation": _(u"lokalita.filters.history.divider.label")
     }
     komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"lokalita.filter.komponenta.divider.label")
+        "translation": _(u"lokalita.filters.komponenta.divider.label")
     }
     dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"lokalita.filter.dok.divider.label")
+        "translation": _(u"lokalita.filters.dok.divider.label")
     }
     layout = Layout(
         Div(
@@ -117,7 +117,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",
@@ -137,7 +137,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(dj_pian_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#DjPianCollapse",
                 role="button",
@@ -158,7 +158,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(komponenta_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#KomponentaCollapse",
                 role="button",
@@ -185,7 +185,7 @@ class LokalitaFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(dok_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#zaznamyCollapse",
                 role="button",

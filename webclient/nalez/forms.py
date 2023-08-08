@@ -24,14 +24,14 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
         class Meta:
             model = NalezObjekt
             fields = ["druh", "specifikace", "pocet", "poznamka"]
-            labels = {"pocet": _("Počet"), "poznamka": _("Poznámka")}
+            labels = {"pocet": _("nalez.forms.nalezObjekt.pocet.label"), "poznamka": _("nalez.forms.nalezObjekt.poznamka.label")}
             widgets = {
                 "poznamka": forms.TextInput(),
                 "pocet": forms.TextInput(),
             }
             help_texts = {
-                "pocet": _("nalez.form.nalezObjekt.pocet.tooltip"),
-                "poznamka": _("nalez.form.nalezObjekt.poznamka.tooltip"),
+                "pocet": _("nalez.forms.nalezObjekt.pocet.tooltip"),
+                "poznamka": _("nalez.forms.nalezObjekt.poznamka.tooltip"),
             }
 
         def __init__(
@@ -43,20 +43,20 @@ def create_nalez_objekt_form(druh_obj_choices, spec_obj_choices, not_readonly=Tr
         ):
             super(CreateNalezObjektForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
-                label=_("Druh"),
+                label=_("nalez.forms.nalezObjekt.druh.label"),
                 widget=forms.Select(
                     choices=druh_objekt_choices,
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
-                help_text=_("nalez.form.nalezObjekt.druh.tooltip"),
+                help_text=_("nalez.forms.nalezObjekt.druh.tooltip"),
             )
             self.fields["specifikace"] = TwoLevelSelectField(
-                label=_("Specifikace"),
+                label=_("nalez.forms.nalezObjekt.specifikace.label"),
                 widget=forms.Select(
                     choices=specifikace_objekt_choices,
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
-                help_text=_("nalez.form.nalezObjekt.specifikace.tooltip"),
+                help_text=_("nalez.forms.nalezObjekt.specifikace.tooltip"),
             )
             self.fields["specifikace"].required = False
 
@@ -88,8 +88,8 @@ def create_nalez_predmet_form(
             fields = ["druh", "specifikace", "pocet", "poznamka"]
 
             labels = {
-                "pocet": _("Počet"),
-                "poznamka": _("Poznámka"),
+                "pocet": _("nalez.forms.nalezPredmet.pocet.label"),
+                "poznamka": _("nalez.forms.nalezPredmet.poznamka.label"),
             }
 
             widgets = {
@@ -97,24 +97,24 @@ def create_nalez_predmet_form(
                 "pocet": forms.TextInput(),
             }
             help_texts = {
-                "pocet": _("nalez.form.nalezPredmet.pocet.tooltip"),
-                "poznamka": _("nalez.form.nalezPredmet.poznamka.tooltip"),
+                "pocet": _("nalez.forms.nalezPredmet.pocet.tooltip"),
+                "poznamka": _("nalez.forms.nalezPredmet.poznamka.tooltip"),
             }
 
         def __init__(self, *args, **kwargs):
             super(CreateNalezPredmetForm, self).__init__(*args, **kwargs)
             self.fields["druh"] = TwoLevelSelectField(
-                label=_("Druh"),
+                label=_("nalez.forms.nalezPredmet.druh.label"),
                 widget=forms.Select(
                     choices=druh_projekt_choices,
                     attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
                 ),
-                help_text=_("nalez.form.nalezPredmet.druh.tooltip"),
+                help_text=_("nalez.forms.nalezPredmet.druh.tooltip"),
             )
             self.fields["specifikace"] = HeslarChoiceFieldField(
-                label=_("Specifikace"),
+                label=_("nalez.forms.nalezPredmet.specifikace.label"),
                 choices=[("", "")] + specifikce_predmetu_choices,
-                help_text=_("nalez.form.nalezPredmet.specifikace.tooltip"),
+                help_text=_("nalez.forms.nalezPredmet.specifikace.tooltip"),
             )
             self.fields["specifikace"].widget.attrs = {
                 "class": "selectpicker", "data-multiple-separator": "; ",

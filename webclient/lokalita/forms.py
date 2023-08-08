@@ -21,7 +21,7 @@ class LokalitaForm(forms.ModelForm):
     """
     typ_lokality_disp = forms.CharField(
         label=_("lokalita.forms.typLokality.label"),
-        help_text=_("lokalita.forms.typLokality.label"),
+        help_text=_("lokalita.forms.typLokality.tooltip"),
         required=False,
     )
 
