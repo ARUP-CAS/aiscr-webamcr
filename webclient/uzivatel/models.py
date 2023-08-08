@@ -1,7 +1,6 @@
 import random
 import string
-from typing import Union
-
+from typing import Union, Optional
 
 from distlib.util import cached_property
 from django.core.validators import MaxValueValidator
@@ -38,6 +37,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
+from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -348,10 +348,30 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     Class pro db model typ user notifikace.
     """
     ident_cely = models.TextField(unique=True)
-    zasilat_neaktivnim = models.BooleanField(default=False)
-    predmet = models.TextField()
-    cesta_sablony = models.TextField(blank=True)
     notification_log = GenericRelation('NotificationsLog')
+
+    def _get_settings_dict(self) -> Optional[dict]:
+        if self.ident_cely in notification_settings:
+            return notification_settings[self.ident_cely]
+        return None
+
+    @property
+    def zasilat_neaktivnim(self) -> Optional[str]:
+        settings_dict = self._get_settings_dict()
+        if settings_dict is not None:
+            return settings_dict.get("zasilat_neaktivnim", False)
+
+    @property
+    def predmet(self) -> Optional[str]:
+        settings_dict = self._get_settings_dict()
+        if settings_dict is not None:
+            return settings_dict.get("predmet", None)
+
+    @property
+    def cesta_sablony(self) -> Optional[str]:
+        settings_dict = self._get_settings_dict()
+        if settings_dict is not None:
+            return settings_dict.get("cesta_sablony", None)
 
     class Meta:
         db_table = "notifikace_typ"
