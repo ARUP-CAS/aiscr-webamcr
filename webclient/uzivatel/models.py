@@ -40,7 +40,7 @@ from heslar.models import Heslar
 from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
 import logging
@@ -84,7 +84,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                                                 db_table='auth_user_notifikace_typ',
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
                                                 default=only_notification_groups)
-    notification_log = GenericRelation('NotificationsLog')
     created_from_admin_panel = False
 
     USERNAME_FIELD = "email"
@@ -348,7 +347,6 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     Class pro db model typ user notifikace.
     """
     ident_cely = models.TextField(unique=True)
-    notification_log = GenericRelation('NotificationsLog')
 
     def _get_settings_dict(self) -> Optional[dict]:
         if self.ident_cely in notification_settings:
@@ -386,12 +384,8 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
     created_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         db_table = "notifikace_log"
-        indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-        ]

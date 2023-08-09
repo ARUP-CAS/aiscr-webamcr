@@ -82,7 +82,6 @@ class Migration(migrations.Migration):
             name='NotificationsLog',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('object_id', models.PositiveIntegerField()),
                 ('created_at', models.DateTimeField(auto_now=True)),
             ],
             options={
@@ -140,9 +139,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('ident_cely', models.TextField(unique=True)),
-                ('zasilat_neaktivnim', models.BooleanField(default=False)),
-                ('predmet', models.TextField()),
-                ('cesta_sablony', models.TextField(blank=True)),
             ],
             options={
                 'db_table': 'notifikace_typ',
@@ -227,10 +223,6 @@ class Migration(migrations.Migration):
             name='user_permissions',
             field=models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions'),
         ),
-        migrations.AddIndex(
-            model_name='notificationslog',
-            index=models.Index(fields=['content_type', 'object_id'], name='notifikace__content_009350_idx'),
-        ),
         migrations.AddConstraint(
             model_name="organizace",
             constraint=models.CheckConstraint(
@@ -238,4 +230,13 @@ class Migration(migrations.Migration):
                 name="organizace_mesicu_do_zverejneni_max_value_check",
             ),
         ),
+        migrations.AddField(
+            model_name="notificationslog",
+            name="user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
+        )
     ]

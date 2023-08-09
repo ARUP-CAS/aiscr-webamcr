@@ -44,6 +44,14 @@ notification_settings = {
         "predmet": "AMČR: uživatelský účet čeká na aktivaci",
         "cesta_sablony": "emails/E-U-04.html"
     },
+    "E-U-05": {
+        # This notification is handeled by Django authentization system
+        "zasilat_neaktivnim": True,
+        # Change in templates/registration/password_reset_subject.txt
+        "predmet": None,
+        # The path is set by system, do not change it
+        "cesta_sablony": "registration/password_reset_email.html"
+    },
     "E-U-06": {
         "zasilat_neaktivnim": True,
         "predmet": "AMČR: nová uživatelská role či oprávnění",
