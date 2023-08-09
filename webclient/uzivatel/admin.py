@@ -11,7 +11,7 @@ from django_object_actions import DjangoObjectActions, action
 
 from core.constants import ZMENA_HLAVNI_ROLE, ZMENA_UDAJU_ADMIN
 from historie.models import Historie
-from services.mailer import Mailer
+from services.mailer import Mailer, NOTIFICATION_GROUPS
 from notifikace_projekty.models import Pes
 from notifikace_projekty.forms import KATASTR_CONTENT_TYPE, KRAJ_CONTENT_TYPE, OKRES_CONTENT_TYPE, create_pes_form
 from .forms import AuthUserCreationForm
@@ -256,6 +256,17 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
                      extra={"max_id": max_id, "hlavni_role_pk": obj.hlavni_role.pk})
 
+    def save_formset(self, request, form, formset, change):
+        super().save_formset(request, form, formset, change)
+        user = User.objects.get(email=form.cleaned_data.get("email"))
+        notification_idents = set([x.ident_cely for x in UserNotificationType.objects.filter(user=user)])
+        for group_ident, current_group_notification_idents in NOTIFICATION_GROUPS.items():
+            current_group_notification_idents = set(current_group_notification_idents)
+            group_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+            if current_group_notification_idents.issubset(notification_idents):
+                user.notification_types.add(group_obj)
+            else:
+                user.notification_types.remove(group_obj)
 
 class CustomGroupAdmin(admin.ModelAdmin):
     """
