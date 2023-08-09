@@ -37,11 +37,11 @@ def send_notifications():
     Mailer.send_enz02()
     logger.debug("cron.Notifications.do.send_enz_02.end")
     dataEn01 = collect_en01_en02(stav=ODESLANI_SN)
-    for email, ids in dataEn01.items():
-        Mailer.send_en01(send_to=email, project_ids=ids)
+    for email, projekt_id_list in dataEn01.items():
+        Mailer.send_en01(send_to=email, projekt_id_list=projekt_id_list)
     dataEn02 = collect_en01_en02(stav=ARCHIVACE_SN)
     for email, ids in dataEn02.items():
-        Mailer.send_en02(send_to=email, project_ids=ids)
+        Mailer.send_en02(send_to=email, projekt_id_list=projekt_id_list)
     logger.debug("cron.Notifications.do.end")
 
 

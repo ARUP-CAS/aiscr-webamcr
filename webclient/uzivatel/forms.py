@@ -161,6 +161,7 @@ class NotificationsForm(forms.ModelForm):
         queryset=UserNotificationType.objects.filter(ident_cely__icontains='S-E-'),
         widget=forms.CheckboxSelectMultiple,
         required=False, label=_("uzivatel.form.notifications_form.notification_types.notification_types_label"))
+
     class Meta:
         model = User
         fields = ('notification_types',)

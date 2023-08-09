@@ -111,6 +111,11 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             return repository_content.sha_512
         return ""
 
+    def delete(self, using=None, keep_parents=False):
+        if self.historie is None:
+            self.create_soubor_vazby()
+        super().delete(using, keep_parents)
+
     class Meta:
         db_table = "soubor"
         indexes = [
@@ -129,10 +134,16 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         hv.save()
         self.historie = hv
         self.save()
+        logger.debug("core.models.soubor.create_soubor_vazby.finished", extra={"historie": hv})
 
     @property
     def vytvoreno(self):
-        return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+        if self.historie is not None:
+            return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+        else:
+            self.create_soubor_vazby()
+            logger.warning("core.models.soubor.vytvoreno.error", extra={"pk": self.pk})
+            return None
 
     def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
         from .repository_connector import FedoraRepositoryConnector
@@ -153,12 +164,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Metóda pro zapsáni vytvoření souboru do historie.
         """
         self.create_soubor_vazby()
-        Historie(
+        hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
             poznamka=self.nazev,
             vazba=self.historie,
         ).save()
+        logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
@@ -168,12 +180,13 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             self.create_soubor_vazby()
         if not nazev:
             nazev = self.nazev
-        Historie(
+        hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
             poznamka=nazev,
             vazba=self.historie,
         ).save()
+        logger.debug("core.models.soubor.zaznamenej_nahrani_nove_verze.finished", extra={"historie": hist})
 
     def save(self, *args, **kwargs):
         """

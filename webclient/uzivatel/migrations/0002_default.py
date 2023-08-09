@@ -47,11 +47,6 @@ class Migration(migrations.Migration):
             name='zanikla',
             value=False
         ),
-        AddDefaultValue(
-            model_name='UserNotificationType',
-            name='zasilat_neaktivnim',
-            value=False
-        ),
         migrations.RunSQL(
             sql="""
             CREATE SEQUENCE osoba_ident_seq START 1;

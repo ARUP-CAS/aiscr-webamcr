@@ -29,7 +29,11 @@
       <td>{{ soubor.nazev }}</td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
-      <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
+      {% if soubor.vytvoreno %}
+        <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
+      {% else %}
+        <td></td>
+      {% endif %}
       {% if show %}
         <td>
           <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">

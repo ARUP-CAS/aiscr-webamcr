@@ -166,6 +166,7 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("Hlavní katastr"),
         help_text=_("Katastální území zadané bodem."),
     )
+    ident_cely = forms.CharField(required=False)
 
     class Meta:
         model = Projekt

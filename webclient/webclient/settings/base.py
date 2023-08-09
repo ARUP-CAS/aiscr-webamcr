@@ -9,6 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 LOG_PATH = "/run/logs/"
 
+
 def get_secret(setting, default_value=None):
     file_path = (
         "/run/secrets/db_conf"
@@ -28,7 +29,10 @@ def get_secret(setting, default_value=None):
                 error_msg = error_msg = f"Add {setting} variable to {file_path} file"
                 raise ImproperlyConfigured(error_msg)
         else:
-            secrets.get(setting, default_value)
+            try:
+                return secrets[setting]
+            except KeyError:
+                return default_value
     else:
         return secrets.get(setting, "X")
 

@@ -177,10 +177,13 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
         user.created_from_admin_panel = True
         logger.debug("uzivatel.admin.save_model.start",
                      extra={"user": user.pk, "obj_pk": obj.pk, "change": change, "form": form})
+        basic_groups_ids_list = [ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]
         try:
             user_db = User.objects.get(id=obj.pk)
+            user_db_group_ids = set(user_db.groups.values_list('id', flat=True))
         except ObjectDoesNotExist as err:
             user_db = None
+            user_db_group_ids = set()
         user_db: Union[User, None]
         form_groups = form.cleaned_data["groups"]
         if obj.is_active:
@@ -199,14 +202,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             obj.is_staff = False
         super().save_model(request, obj, form, change)
 
-        groups = form_groups.filter(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID]))
-        other_groups = form_groups.filter(~Q(id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID,
-                                                      ROLE_ADMIN_ID])))
+        groups = form_groups.filter(id__in=basic_groups_ids_list)
+        other_groups = form_groups.filter(~Q(id__in=basic_groups_ids_list))
         group_ids = groups.values_list('id', flat=True)
+        all_grouos_ids = form_groups.values_list('id', flat=True)
         if group_ids.count() > 0:
             max_id = max(group_ids)
         else:
             max_id = ROLE_BADATEL_ID
+        main_group = Group.objects.get(pk=max_id)
 
         if set(user.groups.values_list('id', flat=True)) != set(form_groups.values_list('id', flat=True)):
             logger.debug("uzivatel.admin.save_model.role_changed",
@@ -238,13 +242,15 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             logger.debug("uzivatel.admin.save_model.manage_user_groups.badatel_added", extra={"user": obj.pk})
             group = Group.objects.get(pk=ROLE_BADATEL_ID)
             transaction.on_commit(lambda: obj.groups.set([group] + list(other_groups.values_list('id', flat=True)),
-                                                              clear=True))
-            Mailer.send_eu06(user=obj, groups=[group] + list(other_groups))
+                                  clear=True))
         elif groups.count() > 1:
             transaction.on_commit(lambda: obj.groups.set([max_id] + list(other_groups.values_list('id', flat=True)),
-                                                              clear=True))
-            # Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
-        Mailer.send_eu06(user=obj, groups=[groups.filter(id=max_id).first()] + list(other_groups))
+                                  clear=True))
+        if change is False:
+            Mailer.send_eu02(user=obj)
+        else:
+            if user_db_group_ids != set(all_grouos_ids):
+                Mailer.send_eu06(user=obj, groups=[main_group] + list(other_groups))
         logger.debug("uzivatel.admin.save_model.manage_user_groups.highest_groups",
                      extra={"user": obj.pk, "user_groups": obj.groups.values_list('id', flat=True)})
         logger.debug("uzivatel.admin.save_model.manage_user_groups",
