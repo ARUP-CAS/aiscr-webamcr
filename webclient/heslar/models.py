@@ -171,8 +171,9 @@ class HeslarHierarchie(ExportModelOperationsMixin("heslar_hierarchie"), models.M
 
     def __init__(self, *args, **kwargs):
         super(HeslarHierarchie, self).__init__(*args, **kwargs)
-        self.initial_heslo_podrazene = self.heslo_podrazene
-        self.initial_heslo_nadrazene = self.heslo_nadrazene
+        if self.pk:
+            self.initial_heslo_podrazene = self.heslo_podrazene
+            self.initial_heslo_nadrazene = self.heslo_nadrazene
 
 
 class HeslarNazev(ExportModelOperationsMixin("heslar_nazev"), models.Model):
