@@ -10,7 +10,8 @@ from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import CheckConstraint, Q
+from django.db.models import CheckConstraint, Q, IntegerField
+from django.db.models.functions import Cast, Substr
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
@@ -27,7 +28,7 @@ from core.constants import (
     ZAPSANI_DOK,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
-from core.models import SouborVazby
+from core.models import SouborVazby, ModelWithMetadata, Soubor
 from heslar.hesla import (
     HESLAR_DOKUMENT_FORMAT,
     HESLAR_DOKUMENT_MATERIAL,
@@ -54,7 +55,7 @@ from core.utils import calculate_crc_32
 logger = logging.getLogger(__name__)
 
 
-class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
+class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
     """
     Class pro db model dokument.
     """
@@ -201,7 +202,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         ).save()
         self.save()
 
-    def set_archivovany(self, user):
+    def set_archivovany(self, user, old_ident):
         """
         Metóda pro nastavení stavu archivovaný a uložení změny do historie.
         """
@@ -212,6 +213,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
             typ_zmeny=ARCHIVACE_DOK,
             uzivatel=user,
             vazba=self.historie,
+            poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
 
@@ -242,29 +244,29 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
 
         if "3D" in self.ident_cely:
             if not self.extra_data.format:
-                result.append(_("dokument.formCheckOdeslani.missingFormat.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingFormat.text"))
             if not self.popis:
-                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.extra_data.duveryhodnost:
-                result.append(_("dokument.formCheckOdeslani.missingDuveryhodnost.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingDuveryhodnost.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].obdobi:
-                result.append(_("dokument.formCheckOdeslani.missingObdobi.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingObdobi.text"))
             if not self.casti.all()[0].komponenty.komponenty.all()[0].areal:
-                result.append(_("dokument.formCheckOdeslani.missingAreal.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingAreal.text"))
         else:
             if not self.pristupnost:
-                result.append(_("dokument.formCheckOdeslani.missingPristupnost.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPristupnost.text"))
             if not self.popis:
-                result.append(_("dokument.formCheckOdeslani.missingPopis.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingPopis.text"))
             if not self.ulozeni_originalu:
                 result.append(
-                    _("dokument.formCheckOdeslani.missingUlozeniOriginalu.text")
+                    _("dokument.models.formCheckOdeslani.missingUlozeniOriginalu.text")
                 )
             if self.jazyky.all().count() == 0:
-                result.append(_("dokument.formCheckOdeslani.missingJazyky.text"))
+                result.append(_("dokument.models.formCheckOdeslani.missingJazyky.text"))
         # At least one soubor must be attached to the dokument
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+            result.append(_("dokument.models.formCheckOdeslani.missingSoubor.text"))
         return result
 
     def check_pred_archivaci(self):
@@ -276,7 +278,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         # At least one soubor must be attached to the dokument
         result = []
         if self.soubory.soubory.all().count() == 0:
-            result.append(_("Dokument musí mít alespoň 1 přiložený soubor."))
+            result.append(_("dokument.models.formCheckArchivace.missingSoubor.text"))
         return result
 
     def has_extra_data(self):
@@ -303,7 +305,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         else:
             return None
 
-    def set_permanent_ident_cely(self, rada):
+    def set_permanent_ident_cely(self, region, rada):
         """
         Metóda pro nastavení permanentního ident celý pro dokument.
         Metóda bere pořadoví číslo z db dokument sekvence.
@@ -311,51 +313,51 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
         """
         MAXIMUM: int = 99999
         current_year = datetime.datetime.now().year
-        sequence = DokumentSekvence.objects.filter(rada=rada).filter(rok=current_year)[
-            0
-        ]
+        try:
+            sequence = DokumentSekvence.objects.get(region=region, rada=rada, rok=current_year)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            sequence = DokumentSekvence.objects.create(region=region, rada=rada, rok=current_year,sekvence=1)
+        finally:
+            prefix = f"{region}-{rada.zkratka}-{str(current_year)}"
+            docs = Dokument.objects.filter(ident_cely__startswith=prefix).order_by("-ident_cely")
+            if docs.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:05}").count()>0:
+                #number from empty spaces
+                idents = list(docs.values_list("ident_cely", flat=True).order_by("ident_cely"))
+                idents = [sub.replace(prefix, "") for sub in idents]
+                idents = [sub.lstrip("0") for sub in idents]
+                idents = [eval(i) for i in idents]
+                missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+                logger.debug("dokuments.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug(missing[0])
+                if missing[0] >= MAXIMUM:
+                    logger.error("dokuments.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence.sekvence=missing[0]
+        sequence.save()
         perm_ident_cely = (
-            rada + "-" + str(current_year) + "{0}".format(sequence.sekvence).zfill(5)
+            sequence.region + "-" + sequence.rada.zkratka + "-" + str(sequence.rok) + "{0}".format(sequence.sekvence).zfill(5)
         )
-        # Loop through all of the idents that have been imported
-        while True:
-            if Dokument.objects.filter(ident_cely=perm_ident_cely).exists():
-                sequence.sekvence += 1
-                logger.warning("dokument.models.Dokument.set_permanent_ident_cely",
-                               extra={"perm_ident_cely": perm_ident_cely, "sequence": sequence.sekvence})
-                perm_ident_cely = (
-                    rada
-                    + "-"
-                    + str(current_year)
-                    + "{0}".format(sequence.sekvence).zfill(5)
-                )
-            else:
-                break
-        if sequence.sekvence >= MAXIMUM:
-            raise MaximalIdentNumberError(MAXIMUM)
+        old_ident_cely = self.ident_cely
         self.ident_cely = perm_ident_cely
-        for file in (
-            self.soubory.soubory.all()
-            .filter(nazev_zkraceny__startswith="X")
-            .order_by("id")
-        ):
-            new_name = get_dokument_soubor_name(self, file.path.name, add_to_index=1)
-            try:
-                checksum = calculate_crc_32(file.path)
-                file.path.seek(0)
-                # After calculating checksum, must move pointer to the beginning
-                old_nazev = file.nazev
-                file.nazev = checksum + "_" + new_name
-                file.nazev_zkraceny = new_name
-                old_path = file.path.storage.path(file.path.name)
-                new_path = old_path.replace(old_nazev, file.nazev)
-                file.path = os.path.split(file.path.name)[0] + "/" + file.nazev
-                os.rename(old_path, str(new_path))
-                file.save()
-            except FileNotFoundError as err:
-                logger.warning("dokument.models.Dokument.set_permanent_ident_cely.FileNotFoundError",
-                               extra={"err": err})
-                raise FileNotFoundError()
+        self.suppress_signal = True
+        self.save()
+        self.save_metadata(use_celery=False)
+
+        from core.repository_connector import FedoraRepositoryConnector
+        from core.utils import get_mime_type
+        from core.views import get_projekt_soubor_name
+        connector = FedoraRepositoryConnector(self)
+        connector.record_ident_change(old_ident_cely)
+        for soubor in self.soubory.soubory.all():
+            soubor: Soubor
+            repository_binary_file = soubor.get_repository_content()
+            if repository_binary_file is not None:
+                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                                          get_mime_type(soubor.nazev),
+                                                          repository_binary_file.content)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
@@ -367,8 +369,6 @@ class Dokument(ExportModelOperationsMixin("dokument"), models.Model):
             dc.save()
             logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
                          extra={"ident_cely": dc.ident_cely})
-        sequence.sekvence += 1
-        sequence.save()
         self.save()
 
     def set_datum_zverejneni(self):
@@ -535,7 +535,7 @@ class DokumentAutor(ExportModelOperationsMixin("dokument_autor"), models.Model):
     class Meta:
         db_table = "dokument_autor"
         unique_together = (("dokument", "autor"), ("dokument", "poradi"))
-        ordering = (["poradi"],)
+        ordering = ("poradi",)
 
 
 class DokumentJazyk(ExportModelOperationsMixin("dokument_jazyk"), models.Model):
@@ -617,15 +617,19 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     """
     Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
     """
-    rada = models.CharField(max_length=4)
+    rada = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},)
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
     rok = models.IntegerField()
     sekvence = models.IntegerField()
 
     class Meta:
         db_table = "dokument_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['rada', 'region','rok'], name='unique_sekvence_dokument'),
+        ]
 
 
-class Let(ExportModelOperationsMixin("let"), models.Model):
+class Let(ExportModelOperationsMixin("let"), ModelWithMetadata):
     """
     Class pro db model let.
     """
@@ -678,22 +682,22 @@ class Let(ExportModelOperationsMixin("let"), models.Model):
     class Meta:
         db_table = "let"
         ordering = ["ident_cely"]
+        verbose_name_plural = "Lety"
 
     def __str__(self):
         return self.ident_cely
 
 
-def get_dokument_soubor_name(dokument, filename, add_to_index=1):
+def get_dokument_soubor_name(dokument: Dokument, filename: str, add_to_index=1):
     """
     Funkce pro získaní správného jména souboru.
     """
-    my_regex = r"^\d*_" + re.escape(dokument.ident_cely.replace("-", ""))
-    files = dokument.soubory.soubory.all().filter(nazev__iregex=my_regex)
+    files = dokument.soubory.soubory.all().filter(nazev__icontains=dokument.ident_cely.replace("-", ""))
     logger.debug("dokument.models.get_dokument_soubor_name", extra={"files": files})
     if not files.exists():
         return dokument.ident_cely.replace("-", "") + os.path.splitext(filename)[1]
     else:
-        filtered_files = files.filter(nazev_zkraceny__iregex=r"(([A-Z]\.\w+)$)")
+        filtered_files = files.filter(nazev__iregex=r"(([A-Z]\.\w+)$)")
         if filtered_files.exists():
             list_last_char = []
             for file in filtered_files:

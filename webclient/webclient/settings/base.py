@@ -9,6 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 LOG_PATH = "/run/logs/"
 
+
 def get_secret(setting, default_value=None):
     file_path = (
         "/run/secrets/db_conf"
@@ -28,7 +29,10 @@ def get_secret(setting, default_value=None):
                 error_msg = error_msg = f"Add {setting} variable to {file_path} file"
                 raise ImproperlyConfigured(error_msg)
         else:
-            secrets.get(setting, default_value)
+            try:
+                return secrets[setting]
+            except KeyError:
+                return default_value
     else:
         return secrets.get(setting, "X")
 
@@ -133,7 +137,8 @@ INSTALLED_APPS = [
     'django_prometheus',
     "cron",
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    "django_object_actions"
 ]
 
 MIDDLEWARE = [
@@ -380,6 +385,10 @@ LOGGING = {
             "handlers": ["logstash", "console"],
             "level": "DEBUG",
         },
+        "xml_generator": {
+            "handlers": ["logstash", "console"],
+            "level": "DEBUG",
+        },
     },
 }
 
@@ -444,9 +453,21 @@ CELERY_BROKER_URL = "redis://"+get_redis_pass()+redis_url
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
+FEDORA_USER = get_secret("FEDORA_USER", "")
+FEDORA_USER_PASSWORD = get_secret("FEDORA_USER_PASSWORD", "")
+FEDORA_SERVER_HOSTNAME = get_secret("FEDORA_SERVER_HOSTNAME", "")
+FEDORA_SERVER_NAME = get_secret("FEDORA_SERVER_NAME", "")
+FEDORA_PORT_NUMBER = get_secret("FEDORA_PORT_NUMBER", "")
+FEDORA_ADMIN_USER = get_secret("FEDORA_ADMIN_USER", "")
+FEDORA_ADMIN_USER_PASSWORD = get_secret("FEDORA_ADMIN_USER_PASSWORD", "")
+
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ]
 }
+TOKEN_EXPIRATION_HOURS = 24
+
+SKIP_RECAPTCHA = False

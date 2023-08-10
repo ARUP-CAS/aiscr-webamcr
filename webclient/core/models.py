@@ -2,16 +2,19 @@ import datetime
 import logging
 import os
 import re
+from typing import Optional
 
+from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
+from django.utils.functional import cached_property
+
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
-from pypdf import PdfReader
-from PIL import Image
 from django.utils.translation import gettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from xml_generator.models import ModelWithMetadata
 from .constants import (
     DOKUMENT_RELATION_TYPE,
     NAHRANI_SBR,
@@ -19,6 +22,7 @@ from .constants import (
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SOUBOR_RELATION_TYPE,
 )
+from .repository_connector import RepositoryBinaryFile
 
 logger = logging.getLogger(__name__)
 
@@ -64,12 +68,20 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
     class Meta:
         db_table = "soubor_vazby"
 
+    @property
+    def navazany_objekt(self) -> Optional[ModelWithMetadata]:
+        if self.typ_vazby == PROJEKT_RELATION_TYPE:
+            return self.projekt_souboru
+        if self.typ_vazby == DOKUMENT_RELATION_TYPE:
+            return  self.dokument_souboru
+        if self.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
+            return self.samostatny_nalez_souboru
+
 
 class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
     """
     Model pro soubor. Obsahuje jeho základné data, vazbu na historii a souborovů vazbu.
     """
-    nazev_zkraceny = models.TextField()
     rozsah = models.IntegerField(blank=True, null=True)
     nazev = models.TextField()
     mimetype = models.TextField(db_index=True)
@@ -83,8 +95,26 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         related_name="soubor_historie",
         null=True,
     )
-    path = models.FileField(upload_to=get_upload_to, max_length=500)
+    path = models.CharField(max_length=500, null=True)
     size_mb = models.DecimalField(decimal_places=10, max_digits=150)
+    sha_512 = models.CharField(max_length=128, null=True, blank=True, db_index=True)
+    suppress_signal = False
+
+    @property
+    def repository_uuid(self):
+        if self.path and settings.FEDORA_SERVER_NAME.lower() in self.path.lower():
+            return self.path.split("/")[-1]
+
+    def calculate_sha_512(self):
+        repository_content = self.get_repository_content()
+        if repository_content is not None:
+            return repository_content.sha_512
+        return ""
+
+    def delete(self, using=None, keep_parents=False):
+        if self.historie is None:
+            self.create_soubor_vazby()
+        super().delete(using, keep_parents)
 
     class Meta:
         db_table = "soubor"
@@ -104,18 +134,43 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         hv.save()
         self.historie = hv
         self.save()
+        logger.debug("core.models.soubor.create_soubor_vazby.finished", extra={"historie": hv})
+
+    @property
+    def vytvoreno(self):
+        if self.historie is not None:
+            return self.historie.historie_set.filter(typ_zmeny=NAHRANI_SBR).order_by("datum_zmeny").first()
+        else:
+            self.create_soubor_vazby()
+            logger.warning("core.models.soubor.vytvoreno.error", extra={"pk": self.pk})
+            return None
+
+    def get_repository_content(self) -> Optional[RepositoryBinaryFile]:
+        from .repository_connector import FedoraRepositoryConnector
+
+        record = self.vazba.navazany_objekt
+        if record is not None and self.repository_uuid is not None:
+            logger.debug("core.models.Soubor.get_repository_content", extra={"record_ident_cely": record.ident_cely,
+                                                                             "repository_uuid": self.repository_uuid})
+            conector = FedoraRepositoryConnector(record)
+            rep_bin_file = conector.get_binary_file(self.repository_uuid)
+            return rep_bin_file
+        logger.debug("core.models.Soubor.get_repository_content.not_found",
+                     extra={"record_ident_cely": record, "repository_uuid": self.repository_uuid, "soubor_pk": self.pk})
+        return None
 
     def zaznamenej_nahrani(self, user):
         """
         Metóda pro zapsáni vytvoření souboru do historie.
         """
         self.create_soubor_vazby()
-        Historie(
+        hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
             poznamka=self.nazev,
             vazba=self.historie,
         ).save()
+        logger.debug("core.models.soubor.zaznamenej_nahrani.finished", extra={"historie": hist})
 
     def zaznamenej_nahrani_nove_verze(self, user, nazev=None):
         """
@@ -125,40 +180,42 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
             self.create_soubor_vazby()
         if not nazev:
             nazev = self.nazev
-        Historie(
+        hist = Historie(
             typ_zmeny=NAHRANI_SBR,
             uzivatel=user,
             poznamka=nazev,
             vazba=self.historie,
         ).save()
+        logger.debug("core.models.soubor.zaznamenej_nahrani_nove_verze.finished", extra={"historie": hist})
 
     def save(self, *args, **kwargs):
         """
         Metóda pro uložení souboru do DB. Navíc se počítá počet stran pro pdf, případne počet frames pro obrázek.
         """
-        super().save(*args, **kwargs)
-        try:
-            self.path
-        except self.DoesNotExist:
-            super().save(*args, **kwargs)
-        if self.path and self.path.path.lower().endswith("pdf"):
-            try:
-                reader = PdfReader(self.path)
-            except:
-                logger.debug("core.models.Soubor.save_error_reading_pdf")
-                self.rozsah = 1
-            else:
-                self.rozsah = len(reader.pages)
-        elif self.path and self.path.path.lower().endswith("tif"):
-            try:
-                img = Image.open(self.path)
-            except:
-                logger.debug("core.models.Soubor.save_error_reading_tif")
-                self.rozsah = 1
-            else:
-                self.rozsah = img.n_frames
-        else:
-            self.rozsah = 1
+        # TODO: Rewrite this
+        # super().save(*args, **kwargs)
+        # try:
+        #     self.path
+        # except self.DoesNotExist:
+        #     super().save(*args, **kwargs)
+        # if self.path and self.path.path.lower().endswith("pdf"):
+        #     try:
+        #         reader = PdfReader(self.path)
+        #     except:
+        #         logger.debug("core.models.Soubor.save_error_reading_pdf")
+        #         self.rozsah = 1
+        #     else:
+        #         self.rozsah = len(reader.pages)
+        # elif self.path and self.path.path.lower().endswith("tif"):
+        #     try:
+        #         img = Image.open(self.path)
+        #     except:
+        #         logger.debug("core.models.Soubor.save_error_reading_tif")
+        #         self.rozsah = 1
+        #     else:
+        #         self.rozsah = img.n_frames
+        # else:
+        #     self.rozsah = 1
         super().save(*args, **kwargs)
 
 
@@ -166,27 +223,30 @@ class ProjektSekvence(models.Model):
     """
     Model pro tabulku se sekvencemi projektu.
     """
-    rada = models.CharField(max_length=1)
+    region = models.CharField(max_length=1)
     rok = models.IntegerField()
     sekvence = models.IntegerField()
 
     class Meta:
         db_table = "projekt_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['region','rok'], name='unique_sekvence_projekt'),
+        ]
 
 
 class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Model):
     """
     Model pro tabulku s odstávkami systému.
     """
-    info_od = models.DateField(_("model.odstavka.infoOd"))
-    datum_odstavky = models.DateField(_("model.odstavka.datumOdstavky"))
-    cas_odstavky = models.TimeField(_("model.odstavka.casOdstavky"))
-    status = models.BooleanField(_("model.odstavka.status"), default=True)
+    info_od = models.DateField(_("core.model.OdstavkaSystemu.infoOd.label"))
+    datum_odstavky = models.DateField(_("core.model.OdstavkaSystemu.datumOdstavky.label"))
+    cas_odstavky = models.TimeField(_("core.model.OdstavkaSystemu.casOdstavky.label"))
+    status = models.BooleanField(_("core.model.OdstavkaSystemu.status.label"), default=True)
 
     class Meta:
         db_table = "odstavky_systemu"
-        verbose_name = _("model.odstavka.modelTitle")
-        verbose_name_plural = _("model.odstavka.modelTitle")
+        verbose_name = _("core.model.OdstavkaSystemu.modelTitle.label")
+        verbose_name_plural = _("core.model.OdstavkaSystemu.modelTitles.label")
 
     def clean(self):
         """
@@ -196,12 +256,12 @@ class OdstavkaSystemu(ExportModelOperationsMixin("odstavka_systemu"), models.Mod
         if odstavky.count() > 0 and self.status:
             if odstavky.first().pk != self.pk:
                 raise ValidationError(
-                    _("model.odstavka.jenJednaAktivniOdstavkaPovolena.text")
+                    _("core.model.OdstavkaSystemu.jenJednaAktivniOdstavkaPovolena.text")
                 )
         super(OdstavkaSystemu, self).clean()
 
     def __str__(self) -> str:
-        return "{}: {} {}".format(_("Odstavka"), self.datum_odstavky, self.cas_odstavky)
+        return "{}: {} {}".format(_("core.model.OdstavkaSystemu.text"), self.datum_odstavky, self.cas_odstavky)
 
 
 class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error"), models.Model):

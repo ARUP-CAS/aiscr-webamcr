@@ -20,11 +20,13 @@ from core.constants import (
 from django.db import models
 from django.utils.translation import gettext as _
 from django.urls import reverse
+
 from ez.models import ExterniZdroj
 from heslar.hesla import (
     HESLAR_AKCE_TYP,
     HESLAR_DATUM_SPECIFIKACE,
     HESLAR_PRISTUPNOST,
+    HESLAR_LOKALITA_TYP,
 )
 from heslar.hesla_dynamicka import (
     TYP_DOKUMENTU_NALEZOVA_ZPRAVA,
@@ -33,13 +35,16 @@ from heslar.models import Heslar, RuianKatastr
 from historie.models import Historie, HistorieVazby
 from uzivatel.models import Organizace, Osoba
 from core.exceptions import MaximalIdentNumberError
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.functions import Cast, Substr
 from django_prometheus.models import ExportModelOperationsMixin
+from xml_generator.models import ModelWithMetadata
 
 
 logger = logging.getLogger(__name__)
 
 
-class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), models.Model):
+class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), ModelWithMetadata):
     """
     Class pro db model archeologicky_zaznam.
     """
@@ -127,18 +132,32 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         Pokud je akce samostatná a má dočasný ident, nastavý se konečný ident.
         """
         self.stav = AZ_STAV_ARCHIVOVANY
-        Historie(
-            typ_zmeny=ARCHIVACE_AZ,
-            uzivatel=user,
-            vazba=self.historie,
-        ).save()
+        poznamka_historie = None
         self.save()
+        old_ident = None
         if (
             self.typ_zaznamu == self.TYP_ZAZNAMU_AKCE
             and self.akce.typ == Akce.TYP_AKCE_SAMOSTATNA
             and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
         ):
+            old_ident = self.ident_cely
             self.set_akce_ident()
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        if (
+            self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA 
+            and self.ident_cely.startswith(IDENTIFIKATOR_DOCASNY_PREFIX)
+        ):
+            old_ident = self.ident_cely
+            self.set_lokalita_permanent_ident_cely()
+            poznamka_historie = f"{old_ident} -> {self.ident_cely}"
+        Historie(
+            typ_zmeny=ARCHIVACE_AZ,
+            uzivatel=user,
+            vazba=self.historie,
+            poznamka=poznamka_historie,
+        ).save()
+        if old_ident is not None:
+            self.record_ident_change(old_ident)
 
     def set_vraceny(self, user, new_state, poznamka):
         """
@@ -166,19 +185,19 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
         result = []
         if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
             required_fields = [
-                (self.akce.datum_zahajeni, _("Datum zahájení není vyplněn.")),
-                (self.akce.datum_ukonceni, _("Datum ukončení není vyplněn.")),
+                (self.akce.datum_zahajeni, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.datum_zahajeni.text")),
+                (self.akce.datum_ukonceni, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.datum_ukonceni.text")),
                 (
                     self.akce.lokalizace_okolnosti,
-                    _("Lokalizace okolností není vyplněna."),
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.lokalizace_okolnosti.text"),
                 ),
-                (self.akce.specifikace_data, _("Specifikace data není vyplněna.")),
-                (self.akce.organizace, _("Organizace není vyplněna.")),
-                (self.akce.hlavni_typ, _("Hlavní typ není vyplněn.")),
-                (self.akce.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
+                (self.akce.specifikace_data, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.specifikace_data.text")),
+                (self.akce.organizace, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.organizace.text")),
+                (self.akce.hlavni_typ, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_typ.text")),
+                (self.akce.hlavni_vedouci, _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_vedouci.text")),
                 (
                     self.akce.archeologicky_zaznam.hlavni_katastr,
-                    _("Hlavní katastr není vyplněn."),
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.hlavni_katastr.text"),
                 ),
             ]
             for req_field in required_fields:
@@ -189,13 +208,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
                     dokument__typ_dokumentu__id=TYP_DOKUMENTU_NALEZOVA_ZPRAVA
                 )
             ) == 0 and not (self.akce.je_nz or self.akce.odlozena_nz):
-                result.append(_("Nemá nálezovou zprávu."))
+                result.append(_("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.nz.text"))
                 logger.info("arch_z.models.ArcheologickyZaznam.nema_nalezovou_zpravu",
                             extra={"ident_cely": self.ident_cely})
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.dokumentacni_jednotky_akce.all()) == 0:
-            result.append(_("Nemá žádnou dokumentační jednotku."))
+            result.append(_("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.dj.text"))
             logger.info("arch_z.models.ArcheologickyZaznam.nema_dokumentacni_jednotku",
                         extra={"ident_cely": self.ident_cely})
         for dj in self.dokumentacni_jednotky_akce.all():
@@ -203,9 +222,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
             # documentation unit must be negative.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
-                    _("Pozitivní dokumentační jednotka ")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text1")
                     + str(dj.ident_cely)
-                    + _(" nemá zadanou žádnou komponentu.")
+                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pozitivni.text2")
                 )
                 logger.debug(
                     "arch_z.models.ArcheologickyZaznam.dj_komponenta_negativni", extra={"dj": dj.ident_cely}
@@ -213,9 +232,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
             # Each documentation unit associated with the project event must have a valid PIAN relation.
             if dj.pian is None:
                 result.append(
-                    _("Dokumentační jednotka ")
+                    _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text1")
                     + str(dj.ident_cely)
-                    + _(" nemá zadaný pian.")
+                    + _("arch_z.models.ArcheologickyZaznam.checkPredOdeslanim.pian.text2")
                 )
                 logger.debug("arch_z.models.ArcheologickyZaznam.dj_nema_pian", extra={"dj": dj.ident_cely})
         for dokument_cast in self.casti_dokumentu.all():
@@ -244,60 +263,59 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), mo
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
                     _(
-                        "Dokument "
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1"
                         + dc.dokument.ident_cely
-                        + " musí být nejdřív archivován."
+                        + "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2"
                     )
                 )
         for dj in self.dokumentacni_jednotky_akce.all():
             if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
-                        "Dokumentační jednotka "
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text1"
                         + str(dj.ident_cely)
-                        + " má nepotvrzený pian."
+                        + "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2"
                     )
                 )
         return result
 
     def set_lokalita_permanent_ident_cely(self):
         """
-        Metóda pro nastavení permanentního ident celý pro lokality.
-        Metóda najde první volné místo v db.
+        Metóda pro nastavení permanentního ident celý pro lokality z lokality sekvence.
         """
-        MAXIMAL: int = 9999999
-        # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-        prefix = str(
-            self.hlavni_katastr.okres.kraj.rada_id
-            + "-"
-            + self.lokalita.typ_lokality.zkratka
+        MAXIMUM: int = 9999999
+        region = self.hlavni_katastr.okres.kraj.rada_id
+        typ = self.lokalita.typ_lokality
+        try:
+            sequence = LokalitaSekvence.objects.get(region=region, typ=typ)
+            if sequence.sekvence >= MAXIMUM:
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence += 1
+        except ObjectDoesNotExist:
+            sequence = LokalitaSekvence.objects.create(region=region, typ=typ, sekvence=1)
+        finally:
+            prefix = f"{region}-{typ.zkratka}"
+            lokality = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}").order_by("-ident_cely")
+            if lokality.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:07}").count()>0:
+                #number from empty spaces
+                idents = list(lokality.values_list("ident_cely", flat=True).order_by("ident_cely"))
+                idents = [sub.replace(prefix, "") for sub in idents]
+                idents = [sub.lstrip("0") for sub in idents]
+                idents = [eval(i) for i in idents]
+                missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+                logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+                logger.debug(missing[0])
+                if missing[0] >= MAXIMUM:
+                    logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
+                    raise MaximalIdentNumberError(MAXIMUM)
+                sequence.sekvence=missing[0]
+        sequence.save()
+        old_ident = self.ident_cely
+        self.ident_cely = (
+            sequence.region + "-" + str(sequence.typ.zkratka) + f"{sequence.sekvence:07}"
         )
-        l = ArcheologickyZaznam.objects.filter(
-            ident_cely__regex="^" + prefix + "\\d{7}$",
-            typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
-        ).order_by("-ident_cely")
-        if l.filter(ident_cely=str(prefix + "0000001")).count() == 0:
-            self.ident_cely = prefix + "0000001"
-        else:
-            # number from empty spaces
-            idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
-            idents = [sub.replace(prefix, "") for sub in idents]
-            idents = [sub.lstrip("0") for sub in idents]
-            idents = [eval(i) for i in idents]
-            start = idents[0]
-            end = MAXIMAL
-            missing = sorted(set(range(start, end + 1)).difference(idents))
-            logger.debug("arch_z.models.ArcheologickyZaznam.set_lokalita_permanent_ident_cely.missing",
-                         extra={"missing": missing[0]})
-            if missing[0] >= MAXIMAL:
-                logger.error(
-                    "arch_z.models.ArcheologickyZaznam.set_lokalita_permanent_ident_cely.maximum_error",
-                    extra={"maximum": str(MAXIMAL)}
-                )
-                raise MaximalIdentNumberError(MAXIMAL)
-            sequence = str(missing[0]).zfill(7)
-            self.ident_cely = prefix + sequence
         self.save()
+        self.record_ident_change(old_ident)
 
     def set_akce_ident(self, ident=None):
         """
@@ -464,6 +482,12 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
             "arch_z:detail", kwargs={"ident_cely": self.archeologicky_zaznam.ident_cely}
         )
 
+    def save_metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        self.projekt.save_metadata()
+        connector = FedoraRepositoryConnector(self)
+        return connector.save_metadata(True)
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """
@@ -501,36 +525,63 @@ class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):
         db_table = "externi_odkaz"
 
 
-def get_akce_ident(region, temp=None, id=None):
+def get_akce_ident(region):
     """
-        Funkce pro nastavení permanentního ident celý pro akci.
-        Metóda najde první volné místo v db.
+    Metóda pro získaní permanentního ident celý pro akci z akce sekvence.
     """
-    MAXIMAL: int = 999999
-    # [region] - [řada] - [rok][pětimístné pořadové číslo dokumentu pro region-rok-radu]
-    if temp:
-        return str(IDENTIFIKATOR_DOCASNY_PREFIX + region + "-9" + str(id) + "A")
-    else:
+    MAXIMUM: int = 999999
+    try:
+        sequence = AkceSekvence.objects.get(region=region)
+        if sequence.sekvence >= MAXIMUM:
+            raise MaximalIdentNumberError(MAXIMUM)
+        sequence.sekvence += 1
+    except ObjectDoesNotExist:
+        sequence = AkceSekvence.objects.create(region=region, sekvence=1)
+    finally:
         prefix = str(region + "-9")
-    l = ArcheologickyZaznam.objects.filter(
-        ident_cely__regex="^" + prefix + "\\d{6}A$"
-    ).order_by("-ident_cely")
-    if l.filter(ident_cely=str(prefix + "000001A")).count() == 0:
-        return prefix + "000001A"
-    else:
-        # temp number from empty spaces
-        idents = list(l.values_list("ident_cely", flat=True).order_by("ident_cely"))
-        idents = [sub.replace(prefix, "") for sub in idents]
-        idents = [sub.replace("A", "") for sub in idents]
-        idents = [sub.lstrip("0") for sub in idents]
-        idents = [eval(i) for i in idents]
-        start = idents[0]
-        end = MAXIMAL
-        missing = sorted(set(range(start, end + 1)).difference(idents))
-        logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
-        logger.debug(missing[0])
-        if missing[0] >= MAXIMAL:
-            logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMAL)})
-            raise MaximalIdentNumberError(MAXIMAL)
-        sequence = str(missing[0]).zfill(6)
-        return prefix + sequence + "A"
+        akce = ArcheologickyZaznam.objects.filter(ident_cely__startswith=f"{prefix}",ident_cely__endswith="A").order_by("-ident_cely")
+        if akce.filter(ident_cely__startswith=f"{prefix}{sequence.sekvence:06}").count()>0:
+            #number from empty spaces
+            idents = list(akce.values_list("ident_cely", flat=True).order_by("ident_cely"))
+            idents = [sub.replace(prefix, "") for sub in idents]
+            idents = [sub.replace("A", "") for sub in idents]
+            idents = [sub.lstrip("0") for sub in idents]
+            idents = [eval(i) for i in idents]
+            missing = sorted(set(range(sequence.sekvence, MAXIMUM + 1)).difference(idents))
+            logger.debug("arch_z.models.get_akce_ident.missing", extra={"missing": missing[0]})
+            logger.debug(missing[0])
+            if missing[0] >= MAXIMUM:
+                logger.error("arch_z.models.get_akce_ident.maximum_error", extra={"maximum": str(MAXIMUM)})
+                raise MaximalIdentNumberError(MAXIMUM)
+            sequence.sekvence=missing[0]
+    sequence.save()
+    return (
+        sequence.region + "-9" + f"{sequence.sekvence:06}" + "A"
+    )
+
+class LokalitaSekvence(models.Model):
+    """
+    Model pro tabulku se sekvencemi lokalit.
+    """
+    typ = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},)
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "lokalita_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['region','typ'], name='unique_sekvence_lokalita'),
+        ]
+
+class AkceSekvence(models.Model):
+    """
+    Model pro tabulku se sekvencemi akcií.
+    """
+    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    sekvence = models.IntegerField()
+
+    class Meta:
+        db_table = "akce_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['region'], name='unique_sekvence_akce'),
+        ]

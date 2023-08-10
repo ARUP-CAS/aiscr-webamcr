@@ -80,12 +80,12 @@ class Migration(migrations.Migration):
             name='Soubor',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('nazev_zkraceny', models.TextField()),
                 ('rozsah', models.IntegerField(blank=True, null=True)),
                 ('nazev', models.TextField()),
                 ('mimetype', models.TextField()),
-                ('path', models.FileField(upload_to=core.models.get_upload_to, max_length=500)),
+                ('path', models.CharField(max_length=500, null=True)),
                 ('size_mb', models.DecimalField(decimal_places=10, max_digits=150)),
+                ('sha_512', models.CharField(blank=True, db_index=True, max_length=128, null=True))
             ],
             options={
                 'db_table': 'soubor',

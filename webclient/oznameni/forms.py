@@ -166,6 +166,7 @@ class ProjektOznameniForm(forms.ModelForm):
         label=_("Hlavní katastr"),
         help_text=_("Katastální území zadané bodem."),
     )
+    ident_cely = forms.CharField(required=False)
 
     class Meta:
         model = Projekt
@@ -214,6 +215,7 @@ class ProjektOznameniForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         change = kwargs.pop("change", False)
         super(ProjektOznameniForm, self).__init__(*args, **kwargs)
+        self.fields["ident_cely"].required = False
         self.fields["katastry"].required = False
         self.fields["podnet"].required = True
         self.fields["lokalizace"].required = True

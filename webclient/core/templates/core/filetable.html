@@ -3,19 +3,19 @@
 <table class="table table-striped table-hover table-sm mb-0">
   <thead>
   <tr>
-    <th scope="col">{% trans "Nahled" %}</th>
-    <th scope="col">{% trans "Název" %}</th>
-    <th scope="col">{% trans "Typ" %}</th>
-    <th scope="col">{% trans "Velikost" %}</th>
-    <th scope="col">{% trans "Datum vytvoření" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.nahled.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.nazev.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.typ.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.velikost.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.datumVytvoreni.label" %}</th>
     {% if show %}
-      <th scope="col">{% trans "Smazat" %}</th>
+      <th scope="col">{% trans "core.templates.filetable.columnHeader.smazat.label" %}</th>
       {% if allow_replace %}
-        <th scope="col">{% trans "Nahradit" %}</th>
+        <th scope="col">{% trans "core.templates.filetable.columnHeader.nahradit.label" %}</th>
       {% endif %}
     {% endif %}
-    <th scope="col">{% trans "Stáhnout" %}</th>
-    <th scope="col">{% trans "Historie" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.stahnout.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.historie.label" %}</th>
   </tr>
   </thead>
   <tbody>
@@ -26,10 +26,14 @@
         <img id="soubor-nahled" src="{% url 'core:download_file' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
         {% endif %}  
       </td>
-      <td>{{ soubor.nazev_zkraceny }}</td>
+      <td>{{ soubor.nazev }}</td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
-      <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
+      {% if soubor.vytvoreno %}
+        <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
+      {% else %}
+        <td></td>
+      {% endif %}
       {% if show %}
         <td>
           <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">

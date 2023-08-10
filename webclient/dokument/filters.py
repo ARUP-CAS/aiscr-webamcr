@@ -81,7 +81,7 @@ class HistorieFilter(filters.FilterSet):
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=filter(lambda x: x[0].startswith("D"), Historie.CHOICES),
-        label=_("historie.filter.typZmeny.label"),
+        label=_("dokument.filters.historieFilter.historieTypZmeny.label"),
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
             attrs={
@@ -94,7 +94,7 @@ class HistorieFilter(filters.FilterSet):
     )
 
     historie_datum_zmeny_od = DateFromToRangeFilter(
-        label=_("historie.filter.datumZmeny.label"),
+        label=_("dokument.filters.historieFilter.historieDatumZmeny.label"),
         field_name="historie__historie__datum_zmeny",
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
@@ -103,7 +103,7 @@ class HistorieFilter(filters.FilterSet):
     historie_uzivatel = ModelMultipleChoiceFilter(
         queryset=User.objects.all(),
         field_name="historie__historie__uzivatel",
-        label=_("historie.filter.uzivatel.label"),
+        label=_("dokument.filters.historieFilter.historieUzivatel.label"),
         widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
         distinct=True,
     )
@@ -160,7 +160,7 @@ class Model3DFilter(HistorieFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).filter(
             id__in=MODEL_3D_DOKUMENT_TYPES
         ),
-        label=_("Typ"),
+        label=_("dokument.filters.model3DFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
     )
@@ -169,7 +169,7 @@ class Model3DFilter(HistorieFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).filter(
             heslo__startswith="3D"
         ),
-        label=_("Formát"),
+        label=_("dokument.filters.model3DFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),
     )
@@ -197,14 +197,14 @@ class Model3DFilter(HistorieFilter):
     )
 
     autor = ModelMultipleChoiceFilter(
-        label=_("Autor"),
+        label=_("dokument.filters.model3DFilter.autor.label"),
         field_name="autori",
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
 
     rok_vzniku_od = NumberFilter(
-        field_name="rok_vzniku", label=_("Rok vzniku (od-do)"), lookup_expr="gte"
+        field_name="rok_vzniku", label=_("dokument.filters.model3DFilter.rokVznikuOd.label"), lookup_expr="gte"
     )
 
     rok_vzniku_do = NumberFilter(
@@ -213,20 +213,20 @@ class Model3DFilter(HistorieFilter):
 
     duveryhodnost = NumberFilter(
         field_name="extra_data__duveryhodnost",
-        label=_("Důvěryhodnost (min. %)"),
+        label=_("dokument.filters.model3DFilter.duverihodnost.label"),
         lookup_expr="gte",
         widget=NumberInput(attrs={"min": "1", "max": "100"}),
         distinct=True,
     )
     popisne_udaje = CharFilter(
-        label=_("Popisné údaje"),
+        label=_("dokument.filters.model3DFilter.popisneUdaje.label"),
         method="filter_popisne_udaje",
     )
 
     zeme = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_ZEME),
         field_name="extra_data__zeme",
-        label=_("Země"),
+        label=_("dokument.filters.model3DFilter.zeme.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -239,7 +239,7 @@ class Model3DFilter(HistorieFilter):
 
     obdobi = MultipleChoiceFilter(
         method="filter_obdobi",
-        label=_("Období"),
+        label=_("dokument.filters.model3DFilter.obdobi.label"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -252,7 +252,7 @@ class Model3DFilter(HistorieFilter):
 
     areal = MultipleChoiceFilter(
         method="filter_areal",
-        label=_("Areál"),
+        label=_("dokument.filters.model3DFilter.areal.label"),
         choices=heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -269,7 +269,7 @@ class Model3DFilter(HistorieFilter):
             nazev_heslare=HESLAR_AKTIVITA
         ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
         field_name="casti__komponenty__komponenty__komponentaaktivita__aktivita",
-        label=_("Aktivity"),
+        label=_("dokument.filters.model3DFilter.aktivity.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -282,7 +282,7 @@ class Model3DFilter(HistorieFilter):
 
     predmet_druh = MultipleChoiceFilter(
         field_name="casti__komponenty__komponenty__predmety__druh",
-        label=_("Druh předmětu"),
+        label=_("dokument.filters.model3DFilter.predmetDruh.label"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -299,7 +299,7 @@ class Model3DFilter(HistorieFilter):
             nazev_heslare=HESLAR_PREDMET_SPECIFIKACE
         ),  # nezda se mi pouziti obou hesel - plati i pro create a edit
         field_name="casti__komponenty__komponenty__predmety__specifikace",
-        label=_("Specifikace předmětu"),
+        label=_("dokument.filters.model3DFilter.predmetSpecifikace.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -311,7 +311,7 @@ class Model3DFilter(HistorieFilter):
     )
     objekt_druh = MultipleChoiceFilter(
         field_name="casti__komponenty__komponenty__objekty__druh",
-        label=_("Druh objektu"),
+        label=_("dokument.filters.model3DFilter.objektDruh.label"),
         choices=heslar_12(HESLAR_OBJEKT_DRUH, HESLAR_OBJEKT_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -325,7 +325,7 @@ class Model3DFilter(HistorieFilter):
 
     objekt_specifikace = MultipleChoiceFilter(
         field_name="casti__komponenty__komponenty__objekty__specifikace",
-        label=_("Specifikace objektu"),
+        label=_("dokument.filters.model3DFilter.objektSpecifikace.label"),
         choices=heslar_12(HESLAR_OBJEKT_SPECIFIKACE, HESLAR_OBJEKT_SPECIFIKACE_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -377,7 +377,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.history.divider.label")
+        "translation": _(u"dokument.filters.model3DFilterFormHelper.historyDivider.label")
     }
     layout = Layout(
         Div(
@@ -436,29 +436,29 @@ class DokumentFilter(Model3DFilter):
     """
     rada = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_RADA),
-        label=_("dokument.filter.rada.label"),
+        label=_("dokument.filters.dokumentFilter.rada.label"),
         widget=SelectMultipleSeparator(),
     )
     typ_dokumentu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_TYP).exclude(
             id__in=MODEL_3D_DOKUMENT_TYPES
         ),
-        label=_("Typ"),
+        label=_("dokument.filters.dokumentFilter.typDokumentu.label"),
         field_name="typ_dokumentu",
         widget=SelectMultipleSeparator(),
     )
     material_originalu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_MATERIAL),
-        label=_("dokument.filter.material.label"),
+        label=_("dokument.filters.dokumentFilter.materialOriginalu.label"),
         widget=SelectMultipleSeparator(),
     )
 
     uzemni_prislusnost = MultipleChoiceFilter(
         method="filter_uzemni_prislusnost",
-        label=_("dokument.filter.uzemniPrislusnost.label"),
+        label=_("dokument.filters.dokumentFilter.uzemniPrislusnost.label"),
         choices=(
-            ("M-", _("dokument.filter.uzemniPrislusnost.M.option")),
-            ("C-", _("dokument.filter.uzemniPrislusnost.C.option")),
+            ("M-", ("dokument.filters.dokumentFilter.uzemniPrislusnost.M.option")),
+            ("C-", ("dokument.filters.dokumentFilter.uzemniPrislusnost.C.option")),
         ),
         widget=SelectMultiple(
             attrs={
@@ -471,59 +471,59 @@ class DokumentFilter(Model3DFilter):
     )
     jazyky = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_JAZYK),
-        label=_("dokument.filter.jazyky.label"),
+        label=_("dokument.filters.dokumentFilter.jazyky.label"),
         widget=SelectMultipleSeparator(),
     )
 
     ulozeni_originalu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_ULOZENI),
-        label=_("dokument.filter.ulozeniOriginalu.label"),
+        label=_("dokument.filters.dokumentFilter.ulozeniOriginalu.label"),
         widget=SelectMultipleSeparator(),
     )
     posudky = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_POSUDEK_TYP),
-        label=_("dokument.filter.posudky.label"),
+        label=_("dokument.filters.dokumentFilter.posudky.label"),
         widget=SelectMultipleSeparator(),
     )
     pristupnost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
-        label=_("dokument.filter.pristupnost.label"),
+        label=_("dokument.filters.dokumentFilter.pristupnost.label"),
         widget=SelectMultipleSeparator(),
     )
 
     datum_zverejneni = DateFromToRangeFilter(
-        label=_("dokument.filter.datumZverejneni.label"),
+        label=_("dokument.filters.dokumentFilter.datumZverejneni.label"),
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
     datum_vzniku = DateFromToRangeFilter(
-        label=_("dokument.filter.datumVzniku.label"),
+        label=_("dokument.filters.dokumentFilter.datumVzniku.label"),
         field_name="extra_data__datum_vzniku",
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
     zachovalost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_ZACHOVALOST),
-        label=_("dokument.filter.zachovalost.label"),
+        label=_("dokument.filters.dokumentFilter.zachovalost.label"),
         field_name="extra_data__zachovalost",
         widget=SelectMultipleSeparator(),
     )
     nahrada = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_NAHRADA),
-        label=_("dokument.filter.nahrada.label"),
+        label=_("dokument.filters.dokumentFilter.nahrada.label"),
         field_name="extra_data__nahrada",
         widget=SelectMultipleSeparator(),
     )
     udalost_typ = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_UDALOST_TYP),
-        label=_("dokument.filter.udalostTyp.label"),
+        label=_("dokument.filters.dokumentFilter.udalostTyp.label"),
         field_name="extra_data__udalost_typ",
         widget=SelectMultipleSeparator(),
     )
 
     rok_udalosti_od = NumberFilter(
         field_name="extra_data__rok_od",
-        label=_("dokument.filter.rokUdalosti.label"),
+        label=_("dokument.filters.dokumentFilter.rokUdalosti.label"),
         lookup_expr="gte",
     )
 
@@ -531,13 +531,13 @@ class DokumentFilter(Model3DFilter):
         field_name="extra_data__rok_do", label="&nbsp;", lookup_expr="lte"
     )
     osoby = ModelMultipleChoiceFilter(
-        label=_("dokument.filter.osoby.label"),
+        label=_("dokument.filters.dokumentFilter.osoby.label"),
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
     )
     duveryhodnost_od = NumberFilter(
         field_name="extra_data__duveryhodnost",
-        label=_("dokument.filter.duveryhodnostOdDo.label"),
+        label=_("dokument.filters.dokumentFilter.duveryhodnost.label"),
         lookup_expr="gte",
     )
 
@@ -546,9 +546,9 @@ class DokumentFilter(Model3DFilter):
     )
 
     jistota = MultipleChoiceFilter(
-        choices=[("True", _("Ano")), ("False", _("Ne"))],
+        choices=[("True", _("dokument.filters.dokumentFilter.true.option")), ("False", _("dokument.filters.dokumentFilter.false.option"))],
         method="filter_jistota",
-        label=_("dokument.filter.jistotaDatace.label"),
+        label=_("dokument.filters.dokumentFilter.jistota.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -562,13 +562,13 @@ class DokumentFilter(Model3DFilter):
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOKUMENT_FORMAT).exclude(
             heslo__startswith="3D"
         ),
-        label=_("Formát"),
+        label=_("dokument.filters.dokumentFilter.format.label"),
         field_name="extra_data__format",
         widget=SelectMultipleSeparator(),
     )
 
     poznamka_komponenty = CharFilter(
-        label=_("dokument.filter.poznamkaKomponenty.label"),
+        label=_("dokument.filters.dokumentFilter.poznamkaKomponenty.label"),
         field_name="casti__komponenty__komponenty__poznamka",
         lookup_expr="icontains",
         distinct=True,
@@ -576,24 +576,24 @@ class DokumentFilter(Model3DFilter):
 
     predmet_pozn_pocet = CharFilter(
         method="filter_predmet_pozn_pocet",
-        label=_("dokument.filter.predmetPoznamkaPocet.label"),
+        label=_("dokument.filters.dokumentFilter.predmetPoznPocet.label"),
         distinct=True,
     )
 
     objekt_pozn_pocet = CharFilter(
         method="filter_objekt_pozn_pocet",
-        label=_("dokument.filter.objektPoznamkaPocet.label"),
+        label=_("dokument.filters.dokumentFilter.objektPoznPocet.label"),
         distinct=True,
     )
 
     neident_katastr = CharFilter(
-        label=_("dokument.filter.neidentAkceKatastr.label"),
+        label=_("dokument.filters.dokumentFilter.neidentAkceKatastr.label"),
         field_name="casti__neident_akce__katastr__nazev",
         distinct=True,
     )
 
     neident_vedouci = ModelMultipleChoiceFilter(
-        label=_("dokument.filter.neidentVedouci.label"),
+        label=_("dokument.filters.dokumentFilter.neidentVedouci.label"),
         field_name="casti__neident_akce__neidentakcevedouci__vedouci",
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
@@ -601,7 +601,7 @@ class DokumentFilter(Model3DFilter):
 
     neident_rok_zahajeni_od = NumberFilter(
         field_name="casti__neident_akce__rok_zahajeni",
-        label=_("dokument.filter.neidentRok.label"),
+        label=_("dokument.filters.dokumentFilter.neidentRokZahajeni.label"),
         lookup_expr="gte",
     )
 
@@ -613,18 +613,18 @@ class DokumentFilter(Model3DFilter):
 
     neident_poznamka = CharFilter(
         method="filter_neident_poznamka",
-        label=_("dokument.filter.neidentPoznamka.label"),
+        label=_("dokument.filters.dokumentFilter.neidentPoznamka.label"),
         distinct=True,
     )
 
     let_id = CharFilter(
         lookup_expr="icontains",
-        label=_("dokument.filter.letId.label"),
+        label=_("dokument.filters.dokumentFilter.ledId.label"),
         field_name="let__ident_cely",
     )
 
     let_datum = DateFromToRangeFilter(
-        label=_("dokument.filter.letDatum.label"),
+        label=_("dokument.filters.dokumentFilter.letDatum.label"),
         field_name="let__datum",
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
@@ -632,12 +632,12 @@ class DokumentFilter(Model3DFilter):
 
     let_pilot = CharFilter(
         lookup_expr="icontains",
-        label=_("dokument.filter.letPilot.label"),
+        label=_("dokument.filters.dokumentFilter.letPilot.label"),
         field_name="let__pilot",
     )
 
     let_pozorovatel = ModelMultipleChoiceFilter(
-        label=_("dokument.filter.letPozorovatel.label"),
+        label=_("dokument.filters.dokumentFilter.letPozorovatel.label"),
         field_name="let__pozorovatel",
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         queryset=Osoba.objects.all(),
@@ -645,7 +645,7 @@ class DokumentFilter(Model3DFilter):
 
     let_organizace = ModelMultipleChoiceFilter(
         queryset=Organizace.objects.all(),
-        label=_("dokument.filter.letOrganizace.label"),
+        label=_("dokument.filters.dokumentFilter.letOrganizace.label"),
         field_name="let__organizace",
         widget=SelectMultiple(
             attrs={
@@ -658,48 +658,48 @@ class DokumentFilter(Model3DFilter):
 
     letiste_start = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LETISTE),
-        label=_("dokument.filter.letLetisteStart.label"),
+        label=_("dokument.filters.dokumentFilter.letisteStart.label"),
         field_name="let__letiste_start",
         widget=SelectMultipleSeparator(),
     )
     letiste_cil = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LETISTE),
-        label=_("dokument.filter.letLetisteCil.label"),
+        label=_("dokument.filters.dokumentFilter.letisteCil.label"),
         field_name="let__letiste_cil",
         widget=SelectMultipleSeparator(),
     )
 
     let_pocasi = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_POCASI),
-        label=_("dokument.filter.letPocasi.label"),
+        label=_("dokument.filters.dokumentFilter.letPocazi.label"),
         field_name="let__pocasi",
         widget=SelectMultipleSeparator(),
     )
     let_dohlednost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_DOHLEDNOST),
-        label=_("dokument.filter.letDohlednost.label"),
+        label=_("dokument.filters.dokumentFilter.letDohlednost.label"),
         field_name="let__dohlednost",
         widget=SelectMultipleSeparator(),
     )
     let_poznamka = CharFilter(
         method="filter_let_poznamka",
-        label=_("dokument.filter.letPoznamka.label"),
+        label=_("dokument.filters.dokumentFilter.letPoznamka.label"),
         distinct=True,
     )
 
     tvary = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_LETFOTO_TVAR),
-        label=_("dokument.filter.tvary.label"),
+        label=_("dokument.filters.dokumentFilter.tvary.label"),
         widget=SelectMultipleSeparator(),
     )
     tvar_poznamka = CharFilter(
         field_name="tvary__poznamka",
-        label=_("dokument.filter.tvaryPoznamka.label"),
+        label=_("dokument.filters.dokumentFilter.tvarPoznamka.label"),
         distinct=True,
     )
     soubor_typ = SouborTypFilter(
         field_name="soubory__soubory__mimetype",
-        label=_("dokument.filter.souborTyp.label"),
+        label=_("dokument.filters.dokumentFilter.souborTyp.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -713,7 +713,7 @@ class DokumentFilter(Model3DFilter):
     soubor_velikost_od = NumberFilter(
         field_name="soubory__soubory__size_mb",
         lookup_expr="gte",
-        label=_("dokument.filter.souborVelikost.label"),
+        label=_("dokument.filters.dokumentFilter.souborVelikost.label"),
     )
 
     soubor_velikost_do = NumberFilter(
@@ -724,7 +724,7 @@ class DokumentFilter(Model3DFilter):
 
     soubor_pocet_stran_od = NumberFilter(
         field_name="soubory__soubory__rozsah",
-        label=_("dokument.filter.souborPocetStran.label"),
+        label=_("dokument.filters.dokumentFilter.souborPocetStran.label"),
         lookup_expr="gte",
     )
 
@@ -735,14 +735,14 @@ class DokumentFilter(Model3DFilter):
     )
     id_vazby = CharFilter(
         method="filter_id_vazby",
-        label=_("dokument.filter.vazbyId.label"),
+        label=_("dokument.filters.dokumentFilter.idVazby.label"),
         distinct=True,
     )
 
     exist_neident_akce = MultipleChoiceFilter(
-        choices=[("True", _("Ano")), ("False", _("Ne"))],
+        choices=[("True", _("dokument.filters.dokumentFilter.existNeidentAkce.true.option")), ("False", _("dokument.filters.dokumentFilter.existNeidentAkce.false.option"))],
         method="filter_exist_neident_akce",
-        label=_("dokument.filter.existNeidentAkce.label"),
+        label=_("dokument.filters.dokumentFilter.existNeidentAkce.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -754,9 +754,9 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_komponenty = MultipleChoiceFilter(
-        choices=[("True", _("Ano")), ("False", _("Ne"))],
+        choices=[("True", _("dokument.filters.dokumentFilter.existKomponenta.true.option")), ("False", _("dokument.filters.dokumentFilter.existKomponenta.false.option"))],
         method="filter_exist_komponenty",
-        label=_("dokument.filter.existKomponenta.label"),
+        label=_("dokument.filters.dokumentFilter.existKomponenta.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -768,9 +768,9 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_nalezy = MultipleChoiceFilter(
-        choices=[("True", _("Ano")), ("False", _("Ne"))],
+        choices=[("True", _("dokument.filters.dokumentFilter.existNalezy.true.option")), ("False", _("dokument.filters.dokumentFilter.existNalezy.false.option"))],
         method="filter_exist_nalezy",
-        label=_("dokument.filter.existNalezy.label"),
+        label=_("dokument.filters.dokumentFilter.existNalezy.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -782,9 +782,9 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_tvary = MultipleChoiceFilter(
-        choices=[("True", _("Ano")), ("False", _("Ne"))],
+        choices=[("True", _("dokument.filters.dokumentFilter.existTvary.true.option")), ("False", _("dokument.filters.dokumentFilter.existTvary.false.option"))],
         method="filter_exist_tvary",
-        label=_("dokument.filter.existTvary.label"),
+        label=_("dokument.filters.dokumentFilter.existTvary.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -796,9 +796,9 @@ class DokumentFilter(Model3DFilter):
     )
 
     exist_soubory = MultipleChoiceFilter(
-        choices=[("True", _("Ano")), ("False", _("Ne"))],
+        choices=[("True", _("dokument.filters.dokumentFilter.existSoubory.true.option")), ("False", _("dokument.filters.dokumentFilter.existSoubory.false.option"))],
         method="filter_exist_soubory",
-        label=_("dokument.filter.existSoubory.label"),
+        label=_("dokument.filters.dokumentFilter.existSoubory.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -1004,25 +1004,25 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.history.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.historyDivider.label")
     }
     extra_data_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.extraData.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.extraDataDivider.label")
     }
     komponenta_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.komponentaNalez.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.komponentaNalezDivider.label")
     }
     neident_akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.neidentAkce.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.neidentAkceDivider.label")
     }
     lety_tvary_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.letyTvary.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.letyTvaryDivider.label")
     }
     soubory_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.soubory.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.souboryDivider.label")
     }
     vazby_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"dokument.filter.vazby.divider.label")
+        "translation": _(u"dokument.filters.dokumentFilterFormHelper.vazbyDivider.label")
     }
     layout = Layout(
         Div(

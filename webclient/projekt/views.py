@@ -6,6 +6,8 @@ import simplejson as json
 from django.db.models.functions import Length
 from django.template.loader import render_to_string
 from dal import autocomplete
+from django.views.generic import RedirectView
+
 from arch_z.models import Akce
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -56,7 +58,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_heatmap_project,
@@ -72,7 +74,7 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -248,8 +250,8 @@ def create(request):
             logger.debug("projekt.views.create.form_valid")
             lat = form_projekt.cleaned_data["latitude"]
             long = form_projekt.cleaned_data["longitude"]
-            p = form_projekt.save(commit=False)
-            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+            projekt = form_projekt.save(commit=False)
+            if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
                 if not form_oznamovatel.is_valid():
                     logger.debug("projekt.views.create.form_not_valid", extra={"errors": form_oznamovatel.errors})
@@ -265,24 +267,28 @@ def create(request):
                         },
                     )
             if long and lat:
-                p.geom = Point(long, lat)
+                projekt.geom = Point(long, lat)
             try:
-                p.set_permanent_ident_cely()
+                projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
             else:
-                p.save()
-                p.set_zapsany(request.user)
+                projekt.save()
+                projekt.set_zapsany(request.user)
                 form_projekt.save_m2m()
-                if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                     # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
                     oznamovatel = form_oznamovatel.save(commit=False)
-                    oznamovatel.projekt = p
+                    oznamovatel.projekt = projekt
                     oznamovatel.save()
-                if p.should_generate_confirmation_document:
-                    p.create_confirmation_document()
+                if projekt.should_generate_confirmation_document:
+                    projekt.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("projekt:detail", ident_cely=p.ident_cely)
+                if projekt.ident_cely[0] == "C":
+                    Mailer.send_ep01a(project=projekt)
+                else:
+                    Mailer.send_ep01b(project=projekt)
+                return redirect("projekt:detail", ident_cely=projekt.ident_cely)
         else:
             logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
     else:
@@ -382,6 +388,9 @@ def smazat(request, ident_cely):
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
+    elif projekt.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:
@@ -480,7 +489,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.set_schvaleny(request.user)
+        old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
@@ -497,6 +506,7 @@ def schvalit(request, ident_cely):
             else:
                 logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
                                                                          "permIdent_cely": projekt.ident_cely})
+        projekt.set_schvaleny(request.user,old_ident)
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -985,9 +995,6 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt_mail = projekt
-            if projekt.stav == PROJEKT_STAV_PRIHLASENY:
-                Mailer.send_ep07(project=projekt_mail, reason=duvod)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
@@ -1097,6 +1104,20 @@ def generovat_oznameni(request, ident_cely):
     return redirect("projekt:detail", ident_cely=ident_cely)
 
 
+class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
+    http_method_names = ["POST"]
+
+    def get_redirect_url(self, *args, **kwargs):
+        ident_cely = kwargs['ident_cely']
+        projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+        projekt.create_confirmation_document(additional=True, user=self.request.user)
+        if projekt.ident_cely[0] == "C":
+            Mailer.send_ep01a(project=projekt)
+        else:
+            Mailer.send_ep01b(project=projekt)
+        return super().get_redirect_url(*args, **kwargs)
+
+
 @login_required
 @require_http_methods(["POST"])
 def generovat_expertni_list(request, ident_cely):
@@ -1105,9 +1126,10 @@ def generovat_expertni_list(request, ident_cely):
     """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    path = projekt.create_expert_list(popup_parametry)
-    file = open(path, "rb")
-    return FileResponse(file)
+    output = projekt.create_expert_list(popup_parametry)
+    response = StreamingHttpResponse(output, content_type="text/rtf")
+    response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
+    return response
 
 
 def get_history_dates(historie_vazby):

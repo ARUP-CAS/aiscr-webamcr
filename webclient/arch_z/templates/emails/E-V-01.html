@@ -3,16 +3,16 @@
 {% load template_tags %}
 {% block content %}
     <p>
-        {% trans 'E-V-01.dobrý_den' %},
+        {% trans 'arch_z.templates.emails.E-V-01.title' %},
     </p>
     <p>
-        {% trans "E-V-01.vámi_odeslaná_akce" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-V-01.na_katastru" %} <b>{{ katastr }}</b> {% trans "E-V-01.byla_převedena_do_stavu" %} <b>{{ state }}</b>.
+        {% trans "arch_z.templates.emails.E-V-01.textPart1" %}
+        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "arch_z.templates.emails.E-V-01.textPart2" %} <b>{{ katastr }}</b> {% trans "E-V-01.byla_převedena_do_stavu" %} <b>{{ state }}</b>.
     </p>
     <p>
-        <b>{% trans 'E-V-01.zdůvodnění' %}:</b> {{ reason }}
+        <b>{% trans 'arch_z.templates.emails.E-V-01.zduvodneni' %}:</b> {{ reason }}
     </p>
     <p>
-        {% trans 'E-V-01.detaily_o_akci_zjistíte_po_přihlášení_do_amčr' %}.
+        {% trans 'arch_z.templates.emails.E-V-01.paticka' %}.
     </p>
 {% endblock %}

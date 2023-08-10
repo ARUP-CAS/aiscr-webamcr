@@ -15,7 +15,7 @@ from core.constants import (
     VRACENI_SN,
     ZAPSANI_SN,
 )
-from core.models import SouborVazby
+from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
 from django.db import models
 from django.urls import reverse
@@ -35,7 +35,7 @@ from uzivatel.models import Organizace, Osoba, User
 from django_prometheus.models import ExportModelOperationsMixin
 
 
-class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Model):
+class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithMetadata):
     """
     Class pro db model samostantý nález.
     """
@@ -77,8 +77,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), models.Mod
         related_name="samostatne_nalezy_okolnosti",
         limit_choices_to={"nazev_heslare": HESLAR_NALEZOVE_OKOLNOSTI},
     )
-    geom = pgmodels.PointField(blank=True, null=True)
-    geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=4326)
+    geom = pgmodels.PointField(blank=True, null=True, srid=4326)
+    geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=5514)
     geom_system = models.TextField(default='wgs84')
     pristupnost = models.ForeignKey(
         Heslar,
@@ -298,6 +298,10 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         null=True,
         related_name="spoluprace_historie",
     )
+
+    @property
+    def aktivni(self):
+        return self.stav == SPOLUPRACE_AKTIVNI
 
     def set_aktivni(self, user):
         """

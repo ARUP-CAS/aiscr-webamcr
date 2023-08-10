@@ -32,9 +32,9 @@ RUN echo 'alias pip=pip3' >> ~/.bashrc
 
 ENV PATH="/scripts:${PATH}"
 
-COPY ./webclient/webclient/requirements .
+COPY ./webclient/requirements.txt .
 
-RUN pip3 install -r base.txt
+RUN pip3 install -r requirements.txt
 
 RUN mkdir /code
 COPY ./webclient /code

@@ -5,8 +5,8 @@ from .views import (
     UzivatelAutocomplete,
     update_notifications,
     GetUserInfo,
+    ObtainAuthTokenWithUpdate,
 )
-from rest_framework.authtoken.views import ObtainAuthToken
 
 
 app_name = "uzivatel"
@@ -19,6 +19,6 @@ urlpatterns = [
     ),
     path("upravit-uzivatele/", UserAccountUpdateView.as_view(), name="update-uzivatel"),
     path("upravit-notifikace/", update_notifications, name="update-notifications"),
-    path("api/token-auth/", ObtainAuthToken.as_view()),
+    path("api/token-auth/", ObtainAuthTokenWithUpdate.as_view()),
     path("api/uzivatel-info/", GetUserInfo.as_view()),
 ]

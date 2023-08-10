@@ -283,6 +283,10 @@ form {
     margin-bottom: $app-form-label-mg-bottom;
   }
 
+  .form-check-label{
+    font-weight: normal;
+  }
+
   .input-group-append {
     cursor: pointer;
 
@@ -458,6 +462,30 @@ form {
   }
 }
 
+.alert {
+  &.app-alert-floating-file-upload {
+    box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.2);
+    border-color: initial;
+    position: fixed;
+    top: 15px;
+    left: calc(300px + 15%);
+    z-index: 1000;
+    width: calc(70% - 300px);
+    text-align: center;
+  }
+
+  ul {
+    @extend .m-0, .p-0;
+    list-style-position: inside;
+  }
+}
+
+.app-alert-floating-file-upload-oznameni {
+  @extend .app-alert-floating-file-upload;
+  left: 15%;
+  width: 70%;
+}
+
 // tooltip
 .tooltip {
   a {
@@ -470,10 +498,11 @@ form {
   @extend .d-flex, .flex-column, .h-100;
 
   &.app-entity-historie {
-    height: 92% !important;
+    //height: 92% !important;
   }
   &.app-entity-historie.app-entity-soubor {
-    height: 85% !important;
+    //height: 85% !important;
+    padding-bottom: 59px;
   }
 
   &.app-entity-soubor {
@@ -498,12 +527,13 @@ form {
   }
 
   .app-table-list-wrapper {
-    flex: 1 0 auto;
+    flex: 1 0 auto; //
     position: relative;
+    max-height: fit-content;
 
     .app-table-list-inner {
-      position: absolute;
-      height: 100%;
+      position: absolute; //
+      height: 100%; //
       width: 100%;
       overflow: auto;
 
@@ -811,8 +841,7 @@ span.badge-span .badge {
   }
 }
 
-.app-entity-samostatny_nalez {
-  #projectMap{
-    position:absolute;
-  }
+#dj_list_card_body {
+  max-height: 500px;
 }
+

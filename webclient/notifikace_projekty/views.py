@@ -33,9 +33,9 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_ROLES = ["admin", "archeolog", "archivar"]
 CARD_NAME_TRANS = {
-    KRAJ_CONTENT_TYPE: _("notifikaceProjekty.list.card.ruianKraj.label"),
-    OKRES_CONTENT_TYPE: _("notifikaceProjekty.list.card.ruianOkres.label"),
-    KATASTR_CONTENT_TYPE: _("notifikaceProjekty.list.card.ruianKatastr.label"),
+    KRAJ_CONTENT_TYPE: _("notifikaceProjekty.views.list.card.ruianKraj.label"),
+    OKRES_CONTENT_TYPE: _("notifikaceProjekty.views.list.card.ruianOkres.label"),
+    KATASTR_CONTENT_TYPE: _("notifikaceProjekty.views.list.card.ruianKatastr.label"),
 }
 
 
@@ -120,6 +120,7 @@ class PesCreateView(LoginRequiredMixin, View):
             messages.add_message(
                 request, messages.ERROR, HLIDACI_PES_NEUSPESNE_VYTVOREN
             )
+        request.user.save_metadata()
         return redirect("notifikace_projekty:list")
 
 
@@ -129,9 +130,9 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
     """
 
     template_name = "core/transakce_modal.html"
-    title = _("notifikace_projekty.modalForm.smazatPsa.title.text")
+    title = _("notifikaceProjekty.views.pesSmazatView.title.text")
     id_tag = "smazat-pes-form"
-    button = _("notifikace_projekty.modalForm.smazatPes.submit.button")
+    button = _("notifikaceProjekty.views.pesSmazatView.submitButton")
 
     def get_zaznam(self):
         id = self.kwargs.get("pk")
@@ -164,4 +165,5 @@ class PesSmazatView(LoginRequiredMixin, TemplateView):
             messages.add_message(
                 request, messages.SUCCESS, HLIDACI_PES_NEUSPESNE_SMAZAN
             )
+        request.user.save_metadata()
         return JsonResponse({"redirect": reverse("notifikace_projekty:list")})

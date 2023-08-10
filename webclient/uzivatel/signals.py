@@ -1,16 +1,23 @@
 import logging
 
-from django.contrib.auth.models import Group
-
-from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 
 from services.mailer import Mailer
-from uzivatel.models import User
+from uzivatel.models import Organizace, Osoba, User
 from rest_framework.authtoken.models import Token
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(post_save, sender=Organizace)
+def orgnaizace_save_metadata(sender, instance: Organizace, **kwargs):
+    instance.save_metadata()
+
+
+@receiver(post_save, sender=Osoba)
+def osoba_save_metadata(sender, instance: Osoba, **kwargs):
+    instance.save_metadata()
 
 
 @receiver(pre_save, sender=User)
@@ -38,11 +45,13 @@ def create_ident_cely(sender, instance, **kwargs):
             else:
                 instance.ident_cely = "U-000001"
 
+
 @receiver(post_save, sender=User)
-def user_post_save_method(sender, instance: User, **kwargs):
+def user_post_save_method(sender, instance: User, created: bool, **kwargs):
+    instance.save_metadata()
     send_deactivation_email(sender, instance, **kwargs)
-    send_new_user_email_to_admin(sender, instance, **kwargs)
-    send_account_confirmed_email(sender, instance, **kwargs)
+    send_new_user_email_to_admin(sender, instance, created)
+    send_account_confirmed_email(sender, instance, created)
     # Create or change token when user changed.
     try:
         old_token = Token.objects.get(user=instance)
@@ -51,7 +60,6 @@ def user_post_save_method(sender, instance: User, **kwargs):
     else:
         old_token.delete()
         Token.objects.create(user=instance)
-
 
 
 def send_deactivation_email(sender, instance: User, **kwargs):
@@ -67,19 +75,19 @@ def send_deactivation_email(sender, instance: User, **kwargs):
             Mailer.send_eu03(user=instance)
 
 
-def send_new_user_email_to_admin(sender, instance: User, **kwargs):
+def send_new_user_email_to_admin(sender, instance: User, created):
     """
     Signál pro zaslání info o nově registrovaném uživately adminovy.
     """
-    if kwargs.get('created') is True and instance.created_from_admin_panel is False:
+    if created is True and instance.created_from_admin_panel is False:
         Mailer.send_eu04(user=instance)
 
 
-def send_account_confirmed_email(sender, instance: User, **kwargs):
+def send_account_confirmed_email(sender, instance: User, created):
     """
     signál pro zaslání emailu uživately o jeho konfirmaci.
     """
-    if kwargs.get('created') is True and instance.created_from_admin_panel is True:
+    if created is True and instance.created_from_admin_panel is True:
         Mailer.send_eu02(user=instance)
 
 
@@ -89,3 +97,14 @@ def delete_profile(sender, instance, *args, **kwargs):
     Signál pro zaslání emailu uživately o jeho smazání.
     """
     Mailer.send_eu03(user=instance)
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Osoba)
+def osoba_delete_repository_container(sender, instance: Osoba, **kwargs):
+    instance.record_deletion()
+
+
+@receiver(post_delete, sender=Organizace)
+def osoba_delete_repository_container(sender, instance: Organizace, **kwargs):
+    instance.record_deletion()

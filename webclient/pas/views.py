@@ -1,6 +1,9 @@
 import logging
 
 import simplejson as json
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, DetailView
+
 from core.constants import (
     ARCHIVACE_SN,
     ODESLANI_SN,
@@ -36,7 +39,7 @@ from core.message_constants import (
     ZAZNAM_SE_NEPOVEDLO_SMAZAT,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import get_cadastre_from_point, get_cadastre_from_point_with_geometry
 from core.views import SearchListView, check_stav_changed
@@ -428,9 +431,9 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            Mailer.send_en03_en04(samostatnyNalez=sn, reason=duvod)
             sn.set_vracen(request.user, sn.stav - 1, duvod)
             sn.save()
+            Mailer.send_en03_en04(samostatny_nalez=sn, reason=duvod)
             messages.add_message(request, messages.SUCCESS, SAMOSTATNY_NALEZ_VRACEN)
             return JsonResponse(
                 {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}
@@ -643,6 +646,9 @@ def smazat(request, ident_cely):
             {"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
+    if nalez.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("pas:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory
@@ -813,7 +819,7 @@ def aktivace(request, pk):
         spoluprace.set_aktivni(request.user)
         messages.add_message(request, messages.SUCCESS, SPOLUPRACE_BYLA_AKTIVOVANA)
         Mailer.send_en06(cooperation=spoluprace)
-        return JsonResponse({"redirect": reverse("pas:spoluprace_list")})
+        return redirect("pas:spoluprace_list")
     else:
         warnings = spoluprace.check_pred_aktivaci()
         logger.info("pas.views.aktivace.warnings", extra={"warnings": warnings})
@@ -821,9 +827,7 @@ def aktivace(request, pk):
             messages.add_message(
                 request, messages.ERROR, f"{SPOLUPRACI_NELZE_AKTIVOVAT} {warnings[0]}"
             )
-            return JsonResponse(
-                {"redirect": reverse("pas:spoluprace_list")}, status=403
-            )
+            return redirect("pas:spoluprace_list")
     context = {
         "object": spoluprace,
         "title": (
@@ -836,6 +840,17 @@ def aktivace(request, pk):
         "button": _("pas.spoluprace.modalForm.aktivace.submit.button"),
     }
     return render(request, "core/transakce_modal.html", context)
+
+
+class AktivaceEmailView(LoginRequiredMixin, DetailView):
+    template_name = "pas/potvrdit_spolupraci.html"
+    model = UzivatelSpoluprace
+
+    def post(self, request, *args, **kwargs):
+        obj: UzivatelSpoluprace = self.get_object()
+        if not obj.aktivni:
+            obj.set_aktivni(request.user)
+        return redirect(reverse("pas:spoluprace_aktivace", kwargs={"pk": obj.pk}))
 
 
 @login_required

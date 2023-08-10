@@ -12,7 +12,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Projekty" %}
+          {% trans "core.templates.index.cardProjekt.label" %}
         </div>
       </a>
     </div>
@@ -22,7 +22,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Samostatné akce" %}
+          {% trans "core.templates.index.cardSamostatneAkce.label" %}
         </div>
       </a>
     </div>
@@ -32,7 +32,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Lokality" %}
+          {% trans "core.templates.index.cardLokality.label" %}
         </div>
       </a>
     </div>
@@ -42,7 +42,7 @@
           <img src="{% static 'logo-am-mark.png' %}" />
         </div>
         <div class="card-footer">
-          {% trans "Samostatné nálezy" %}
+          {% trans "core.templates.index.cardSamostatneNalezy.label" %}
         </div>
       </a>
     </div>
@@ -52,7 +52,7 @@
         <img src="{% static 'logo-am-mark.png' %}" />
       </div>
       <div class="card-footer">
-        {% trans "Knihovna 3D" %}
+        {% trans "core.templates.index.cardKnihovna3D.label" %}
       </div>
     </a>
   </div>
@@ -62,7 +62,7 @@
         <img src="{% static 'logo-am-mark.png' %}" />
       </div>
       <div class="card-footer">
-        {% trans "Dokumeny" %}
+        {% trans "core.templates.index.cardDokumenty.label" %}
       </div>
     </a>
   </div>
@@ -72,7 +72,7 @@
         <img src="{% static 'logo-am-mark.png' %}" />
       </div>
       <div class="card-footer">
-        {% trans "Externí zdroje" %}
+        {% trans "core.templates.index.cardExterniZdroje.label" %}
       </div>
     </a>
   </div>
@@ -81,28 +81,57 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-projekt collapse">
       <div class="p-3">
-        <h4>{% trans "Projekty" %}</h4>
+        <h4>{% trans "core.templates.index.cardProjekt.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "core.templates.index.cardProjekt.text" %}
+      </div>
+    </div>
+
+    <div class="app-collapse-akce collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardSamostatnaAkce.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardSamostatnaAkce.text" %}
+      </div>
+    </div>
+    
+    <div class="app-collapse-lokalita collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardLokalita.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardLokalita.text" %}
       </div>
     </div>
 
     <div class="app-collapse-knihovna_3d collapse">
       <div class="p-3">
-        <h4>{% trans "Knihovna 3D" %}</h4>
+        <h4>{% trans "core.templates.index.cardKnihovna3D.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "core.templates.index.cardKnihovna3D.text" %}
+      </div>
+    </div>
+    
+    <div class="app-collapse-dokument collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardDokument.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardDokument.text" %}
+      </div>
+    </div>
+    
+    <div class="app-collapse-ext-zdroj collapse">
+      <div class="p-3">
+        <h4>{% trans "core.templates.index.cardExtZdroj.text.title" %}</h4>
+        <hr />
+        {% trans "core.templates.index.cardExtZdroj.text" %}
       </div>
     </div>
 
     <div class="app-collapse-samostatny_nalez collapse">
       <div class="p-3">
-        <h4>{% trans "Samostatné nálezy" %}</h4>
+        <h4>{% trans "core.templates.index.cardSamostatneNalezy.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "core.templates.index.cardSamostatneNalezy.text" %}
       </div>
     </div>
   </div>
@@ -115,11 +144,35 @@
       $(".app-entity-projekt").mouseover(function(){
         $(".app-collapse-projekt").show(100);
       });
+      $(".app-entity-akce").mouseleave(function(){
+        $(".app-collapse-akce").hide(100);
+      });
+      $(".app-entity-akce").mouseover(function(){
+        $(".app-collapse-akce").show(100);
+      });
+      $(".app-entity-lokalita").mouseleave(function(){
+        $(".app-collapse-lokalita").hide(100);
+      });
+      $(".app-entity-lokalita").mouseover(function(){
+        $(".app-collapse-lokalita").show(100);
+      });
       $(".app-entity-knihovna_3d").mouseleave(function(){
         $(".app-collapse-knihovna_3d").hide(100);
       });
       $(".app-entity-knihovna_3d").mouseover(function(){
         $(".app-collapse-knihovna_3d").show(100);
+      });
+      $(".app-entity-dokument").mouseleave(function(){
+        $(".app-collapse-dokument").hide(100);
+      });
+      $(".app-entity-dokument").mouseover(function(){
+        $(".app-collapse-dokument").show(100);
+      });
+      $(".app-entity-ext_zdroj").mouseleave(function(){
+        $(".app-collapse-ext-zdroj").hide(100);
+      });
+      $(".app-entity-ext_zdroj").mouseover(function(){
+        $(".app-collapse-ext-zdroj").show(100);
       });
       $(".app-entity-samostatny_nalez").mouseleave(function(){
         $(".app-collapse-samostatny_nalez").hide(100);

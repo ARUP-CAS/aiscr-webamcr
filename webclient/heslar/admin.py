@@ -1,9 +1,29 @@
 from django.contrib import admin
+from django.http import StreamingHttpResponse
 
 from heslar.models import Heslar, HeslarNazev, HeslarDatace, HeslarDokumentTypMaterialRada, HeslarOdkaz, RuianKraj, \
     RuianOkres, RuianKatastr, HeslarHierarchie
 from uzivatel.models import Osoba, Organizace
+from django_object_actions import DjangoObjectActions, action
 
+
+class ObjectWithMetadataAdmin(DjangoObjectActions, admin.ModelAdmin):
+    @action(label="Metadata", description="Download of metadata")
+    def metadata(self, request, obj):
+        metadata = obj.metadata
+
+        def context_processor(content):
+            yield content
+
+        response = StreamingHttpResponse(context_processor(metadata), content_type="text/xml")
+        response['Content-Disposition'] = 'attachment; filename="metadata.xml"'
+        return response
+
+    change_actions = ("metadata",)
+
+
+class HeslarWithMetadataAdmin(ObjectWithMetadataAdmin):
+    pass
 
 @admin.register(HeslarNazev)
 class HeslarNazevAdmin(admin.ModelAdmin):
@@ -27,7 +47,7 @@ class HeslarNazevAdmin(admin.ModelAdmin):
 
 
 @admin.register(Heslar)
-class HeslarAdmin(admin.ModelAdmin):
+class HeslarAdmin(HeslarWithMetadataAdmin):
     """
     Admin část pro správu modelu heslař.
     """
@@ -71,6 +91,12 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     search_fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
     list_filter = ("obdobi", )
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj:  # This means this is an edit
+            return ("obdobi", )
+        else:
+            return []
+
 
 @admin.register(HeslarDokumentTypMaterialRada)
 class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
@@ -81,7 +107,7 @@ class HeslarDokumentTypMaterialRadaAdmin(admin.ModelAdmin):
     list_display = ("dokument_rada", "dokument_typ", "dokument_material")
     readonly_fields = ("dokument_rada", "dokument_typ", "dokument_material")
     fields = ("dokument_rada", "dokument_typ", "dokument_material")
-    search_fields = ("dokument_rada", "dokument_typ", "dokument_material")
+    search_fields = ("dokument_rada__ident_cely", "dokument_typ__ident_cely", "dokument_material__ident_cely")
     list_filter = ("dokument_rada", "dokument_typ", "dokument_material")
 
     def has_add_permission(self, request, obj=None):
@@ -99,8 +125,8 @@ class HeslarOdkazAdmin(admin.ModelAdmin):
     """
     Admin část pro správu modelu heslař odkaz.
     """
-    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
-    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
+    list_display = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
+    fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri", "skos_mapping_relation")
     search_fields = ("heslo", "zdroj", "nazev_kodu", "kod", "uri")
 
 
@@ -116,7 +142,7 @@ class HeslarHierarchieAdmin(admin.ModelAdmin):
 
 
 @admin.register(Osoba)
-class OsobaAdmin(admin.ModelAdmin):
+class OsobaAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu osob.
     """
@@ -135,7 +161,7 @@ class OsobaAdmin(admin.ModelAdmin):
 
 
 @admin.register(Organizace)
-class OrganizaceAdmin(admin.ModelAdmin):
+class OrganizaceAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu organizace.
     """
@@ -146,7 +172,7 @@ class OrganizaceAdmin(admin.ModelAdmin):
     search_fields = ("nazev", "nazev_zkraceny", "typ_organizace__heslo", "zverejneni_pristupnost__heslo", "ident_cely")
     fields = ("nazev", "nazev_zkraceny", "typ_organizace", "oao", "mesicu_do_zverejneni",
               "zverejneni_pristupnost", "nazev_zkraceny_en", "email", "telefon", "adresa", "ico",
-              "nazev_en", "zanikla")
+              "nazev_en", "soucast", "zanikla")
     readonly_fields = ("ident_cely", )
 
     def has_delete_permission(self, request, obj=None):
@@ -155,7 +181,7 @@ class OrganizaceAdmin(admin.ModelAdmin):
         return super().has_delete_permission(request)
 
 
-class HeslarRuianAdmin(admin.ModelAdmin):
+class HeslarRuianAdmin(ObjectWithMetadataAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -196,5 +222,3 @@ class HeslarRuianKatastrAdmin(HeslarRuianAdmin):
     fields = ("aktualni", "nazev", "kod", "nazev_stary", "okres")
     search_fields = ("okres", "aktualni", "nazev", "kod", "nazev_stary")
     list_filter = ("okres", "okres__kraj", "aktualni")
-
-

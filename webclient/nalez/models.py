@@ -26,7 +26,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         models.RESTRICT,
         db_column="druh",
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_DRUH},
-        verbose_name=_("Druh objektu"),
+        verbose_name=_("nalez.models.nalezObjekt.druh.label"),
         related_name="objekty_druhu",
     )
     specifikace = models.ForeignKey(
@@ -34,7 +34,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
         models.RESTRICT,
         db_column="specifikace",
         limit_choices_to={"nazev_heslare": HESLAR_OBJEKT_SPECIFIKACE},
-        verbose_name=_("Specifikace objektu"),
+        verbose_name=_("nalez.models.nalezObjekt.specifikace.label"),
         related_name="objekty_specifikace",
         blank=True,
         null=True,
@@ -64,7 +64,7 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         models.RESTRICT,
         db_column="druh",
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_DRUH},
-        verbose_name=_("Druh předmětu"),
+        verbose_name=_("nalez.models.nalezPredmet.druh.label"),
         related_name="predmety_druhu",
     )
     specifikace = models.ForeignKey(
@@ -72,7 +72,7 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
         models.RESTRICT,
         db_column="specifikace",
         limit_choices_to={"nazev_heslare": HESLAR_PREDMET_SPECIFIKACE},
-        verbose_name=_("Specifikace předmětu"),
+        verbose_name=_("nalez.models.nalezPredmet.specifikace.label"),
         related_name="predmety_specifikace",
         blank=True,
         null=True,

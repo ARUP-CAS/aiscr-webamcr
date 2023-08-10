@@ -90,18 +90,18 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
                     _(
-                        "Dokument "
+                        "lokalita.models.lokalita.checkPredArchivaci.dokumentStav.part1")
                         + dc.dokument.ident_cely
-                        + " musí být nejdřív archivován."
+                        + _("lokalita.models.lokalita.checkPredArchivaci.dokumentStav.part2"
                     )
                 )
         for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
             if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
-                        "Dokumentační jednotka "
+                        "lokalita.models.lokalita.checkPredArchivaci.djMaNepotvrzenyPian.part1")
                         + str(dj.ident_cely)
-                        + " má nepotvrzený pian."
+                        + _("lokalita.models.lokalita.checkPredArchivaci.djMaNepotvrzenyPian.part2"
                     )
                 )
         return result
@@ -118,14 +118,14 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
         """
         result = []
         required_fields = [
-            (self.datum_zahajeni, _("Datum zahájení není vyplněn.")),
-            (self.datum_ukonceni, _("Datum ukončení není vyplněn.")),
-            (self.lokalizace_okolnosti, _("Lokalizace okolností není vyplněna.")),
-            (self.specifikace_data, _("Specifikace data není vyplněna.")),
-            (self.organizace, _("Organizace není vyplněna.")),
-            (self.hlavni_typ, _("Hlavní typ není vyplněn.")),
-            (self.hlavni_vedouci, _("Hlavní vedoucí není vyplněn.")),
-            (self.archeologicky_zaznam, _("Hlavní katastr není vyplněn.")),
+            (self.datum_zahajeni, _("lokalita.models.lokalita.checkPredOdeslanim.datumZahajeni")),
+            (self.datum_ukonceni, _("lokalita.models.lokalita.checkPredOdeslanim.datumUkonceni")),
+            (self.lokalizace_okolnosti, _("lokalita.models.lokalita.checkPredOdeslanim.lokalizaceOkolnosti")),
+            (self.specifikace_data, _("lokalita.models.lokalita.checkPredOdeslanim.specifikaceData")),
+            (self.organizace, _("lokalita.models.lokalita.checkPredOdeslanim.organizace")),
+            (self.hlavni_typ, _("lokalita.models.lokalita.checkPredOdeslanim.hlavniTyp")),
+            (self.hlavni_vedouci, _("lokalita.models.lokalita.checkPredOdeslanim.hlavniVedouci")),
+            (self.archeologicky_zaznam, _("lokalita.models.lokalita.checkPredOdeslanim.archeologickyZaznam")),
         ]
         for req_field in required_fields:
             if not req_field[0]:
@@ -141,13 +141,13 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
                 == 0
                 and not self.je_nz
         ):
-            result.append(_("Nemá nálezovou zprávu."))
+            result.append(_("lokalita.models.lokalita.checkPredOdeslanim.nemaNz"))
             logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_nalezovou_zpravu",
                         extra={"archeologicky_zaznam_ident_cely": self.archeologicky_zaznam.ident_cely})
         # Related events must have at least one valid documentation unit (dokumentační jednotka)
         # record associated with it.
         if len(self.archeologicky_zaznam.dokumentacni_jednotky_akce.all()) == 0:
-            result.append(_("Nemá žádnou dokumentační jednotku."))
+            result.append(_("lokalita.models.lokalita.checkPredOdeslanim.nemaDj"))
             logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_dokumentacni_jednotku",
                         extra={"archeologicky_zaznam_ident_cely": self.archeologicky_zaznam.ident_cely})
         for dj in self.archeologicky_zaznam.dokumentacni_jednotky_akce.all():
@@ -155,18 +155,18 @@ class Lokalita(ExportModelOperationsMixin("lokalita"), models.Model):
             # documentation unit must be negative.
             if not dj.negativni_jednotka and len(dj.komponenty.komponenty.all()) == 0:
                 result.append(
-                    _("Pozitivní dokumentační jednotka ")
+                    _("lokalita.models.lokalita.checkPredOdeslanim.pozitivniDjNemaKomponentu.part1")
                     + str(dj.ident_cely)
-                    + _(" nemá zadanou žádnou komponentu.")
+                    + _("lokalita.models.lokalita.checkPredOdeslanim.pozitivniDjNemaKomponentu.part2")
                 )
                 logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_kompunentu_neni_negativni",
                             extra={"dj_ident_cely": dj.ident_cely})
             # Each documentation unit associated with the project event must have a valid PIAN relation.
             if dj.pian is None:
                 result.append(
-                    _("Dokumentační jednotka ")
+                    _("lokalita.models.lokalita.checkPredOdeslanim.djNemaPian.part1")
                     + str(dj.ident_cely)
-                    + _(" nemá zadaný pian.")
+                    + _("lokalita.models.lokalita.checkPredOdeslanim.djNemaPian.part2")
                 )
                 logger.info("lokalita.models.Lokalita.check_pred_odeslanim.nema_pian",
                             extra={"dj_ident_cely": dj.ident_cely})

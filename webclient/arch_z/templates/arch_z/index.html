@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{%trans akce.template.index.Title%}{% endblock %}
+{% block title %}{%trans arch_z.templates.arch_z.index.title%}{% endblock %}
 
 {% block content %}
   <div class="app-entity-akce">
@@ -15,7 +15,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zapsat Samostatnou Akci" %}
+            {% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.label" %}
           </div>
         </a>
       </div>
@@ -25,7 +25,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Vybrat" %}
+            {% trans "arch_z.templates.arch_z.index.cardVybrat.label" %}
           </div>
         </a>
       </div>
@@ -35,7 +35,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Moje Akce" %}
+            {% trans "arch_z.templates.arch_z.index.cardMojeAkce.label" %}
           </div>
         </a>
       </div>
@@ -45,7 +45,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Archivovat" %}
+            {% trans "arch_z.templates.arch_z.index.cardArchivovat.label" %}
           </div>
         </a>
       </div>
@@ -55,34 +55,30 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-zapsat-akce collapse">
       <div class="p-3">
-        <h4>{% trans "Zapsat Samostatnou Akci" %}</h4>
+        <h4>{% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "arch_z.templates.arch_z.index.cardZapsatSamostatnouAkci.text" %}
       </div>
     </div>
     <div class="app-collapse-moje-akce collapse">
       <div class="p-3">
-        <h4>{% trans "Moje Akce" %}</h4>
+        <h4>{% trans "arch_z.templates.arch_z.index.cardMojeAkce.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "arch_z.templates.arch_z.index.cardMojeAkce.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
-        <h4>{% trans "Vybrat" %}</h4>
+        <h4>{% trans "arch_z.templates.arch_z.index.cardVybrat.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "arch_z.templates.arch_z.index.cardVybrat.text" %}
       </div>
     </div>
   <div class="app-collapse-archivovat collapse">
       <div class="p-3">
-        <h4>{% trans "Archivovat" %}</h4>
+        <h4>{% trans "arch_z.templates.arch_z.index.cardArchivovat.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "arch_z.templates.arch_z.index.cardArchivovat.text" %}
       </div>
     </div>
   </div>

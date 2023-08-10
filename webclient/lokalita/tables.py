@@ -50,7 +50,7 @@ class LokalitaTable(SearchTable):
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
     katastr = tables.Column(
-        verbose_name=_("Katastrální území"),
+        verbose_name=_("lokalita.tables.lokalitaTable.katastr.label"),
         default="",
         accessor="archeologicky_zaznam__hlavni_katastr",
     )
@@ -65,17 +65,17 @@ class LokalitaTable(SearchTable):
     )
     jistota = tables.columns.Column(default="", order_by="jistota__nazev_zkraceny")
     uzivatelske_oznaceni = tables.Column(
-        verbose_name=_("Uživatelské označení"),
+        verbose_name=_("lokalita.tables.lokalitaTable.uzivatelskeOznaceni.label"),
         default="",
         accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
     dalsi_katastry = DalsiKatastryColumn(
-        verbose_name=_("Další katastry"),
+        verbose_name=_("lokalita.tables.lokalitaTable.dalsiKatastry.label"),
         default="",
         accessor="archeologicky_zaznam__katastry__all",
     )
     pristupnost = tables.Column(
-        verbose_name=_("Pristupnost"),
+        verbose_name=_("lokalita.tables.lokalitaTable.pristupnost.label"),
         default="",
         accessor="archeologicky_zaznam__pristupnost",
     )

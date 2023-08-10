@@ -1,7 +1,6 @@
 import random
 import string
-from typing import Union
-
+from typing import Union, Optional
 
 from distlib.util import cached_property
 from django.core.validators import MaxValueValidator
@@ -38,13 +37,15 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from heslar.hesla import HESLAR_ORGANIZACE_TYP, HESLAR_PRISTUPNOST
 from heslar.models import Heslar
+from services.notfication_settings import notification_settings
 from uzivatel.managers import CustomUserManager
 from simple_history.models import HistoricalRecords
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
 import logging
 
+from xml_generator.models import ModelWithMetadata, METADATA_UPDATE_TIMEOUT
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                                                 db_table='auth_user_notifikace_typ',
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
                                                 default=only_notification_groups)
-    notification_log = GenericRelation('NotificationsLog')
     created_from_admin_panel = False
 
     USERNAME_FIELD = "email"
@@ -191,13 +191,6 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                 logger.debug("User.save.deactivate_spoluprace", extra={"spoluprace_id": spoluprace.pk})
                 spoluprace.stav = SPOLUPRACE_NEAKTIVNI
                 spoluprace.save()
-
-        if self.is_active:
-            try:
-                self.is_staff = self.hlavni_role.pk == ROLE_ADMIN_ID or self.is_superuser
-            except ValueError:
-                self.is_staff = self.is_superuser
-
         if self.history_vazba is None:
             from historie.models import HistorieVazby
             historie_vazba = HistorieVazby(typ_vazby=UZIVATEL_RELATION_TYPE)
@@ -212,13 +205,32 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                     id__in=([ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID, ROLE_ADMIN_ID])).count() == 0:
             self.groups.add(Group.objects.get(pk=ROLE_BADATEL_ID))
 
+    @property
+    def metadata(self):
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        return connector.get_metadata()
+
+    def save_metadata(self, **kwargs):
+        if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
+            return
+        from cron.tasks import save_record_metadata
+        save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+
+    def record_deletion(self):
+        logger.debug("uzivatel.models.User.delete_repository_container.start")
+        from core.repository_connector import FedoraRepositoryConnector
+        connector = FedoraRepositoryConnector(self)
+        logger.debug("uzivatel.models.User.delete_repository_container.end")
+        return connector.record_deletion()
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"
         verbose_name_plural = "Uživatelé"
 
 
-class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToManyRestrictedClassMixin):
+class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
     Class pro db model organizace.
     """
@@ -257,7 +269,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToM
     nazev_en = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Organizace.nazev_en"),
                                 max_length=255)
     zanikla = models.BooleanField(default=False, verbose_name=_("uzivatel.models.Organizace.zanikla"))
-    ident_cely = models.CharField(max_length=10, unique=True)
+    ident_cely = models.CharField(max_length=20, unique=True)
 
     def save(self, *args, **kwargs):
         """
@@ -288,15 +300,14 @@ class Organizace(ExportModelOperationsMixin("organizace"), models.Model, ManyToM
         ]
 
 
-
-class Osoba(ExportModelOperationsMixin("osoba"), models.Model, ManyToManyRestrictedClassMixin):
+class Osoba(ExportModelOperationsMixin("osoba"), ModelWithMetadata, ManyToManyRestrictedClassMixin):
     """
     Class pro db model osoba.
     """
     jmeno = models.CharField(verbose_name=_("uzivatel.models.Osoba.jmeno"), max_length=100)
     prijmeni = models.CharField(verbose_name=_("uzivatel.models.Osoba.prijmeni"), max_length=100)
     vypis = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis"), max_length=200)
-    vypis_cely = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"), max_length=200)
+    vypis_cely = models.CharField(verbose_name=_("uzivatel.models.Osoba.vypis_cely"), max_length=200, db_index=True)
     rok_narozeni = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_narozeni"))
     rok_umrti = models.IntegerField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rok_umrti"))
     rodne_prijmeni = models.CharField(blank=True, null=True, verbose_name=_("uzivatel.models.Osoba.rodne_prijmeni"),
@@ -336,10 +347,29 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
     Class pro db model typ user notifikace.
     """
     ident_cely = models.TextField(unique=True)
-    zasilat_neaktivnim = models.BooleanField(default=False)
-    predmet = models.TextField()
-    cesta_sablony = models.TextField(blank=True)
-    notification_log = GenericRelation('NotificationsLog')
+
+    def _get_settings_dict(self) -> Optional[dict]:
+        if self.ident_cely in notification_settings:
+            return notification_settings[self.ident_cely]
+        return None
+
+    @property
+    def zasilat_neaktivnim(self) -> Optional[str]:
+        settings_dict = self._get_settings_dict()
+        if settings_dict is not None:
+            return settings_dict.get("zasilat_neaktivnim", False)
+
+    @property
+    def predmet(self) -> Optional[str]:
+        settings_dict = self._get_settings_dict()
+        if settings_dict is not None:
+            return settings_dict.get("predmet", None)
+
+    @property
+    def cesta_sablony(self) -> Optional[str]:
+        settings_dict = self._get_settings_dict()
+        if settings_dict is not None:
+            return settings_dict.get("cesta_sablony", None)
 
     class Meta:
         db_table = "notifikace_typ"
@@ -354,12 +384,8 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
     created_at = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         db_table = "notifikace_log"
-        indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-        ]

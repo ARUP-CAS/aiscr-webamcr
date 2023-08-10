@@ -125,6 +125,8 @@ def copy_data(source_host, destination_host, source_db, destination_db, source_u
             ("*", "externi_odkaz"),
             ("*", "samostatny_nalez"),
             ("*", "uzivatel_spoluprace"),
+            ("*", "auth_user_groups"),
+            ("*", "tvar"),
         )
         table_names = [i[1] for i in tables]
         table_names.reverse()
@@ -215,6 +217,7 @@ def encrypt_passwords(destination_host, destination_db, destination_user, destin
             sha256 = hasher.encode_sha1_hash(sha1_hash, salt)
             destination_cursor.execute(f"update auth_user set password = '{sha256}' where id = {current_hash[0]};")
     destination_conn.commit()
+    print("Passowrds encrypted.")
 
 
 def reset_sequences(destination_host, destination_db, destination_user, destination_password):
@@ -279,6 +282,7 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("history_id", "uzivatel_spoluprace"),
         ("id", "uzivatel_notifikace"),
         ("id", "uzivatel_spoluprace"),
+        ("id", "tvar"),
     )
     for item in tables:
         destination_cursor.execute(f"SELECT SETVAL("
@@ -295,12 +299,13 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
     for item in other_queries:
         destination_cursor.execute(item)
     destination_conn.commit()
+    print("Sequences are set.")
 
 if __name__ == "__main__":
     copy_data(source_host=sys.argv[1], destination_host=sys.argv[2],
               source_db=sys.argv[3], destination_db=sys.argv[4],
               source_user=sys.argv[5], destination_user=sys.argv[6],
-              source_password=sys.argv[7], destination_password=sys.argv[8])
+              source_password=sys.argv[7], destination_password=sys.argv[8], truncate_all=True)
     encrypt_passwords(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],
                       destination_password=sys.argv[8])
     reset_sequences(destination_host=sys.argv[2], destination_db=sys.argv[4], destination_user=sys.argv[6],

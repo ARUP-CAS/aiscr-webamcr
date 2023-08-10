@@ -17,7 +17,7 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
 # Update base container install
-RUN apt-get -qq update
+RUN apt-get -qq update --fix-missing
 
 # Install dependencies
 RUN apt-get -qq -y install cron
@@ -32,9 +32,9 @@ ENV LC_ALL="cs_CZ.utf8"
 RUN echo "alias python=python3" >> ~/.bashrc
 RUN echo "alias pip=pip3" >> ~/.bashrc
 
-COPY ./webclient/webclient/requirements .
+COPY ./webclient/requirements.txt .
 
-RUN pip3 install -r base.txt
+RUN pip3 install -r requirements.txt
 
 RUN mkdir /code
 COPY ./webclient /code

@@ -5,7 +5,7 @@
 {% load export_url from django_tables2 %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Historie" %}{% endblock %}
+{% block title %}{% trans "historie.templates.historieList.title" %}{% endblock %}
 {% block head %}{% endblock %}
 
 {% block content %}
@@ -18,21 +18,21 @@
       <div class="app-left">
         <div class="app-entity-title">
           {% if typ == "projekt" %}
-          <a href="{% url 'projekt:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie projektu" %}</a>
+          <a href="{% url 'projekt:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.projekt.cardHeader" %}</a>
           {% elif typ == "akce" %}
-          <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie akce" %}</a>
+          <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.akce.cardHeader" %}</a>
           {% elif typ == "knihovna_3d" %}
-          <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie modelu" %}</a>
+          <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.model3D.cardHeader" %}</a>
           {% elif typ == "dokument" %}
-          <a href="{% url 'dokument:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie dokumentu" %}</a>
+          <a href="{% url 'dokument:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.dokument.cardHeader" %}</a>
           {% elif typ == "samostatny_nalez" %}
-          <a href="{% url 'pas:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie samostatneho nalezu" %}</a>
+          <a href="{% url 'pas:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.sn.cardHeader" %}</a>
           {% elif typ == "spoluprace" %}
-          <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">dynamic_feed</span>{% trans "Historie spoluprace" %}</a>
+          <a href="{% url 'pas:spoluprace_list' %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.spoluprace.cardHeader" %}</a>
           {% elif typ == "soubor" %}
-          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "Historie souboru" %}</a>
+          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.soubor.cardHeader" %}</a>
           {% elif typ == "uzivatel" %}
-          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "Historie uživatele" %}</a>
+          <a href="/"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.uzivatele.cardHeader" %}</a>
           {% endif %}
         </div>
         <div id="id-app-entity-item" class="app-entity-item">
@@ -46,12 +46,12 @@
     <form method="get">
       <div class="mb-1 d-flex flex-row align-items-center justify-content-between" style="height: 2.875rem;">
         <div class="app-middle text-muted">
-          {% trans "Počet nalezených záznamů: " %}<strong>{{ table.rows|length }}</strong>
+          {% trans "historie.templates.historieList.pocetZaznamu.text" %}<strong>{{ table.rows|length }}</strong>
         </div>
         <div class="app-right">
           <div class="btn-group" role="group">
             <div class="btn-group" role="group">
-              <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Zobrazení sloupců' %}">
+              <button id="btnGroupDropTable" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'historie.templates.historieList.zobrazeniSloupcu.label' %}">
                 <span class="material-icons">table_chart</span>
               </button>
               <div class="dropdown-menu" aria-labelledby="btnGroupDropTable">
@@ -105,13 +105,13 @@
               </div>
             </div>
             <div class="btn-group" role="group">
-              <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'Export výběru (při výběru většího množství záznamů může trvat delší dobu)' %}">
+              <button id="btnGroupDropDownload" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" rel="tooltip" data-placement="top" title="{% trans 'historie.templates.historieList.exportMuzeTrvat.text' %}">
                 <span class="material-icons">download</span>
               </button>
               <div class="dropdown-menu" style="z-index:1500;" aria-labelledby="btnGroupDropDownload">
                 {% for format in export_formats %}
                   <a href="{% export_url format %}" class="dropdown-item">
-                    {% trans "Stáhnout" %} <code>.{{ format }}</code>
+                    {% trans "historie.templates.historieList.stahnout.label" %} <code>.{{ format }}</code>
                   </a>
                 {% endfor %}
               </div>
@@ -121,7 +121,11 @@
       </div>
     </form>
     {% render_table table 'bootstrap4_table.html' %}
-  <button type="button" class="btn btn-secondary" style="width: 55px;" onclick="goBack();">{% trans "Zpět" %}</button>
+    <nav aria-label="Table navigation" class="table-navigation row">
+      <ul class="pagination  jump-page settings col-3">
+  <button type="button" class="btn btn-secondary" style="max-width: fit-content;" onclick="goBack();">{% trans "historie.templates.historieList.zpet.label" %}</button>
+      </ul>
+    </nav>
   </div>
 {% endblock %}
 
