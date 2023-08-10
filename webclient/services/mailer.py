@@ -28,13 +28,12 @@ from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
-groups = {
-    "E-A-01": "S-E-A-XX",
-    "E-A-02": "S-E-A-XX",
-    "E-N-01": "S-E-N-01",
-    "E-N-02": "S-E-N-02",
-    "E-N-05": "S-E-N-05",
-    "E-K-01": "S-E-K-01"
+NOTIFICATION_GROUPS = {
+    "S-E-A-XX": ("E-A-01", "E-A-02"),
+    "S-E-N-01": ("E-N-01", ),
+    "S-E-N-02": ("E-N-02", ),
+    "S-E-N-05": ("E-N-05", ),
+    "S-E-K-01": ("E-K-01", ),
 }
 
 ALWAYS_ACTIVE = [
@@ -76,14 +75,6 @@ class Mailer:
     def _notification_should_be_sent(cls, notification_type: 'uzivatel.models.UserNotificationType',
                                      user: 'uzivatel.models.User'):
         result = False
-        if notification_type.ident_cely in groups.keys():
-            try:
-                group = uzivatel.models.UserNotificationType.objects.get(
-                    ident_cely=groups[notification_type.ident_cely])
-                group_key = group.pk
-            except ObjectDoesNotExist:
-                logger.debug("services.mailer._notification_should_be_sent.group_not_found",
-                             extra={"user": user, "notification_type": notification_type.ident_cely})
         if notification_type.ident_cely in ALWAYS_ACTIVE:
             notification_is_enabled = True
         else:

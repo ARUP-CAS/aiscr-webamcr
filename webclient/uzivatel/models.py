@@ -371,6 +371,11 @@ class UserNotificationType(ExportModelOperationsMixin("user_notification_type"),
         if settings_dict is not None:
             return settings_dict.get("cesta_sablony", None)
 
+    @property
+    def is_groups(self) -> bool:
+        from services.mailer import NOTIFICATION_GROUPS
+        return self.ident_cely in NOTIFICATION_GROUPS.values()
+
     class Meta:
         db_table = "notifikace_typ"
 
