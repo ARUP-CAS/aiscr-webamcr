@@ -2,6 +2,7 @@ import datetime
 from decimal import Decimal
 import logging
 
+from core.constants import OBLAST_CECHY, OBLAST_MORAVA
 from core.ident_cely import get_dokument_rada, get_temporary_project_ident
 from core.models import ProjektSekvence
 from core.tests.runner import (
@@ -72,7 +73,7 @@ class IdentTests(TestCase):
         p = Projekt(
             id=1,
         )
-        region = "M"
+        region = OBLAST_MORAVA
         ident = get_temporary_project_ident(region)
         query = (
         "select lastval()"
@@ -102,7 +103,7 @@ class IdentTests(TestCase):
         p.save()
         p.set_permanent_ident_cely()
         self.assertEqual(p.ident_cely, "C-" + str(year) + "00002")
-        s = ProjektSekvence.objects.filter(rok=year).filter(region="C")[0]
+        s = ProjektSekvence.objects.filter(rok=year).filter(region=OBLAST_CECHY)[0]
         # Over ze se sekvence inkrementla
         self.assertEqual(s.sekvence, 2)
 

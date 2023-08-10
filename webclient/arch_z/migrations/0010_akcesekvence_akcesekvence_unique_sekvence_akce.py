@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 
+from core.constants import OBLAST_CECHY, OBLAST_MORAVA
+
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -24,7 +26,7 @@ class Migration(migrations.Migration):
                 (
                     "region",
                     models.CharField(
-                        choices=[("M", "Morava"), ("C", "Cechy")], max_length=1
+                        choices=[(OBLAST_MORAVA, "Morava"), (OBLAST_CECHY, "Cechy")], max_length=1
                     ),
                 ),
                 ("sekvence", models.IntegerField()),

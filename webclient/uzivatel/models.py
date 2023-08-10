@@ -20,8 +20,8 @@ from core.constants import (
     PROJEKT_STAV_UZAVRENY,
     PROJEKT_STAV_ZAHAJENY_V_TERENU,
     PROJEKT_STAV_ZAPSANY,
-    PROJEKT_STAV_ZRUSENY, SPOLUPRACE_AKTIVNI, SPOLUPRACE_NEAKTIVNI, ZMENA_HLAVNI_ROLE, UZIVATEL_RELATION_TYPE,
-    ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
+    PROJEKT_STAV_ZRUSENY, SPOLUPRACE_NEAKTIVNI, UZIVATEL_RELATION_TYPE,
+    ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT, ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX,
 )
 from core.mixins import ManyToManyRestrictedClassMixin
 from core.validators import validate_phone_number
@@ -249,7 +249,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
     mesicu_do_zverejneni = models.PositiveIntegerField(default=ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT,
                                                        verbose_name=_(
                                                            "uzivatel.models.Organizace.mesicu_do_zverejneni"),
-                                                       validators=[MaxValueValidator(1200)])
+                                                       validators=[MaxValueValidator(ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX)])
     zverejneni_pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -294,7 +294,7 @@ class Organizace(ExportModelOperationsMixin("organizace"), ModelWithMetadata, Ma
         verbose_name_plural = "Organizace"
         constraints = [
             CheckConstraint(
-                check = Q(mesicu_do_zverejneni__lte=1200),
+                check = Q(mesicu_do_zverejneni__lte=ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX),
                 name = "organizace_mesicu_do_zverejneni_max_value_check",
             ),
         ]
