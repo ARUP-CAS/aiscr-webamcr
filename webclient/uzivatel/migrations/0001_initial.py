@@ -12,6 +12,8 @@ import simple_history.models
 import uzivatel.models
 import django.core.validators
 
+from core.constants import ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX
+
 
 class Migration(migrations.Migration):
 
@@ -226,7 +228,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="organizace",
             constraint=models.CheckConstraint(
-                check=models.Q(("mesicu_do_zverejneni__lte", 1200)),
+                check=models.Q(("mesicu_do_zverejneni__lte", ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX)),
                 name="organizace_mesicu_do_zverejneni_max_value_check",
             ),
         ),
