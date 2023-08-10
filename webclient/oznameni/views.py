@@ -6,6 +6,7 @@ from core.constants import (
     PRIDANI_OZNAMOVATELE_PROJ,
     PROJEKT_STAV_ARCHIVOVANY,
     PROJEKT_STAV_VYTVORENY,
+    OBLAST_CECHY,
 )
 from core.ident_cely import get_temporary_project_ident
 from core.message_constants import ZAZNAM_SE_NEPOVEDLO_EDITOVAT, ZAZNAM_USPESNE_EDITOVAN
@@ -110,7 +111,7 @@ def index(request, test_run=False):
             }
 
             context = {"confirm": confirmation}
-            if p.ident_cely[2].upper() == "C":
+            if p.ident_cely[2].upper() == OBLAST_CECHY:
                 Mailer.send_eo01(project=p)
             else:
                 Mailer.send_eo02(project=p)

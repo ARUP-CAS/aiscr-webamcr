@@ -21,7 +21,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, PageBreak, ListFlowable
 from reportlab.pdfbase.pdfmetrics import registerFontFamily
 
-from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
+from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL, \
+    OBLAST_CECHY
 from heslar.models import RuianKraj
 
 logger_s = logging.getLogger(__name__)
@@ -66,7 +67,7 @@ class DocumentCreator(ABC):
 
 class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
-        dok_index = 0 if "C" in self.projekt.ident_cely.upper() else 1
+        dok_index = 0 if OBLAST_CECHY in self.projekt.ident_cely.upper() else 1
         self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
         self.texts["header_line_2"] = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
         # Condition check for automated testing
