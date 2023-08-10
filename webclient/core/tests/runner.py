@@ -22,7 +22,7 @@ from core.constants import (
     ROLE_BADATEL_ID,
     PIAN_RELATION_TYPE, PROJEKT_STAV_OZNAMENY, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_PRIHLASENY,
     PROJEKT_STAV_UKONCENY_V_TERENU, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
-    PROJEKT_STAV_ZRUSENY, AZ_STAV_ARCHIVOVANY, PROJEKT_RELATION_TYPE,
+    PROJEKT_STAV_ZRUSENY, AZ_STAV_ARCHIVOVANY, OBLAST_CECHY, OBLAST_MORAVA,
 )
 from core.models import ProjektSekvence, Soubor, SouborVazby
 from dj.models import DokumentacniJednotka
@@ -176,8 +176,8 @@ class AMCRBaseTestRunner(BaseRunner):
         sekvence_roku = [2020, 2021, 2022, 2023, 2024, 2025]
         projektove_sekvence = []
         for rok in sekvence_roku:
-            projektove_sekvence.append(ProjektSekvence(region="C", rok=rok, sekvence=1))
-            projektove_sekvence.append(ProjektSekvence(region="M", rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region=OBLAST_CECHY, rok=rok, sekvence=1))
+            projektove_sekvence.append(ProjektSekvence(region=OBLAST_MORAVA, rok=rok, sekvence=1))
         ProjektSekvence.objects.bulk_create(projektove_sekvence)
 
         user_notifications = (
@@ -382,10 +382,10 @@ class AMCRBaseTestRunner(BaseRunner):
                heslo_en="en_31").save()
         Heslar(id=LOKALITA_TYP, nazev_heslare=hlt, zkratka="L", ident_cely="XXX29", heslo="cz_32",
                heslo_en="en_32").save()
-        Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka="M", ident_cely="XXX30", heslo="cz_33",
+        Heslar(id=LOKALITA_TYP_NEW, nazev_heslare=hlt, zkratka=OBLAST_MORAVA, ident_cely="XXX30", heslo="cz_33",
                heslo_en="en_33").save()
         Heslar(id=EZ_TYP, nazev_heslare=hezt, zkratka="K", heslo="kniha", ident_cely="XXX31", heslo_en="en_34").save()
-        Heslar(id=EZ_TYP_NEW, nazev_heslare=hezt, zkratka="C", heslo="casopis", ident_cely="XXX32", heslo_en="en_35")\
+        Heslar(id=EZ_TYP_NEW, nazev_heslare=hezt, zkratka=OBLAST_CECHY, heslo="casopis", ident_cely="XXX32", heslo_en="en_35")\
             .save()
 
         kl10 = Kladyzm(
@@ -844,8 +844,8 @@ class AMCGithubTestRunner(AMCRBaseTestRunner):
         return temp_return
 
     def save_geographical_data(self):
-        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id="C", kod=1, nazev_en="Praha")
-        kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id="C", kod=2, nazev_en="Brno")
+        kraj_praha = RuianKraj(id=84, nazev="Hlavní město Praha", rada_id=OBLAST_CECHY, kod=1, nazev_en="Praha")
+        kraj_brno = RuianKraj(id=85, nazev="Jihomoravský kraj", rada_id=OBLAST_CECHY, kod=2, nazev_en="Brno")
         okres_praha = RuianOkres(
             id=162, nazev="Praha", kraj=kraj_brno, spz="1", kod=3,
             definicni_bod=GEOSGeometry(

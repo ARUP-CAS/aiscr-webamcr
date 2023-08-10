@@ -42,7 +42,7 @@ from core.message_constants import (
 )
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
-from uzivatel.models import Osoba, User
+from uzivatel.models import Osoba, User, UserNotificationType
 
 logger = logging.getLogger(__name__)
 
@@ -272,11 +272,24 @@ def update_notifications(request):
     """
     Funkce pohledu pro editaci notifikací.
     """
+    from services.mailer import NOTIFICATION_GROUPS
     form = NotificationsForm(request.POST)
     if form.is_valid():
         notifications = form.cleaned_data.get('notification_types')
         user: User = request.user
-        user.notification_types.set(notifications)
+        notification_group_idents = [x.ident_cely for x in notifications.all()]
+        for group_ident, current_group_notification_idents in NOTIFICATION_GROUPS.items():
+            group_obj = UserNotificationType.objects.get(ident_cely=group_ident)
+            if group_ident in notification_group_idents:
+                user.notification_types.add(group_obj)
+            else:
+                user.notification_types.remove(group_obj)
+            for current_inner_ident in current_group_notification_idents:
+                type_obj = UserNotificationType.objects.get(ident_cely=current_inner_ident)
+                if group_ident in notification_group_idents:
+                    user.notification_types.add(type_obj)
+                else:
+                    user.notification_types.remove(type_obj)
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.update_notifications.post.success"))
         user.save_metadata()
