@@ -35,7 +35,7 @@ from core.constants import (
     VRACENI_NAVRHU_ZRUSENI,
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
-    ZAPSANI_PROJ,
+    ZAPSANI_PROJ, OBLAST_CECHY,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -284,7 +284,7 @@ def create(request):
                 if projekt.should_generate_confirmation_document:
                     projekt.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                if projekt.ident_cely[0] == "C":
+                if projekt.ident_cely[0] == OBLAST_CECHY:
                     Mailer.send_ep01a(project=projekt)
                 else:
                     Mailer.send_ep01b(project=projekt)
@@ -511,7 +511,7 @@ def schvalit(request, ident_cely):
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_SCHVALEN)
-        if projekt.ident_cely[0] == "C":
+        if projekt.ident_cely[0] == OBLAST_CECHY:
             Mailer.send_ep01a(project=projekt)
         else:
             Mailer.send_ep01b(project=projekt)
@@ -558,7 +558,7 @@ def prihlasit(request, ident_cely):
             projekt = form.save(commit=False)
             projekt.set_prihlaseny(request.user)
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_PRIHLASEN)
-            if projekt.ident_cely[0] == "C":
+            if projekt.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep03a(project=projekt)
             else:
                 Mailer.send_ep03b(project=projekt)
@@ -930,7 +930,7 @@ def zrusit(request, ident_cely):
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_ZRUSEN)
             Mailer.send_ep04(project=projekt, reason=duvod)
-            if projekt.ident_cely[0] == "C":
+            if projekt.ident_cely[0] == OBLAST_CECHY:
                 Mailer.send_ep06a(project=projekt, reason=duvod)
             else:
                 Mailer.send_ep06b(project=projekt, reason=duvod)
@@ -1097,7 +1097,7 @@ def generovat_oznameni(request, ident_cely):
     """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     projekt.create_confirmation_document(additional=True, user=request.user)
-    if projekt.ident_cely[0] == "C":
+    if projekt.ident_cely[0] == OBLAST_CECHY:
         Mailer.send_ep01a(project=projekt)
     else:
         Mailer.send_ep01b(project=projekt)
@@ -1111,7 +1111,7 @@ class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
         ident_cely = kwargs['ident_cely']
         projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
         projekt.create_confirmation_document(additional=True, user=self.request.user)
-        if projekt.ident_cely[0] == "C":
+        if projekt.ident_cely[0] == OBLAST_CECHY:
             Mailer.send_ep01a(project=projekt)
         else:
             Mailer.send_ep01b(project=projekt)

@@ -4,6 +4,7 @@
 {% load crispy_forms_tags %}
 {% load render_table from django_tables2 %}
 {% load export_url from django_tables2 %}
+{% load template_filters %}
 
 {% block title %}{{ page_title }}{% endblock %}
 {% block head %}{% endblock %}
@@ -213,8 +214,8 @@ $('#soubor-modal').on('show.bs.modal', function (event) {
 {% block script2 %}
 <script>
   $(document).ready(function () { 
-      const STAV_JEDEN = '1' //STAV_ZAPSANY_PROJEKT
-      const STAV_DVA = '2' //STAV_OZNAMENY a AZ_STAV_ODESLANY
+      const STAV_JEDEN = '{% get_value_from_heslar "projekt_stav" "zapsany" %}'
+      const STAV_DVA = '{% get_value_from_heslar "az_stav" "odeslany" %}'
       setPageHeader();
 
       function setHeader(header) {

@@ -25,7 +25,7 @@ from core.constants import (
     D_STAV_ZAPSANY,
     ODESLANI_DOK,
     VRACENI_DOK,
-    ZAPSANI_DOK,
+    ZAPSANI_DOK, OBLAST_CECHY, OBLAST_MORAVA,
 )
 from core.exceptions import UnexpectedDataRelations, MaximalIdentNumberError
 from core.models import SouborVazby, ModelWithMetadata, Soubor
@@ -618,7 +618,7 @@ class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.M
     Class pro db model dokument sekvence. Obsahuje sekvenci po roku a řade.
     """
     rada = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_DOKUMENT_RADA},)
-    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    region = models.CharField(max_length=1, choices=[(OBLAST_MORAVA, "Morava"), (OBLAST_CECHY, "Cechy")])
     rok = models.IntegerField()
     sekvence = models.IntegerField()
 

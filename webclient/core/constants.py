@@ -171,3 +171,4 @@ DOC_KOMU = (_("core.constants.dok.komu_praha"), _("core.constants.dok.komu_brno"
 DOC_REDITEL = (_("core.constants.dok.reditel_praha"), _("core.constants.dok.reditel_brno"))
 
 ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT = 36
+ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX = 1200

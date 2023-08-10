@@ -15,7 +15,7 @@ from core.constants import (
     ODESLANI_AZ,
     PIAN_POTVRZEN,
     VRACENI_AZ,
-    ZAPSANI_AZ,
+    ZAPSANI_AZ, OBLAST_CECHY, OBLAST_MORAVA,
 )
 from django.db import models
 from django.utils.translation import gettext as _
@@ -564,7 +564,7 @@ class LokalitaSekvence(models.Model):
     Model pro tabulku se sekvencemi lokalit.
     """
     typ = models.ForeignKey(Heslar,models.RESTRICT,limit_choices_to={"nazev_heslare": HESLAR_LOKALITA_TYP},)
-    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    region = models.CharField(max_length=1, choices=[(OBLAST_MORAVA, "Morava"), (OBLAST_CECHY, "Cechy")])
     sekvence = models.IntegerField()
 
     class Meta:
@@ -577,7 +577,7 @@ class AkceSekvence(models.Model):
     """
     Model pro tabulku se sekvencemi akcií.
     """
-    region = models.CharField(max_length=1,choices=[("M","Morava"),("C","Cechy")])
+    region = models.CharField(max_length=1, choices=[(OBLAST_MORAVA, "Morava"), (OBLAST_CECHY, "Cechy")])
     sekvence = models.IntegerField()
 
     class Meta:
