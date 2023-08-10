@@ -19,7 +19,7 @@ from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
 from oznameni import views as oznameni_views
-from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView
+from uzivatel.views import UserRegistrationView, UserLoginView, UserLogoutView, UserActivationView, UserPasswordResetView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -65,16 +65,18 @@ urlpatterns = [
         name="logout",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("accounts/password_reset", UserPasswordResetView.as_view(), name="password_reset"),
     path("arch-z/lokalita/", include("lokalita.urls")),
     path("ext-zdroj/", include("ez.urls")),
     path("neident-akce/", include("neidentakce.urls")),
-    path("watchdog/",  include("watchdog.urls")),
-    path("select2/", include("django_select2.urls"))
+    path("notifikace_projekty/",  include("notifikace_projekty.urls")),
+    path('', include('django_prometheus.urls')),
 ]
+urlpatterns+=[re_path(r'^healthcheck/', include("healthcheck.urls"))]
+
 if "rosetta" in settings.INSTALLED_APPS:
     urlpatterns += [re_path(r"^rosetta/", include("rosetta.urls"))]
 
-# if settings.DEBUG:
-#     import debug_toolbar
-#
-#     urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]

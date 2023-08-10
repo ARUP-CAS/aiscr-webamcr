@@ -1,6 +1,6 @@
 import datetime
 import logging
-import structlog
+
 
 from django import template
 from psycopg2._range import DateRange
@@ -12,12 +12,11 @@ from django.utils.translation import gettext_lazy as _
 from uzivatel.models import Osoba
 from dokument.models import DokumentAutor
 from ez.models import ExterniZdrojAutor, ExterniZdrojEditor
-from heslar import hesla
+from heslar import hesla_dynamicka
 
 register = template.Library()
 
 logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
 
 
 @register.filter
@@ -111,9 +110,9 @@ def get_katastr_name(value):
 @register.filter
 def true_false(value):
     if value and value == True:
-        return _("Ano")
+        return _("core.template_filters.true_false.true.label")
     else:
-        return _("Ne")
+        return _("core.template_filters.true_false.false.label")
 
 
 @register.filter
@@ -160,11 +159,11 @@ def get_osoby_name(widget):
 @register.simple_tag
 def get_value_from_heslar(nazev_heslare, hodnota):
     values = {
-        ("externi_zdroj_typ", "kniha"): hesla.EXTERNI_ZDROJ_TYP_KNIHA,
-        ("externi_zdroj_typ", "cast_knihy"): hesla.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
-        ("externi_zdroj_typ", "clanek_v_casopise"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
-        ("externi_zdroj_typ", "clanek_v_novinach"): hesla.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
-        ("externi_zdroj_typ", "nepublikovana_zprava"): hesla.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
+        ("externi_zdroj_typ", "kniha"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_KNIHA,
+        ("externi_zdroj_typ", "cast_knihy"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CAST_KNIHY,
+        ("externi_zdroj_typ", "clanek_v_casopise"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CLANEK_V_CASOPISE,
+        ("externi_zdroj_typ", "clanek_v_novinach"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_CLANEK_V_NOVINACH,
+        ("externi_zdroj_typ", "nepublikovana_zprava"): hesla_dynamicka.EXTERNI_ZDROJ_TYP_NEPUBLIKOVANA_ZPRAVA,
         ("projekt_stav", "oznameny"): constants.PROJEKT_STAV_OZNAMENY,
         ("projekt_stav", "zapsany"): constants.PROJEKT_STAV_ZAPSANY,
         ("projekt_stav", "prihlaseny"): constants.PROJEKT_STAV_PRIHLASENY,
@@ -178,5 +177,6 @@ def get_value_from_heslar(nazev_heslare, hodnota):
     if (nazev_heslare, hodnota) in values:
         return values[(nazev_heslare, hodnota)]
     else:
-        logger_s.error("template_filters.get_value_from_heslar.error", nazev_heslare=nazev_heslare, hodnota=hodnota)
+        logger.error("template_filters.get_value_from_heslar.error",
+                     extra={"nazev_heslare": nazev_heslare, "hodnota": hodnota})
         return ""

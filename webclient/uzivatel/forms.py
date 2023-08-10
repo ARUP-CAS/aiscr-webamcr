@@ -2,18 +2,22 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout, Field
 from crispy_forms.bootstrap import AppendedText
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserChangeForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.password_validation import validate_password
 from django.forms import PasswordInput
 from django.utils.translation import gettext_lazy as _
 from django_registration.forms import RegistrationForm
 from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
 
 from core.widgets import ForeignKeyReadOnlyTextInput
 from .models import Osoba, User, UserNotificationType
 
 
 class AuthUserCreationForm(RegistrationForm):
+    """
+    Formulář pro vytvoření uživatele.
+    """
     class Meta(RegistrationForm):
         model = User
         fields = (
@@ -60,8 +64,8 @@ class AuthUserCreationForm(RegistrationForm):
             Field("email"),
             Field("telefon"),
             Field("organizace"),
-            AppendedText('password1', '<i class="bi bi-eye-slash" id="togglePassword1"></i>'),
-            AppendedText('password2', '<i class="bi bi-eye-slash" id="togglePassword2"></i>'),
+            AppendedText('password1', mark_safe('<i class="bi bi-eye-slash" id="togglePassword1"></i>'),input_size="input-group-sm"),
+            AppendedText('password2', mark_safe('<i class="bi bi-eye-slash" id="togglePassword2"></i>'),input_size="input-group-sm"),
         )
         for key in self.fields.keys():
             if isinstance(self.fields[key].widget, forms.widgets.Select):
@@ -69,6 +73,9 @@ class AuthUserCreationForm(RegistrationForm):
 
 
 class AuthUserChangeForm(forms.ModelForm):
+    """
+    Formulář pro editaci uživatele.
+    """
     class Meta:
         model = User
         fields = ("telefon",)
@@ -93,6 +100,9 @@ class AuthUserChangeForm(forms.ModelForm):
 
 
 class AuthReadOnlyUserChangeForm(forms.ModelForm):
+    """
+    Formulář pro zobrazení detailu uživatele.
+    """
     hlavni_role = forms.CharField(widget=ForeignKeyReadOnlyTextInput())
 
     class Meta:
@@ -144,10 +154,14 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
 
 
 class NotificationsForm(forms.ModelForm):
+    """
+    Formulář pro správu typu notifikací.
+    """
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(ident_cely__icontains='S-E-'),
         widget=forms.CheckboxSelectMultiple,
         required=False, label=_("uzivatel.form.notifications_form.notification_types.notification_types_label"))
+
     class Meta:
         model = User
         fields = ('notification_types',)
@@ -156,6 +170,9 @@ class NotificationsForm(forms.ModelForm):
         }
 
 class UpdatePasswordSettings(forms.ModelForm):
+    """
+    Formulář pro změnu hesla.
+    """
     password1 = forms.CharField(required=False, widget=PasswordInput())
     password2 = forms.CharField(required=False, widget=PasswordInput())
 
@@ -194,13 +211,18 @@ class UpdatePasswordSettings(forms.ModelForm):
 
 
 class AuthUserLoginForm(AuthenticationForm):
+    """
+    Formulář pro prihlášení uživatele.
+    """
     def __init__(self, *args, **kwargs):
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
+        self.fields["username"].help_text= _("uzivatel.form.login.username.tooltip")
+        self.fields["password"].help_text= _("uzivatel.form.login.password.tooltip")
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Field("username"),
-            AppendedText('password', '<i class="bi bi-eye-slash" id="togglePassword"></i>'),
+            AppendedText("password", mark_safe('<i class="bi bi-eye-slash" id="togglePassword"> </i>'),input_size="input-group-sm"),
         )
 
     def get_invalid_login_error(self):
@@ -209,8 +231,17 @@ class AuthUserLoginForm(AuthenticationForm):
             code="invalid_login",
         )
 
+class UserPasswordResetForm(PasswordResetForm):
+    def __init__(self, *args, **kwargs):
+        super(UserPasswordResetForm, self).__init__(*args, **kwargs)
+        self.fields["email"].help_text= _("uzivatel.form.passwordReset.email.tooltip")
+
+
 
 class OsobaForm(forms.ModelForm):
+    """
+    Formulář pro vytvoření osoby.
+    """
     class Meta:
         model = Osoba
         fields = (

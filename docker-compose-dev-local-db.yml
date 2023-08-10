@@ -16,11 +16,13 @@ services:
     secrets:
       - db_conf
       - mail_conf
+      - redis_pass
     restart: on-failure
     volumes:
       - ./webclient:/code
       - ./vol/web:/vol/web
       - locale_data:/vol/web/locale
+      - logs_volume:/run/logs
     ports:
       - "8000:8000"
       - "5678:5678"
@@ -30,7 +32,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  
+      redis:
+        condition: service_started
+
   livereload:
     build:
       context: .
@@ -56,6 +60,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-DB
+      args:
+        DB_BACKUP_FILE: backup_file_db_v4.tar
     ports:
       - "5432:5432"
     secrets:
@@ -64,36 +70,66 @@ services:
       - DBNAME=aiscrrestore
       - POSTGRES_PASSWORD_FILE=/run/secrets/local_db_pass
     volumes:
-     - db_dev_data:/var/lib/postgresql/data
+      - db_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: ./healthcheck.sh
       retries: 30
       interval: '10s'
 
-  pgadmin:
-    image: dpage/pgadmin4
-    secrets:
-      - pg_admin_pass
+  redis:
+    build: ./redis
+    image: redis:7
     ports:
-      - 88:80
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.net
-      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/pg_admin_pass
+      - "6379:6379"
+    secrets:
+      - redis_pass
+    command: sh -c 'redis-server /home/redis/redis.conf'
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient worker -l INFO
+    secrets:
+      - db_conf
+      - redis_pass
     volumes:
-      - pg_admin_vol:/var/lib/pgadmin/
+      - ./webclient:/code
+      - ./vol/web:/vol/web
     depends_on:
+      redis:
+        condition: service_started
       db:
         condition: service_healthy
+      web:
+        condition: service_started
 
-  memcached:
-    image: memcached:latest
-    ports:
-      - "11211:11211"
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile-DEV
+    command: celery -A webclient beat -l INFO
+    secrets:
+      - db_conf
+      - redis_pass
+    volumes:
+      - ./webclient:/code
+      - ./vol/web:/vol/web
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
 
 volumes:
   locale_data:
   pg_admin_vol:
   db_dev_data:
+  logs_volume:
+  elasticsearch_volume:
+  grafana_data:
 
 secrets:
   pg_admin_pass:
@@ -108,3 +144,10 @@ secrets:
   mail_conf:
     # PLEASE CHECK and UPDATE path accordingly to a file containing configuration for web container specifying mailtrap setting (doesn't need to be repo root)
     file: ./secrets_mail_client.json
+  redis_pass:
+    # PLEASE CHECK and UPDATE path accordingly to a secret setting pg_admin web client password ) - local dev machine
+    file: ./secrets/redis_pass.txt
+    # production environment
+    # external: true
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt

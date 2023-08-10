@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}Dokumenty{% endblock %}
+{% block title %}{% trans "dokument.templates.indexDokument.Dokument.title" %}{% endblock %}
 
 {% block content %}
   <div class="app-entity-dokument">
@@ -15,17 +15,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zapsat doument" %}
-          </div>
-        </a>
-      </div>
-      <div class="col">
-        <a href="{% url 'dokument:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-modely">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "Moje dokumenty" %}
+            {% trans "dokument.templates.indexDokument.cardZapsat.label" %}
           </div>
         </a>
       </div>
@@ -35,7 +25,17 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Vybrat" %}
+            {% trans "dokument.templates.indexDokument.cardVybrat.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'dokument:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-modely">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "dokument.templates.indexDokument.cardMojeDokumenty.label" %}
           </div>
         </a>
       </div>
@@ -45,7 +45,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Archivovat" %}
+            {% trans "dokument.templates.indexDokument.cardArchivovat.label" %}
           </div>
         </a>
       </div>
@@ -55,31 +55,31 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-zapsat-model collapse">
       <div class="p-3">
-        <h4>{% trans "Zapsat dokument" %}</h4>
+        <h4>{% trans "dokument.templates.indexDokument.cardZapsat.text.title" %}</h4>
         <hr />
-        {% trans "dokumenty.index.zapsat.text" %}
+        {% trans "dokument.templates.indexDokument.cardZapsat.text" %}
       </div>
     </div>
     <div class="app-collapse-moje-modely collapse">
       <div class="p-3">
-        <h4>{% trans "Moje dokumenty" %}</h4>
+        <h4>{% trans "dokument.templates.indexDokument.cardMojeDokumenty.text.title" %}</h4>
         <hr />
-        {% trans "dokumenty.index.mojeDokumenty.text" %}
+        {% trans "dokument.templates.indexDokument.cardMojeDokumenty.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
-        <h4>{% trans "Vybrat" %}</h4>
+        <h4>{% trans "dokument.templates.indexDokument.cardVybrat.text.title" %}</h4>
         <hr />
-        {% trans "dokumenty.index.vybrat.text" %}
+        {% trans "dokument.templates.indexDokument.cardVybrat.text" %}
       </div>
     </div>
-  </div>
-  <div class="app-collapse-archivovat collapse">
-    <div class="p-3">
-      <h4>{% trans "Archivovat" %}</h4>
-      <hr />
-      {% trans "dokumenty.index.archivovat.text" %}
+    <div class="app-collapse-archivovat collapse">
+      <div class="p-3">
+        <h4>{% trans "dokument.templates.indexDokument.cardArchivovat.text.title" %}</h4>
+        <hr />
+        {% trans "dokument.templates.indexDokument.cardArchivovat.text" %}
+      </div>
     </div>
   </div>
 

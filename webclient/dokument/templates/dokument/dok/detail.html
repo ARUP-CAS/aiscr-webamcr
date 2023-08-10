@@ -4,7 +4,7 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
-{% block title %}{% trans "Detail dokumentu" %}{% endblock %}
+{% block title %}{% trans "dokument.templates.dok.detail.title" %}{% endblock %}
 {% block head %}
   <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
 {% endblock %}
@@ -18,14 +18,14 @@
     <div class="card app-card-form app-table-list-container">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Soubory" %}
+          {% trans "dokument.templates.dok.detail.soubory.cardHeader" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
                rel="tooltip"
-               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+               data-placement="top" title="{% trans 'dokument.templates.dok.detail.soubory.NahratSoubory.tooltip' %}">
               <span class="material-icons">publish</span>
             </a>
           </div>
@@ -38,7 +38,7 @@
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
-            {% trans "Dokument zatím neobsahuje žádné soubory." %}
+            {% trans "dokument.templates.dok.detail.soubory.DokbezSouboru.text" %}
           </div>
         {% endif %}
       </div>
@@ -47,13 +47,13 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Detail" %}
+          {% trans "dokument.templates.dok.detail.dokument.cardHeader" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'dokument:edit' dokument.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
+               data-placement="top" title="{% trans 'dokument.templates.dok.detail.dokument.upravit.tooltip' %}">
               <span class="material-icons">edit</span>
             </a>
           </div>
@@ -73,7 +73,7 @@
           {% crispy form_dokument %}
 
         <div css_class="col-sm-12">
-                <span class="app-divider-label">{% trans "Rozšiřující popis" %}</span>
+                <span class="app-divider-label">{% trans "dokument.templates.dok.detail.dokument.divider.RozsirujuciPopis.text" %}</span>
                 <hr class="mt-0" />
         </div>
         <div>
@@ -87,14 +87,14 @@
         <div class="card app-card-form app-card-casti-dokumentu">
           <div id="karta-casti-dokumentu" class="card-header">
             <div class="app-fx app-left">
-              {% trans "Části dokumentu" %}
+              {% trans "dokument.templates.dok.detail.castiDokumentu.cardHeader" %}
             </div>
             {% if show.editovat %}
             <div class="app-fx app-right">
               <div class="btn-group" role="group">
                 <button id="button-add-cast" class="btn" href="{% url 'dokument:vytvorit-cast' dokument.ident_cely %}"
                 rel="tooltip" data-placement="top"
-                title="{% trans 'Přidat dokumentační část' %}">
+                title="{% trans 'dokument.templates.dok.detail.castiDokumentu.pridatDC.tooltip' %}">
                 <span class="material-icons">add</span>
                 </button>
               </div>
@@ -148,7 +148,7 @@
                 {% empty %}
                   <div class="app-note">
                     <span class="material-icons">info</span>
-                    {% trans "Dokument nemá žádné části dokumentu." %}
+                    {% trans "dokument.templates.dok.detail.castiDokumentu.DokumentBezDC.text" %}
                   </div>
               {% endfor %}
             </ul>
@@ -166,7 +166,7 @@
     <div class="card app-card-form" id="tvary">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Tvary" %}
+          {% trans "dokument.templates.dok.detail.tvary.cardHeader" %}
         </div>
       </div>
       <div class="card-body formset-table">
@@ -175,14 +175,14 @@
             {% crispy form_tvary tvary_helper %}
             {% if show.editovat %}
           <button type="submit" id="editTvarSubmitButton"
-                  class="btn btn-primary">{% trans "document.detail.tvary.button" %}
+                  class="btn btn-primary">{% trans "dokument.templates.dok.detail.tvary.submitButtonText" %}
           </button>
           {% endif %}
         </form>
         {% else %}
         <div class="app-note">
           <span class="material-icons">info</span>
-          {% trans "Dokument neobsahuje žádné tvary." %}
+          {% trans "dokument.templates.dok.detail.tvary.DokumentBezTvarov.text" %}
         </div>
         {% endif %}
       </div>
@@ -196,7 +196,7 @@
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
     if ("{{show.odeslat_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'dokument:odeslat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
       formID: "odeslat-dokument-form",
       modalFormID: "#odeslat-dokument-form",
@@ -204,7 +204,7 @@
     odeslat_akci_modal = new Modal(options, "dokument-odeslat");
     };
     if ("{{show.vratit_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'dokument:vratit' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
       formID: "vratit-dokument-form",
       modalFormID: "#vratit-dokument-form",
@@ -212,14 +212,14 @@
     vratit_akci_modal = new Modal(options, "dokument-vratit");
     }
     if ("{{show.archivovat_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'dokument:archivovat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
         formID: "archivovat-dokument-form",
         modalFormID: "#archivovat-dokument-form",
       })
     archivovat_akci_modal = new Modal(options, "dokument-archivovat");
     }
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'dokument:smazat' dokument.ident_cely %}?sent_stav={{dokument.stav}}",
       formID: "smazat-dokument-form",
       modalFormID: "#smazat-dokument-form",
@@ -228,7 +228,7 @@
     if (document.getElementsByClassName("tvar-smazat-btn")){
       elements = document.getElementsByClassName("tvar-smazat-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "smazat-tvar-form",
         modalFormID: "#smazat-tvar-form",
         })
@@ -236,7 +236,7 @@
       }
     }
     if ("{{show.editovat}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "vytvor-cast-form",
         modalFormID: "#vytvor-cast-form",
       })
@@ -251,9 +251,9 @@
     var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
     return v ? v[2] : null;
   }
-  const akce_back = "{% trans 'document.detail.back.akce.title' %}"
-  const lokalita_back = "{% trans 'document.detail.back.lokalita.title' %}"
-  const projekt_back = "{% trans 'document.detail.back.projekt.title' %}"
+  const akce_back = "{% trans 'dokument.templates.dok.detail.back.akce.title' %}"
+  const lokalita_back = "{% trans 'dokument.templates.dok.detail.back.lokalita.title' %}"
+  const projekt_back = "{% trans 'dokument.templates.dok.detail.back.projekt.title' %}"
   document.addEventListener('DOMContentLoaded', function (event) {
     let back = document.getElementById("document-back")
     if (back){

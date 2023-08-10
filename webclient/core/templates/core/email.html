@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load template_tags %}
 <!doctype html>
 <html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
@@ -12,9 +13,9 @@
 <p>
     ------------------------------
     <br>
-    {% trans "paticka.toto_je_automaticky_generovaná_zpráva_systému_amčr_v_případě_potřeby_kontaktujte_administrátora_arú_praha_amcr@arup_cas_cz_nebo_arú_brno_amcr@arub_cz" %}.
+    {% trans "core.templates.email.paticka.text" %}.
     <br>
-    {% trans "paticka.odesláno_z" %}: {{ server_domain }}
+    {% trans "core.templates.email.paticka.odesláno_z" %}: {% get_server_domain %}
 </p>
 </body>
 </html>

@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}Modely{% endblock %}
+{% block title %}{% trans "dokument.templates.indexModel3D.Model.title" %}{% endblock %}
 
 {% block content %}
   <div class="app-entity-knihovna_3d">
@@ -15,17 +15,7 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Zapsat model" %}
-          </div>
-        </a>
-      </div>
-      <div class="col">
-        <a href="{% url 'dokument:list-model-3D' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-modely">
-          <div class="card-body">
-            <img src="{% static 'logo-am-mark.png' %}" />
-          </div>
-          <div class="card-footer">
-            {% trans "Moje modely" %}
+            {% trans "dokument.templates.indexModel3D.cardZapsat.label" %}
           </div>
         </a>
       </div>
@@ -35,7 +25,27 @@
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
           <div class="card-footer">
-            {% trans "Vybrat" %}
+            {% trans "dokument.templates.indexModel3D.cardVybrat.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'dokument:list-model-3D' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-modely">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "dokument.templates.indexModel3D.cardMojeModely.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'dokument:list-model-3D' %}?stav=2" class="card app-card-entity app-card-archivovat">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "dokument.templates.indexModel3D.cardArchivovat.label" %}
           </div>
         </a>
       </div>
@@ -45,26 +55,30 @@
   <div class="app-card-desc-wrapper">
     <div class="app-collapse-zapsat-model collapse">
       <div class="p-3">
-        <h4>{% trans "Zapsat model" %}</h4>
+        <h4>{% trans "dokument.templates.indexModel3D.cardZapsat.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "dokument.templates.indexModel3D.cardZapsat.text" %}
       </div>
     </div>
     <div class="app-collapse-moje-modely collapse">
       <div class="p-3">
-        <h4>{% trans "Moje modely" %}</h4>
+        <h4>{% trans "dokument.templates.indexModel3D.cardMojeModely.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "dokument.templates.indexModel3D.cardMojeModely.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
       <div class="p-3">
-        <h4>{% trans "Vybrat" %}</h4>
+        <h4>{% trans "dokument.templates.indexModel3D.cardVybrat.text.title" %}</h4>
         <hr />
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
-        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident.
+        {% trans "dokument.templates.indexModel3D.cardVybrat.text" %}
+      </div>
+    </div>
+    <div class="app-collapse-archivovat collapse">
+      <div class="p-3">
+        <h4>{% trans "dokument.templates.indexModel3D.cardArchivovat.text.title" %}</h4>
+        <hr />
+        {% trans "dokument.templates.indexModel3D.cardArchivovat.text" %}
       </div>
     </div>
   </div>
@@ -88,6 +102,12 @@
     });
     $(".app-card-vybrat").mouseover(function(){
       $(".app-collapse-vybrat").show(100);
+    });
+    $(".app-card-archivovat").mouseleave(function(){
+      $(".app-collapse-archivovat").hide(100);
+    });
+    $(".app-card-archivovat").mouseover(function(){
+      $(".app-collapse-archivovat").show(100);
     });
 </script>
 {% endblock %}

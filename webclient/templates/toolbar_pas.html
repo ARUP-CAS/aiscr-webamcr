@@ -41,6 +41,7 @@
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="pas-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat Nalez" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'samostatny_nalez' sn.id %}">{% trans "samostatny_nalez.detail.toolbar.MetadataDownload" %}</a>
           <a class="dropdown-item" href="{% url 'historie:pas' sn.ident_cely %}">{% trans "Historie" %}</a>
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "pas.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>

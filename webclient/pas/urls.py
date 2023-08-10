@@ -22,6 +22,7 @@ urlpatterns = [
         "spoluprace/vyber", UzivatelSpolupraceListView.as_view(), name="spoluprace_list"
     ),
     path("spoluprace/aktivace/<int:pk>", views.aktivace, name="spoluprace_aktivace"),
+    path("spoluprace/aktivace-email/<int:pk>", views.AktivaceEmailView.as_view(), name="spoluprace_aktivace_email"),
     path(
         "spoluprace/deaktivace/<int:pk>", views.deaktivace, name="spoluprace_deaktivace"
     ),

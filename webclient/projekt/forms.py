@@ -1,5 +1,7 @@
+import logging
+
 from django.urls import reverse
-import structlog
+
 from crispy_forms.bootstrap import FormActions, AppendedText
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Div, Layout, Submit
@@ -8,16 +10,20 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import HiddenInput
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 
 from arch_z import validators
 from oznameni.forms import DateRangeField, DateRangeWidget
 from projekt.models import Projekt
 from core.constants import PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_ZAHAJENY_V_TERENU, PROJEKT_STAV_ZRUSENY
-from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID
 
-logger_s = structlog.get_logger(__name__)
+logger_s = logging.getLogger(__name__)
 
 class CreateProjektForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření projektu.
+    """
     latitude = forms.FloatField(required=False, widget=HiddenInput())
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
@@ -140,6 +146,9 @@ class CreateProjektForm(forms.ModelForm):
 
 
 class EditProjektForm(forms.ModelForm):
+    """
+    Hlavní formulář pro editaci projektu.
+    """
     latitude = forms.FloatField(required=False, widget=HiddenInput())
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
@@ -307,7 +316,7 @@ class EditProjektForm(forms.ModelForm):
                             css_class="col-sm-12",
                         ),
                         Div(
-                            AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                            AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
                             css_class="col-sm-4 input-osoba",
                         ),
                         Div("organizace", css_class="col-sm-4"),
@@ -353,6 +362,9 @@ class EditProjektForm(forms.ModelForm):
                 self.fields[key].help_text = ""
 
     def clean(self):
+        """
+        Kontrola datumu zahájení a ukončení pri validaci formuláře.
+        """
         cleaned_data = super().clean()
         if {"datum_zahajeni", "datum_ukonceni"} <= cleaned_data.keys():
             if cleaned_data.get("datum_zahajeni") and cleaned_data.get(
@@ -368,6 +380,9 @@ class EditProjektForm(forms.ModelForm):
 
 
 class NavrhnoutZruseniProjektForm(forms.Form):
+    """
+    Formulář pro navržení zrušení projektu.
+    """
     reason = forms.CharField(
         label=_("Důvod návrhu zrušení"),
         required=True,
@@ -390,12 +405,15 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         help_text=_("projekt.form.navrhzruseni.duvod.tooltip"),
     )
     projekt_id = forms.CharField(
-        label=_("projekt.form.navrhzruseni.projektId.label"), required=False
+        label=_("projekt.form.navrhzruseni.projektId.label"),
+        required=False,
+        help_text=_("projekt.form.navrhZruseniProj.projektId.tooltip"),
     )
     reason_text = forms.CharField(
         label=_("projekt.form.navrhzruseni.vlastniduvod.label"),
         required=False,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+        help_text=_("projekt.form.navrhZruseniProj.reasonText.tooltip"),
     )
     enable_submit = True
 
@@ -417,6 +435,9 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         )
 
     def clean(self):
+        """
+        Metóda na kontrolu obsahu důvodu pro zrušení.
+        """
         cleaned_data = super().clean()
         if cleaned_data.get("reason") == "option1":
             if not cleaned_data.get("projekt_id"):
@@ -432,6 +453,9 @@ class NavrhnoutZruseniProjektForm(forms.Form):
 
 
 class PrihlaseniProjektForm(forms.ModelForm):
+    """
+    Hlavní formulář pro prihlášení projektu.
+    """
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
     class Meta:
@@ -495,7 +519,7 @@ class PrihlaseniProjektForm(forms.ModelForm):
         self.helper.layout = Layout(
             Div(
                 Div(
-                    AppendedText("vedouci_projektu", '<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
+                    AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
                     css_class="col-sm-4 input-osoba",
                     ),
                 Div("organizace", css_class="col-sm-4"),
@@ -520,6 +544,9 @@ class PrihlaseniProjektForm(forms.ModelForm):
 
 
 class ZahajitVTerenuForm(forms.ModelForm):
+    """
+    Formulář pro zahájení projektu v terénu.
+    """
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip"),
@@ -551,6 +578,9 @@ class ZahajitVTerenuForm(forms.ModelForm):
 
 
 class UkoncitVTerenuForm(forms.ModelForm):
+    """
+    Formulář pro ukončení projektu v terénu.
+    """
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         help_text=_("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
@@ -581,6 +611,9 @@ class UkoncitVTerenuForm(forms.ModelForm):
         )
 
     def clean(self):
+        """
+        Metóda pro kontrolu datumu ukončení.
+        """
         cleaned_data = super().clean()
         if {"datum_ukonceni"} <= cleaned_data.keys():
             if self.instance.datum_zahajeni > cleaned_data.get("datum_ukonceni"):
@@ -592,11 +625,14 @@ class UkoncitVTerenuForm(forms.ModelForm):
 
 
 class ZruseniProjektForm(forms.Form):
-
+    """
+    Formulář pro zrušení projektu.
+    """
     reason_text = forms.CharField(
         label=_("projekt.form.zruseni.duvod.label"),
         required=True,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
+        help_text=_("projekt.form.zruseni.duvod.tooltip"),
     )
 
     def __init__(self, *args, **kwargs):
@@ -616,6 +652,9 @@ class ZruseniProjektForm(forms.Form):
 
 
 class GenerovatNovePotvrzeniForm(forms.Form):
+    """
+    Formulář pro vygenerování nového potvrzení projektu.
+    """
     odeslat_oznamovateli = forms.BooleanField(label=_("Odeslat oznamovateli"), required=False)
 
     def __init__(self, *args, **kwargs):
@@ -648,6 +687,9 @@ VYSLEDEK_CHOICES = [
 ]
 
 class GenerovatExpertniListForm(forms.Form):
+    """
+    Formulář pro generování expertního listu projektu.
+    """
     cislo_jednaci = forms.CharField(label=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.label"),
                                     required=False,
                                     help_text=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
@@ -699,6 +741,9 @@ class GenerovatExpertniListForm(forms.Form):
         )
 
 class PripojitProjektForm(forms.Form):
+    """
+    Formulář pro pripojení projektu do akce nebo dokumentu.
+    """
     def __init__(self,dok=False, *args, **kwargs):
         super(PripojitProjektForm, self).__init__(*args, **kwargs)
         if dok:

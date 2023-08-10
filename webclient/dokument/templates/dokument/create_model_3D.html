@@ -61,7 +61,7 @@
           {% include "dokument/coor_doc.html" %}
           <div class="row">
             <div class="col-sm-12">
-              <span class="app-divider-label">{% trans "dokument.template.komponentaDivider.text" %}</span>
+              <span class="app-divider-label">{% trans "dokument.templates.create_model_3D.komponentaDivider.text" %}</span>
               <hr class="mt-0" />
             </div>
             <div class="form-group col-sm-2">
@@ -84,7 +84,7 @@
           </div>
         </div>
       </div>
-      <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+      <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary mt-3">{% trans "dokument.templates.create_model_3D.submitButton.text" %}</button>
     </form>
   </div>
 {% endblock %}
@@ -110,7 +110,7 @@
   };
 
   document.addEventListener('DOMContentLoaded', function (event) {
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
     formURL: "{% url 'heslar:create_osoba' %}",
     formID: "create-osoba-form",
     modalFormID: "#create-osoba-form",

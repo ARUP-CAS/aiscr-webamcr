@@ -1,4 +1,5 @@
-import structlog
+import logging
+import logstash
 
 from adb.models import Adb, VyskovyBod
 from crispy_forms.bootstrap import AppendedText
@@ -7,12 +8,16 @@ from crispy_forms.layout import Div, Layout
 from cron.convertToSJTSK import convertToJTSK
 from django import forms
 from django.utils.translation import gettext as _
+from django.utils.safestring import mark_safe
 
 
-logger_s = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class CreateADBForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení ADB.
+    """
     class Meta:
         model = Adb
         fields = (
@@ -31,18 +36,18 @@ class CreateADBForm(forms.ModelForm):
         )
 
         labels = {
-            "typ_sondy": _("Typ sondy"),
-            "uzivatelske_oznaceni_sondy": _("Uživatelské označení"),
-            "trat": _("Ulice (trať)"),
-            "cislo_popisne": _("Číslo popisné"),
-            "parcelni_cislo": _("Číslo parcely"),
-            "podnet": _("Podnět"),
-            "stratigraficke_jednotky": _("Počet SJ"),
-            "autor_popisu": _("Autor popisu"),
-            "rok_popisu": _("Rok popisu"),
-            "autor_revize": _("Autor revize"),
-            "rok_revize": _("Rok revize"),
-            "poznamka": _("Poznámka"),
+            "typ_sondy": _("adb.forms.createAdbForm.label.typ_sondy"),
+            "uzivatelske_oznaceni_sondy": _("adb.forms.createAdbForm.label.uzivatelske_oznaceni_sondy"),
+            "trat": _("adb.forms.createAdbForm.label.trat"),
+            "cislo_popisne": _("adb.forms.createAdbForm.label.cislo_popisne"),
+            "parcelni_cislo": _("adb.forms.createAdbForm.label.parcelni_cislo"),
+            "podnet": _("adb.forms.createAdbForm.label.podnet"),
+            "stratigraficke_jednotky": _("adb.forms.createAdbForm.label.stratigraficke_jednotky"),
+            "autor_popisu": _("adb.forms.createAdbForm.label.autor_popisu"),
+            "rok_popisu": _("adb.forms.createAdbForm.label.rok_popisu"),
+            "autor_revize": _("adb.forms.createAdbForm.label.autor_revize"),
+            "rok_revize": _("adb.forms.createAdbForm.label.rok_revize"),
+            "poznamka": _("adb.forms.createAdbForm.label.poznamka"),
         }
         widgets = {
             "typ_sondy": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
@@ -62,32 +67,28 @@ class CreateADBForm(forms.ModelForm):
         }
 
         help_texts = {
-            "typ_sondy": _("adb.form.typSondy.tooltip"),
+            "typ_sondy": _("adb.forms.createAdbForm.tooltip.typSondy"),
             "uzivatelske_oznaceni_sondy": _(
-                "adb.form.uzivatelske_oznaceni_sondy.tooltip"
+                "adb.forms.createAdbForm.tooltip.uzivatelske_oznaceni_sondy"
             ),
-            "trat": _("adb.form.trat.tooltip"),
-            "cislo_popisne": _("adb.form.cislo_popisne.tooltip"),
-            "parcelni_cislo": _("adb.form.parcelni_cislo.tooltip"),
-            "podnet": _("adb.form.podnet.tooltip"),
-            "stratigraficke_jednotky": _("adb.form.stratigraficke_jednotky.tooltip"),
-            "autor_popisu": _("adb.form.autor_popisu.tooltip"),
-            "rok_popisu": _("adb.form.rok_popisu.tooltip"),
-            "autor_revize": _("adb.form.autor_revize.tooltip"),
-            "rok_revize": _("adb.form.rok_revize.tooltip"),
-            "poznamka": _("adb.form.poznamka.tooltip"),
+            "trat": _("adb.forms.createAdbForm.tooltip.trat"),
+            "cislo_popisne": _("adb.forms.createAdbForm.tooltip.cislo_popisne"),
+            "parcelni_cislo": _("adb.forms.createAdbForm.tooltip.parcelni_cislo"),
+            "podnet": _("adb.forms.createAdbForm.tooltip.podnet"),
+            "stratigraficke_jednotky": _("adb.forms.createAdbForm.tooltip.stratigraficke_jednotky"),
+            "autor_popisu": _("adb.forms.createAdbForm.tooltip.autor_popisu"),
+            "rok_popisu": _("adb.forms.createAdbForm.tooltip.rok_popisu"),
+            "autor_revize": _("adb.forms.createAdbForm.tooltip.autor_revize"),
+            "rok_revize": _("adb.forms.createAdbForm.tooltip.rok_revize"),
+            "poznamka": _("adb.forms.createAdbForm.tooltip.poznamka"),
         }
 
-        # widgets = {
-        #     "autor_popisu": autocomplete.ModelSelect2(
-        #         url="uzivatel:osoba-autocomplete"
-        #     ),
-        #     "autor_revize": autocomplete.ModelSelect2(
-        #         url="uzivatel:osoba-autocomplete"
-        #     ),
-        # }
-
     def __init__(self, *args, readonly=False, **kwargs):
+        """
+        Init metóda pro vytvoření formuláře.
+        Args:
+            readonly (boolean): nastavuje formulář na readonly.
+        """
         super(CreateADBForm, self).__init__(*args, **kwargs)
         self.fields["uzivatelske_oznaceni_sondy"].required = False
         self.fields["autor_revize"].required = False
@@ -126,7 +127,7 @@ class CreateADBForm(forms.ModelForm):
                     Div(
                         AppendedText(
                             "autor_popisu",
-                            '<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                            mark_safe('<button id="create-autor-popisu" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                         ),
                         css_class="col-sm-2 input-osoba",
                     ),
@@ -135,7 +136,7 @@ class CreateADBForm(forms.ModelForm):
                     Div(
                         AppendedText(
                             "autor_revize",
-                            '<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>',
+                            mark_safe('<button id="create-autor-revize" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>'),
                         ),
                         css_class="col-sm-2 input-osoba",
                     ),
@@ -155,6 +156,9 @@ class CreateADBForm(forms.ModelForm):
 
 
 class VyskovyBodFormSetHelper(FormHelper):
+    """
+    Form helper pro správne vykreslení formuláře výškovího bodu.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
@@ -163,18 +167,35 @@ class VyskovyBodFormSetHelper(FormHelper):
 
 
 def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
+    """
+    Funkce která vrací formulář VB pro formset.
+
+    Args:
+        pian (pian): pian objeckt.
+
+        niveleta (niveleta): niveleta objekt.
+        
+        not_readonly (boolean): nastavuje formulář na readonly.
+    
+    Returns:
+        CreateVysovyBodForm: django model formulář VB
+    """
+    
     class CreateVyskovyBodForm(forms.ModelForm):
+        """
+        Hlavní formulář pro vytvoření, editaci a zobrazení VB.
+        """
         northing = forms.FloatField(
-            label=_("adb.form.vyskovyBod.northing.label"),
-            help_text=_("adb.form.vyskovyBod.northing.tooltip"),
+            label=_("adb.forms.createVyskovyBodForm.label.northing"),
+            help_text=_("adb.forms.createVyskovyBodForm.tooltip.northing"),
         )
         easting = forms.FloatField(
-            label=_("adb.form.vyskovyBod.easting.label"),
-            help_text=_("adb.form.vyskovyBod.easting.tooltip"),
+            label=_("adb.forms.createVyskovyBodForm.label.easting"),
+            help_text=_("adb.forms.createVyskovyBodForm.tooltip.easting"),
         )
         niveleta = forms.FloatField(
-            label=_("adb.form.vyskovyBod.niveleta.label"),
-            help_text=_("adb.form.vyskovyBod.niveleta.tooltip"),
+            label=_("adb.forms.createVyskovyBodForm.label.niveleta"),
+            help_text=_("adb.forms.createVyskovyBodForm.tooltip.niveleta"),
         )
 
         class Meta:
@@ -183,11 +204,11 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             fields = ("ident_cely", "typ", "northing", "easting", "niveleta")
 
             labels = {
-                "ident_cely": _("adb.form.vyskovyBod.ident_cely.label"),
-                "typ": _("adb.form.vyskovyBod.typ.label"),
-                "niveleta": _("adb.form.vyskovyBod.niveleta.label"),
-                "northing": _("adb.form.vyskovyBod.northing.label"),
-                "easting": _("adb.form.vyskovyBod.easting.label"),
+                "ident_cely": _("adb.forms.createVyskovyBodForm.label.ident_cely"),
+                "typ": _("adb.forms.createVyskovyBodForm.label.typ"),
+                "niveleta": _("adb.forms.createVyskovyBodForm.label.niveleta"),
+                "northing": _("adb.forms.createVyskovyBodForm.label.northing"),
+                "easting": _("adb.forms.createVyskovyBodForm.label.easting"),
             }
 
             widgets = {
@@ -195,23 +216,35 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
                 "typ": forms.Select(attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}),
             }
             help_texts = {
-                "ident_cely": _("adb.form.vyskovyBod.ident_cely.tooltip"),
-                "typ": _("adb.form.vyskovyBod.typ.tooltip"),
-                "niveleta": _("adb.form.vyskovyBod.niveleta.tooltip"),
-                "northing": _("adb.form.vyskovyBod.northing.tooltip"),
-                "easting": _("adb.form.vyskovyBod.easting.tooltip"),
+                "ident_cely": _("adb.forms.createVyskovyBodForm.tooltip.ident_cely"),
+                "typ": _("adb.forms.createVyskovyBodForm.tooltip.typ"),
+                "niveleta": _("adb.forms.createVyskovyBodForm.tooltip.niveleta"),
+                "northing": _("adb.forms.createVyskovyBodForm.tooltip.northing"),
+                "easting": _("adb.forms.createVyskovyBodForm.tooltip.easting"),
             }
 
         def _has_initial_values(self):
+            """
+            Metóda která vrací či ma formulář vyplnená initial hodnota
+            Args:
+            pian (pian): pian objeckt.
+            niveleta (niveleta): niveleta objekt
+            Returns:
+            has_initial_values: boolean jestli formulář má initial hodnotu nebo ne.
+            """
             cleaned_data = self.cleaned_data
             has_initial_values = False
             if pian:
                 [x, y] = convertToJTSK(pian.geom.centroid.y, pian.geom.centroid.x)
                 has_initial_values = cleaned_data.get("northing", None) == -1 * round(x, 2) and cleaned_data.get("easting", None) == -1 * round(y, 2)
-                logger_s.debug(cleaned_data=cleaned_data, x=x, y=y, has_initial_values=has_initial_values)
+                logger.debug("adb.forms.create_vyskovy_bod_form.pian",
+                             extra={"cleaned_data": cleaned_data, "x": x, "y": y,
+                                      "has_initial_values": has_initial_values})
             if has_initial_values and niveleta:
                 has_initial_values = cleaned_data.get("niveleta", None) == niveleta
-                logger_s.debug(cleaned_data=cleaned_data, niveleta=niveleta, has_initial_values=has_initial_values)
+                logger.debug("adb.forms.create_vyskovy_bod_form.has_initial_values", extra={
+                    "cleaned_data": cleaned_data, "niveleta": niveleta,
+                    "has_initial_values": has_initial_values})
             elif "niveleta" in cleaned_data:
                 has_initial_values = False
             if "typ" in cleaned_data and cleaned_data["typ"] is not None:
@@ -219,17 +252,28 @@ def create_vyskovy_bod_form(pian=None, niveleta=None, not_readonly=True):
             return has_initial_values
 
         def is_valid(self):
+            """
+            Metóda která vrací či je formulář správne vyplněn, zakomponována metóda na vyplnení initial hodnoty.
+            """
             parent_is_valid = super().is_valid()
             if self._has_initial_values():
                 return True
             return parent_is_valid
 
         def save(self, commit=True):
+            """
+            Metóda která ukladá formulář do modelu, zakomponována metóda na vyplnení initial hodnoty.
+            """
             if self._has_initial_values():
                 return None
             return super().save(commit)
 
         def __init__(self, *args, **kwargs):
+            """
+            Init metóda pro vytvoření formuláře.
+            Args:
+            not_readonly (boolean): nastavuje formulář na readonly.
+            """
             super(CreateVyskovyBodForm, self).__init__(*args, **kwargs)
             self.fields["ident_cely"].required = False
 

@@ -18,13 +18,13 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Detail" %}
+          {% trans "ez.templates.detail.cardHeader" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'ez:edit' zaznam.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
+               data-placement="top" title="{% trans 'ez.templates.detail.upravit.tooltip' %}">
               <span class="material-icons">edit</span>
             </a>
           </div>
@@ -47,14 +47,14 @@
       </div>
     </div>
     {% if show.ez_odkazy %}
-    {% trans "externiZdroj.detail.odkazy.pridatAkci.label" as pridatLabel %}
-    {% trans "externiZdroj.detail.odkazy.tableAkce.label" as tableLabel %}
-    {% trans "externiZdroj.detail.odkazy.zadnaAkce.text" as tabletext %}
+    {% trans "ez.templates.detail.odkazy.pridatAkci.label" as pridatLabel %}
+    {% trans "ez.templates.detail.odkazy.tableAkce.label" as tableLabel %}
+    {% trans "ez.templates.detail.odkazy.zadnaAkce.text" as tabletext %}
     {% include "ez/ez_odkazy_table.html" with zaznamy=ez_akce type="arch_z" card_type="akce"%}
 
-    {% trans "externiZdroj.detail.odkazy.pridatLokalitu.label" as pridatLabel %}
-    {% trans "externiZdroj.detail.odkazy.tableLokalitu.label" as tableLabel %}
-    {% trans "externiZdroj.detail.odkazy.zadnaLokalitu.text" as tabletext %}
+    {% trans "ez.templates.detail.odkazy.pridatLokalitu.label" as pridatLabel %}
+    {% trans "ez.templates.detail.odkazy.tableLokalitu.label" as tableLabel %}
+    {% trans "ez.templates.detail.odkazy.zadnaLokalitu.text" as tabletext %}
     {% include "ez/ez_odkazy_table.html" with zaznamy=ez_lokality type="lokalita" card_type="lokalita"%}
     {% endif %}
   </div>
@@ -66,7 +66,7 @@
   //modal scripts
   document.addEventListener('DOMContentLoaded', function (event) {
     if ("{{show.odeslat_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'ez:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
       formID: "odeslat-ez-form",
       modalFormID: "#odeslat-ez-form",
@@ -74,7 +74,7 @@
     new Modal(options, "ez-odeslat");
     };
     if ("{{show.vratit_link}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'ez:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
       formID: "vratit-ez-form",
       modalFormID: "#vratit-ez-form",
@@ -82,7 +82,7 @@
     new Modal(options, "ez-vratit");
     }
     if ("{{show.potvrdit_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'ez:potvrdit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "potvrdit-ez-form",
         modalFormID: "#potvrdit-ez-form",
@@ -90,7 +90,7 @@
       new Modal(options, "ez-potvrdit");
     }
     if ("{{show.smazat}}" != "False"){
-    var options = Object.assign(defaults, {modalID: "modal-form",
+    var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'ez:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
       formID: "smazat-ez-form",
       modalFormID: "#smazat-ez-form",
@@ -100,7 +100,7 @@
     if (document.getElementsByClassName("ez-odpojit-btn")){
       elements = document.getElementsByClassName("ez-odpojit-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "odpojit-az-form",
         modalFormID: "#odpojit-az-form",
         })
@@ -110,7 +110,7 @@
     if (document.getElementsByClassName("ez-change-btn")){
       elements = document.getElementsByClassName("ez-change-btn")
       for (let i = 0; i < elements.length; i++){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formID: "zmenit-eo-form",
         modalFormID: "#zmenit-eo-form",
         })

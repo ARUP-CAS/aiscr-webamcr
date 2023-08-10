@@ -1,8 +1,7 @@
 -- Migrace hlídacích psů
-INSERT INTO watchdog_watchdog (user_id, object_id, content_type_id, created_at)
+INSERT INTO notifikace_projekty_pes (user_id, object_id, created_at)
 SELECT uzivatel, 
 (SELECT id FROM ruian_kraj WHERE ruian_kraj.id = (SELECT kraj FROM ruian_okres WHERE ruian_okres.id = (SELECT okres FROM ruian_katastr WHERE ruian_katastr.id = notifikace_projekt.katastr))) AS kraj,
-(SELECT id FROM django_content_type WHERE model = 'ruiankraj'),
 NOW()
 FROM notifikace_projekt GROUP BY uzivatel, kraj;
 DROP TABLE notifikace_projekt;

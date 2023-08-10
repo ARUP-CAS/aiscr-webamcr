@@ -9,10 +9,10 @@
 
     {% block zaznam_detail %}
     <div class="app-entity-lokalita">
-    {% translate "lokalita.detail.toolbar.title" as toolbar_name%}
-    {% trans "lokalita.detail.toolbar.DalsiVolby.DigiArchivLink" as digi_archiv_label %}
-    {% trans "lokalita.detail.toolbar.DalsiVolby.OAIAPI" as oaiapi_label %}
-    {% trans "Detail" as header %}
+    {% translate "lokalita.template.lokalitadetail.toolbar.title" as toolbar_name%}
+    {% trans "lokalita.template.lokalitadetail.toolbar.DalsiVolby.DigiArchivLink" as digi_archiv_label %}
+    {% trans "lokalita.template.lokalitadetail.toolbar.DalsiVolby.OAIAPI" as oaiapi_label %}
+    {% trans "lokalita.template.lokalitadetail.cardHeader.detail" as header %}
     {% include "toolbar_akce.html" with showbackdetail=False showcontrols=True type="lokalita" name=toolbar_name %}
 
     <!-- stepper -->
@@ -30,7 +30,7 @@
     //modal scripts
     document.addEventListener('DOMContentLoaded', function (event) {
       if ("{{show.odeslat_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}&typ=lokalita",
         formID: "odeslat-akci-form",
         modalFormID: "#odeslat-akci-form",
@@ -38,7 +38,7 @@
       odeslat_akci_modal = new Modal(options, "lokalita-odeslat");
       };
       if ("{{show.vratit_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "vratit-akci-form",
         modalFormID: "#vratit-akci-form",
@@ -46,14 +46,14 @@
       vratit_akci_modal = new Modal(options, "lokalita-vratit");
       }
       if ("{{show.archivovat_link}}" != "False"){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "archivovat-akci-form",
           modalFormID: "#archivovat-akci-form",
         })
       archivovat_akci_modal = new Modal(options, "lokalita-archivovat");
       }
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "smazat-akci-form",
         modalFormID: "#smazat-akci-form",

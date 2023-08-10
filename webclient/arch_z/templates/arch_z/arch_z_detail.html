@@ -4,14 +4,14 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
-{% block title %}{% trans "Detail archeologického záznamu - akce" %}{% endblock %}
+{% block title %}{% trans "arch_z.templates.arch_z.arch_z_detail.detailAkce.title" %}{% endblock %}
 
 
     {% block zaznam_detail %}
     <div class="app-entity-akce">
-    {% translate "akce.template.toolbar.title.href" as toolbar_name%}
-    {% trans "akce.detail.toolbar.DalsiVolby.DigiArchivLink" as digi_archiv_label %}
-    {% trans "akce.detail.toolbar.DalsiVolby.OAIAPI" as oaiapi_label %}
+    {% translate "arch_z.templates.arch_z.arch_z_detail.toolbar.dalsiVolby.title" as toolbar_name%}
+    {% trans "arch_z.templates.arch_z.arch_z_detail.toolbar.dalsiVolby.digiArchivLink.label" as digi_archiv_label %}
+    {% trans "arch_z.templates.arch_z.arch_z_detail.toolbar.dalsiVolby.oaiapi.label" as oaiapi_label %}
     {% include "toolbar_akce.html" with showcontrols=True type="akce" name=toolbar_name %}
 
     <!-- stepper -->
@@ -21,13 +21,13 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Detail" %}
+          {% trans "arch_z.templates.arch_z.arch_z_detail.cardHeader.detail.label" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'arch_z:edit' zaznam.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
+               data-placement="top" title="{% trans 'arch_z.templates.arch_z.arch_z_detail.editButtons.upravit.label' %}">
               <span class="material-icons">edit</span>
             </a>
           </div>
@@ -47,44 +47,44 @@
         <div class="row">
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Hlavní katastr" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.hlavniKatastr.label" %}</label>
               <input id="main_cadastre_id" class="form-control" type="text" value="{{ zaznam.hlavni_katastr|check_if_none }}"
                      readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <label>{% trans "Další katastry" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.dalsiKatastry.label" %}</label>
               <input id="other_cadastre_id" class="form-control" type="text" value="{{ zaznam.katastry.all|katastry_to_list|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Hlavní vedoucí" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.hlavniVedouci.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_vedouci|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Organizace" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.organizace.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.organizace|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Uživatelské označení" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.uzivatelskeOznaceni.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.uzivatelske_oznaceni|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Hlavní typ" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.hlavniTyp.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.hlavni_typ|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Vedlejší typ" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.vedlejsiTyp.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.vedlejsi_typ|check_if_none }}" readonly>
             </div>
           </div>
@@ -92,13 +92,13 @@
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Specifikace data" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.specifikaceData.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.specifikace_data|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Datum zahájení" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.datumZahajeni.label" %}</label>
               {% if presna_specifikace %}
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_zahajeni|date:'d.m.Y'|check_if_none }}"
                      readonly>
@@ -110,7 +110,7 @@
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Datum ukončení" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.datumUkonceni.label" %}</label>
               {% if presna_specifikace %}
               <input class="form-control" type="text" value="{{ zaznam.akce.datum_ukonceni|date:'d.m.Y'|check_if_none }}"
                      readonly>
@@ -122,45 +122,45 @@
           </div>
           <div class="col-sm-12">
             <div class="form-group">
-              <label>{% trans "Lokalizace/okolnosti" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.lokalizaceOkolnosti.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.lokalizace_okolnosti|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-12">
             <div class="form-group">
-              <label>{% trans "Poznámka" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.poznamka.label" %}</label>
               <textarea class="textarea form-control" cols="40" rows="4" placeholder="{{ zaznam.akce.souhrn_upresneni|check_if_none }}"
                         readonly>{{ zaznam.akce.souhrn_upresneni|check_if_none }}</textarea>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <label>{% trans "Uložení nálezu" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.ulozeniNalezu.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_nalezu|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-4">
             <div class="form-group">
-              <label>{% trans "Uložení dokumentace" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.ulozeniDokumentace.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.ulozeni_dokumentace|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Přístupnost" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.pristupnost.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.pristupnost|check_if_none }}" readonly>
             </div>
           </div>
           <div class="col-sm-2 je_nz">
             <div class="form-group">
-              <label>{% trans "Odeslat ZAA jako NZ" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.odeslatZaaJakoNz.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.je_nz|true_false }}" readonly>
             </div>
           </div>
           {% if not zaznam.akce.projekt %}
           <div class="col-sm-2">
             <div class="form-group">
-              <label>{% trans "Odlozena NZ" %}</label>
+              <label>{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.odlozenaNz.label" %}</label>
               <input class="form-control" type="text" value="{{ zaznam.akce.odlozena_nz|true_false }}" readonly>
             </div>
           </div>
@@ -169,7 +169,7 @@
         {% if ostatni_vedouci_objekt_formset.forms %}
           <div class="row">
             <div class="col-sm-12">
-              <span class="app-divider-label">{% trans "arch_z.create.dalsi_vedouci" %}</span>
+              <span class="app-divider-label">{% trans "arch_z.templates.arch_z.arch_z_detail.detailForm.vytvorDalsihoVedouci.label" %}</span>
               <hr class="mt-0"/>
             </div>
           </div>
@@ -211,7 +211,7 @@
     document.addEventListener('DOMContentLoaded', function (event) {
       {% if arch_projekt_link and arch_projekt_link.0 %}
         if ("{{arch_projekt_link}}" !== "None"){
-          var options = Object.assign(defaults, {modalID: "modal-form",
+          var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'projekt:projekt_archivovat' zaznam.akce.projekt.ident_cely %}?sent_stav={{projekt.stav}}&from_arch=true",
           formID: "archivovat-form",
           modalFormID: "#archivovat-form",
@@ -225,7 +225,7 @@
         };
       {% endif %}
       if ("{{show.odeslat_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:odeslat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "odeslat-akci-form",
         modalFormID: "#odeslat-akci-form",
@@ -233,7 +233,7 @@
       odeslat_akci_modal = new Modal(options, "akce-odeslat");
       };
       if ("{{show.vratit_link}}" != "False"){
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:vratit' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "vratit-akci-form",
         modalFormID: "#vratit-akci-form",
@@ -241,21 +241,21 @@
       vratit_akci_modal = new Modal(options, "akce-vratit");
       }
       if ("{{show.archivovat_link}}" != "False"){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:archivovat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "archivovat-akci-form",
           modalFormID: "#archivovat-akci-form",
         })
       archivovat_akci_modal = new Modal(options, "akce-archivovat");
       }
-      var options = Object.assign(defaults, {modalID: "modal-form",
+      var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'arch_z:smazat' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
         formID: "smazat-akci-form",
         modalFormID: "#smazat-akci-form",
       })
       smazat_akci_modal = new Modal(options, "akce-smazat");
       if ("{{show.zmenit_proj_akci}}" != "False"){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:zmenit-proj-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "zmenit-akci-form",
           modalFormID: "#zmenit-akci-form",
@@ -263,7 +263,7 @@
         new Modal(options, "arch_z-proj-akce-change");
       }
       if ("{{show.zmenit_sam_akci}}" != "False"){
-        var options = Object.assign(defaults, {modalID: "modal-form",
+        var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
           formURL: "{% url 'arch_z:zmenit-sam-akci' zaznam.ident_cely %}?sent_stav={{zaznam.stav}}",
           formID: "zmenit-akci-form",
           modalFormID: "#zmenit-akci-form",
@@ -271,7 +271,7 @@
         new Modal(options, "arch_z-sam-akce-change");
       }
 
-      if (document.getElementById("main_cadastre_id")!==null) {
+      /*if (document.getElementById("main_cadastre_id")!==null) {
               let xhr = new XMLHttpRequest();
               xhr.open('POST', '/arch-z/akce-zjisti-katastr');
               xhr.setRequestHeader('Content-type', 'application/json');
@@ -295,7 +295,7 @@
                       'cadastre': document.getElementById("main_cadastre_id").value,
                       'pian': "",
                   }))
-          }
+          }*/
     });
   </script>
 {% endblock %}

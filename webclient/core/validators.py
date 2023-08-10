@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 def validate_phone_number(number):
+    """
+    Validátor pro ověření telefonního čísla na správny formát.
+    """
     number = number.replace(" ", "")
     is_valid = False
     r = re.compile("[0-9]+")
@@ -28,10 +31,10 @@ def validate_phone_number(number):
         is_valid = True
 
     if not is_valid:
-        logger.debug(f"core.validators.validate_phone_number: {number} is not valid.")
+        logger.debug(f"core.validators.validate_phone_number.not_valid", extra={"number": number})
         raise ValidationError(
-            _("%(value)s nesprávný formát čísla. Musí být: +420xxxxxxxxx"),
+            _("%(value)s core.validators.validate_phone_number.not_valid.text"),
             params={"value": number},
         )
     else:
-        logger.debug(f"core.validators.validate_phone_number: {number} is valid.")
+        logger.debug(f"core.validators.validate_phone_number.valid", extra={"number": number})

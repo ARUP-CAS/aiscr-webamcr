@@ -1,0 +1,58 @@
+{% extends "base_logged_in.html" %}
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% trans "notifikaceProjekty.templates.pesList.title" %}{% endblock %}
+{% block head %}
+ <!-- Autocomplete media files -->
+ <link href="/static/static/admin/css/vendor/select2/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/admin/css/autocomplete.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="/static/static/autocomplete_light/select2.css" media="screen" rel="stylesheet" type="text/css">
+ <script src="/static/static/admin/js/vendor/select2/select2.full.js"></script>
+ <script src="/static/static/autocomplete_light/autocomplete_light.js"></script>
+ <script src="/static/static/autocomplete_light/select2.js"></script>
+ <script src="/static/static/autocomplete_light/i18n/cs.js"></script>
+ {% endblock %}
+
+{% block content %}
+    <div class="card app-card-form">
+        {% for formset in formsets %}
+        <div class="card app-card-form app-card-inner">
+            <div class="card-body formset-table">
+              <h5>{{formset.name}}</h5>
+                <form class="mb-3" method="POST" action="{% url 'notifikace_projekty:zapsat' %}?model-typ={{formset.model_typ}}" onsubmit="editPesSubmitButton.disabled = true; return true;">
+                    {% crispy formset.form pes_helper %}
+                  <button type="submit" id="editPesSubmitButton"
+                          class="btn btn-primary">{% trans "notifikaceProjekty.templates.pesList.submitButton" %}
+                  </button>
+                </form>
+            </div>
+          </div>
+        {% endfor %}
+    </div>
+    <div class="mt-3">
+        <div class="form-group">
+          <a href="{%url 'uzivatel:update-uzivatel'%}" class="btn btn-secondary">{% trans "notifikaceProjekty.templates.pesList.backButton" %}</a>
+        </div>
+      </div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    //modal scripts
+    document.addEventListener('DOMContentLoaded', function (event) {
+      if (document.getElementsByClassName("pes-smazat-btn")){
+        elements = document.getElementsByClassName("pes-smazat-btn")
+        for (let i = 0; i < elements.length; i++){
+          const options = Object.assign(Object.create(defaults), {modalID: "modal-form",
+          formID: "smazat-pes-form",
+          modalFormID: "#smazat-pes-form",
+          })
+          new Modal(options, elements.item(i).id);
+        }
+      }
+  });
+  </script>
+{% endblock %}

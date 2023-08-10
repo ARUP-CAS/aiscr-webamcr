@@ -12,18 +12,24 @@ from django.contrib.gis.db import models as pgmodels
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import gettext as _
-from heslar.hesla import GEOMETRY_PLOCHA, HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP, PIAN_PRESNOST_KATASTR
+from heslar.hesla import HESLAR_PIAN_PRESNOST, HESLAR_PIAN_TYP
+from heslar.hesla_dynamicka import GEOMETRY_PLOCHA, PIAN_PRESNOST_KATASTR
 from heslar.models import Heslar
 from historie.models import HistorieVazby, Historie
 from core.exceptions import MaximalIdentNumberError
 from uzivatel.models import User
-from django.db.models import Q
+from django.db.models import Q, CheckConstraint
+from django_prometheus.models import ExportModelOperationsMixin
+
+from xml_generator.models import ModelWithMetadata
 
 logger = logging.getLogger(__name__)
 
 
-class Pian(models.Model):
-
+class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
+    """
+    Class pro db model pian.
+    """
     STATES = (
         (PIAN_NEPOTVRZEN, _("Nepotvrzený")),
         (PIAN_POTVRZEN, _("Potvrzený")),
@@ -31,51 +37,76 @@ class Pian(models.Model):
 
     presnost = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="presnost",
         related_name="piany_presnosti",
         limit_choices_to=Q(nazev_heslare=HESLAR_PIAN_PRESNOST) & Q(zkratka__lt="4"),
     )
     typ = models.ForeignKey(
         Heslar,
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="typ",
         related_name="piany_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PIAN_TYP},
     )
     geom = pgmodels.GeometryField(null=False, srid=4326)
-    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True,srid=5514)
-    geom_system = models.TextField(blank=False, null=False,max_length=6)
+    geom_sjtsk = pgmodels.GeometryField(blank=True, null=True, srid=5514)
+    geom_system = models.CharField(max_length=6, default="wgs84")
     zm10 = models.ForeignKey(
         "Kladyzm",
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zm10",
         related_name="pian_zm10",
-        null=False,
     )
     zm50 = models.ForeignKey(
         "Kladyzm",
-        models.DO_NOTHING,
+        models.RESTRICT,
         db_column="zm50",
         related_name="pian_zm50",
-        null=False,
     )
-    ident_cely = models.TextField(unique=True, null=False)
+    ident_cely = models.CharField(unique=True, max_length=16)
     historie = models.OneToOneField(
         HistorieVazby,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         db_column="historie",
         related_name="pian_historie",
+        null=True,
     )
-    stav = models.SmallIntegerField(null=False, choices=STATES, default=PIAN_NEPOTVRZEN)
+    stav = models.SmallIntegerField(choices=STATES, default=PIAN_NEPOTVRZEN)
+    geom_updated_at = models.DateTimeField(blank=True, null=True)
+    geom_sjtsk_updated_at = models.DateTimeField(blank=True, null=True)
+
+    @property
+    def pristupnost_pom(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        pristupnosti_ids = set()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None \
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None:
+                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        return Heslar.objects.get(ident_cely="HES-000865")
 
     class Meta:
         db_table = "pian"
+        constraints = [
+            CheckConstraint(
+                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                       | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
+                name='pian_geom_check',
+            ),
+        ]
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
 
     def set_permanent_ident_cely(self):
+        """
+        Metóda pro nastavení permanentního ident celý pro pian.
+        Metóda vráti ident podle sekvence pianu.
+        """
         MAXIMUM: int = 999999
         katastr = True if self.presnost.zkratka == "4" else False
         sequence = PianSekvence.objects.filter(kladyzm50=self.zm50).filter(
@@ -86,7 +117,7 @@ class Pian(models.Model):
                 "P-"
                 + str(self.zm50.cislo).replace("-", "").zfill(4)
                 + "-"
-                + "{0}".format(sequence.sekvence).zfill(6)
+                + f"{sequence.sekvence:06}"
             )
         else:
             raise MaximalIdentNumberError(MAXIMUM)
@@ -104,55 +135,78 @@ class Pian(models.Model):
                     "P-"
                     + str(self.zm50.cislo).replace("-", "").zfill(4)
                     + "-"
-                    + "{0}".format(sequence.sekvence).zfill(6)
+                    + f"{sequence.sekvence:06}"
                 )
             else:
                 break
+        old_ident = self.ident_cely
         self.ident_cely = perm_ident_cely
         sequence.sekvence += 1
         sequence.save()
         self.save()
+        self.record_ident_change(old_ident)
 
     def set_vymezeny(self, user):
+        """
+        Metóda pro nastavení stavu vymezený.
+        """
         self.stav = PIAN_NEPOTVRZEN
         self.zaznamenej_zapsani(user)
 
-    def set_potvrzeny(self, user):
+    def set_potvrzeny(self, user, old_ident):
+        """
+        Metóda pro nastavení stavu potvrzený.
+        """
         self.stav = PIAN_POTVRZEN
-        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie).save()
+        Historie(typ_zmeny=POTVRZENI_PIAN, uzivatel=user, vazba=self.historie, poznamka=f"{old_ident} -> {self.ident_cely}").save()
         self.save()
 
     def zaznamenej_zapsani(self, user):
+        """
+        Metóda pro uložení změny do historie pro pianu.
+        """
         Historie(typ_zmeny=ZAPSANI_PIAN, uzivatel=user, vazba=self.historie).save()
         self.save()
 
 
-class Kladyzm(models.Model):
+class Kladyzm(ExportModelOperationsMixin("klady_zm"), models.Model):
+    """
+    Class pro db model klady zm.
+    """
     gid = models.AutoField(primary_key=True)
     objectid = models.IntegerField(unique=True)
     kategorie = models.IntegerField(choices=KLADYZM_KATEGORIE)
     cislo = models.CharField(unique=True, max_length=8)
-    nazev = models.CharField(max_length=100)
     natoceni = models.DecimalField(max_digits=12, decimal_places=11)
     shape_leng = models.DecimalField(max_digits=12, decimal_places=6)
     shape_area = models.DecimalField(max_digits=12, decimal_places=2)
-    the_geom = pgmodels.GeometryField(srid=102067)
+    the_geom = pgmodels.PolygonField(srid=5514)
 
     class Meta:
         db_table = "kladyzm"
 
 
-class PianSekvence(models.Model):
-    kladyzm50 = models.OneToOneField(
-        "Kladyzm", models.DO_NOTHING, db_column="kladyzm_id", null=False,
+class PianSekvence(ExportModelOperationsMixin("pian_sekvence"), models.Model):
+    """
+    Class pro db model sekvence pianu podle klady zm 50 a katastru.
+    """
+    kladyzm50 = models.ForeignKey(
+        "Kladyzm", models.RESTRICT, db_column="kladyzm_id", null=False,
     )
     sekvence = models.IntegerField()
     katastr = models.BooleanField()
 
     class Meta:
         db_table = "pian_sekvence"
+        constraints = [
+            models.UniqueConstraint(fields=['kladyzm50','katastr'], name='unique_sekvence_pian'),
+        ]
+
 
 def vytvor_pian(katastr):
+    """
+    Funkce pro vytvoření pianu v DB podle katastru.
+    """
     zm10s = (
                 Kladyzm.objects.filter(kategorie=KLADYZM10)
                 .filter(the_geom__contains=katastr.definicni_bod)

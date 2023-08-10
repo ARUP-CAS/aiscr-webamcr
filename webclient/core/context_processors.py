@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 
 def constants_import(request):
+    """
+    Automatický import stavov projektú do kontextu všech template.
+    """
     constants_dict = {
         "PROJEKT_STAV_OZNAMENY": PROJEKT_STAV_OZNAMENY,
         "PROJEKT_STAV_ZAPSANY": PROJEKT_STAV_ZAPSANY,
@@ -45,11 +48,17 @@ def constants_import(request):
 
 
 def digi_links_from_settings(request):
+    """
+    Automatický import linkov na digitálni archiv zo settings do kontextov všech template.
+    """
     return getattr(settings, "DIGI_LINKS")
 
 
 # for autologout function redirect immediatelly
 def auto_logout_client(request):
+    """
+    Automatický výpočet a import kontextu potrebného pro správne zobrzazení automatického logoutu na všech stránkach.
+    """
     if request.user.is_anonymous:
         return {}
 
@@ -98,7 +107,7 @@ def auto_logout_client(request):
             )
         else:
             ctx["redirect_to_login_immediately"] = mark_safe(
-                "$('#time').html('%s');" % _("nav.autologout.expired.text")
+                "$('#time').html('%s');" % _("core.context_processors.autologout.expired.text")
             )
         ctx["logout_warning_text"] = mark_safe("AUTOLOGOUT_EXPIRATION_WARNING")
     else:
@@ -108,7 +117,7 @@ def auto_logout_client(request):
             datetime.now() + timedelta(seconds=options["MAINTENANCE_LOGOUT_TIME"]),
             900,
         )
-        logger.debug(logout_time)
+        logger.debug("core.context_processors.auto_logout_client", extra={"logout_time": logout_time})
         until_logout = logout_time - datetime.now()
         ctx["seconds_until_idle_end"] = int(until_logout.total_seconds())
         ctx["IDLE_WARNING_TIME"] = ctx["seconds_until_idle_end"] - 5

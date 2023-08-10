@@ -101,13 +101,14 @@
     </tbody>
   </table>
 
-  <form action="{% url 'core:post_upload' %}" class="dropzone mb-4" id="my-awesome-dropzone"
+  <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
         enctype="multipart/form-data">
     {% csrf_token %}
     <div class="fallback">
       <input name="file" type="file" multiple/>
     </div>
   </form>
+  <small class="form-text text-muted">{% trans "oznameni.templates.index_2.file_upload.tooltip" %}</small>
 
   <form method="post" onSubmit="return confirm('{% trans "Nahrali jste všechny dokumenty?" %}') ">
     {% csrf_token %}

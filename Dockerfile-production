@@ -1,7 +1,7 @@
-### Based on: https://github.com/thinkWhere/GDAL-Docker/blob/develop/3.8-ubuntu/Dockerfile ###
+### from https://github.com/OSGeo/gdal/tree/master/docker ###
 
-#### Use latest Ubuntu
-FROM ubuntu:focal
+#### Use latest gdal official image
+FROM ghcr.io/osgeo/gdal:ubuntu-small-3.6.3
 
 
 ARG VERSION_APP
@@ -15,10 +15,11 @@ RUN apt-get clean
 
 ENV TZ 'Europe/Prague'
 RUN echo $TZ > /etc/timezone
-RUN apt-get update && apt-get -qq -y install cron && apt-get -y -qq install sudo
+RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata
 
-# Install GDAL dependencies
+# Install dependencies
+RUN  apt-get -qq -y install cron && apt-get -y -qq install sudo
 RUN apt-get install -y python3-pip libgdal-dev locales gettext
 
 # Ensure locales configured correctly
@@ -29,18 +30,11 @@ ENV LC_ALL='cs_CZ.utf8'
 RUN echo 'alias python=python3' >> ~/.bashrc
 RUN echo 'alias pip=pip3' >> ~/.bashrc
 
-# Update C env vars so compiler can find gdal
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
-
-# This will install latest version of GDAL
-RUN pip3 install GDAL==3.0.4
-
 ENV PATH="/scripts:${PATH}"
 
-COPY ./webclient/webclient/requirements .
+COPY ./webclient/requirements.txt .
 
-RUN pip3 install -r production.txt
+RUN pip3 install -r requirements.txt
 
 RUN mkdir /code
 COPY ./webclient /code

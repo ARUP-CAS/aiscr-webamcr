@@ -10,7 +10,6 @@ secrets_backup.json
 
 # Pycharm project files
 .idea/
-*.ini
 
 # VsCode project files
 .vscode/
@@ -82,8 +81,6 @@ logs/*
 *.tar
 
 #jnihnat - local changes
-backup_file_db_v4.tar
-backup_file_db_v5.tar
 docker-compose-db-yml
 Dockerfile-DB
 docker-compose-debug-yml
@@ -91,3 +88,19 @@ docker-compose-db-prod-yml
 secrets.alternative.json
 secrets_mail_client.json
 secrets
+.DS_Store
+Dockerfile-DB-MAC
+docker-compose-mac-dev-local-db.yml
+pg_hba.conf
+docker-compose-debug-vscode.yml
+
+# kibana config
+kibana/kibana.yml
+
+# logstash config
+logstash/logstash.conf
+/scripts/test_preparaton.sh
+/redis_pass.txt
+
+# rewrite preklady
+/preklady

@@ -1,5 +1,3 @@
-import logging
-
 from arch_z.models import Akce, ArcheologickyZaznam
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Div, Layout
@@ -8,10 +6,9 @@ from dj.models import DokumentacniJednotka
 from django import forms
 from django.db.models import Q
 from django.utils.translation import gettext as _
-from heslar.hesla import HESLAR_DJ_TYP, TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
+from heslar.hesla import HESLAR_DJ_TYP
+from heslar.hesla_dynamicka import TYP_DJ_KATASTR, TYP_DJ_SONDA_ID, TYP_DJ_CAST, TYP_DJ_CELEK, TYP_DJ_LOKALITA
 from heslar.models import Heslar, RuianKatastr
-
-logger = logging.getLogger(__name__)
 
 
 class MyAutocompleteWidget(autocomplete.ModelSelect2):
@@ -20,6 +17,9 @@ class MyAutocompleteWidget(autocomplete.ModelSelect2):
 
 
 class CreateDJForm(forms.ModelForm):
+    """
+    Hlavní formulář pro vytvoření, editaci a zobrazení dokumentační jednotky.
+    """
     ku_change = forms.CharField(
         max_length=50, required=False, widget=forms.HiddenInput()
     )
@@ -27,7 +27,7 @@ class CreateDJForm(forms.ModelForm):
         max_length=100,
         required=False,
         disabled=True,
-        label=_("PIAN"),
+        label=_("dj.forms.createDjForm.pianText.label"),
     )
 
     def get_typ_queryset(
@@ -37,6 +37,9 @@ class CreateDJForm(forms.ModelForm):
         typ_arch_z=None,
         typ_akce=None,
     ):
+        """
+        Metóda formuláře pro získaní querysetu pro typ DJ podle typu akce.
+        """
         queryset = Heslar.objects.filter(nazev_heslare=HESLAR_DJ_TYP)
         if typ_arch_z == ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA:
             return queryset.filter(id__in=[TYP_DJ_LOKALITA,TYP_DJ_KATASTR])
@@ -58,7 +61,7 @@ class CreateDJForm(forms.ModelForm):
                         & Q(ident_cely__lt=instance.ident_cely)
                     ).count()
                     > 0
-                ):
+                ) or jednotky.exclude(adb__isnull=True).count() > 0:
                     queryset = queryset.filter(id=TYP_DJ_SONDA_ID)
                 elif jednotky.filter(typ__id=TYP_DJ_SONDA_ID).count() > 1:
                     queryset = queryset.filter(id__in=[TYP_DJ_CELEK, TYP_DJ_SONDA_ID])
@@ -88,10 +91,10 @@ class CreateDJForm(forms.ModelForm):
         fields = ("typ", "negativni_jednotka", "nazev", "pian")
 
         labels = {
-            "typ": _("Typ"),
-            "negativni_jednotka": _("Negativni jednotka"),
-            "nazev": _("Název"),
-            "pian": _("PIAN"),
+            "typ": _("dj.forms.createDjForm.typ.label"),
+            "negativni_jednotka": _("dj.forms.createDjForm.negativni_jednotka.label"),
+            "nazev": _("dj.forms.createDjForm.nazev.label"),
+            "pian": _("dj.forms.createDjForm.pian.label"),
         }
 
         widgets = {
@@ -107,7 +110,7 @@ class CreateDJForm(forms.ModelForm):
                 url="pian:pian-autocomplete",
             ),
             "negativni_jednotka": forms.Select(
-                choices=[("False", _("Ne")), ("True", _("Ano"))],
+                choices=[("False", _("dj.forms.createDjForm.negativniJednotka.choices.ne.label")), ("True", _("dj.forms.createDjForm.negativniJednotka.choices.ano.label"))],
                 attrs={
                     "class": "selectpicker",
                     "data-multiple-separator": "; ",
@@ -116,11 +119,11 @@ class CreateDJForm(forms.ModelForm):
             ),
         }
         help_texts = {
-            "typ": _("dj.form.typ.tooltip"),
-            "negativni_jednotka": _("dj.form.negativni_jednotka.tooltip"),
-            "nazev": _("dj.form.nazev.tooltip"),
-            "pian": _("dj.form.pian.tooltip"),
-            "pian_text": _("dj.form.pian.tooltip"),
+            "typ": _("dj.forms.createDjForm.typ.tooltip"),
+            "negativni_jednotka": _("dj.forms.createDjForm.negativni_jednotka.tooltip"),
+            "nazev": _("dj.forms.createDjForm.nazev.tooltip"),
+            "pian": _("dj.forms.createDjForm.pian.tooltip"),
+            "pian_text": _("dj.forms.createDjForm.pianText.tooltip"),
         }
 
     def __init__(
@@ -142,7 +145,7 @@ class CreateDJForm(forms.ModelForm):
             queryset=self.get_typ_queryset(
                 jednotky, self.instance, typ_arch_z, typ_akce
             ),
-            help_text=_("dj.form.typ.tooltip"),
+            help_text=_("dj.forms.createDjForm.typ.tooltip"),
             widget=forms.Select(
                 attrs={
                     "class": "selectpicker",
@@ -188,11 +191,14 @@ class CreateDJForm(forms.ModelForm):
 
 
 class ChangeKatastrForm(forms.Form):
+    """
+    Formulář pro editaci katastru u archeologického záznamu.
+    """
     katastr = forms.ModelChoiceField(
-        label=_("dj.form.katastrChange.label"),
+        label=_("dj.forms.ChangeKatastrForm.katastr.label"),
         widget=autocomplete.ModelSelect2(url="heslar:katastr-autocomplete"),
         queryset=RuianKatastr.objects.all(),
-        help_text=_("dj.form.katastrChange.tooltip"),
+        help_text=_("dj.forms.ChangeKatastrForm.katastr.tooltip"),
         required=True,
     )
 

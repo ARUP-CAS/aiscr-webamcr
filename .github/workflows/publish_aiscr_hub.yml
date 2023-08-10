@@ -1,0 +1,103 @@
+name: Build and Publish Docker images on  https://hub.docker.com/u/aiscr
+
+on:
+  push:
+    tags:
+      - "v**"
+  workflow_dispatch :
+    inputs:
+      tags:
+       description: 'Tag describing manual trigger'
+       type: string
+       required: false
+
+env:
+  DOCKER_HUB_REPO_REDIS: aiscr/webamcr-redis
+  DOCKER_HUB_REPO_PROXY: aiscr/webamcr-proxy
+  DOCKER_HUB_REPO_PROD: aiscr/webamcr
+  DOCKER_HUB_USERNAME: aiscr
+
+jobs:
+  build_publish_images:
+    name: Build and push docker images for to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      
+      - name: Get tag from GITHUB_REF
+        id: step_tag1
+        run: echo "tag_version=$(echo $GITHUB_REF | cut -d/ -f3)" >> $GITHUB_ENV
+
+      #---------------------
+      # BUILD PROD
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker production image
+        id: meta_prod
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_PROD }}
+      
+      - name: PRODUCTION - Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: Dockerfile-production
+          push: true
+          tags: ${{ steps.meta_prod.outputs.tags }}
+          labels: ${{ steps.meta_prod.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+      #---------------------
+      # BUILD PROXY
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker proxy image
+        id: meta_proxy
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_PROXY }}
+
+      - name: PROXY - Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./proxy
+          push: true
+          tags: ${{ steps.meta_proxy.outputs.tags }}
+          labels: ${{ steps.meta_proxy.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+      #---------------------
+      # BUILD REDIS
+      #---------------------
+      - name: Extract metadata (tags, labels) for Docker redis image
+        id: meta_redis
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.DOCKER_HUB_REPO_REDIS }}
+
+      - name: REDIS - Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./redis
+          push: true
+          tags: ${{ steps.meta_redis.outputs.tags }}
+          labels: ${{ steps.meta_redis.outputs.labels }}
+          build-args: |
+            VERSION_APP=${{ env.tag_version }}
+            TAG_APP=${{ github.ref }}
+  deploy_on_dev:
+      name: Deploy containers on DEV SERVER
+      needs: build_publish_images
+      uses: ./.github/workflows/deployment.yml
+      secrets: inherit
+      with:
+         man_tag: ${{ inputs.tags }}
+      

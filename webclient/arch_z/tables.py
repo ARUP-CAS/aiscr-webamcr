@@ -8,27 +8,31 @@ from .models import Akce
 
 
 class AkceTable(SearchTable):
-
-    ident_cely = tables.Column(linkify=True, accessor="archeologicky_zaznam.ident_cely")
-    katastr = tables.Column(
-        verbose_name=_("Katastrální území"),
-        default="",
-        accessor="archeologicky_zaznam.hlavni_katastr",
+    """
+        Class pro definování tabulky pro akci použitých pro zobrazení přehledu akcií a exportu.
+    """
+    ident_cely = tables.Column(
+        linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
-    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam.stav")
+    katastr = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.katastr.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr",
+    )
+    stav = tables.columns.Column(default="", accessor="archeologicky_zaznam__stav")
     organizace = tables.columns.Column(
         default="", order_by="organizace__nazev_zkraceny"
     )
     hlavni_vedouci = tables.columns.Column(default="")
     uzivatelske_oznaceni = tables.Column(
-        verbose_name=_("Uživatelské označení"),
+        verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
-        accessor="archeologicky_zaznam.uzivatelske_oznaceni",
+        accessor="archeologicky_zaznam__uzivatelske_oznaceni",
     )
     dalsi_katastry = DalsiKatastryColumn(
-        verbose_name=_("Další katastry"),
+        verbose_name=_("arch_z.tables.AkceTable.dalsi_katastry.label"),
         default="",
-        accessor="archeologicky_zaznam.katastry.all",
+        accessor="archeologicky_zaznam__katastry__all",
     )
     app = "akce"
     columns_to_hide = ("uzivatelske_oznaceni", "dalsi_katastry")

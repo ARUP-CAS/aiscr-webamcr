@@ -110,3 +110,85 @@ WHERE obdobi is null;
 
 UPDATE komponenta_dokument SET areal = (SELECT id FROM heslar_areal_druha WHERE ident_cely = 'HES-000060')
 WHERE areal is null;
+
+CREATE INDEX IF NOT EXISTS soubor_id
+    ON public.soubor USING btree
+    (id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS dokument_soubor_fs_soubor_fs
+    ON public.dokument_soubor_fs USING btree
+    (soubor_fs ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS dokument_soubor_fs_dokument
+    ON public.dokument_soubor_fs USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+-- Odstranění dokumentů ZA/ZL
+WITH za_zl AS
+(
+	SELECT dokument.id FROM dokument INNER JOIN heslar_rada ON dokument.rada = heslar_rada.id
+	WHERE heslar_rada.ident_cely = 'HES-000884' OR heslar_rada.ident_cely = 'HES-000885'
+)
+DELETE FROM soubor USING dokument_soubor_fs WHERE soubor.id = dokument_soubor_fs.soubor_fs AND dokument_soubor_fs.dokument IN (SELECT id FROM za_zl);
+WITH za_zl AS
+(
+	SELECT dokument.id FROM dokument INNER JOIN heslar_rada ON dokument.rada = heslar_rada.id
+	WHERE heslar_rada.ident_cely = 'HES-000884' OR heslar_rada.ident_cely = 'HES-000885'
+)
+DELETE FROM dokument_soubor_fs USING za_zl WHERE za_zl.id = dokument_soubor_fs.dokument;
+
+-- Běží cca 10 minut
+CREATE INDEX IF NOT EXISTS jednotka_dokument_dokument
+    ON public.jednotka_dokument USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS komponenta_dokument_dokument_idx
+    ON public.komponenta_dokument USING btree
+    (jednotka_dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+WITH za_zl AS
+(
+	SELECT dokument.id FROM dokument INNER JOIN heslar_rada ON dokument.rada = heslar_rada.id
+	WHERE heslar_rada.ident_cely = 'HES-000884' OR heslar_rada.ident_cely = 'HES-000885'
+)
+DELETE FROM jednotka_dokument USING za_zl WHERE za_zl.id = jednotka_dokument.dokument;
+
+CREATE INDEX IF NOT EXISTS extra_data_dokument_idx
+    ON public.extra_data USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS historie_dokumentu_dokument_idx
+    ON public.historie_dokumentu USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS jednotka_dokument_dokument_idx
+    ON public.jednotka_dokument USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS odkaz_dokument_idx
+    ON public.odkaz USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS soubor_dokument_idx
+    ON public.soubor USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS tvar_dokument_idx
+    ON public.tvar USING btree
+    (dokument ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS dokument_id_idx
+    ON public.dokument USING btree
+    (id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+WITH za_zl AS
+(
+	SELECT dokument.id FROM dokument INNER JOIN heslar_rada ON dokument.rada = heslar_rada.id
+	WHERE heslar_rada.ident_cely = 'HES-000884' OR heslar_rada.ident_cely = 'HES-000885'
+)
+DELETE FROM dokument USING za_zl WHERE za_zl.id = dokument.id;

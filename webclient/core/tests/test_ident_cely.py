@@ -1,11 +1,11 @@
 import datetime
 from decimal import Decimal
+import logging
 
 from core.ident_cely import get_dokument_rada, get_temporary_project_ident
 from core.models import ProjektSekvence
 from core.tests.runner import (
     GEOMETRY_PLOCHA,
-    KATASTR_ODROVICE_ID,
     MATERIAL_DOKUMENTU_DIGI_SOUBOR_ID,
     PRESNOST_DESITKY_METRU_ID,
     RADA_DOKUMENTU_TEXT_ID,
@@ -13,11 +13,16 @@ from core.tests.runner import (
 )
 from django.contrib.gis.geos import GEOSGeometry
 from django.test import TestCase
-from heslar.hesla import TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import Heslar, RuianKatastr
 from historie.models import HistorieVazby
 from pian.models import Kladyzm, Pian
 from projekt.models import Projekt
+from django.db import connection
+
+
+
+logger = logging.getLogger("tests")
 
 
 class IdentTests(TestCase):
@@ -27,23 +32,21 @@ class IdentTests(TestCase):
             objectid=1,
             kategorie=1,
             cislo="03",
-            nazev="Vejprty",
             natoceni=Decimal(8.78330000000),
             shape_leng=Decimal(341204.736390),
             shape_area=Decimal(7189599966.71),
             the_geom=GEOSGeometry(
-                "0106000020B38E01000100000001030000000100000005000000A0103FF6D3672BC1A08E29DB"
-                "A8C22BC1E06C309E109228C1408F6DE6CB322CC1C0C9EDA718E828C180504AA34C7E2EC10037"
-                "0FD61FC72BC1C0252A1EBB0C2EC1A0103FF6D3672BC1A08E29DBA8C22BC1"
+                "01030000208A150000010000000500000040A0C822AEE122C100008294A0F02CC1A03A26F06B0720C100F28414463E2DC180C07FD6894120C1E03D48F6308D2FC1E03A07951E2523C12067B4B38D3E2FC140A0C822AEE122C100008294A0F02CC1"
             ),
         )
         kl.save()
-        vazba_pian = HistorieVazby.objects.get(pk=47)
+        vazba_pian = HistorieVazby.objects.get(pk=1047)
         pian = Pian(
             id=1,
             presnost=Heslar.objects.get(pk=PRESNOST_DESITKY_METRU_ID),
             typ=Heslar.objects.get(pk=GEOMETRY_PLOCHA),
             geom=GEOSGeometry("0101000020E610000042D35729E77F3040234F91EAF9804840"),
+            geom_system="wgs84",
             zm10=kl,
             zm50=kl,
             ident_cely="P-3412-900002",
@@ -56,13 +59,13 @@ class IdentTests(TestCase):
         p = Projekt(
             stav=0,
             typ_projektu=Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID),
-            hlavni_katastr=RuianKatastr.objects.get(id=150),
+            hlavni_katastr=RuianKatastr.objects.first(),
         )
         p.save()
 
         p.set_permanent_ident_cely()
         p.save()
-        self.assertEqual(p.ident_cely, f"C-{datetime.datetime.now().year}00001")
+        self.assertEqual(p.ident_cely, f"C-{datetime.datetime.now().year}00002")
 
     def test_get_temporary_project_ident(self):
         year = datetime.datetime.now().year
@@ -70,17 +73,20 @@ class IdentTests(TestCase):
             id=1,
         )
         region = "M"
-        ident = get_temporary_project_ident(p, region)
-        self.assertEqual(ident, f"X-M-{'0' * 8}1")
-        p.id = 100000
-        ident = get_temporary_project_ident(p, region)
-        self.assertEqual(ident, f"X-M-{str(p.id).zfill(9)}")
+        ident = get_temporary_project_ident(region)
+        query = (
+        "select lastval()"
+        )
+        cursor = connection.cursor()
+        cursor.execute(query)
+        last_val =  cursor.fetchone()[0]
+        self.assertEqual(ident, f"X-M-{'0' * 8}{last_val}")
 
     def test_get_permanent_ident(self):
         # Insert some projects to the database
         year = datetime.datetime.now().year
         zachranny_typ_projektu = Heslar.objects.get(pk=TYP_PROJEKTU_ZACHRANNY_ID)
-        katastr_odrovice = RuianKatastr.objects.get(id=KATASTR_ODROVICE_ID)
+        katastr_odrovice = RuianKatastr.objects.filter(nazev="ODROVICE").first()
         Projekt(
             stav=0,
             typ_projektu=zachranny_typ_projektu,
@@ -95,8 +101,8 @@ class IdentTests(TestCase):
         )
         p.save()
         p.set_permanent_ident_cely()
-        self.assertEqual(p.ident_cely, "C-" + str(year) + "00001")
-        s = ProjektSekvence.objects.filter(rok=year).filter(rada="C")[0]
+        self.assertEqual(p.ident_cely, "C-" + str(year) + "00002")
+        s = ProjektSekvence.objects.filter(rok=year).filter(region="C")[0]
         # Over ze se sekvence inkrementla
         self.assertEqual(s.sekvence, 2)
 

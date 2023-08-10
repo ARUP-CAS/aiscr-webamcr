@@ -2,10 +2,12 @@ import logging
 from django.views import View
 
 import simplejson as json
-import structlog
+
 from django.db.models.functions import Length
 from django.template.loader import render_to_string
 from dal import autocomplete
+from django.views.generic import RedirectView
+
 from arch_z.models import Akce
 from core.constants import (
     ARCHIVACE_PROJ,
@@ -56,7 +58,7 @@ from core.message_constants import (
     PROJEKT_USPESNE_ZRUSEN,
     ZAZNAM_USPESNE_EDITOVAN,
     ZAZNAM_USPESNE_SMAZAN,
-    ZAZNAM_USPESNE_VYTVOREN,
+    ZAZNAM_USPESNE_VYTVOREN, ZAZNAM_NELZE_SMAZAT_FEDORA,
 )
 from core.utils import (
     get_heatmap_project,
@@ -72,14 +74,14 @@ from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
-from heslar.hesla import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
@@ -99,19 +101,25 @@ from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
 
+
 logger = logging.getLogger(__name__)
-logger_s = structlog.get_logger(__name__)
 
 
 @login_required
 @require_http_methods(["GET"])
 def index(request):
+    """
+    Funkce pohledu pro zobrazení indexu s navigací projektu.
+    """
     return render(request, "projekt/index.html")
 
 
 @login_required
 @require_http_methods(["GET"])
 def detail(request, ident_cely):
+    """
+    Funkce pohledu pro zobrazení detailu projektu.
+    """
     context = {"warnings": request.session.pop("temp_data", None)}
     projekt = get_object_or_404(
         Projekt.objects.select_related(
@@ -127,8 +135,6 @@ def detail(request, ident_cely):
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
         ).all()
-    else:
-        logger.debug("Projekt neni typu zachranny ani pruzkum " + str(typ_projektu))
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
@@ -155,22 +161,17 @@ def detail(request, ident_cely):
 @login_required
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
+    """
+    Funkce pohledu pro získaní heatmapy.
+    """
     body = json.loads(request.body.decode("utf-8"))
-    # logger.debug(request.body.decode("utf-8"))
-    # logger.debug(body["zoom"])
-    # logger.debug(body["southEast"]["lat"])
-    # DEBUG {"
-    # northWest":{"lat":50.01239997944656,"lng":14.618017673492433},
-    # "southEast":{"lat":50.00964206670656,"lng":14.63383197784424},"zoom":17}
-    # get_points_from_envelope
     num = get_num_projects_from_envelope(
         body["southEast"]["lng"],
         body["northWest"]["lat"],
         body["northWest"]["lng"],
         body["southEast"]["lat"],
     )
-    logger.debug("projekt pocet geometrii")
-    logger.debug(num)
+    logger.debug("projekt.views.post_ajax_get_projects_limit.num", extra={"num": num})
     if num < 5000:
         pians = get_projects_from_envelope(
             body["southEast"]["lng"],
@@ -180,7 +181,6 @@ def post_ajax_get_projects_limit(request):
         )
         back = []
         for pian in pians:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             back.append(
                 {
                     "id": pian.id,
@@ -200,7 +200,7 @@ def post_ajax_get_projects_limit(request):
             body["southEast"]["lat"],
             body["zoom"],
         )
-        logger.debug("projekt density %s", density)
+        logger.debug("projekt.views.post_ajax_get_projects_limit.density", extra={"density": density})
 
         heats = get_heatmap_project(
             body["southEast"]["lng"],
@@ -212,7 +212,6 @@ def post_ajax_get_projects_limit(request):
         back = []
         cid = 0
         for heat in heats:
-            # logger.debug('%s %s %s',pian.ident_cely,pian.geometry,pian.presnost.zkratka)
             cid += 1
             back.append(
                 {
@@ -231,7 +230,10 @@ def post_ajax_get_projects_limit(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def create(request):
-    logger_s.debug("create.start")
+    """
+    Funkce pohledu pro vytvoření projektu.
+    """
+    logger.debug("projekt.views.create.start")
     required_fields = get_required_fields()
     required_fields_next = get_required_fields(next=1)
     if request.method == "POST":
@@ -245,15 +247,14 @@ def create(request):
             required = False
         form_oznamovatel = OznamovatelForm(request.POST, required=required)
         if form_projekt.is_valid():
-            logger.debug("Projekt form is valid")
+            logger.debug("projekt.views.create.form_valid")
             lat = form_projekt.cleaned_data["latitude"]
             long = form_projekt.cleaned_data["longitude"]
-            p = form_projekt.save(commit=False)
-            if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+            projekt = form_projekt.save(commit=False)
+            if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                 # Kontrola oznamovatele
                 if not form_oznamovatel.is_valid():
-                    logger.debug("The form oznamovatel is not valid!")
-                    logger.debug(form_oznamovatel.errors)
+                    logger.debug("projekt.views.create.form_not_valid", extra={"errors": form_oznamovatel.errors})
                     return render(
                         request,
                         "projekt/create.html",
@@ -266,29 +267,31 @@ def create(request):
                         },
                     )
             if long and lat:
-                p.geom = Point(long, lat)
+                projekt.geom = Point(long, lat)
             try:
-                p.set_permanent_ident_cely()
+                projekt.set_permanent_ident_cely()
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
             else:
-                p.save()
-                p.set_zapsany(request.user)
+                projekt.save()
+                projekt.set_zapsany(request.user)
                 form_projekt.save_m2m()
-                if p.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
+                if projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID:
                     # Vytvoreni oznamovatele - kontrola formu uz je na zacatku
                     oznamovatel = form_oznamovatel.save(commit=False)
-                    oznamovatel.projekt = p
+                    oznamovatel.projekt = projekt
                     oznamovatel.save()
-                if p.should_generate_confirmation_document:
-                    p.create_confirmation_document()
+                if projekt.should_generate_confirmation_document:
+                    projekt.create_confirmation_document()
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
-                return redirect("projekt:detail", ident_cely=p.ident_cely)
+                if projekt.ident_cely[0] == "C":
+                    Mailer.send_ep01a(project=projekt)
+                else:
+                    Mailer.send_ep01b(project=projekt)
+                return redirect("projekt:detail", ident_cely=projekt.ident_cely)
         else:
-            logger.debug("The form projekt is not valid!")
-            logger.debug(form_projekt.errors)
+            logger.debug("projekt.views.create.form_projekt_not_valid", extra={"errors": form_projekt.errors})
     else:
-        logger_s.debug("create.get")
         form_projekt = CreateProjektForm(
             required=required_fields, required_next=required_fields_next
         )
@@ -309,6 +312,9 @@ def create(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def edit(request, ident_cely):
+    """
+    Funkce pohledu pro editaci projektu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav == PROJEKT_STAV_ARCHIVOVANY:
         raise PermissionDenied()
@@ -323,7 +329,7 @@ def edit(request, ident_cely):
             required_next=required_fields_next,
         )
         if form.is_valid():
-            logger.debug("Projekt Form is valid:1")
+            logger.debug("projekt.views.edit.form_valid")
             lat = form.cleaned_data["latitude"]
             long = form.cleaned_data["longitude"]
             # Workaroud to not check if long and lat has been changed, only geom is interesting
@@ -337,16 +343,15 @@ def edit(request, ident_cely):
                 p.geom = new_geom
                 p.save()
                 geom_changed = True
-                logger.debug("Geometry successfully updated: " + str(p.geom))
+                logger.debug("projekt.views.edit.form_valid.geom_updated", extra={"geom": p.geom})
             else:
-                logger.warning("Projekt geom not updated.")
+                logger.warning("projekt.views.edit.form_valid.geom_not_updated")
             if form.changed_data or geom_changed:
-                logger.debug(form.changed_data)
+                logger.debug("projekt.views.edit.form_valid.form_changed", extra={"changed_data": form.changed_data})
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_EDITOVAN)
             return redirect("projekt:detail", ident_cely=ident_cely)
         else:
-            logger.debug("The form is not valid!")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.edit.form_valid.form_not_valid", extra={"form_errors": form.errors})
 
     else:
         form = EditProjektForm(
@@ -358,7 +363,7 @@ def edit(request, ident_cely):
             form.fields["latitude"].initial = projekt.geom.coords[1]
             form.fields["longitude"].initial = projekt.geom.coords[0]
         else:
-            logger.warning("Projekt geom is empty.")
+            logger.warning("projekt.views.edit.empty")
     return render(
         request,
         "projekt/edit.html",
@@ -370,6 +375,9 @@ def edit(request, ident_cely):
 @allowed_user_groups([ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID])
 @require_http_methods(["GET", "POST"])
 def smazat(request, ident_cely):
+    """
+    Funkce pohledu pro smazání projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if check_stav_changed(request, projekt):
         return JsonResponse(
@@ -380,6 +388,9 @@ def smazat(request, ident_cely):
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
+    elif projekt.container_creation_queued():
+        messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
+        return JsonResponse({"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})}, status=403)
     else:
         warnings = projekt.check_pred_smazanim()
         if warnings:
@@ -404,30 +415,11 @@ def smazat(request, ident_cely):
         return render(request, "core/transakce_modal.html", context)
 
 
-@login_required
-@require_http_methods(["POST"])
-def odebrat_sloupec_z_vychozich(request):
-    if request.method == "POST":
-        if "projekt_vychozi_skryte_sloupce" not in request.session:
-            request.session["projekt_vychozi_skryte_sloupce"] = []
-        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
-        zmena = json.loads(request.body.decode("utf8"))["zmena"]
-        skryte_sloupce = request.session["projekt_vychozi_skryte_sloupce"]
-        if zmena == "zobraz":
-            try:
-                skryte_sloupce.remove(sloupec)
-            except ValueError:
-                logger.error(
-                    f"projekt.odebrat_sloupec_z_vychozich nelze odebrat sloupec {sloupec}"
-                )
-                HttpResponse(f"Nelze odebrat sloupec {sloupec}", status=400)
-        else:
-            skryte_sloupce.append(sloupec)
-        request.session.modified = True
-    return HttpResponse("Odebráno")
-
 
 class ProjektListView(SearchListView):
+    """
+    Třida pohledu pro zobrazení listu/tabulky s projektami.
+    """
     table_class = ProjektTable
     model = Projekt
     template_name = "projekt/projekt_list.html"
@@ -480,6 +472,9 @@ class ProjektListView(SearchListView):
 @login_required
 @require_http_methods(["GET", "POST"])
 def schvalit(request, ident_cely):
+    """
+    Funkce pohledu pro schválení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -494,7 +489,7 @@ def schvalit(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
-        projekt.set_schvaleny(request.user)
+        old_ident = projekt.ident_cely
         if projekt.ident_cely[0] == "X":
             try:
                 projekt.set_permanent_ident_cely()
@@ -509,12 +504,9 @@ def schvalit(request, ident_cely):
                     status=403,
                 )
             else:
-                logger.debug(
-                    "Projektu "
-                    + ident_cely
-                    + " byl prirazen permanentni ident "
-                    + projekt.ident_cely
-                )
+                logger.debug("projekt.views.schvalit.perm_ident", extra={"ident_cely": ident_cely,
+                                                                         "permIdent_cely": projekt.ident_cely})
+        projekt.set_schvaleny(request.user,old_ident)
         projekt.save()
         if projekt.typ_projektu.pk == TYP_PROJEKTU_ZACHRANNY_ID:
             projekt.create_confirmation_document(user=request.user)
@@ -544,6 +536,9 @@ def schvalit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def prihlasit(request, ident_cely):
+    """
+    Funkce pohledu pro přihlášení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -557,7 +552,6 @@ def prihlasit(request, ident_cely):
             {"redirect": reverse("projekt:detail", kwargs={"ident_cely": ident_cely})},
             status=403,
         )
-    logger.debug("something")
     if request.method == "POST":
         form = PrihlaseniProjektForm(request.POST, instance=projekt)
         if form.is_valid():
@@ -576,8 +570,7 @@ def prihlasit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.prihlasit.form_not_valid", extra={"errors": form.errors})
     else:
         archivar = True if request.user.hlavni_role.id == ROLE_ARCHIVAR_ID else False
         form = PrihlaseniProjektForm(
@@ -596,6 +589,9 @@ def prihlasit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zahajit_v_terenu(request, ident_cely):
+    """
+    Funkce pohledu pro zahájení v terenu projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_PRIHLASENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -626,8 +622,7 @@ def zahajit_v_terenu(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.zahajit_v_terenu.form_not_valid", extra={"errors": form.errors})
     else:
         form = ZahajitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -646,6 +641,9 @@ def zahajit_v_terenu(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def ukoncit_v_terenu(request, ident_cely):
+    """
+    Funkce pohledu pro ukončení v terenu projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_ZAHAJENY_V_TERENU:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -675,8 +673,7 @@ def ukoncit_v_terenu(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.ukoncit_v terenu.form_not_valid", extra={"errors": form.errors})
     else:
         form = UkoncitVTerenuForm(instance=projekt, initial={"old_stav": projekt.stav})
     return render(
@@ -695,6 +692,9 @@ def ukoncit_v_terenu(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def uzavrit(request, ident_cely):
+    """
+    Funkce pohledu pro uzavření projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UKONCENY_V_TERENU:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -713,11 +713,11 @@ def uzavrit(request, ident_cely):
         akce = Akce.objects.filter(projekt=projekt)
         for a in akce:
             if a.archeologicky_zaznam.stav == AZ_STAV_ZAPSANY:
-                logger.debug("Setting event to state A2")
+                logger.debug("projekt.views.uzavrit.set_a2", extra={"ident_cely": ident_cely})
                 a.archeologicky_zaznam.set_odeslany(request.user)
             for dokument_cast in a.archeologicky_zaznam.casti_dokumentu.all():
                 if dokument_cast.dokument.stav == D_STAV_ZAPSANY:
-                    logger.debug("Setting dokument to state D2")
+                    logger.debug("projekt.views.uzavrit.set_d2", extra={"ident_cely": ident_cely})
                     dokument_cast.dokument.set_odeslany(request.user)
         projekt.set_uzavreny(request.user)
         messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_UZAVREN)
@@ -727,7 +727,7 @@ def uzavrit(request, ident_cely):
     else:
         # Check business rules
         warnings = projekt.check_pred_uzavrenim()
-        logger.debug(warnings)
+        logger.debug("projekt.views.uzavrit.warnings", extra={"warnings": warnings})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -769,6 +769,9 @@ def uzavrit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def archivovat(request, ident_cely):
+    """
+    Funkce pohledu pro archivaci projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav != PROJEKT_STAV_UZAVRENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -791,7 +794,7 @@ def archivovat(request, ident_cely):
         )
     else:
         warnings = projekt.check_pred_archivaci()
-        logger.debug(warnings)
+        logger.debug("projekt.views.archivovat.warnings", extra={"warnings": warnings})
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         if warnings:
             request.session["temp_data"] = []
@@ -829,6 +832,9 @@ def archivovat(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def navrhnout_ke_zruseni(request, ident_cely):
+    """
+    Funkce pohledu pro navržení projektu ke zrušení pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY > projekt.stav > PROJEKT_STAV_OZNAMENY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -856,7 +862,6 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 duvod_to_save = form.cleaned_data["reason_text"]
             else:
                 duvod_to_save = duvod_to_save
-            logger.debug(duvod_to_save)
             projekt.set_navrzen_ke_zruseni(request.user, duvod_to_save)
             projekt.save()
             messages.add_message(
@@ -870,12 +875,11 @@ def navrhnout_ke_zruseni(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.navrhnout_ke_zruseni.form_not_valid", extra={"errors": form.errors})
             context = {"projekt": projekt, "form": form}
     else:
         warnings = projekt.check_pred_navrzeni_k_zruseni()
-        logger.debug(warnings)
+        logger.debug("projekt.views.navrhnout_ke_zruseni.warnings", extra={"warnings": warnings})
 
         if warnings:
             request.session["temp_data"] = []
@@ -903,6 +907,9 @@ def navrhnout_ke_zruseni(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def zrusit(request, ident_cely):
+    """
+    Funkce pohledu pro zrušení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if projekt.stav not in [PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, PROJEKT_STAV_OZNAMENY]:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -935,9 +942,9 @@ def zrusit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
-            context = context = {
+            form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
+            logger.debug("projekt.views.zrusit.form_not_valid", extra={"errors": form.errors})
+            context = {
                 "object": projekt,
                 "title": _("projekt.modalForm.zruseni.title.text"),
                 "id_tag": "zrusit-form",
@@ -960,7 +967,6 @@ def zrusit(request, ident_cely):
                 .order_by("-datum_zmeny")[0]
                 .poznamka
             )
-            logger.debug(last_history_poznamka)
             context["form"] = ZruseniProjektForm(
                 initial={"reason_text": last_history_poznamka}
             )
@@ -970,6 +976,9 @@ def zrusit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit(request, ident_cely):
+    """
+    Funkce pohledu pro vrácení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     if not PROJEKT_STAV_ARCHIVOVANY >= projekt.stav > PROJEKT_STAV_ZAPSANY:
         messages.add_message(request, messages.ERROR, PRISTUP_ZAKAZAN)
@@ -986,9 +995,6 @@ def vratit(request, ident_cely):
         form = VratitForm(request.POST)
         if form.is_valid():
             duvod = form.cleaned_data["reason"]
-            projekt_mail = projekt
-            if projekt.stav == PROJEKT_STAV_PRIHLASENY:
-                Mailer.send_ep07(project=projekt_mail, reason=duvod)
             projekt.set_vracen(request.user, projekt.stav - 1, duvod)
             projekt.save()
             messages.add_message(request, messages.SUCCESS, PROJEKT_USPESNE_VRACEN)
@@ -1000,8 +1006,7 @@ def vratit(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.vratit.form_not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1017,6 +1022,9 @@ def vratit(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def vratit_navrh_zruseni(request, ident_cely):
+    """
+    Funkce pohledu pro vrácení návrhu na zrušení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
 
     if projekt.stav not in [
@@ -1049,8 +1057,7 @@ def vratit_navrh_zruseni(request, ident_cely):
                 }
             )
         else:
-            logger.debug("The form is not valid")
-            logger.debug(form.errors)
+            logger.debug("projekt.views.vratit_navrh_zruseni.form_not_valid", extra={"errors": form.errors})
     else:
         form = VratitForm(initial={"old_stav": projekt.stav})
     context = {
@@ -1066,6 +1073,9 @@ def vratit_navrh_zruseni(request, ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def odpojit_dokument(request, ident_cely, proj_ident_cely):
+    """
+    Funkce pohledu pro odpojení dokumentu z projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=proj_ident_cely)
     return odpojit(request, ident_cely, proj_ident_cely, projekt)
 
@@ -1073,29 +1083,65 @@ def odpojit_dokument(request, ident_cely, proj_ident_cely):
 @login_required
 @require_http_methods(["GET", "POST"])
 def pripojit_dokument(request, proj_ident_cely):
+    """
+    Funkce pohledu pro pripojení dokumentu z projektu pomoci modalu.
+    """
     return pripojit(request, proj_ident_cely, None, Projekt)
 
 
 @login_required
 @require_http_methods(["POST"])
 def generovat_oznameni(request, ident_cely):
+    """
+    Funkce pohledu pro generování oznámení projektu pomoci modalu.
+    """
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
     projekt.create_confirmation_document(additional=True, user=request.user)
+    if projekt.ident_cely[0] == "C":
+        Mailer.send_ep01a(project=projekt)
+    else:
+        Mailer.send_ep01b(project=projekt)
     return redirect("projekt:detail", ident_cely=ident_cely)
+
+
+class GenerovatOznameniView(LoginRequiredMixin, RedirectView):
+    http_method_names = ["POST"]
+
+    def get_redirect_url(self, *args, **kwargs):
+        ident_cely = kwargs['ident_cely']
+        projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
+        projekt.create_confirmation_document(additional=True, user=self.request.user)
+        if projekt.ident_cely[0] == "C":
+            Mailer.send_ep01a(project=projekt)
+        else:
+            Mailer.send_ep01b(project=projekt)
+        return super().get_redirect_url(*args, **kwargs)
 
 
 @login_required
 @require_http_methods(["POST"])
 def generovat_expertni_list(request, ident_cely):
+    """
+    Funkce pohledu pro generování expertního listu projektu pomoci modalu.
+    """
     popup_parametry = request.POST
     projekt = get_object_or_404(Projekt, ident_cely=ident_cely)
-    path = projekt.create_expert_list(popup_parametry)
-    file = open(path, "rb")
-    return FileResponse(file)
+    output = projekt.create_expert_list(popup_parametry)
+    response = StreamingHttpResponse(output, content_type="text/rtf")
+    response['Content-Disposition'] = f'attachment; filename="expertni_list_{ident_cely}.rtf"'
+    return response
 
 
 def get_history_dates(historie_vazby):
-    # Transakce do stavu "Zapsan" jsou 2
+    """
+    Funkce pro získaní dátumů pro historii.
+
+    Args:     
+        historie_vazby (HistorieVazby): model historieVazby daného projektu.
+    
+    Returns:
+        historie: dictionary dátumů k historii.
+    """
     historie = {
         "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
@@ -1124,6 +1170,17 @@ def get_history_dates(historie_vazby):
 
 
 def get_detail_template_shows(projekt, user):
+    """
+    Funkce pro získaní dictionary uživatelských akcí které mají být zobrazeny uživately.
+
+    Args:     
+        projekt (Projekt): model projekt pro který se dané akce počítají.
+
+        user (AuthUser): uživatel pro kterého se dané akce počítají.
+    
+    Returns:
+        historie: dictionary možností pro zobrazení.
+    """
     show_oznamovatel = (
         projekt.typ_projektu.id == TYP_PROJEKTU_ZACHRANNY_ID
         and projekt.has_oznamovatel()
@@ -1214,6 +1271,17 @@ def get_detail_template_shows(projekt, user):
 
 
 def get_required_fields(zaznam=None, next=0):
+    """
+    Funkce pro získaní dictionary povinných polí podle stavu projektu.
+
+    Args:     
+        zaznam (Projekt): model projekt pro který se dané pole počítají.
+
+        next (int): pokud je poskytnuto číslo tak se jedná o povinné pole pro příští stav.
+
+    Returns:
+        required_fields: list polí.
+    """
     required_fields = []
     if zaznam:
         stav = zaznam.stav
@@ -1254,6 +1322,9 @@ def get_required_fields(zaznam=None, next=0):
 
 
 def katastr_text_to_id(request):
+    """
+    Funkce podlehu pro získaní ID katastru podle názvu katastru.
+    """
     hlavni_katastr: str = request.POST.get("hlavni_katastr")
     hlavni_katastr_name = hlavni_katastr[: hlavni_katastr.find("(")].strip()
     okres_name = (
@@ -1268,15 +1339,18 @@ def katastr_text_to_id(request):
         return post
     else:
         if hlavni_katastr_name.isnumeric() and okres_name.isnumeric():
-            logger.debug(
-                f"Katastr {hlavni_katastr_name} and {okres_name} are already numbers"
-            )
+            logger.debug("projekt.views.katastr_text_to_id.has_numbers",
+                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         else:
-            logger.error(f"Cannot find katastr {hlavni_katastr_name} in {okres_name}!")
+            logger.error("projekt.views.katastr_text_to_id.not_found",
+                         extra={"hlavni_katastr_name": hlavni_katastr_name, "okres_name": okres_name})
         return request.POST.copy()
 
 
 class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
+    """
+    Třída pohledu získaní projektů pro autocomplete pro připojení do dokumentu.
+    """
     def get_queryset(self):
         if not self.request.user.is_authenticated:
             return Projekt.objects.none()
@@ -1307,6 +1381,9 @@ class ProjektAutocompleteBezZrusenych(autocomplete.Select2QuerySetView):
 
 
 class ProjectTableRowView(LoginRequiredMixin, View):
+    """
+    Třída pohledu pro zobrazení řádku tabulky projektů pri připájení.
+    """
     def get(self, request):
         context = {"p": Projekt.objects.get(id=request.GET.get("id", ""))}
         return HttpResponse(render_to_string("projekt/projekt_table_row.html", context))

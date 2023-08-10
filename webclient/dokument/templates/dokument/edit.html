@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Editace dokumentu" %}{% endblock %}
+{% block title %}{% trans "dokument.templates.edit.editaceDokumentu.title" %}{% endblock %}
 {% block head %}
 {% endblock %}
 
@@ -15,7 +15,7 @@
         <div class="card app-card-form">
           <div class="card-header">
             <div class="app-fx app-left">
-              {% trans "Editace dokumentu" %}
+              {% trans "dokument.templates.edit.editaceDokumentu.cardHeader" %}
             </div>
           </div>
           <div class="card-body">
@@ -33,8 +33,8 @@
         </div>
         <div class="mt-3">
           <div class="form-group">
-            <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "Uložit" %}</button>
-            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+            <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "dokument.templates.edit.submitButton.text" %}</button>
+            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "dokument.templates.edit.backButton.text" %}</button>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@
             $(settings.modalIDD).modal("hide");
           };
           document.addEventListener('DOMContentLoaded', function (event) {
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formURL: "{% url 'heslar:create_osoba' %}",
             formID: "create-osoba-form",
             modalFormID: "#create-osoba-form",
@@ -113,7 +113,7 @@
             successFunc:successFunction,
           })
           new Modal(options, "create-autor"); 
-            var options = Object.assign(defaults, {modalID: "modal-form",
+            var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
             formURL: "{% url 'heslar:create_osoba' %}",
             formID: "create-osoba-form",
             modalFormID: "#create-osoba-form",

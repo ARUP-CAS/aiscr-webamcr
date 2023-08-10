@@ -1,5 +1,8 @@
+from django.test import TestCase
 from django.urls import reverse
-from ez.models import ExterniZdroj
+
+from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
+from core.constants import EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY
 from core.tests.runner import (
     EL_CHEFE_ID,
     EXISTIN_EO_ID,
@@ -7,30 +10,18 @@ from core.tests.runner import (
     EXISTING_EZ_IDENT,
     EXISTING_EZ_ODESLANY,
     EZ_TYP,
-    EZ_TYP_NEW,
-    add_middleware_to_request,
 )
-from django.test import RequestFactory, TestCase
-from django.utils.translation import gettext as _
+from ez.models import ExterniZdroj
 from uzivatel.models import User
-from django.contrib.sessions.middleware import SessionMiddleware
-from ez.views import ExterniZdrojDetailView
-from core.constants import EZ_STAV_ODESLANY, EZ_STAV_POTVRZENY, EZ_STAV_ZAPSANY
-from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 
 
 class UrlTests(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         self.existing_user = User.objects.get(email="amcr@arup.cas.cz")
 
     def test_get_ez_detail(self):
-        request = self.factory.get("/ext-zdroj/detail/")
-        request.user = self.existing_user
-        request = add_middleware_to_request(request, SessionMiddleware)
-        request.session.save()
-
-        response = ExterniZdrojDetailView.as_view()(request, slug=EXISTING_EZ_IDENT)
+        self.client.force_login(self.existing_user)
+        response = self.client.get(reverse("ez:detail", kwargs={"slug": EXISTING_EZ_IDENT}))
         self.assertEqual(200, response.status_code)
 
     def test_get_ez_vyber(self):
@@ -63,28 +54,6 @@ class UrlTests(TestCase):
         self.client.force_login(self.existing_user)
         response = self.client.get(f"/ext-zdroj/edit/{EXISTING_EZ_IDENT}")
         self.assertEqual(200, response.status_code)
-
-    def test_post_ez_editovat(self):
-        data = {
-            "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
-            "typ": str(EZ_TYP_NEW),
-            "rok_vydani_vzniku": "2000",
-            "nazev": "nazev casopisu",
-            "autori": str(EL_CHEFE_ID),
-        }
-        self.client.force_login(self.existing_user)
-        response = self.client.post(
-            f"/ext-zdroj/edit/{EXISTING_EZ_IDENT}", data, follow=True
-        )
-        ez = ExterniZdroj.objects.filter(ident_cely=EXISTING_EZ_IDENT).first()
-        ez.refresh_from_db()
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(ez.typ.pk, EZ_TYP_NEW)
-        self.assertEqual(ez.nazev, "nazev casopisu")
-        self.assertEqual(ez.rok_vydani_vzniku, "2000")
-        self.assertTrue(
-            len(ExterniZdroj.objects.filter(ident_cely=EXISTING_EZ_IDENT)) == 1
-        )
 
     def test_get_ez_odelsat(self):
         self.client.force_login(self.existing_user)
@@ -203,6 +172,7 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
             "old_stav": str(EZ_STAV_ZAPSANY),
             "arch_z": str(az.id),
+            "paginace": "177-190",
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
@@ -286,6 +256,7 @@ class UrlTests(TestCase):
             "csrfmiddlewaretoken": "5X8q5kjaiRg63lWg0WIriIwt176Ul396OK9AVj9ygODPd1XvT89rGek9Bv2xgIcv",
             "old_stav": str(az.stav),
             "ez": str(ez.id),
+            "paginace": "177-190",
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(

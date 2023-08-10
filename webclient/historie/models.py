@@ -46,10 +46,13 @@ from core.constants import (
 from django.db import models
 from django.utils.translation import gettext as _
 from uzivatel.models import User
+from django_prometheus.models import ExportModelOperationsMixin
 
 
-class Historie(models.Model):
-
+class Historie(ExportModelOperationsMixin("historie"), models.Model):
+    """
+    Class pro db model historie.
+    """
     CHOICES = (
         # Project related choices
         (OZNAMENI_PROJ, "Oznámení projektu"),
@@ -97,12 +100,12 @@ class Historie(models.Model):
         (NAHRANI_SBR, "Nahrání souboru"),
     )
 
-    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("Datum změny"))
-    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("Typ změny"))
+    datum_zmeny = models.DateTimeField(auto_now_add=True, verbose_name=_("historie.models.historie.datumZmeny.label"))
+    typ_zmeny = models.TextField(choices=CHOICES, verbose_name=_("historie.models.historie.typZmeny.label"),db_index=True)
     uzivatel = models.ForeignKey(
-        User, on_delete=models.PROTECT, db_column="uzivatel", verbose_name=_("Uživatel")
+        User, on_delete=models.RESTRICT, db_column="uzivatel", verbose_name=_("historie.models.historie.uzivatel.label")
     )
-    poznamka = models.TextField(blank=True, null=True, verbose_name=_("Poznámka"))
+    poznamka = models.TextField(blank=True, null=True, verbose_name=_("historie.models.historie.poznamka.label"))
     vazba = models.ForeignKey(
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
     )
@@ -112,20 +115,23 @@ class Historie(models.Model):
         verbose_name = "historie"
 
 
-class HistorieVazby(models.Model):
-
+class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
+    """
+    Class pro db model historie vazby.
+    Model se používa k napojení na jednotlivé záznamy.
+    """
     CHOICES = (
-        (PROJEKT_RELATION_TYPE, "Projekt"),
-        (DOKUMENT_RELATION_TYPE, "Dokument"),
-        (SAMOSTATNY_NALEZ_RELATION_TYPE, "Samostatný nález"),
-        (UZIVATEL_RELATION_TYPE, "Uživatel"),
-        (PIAN_RELATION_TYPE, "Pian"),
-        (UZIVATEL_SPOLUPRACE_RELATION_TYPE, "Uživatel spolupráce"),
-        (EXTERNI_ZDROJ_RELATION_TYPE, "Externí zdroj"),
-        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, "Archeologický záznam"),
+        (PROJEKT_RELATION_TYPE, _("Projekt")),
+        (DOKUMENT_RELATION_TYPE, _("Dokument")),
+        (SAMOSTATNY_NALEZ_RELATION_TYPE, _("Samostatný nález")),
+        (UZIVATEL_RELATION_TYPE, _("Uživatel")),
+        (PIAN_RELATION_TYPE, _("Pian")),
+        (UZIVATEL_SPOLUPRACE_RELATION_TYPE, _("Uživatel spolupráce")),
+        (EXTERNI_ZDROJ_RELATION_TYPE, _("Externí zdroj")),
+        (ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE, _("Archeologický záznam")),
     )
 
-    typ_vazby = models.TextField(max_length=24, choices=CHOICES)
+    typ_vazby = models.TextField(max_length=24, choices=CHOICES, db_index=True)
 
     class Meta:
         db_table = "historie_vazby"
@@ -135,20 +141,42 @@ class HistorieVazby(models.Model):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
     def get_last_transaction_date(self, transaction_type):
+        """
+        Metóda pro zjištení datumu posledné transakce daného typu.
+        """
         resp = {}
         if isinstance(transaction_type, list):
-            tranzakce_list = (
+            transakce_list = (
                 self.historie_set.filter(typ_zmeny__in=transaction_type)
                 .only("datum_zmeny")
                 .order_by("-datum_zmeny")
             )
         else:
-            tranzakce_list = (
+            transakce_list = (
                 self.historie_set.filter(typ_zmeny=transaction_type)
                 .only("datum_zmeny")
                 .order_by("-datum_zmeny")
             )
-        if len(tranzakce_list) > 0:
-            resp["datum"] = tranzakce_list[0].datum_zmeny
-            resp["uzivatel"] = tranzakce_list[0].uzivatel
+        if len(transakce_list) > 0:
+            resp["datum"] = transakce_list[0].datum_zmeny
+            resp["uzivatel"] = transakce_list[0].uzivatel
         return resp
+
+    @property
+    def navazany_objekt(self):
+        if hasattr(self, "projekt_historie"):
+            return self.projekt_historie
+        elif hasattr(self, "dokument_historie"):
+            return self.dokument_historie
+        elif hasattr(self, "sn_historie"):
+            return self.sn_historie
+        elif hasattr(self, "uzivatelhistorievazba"):
+            return self.uzivatelhistorievazba
+        elif hasattr(self, "pian_historie"):
+            return self.pian_historie
+        elif hasattr(self, "spoluprace_historie"):
+            return self.spoluprace_historie
+        elif hasattr(self, "externizdroj"):
+            return self.externizdroj
+        elif hasattr(self, "archeologickyzaznam"):
+            return self.archeologickyzaznam

@@ -1,11 +1,16 @@
+import io
 import tempfile
 from abc import ABC, abstractmethod
 import datetime
 from io import BytesIO
+import logging
 import os
 
+from django.contrib.staticfiles.storage import staticfiles_storage
+
+from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from core.utils import calculate_crc_32
-from webclient.settings.base import MEDIA_ROOT
+from webclient.settings.base import MEDIA_ROOT, STATIC_ROOT
 
 from reportlab.lib import utils
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
@@ -19,19 +24,34 @@ from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from core.constants import DOK_ADRESA, DOK_VE_MESTE, DOK_MESTO, DOK_EMAIL, DOK_TELEFON, DOC_KOMU, DOC_REDITEL
 from heslar.models import RuianKraj
 
+logger_s = logging.getLogger(__name__)
+
 PAGESIZE = (210 * mm, 297 * mm)
 BASE_MARGIN = 20 * mm
 HEADER_HEIGHT = 10 * mm
 HEADER_IMAGES = ("logo-arup-cs.png", "logo-arub-cs.png", "logo-am-colored-cs.png")
 
-pdfmetrics.registerFont(TTFont('OpenSans', 'static/fonts/OpenSans-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('OpenSansBold', 'static/fonts/OpenSans-Bold.ttf'))
-registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold')
+#Try except because of failing sphinx-build
 
+path = None
+path_bold = None
+try:
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Regular.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSans', path))
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Bold.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSansBold', path))
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-Italic.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSansItalic', path))
+    path = os.path.join(STATIC_ROOT, "fonts", "OpenSans-BoldItalic.ttf")
+    pdfmetrics.registerFont(TTFont('OpenSansBoldItalic', path))
+    registerFontFamily('OpenSans', normal='OpenSans', bold='OpenSansBold', italic="OpenSansItalic",
+                       boldItalic="OpenSansBoldItalic")
+except Exception as err:
+    # This will be triggered during collectstatic
+    logger_s.error("doc_utils.font.error", extra={"path": path, "path_bold": path_bold})
 
 Title = "Hello world"
 pageinfo = "platypus example"
-
 
 class DocumentCreator(ABC):
 
@@ -46,7 +66,7 @@ class DocumentCreator(ABC):
 
 class OznameniPDFCreator(DocumentCreator):
     def _generate_text(self):
-        dok_index = 0 if "C" in self.projekt.ident_cely else 1
+        dok_index = 0 if "C" in self.projekt.ident_cely.upper() else 1
         self.texts["header_line_1"] = f"ARCHEOLOGICKÝ ÚSTAV AV ČR, {DOK_MESTO[dok_index]}, v. v. i."
         self.texts["header_line_2"] = "REFERÁT ARCHEOLOGICKÉ PAMÁTKOVÉ PÉČE"
         # Condition check for automated testing
@@ -73,8 +93,8 @@ class OznameniPDFCreator(DocumentCreator):
         Potvrzujeme, že <strong>{self.oznamovatel.oznamovatel}</strong> ({self.oznamovatel.adresa}; tel: {self.oznamovatel.telefon}; 
         email: {self.oznamovatel.email}), jehož zastupuje {self.oznamovatel.odpovedna_osoba}, 
         ohlásil záměr <strong>{self.projekt.podnet}</strong> (označení stavby: {self.projekt.oznaceni_stavby}; 
-        plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ')} - 
-        {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ')} na 
+        plánované zahájení: {self.projekt.planovane_zahajeni.lower.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} - 
+        {self.projekt.planovane_zahajeni.upper.strftime('%d. %m. %Y').replace(' 0', ' ') if self.projekt.planovane_zahajeni else ''} na 
         k. ú. <strong>{str(self.projekt.hlavni_katastr).replace("(", "(okr. ")}</strong>, parc. č. 
         {self.projekt.parcelni_cislo} ({self.projekt.lokalizace}) {DOC_KOMU[dok_index]}. 
         Oznámení provedl <strong>{datum_zmeny.strftime('%d. %m. %Y').replace(' 0', ' ')}</strong> pod evidenčním číslem 
@@ -249,18 +269,21 @@ class OznameniPDFCreator(DocumentCreator):
                                        leading=20))
         self.styles.add(ParagraphStyle("amBodyTextCenter",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_CENTER))
+                                       alignment=TA_CENTER,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amBodyTextSmallerSpaceAfter",
                                        parent=self.styles["amBodyText"],
                                        spaceAfter=0,
-                                       spaceBefore=0))
+                                       spaceBefore=0,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amHeading1",
                                        parent=self.styles["amBodyText"],
                                        alignment=TA_CENTER,
                                        fontName="OpenSansBold"))
         self.styles.add(ParagraphStyle("amDatum",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_RIGHT))
+                                       alignment=TA_RIGHT,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amVec",
                                        parent=self.styles["amBodyText"],
                                        alignment=TA_LEFT,
@@ -271,15 +294,18 @@ class OznameniPDFCreator(DocumentCreator):
                                        fontName="OpenSansBold"))
         self.styles.add(ParagraphStyle("amPodpis1",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_CENTER))
+                                       alignment=TA_CENTER,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amPodpis2",
                                        parent=self.styles["amBodyText"],
-                                       alignment=TA_CENTER))
+                                       alignment=TA_CENTER,
+                                       fontName="OpenSans"))
         self.styles.add(ParagraphStyle("amPodpis3",
                                        parent=self.styles["amPodpis2"],
-                                       fontSize=10))
+                                       fontSize=10,
+                                       fontName="OpenSans"))
 
-    def build_document(self):
+    def build_document(self) -> RepositoryBinaryFile:
         def draw_image(filename, canvas, counter):
             img = utils.ImageReader(filename)
             iw, ih = img.getSize()
@@ -380,28 +406,19 @@ class OznameniPDFCreator(DocumentCreator):
         )
         pdf_value = pdf_buffer.getvalue()
         pdf_buffer.close()
-        if not os.path.exists(MEDIA_ROOT):
-            os.makedirs(MEDIA_ROOT)
-        directory = f"{MEDIA_ROOT}/soubory/AG/{datetime.datetime.now().strftime('%Y/%m/%d')}"
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        if self.additional:
-            from core.models import Soubor
-            soubory_count = Soubor.objects.filter(nazev_zkraceny__startswith=f"oznameni_{self.projekt.ident_cely}_").count()
-            postfix = "_" + chr(65 + soubory_count)
-        else:
-            postfix = ""
-        path = f"{directory}/oznameni_{self.projekt.ident_cely}{postfix}.pdf"
-        with open(path, "wb") as file:
-            file.write(pdf_value)
-        with open(path, mode="rb") as file:
-            checksum = calculate_crc_32(file)
-        os.remove(path)
-        path = f"{directory}/{checksum}_oznameni_{self.projekt.ident_cely}{postfix}.pdf"
-        filename_without_checksum = f"oznameni_{self.projekt.ident_cely}{postfix}.pdf"
-        with open(path, "wb") as file:
-            file.write(pdf_value)
-        return path, filename_without_checksum
+
+        postfix = "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+        file = io.BytesIO()
+        file.write(pdf_value)
+        file.seek(0)
+        checksum = calculate_crc_32(file)
+        file.seek(0)
+        filename = f"{checksum}_oznameni_{self.projekt.ident_cely}{postfix}.pdf"
+
+        con = FedoraRepositoryConnector(self.projekt)
+        rep_bin_file: RepositoryBinaryFile = con.save_binary_file(filename, "application/pdf", file)
+        return rep_bin_file
 
     def __init__(self, oznamovatel, projekt, additional=False):
         from oznameni.models import Oznamovatel
