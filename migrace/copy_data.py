@@ -217,7 +217,6 @@ def encrypt_passwords(destination_host, destination_db, destination_user, destin
             sha256 = hasher.encode_sha1_hash(sha1_hash, salt)
             destination_cursor.execute(f"update auth_user set password = '{sha256}' where id = {current_hash[0]};")
     destination_conn.commit()
-    print("Passowrds encrypted.")
 
 
 def reset_sequences(destination_host, destination_db, destination_user, destination_password):
@@ -283,6 +282,8 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         ("id", "uzivatel_notifikace"),
         ("id", "uzivatel_spoluprace"),
         ("id", "tvar"),
+        ("id", "auth_user_groups"),
+        ("id", "auth_user_notifikace_typ"),
     )
     for item in tables:
         destination_cursor.execute(f"SELECT SETVAL("
@@ -294,12 +295,11 @@ def reset_sequences(destination_host, destination_db, destination_user, destinat
         "SELECT SETVAL('auth_user_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 3) AS INT)) FROM auth_user) + 1);",
         "SELECT SETVAL('organizace_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 5) AS INT)) FROM organizace) + 1);",
         "SELECT SETVAL('osoba_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 4) AS INT)) FROM osoba) + 1);",
-
+        "SELECT SETVAL('heslar_ident_cely_seq', (SELECT MAX(CAST(SUBSTRING(ident_cely, 5) AS INT)) FROM heslar WHERE LENGTH(ident_cely) > 0) + 1);",
     ]
     for item in other_queries:
         destination_cursor.execute(item)
     destination_conn.commit()
-    print("Sequences are set.")
 
 if __name__ == "__main__":
     copy_data(source_host=sys.argv[1], destination_host=sys.argv[2],
