@@ -388,9 +388,9 @@ class NotificationsLog(ExportModelOperationsMixin("notification_log"), models.Mo
     Class pro db model logu notifikací.
     """
     notification_type = models.ForeignKey(UserNotificationType, on_delete=models.CASCADE)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    receiver_address = models.CharField(max_length=254)
 
     class Meta:
         db_table = "notifikace_log"
