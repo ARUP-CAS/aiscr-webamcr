@@ -85,6 +85,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now=True)),
+                ('receiver_address', models.CharField(max_length=254)),
             ],
             options={
                 'db_table': 'notifikace_log',
@@ -164,11 +165,6 @@ class Migration(migrations.Migration):
             model_name='organizace',
             name='zverejneni_pristupnost',
             field=models.ForeignKey(db_column='zverejneni_pristupnost', limit_choices_to={'nazev_heslare': 25}, on_delete=django.db.models.deletion.RESTRICT, related_name='organizace_pristupnosti', to='heslar.heslar', verbose_name='uzivatel.models.Organizace.zverejneni_pristupnost'),
-        ),
-        migrations.AddField(
-            model_name='notificationslog',
-            name='content_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype'),
         ),
         migrations.AddField(
             model_name='notificationslog',
