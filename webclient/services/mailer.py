@@ -127,7 +127,7 @@ class Mailer:
             except Exception as e:
                 logger.error("services.mailer.send.error",
                              extra={"from_email": from_email, "to": to, "subject": subject, "exception": e})
-            cls._log_notification(notification_type=notification_type, receiver_object=user)
+            cls._log_notification(notification_type=notification_type, receiver_object=user, receiver_address=to)
         else:
             logger.warning("services.mailer.send.invalid_email", extra={"to": to, "subject": subject})
 
