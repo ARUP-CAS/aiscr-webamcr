@@ -5,7 +5,7 @@
     <p>{% trans 'dokument.templates.emails.E-K-01.title' %},</p>
     <p>{% trans "dokument.templates.emails.E-K-01.textPart1" %} <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b>.</p>
     <p>
-        {% trans "dokument.templates.emails.E-K-01.textPart2" %}
-        {% trans "dokument.templates.emails.E-K-01.textPart3" %}
+        {% trans "dokument.templates.emails.E-K-01.textPart2" %}.
+        {% trans "dokument.templates.emails.E-K-01.textPart3" %}.
     </p>
 {% endblock %}
