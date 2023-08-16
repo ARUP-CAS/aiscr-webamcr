@@ -7,6 +7,6 @@
         {% trans "dokument.templates.emails.E-K-02.textPart1" %}
         <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "dokument.templates.emails.E-K-02.textPart2" %} <b>{{ state }}</b>.
     </p>
-    <p><b>{% trans "dokument.templates.emails.E-K-02.reason.text" %}</b> {{ reason }}</p>
-    <p>{% trans "dokument.templates.emails.E-K-02.textPart3" %}</p>
+    <p><b>{% trans "dokument.templates.emails.E-K-02.reason.text" %}:</b> {{ reason }}</p>
+    <p>{% trans "dokument.templates.emails.E-K-02.textPart3" %}.</p>
 {% endblock %}
