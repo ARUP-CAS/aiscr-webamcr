@@ -544,6 +544,7 @@ def edit(request, ident_cely):
         request,
         "arch_z/create.html",
         {
+            "object": zaznam,
             "formAZ": form_az,
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
@@ -778,6 +779,7 @@ def zapsat(request, projekt_ident_cely=None):
             "title": _("arch_z.views.zapsat.projektovaAkce.title.text"),
             "header": _("arch_z.views.zapsat.projektovaAkce.header.text"),
             "create_akce": False,
+            "projekt_ident_cely": projekt_ident_cely,
         }
     else:
         projekt = None

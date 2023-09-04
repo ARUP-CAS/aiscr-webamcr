@@ -115,7 +115,15 @@
     <div class="mt-3">
       <div class="form-group">
         <button type="submit" id="actionSubmitBtn" class="btn btn-primary">{{ button }}</button>
-        <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</button>
+          {% if object %}
+            <a type="button" class="btn btn-secondary" href="{% url 'arch_z:detail' object.ident_cely %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>
+          {% else %}
+            {% if sam_akce %}
+              <a type="button" class="btn btn-secondary" href="{% url 'arch_z:index' %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>
+            {% else %}
+              <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' projekt_ident_cely %}">{% trans "arch_z.templates.arch_z.create.detailForm.button.zpet.label" %}</a>
+            {% endif %}
+          {% endif %}
       </div>
     </div>
   </form>

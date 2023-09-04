@@ -111,6 +111,7 @@ from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaVazby
+from lokalita.models import Lokalita
 from nalez.forms import (
     NalezFormSetHelper,
     create_nalez_objekt_form,
@@ -1634,11 +1635,21 @@ def zapsat(request, zaznam=None):
             required=required_fields,
             required_next=required_fields_next,
         )
-
+    if zaznam:
+        if isinstance(zaznam, ArcheologickyZaznam):
+            back_ident = zaznam.ident_cely
+        else:
+            back_ident = None
+    else:
+        back_ident = None
     return render(
         request,
         "dokument/create.html",
         {
+            "back_ident": back_ident,
+            "zaznam": zaznam,
+            "TYP_ZAZNAMU_LOKALITA": ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
+            "TYP_ZAZNAMU_AKCE": ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,

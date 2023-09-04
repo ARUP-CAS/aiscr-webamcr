@@ -22,7 +22,7 @@
       </div>
       <div>
         <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary mt-3">{% trans "Zažádat" %}</button>
-        <button type="button" class="btn btn-secondary mt-3" onclick="goBack();">{% trans "Zpět" %}</button>
+        <a type="button" class="btn btn-secondary mt-3" href="{% url 'pas:spoluprace_list' %}">{% trans "Zpět" %}</a>
       </div>
     </form>
   </div>

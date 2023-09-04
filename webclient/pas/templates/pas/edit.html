@@ -27,7 +27,11 @@
       </div>      
     <div>
       <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary" id="submit-id-save">
-      <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "Zpět" %}</button>
+      {% if sn %}
+        <a type="button" class="btn btn-secondary" href="{% url 'pas:detail' sn.ident_cely %}">{% trans "Zpět" %}</a>
+      {% else %}
+        <a type="button" class="btn btn-secondary" href="{% url 'pas:index' %}">{% trans "Zpět" %}</a>
+      {% endif %}
     </div>
     </form>
   </div>

@@ -16,7 +16,7 @@
         <div class="form-group">
             <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary"
                    id="submit-id-save">
-            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+            <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' oznameni.projekt.ident_cely %}">{% trans "Zpět" %}</a>
         </div>
       </div>
     </form>

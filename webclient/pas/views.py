@@ -346,6 +346,7 @@ def edit(request, ident_cely):
         request,
         "pas/edit.html",
         {
+            "sn": sn,
             "global_map_can_edit": True,
             "formCoor": form_coor,
             "form": form,

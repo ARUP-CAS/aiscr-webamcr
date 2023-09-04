@@ -55,7 +55,7 @@
         <div class="form-group">
           <input type="submit" name="save" value="{% translate 'Uložit' %}"
                  class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
-          <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "Zpět" %}</button>
+          <a type="button" class="btn btn-secondary" {% url 'projekt:detail' projekt.ident_cely %}>{% trans "Zpět" %}</a>
         </div>
       </div>
 		</form>
