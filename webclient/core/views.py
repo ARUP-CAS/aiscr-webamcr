@@ -196,7 +196,6 @@ def update_file(request, typ_vazby, file_id):
     """
     ident_cely = ""
     back_url = request.GET.get("next")
-    soubor = get_object_or_404(Soubor, id=file_id)
     return render(
         request,
         "core/upload_file.html",
@@ -333,18 +332,18 @@ def post_upload(request):
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
-                rep_bin_file = conn.update_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name),
+                extension = soubor.name.split(".")[-1]
+                old_name = s.nazev.split(".")[-1]
+                new_name = f'{".".join(old_name[:-1])}.{extension[-1]}'
+                rep_bin_file = conn.update_binary_file(new_name, get_mime_type(soubor.name),
                                                        soubor_data, s.repository_uuid)
-                name_without_checksum = soubor.name
-                soubor.name = checksum + "_" + new_name
-                s.nazev = checksum + "_" + new_name
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
                 s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
                 s.sha_512 = rep_bin_file.sha_512
                 s.save()
-                s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
+                s.zaznamenej_nahrani_nove_verze(request.user, new_name)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
@@ -367,13 +366,15 @@ def post_upload(request):
                         },
                         status=200,
                     )
+                else:
+                    return JsonResponse(
+                        {"filename": s.nazev, "id": s.pk}, status=200
+                    )
             else:
-                return JsonResponse(
-                    {"filename": s.nazev, "id": s.pk}, status=200
-                )
+                logger.warning("core.views.post_upload.rep_bin_file_is_none")
+                return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
     else:
         logger.warning("core.views.post_upload.no_file")
-
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
 
 

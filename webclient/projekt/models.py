@@ -493,7 +493,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             pass
         return has_oznamovatel
 
-    def set_permanent_ident_cely(self):
+    def set_permanent_ident_cely(self, update_repository=True):
         """
         Metóda na nastavení permanentního identu akce z projektu sekvence.
         """
@@ -529,7 +529,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
         self.save()
-        self.record_ident_change(old_ident)
+        if update_repository:
+            self.record_ident_change(old_ident)
 
     def create_confirmation_document(self, additional=False, user=None):
         """
@@ -585,6 +586,15 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
+        samostatne_nalezy = self.samostatne_nalezy.all()
+        pristupnosti_ids = set()
+        for samosatny_nalez in samostatne_nalezy:
+            from pas.models import SamostatnyNalez
+            samosatny_nalez: SamostatnyNalez
+            if samosatny_nalez.pristupnost is not None:
+                pristupnosti_ids.add(samosatny_nalez.pristupnost.id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
 
     @property
