@@ -2,9 +2,9 @@ import logging
 
 from django.urls import reverse
 
-from crispy_forms.bootstrap import FormActions, AppendedText
+from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import HTML, Div, Layout, Submit
+from crispy_forms.layout import HTML, Div, Layout
 from dal import autocomplete
 from django import forms
 from django.core.exceptions import ValidationError
@@ -28,9 +28,9 @@ class CreateProjektForm(forms.ModelForm):
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
-        label=_("Plánované zahájení prací"),
+        label=_("projekt.forms.createProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
-        help_text=_("projekt.form.createProjekt.planovane_zahajeni.tooltip"),
+        help_text=_("projekt.forms.createProjekt.planovaneZahajeni.tooltip"),
     )
 
     class Meta:
@@ -61,25 +61,25 @@ class CreateProjektForm(forms.ModelForm):
             ),
         }
         labels = {
-            "typ_projektu": _("Typ projektu"),
-            "hlavni_katastr": _("Hlavní katastr"),
-            "katastry": _("Další katastry"),
-            "podnet": _("Podnět"),
-            "lokalizace": _("Lokalizace"),
-            "parcelni_cislo": _("Parcelní číslo"),
-            "oznaceni_stavby": _("Označení stavby"),
+            "typ_projektu": _("projekt.forms.createProjekt.typProjektu.label"),
+            "hlavni_katastr": _("projekt.forms.createProjekt.hlavniKatastr.label"),
+            "katastry": _("projekt.forms.createProjekt.katastry.label"),
+            "podnet": _("projekt.forms.createProjekt.podnet.label"),
+            "lokalizace": _("projekt.forms.createProjekt.lokalizace.label"),
+            "parcelni_cislo": _("projekt.forms.createProjekt.parcelniCislo.label"),
+            "oznaceni_stavby": _("projekt.forms.createProjekt.oznaceniStavby.label"),
         }
         error_messages = {
-            "hlavni_katastr": {"required": "Je třeba vybrat bod na mapě."}
+            "hlavni_katastr": {"required": _("projekt.forms.createProjekt.hlavniKatastr.error")}
         }
         help_texts = {
-            "typ_projektu": _("projekt.form.createProjekt.typ_projektu.tooltip"),
-            "hlavni_katastr": _("projekt.form.createProjekt.hlavni_katastr.tooltip"),
-            "katastry": _("projekt.form.createProjekt.katastry.tooltip"),
-            "podnet": _("projekt.form.createProjekt.podnet.tooltip"),
-            "lokalizace": _("projekt.form.createProjekt.lokalizace.tooltip"),
-            "parcelni_cislo": _("projekt.form.createProjekt.parcelni_cislo.tooltip"),
-            "oznaceni_stavby": _("projekt.form.createProjekt.oznaceni_stavby.tooltip"),
+            "typ_projektu": _("projekt.forms.createProjekt.typProjektu.tooltip"),
+            "hlavni_katastr": _("projekt.forms.createProjekt.hlavniKatastr.tooltip"),
+            "katastry": _("projekt.forms.createProjekt.katastry.tooltip"),
+            "podnet": _("projekt.forms.createProjekt.podnet.tooltip"),
+            "lokalizace": _("projekt.forms.createProjekt.lokalizace.tooltip"),
+            "parcelni_cislo": _("projekt.forms.createProjekt.parcelniCislo.tooltip"),
+            "oznaceni_stavby": _("projekt.forms.createProjekt.oznaceniStavby.tooltip"),
         }
 
     def __init__(self, *args,required=None,required_next=None, **kwargs):
@@ -94,7 +94,7 @@ class CreateProjektForm(forms.ModelForm):
             Div(
                 Div(
                     Div(
-                        HTML(_("Detail projektu")),
+                        HTML(_("projekt.forms.createProjekt.cardHeader.detail")),
                         css_class="app-fx app-left",
                     ),
                     css_class="card-header",
@@ -153,23 +153,23 @@ class EditProjektForm(forms.ModelForm):
     longitude = forms.FloatField(required=False, widget=HiddenInput())
     planovane_zahajeni = DateRangeField(
         required=True,
-        label=_("Plánované zahájení prací"),
+        label=_("projekt.forms.editProjekt.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
-        help_text=_("projekt.form.editProjekt.planovane_zahajeni.tooltip"),
+        help_text=_("projekt.forms.editProjekt.planovaneZahajeni.tooltip"),
     )
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         widget=forms.DateInput(
             attrs={"data-provide": "datepicker", "autocomplete": "off"}
         ),
-        help_text=_("projekt.form.editProjekt.datum_zahajeni.tooltip"),
+        help_text=_("projekt.forms.editProjekt.datumZahajeni.tooltip"),
     )
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
         widget=forms.DateInput(
             attrs={"data-provide": "datepicker", "autocomplete": "off"}
         ),
-        help_text=_("projekt.form.editProjekt.datum_ukonceni.tooltip"),
+        help_text=_("projekt.forms.editProjekt.datumUkonceni.tooltip"),
     )
 
     class Meta:
@@ -226,47 +226,47 @@ class EditProjektForm(forms.ModelForm):
             ),
         }
         labels = {
-            "typ_projektu": _("Typ projektu"),
-            "hlavni_katastr": _("Hlavní katastr"),
-            "katastry": _("Další katastry"),
-            "podnet": _("Podnět"),
-            "lokalizace": _("Lokalizace"),
-            "parcelni_cislo": _("Parcelní číslo"),
-            "oznaceni_stavby": _("Označení stavby"),
-            "vedouci_projektu": _("Vedoucí projektu"),
-            "organizace": _("Organizace"),
-            "kulturni_pamatka": _("Památková ochrana"),
-            "kulturni_pamatka_cislo": _("Rejstříkové číslo USKP"),
-            "kulturni_pamatka_popis": _("Název památky"),
-            "uzivatelske_oznaceni": _("Uživatelské označení"),
-            "datum_zahajeni": _("Datum zahájení výzkumu"),
-            "datum_ukonceni": _("Datum ukončení výzkumu"),
-            "termin_odevzdani_nz": _("Termín odevzdání"),
+            "typ_projektu": _("projekt.forms.editProjekt.typProjektu.label"),
+            "hlavni_katastr": _("projekt.forms.editProjekt.hlavniKatastr.label"),
+            "katastry": _("projekt.forms.editProjekt.katastry.label"),
+            "podnet": _("projekt.forms.editProjekt.podnet.label"),
+            "lokalizace": _("projekt.forms.editProjekt.lokalizace.label"),
+            "parcelni_cislo": _("projekt.forms.editProjekt.parcelniCislo.label"),
+            "oznaceni_stavby": _("projekt.forms.editProjekt.oznaceniStavby.label"),
+            "vedouci_projektu": _("projekt.forms.editProjekt.vedouciProjektu.label"),
+            "organizace": _("projekt.forms.editProjekt.organizace.label"),
+            "kulturni_pamatka": _("projekt.forms.editProjekt.kulturniPamatka.label"),
+            "kulturni_pamatka_cislo": _("projekt.forms.editProjekt.kulturniPamatkaCislo.label"),
+            "kulturni_pamatka_popis": _("projekt.forms.editProjekt.kulturniPamatkaPopis.label"),
+            "uzivatelske_oznaceni": _("projekt.forms.editProjekt.uzivatelskeOznaceni.label"),
+            "datum_zahajeni": _("projekt.forms.editProjekt.datumZahajeni.label"),
+            "datum_ukonceni": _("projekt.forms.editProjekt.datumUkonceni.label"),
+            "termin_odevzdani_nz": _("projekt.forms.editProjekt.terminOdevzdani.label"),
         }
         help_texts = {
-            "typ_projektu": _("projekt.form.editProjekt.typ_projektu.tooltip"),
-            "hlavni_katastr": _("projekt.form.editProjekt.hlavni_katastr.tooltip"),
-            "katastry": _("projekt.form.editProjekt.katastry.tooltip"),
-            "podnet": _("projekt.form.editProjekt.podnet.tooltip"),
-            "lokalizace": _("projekt.form.editProjekt.lokalizace.tooltip"),
-            "parcelni_cislo": _("projekt.form.editProjekt.parcelni_cislo.tooltip"),
-            "oznaceni_stavby": _("projekt.form.editProjekt.oznaceni_stavby.tooltip"),
-            "vedouci_projektu": _("projekt.form.editProjekt.vedouci_projektu.tooltip"),
-            "organizace": _("projekt.form.editProjekt.organizace.tooltip"),
-            "kulturni_pamatka": _("projekt.form.editProjekt.kulturni_pamatka.tooltip"),
+            "typ_projektu": _("projekt.forms.editProjekt.typProjektu.tooltip"),
+            "hlavni_katastr": _("projekt.forms.editProjekt.hlavniKatastr.tooltip"),
+            "katastry": _("projekt.forms.editProjekt.katastry.tooltip"),
+            "podnet": _("projekt.forms.editProjekt.podnet.tooltip"),
+            "lokalizace": _("projekt.forms.editProjekt.lokalizace.tooltip"),
+            "parcelni_cislo": _("projekt.forms.editProjekt.parcelniCislo.tooltip"),
+            "oznaceni_stavby": _("projekt.forms.editProjekt.oznaceniStavby.tooltip"),
+            "vedouci_projektu": _("projekt.forms.editProjekt.vedouciProjektu.tooltip"),
+            "organizace": _("projekt.forms.editProjekt.organizace.tooltip"),
+            "kulturni_pamatka": _("projekt.forms.editProjekt.kulturniPamatka.tooltip"),
             "kulturni_pamatka_cislo": _(
-                "projekt.form.editProjekt.kulturni_pamatka_cislo.tooltip"
+                "projekt.forms.editProjekt.kulturniPamatkaCislo.tooltip"
             ),
             "kulturni_pamatka_popis": _(
-                "projekt.form.editProjekt.kulturni_pamatka_popis.tooltip"
+                "projekt.forms.editProjekt.kulturniPamatkaPopis.tooltip"
             ),
             "uzivatelske_oznaceni": _(
-                "projekt.form.editProjekt.uzivatelske_oznaceni.tooltip"
+                "projekt.forms.editProjekt.uzivatelskeOznaceni.tooltip"
             ),
-            "datum_zahajeni": _("projekt.form.editProjekt.datum_zahajeni.tooltip"),
-            "datum_ukonceni": _("projekt.form.editProjekt.datum_ukonceni.tooltip"),
+            "datum_zahajeni": _("projekt.forms.editProjekt.datumZahajeni.tooltip"),
+            "datum_ukonceni": _("projekt.forms.editProjekt.datumUkonceni.tooltip"),
             "termin_odevzdani_nz": _(
-                "projekt.form.editProjekt.termin_odevzdani_nz.tooltip"
+                "projekt.forms.editProjekt.terminOdevzdani.tooltip"
             ),
         }
 
@@ -278,7 +278,7 @@ class EditProjektForm(forms.ModelForm):
             Div(
                 Div(
                     Div(
-                        HTML(_("Editace projektu")),
+                        HTML(_("projekt.forms.editProjekt.cardHeader.editace")),
                         css_class="app-fx app-left",
                     ),
                     css_class="card-header",
@@ -307,12 +307,12 @@ class EditProjektForm(forms.ModelForm):
                     ),
                     Div(
                         Div(
+                            HTML('<span class="app-divider-label">'),
                             HTML(
-                                _(
-                                    '<span class="app-divider-label">Přihlášení projektu</span>'
-                                )
-                            ),
-                            HTML(_('<hr class="mt-0" />')),
+                                _("projekt.forms.editProjekt.prihlaseni.divider")
+                                ),
+                            HTML('</span>'),
+                            HTML('<hr class="mt-0" />'),
                             css_class="col-sm-12",
                         ),
                         Div(
@@ -327,10 +327,10 @@ class EditProjektForm(forms.ModelForm):
                         Div("latitude", css_class="hidden"),
                         Div("longitude", css_class="hidden"),
                         Div(
-                            HTML(
-                                _('<span class="app-divider-label">Terenní část</span>')
-                            ),
-                            HTML(_('<hr class="mt-0" />')),
+                            HTML('<span class="app-divider-label">'),
+                            HTML(_("projekt.forms.editProjekt.terenniCast.divider")),
+                            HTML('</span>'),
+                            HTML('<hr class="mt-0" />'),
                             css_class="col-sm-12",
                         ),
                         Div("datum_zahajeni", css_class="col-sm-3"),
@@ -384,36 +384,36 @@ class NavrhnoutZruseniProjektForm(forms.Form):
     Formulář pro navržení zrušení projektu.
     """
     reason = forms.CharField(
-        label=_("Důvod návrhu zrušení"),
+        label=_("projekt.forms.navrhZruseniProj.reason.label"),
         required=True,
-        help_text=_("projekt.form.navrhZruseniProj.reason.tooltip"),
+        help_text=_("projekt.forms.navrhZruseniProj.reason.tooltip"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
     CHOICES = [
-        ("option1", _("projekt.form.navrhzruseni.duvod1.text")),
-        ("option2", _("projekt.form.navrhzruseni.duvod2.text")),
-        ("option3", _("projekt.form.navrhzruseni.duvod3.text")),
-        ("option4", _("projekt.form.navrhzruseni.duvod4.text")),
-        ("option5", _("projekt.form.navrhzruseni.duvod5.text")),
-        ("option6", _("projekt.form.navrhzruseni.duvod6.text")),
+        ("option1", _("projekt.forms.navrhzruseni.duvod1.text")),
+        ("option2", _("projekt.forms.navrhzruseni.duvod2.text")),
+        ("option3", _("projekt.forms.navrhzruseni.duvod3.text")),
+        ("option4", _("projekt.forms.navrhzruseni.duvod4.text")),
+        ("option5", _("projekt.forms.navrhzruseni.duvod5.text")),
+        ("option6", _("projekt.forms.navrhzruseni.duvod6.text")),
     ]
 
     reason = forms.ChoiceField(
-        label=_("projekt.form.navrhzruseni.duvod.label"),
+        label=_("projekt.forms.navrhzruseni.duvod.label"),
         choices=CHOICES,
         widget=forms.RadioSelect,
-        help_text=_("projekt.form.navrhzruseni.duvod.tooltip"),
+        help_text=_("projekt.forms.navrhzruseni.duvod.tooltip"),
     )
     projekt_id = forms.CharField(
-        label=_("projekt.form.navrhzruseni.projektId.label"),
+        label=_("projekt.forms.navrhzruseni.projektId.label"),
         required=False,
-        help_text=_("projekt.form.navrhZruseniProj.projektId.tooltip"),
+        help_text=_("projekt.forms.navrhZruseniProj.projektId.tooltip"),
     )
     reason_text = forms.CharField(
-        label=_("projekt.form.navrhzruseni.vlastniduvod.label"),
+        label=_("projekt.forms.navrhzruseni.vlastniduvod.label"),
         required=False,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
-        help_text=_("projekt.form.navrhZruseniProj.reasonText.tooltip"),
+        help_text=_("projekt.forms.navrhZruseniProj.reasonText.tooltip"),
     )
     enable_submit = True
 
@@ -442,12 +442,12 @@ class NavrhnoutZruseniProjektForm(forms.Form):
         if cleaned_data.get("reason") == "option1":
             if not cleaned_data.get("projekt_id"):
                 raise forms.ValidationError(
-                    _("projekt.form.navrhzruseni.validation.projektId.text")
+                    _("projekt.forms.navrhzruseni.validation.projektId.text")
                 )
         elif cleaned_data.get("reason") == "option6":
             if not cleaned_data.get("reason_text"):
                 raise forms.ValidationError(
-                    _("projekt.form.navrhzruseni.validation.vlastniDuvod.text")
+                    _("projekt.forms.navrhzruseni.validation.vlastniDuvod.text")
                 )
         return self.cleaned_data
 
@@ -483,29 +483,29 @@ class PrihlaseniProjektForm(forms.ModelForm):
             ),
         }
         labels = {
-            "vedouci_projektu": _("Vedoucí projektu"),
-            "organizace": _("Organizace"),
-            "kulturni_pamatka": _("Památková ochrana"),
-            "kulturni_pamatka_cislo": _("Rejstříkové číslo ÚSKP"),
-            "kulturni_pamatka_popis": _("Název památky"),
-            "uzivatelske_oznaceni": _("Uživatelské označení"),
+            "vedouci_projektu": _("projekt.forms.prihlaseniProj.vedouciProjektu.label"),
+            "organizace": _("projekt.forms.prihlaseniProj.organizace.label"),
+            "kulturni_pamatka": _("projekt.forms.prihlaseniProj.kulturniPamatka.label"),
+            "kulturni_pamatka_cislo": _("projekt.forms.prihlaseniProj.kulturniPamatkaCislo.label"),
+            "kulturni_pamatka_popis": _("projekt.forms.prihlaseniProj.kulturniPamatkaPopis.label"),
+            "uzivatelske_oznaceni": _("projekt.forms.prihlaseniProj.uzivatelskeOznaceni.label"),
         }
         help_texts = {
             "vedouci_projektu": _(
-                "projekt.form.prihlaseniProj.vedouci_projektu.tooltip"
+                "projekt.forms.prihlaseniProj.vedouciProjektu.tooltip"
             ),
             "kulturni_pamatka": _(
-                "projekt.form.prihlaseniProj.kulturni_pamatka.tooltip"
+                "projekt.forms.prihlaseniProj.kulturniPamatka.tooltip"
             ),
-            "organizace": _("projekt.form.prihlaseniProj.organizace.tooltip"),
+            "organizace": _("projekt.forms.prihlaseniProj.organizace.tooltip"),
             "kulturni_pamatka_cislo": _(
-                "projekt.form.prihlaseniProj.kulturni_pamatka_cislo.tooltip"
+                "projekt.forms.prihlaseniProj.kulturniPamatkaCislo.tooltip"
             ),
             "kulturni_pamatka_popis": _(
-                "projekt.form.prihlaseniProj.kulturni_pamatka_popis.tooltip"
+                "projekt.forms.prihlaseniProj.kulturniPamatkaPopis.tooltip"
             ),
             "uzivatelske_oznaceni": _(
-                "projekt.form.prihlaseniProj.uzivatelske_oznaceni.tooltip"
+                "projekt.forms.prihlaseniProj.uzivatelskeOznaceni.tooltip"
             ),
         }
 
@@ -549,7 +549,7 @@ class ZahajitVTerenuForm(forms.ModelForm):
     """
     datum_zahajeni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
-        help_text=_("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip"),
+        help_text=_("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -557,10 +557,10 @@ class ZahajitVTerenuForm(forms.ModelForm):
         model = Projekt
         fields = ("datum_zahajeni",)
         labels = {
-            "datum_zahajeni": _("Datum zahájení terénních prací"),
+            "datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.label"),
         }
         help_texts = {
-            "datum_zahajeni": _("projekt.form.zahajitVTerenu.datum_zahajeni.tooltip")
+            "datum_zahajeni": _("projekt.forms.zahajitVTerenu.datumZahajeni.tooltip")
         }
 
     def __init__(self, *args, **kwargs):
@@ -583,7 +583,7 @@ class UkoncitVTerenuForm(forms.ModelForm):
     """
     datum_ukonceni = forms.DateField(
         validators=[validators.datum_max_1_mesic_v_budoucnosti],
-        help_text=_("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
+        help_text=_("projekt.forms.ukoncitVTerenu.datumUkonceni.tooltip"),
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
 
@@ -591,10 +591,10 @@ class UkoncitVTerenuForm(forms.ModelForm):
         model = Projekt
         fields = ("datum_ukonceni",)
         labels = {
-            "datum_ukonceni": _("Datum ukončení terénních prací"),
+            "datum_ukonceni": _("projekt.forms.ukoncitVTerenu.datumUkonceni.label"),
         }
         help_texts = {
-            "datum_ukonceni": _("projekt.form.ukoncitVTerenu.datum_ukonceni.tooltip"),
+            "datum_ukonceni": _("projekt.forms.ukoncitVTerenu.datumUkonceni.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -629,10 +629,10 @@ class ZruseniProjektForm(forms.Form):
     Formulář pro zrušení projektu.
     """
     reason_text = forms.CharField(
-        label=_("projekt.form.zruseni.duvod.label"),
+        label=_("projekt.forms.zruseni.duvod.label"),
         required=True,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
-        help_text=_("projekt.form.zruseni.duvod.tooltip"),
+        help_text=_("projekt.forms.zruseni.duvod.tooltip"),
     )
 
     def __init__(self, *args, **kwargs):
@@ -644,7 +644,7 @@ class ZruseniProjektForm(forms.Form):
                 Div(
                     "reason_text",
                     css_class="col-sm-12",
-                    title="projekt.form.zruseni.duvodTooltip.text",
+                    title="projekt.forms.zruseni.duvodTooltip.text",
                 ),
                 css_class="row",
             ),
@@ -655,7 +655,7 @@ class GenerovatNovePotvrzeniForm(forms.Form):
     """
     Formulář pro vygenerování nového potvrzení projektu.
     """
-    odeslat_oznamovateli = forms.BooleanField(label=_("Odeslat oznamovateli"), required=False)
+    odeslat_oznamovateli = forms.BooleanField(label=_("projekt.forms.GenerovatExpertniListForm.odeslatOznamovateli.label"), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -667,7 +667,7 @@ class GenerovatNovePotvrzeniForm(forms.Form):
                     Div(
                         "odeslat_oznamovateli",
                         css_class="col-sm-12",
-                        title="projekt.form.GenerovatNovePotvrzeniForm.odeslat_oznamovateliTooltip.text",
+                        title="projekt.form.GenerovatExpertniListForm.odeslatOznamovateli.tooltip",
                     ),
                     css_class="row",
                 ),
@@ -676,37 +676,37 @@ class GenerovatNovePotvrzeniForm(forms.Form):
 
 
 TYP_VYZKUMU_CHOICES = [
-    ("predstihovy", _("projekt.form.GenerovatExpertniListForm.predstihovy.typ_vyzkumu.text")),
-    ("zachranny", _("projekt.form.GenerovatExpertniListForm.zachranny.typ_vyzkumu.text")),
-    ("dohled", _("projekt.form.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
+    ("predstihovy", _("projekt.forms.GenerovatExpertniListForm.predstihovy.typ_vyzkumu.text")),
+    ("zachranny", _("projekt.forms.GenerovatExpertniListForm.zachranny.typ_vyzkumu.text")),
+    ("dohled", _("projekt.forms.GenerovatExpertniListForm.dohled.typ_vyzkumu.text")),
 ]
 VYSLEDEK_CHOICES = [
-    ("pozitivni", _("projekt.form.GenerovatExpertniListForm.vysledek.pozitivni.text")),
-    ("negativni", _("projekt.form.GenerovatExpertniListForm.vysledek..text")),
-    ("jine", _("projekt.form.GenerovatExpertniListForm.vysledek.jine.text")),
+    ("pozitivni", _("projekt.forms.GenerovatExpertniListForm.vysledek.pozitivni.text")),
+    ("negativni", _("projekt.forms.GenerovatExpertniListForm.vysledek..text")),
+    ("jine", _("projekt.forms.GenerovatExpertniListForm.vysledek.jine.text")),
 ]
 
 class GenerovatExpertniListForm(forms.Form):
     """
     Formulář pro generování expertního listu projektu.
     """
-    cislo_jednaci = forms.CharField(label=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.label"),
+    cislo_jednaci = forms.CharField(label=_("projekt.forms.GenerovatExpertniListForm.cislo_jednaci.label"),
                                     required=False,
-                                    help_text=_("projekt.form.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
+                                    help_text=_("projekt.forms.GenerovatExpertniListForm.cislo_jednaci.tooltip"), )
     typ_vyzkumu = forms.ChoiceField(
-        label=_("projekt.form.GenerovatExpertniListForm.typ_vyzkumu.label"),
+        label=_("projekt.forms.GenerovatExpertniListForm.typ_vyzkumu.label"),
         choices=TYP_VYZKUMU_CHOICES,
         widget=forms.Select,
-        help_text=_("projekt.form.GenerovatExpertniListForm.typ_vyzkumu.tooltip"),
+        help_text=_("projekt.forms.GenerovatExpertniListForm.typ_vyzkumu.tooltip"),
     )
     vysledek = forms.ChoiceField(
-        label=_("projekt.form.GenerovatExpertniListForm.vysledek.label"),
+        label=_("projekt.forms.GenerovatExpertniListForm.vysledek.label"),
         choices=VYSLEDEK_CHOICES,
         widget=forms.Select,
-        help_text=_("projekt.form.GenerovatExpertniListForm.vysledek.tooltip"),
+        help_text=_("projekt.forms.GenerovatExpertniListForm.vysledek.tooltip"),
     )
     poznamka_popis = forms.CharField(
-        label=_("projekt.form.GenerovatExpertniListForm.poznamka_popis.label"),
+        label=_("projekt.forms.GenerovatExpertniListForm.poznamka_popis.label"),
         required=False,
         widget=forms.Textarea(attrs={"rows": 2, "cols": 80}),
     )
@@ -761,7 +761,7 @@ class PripojitProjektForm(forms.Form):
             )
             typ= "projekt"
         self.fields["projekt"] = forms.ChoiceField(
-            label=_("arch_z.forms.projektPripojit.label"),
+            label=_("projekt.forms.projektPripojit.projekt.label"),
             choices=new_choices,
             widget=autocomplete.ListSelect2(
                 url=reverse("projekt:projekt-autocomplete-bez-zrusenych", kwargs={"typ": typ})

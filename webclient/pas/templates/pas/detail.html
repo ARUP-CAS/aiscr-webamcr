@@ -5,7 +5,7 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 
-{% block title %}{% trans "Detail samostatného nálezu" %}{% endblock %}
+{% block title %}{% trans "pas.templates.detail.title" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" type="text/css" href="{% static 'bs-stepper.min.css' %}"/>
 {% endblock %}
@@ -18,14 +18,14 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Fotografie" %}
+          {% trans "pas.templates.detail.fotografie" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn app-entity-dokument" href="{% url 'core:upload_file_pas' sn.ident_cely %}"
                rel="tooltip"
-               data-placement="top" title="{% trans 'Nahrát soubory' %}">
+               data-placement="top" title="{% trans 'pas.templates.detail.nahratSoubor' %}">
               <span class="material-icons">publish</span>
             </a>
           </div>
@@ -38,7 +38,7 @@
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>
-            {% trans "Samostatný nález zatím neobsahuje žádné fotografie." %}
+            {% trans "pas.templates.detail.nalezBezFotografii" %}
           </div>
         {% endif %}
       </div>
@@ -47,13 +47,13 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Detail" %}
+          {% trans "pas.templates.detail.cardHeader.detail" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <a class="btn" href="{% url 'pas:edit' sn.ident_cely %}" rel="tooltip"
-               data-placement="top" title="{% trans 'Upravit' %}">
+               data-placement="top" title="{% trans 'pas.templates.detail.upravit.label' %}">
               <span class="material-icons">edit</span>
             </a>
           </div>
@@ -77,7 +77,7 @@
     <div class="card app-card-form">
       <div class="card-header">
         <div class="app-fx app-left">
-          {% trans "Uložení" %}
+          {% trans "pas.templates.detail.cardHeader.ulozeni" %}
         </div>
         {% if show.editovat %}
         <div class="app-fx app-right">

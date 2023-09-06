@@ -3,18 +3,18 @@
 {% load template_tags %}
 {% block content %}
     <p>
-        {% trans "E-U-04.dobrý_den" %},
+        {% trans "uzivatel.templates.E-U-04.title" %}
     </p>
     <p>
-        {% trans "E-U-04.nový_uživatel_žádá_o_přístup_do_AMČR" %}.
+        {% trans "uzivatel.templates.E-U-04.part1" %}
     </p>
     <ul style="list-style: none">
-        <li><b>{% trans "E-U-04.id" %}:</b> {{ id }}</li>
-        <li><b>{% trans "E-U-04.jméno" %}:</b> {{ name }}</li>
-        <li><b>{% trans "E-U-04.příjmení" %}:</b> {{ surname }}</li>
-        <li><b>{% trans "E-U-04.organizace" %}:</b> {{ organization }}</li>
-        <li><b>{% trans "E-U-04.email" %}:</b> {{ email }}</li>
-        <li><b>{% trans "E-U-04.telefon" %}:</b> {{ phone }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-04.id" %}</b> {{ id }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-04.jmeno" %}</b> {{ name }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-04.prijmeni" %}</b> {{ surname }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-04.organizace" %}</b> {{ organization }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-04.email" %}</b> {{ email }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-04.telefon" %}</b> {{ phone }}</li>
     </ul>
-    <p>{% trans "E-U-04.uživatelský_účet_aktivujete_v_administraci_amčr" %}: <a href="{% get_site_url %}{{ admin_link }}">{% get_site_url %}{{ admin_link }}</a></p>
+    <p>{% trans "uzivatel.templates.E-U-04.part2" %} <a href="{% get_site_url %}{{ admin_link }}">{% get_site_url %}{{ admin_link }}</a></p>
 {% endblock %}

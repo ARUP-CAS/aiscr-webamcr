@@ -77,8 +77,8 @@ class PesKrajNotificationTypeInline(PesNotificationTypeInline):
     """
     model_type = KRAJ_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
-    verbose_name = _("admin.uzivatel.form.notifikace.kraj")
-    verbose_name_plural = _("admin.uzivatel.form.notifikace.kraje")
+    verbose_name = _("uzivatel.admin.form.notifikace.kraj")
+    verbose_name_plural = _("uzivatel.admin.form.notifikace.kraje")
 
 
 class PesOkresNotificationTypeInline(PesNotificationTypeInline):
@@ -87,8 +87,8 @@ class PesOkresNotificationTypeInline(PesNotificationTypeInline):
     """
     model_type = OKRES_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
-    verbose_name = _("admin.uzivatel.form.notifikace.okres")
-    verbose_name_plural = _("admin.uzivatel.form.notifikace.okresy")
+    verbose_name = _("uzivatel.admin.form.notifikace.okres")
+    verbose_name_plural = _("uzivatel.admin.form.notifikace.okresy")
 
 
 class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
@@ -97,8 +97,8 @@ class PesKatastrNotificationTypeInline(PesNotificationTypeInline):
     """
     model_type = KATASTR_CONTENT_TYPE
     form = create_pes_form(model_typ=model_type)
-    verbose_name = _("admin.uzivatel.form.notifikace.katastr")
-    verbose_name_plural = _("admin.uzivatel.form.notifikace.katastry")
+    verbose_name = _("uzivatel.admin.form.notifikace.katastr")
+    verbose_name_plural = _("uzivatel.admin.form.notifikace.katastry")
 
 
 class CustomUserAdmin(DjangoObjectActions, UserAdmin):
