@@ -367,10 +367,10 @@ def post_upload(request):
                         },
                         status=200,
                     )
-            else:
-                return JsonResponse(
-                    {"filename": s.nazev, "id": s.pk}, status=200
-                )
+                else:
+                    return JsonResponse(
+                        {"filename": s.nazev, "id": s.pk}, status=200
+                    )
     else:
         logger.warning("core.views.post_upload.no_file")
 
