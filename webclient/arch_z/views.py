@@ -113,7 +113,7 @@ from pian.forms import PianCreateForm
 from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
-
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -1142,7 +1142,7 @@ def post_akce2kat(request):
     return JsonResponse({"lat": "", "lng": "", "zoom": "", "geom": ""}, status=200)
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
@@ -1152,10 +1152,12 @@ def get_history_dates(historie_vazby):
     Returns:
         historie: dictionary dátumů k historii.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_AZ, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_AZ, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_AZ, anonymized),
     }
     return historie
 
@@ -1505,7 +1507,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
     context["komponenta_form_create"] = komponenta_form_create
     context["komponenta_forms_detail"] = komponenta_forms_detail
     context["pian_forms_detail"] = pian_forms_detail
-    context["history_dates"] = get_history_dates(zaznam.historie)
+    context["history_dates"] = get_history_dates(zaznam.historie, request.user)
     context["zaznam"] = zaznam
     context["dokumenty"] = dokumenty
     context["dokumentacni_jednotky"] = jednotky

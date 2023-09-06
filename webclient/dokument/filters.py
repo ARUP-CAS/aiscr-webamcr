@@ -16,6 +16,8 @@ from django_filters import (
     NumberFilter,
     DateFromToRangeFilter,
 )
+
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
 from django.db.models import Q
@@ -100,14 +102,6 @@ class HistorieFilter(filters.FilterSet):
         distinct=True,
     )
 
-    historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
-        field_name="historie__historie__uzivatel",
-        label=_("dokument.filters.historieFilter.historieUzivatel.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
-        distinct=True,
-    )
-
     def filter_queryset(self, queryset):
         """
         Metóda pro filtrování podle historie s logickým operátorem AND.
@@ -147,6 +141,26 @@ class HistorieFilter(filters.FilterSet):
                 type(queryset).__name__,
             )
         return queryset
+
+    def __init__(self, *args, **kwargs):
+        super(HistorieFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
+        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.all(),
+                field_name="historie__historie__uzivatel",
+                label=_("dokument.filters.historieFilter.historieUzivatel.label"),
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                distinct=True,
+            )
+        else:
+            self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.all(),
+                field_name="historie__historie__uzivatel",
+                label=_("dokument.filters.historieFilter.historieUzivatel.label"),
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                distinct=True,
+            )
 
 
 class Model3DFilter(HistorieFilter):

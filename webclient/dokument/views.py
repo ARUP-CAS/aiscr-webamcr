@@ -14,7 +14,7 @@ from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
-    ZAPSANI_DOK,
+    ZAPSANI_DOK, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -417,7 +417,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["dokument"] = dokument
         context["form_dokument"] = form_dokument
         context["form_dokument_extra"] = form_dokument_extra
-        context["history_dates"] = get_history_dates(dokument.historie)
+        context["history_dates"] = get_history_dates(dokument.historie,request.user)
         context["show"] = show
 
         if dokument.soubory:
@@ -1525,14 +1525,16 @@ def get_hierarchie_dokument_typ():
     return hierarchie
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK, anonymized),
     }
     return historie
 

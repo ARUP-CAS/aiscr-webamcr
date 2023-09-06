@@ -1,10 +1,13 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Value, CharField, F
+from django.db.models.functions import Concat
 from django.views.generic import ListView
 from django_tables2 import SingleTableMixin
 from simple_history.models import HistoricalRecords
 
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from historie.models import Historie
 from historie.tables import HistorieTable, SimpleHistoryTable
 from core.forms import SouborMetadataForm
@@ -27,6 +30,29 @@ class HistorieListView(ExportMixinDate, LoginRequiredMixin, SingleTableMixin, Li
     template_name = "historie/historie_list.html"
     export_name = "export_historie_"
 
+    def _annotate_queryset(self, queryset):
+        user = self.request.user
+        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            return queryset.annotate(uzivatel_custom=Concat(
+                    F("uzivatel__last_name"),
+                    Value(", "),
+                    F("uzivatel__first_name"),
+                    Value(" ("),
+                    F("uzivatel__ident_cely"),
+                    Value(", "),
+                    F("uzivatel__organizace__nazev_zkraceny"),
+                    Value(")"),
+                    output_field=CharField(),
+                ))
+        else:
+            return queryset.annotate(uzivatel_custom=Concat(
+                F("uzivatel__ident_cely"),
+                Value(" ("),
+                F("uzivatel__organizace__nazev_zkraceny"),
+                Value(")"),
+                output_field=CharField(),
+            ))
+
     def get_context_data(self, typ=None, **kwargs):
         context = super().get_context_data(**kwargs)
         context["export_formats"] = ["csv", "json", "xlsx"]
@@ -39,9 +65,11 @@ class ProjektHistorieListView(HistorieListView):
     """
     def get_queryset(self):
         projekt_ident = self.kwargs["ident_cely"]
-        return self.model.objects.filter(
+        queryset = self.model.objects.filter(
             vazba__projekt_historie__ident_cely=projekt_ident
         ).order_by("-datum_zmeny")
+        queryset = self._annotate_queryset(queryset)
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super(ProjektHistorieListView, self).get_context_data(**kwargs)

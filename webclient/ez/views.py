@@ -24,7 +24,7 @@ from core.constants import (
     EZ_STAV_ZAPSANY,
     ODESLANI_EXT_ZD,
     POTVRZENI_EXT_ZD,
-    ZAPSANI_EXT_ZD,
+    ZAPSANI_EXT_ZD, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
 )
 
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -57,7 +57,7 @@ from .forms import (
 )
 from django.db.models import Prefetch
 
-from uzivatel.models import Osoba
+from uzivatel.models import Osoba, User
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
         context["app"] = "ext_zdroj"
         context["page_title"] = _("ez.templates.ExterniZdrojDetailView.pageTitle")
         context["toolbar_name"] = _("ez.templates.ExterniZdrojDetailView.toolbar.title")
-        context["history_dates"] = get_history_dates(zaznam.historie)
+        context["history_dates"] = get_history_dates(zaznam.historie, request.user)
         context["show"] = get_detail_template_shows(zaznam)
         context["ez_akce"] = ez_akce
         context["ez_lokality"] = ez_lokality
@@ -608,14 +608,16 @@ class ExterniOdkazPripojitDoAzView(TransakceView):
         return JsonResponse({"redirect": az.get_absolute_url()})
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD),
-        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_EXT_ZD),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_EXT_ZD, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_EXT_ZD, anonymized),
+        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_EXT_ZD, anonymized),
     }
     return historie
 
