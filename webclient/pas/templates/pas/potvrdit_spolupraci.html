@@ -36,7 +36,7 @@
             {% if not object.aktivni %}
               {% csrf_token %}
             <button type="submit" name="save" class="btn btn-primary mr-1"
-                    id="submit-id-save">{% translate 'Potvrdit spolupráci' %}</button>
+                    id="submit-id-save">{% trans 'pas.templates.potvrdit_spolupraci.submitButton' %}</button>
             {% endif %}
           </div>
         </div>
