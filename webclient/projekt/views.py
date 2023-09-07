@@ -269,7 +269,7 @@ def create(request):
             if long and lat:
                 projekt.geom = Point(long, lat)
             try:
-                projekt.set_permanent_ident_cely()
+                projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
             else:
