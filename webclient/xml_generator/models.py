@@ -56,7 +56,6 @@ class ModelWithMetadata(models.Model):
         else:
             from core.repository_connector import FedoraRepositoryConnector
             connector = FedoraRepositoryConnector(self)
-            connector.save_metadata(True)
             if include_files:
                 from core.models import SouborVazby
                 if hasattr(self, "soubory") and isinstance(self.soubory, SouborVazby):
@@ -64,6 +63,7 @@ class ModelWithMetadata(models.Model):
                         from core.models import Soubor
                         soubor: Soubor
                         connector.migrate_binary_file(soubor, include_content=False)
+            connector.save_metadata(True)
         logger.debug("xml_generator.models.ModelWithMetadata.save_metadata.end")
 
     def record_deletion(self):
@@ -84,7 +84,7 @@ class ModelWithMetadata(models.Model):
 
     def record_ident_change(self, old_ident_cely):
         logger.debug("xml_generator.models.ModelWithMetadata.record_ident_change.start")
-        if old_ident_cely is not None:
+        if old_ident_cely is not None and self.ident_cely != old_ident_cely:
             from cron.tasks import record_ident_change
             record_ident_change.apply_async([self.__class__.__name__, self.pk, old_ident_cely],
                                             countdown=IDENT_CHANGE_UPDATE_TIMEOUT)

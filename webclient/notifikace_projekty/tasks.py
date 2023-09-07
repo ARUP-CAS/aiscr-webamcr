@@ -17,6 +17,8 @@ def check_hlidaci_pes(projekt_id):
     Task pro celery pro skontrolování jestli je nastavený hlídací pes.
     """
     logger.debug("cron.Notifications.collect_watchdogs.start")
+    if not Projekt.objects.filter(pk=projekt_id).exists():
+        return
     projekt = Projekt.objects.get(pk=projekt_id)
     users_to_notify = Pes.objects.none()
     users_to_notify |= Pes.objects.filter(
