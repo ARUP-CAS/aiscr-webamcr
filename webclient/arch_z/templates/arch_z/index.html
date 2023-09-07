@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" class="card app-card-entity app-card-vybrat">
+        <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=katastr&sort=ident_cely" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False" class="card app-card-entity app-card-moje-akce">
+        <a href="{% url 'arch_z:list' %}?vlastnik={{ user.id }}&zahrnout_projektove=False&sort=katastr&sort=ident_cely" class="card app-card-entity app-card-moje-akce">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,17 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" class="card app-card-entity app-card-archivovat">
+        <a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-akce">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "arch_z.templates.arch_z.index.cardNaseAkce.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False&sort=datum_ukonceni&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -65,6 +75,13 @@
         <h4>{% trans "arch_z.templates.arch_z.index.cardMojeAkce.text.title" %}</h4>
         <hr />
         {% trans "arch_z.templates.arch_z.index.cardMojeAkce.text" %}
+      </div>
+    </div>
+    <div class="app-collapse-nase-akce collapse">
+      <div class="p-3">
+        <h4>{% trans "arch_z.templates.arch_z.index.cardNaseAkce.text.title" %}</h4>
+        <hr />
+        {% trans "arch_z.templates.arch_z.index.cardNaseAkce.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
@@ -96,6 +113,12 @@
     });
     $(".app-card-moje-akce").mouseover(function(){
       $(".app-collapse-moje-akce").show(100);
+    });
+    $(".app-card-nase-akce").mouseleave(function(){
+      $(".app-collapse-nase-akce").hide(100);
+    });
+    $(".app-card-nase-akce").mouseover(function(){
+      $(".app-collapse-nase-akce").show(100);
     });
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);

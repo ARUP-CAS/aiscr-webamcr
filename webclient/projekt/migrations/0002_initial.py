@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projekt',
             name='typ_projektu',
-            field=models.ForeignKey(db_column='typ_projektu', limit_choices_to={'nazev_heslare': 41}, on_delete=django.db.models.deletion.RESTRICT, related_name='projekty_typu', to='heslar.heslar', verbose_name='Typ projektů'),
+            field=models.ForeignKey(db_column='typ_projektu', limit_choices_to={'nazev_heslare': 41}, on_delete=django.db.models.deletion.RESTRICT, related_name='projekty_typu', to='heslar.heslar', verbose_name='Typ projektu'),
         ),
         migrations.AddField(
             model_name='projekt',
