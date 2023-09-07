@@ -89,7 +89,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
-        verbose_name=_("Typ projektů"),
+        verbose_name=_("projekt.models.projekt.typProjektu.label"),
         db_index=True,
     )
     lokalizace = models.TextField(blank=True, null=True)
