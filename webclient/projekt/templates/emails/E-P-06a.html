@@ -1,20 +1,20 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "E-P-06a.vážená_paní/vážený_pane" %},</p>
+    <p>{% trans "projekt.templates.email.E-P-06a.title" %}</p>
     <p>
-        {% trans "E-P-06a.projekt" %} <b>{{ ident_cely }}</b>
-        (<b>{{ podnet }}</b>), {% trans "E-P-06a.který_byl_evidován_v_souvislosti_s_vaším_oznámením_o_stavební_nebo_jiné_činností_na_území_s_archeologickými_nálezy_dle_22_odst._2_zák._č._20/1987_na_k.ú." %}
-        <b>{{ katastr }}</b>,
-        {% trans "E-P-06a.parcela" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
-        {% if datum_oznameni %}{% trans "E-P-06a.ze_dne" %} <b>{{ datum_oznameni }}</b>,{% endif %}
-        {% trans "E-P-06a.byl_zrušen" %}.
+        {% trans "projekt.templates.email.E-P-06a.part1" %} <b>{{ ident_cely }}</b>
+        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-P-06a.part2" %}
+        <b>{{ katastr }}</b>
+        {% trans "projekt.templates.email.E-P-06a.part3" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
+        {% if datum_oznameni %}{% trans "projekt.templates.email.E-P-06a.part4" %} <b>{{ datum_oznameni }}</b>{% endif %}
+        {% trans "projekt.templates.email.E-P-06a.part5" %}
     </p>
-    <p><b>{% trans "E-P-06a.důvod_zrušení" %}:</b> {{ reason }}</p>
+    <p><b>{% trans "projekt.templates.email.E-P-06a.part6" %}</b> {{ reason }}</p>
     <p>
-        {% trans "E-P-06a.vaše_případné_dotazy_pište_na_adresu_oznameni@arup.cas.cz_nebo_volejte_na_tel._257_014_310" %}.
+        {% trans "projekt.templates.email.E-P-06a.part7" %}
     </p>
-    <p>{% trans "E-P-06a.s_pozdravem" %}</p>
-    <p>{% trans "E-P-06a.archeologický_ústav_av_čr_praha_v_v_i" %}</p>
-    <p>{% trans "E-P-06a.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.</p>
+    <p>{% trans "projekt.templates.email.E-P-06a.part8" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-06a.part9" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-06a.part10" %}</p>
 {% endblock %}

@@ -2,30 +2,29 @@
 {% load i18n %}
 {% block content %}
     <p>
-        {% trans "E-U-02.dobrý_den" %},
+        {% trans "uzivatel.templates.E-U-02.title" %}
     </p>
     <p>
-        {% trans "E-U-02.pro_tuto_emailovou_adresu_byl_registrován_nový_uživatelský_účet_do_AMČR_s_následujícími_údaji" %}:
+        {% trans "uzivatel.templates.E-U-02.part1" %}
     </p>
     <ul style="list-style: none">
-        <li><b>{% trans "E-U-02.id" %}:</b> {{ id }}</li>
-        <li><b>{% trans "E-U-02.jméno" %}:</b> {{ name }}</li>
-        <li><b>{% trans "E-U-02.příjmení" %}:</b> {{ surname }}</li>
-        <li><b>{% trans "E-U-02.organizace" %}:</b> {{ organization }}</li>
-        <li><b>{% trans "E-U-02.email" %}:</b> {{ email }}</li>
-        <li><b>{% trans "E-U-02.telefon" %}:</b> {{ phone }}</li>
-        <li><b>{% trans "E-U-02.heslo" %}:</b> <i>{% trans "E-U-02.heslo_vámi_zvolené_heslo" %}</i>
+        <li><b>{% trans "uzivatel.templates.E-U-02.id" %}</b> {{ id }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.jmeno" %}</b> {{ name }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.prijmeni" %}</b> {{ surname }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.organizace" %}</b> {{ organization }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.email" %}</b> {{ email }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.telefon" %}</b> {{ phone }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.heslo" %}</b> <i>{% trans "uzivatel.templates.E-U-02.heslo.zvolene" %}</i>
         </li>
-        <li><b>{% trans "E-U-02.user_role" %}:</b> {{ role }}</li>
+        <li><b>{% trans "uzivatel.templates.E-U-02.user_role" %}</b> {{ role }}</li>
     </ul>
     <p>
-        {% trans "E-U-02.vyčkejte_na_aktivaci_účtu_administrátorem_která_vám_bude_potvrzena_na_tento_email_obvykle_nejbližší_pracovní_den_v_běžné_pracovní_době" %}.
+        {% trans "uzivatel.templates.E-U-02.part2" %}
     </p>
     <p>
-        {% trans "E-U-02.upozornění_registrace_v_amčr_uživatele_neopravňuje_k_provádění_archeologických_výzkumů_na_území_české_republiky_a_to_vč_vyhledávání_archeologických_nálezů" %}.
-        {% trans "E-U-02.tuto_činnost_mohu_vykonávat_pouze_oprávněné_archeologické_organizace_a_jejich_oficiální_spolupracovníci" %}.
+        {% trans "uzivatel.templates.E-U-02.part3" %}
     </p>
     <p>
-        {% trans "E-U-02.k_možnostem_spolupráce_více_viz" %}: <a href="{% trans "https://amcr-info.aiscr.cz/pas" %}">{% trans "https://amcr-info.aiscr.cz/pas" %}</a>
+        {% trans "uzivatel.templates.E-U-02.part4" %} <a href="{% trans "uzivatel.templates.E-U-02.link" %}">{% trans "uzivatel.templates.E-U-02.link.text" %}</a>
     </p>
 {% endblock %}

@@ -6,7 +6,7 @@
       <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">1</span>
         <span class="bs-stepper-label">
-              {% trans "Rozepsaný" %}
+              {% trans "templates.stateComponentDocument.rozepsany.label" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_zapsani.uzivatel }}">
                 {{ history_dates.datum_zapsani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -19,7 +19,7 @@
       <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">2</span>
         <span class="bs-stepper-label">
-              {% trans "Odeslaný" %}
+              {% trans "templates.stateComponentDocument.odeslany.label" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_odeslani.uzivatel }}">
                 {{ history_dates.datum_odeslani.datum|date:'Y-m-d'|default_if_none:"" }}
@@ -32,7 +32,7 @@
       <button type="button" class="btn step-trigger historie-link" onclick="location.href='{% url 'historie:dokument' dokument.ident_cely %}';">
         <span class="bs-stepper-circle">3</span>
         <span class="bs-stepper-label">
-              {% trans "Archivovaný" %}
+              {% trans "templates.stateComponentDocument.archivovany.label" %}
               <span class="app-stepper-date" rel="tooltip" data-placement="bottom"
                     title="{{ history_dates.datum_archivace.uzivatel }}">
                 {{ history_dates.datum_archivace.datum|date:'Y-m-d'|default_if_none:"" }}

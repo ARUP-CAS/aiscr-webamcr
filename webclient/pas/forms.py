@@ -37,7 +37,7 @@ def validate_uzivatel_email(email):
     user = User.objects.filter(email=email)
     if not user.exists():
         raise ValidationError(
-            _("Uživatel s emailem ") + email + _(" neexistuje."),
+            _("pas.forms.te_uzivatel_email.error.noUser.part1") + email + _("pas.forms.te_uzivatel_email.error.noUser.part2"),
         )
     if user[0].hlavni_role not in Group.objects.filter(
         id__in=(ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
@@ -47,7 +47,7 @@ def validate_uzivatel_email(email):
             extra={"email": email, "hlavni_role_id": user[0].hlavni_role.pk},
         )
         raise ValidationError(
-            _("Uživatel s emailem ") + email + _(" nemá vhodnou roli pro spolupráci."),
+            _("pas.forms.te_uzivatel_email.error.wrongGroup.part1") + email + _("pas.forms.te_uzivatel_email.error.wrongGroup.part2"),
         )
 
 
@@ -68,14 +68,14 @@ class PotvrditNalezForm(forms.ModelForm):
         widget=forms.Select(
             attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             choices=(
-                (True, "Ano"),
-                (False, "Ne"),
+                (True, _("pas.forms.potvrditNalezForm.prenado.choice.ano")),
+                (False, _("pas.forms.potvrditNalezForm.prenado.choice.ne")),
             ),
         ),
-        label=_("Nález předán"),
-        help_text=_("pas.form.potvrditNalez.predano.tooltip"),
+        label=_("pas.forms.potvrditNalezForm.prenado.label"),
+        help_text=_("pas.forms.potvrditNalezForm.prenado.tooltip"),
         error_messages={
-            "required": _("Nález musí být předán. Vyplňte Ano"),
+            "required": _("pas.forms.potvrditNalezForm.prenado.errorMessage"),
         },
     )
     old_stav = forms.CharField(required=True, widget=forms.HiddenInput())
@@ -93,16 +93,16 @@ class PotvrditNalezForm(forms.ModelForm):
             ),
         }
         labels = {
-            "evidencni_cislo": _("Evidenční číslo"),
-            "predano_organizace": _("Předáno organizaci"),
-            "pristupnost": _("Přístupnost"),
+            "evidencni_cislo": _("pas.forms.potvrditNalezForm.evidencniCislo.label"),
+            "predano_organizace": _("pas.forms.potvrditNalezForm.predanoOrganizaci.label"),
+            "pristupnost": _("pas.forms.potvrditNalezForm.pristupnost.label"),
         }
         help_texts = {
-            "evidencni_cislo": _("pas.form.potvrditNalez.evidencni_cislo.tooltip"),
+            "evidencni_cislo": _("pas.forms.potvrditNalezForm.evidencniCislo.tooltip"),
             "predano_organizace": _(
-                "pas.form.potvrditNalez.predano_organizace.tooltip"
+                "pas.forms.potvrditNalezForm.predanoOrganizace.tooltip"
             ),
-            "pristupnost": _("pas.form.potvrditNalez.pristupnost.tooltip"),
+            "pristupnost": _("pas.forms.potvrditNalezForm.pristupnost.tooltip"),
         }
 
     def __init__(self, *args, readonly=False, predano_required=False, predano_hidden=False, **kwargs):
@@ -153,9 +153,9 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
     """
     katastr = forms.CharField(
         max_length=50,
-        label=_("Katastrální území"),
-        error_messages={"required": "Je třeba vybrat bod na mapě."},
-        help_text=_("pas.form.createSamostatnyNalez.katastr.tooltip"),
+        label=_("pas.forms.createSamostatnyNalezForm.katastr.label"),
+        error_messages={"required": _("pas.forms.createSamostatnyNalezForm.katastr.errorMessage")},
+        help_text=_("pas.forms.createSamostatnyNalezForm.katastr.tooltip"),
         required=True,
     )
 
@@ -188,30 +188,30 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             "poznamka": forms.TextInput(),
         }
         labels = {
-            "nalezce": _("Nálezce"),
-            "datum_nalezu": _("Datum nálezu"),
-            "lokalizace": _("Lokalizace"),
-            "okolnosti": _("Nálezové okolnosti"),
-            "hloubka": _("Hloubka (cm)"),
-            "obdobi": _("Období"),
-            "druh_nalezu": _("Nález"),
-            "pocet": _("Počet"),
-            "presna_datace": _("Přesná datace"),
-            "specifikace": _("Materiál"),
-            "poznamka": _("Poznámka / bližší popis"),
+            "nalezce": _("pas.forms.createSamostatnyNalezForm.nalezce.label"),
+            "datum_nalezu": _("pas.forms.createSamostatnyNalezForm.datumNalezu.label"),
+            "lokalizace": _("pas.forms.createSamostatnyNalezForm.lokalizace.label"),
+            "okolnosti": _("pas.forms.createSamostatnyNalezForm.okolnosti.label"),
+            "hloubka": _("pas.forms.createSamostatnyNalezForm.hloubka.label"),
+            "obdobi": _("pas.forms.createSamostatnyNalezForm.obdobi.label"),
+            "druh_nalezu": _("pas.forms.createSamostatnyNalezForm.druhNalezu.label"),
+            "pocet": _("pas.forms.createSamostatnyNalezForm.pocet.label"),
+            "presna_datace": _("pas.forms.createSamostatnyNalezForm.presnaDatace.label"),
+            "specifikace": _("pas.forms.createSamostatnyNalezForm.specifikace.label"),
+            "poznamka": _("pas.forms.createSamostatnyNalezForm.poznamka.label"),
         }
         help_texts = {
-            "nalezce": _("pas.form.createSamostatnyNalez.nalezce.tooltip"),
-            "datum_nalezu": _("pas.form.createSamostatnyNalez.datum_nalezu.tooltip"),
-            "lokalizace": _("pas.form.createSamostatnyNalez.lokalizace.tooltip"),
-            "okolnosti": _("pas.form.createSamostatnyNalez.okolnosti.tooltip"),
-            "hloubka": _("pas.form.createSamostatnyNalez.hloubka.tooltip"),
-            "obdobi": _("pas.form.createSamostatnyNalez.obdobi.tooltip"),
-            "druh_nalezu": _("pas.form.createSamostatnyNalez.druh_nalezu.tooltip"),
-            "pocet": _("pas.form.createSamostatnyNalez.pocet.tooltip"),
-            "presna_datace": _("pas.form.createSamostatnyNalez.presna_datace.tooltip"),
-            "specifikace": _("pas.form.createSamostatnyNalez.specifikace.tooltip"),
-            "poznamka": _("pas.form.createSamostatnyNalez.poznamka.tooltip"),
+            "nalezce": _("pas.forms.createSamostatnyNalezForm.nalezce.tooltip"),
+            "datum_nalezu": _("pas.forms.createSamostatnyNalezForm.datumNalezu.tooltip"),
+            "lokalizace": _("pas.forms.createSamostatnyNalezForm.lokalizace.tooltip"),
+            "okolnosti": _("pas.forms.createSamostatnyNalezForm.okolnosti.tooltip"),
+            "hloubka": _("pas.forms.createSamostatnyNalezForm.hloubka.tooltip"),
+            "obdobi": _("pas.forms.createSamostatnyNalezForm.obdobi.tooltip"),
+            "druh_nalezu": _("pas.forms.createSamostatnyNalezForm.druhNalezu.tooltip"),
+            "pocet": _("pas.forms.createSamostatnyNalezForm.pocet.tooltip"),
+            "presna_datace": _("pas.forms.createSamostatnyNalezForm.presnaDatace.tooltip"),
+            "specifikace": _("pas.forms.createSamostatnyNalezForm.specifikace.tooltip"),
+            "poznamka": _("pas.forms.createSamostatnyNalezForm.poznamka.tooltip"),
         }
 
     def __init__(
@@ -237,27 +237,27 @@ class CreateSamostatnyNalezForm(forms.ModelForm):
             widget=forms.Select(
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"}
             ),
-            help_text=_("pas.form.createSamostatnyNalez.projekt.tooltip"),
+            help_text=_("pas.forms.createSamostatnyNalezForm.projekt.tooltip"),
             initial=Projekt.objects.filter(ident_cely=project_ident)[0]
             if project_ident
             else None,
         )
         self.fields["katastr"].widget.attrs["readonly"] = True
         self.fields["druh_nalezu"] = TwoLevelSelectField(
-            label=_("Druh nálezu"),
+            label=_("pas.forms.createSamostatnyNalezForm.druhNalezu.label"),
             widget=forms.Select(
                 choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT),
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
-            help_text=_("pas.form.createSamostatnyNalez.drih_nalezu.tooltip"),
+            help_text=_("pas.forms.createSamostatnyNalezForm.druhNalezu.tooltip"),
         )
         self.fields["obdobi"] = TwoLevelSelectField(
-            label=_("Období"),
+            label=_("pas.forms.createSamostatnyNalezForm.obdobi.label"),
             widget=forms.Select(
                 choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT),
                 attrs={"class": "selectpicker", "data-multiple-separator": "; ", "data-live-search": "true"},
             ),
-            help_text=_("pas.form.createSamostatnyNalez.obdobi.tooltip"),
+            help_text=_("pas.forms.createSamostatnyNalezForm.obdobi.tooltip"),
         )
         self.fields["druh_nalezu"].required = False
         self.fields["obdobi"].required = False
@@ -326,15 +326,15 @@ class CreateZadostForm(forms.Form):
     Hlavní formulář pro vytvoření, editaci a zobrazení žádosti o spoluprácu.
     """
     email_uzivatele = forms.EmailField(
-        label=_("Uživatel"),
+        label=_("pas.forms.createZadostForm.emailUzivatele.label"),
         widget=forms.EmailInput(
-            attrs={"placeholder": _("Zadejte email uživatele pro spolupráci")}
+            attrs={"placeholder": _("pas.forms.createZadostForm.emailUzivatele.placeholder")}
         ),
         required=True,
         validators=[validate_uzivatel_email],
-        help_text=_("pas.form.createZadost.email_uzivatele.tooltip"),
+        help_text=_("pas.forms.createZadostForm.emailUzivatele.tooltip"),
     )
-    text = forms.CharField(widget=forms.Textarea, required=False, help_text=_("pas.form.createZadost.text.tooltip"),)
+    text = forms.CharField(widget=forms.Textarea, required=False, help_text=_("pas.forms.createZadostForm.text.tooltip"),)
 
     def __init__(self, *args, **kwargs):
         super(CreateZadostForm, self).__init__(*args, **kwargs)

@@ -2,12 +2,12 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "E-N-01.dobrý_den" %},</p>
-    {% trans "E-N-01.v_amčr-pas_byly_dnes_vaším_spolupracovníkem_odeslány_nové_nálezy_ke_schválení" %}:
+    <p>{% trans "pas.templates.emails.E-N-01.title" %},</p>
+    {% trans "pas.templates.emails.E-N-01.text1" %}:
     <ul style="list-style: none">
         {% for id in ids %}
             <li><a href="{% get_site_url %}{% url 'core:redirect_ident' id %}">{{ id }}</a></li>
         {% endfor %}
     </ul>
-    <p>{% trans "E-N-01.detaily_zjistíte_po_přihlášení_do amčr-pas" %}.</p>
+    <p>{% trans "pas.templates.emails.E-N-01.text2" %}.</p>
 {% endblock %}

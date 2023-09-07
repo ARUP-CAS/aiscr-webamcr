@@ -56,20 +56,20 @@ class CoordinatesDokumentForm(forms.Form):
     Hlavní formulář pro editaci souradnic u modelu 3D.
     """
     detector_system_coordinates = forms.ChoiceField(
-        label=_("dokument.forms.coordinatesDokumentForm.detector.label"),
+        label=_("pas.forms.coordinates.detector.label"),
         choices=COORDINATE_SYSTEM,
         required=False,
-        help_text=_("dokument.forms.coordinatesDokumentForm.detector.tooltip"),
+        help_text=_("pas.forms.coordinates.detector.tooltip"),
     )
     detector_coordinates_x = forms.CharField(
-        label=_("dokument.forms.coordinatesDokumentForm.cor_x.label"),
+        label=_("pas.forms.coordinates.cor_x.label"),
         required=False,
-        help_text=_("dokument.forms.coordinatesDokumentForm.cor_x.tooltip"),
+        help_text=_("pas.forms.coordinates.cor_x.tooltip"),
     )
     detector_coordinates_y = forms.CharField(
-        label=_("dokument.forms.coordinatesDokumentForm.cor_y.label"),
+        label=_("pas.forms.coordinates.cor_y.label"),
         required=False,
-        help_text=_("dokument.forms.coordinatesDokumentForm.cor_y.tooltip"),
+        help_text=_("pas.forms.coordinates.cor_y.tooltip"),
     )
 
     coordinate_wgs84_x = forms.FloatField(required=False, widget=HiddenInput())

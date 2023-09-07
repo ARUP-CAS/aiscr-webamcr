@@ -46,7 +46,11 @@ def index(request, test_run=False):
     V prvém kroku uživatel zadáva údaje a v druhém je potvrzuje a případně uploaduje soubory.
     """
     logger.debug(f"oznameni.views.index.start", extra={"text_run": test_run})
-    test_run = test_run or request.GET["test"].lower() == "true"
+    try:
+        request_test = request.GET["test"].lower()
+    except:
+        request_test = 'false'
+    test_run = test_run or request_test == "true"
     # First step of the form
     if request.method == "POST" and "oznamovatel" in request.POST:
         logger.debug(f"oznameni.views.index.first_part_start")
@@ -226,9 +230,9 @@ class OznamovatelCreateView(LoginRequiredMixin, TemplateView):
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         context = {
             "object": projekt,
-            "title": _("projekt.modalForm.pridaniOznamovatele.title.text"),
+            "title": _("oznameni.views.oznamovatelCreateView.title"),
             "id_tag": "pridat-oznamovatele-form",
-            "button": _("projekt.modalForm.pridaniOznamovatele.submit.button"),
+            "button": _("oznameni.views.oznamovatelCreateView.submitButton"),
             "form_check": form_check,
         }
         return context
