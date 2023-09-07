@@ -116,6 +116,8 @@ services:
       - prod-net
     ports:
       - "9090:9090"
+    secrets:
+      - prometheus_config
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
@@ -202,5 +204,7 @@ secrets:
   elastic_pass:
     external: true
   logstash_elastic_pass:
+    external: true
+  prometheus_config:
     external: true
 

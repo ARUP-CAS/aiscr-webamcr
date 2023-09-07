@@ -434,6 +434,10 @@ def record_ident_change(class_name, record_pk, old_ident):
     from core.utils import get_mime_type
     from core.views import get_projekt_soubor_name
     record = get_record(class_name, record_pk)
+    if record.ident_cely == old_ident or old_ident is None:
+        logger.debug("cron.record_ident_change.do.no_change", extra={"class_name": class_name,
+                                                                     "record_pk": record_pk, "old_ident": old_ident})
+        return
     connector = FedoraRepositoryConnector(record)
     connector.record_ident_change(old_ident)
     if hasattr(record, "soubory") and record.soubory is not None:
@@ -441,7 +445,7 @@ def record_ident_change(class_name, record_pk, old_ident):
             soubor: Soubor
             repository_binary_file = soubor.get_repository_content()
             if repository_binary_file is not None:
-                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                          get_mime_type(soubor.nazev),
-                                                          repository_binary_file.content)
+                connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
+                                           get_mime_type(soubor.nazev),
+                                           repository_binary_file.content)
     logger.debug("cron.record_ident_change.do.end")
