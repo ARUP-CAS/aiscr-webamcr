@@ -58,13 +58,13 @@ class OznamovatelForm(forms.ModelForm):
     """
     telefon = forms.CharField(
         validators=[validate_phone_number],
-        help_text=_("oznameni.forms.telefon.tooltip"),
+        help_text=_("oznameni.forms.oznamovatelForm.telefon.tooltip"),
         widget=forms.TextInput(
             attrs={"pattern": "^[+](420)\d{9}", "title": "+420XXXXXXXXX"}
         ),
     )
     email = forms.EmailField(
-        help_text=_("oznameni.forms.telefon.tooltip"),
+        help_text=_("oznameni.forms.oznamovatelForm.email.tooltip"),
     )
 
     class Meta:
@@ -76,20 +76,20 @@ class OznamovatelForm(forms.ModelForm):
             "adresa": forms.TextInput(),
         }
         labels = {
-            "oznamovatel": _("Oznamovatel"),
-            "odpovedna_osoba": _("Pověřená osoba oznamovatele"),
-            "telefon": _("Telefon"),
-            "email": _("Email"),
-            "adresa": _("Adresa oznamovatele"),
+            "oznamovatel": _("oznameni.forms.oznamovatelForm.oznamovatel.label"),
+            "odpovedna_osoba": _("oznameni.forms.oznamovatelForm.odpovednaOsoba.label"),
+            "telefon": _("oznameni.forms.oznamovatelForm.telefon.label"),
+            "email": _("oznameni.forms.oznamovatelForm.email.label"),
+            "adresa": _("oznameni.forms.oznamovatelForm.adresa.label"),
         }
         help_texts = {
-            "oznamovatel": _("Jméno / název osoby realizující stavební či jiný záměr."),
+            "oznamovatel": _("oznameni.forms.oznamovatelForm.oznamovatel.tooltip"),
             "odpovedna_osoba": _(
-                "Jméno fyzické osoby, která zastupuje oznamovatele při jednání a podání oznámení."
+                "oznameni.forms.oznamovatelForm.odpovednaOsoba.tooltip"
             ),
-            "telefon": _("oznameni.forms.telefon.tooltip"),
-            "email": _("oznameni.forms.email.tooltip"),
-            "adresa": _("oznameni.forms.adresa.tooltip"),
+            "telefon": _("oznameni.forms.oznamovatelForm.telefon.tooltip"),
+            "email": _("oznameni.forms.oznamovatelForm.email.tooltip"),
+            "adresa": _("oznameni.forms.oznamovatelForm.adresa.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -113,7 +113,7 @@ class OznamovatelForm(forms.ModelForm):
         else:
             header = Div(
                 Div(
-                    HTML(_("Oznamovatel")),
+                    HTML(_("oznameni.forms.oznamovatelForm.header.oznamovatel")),
                     css_class="app-fx app-left",
                 ),
                 css_class="card-header",
@@ -155,18 +155,18 @@ class ProjektOznameniForm(forms.ModelForm):
     """
     planovane_zahajeni = DateRangeField(
         required=True,
-        label=_("Plánované zahájení prací"),
+        label=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.label"),
         widget=DateRangeWidget(attrs={"rows": 1, "cols": 40, "autocomplete": "off"}),
-        help_text=_("Termín plánovaného zahájení realizace záměru."),
+        help_text=_("oznameni.forms.projektOznameniForm.planovaneZahajeni.tooltip"),
     )
     latitude = forms.CharField(widget=forms.HiddenInput())
     longitude = forms.CharField(widget=forms.HiddenInput())
     katastralni_uzemi = forms.CharField(
         widget=forms.TextInput(attrs={"readonly": "readonly"}),
-        label=_("Hlavní katastr"),
-        help_text=_("Katastální území zadané bodem."),
+        label=_("oznameni.forms.projektOznameniForm.katastralniUzemi.label"),
+        help_text=_("oznameni.forms.projektOznameniForm.katastralniUzemi.tooltip"),
     )
-    ident_cely = forms.CharField(required=False)
+    ident_cely = forms.CharField(required=False,widget=forms.HiddenInput())
 
     class Meta:
         model = Projekt
@@ -190,26 +190,24 @@ class ProjektOznameniForm(forms.ModelForm):
             "ident_cely": forms.HiddenInput(),
         }
         labels = {
-            "podnet": _("Podnět"),
-            "lokalizace": _("Lokalizace"),
-            "parcelni_cislo": _("Parcelní číslo"),
-            "oznaceni_stavby": _("Označení stavby"),
-            "katastry": _("Další katastry"),
+            "podnet": _("oznameni.forms.projektOznameniForm.podnet.label"),
+            "lokalizace": _("oznameni.forms.projektOznameniForm.lokalizace.label"),
+            "parcelni_cislo": _("oznameni.forms.projektOznameniForm.parcelniCislo.label"),
+            "oznaceni_stavby": _("oznameni.forms.projektOznameniForm.oznaceniStavby.label"),
+            "katastry": _("oznameni.forms.projektOznameniForm.katastry.label"),
         }
         help_texts = {
             "podnet": _(
-                "Charakteristika stavebního nebo jiného záměru (např. rodinný dům, inženýrské sítě, výstavba "
-                "komunikace, terénní úpravy, těžba suroviny apod.). "
+                "oznameni.forms.projektOznameniForm.podnet.tooltip"
             ),
             "lokalizace": _(
-                "Bližší specifikace umístění zamýšlené stavby či jiného záměru (např. ulice a číslo popisné, "
-                "název polní trati, místní název  apod.). "
+                "oznameni.forms.projektOznameniForm.lokalizace.tooltip"
             ),
-            "parcelni_cislo": _("Čísla parcel dotčených záměrem."),
+            "parcelni_cislo": _("oznameni.forms.projektOznameniForm.parcelniCislo.tooltip"),
             "oznaceni_stavby": _(
-                "Identifikační číslo stavby podle stavebního nebo jiného úřadu. Číslo jednací nebo spisová značka."
+                "oznameni.forms.projektOznameniForm.oznaceniStavby.tooltip"
             ),
-            "katastry": _("Vyberte případné další katastry dotčené záměrem."),
+            "katastry": _("oznameni.forms.projektOznameniForm.katastry.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -234,7 +232,7 @@ class ProjektOznameniForm(forms.ModelForm):
             Div(
                 Div(
                     Div(
-                        HTML(_("Charakteristika záměru")),
+                        HTML(_("oznameni.forms.projektOznameniForm.header.charakteristikaZameru")),
                         css_class="app-fx app-left",
                     ),
                     css_class="card-header",

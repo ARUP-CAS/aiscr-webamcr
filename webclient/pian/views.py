@@ -147,12 +147,12 @@ def odpojit(request, dj_ident_cely):
     else:
         context = {
             "object": pian,
-            "title": _("pian.modalForm.odpojeniPian.title.text"),
+            "title": _("pian.views.odpojit.title.text"),
             "id_tag": "odpojit-pian-form",
-            "button": _("pian.modalForm.odpojeniPian.submit.button"),
-            "text": _("Skutečně odpojit pian ")
+            "button": _("pian.views.odpojit.submit.button"),
+            "text": _("pian.views.odpojit.text.part1")
             + pian.ident_cely
-            + _(" z dokumentační jednotky ")
+            + _("pian.views.odpojit.text.part2")
             + dj.ident_cely
             + "?",
         }
@@ -195,10 +195,10 @@ def potvrdit(request, dj_ident_cely):
             return response
     context = {
         "object": pian,
-        "title": _("pian.modalForm.potvrditPian.title.text"),
+        "title": _("pian.views.potvrdit.title.text"),
         "id_tag": "potvrdit-pian-form",
-        "button": _("pian.modalForm.potvrditPian.submit.button"),
-        "text": _("Skutečně potvrdit pian ") + pian.ident_cely + "?",
+        "button": _("pian.views.potvrdit.submitButton.text"),
+        "text": _("pian.views.potvrdit.text") + pian.ident_cely + "?",
     }
     return render(request, "core/transakce_modal.html", context)
 

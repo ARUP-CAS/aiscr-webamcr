@@ -31,8 +31,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     Class pro db model pian.
     """
     STATES = (
-        (PIAN_NEPOTVRZEN, _("Nepotvrzený")),
-        (PIAN_POTVRZEN, _("Potvrzený")),
+        (PIAN_NEPOTVRZEN, _("pian.models.pian.states.nepotvrzen")),
+        (PIAN_POTVRZEN, _("pian.models.pian.states.potvrzen")),
     )
 
     presnost = models.ForeignKey(

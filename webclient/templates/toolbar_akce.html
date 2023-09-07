@@ -7,7 +7,7 @@
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {% if toolbar_label %}{{toolbar_label}}{%endif%}
-      {{ zaznam.ident_cely }}{% if showbackdetail and app == "akce" %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">Zpět na detail projektu</a>{% endif %}
+      {{ zaznam.ident_cely }}{% if showbackdetail and app == "akce" %}<span class="app-pipe"></span><a href="{% url 'projekt:detail' zaznam.akce.projekt.ident_cely %}" class="app-entity-color font-weight-normal">{% trans "templates.toolbarAkce.backToProjekt.label" %}</a>{% endif %}
     </div>
   </div>
   {% if showcontrols %}
@@ -16,33 +16,33 @@
         {% if show.vratit_link %}
           <button id="{{type}}-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "Vrátit" %}
+            {% trans "templates.toolbarAkce.vratit.label" %}
           </button>
         {% endif %}
         {% if show.odeslat_link %}
           <button id="{{type}}-odeslat" class="btn m-0" type="button" name="button">
             <span class="material-icons">send</span>
-            {% trans "Odeslat" %}
+            {% trans "templates.toolbarAkce.odeslat.label" %}
           </button>
         {% endif %}
         {% if show.archivovat_link %}
           <button id="{{type}}-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
-            {% trans "Archivovat" %}
+            {% trans "templates.toolbarAkce.archivovat.label" %}
           </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "Další volby" %}
+          {% trans "templates.toolbarAkce.dalsiVolby.label" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <button id="{{type}}-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat akci" %}</button>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'archeologicky_zaznam' zaznam.id %}">{% trans "akce.detail.toolbar.MetadataDownload" %}</a>
-          <a class="dropdown-item" href="{% url 'historie:'|add:type zaznam.ident_cely %}">{% trans "Historie" %}</a>
+          <button id="{{type}}-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.smazatAkci.label" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'archeologicky_zaznam' zaznam.id %}">{% trans "templates.toolbarAkce.metadataDownload.label" %}</a>
+          <a class="dropdown-item" href="{% url 'historie:'|add:type zaznam.ident_cely %}">{% trans "templates.toolbarAkce.historie.label" %}</a>
           {% if show.zmenit_proj_akci %}
-          <button id="arch_z-proj-akce-change" class="dropdown-item" type="button" name="button">{% trans "akce.zmenitNaSamostatnou.label" %}</button>
+          <button id="arch_z-proj-akce-change" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.zmenitNaSamostatnou.label" %}</button>
           {% endif %}
           {% if show.zmenit_sam_akci %}
-          <button id="arch_z-sam-akce-change" class="dropdown-item" type="button" name="button">{% trans "akce.zmenitNaProjektovou.label" %}</button>
+          <button id="arch_z-sam-akce-change" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.zmenitNaProjektovou.label" %}</button>
           {% endif %}
           {% if show.arch_links%}
           <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{{digi_archiv_label}}</a>
