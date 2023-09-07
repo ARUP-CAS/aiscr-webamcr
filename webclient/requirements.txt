@@ -38,7 +38,7 @@ djangorestframework==3.14.0
 djangorestframework-xml==2.0.0
 lxml==4.9.3
 # DEV requirements
-pre-commit==3.3.3
+pre-commit==3.4.0
 isort==5.12.0
 coverage==7.3.1
 django-debug-toolbar==4.2.0
@@ -48,7 +48,7 @@ django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.7
 django-object-actions==4.1.0
 
-pre-commit==3.3.3
+pre-commit==3.4.0
 isort==5.12.0
 coverage==7.3.1
 django-debug-toolbar==4.2.0
