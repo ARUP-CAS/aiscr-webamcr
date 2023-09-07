@@ -221,7 +221,7 @@ def post_ajax_get_projects_limit(request):
                     "geom": heat["geometry"].replace(", ", ","),
                 }
             )
-        if len(heat) > 0:
+        if len(heats) > 0:
             return JsonResponse({"heat": back, "algorithm": "heat"}, status=200)
         else:
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
