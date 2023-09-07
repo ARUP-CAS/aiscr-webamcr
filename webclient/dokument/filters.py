@@ -408,7 +408,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",
@@ -457,8 +457,8 @@ class DokumentFilter(Model3DFilter):
         method="filter_uzemni_prislusnost",
         label=_("dokument.filters.dokumentFilter.uzemniPrislusnost.label"),
         choices=(
-            ("M-", ("dokument.filters.dokumentFilter.uzemniPrislusnost.M.option")),
-            ("C-", ("dokument.filters.dokumentFilter.uzemniPrislusnost.C.option")),
+            ("M-", _("dokument.filters.dokumentFilter.uzemniPrislusnost.M.option")),
+            ("C-", _("dokument.filters.dokumentFilter.uzemniPrislusnost.C.option")),
         ),
         widget=SelectMultiple(
             attrs={
@@ -1053,7 +1053,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",
@@ -1073,7 +1073,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(extra_data_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#extraDataCollapse",
                 role="button",

@@ -5,7 +5,7 @@
 
 
 
-{% block title %}{% trans "Editace samostatného nálezu" %}{% endblock %}
+{% block title %}{% trans "pas.templates.edit.title" %}{% endblock %}
 {% block head %}
 {% endblock %}
 
@@ -18,7 +18,7 @@
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
-            {% trans "Editace samostatného nálezu" %}
+            {% trans "pas.templates.edit.cardHeader.editace" %}
           </div>
         </div>
         <div class="card-body">
@@ -26,8 +26,8 @@
         </div>
       </div>      
     <div>
-      <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary" id="submit-id-save">
-      <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "Zpět" %}</button>
+      <input type="submit" name="save" value="{% trans 'pas.templates.edit.submitButton' %}" class="btn btn-primary" id="submit-id-save">
+      <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "pas.templates.edit.backButton" %}</button>
     </div>
     </form>
   </div>

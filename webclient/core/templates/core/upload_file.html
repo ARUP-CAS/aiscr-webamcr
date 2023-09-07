@@ -14,6 +14,9 @@
     <form action="{% url 'core:post_upload' %}" class="dropzone mb-0" id="my-awesome-dropzone"
           enctype="multipart/form-data">
       {% csrf_token %}
+      {% if file_id %}
+        <input type="hidden" name="">
+      {% endif %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
       </div>
@@ -32,7 +35,7 @@
   <script src="{% static 'dropzone.min.js' %}"></script>
     {% if file_id %}
         <script>var maxFiles = 1;</script>
-        <script>var file_id = "{{ file_id }}";</script>
+        <script>var file_id = {{ file_id }};</script>
         <script>var addRemoveLinks = false;</script>
     {% else %}
         <script>var maxFiles = 999;</script>

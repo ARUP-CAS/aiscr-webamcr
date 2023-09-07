@@ -40,15 +40,15 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     Class pro db model samostantý nález.
     """
     PAS_STATES = [
-        (SN_ZAPSANY, _("SN1 - zapsaný")),
-        (SN_ODESLANY, _("SN2 - odeslaný")),  # Odeslaný
-        (SN_POTVRZENY, _("SN3 - potvrzený")),  # Potvrzeny
-        (SN_ARCHIVOVANY, _("SN4 - archivovaný")),
+        (SN_ZAPSANY, _("pas.models.samostatnyNalez.states.zapsany.label")),
+        (SN_ODESLANY, _("pas.models.samostatnyNalez.states.odeslany.label")),  # Odeslaný
+        (SN_POTVRZENY, _("pas.models.samostatnyNalez.states.potvrzeny.label")),  # Potvrzeny
+        (SN_ARCHIVOVANY, _("pas.models.samostatnyNalez.states.archivovany.label")),
     ]
 
     PREDANO_BOOLEAN = (
-        (True, _('Ano')),
-        (False, _('Ne')))
+        (True, _('pas.models.samostatnyNalez.predano.ano')),
+        (False, _('pas.models.samostatnyNalez.predano.ano')))
 
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(
@@ -227,27 +227,27 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         """
         resp = []
         if not self.obdobi:
-            resp.append(_("Nález před odesláním musí mít vyplneno období."))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.obdobi.text"))
         if not self.datum_nalezu:
-            resp.append(_("Nález před odesláním musí mít vyplnen datum nálezu"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.datumNalezu.text"))
         if not self.lokalizace:
-            resp.append(_("Nález před odesláním musí mít vyplnenu lokalizaci"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.lokalizace.text"))
         if not self.okolnosti:
-            resp.append(_("Nález před odesláním musí mít vyplnen okolnosti"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.okolnosti.text"))
         if not self.specifikace:
-            resp.append(_("Nález před odesláním musí mít vyplnen materiál"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.specifikace.text"))
         if not self.druh_nalezu:
-            resp.append(_("Nález před odesláním musí mít vyplnen druh nálezu"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.druhNalezu.text"))
         if not self.nalezce:
-            resp.append(_("Nález před odesláním musí mít vyplneneho nálezce"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.nalezce.text"))
         if not self.geom:
-            resp.append(_("Nález před odesláním musí mít vyplnenu polohu"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.geom.text"))
         if self.hloubka is None:
-            resp.append(_("pas.formCheckOdeslani.missingHloubka.text"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.hloubka.text"))
         if not self.katastr:
-            resp.append(_("pas.formCheckOdeslani.missingKatastr.text"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.katastr.text"))
         if not self.soubory.soubory.exists():
-            resp.append(_("Nález před odesláním musí mít alespoň jednou fotografii"))
+            resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"))
         return resp
 
     class Meta:
@@ -273,8 +273,8 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
     Class pro db model spolupráce.
     """
     SPOLUPRACE_STATES = [
-        (SPOLUPRACE_NEAKTIVNI, _("neaktivní")),
-        (SPOLUPRACE_AKTIVNI, _("aktivní")),
+        (SPOLUPRACE_NEAKTIVNI, _("pas.models.uzivatelSpoluprace.states.neaktivni.label")),
+        (SPOLUPRACE_AKTIVNI, _("pas.models.uzivatelSpoluprace.states.aktivni.label")),
     ]
 
     spolupracovnik = models.ForeignKey(
@@ -334,7 +334,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         result = []
         if self.stav == SPOLUPRACE_AKTIVNI:
-            result.append(_("Spolupráce již je aktivní."))
+            result.append(_("pas.models.uzivatelSpoluprace.checkPredAktivaci.stav.text"))
         return result
 
     def check_pred_deaktivaci(self):
@@ -344,7 +344,7 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
         """
         result = []
         if self.stav == SPOLUPRACE_NEAKTIVNI:
-            result.append(_("Spolupráce již je neaktivní."))
+            result.append(_("pas.models.uzivatelSpoluprace.checkPredDeaktivaci.stav.text"))
         return result
 
     class Meta:
