@@ -2,10 +2,10 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "E-P-05.dobrý_den" %},</p>
+    <p>{% trans "projekt.templates.email.E-P-05.title" %}</p>
     <p>
-        {% trans "E-P-05.projekt" %} <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-P-05.na_katastru" %}
-        <b>{{ katastr }}</b> {% trans "E-P-05.vámi_navržený_ke_zrušení_byl_převeden_do_stavu" %}
-        <b>{{ state }}</b>.</p>
-    <p>{% trans "E-P-05.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.</p>
+        {% trans "projekt.templates.email.E-P-05.part1" %} <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-P-05.part2" %}
+        <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-P-05.part3" %}
+        <b>{{ state }}</b></p>
+    <p>{% trans "projekt.templates.email.E-P-05.part4" %}</p>
 {% endblock %}

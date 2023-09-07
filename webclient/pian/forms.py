@@ -12,9 +12,9 @@ class PianCreateForm(forms.ModelForm):
     class Meta:
         model = Pian
         fields = ("presnost", "geom", "geom_sjtsk", "geom_system")
-        labels = {"presnost": _("Přesnost")}
+        labels = {"presnost": _("pian.forms.pianCreateForm.presnost.label")}
         help_texts = {
-            "presnost": _("pian.form.presnost.tooltip"),
+            "presnost": _("pian.forms.pianCreateForm.presnost.tooltip"),
         }
         widgets = {
             "geom": HiddenInput(),

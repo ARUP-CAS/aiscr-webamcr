@@ -5,7 +5,7 @@
 {% load template_tags%}
 {% load cache %}
 
-{% block title %}AMČR - Login{% endblock %}
+{% block title %}{% trans "templates.registration.login.title" %}{% endblock %}
 
 {% block content %}
   <div class="app-login-wrapper">
@@ -26,27 +26,27 @@
         </div>
       {% else %}
       <div class="col-lg-4">
-        <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'Archeologická mapa České republiky' %}" class="app-logo">
+        <img class="mb-4" src="{% static 'logo-amcr-cs.svg' %}" alt="{% trans 'templates.registration.login.logo.alt' %}" class="app-logo">
         <div class="card">
           <div class="card-body">
             <form method="post">
-              <h1 class="h3 mb-3 font-weight-normal">{% trans "Přihlášení" %}</h1>
+              <h1 class="h3 mb-3 font-weight-normal">{% trans "templates.registration.login.prihlaseni.header" %}</h1>
               {% csrf_token %}
               {% crispy form %}
               <div class="mb-3">
-                <a href="{% url 'password_reset' %}" title="{% trans 'Zapomněli jste heslo' %}?">{% trans "Zapomněli jste heslo" %}?</a>
+                <a href="{% url 'password_reset' %}" title="{% trans 'templates.registration.login.forgottenPassword.title' %}?">{% trans "templates.registration.login.forgottenPassword.text" %}?</a>
               </div>
-              <button class="btn btn-primary btn-block" type="submit">{% trans "Přihlásit" %}</button>
+              <button class="btn btn-primary btn-block" type="submit">{% trans "templates.registration.login.submitButton.prihlasit" %}</button>
               <p class="mt-3 mb-3 text-muted">
-                {% trans "Nemáte účet" %}?
-                <a href="/accounts/register" target="_blank" title="{% trans 'Zaregistrovat se' %}">{% trans "Zaregistrovat se" %}</a>
+                {% trans "templates.registration.login.noAccount.header" %}?
+                <a href="/accounts/register" target="_blank" title="{% trans 'templates.registration.login.register.title' %}">{% trans "templates.registration.login.register.text" %}</a>
               </p>
               <hr />
               <div class="app-flags">
-                <a href="#" title="{% trans 'Czech' %}">
+                <a href="#" title="{% trans 'templates.registration.login.flag.czech' %}">
                   <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
                 </a>
-                <a href="#" title="{% trans 'Engish' %}">
+                <a href="#" title="{% trans 'templates.registration.login.flag.english' %}">
                   <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
                 </a>
               </div>
@@ -58,16 +58,16 @@
         <div class="app-inner">
           <div class="card app-desc">
             <div class="card-body">
-              <h3>{% trans "Popis projektu" %}</h3>
-              {% trans "loginPage.popisProjektu.text" %}
+              <h3>{% trans "templates.registration.login.popisProjektu.header" %}</h3>
+              {% trans "templates.registration.login.popisProjektu.text" %}
             </div>
           </div>
           <hr />
           <div class="card app-news">
             <div class="card-body">
-              <h3>{% trans "Novinky" %}</h3>
+              <h3>{% trans "templates.registration.login.novinky.header" %}</h3>
               <div class="app-sroll-inner">
-                {% trans "loginPage.novinky.text" %}
+                {% trans "templates.registration.login.novinky.text" %}
               </div>
             </div>
           </div>

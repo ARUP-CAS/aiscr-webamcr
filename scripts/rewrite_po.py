@@ -57,20 +57,25 @@ def find_v2(po_file, st, by="msgid", include_obsolete_entries=False, msgctxt=Fal
 BASE_DIR = Path(__file__).resolve()
 path_new = os.path.join(BASE_DIR.parent.parent, "preklady/new_django.po.cs/django.po")
 path_old = os.path.join(
-    BASE_DIR.parent.parent, "preklady/django.po.cs_backup/django.po"
+    BASE_DIR.parent.parent, "preklady/django.po.cs_backup/django_oznameni.po"
 )
 po_file_new = pofile(path_new)
 po_file_old = pofile(path_old)
+rewrite_only = "oznameni/"
 print("Not found entries:")
 for entry_new in po_file_new:
-    entry_old_msgid = find_v2(po_file_old, entry_new.msgid)
-    if not entry_old_msgid:
-        entry_old = find_v2(po_file_old, entry_new.occurrences, "occurrences")
-        if entry_old:
-            if entry_old.msgstr:
-                entry_new.msgstr = entry_old.msgstr
+    if len(entry_new.occurrences) >0 and  rewrite_only in entry_new.occurrences[0][0]:
+        entry_old_msgid = find_v2(po_file_old, entry_new.msgid)
+        if not entry_old_msgid:
+            entry_old = find_v2(po_file_old, entry_new.occurrences, "occurrences")
+            if entry_old:
+                if entry_old.msgstr:
+                    entry_new.msgstr = entry_old.msgstr
+                else:
+                    entry_new.msgstr = entry_old.msgid
             else:
-                entry_new.msgstr = entry_old.msgid
+                print(f"entry: {entry_new.msgid}, occurences: {entry_new.occurrences}")
         else:
-            print(f"entry: {entry_new.msgid}, occurences: {entry_new.occurrences}")
+            entry_new.msgstr = entry_old_msgid.msgstr
+        entry_new.flags.append("fuzzy")
 po_file_new.save()
