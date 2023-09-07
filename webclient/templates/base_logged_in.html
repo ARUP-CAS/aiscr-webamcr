@@ -23,8 +23,8 @@
   {% endcompress %} -->
   <div id="app-sidebar-wrapper">
     <div class="app-sidebar-heading">
-      <a href="/" title="{% trans 'Domů' %}">
-        <img src="{% static 'logo-am-cs.png' %}" alt="{% trans 'Archeologická mapa České republiky' %}" />
+      <a href="/" title="{% trans 'templates.baseLogedIn.sidebar.home' %}">
+        <img src="{% static 'logo-am-cs.png' %}" alt="{% trans 'templates.baseLogedIn.sidebar.logo.alt' %}" />
       </a>
     </div>
     <div class="accordion" id="accordionSidebar">
@@ -33,7 +33,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseProjekty" aria-expanded="false" aria-controls="collapseProjekty">
-              <span class="material-icons">dynamic_feed</span> {% trans "Projekty" %}
+              <span class="material-icons">dynamic_feed</span> {% trans "templates.baseLogedIn.sidebar.projekty" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -41,17 +41,17 @@
         <div id="collapseProjekty" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'projekt:index' %}">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'projekt:create' %}">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "Přihlásit projekt" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "Zahájit výzkum" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Ukončit terén" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Spravovat akce" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "Uzavřít projekt" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}">{% trans "Vybrat projekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "Naše projekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "Schválit oznámení" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "Archivovat projekty" %}</a></li>
+              <li><a href="{% url 'projekt:index' %}">{% trans "templates.baseLogedIn.sidebar.projekty.home" %}</a></li>
+              <li><a href="{% url 'projekt:create' %}">{% trans "templates.baseLogedIn.sidebar.projekty.zapsat" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "templates.baseLogedIn.sidebar.projekty.prihlasit" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.zahajitVyzkum" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.ukoncitTeren" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.spravovatAkce" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.UzavritProjekt" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}">{% trans "templates.baseLogedIn.sidebar.projekty.vybratProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "templates.baseLogedIn.sidebar.projekty.naseProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "templates.baseLogedIn.sidebar.projekty.schvalitOznameni" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
             </ul>
           </div>
         </div>
@@ -61,7 +61,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseAkce" aria-expanded="false" aria-controls="collapseAkce">
-              <span class="material-icons">brush</span> {% trans "Samostatné akce" %}
+              <span class="material-icons">brush</span> {% trans "templates.baseLogedIn.sidebar.samostatneAkce" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -69,11 +69,11 @@
         <div id="collapseAkce" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'arch_z:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje Akce" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'arch_z:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.home" %}</a></li>
+              <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -83,7 +83,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseLokality" aria-expanded="false" aria-controls="collapseLokality">
-              <span class="material-icons">tour</span> {% trans "Lokality" %}
+              <span class="material-icons">tour</span> {% trans "templates.baseLogedIn.sidebar.lokality" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -91,11 +91,11 @@
         <div id="collapseLokality" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'lokalita:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'lokalita:create' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje lokality" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'lokalita:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.home" %}</a></li>
+              <li><a href="{% url 'lokalita:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.zapsat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -105,7 +105,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseSn" aria-expanded="false" aria-controls="collapseSn">
-              <span class="material-icons">location_on</span> {% trans "Samostatné nálezy" %}
+              <span class="material-icons">location_on</span> {% trans "templates.baseLogedIn.sidebar.samostatneNalezy" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -113,13 +113,13 @@
         <div id="collapseSn" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'pas:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "Spolupráce" %}</a></li>
-              <li><a href="{% url 'pas:create' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje nálezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "Potvrdit" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'pas:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.home" %}</a></li>
+              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
+              <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -129,7 +129,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapse3d" aria-expanded="true" aria-controls="collapse3d">
-              <span class="material-icons">3d_rotation</span> {% trans "Knihovna 3D" %}
+              <span class="material-icons">3d_rotation</span> {% trans "templates.baseLogedIn.sidebar.knihovna3D" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -137,11 +137,11 @@
         <div id="collapse3d" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje modely" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.home" %}</a></li>
+              <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.zapsat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -151,7 +151,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseDokument" aria-expanded="true" aria-controls="collapseDokument">
-              <span class="material-icons">description</span> {% trans "Dokumenty" %}
+              <span class="material-icons">description</span> {% trans "templates.baseLogedIn.sidebar.dokumenty" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -159,11 +159,11 @@
         <div id="collapseDokument" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'dokument:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje dokumenty" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'dokument:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.home" %}</a></li>
+              <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -173,7 +173,7 @@
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
                     data-target="#collapseEz" aria-expanded="false" aria-controls="collapseEz">
-              <span class="material-icons">menu_book</span> {% trans "Externí zdroje" %}
+              <span class="material-icons">menu_book</span> {% trans "templates.baseLogedIn.sidebar.externiZdroje" %}
               <span class="material-icons app-icon-expand">expand_more</span>
             </button>
           </h2>
@@ -181,11 +181,11 @@
         <div id="collapseEz" class="collapse" data-parent="#accordionSidebar">
           <div class="card-body">
             <ul>
-              <li><a href="{% url 'ez:index' %}" title="">{% trans "Domů" %}</a></li>
-              <li><a href="{% url 'ez:create' %}" title="">{% trans "Zapsat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}" title="">{% trans "Vybrat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}" title="">{% trans "Moje Externí Zdroje" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?stav=2" title="">{% trans "Archivovat" %}</a></li>
+              <li><a href="{% url 'ez:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.home" %}</a></li>
+              <li><a href="{% url 'ez:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.zapsat" %}</a></li>
+              <li><a href="{% url 'ez:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -194,7 +194,7 @@
         <div class="card-header">
           <h2 class="mb-0">
             <button class="btn btn-link btn-block text-left .btn-link.collapsed" type="button">
-              <a href="/admin/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "Administrace" %}</a>
+              <a href="/admin/" class="menu-direct-link"><span class="material-icons">settings</span> {% trans "templates.baseLogedIn.sidebar.administrace" %}</a>
             </button>
           </h2>
         </div>
@@ -217,7 +217,7 @@
         <li class="nav-item d-lg-none d-xl-block">
           <span class="nav-link">
             <small>
-              <strong>{% trans "Přihlášen" %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
+              <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
             </small>
           </span>
         </li>
@@ -225,28 +225,28 @@
         <li class="nav-item d-lg-none d-xl-block">
           <span class="nav-link">
             <small>
-              <strong>{% trans "nav.autologout.text" %}:</strong> <span id="time">01:00</span>
+              <strong>{% trans "templates.baseLogedIn.navbar.autoLogoutTime" %}</strong> <span id="time">01:00</span>
             </small>
           </span>
         </li>
         <li class="nav-item d-none d-lg-block d-xl-none">
           <a href="#" class="nav-link" tabindex="0" data-trigger="focus" data-toggle="popover" data-placement="bottom"
-            data-content="<strong>{% trans 'Přihlášen' %}:</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
+            data-content="<strong>{% trans 'templates.baseLogedIn.navbar.informace.prihlasen' %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <span class="material-icons">info</span>
-            {% trans "Informace" %}
+            {% trans "templates.baseLogedIn.navbar.informace" %}
           </a>
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'uzivatel:update-uzivatel' %}" rel="tooltip" data-placement="top" title="{% trans 'Informace o uživateli' %}">
+          <a class="nav-link" href="{% url 'uzivatel:update-uzivatel' %}" rel="tooltip" data-placement="top" title="{% trans 'templates.baseLogedIn.navbar.uzivatel.title' %}">
             <span class="material-icons">person</span>
-            <span>{% trans "Uživatel" %}</span>
+            <span>{% trans "templates.baseLogedIn.navbar.uzivatel" %}</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'logout' %}" rel="tooltip" data-placement="top" title="{% trans 'Odhlásit' %}">
+          <a class="nav-link" href="{% url 'logout' %}" rel="tooltip" data-placement="top" title="{% trans 'templates.baseLogedIn.navbar.odhlasit.title' %}">
             <span class="material-icons">logout</span>
-            {% trans "Odhlásit" %}
+            {% trans "templates.baseLogedIn.navbar.odhlasit" %}
           </a>
         </li>
         <li class="nav-item app-pipe"></li>
@@ -275,9 +275,9 @@
   <footer class="text-lg-start">
     <div class="d-flex justify-content-between p-3 app-footer-wrapper">
       <div>
-        <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "Licence" %}</a><span class="app-pipe"></span><!--
-        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "Kontakt" %}</a><span class="app-pipe"></span><!--
-        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerPartneri">{% trans "Partneři" %}</a>
+        <a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerLicence">{% trans "templates.baseLogedIn.footer.licence" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerKontakt">{% trans "templates.baseLogedIn.footer.kontakt" %}</a><span class="app-pipe"></span><!--
+        --><a href="#" class="text-uppercase" data-toggle="modal" data-target="#footerPartneri">{% trans "templates.baseLogedIn.footer.partneri" %}</a>
       </div>
       <div>
         <small>

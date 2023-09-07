@@ -1,20 +1,20 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "E-P-06b.vážená_paní/vážený_pane" %},</p>
+    <p>{% trans "projekt.templates.email.E-P-06b.title" %}</p>
     <p>
-        {% trans "E-P-06b.projekt" %} <b>{{ ident_cely }}</b>
-        (<b>{{ podnet }}</b>), {% trans "E-P-06b.který_byl_evidován_v_souvislosti_s_vaším_oznámením_o_stavební_nebo_jiné_činností_na_území_s_archeologickými_nálezy_dle_22,_odst._2_zák._č._20/1987_na_k.ú." %}
-        <b>{{ katastr }}</b>,
-        {% trans "E-P-06b.parcela" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
-        {% if datum_oznameni %}{% trans "E-P-06b.ze_dne" %} <b>{{ datum_oznameni }}</b>,{% endif %}
-        {% trans "E-P-06b.byl_zrušen" %}.
+        {% trans "projekt.templates.email.E-P-06b.part1" %} <b>{{ ident_cely }}</b>
+        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-P-06b.part2" %}
+        <b>{{ katastr }}</b>
+        {% trans "projekt.templates.email.E-P-06b.part3" %} <b>{{ parcela }}</b> (<b>{{ lokalita }}</b>)
+        {% if datum_oznameni %}{% trans "projekt.templates.email.E-P-06b.part4" %} <b>{{ datum_oznameni }}</b>{% endif %}
+        {% trans "projekt.templates.email.E-P-06b.part5" %}
     </p>
-    <p><b>{% trans "E-P-06b.důvod_zrušení" %}:</b> {{ reason }}</p>
+    <p><b>{% trans "projekt.templates.email.E-P-06b.part6" %}</b> {{ reason }}</p>
     <p>
-        {% trans "E-P-06b.vaše_případné_dotazy_pište_na_adresu_oznameni@arub.cz_nebo_volejte_na_tel._+420_515_911_133_(jihomoravský_a_zlínský_kraj)_+420_515_911_121_(vysočina_a_olomoucký_kraj)_+420_553_821_603_(moravskoslezský kraj)" %}.
+        {% trans "projekt.templates.email.E-P-06b.part7" %}
     </p>
-    <p>{% trans "E-P-06b.s_pozdravem" %}</p>
-    <p>{% trans "E-P-06b.archeologický_ústav_av_čr_brno_v_v_i" %}</p>
-    <p>{% trans "E-P-06b.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.</p>
+    <p>{% trans "projekt.templates.email.E-P-06b.part8" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-06b.part9" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-06b.part10" %}</p>
 {% endblock %}
