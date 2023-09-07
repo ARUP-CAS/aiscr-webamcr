@@ -69,19 +69,19 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     Class pro db model projekt.
     """
     CHOICES = (
-        (PROJEKT_STAV_OZNAMENY, "P0 - Oznámen"),
-        (PROJEKT_STAV_ZAPSANY, "P1 - Zapsán"),
-        (PROJEKT_STAV_PRIHLASENY, "P2 - Přihlášen"),
-        (PROJEKT_STAV_ZAHAJENY_V_TERENU, "P3 - Zahájen v terénu"),
-        (PROJEKT_STAV_UKONCENY_V_TERENU, "P4 - Ukončen v terénu"),
-        (PROJEKT_STAV_UZAVRENY, "P5 - Uzavřen"),
-        (PROJEKT_STAV_ARCHIVOVANY, "P6 - Archivován"),
-        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, "P7 - Navržen ke zrušení"),
-        (PROJEKT_STAV_ZRUSENY, "P8 - Zrušen"),
+        (PROJEKT_STAV_OZNAMENY, _("projekt.models.projekt.states.oznamen.label")),
+        (PROJEKT_STAV_ZAPSANY, _("projekt.models.projekt.states.zapsan.label")),
+        (PROJEKT_STAV_PRIHLASENY, _("projekt.models.projekt.states.prihlasen.label")),
+        (PROJEKT_STAV_ZAHAJENY_V_TERENU, _("projekt.models.projekt.states.zahajenVTerenu.label")),
+        (PROJEKT_STAV_UKONCENY_V_TERENU, _("projekt.models.projekt.states.ukoncenVTerenu.label")),
+        (PROJEKT_STAV_UZAVRENY, _("projekt.models.projekt.states.uzavren.label")),
+        (PROJEKT_STAV_ARCHIVOVANY, _("projekt.models.projekt.states.archivovan.label")),
+        (PROJEKT_STAV_NAVRZEN_KE_ZRUSENI, _("projekt.models.projekt.states.navrzenKeZruseni.label")),
+        (PROJEKT_STAV_ZRUSENY, _("projekt.models.projekt.states.zrusen.label")),
     )
 
     stav = models.SmallIntegerField(
-        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("Stav"), db_index=True
+        choices=CHOICES, default=PROJEKT_STAV_OZNAMENY, verbose_name=_("projekt.models.projekt.stav.label"), db_index=True
     )
     typ_projektu = models.ForeignKey(
         Heslar,
@@ -96,9 +96,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     kulturni_pamatka_cislo = models.TextField(blank=True, null=True)
     kulturni_pamatka_popis = models.TextField(blank=True, null=True)
     parcelni_cislo = models.TextField(blank=True, null=True)
-    podnet = models.TextField(blank=True, null=True, verbose_name=_("Podnět"))
+    podnet = models.TextField(blank=True, null=True, verbose_name=_("projekt.models.projekt.podnet.label"))
     uzivatelske_oznaceni = models.TextField(
-        blank=True, null=True, verbose_name=_("Uživatelské označení")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.uyivatelskeOznaceni.label")
     )
     vedouci_projektu = models.ForeignKey(
         Osoba,
@@ -106,14 +106,14 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_column="vedouci_projektu",
         blank=True,
         null=True,
-        verbose_name=_("Vedoucí projektů"),
+        verbose_name=_("projekt.models.projekt.vedouciProjektu.label"),
         db_index=True,
     )
     datum_zahajeni = models.DateField(
-        blank=True, null=True, verbose_name=_("Datum zahájení")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.datumZahajeni.label")
     )
     datum_ukonceni = models.DateField(
-        blank=True, null=True, verbose_name=_("Datum ukončení")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.datumUkonceni.label")
     )
     kulturni_pamatka = models.ForeignKey(
         Heslar,
@@ -122,12 +122,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         blank=True,
         null=True,
         limit_choices_to={"nazev_heslare": HESLAR_PAMATKOVA_OCHRANA},
-        verbose_name=_("Památka"),
+        verbose_name=_("projekt.models.projekt.kulturniPamatka.label"),
         db_index=True,
     )
     termin_odevzdani_nz = models.DateField(blank=True, null=True)
     ident_cely = models.TextField(
-        unique=True, verbose_name=_("Identifikátor")
+        unique=True, verbose_name=_("projekt.models.projekt.ident.label")
     )
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     soubory = models.OneToOneField(
@@ -149,10 +149,10 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Organizace, models.RESTRICT, db_column="organizace", blank=True, null=True, db_index=True
     )
     oznaceni_stavby = models.TextField(
-        blank=True, null=True, verbose_name=_("Označení stavby")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.oznaceniStavby.label")
     )
     planovane_zahajeni = DateRangeField(
-        blank=True, null=True, verbose_name=_("Plánované zahájení")
+        blank=True, null=True, verbose_name=_("projekt.models.projekt.planovaneZahajeni.label")
     )
     katastry = models.ManyToManyField(RuianKatastr, through="ProjektKatastr")
     hlavni_katastr = models.ForeignKey(
@@ -160,7 +160,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         on_delete=models.RESTRICT,
         db_column="hlavni_katastr",
         related_name="projekty_hlavnich_katastru",
-        verbose_name=_("Hlavní katastr"),
+        verbose_name=_("projekt.models.projekt.hlavniKatastr.label"),
         db_index=True,
     )
 
@@ -408,7 +408,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         for akce in self.akce_set.all():
             if akce.archeologicky_zaznam.stav != AZ_STAV_ARCHIVOVANY:
                 result[akce.archeologicky_zaznam.ident_cely] = _(
-                    "Akce musí být archivovaná!"
+                    "projekt.models.projekt.checkPredArchivaci.akce.text"
                 )
         return result
 
@@ -420,7 +420,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         """
         has_event = len(self.akce_set.all()) > 0
         if has_event:
-            return {"has_event": _("Projekt před zrušením nesmí mít projektové akce.")}
+            return {"has_event": _("projekt.models.projekt.checkPredNavrzeniKZruseni.akce.text")}
         else:
             return {}
 
@@ -435,11 +435,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         has_individual_finds = len(self.samostatne_nalezy.all()) > 0
         has_soubory = self.soubory.soubory.all()
         if has_event:
-            resp.append(_("Projekt před smazáním nesmí mít projektové akce."))
+            resp.append(_("projekt.models.projekt.checkPredSmazanim.akce.text"))
         if has_individual_finds:
-            resp.append(_("Projekt před smazáním nesmí mít samostatné nálezy."))
+            resp.append(_("projekt.models.projekt.checkPredSmazanim.nalezy.text"))
         if has_soubory:
-            resp.append(_("Projekt má projektovou dokumentaci."))
+            resp.append(_("projekt.models.projekt.checkPredSmazanim.dokumentace.text"))
         return resp
 
     def check_pred_uzavrenim(self):
@@ -451,12 +451,12 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         does_not_have_event = len(self.akce_set.all()) == 0
         result = {}
         if does_not_have_event and self.typ_projektu.id != TYP_PROJEKTU_PRUZKUM_ID:
-            result["has_event"] = _("Projekt musí mít alespoň jednu projektovou akci.")
+            result["has_event"] = _("projekt.models.projekt.checkPredUzavrenim.akce.text")
         for a in self.akce_set.all():
             if hasattr(a, "check_pred_odeslanim"):
                 akce_warnings = a.check_pred_odeslanim()
                 if akce_warnings:
-                    result[_("Akce ") + a.archeologicky_zaznam.ident_cely] = akce_warnings
+                    result[_("projekt.models.projekt.checkPredUzavrenim.akce.text") + a.archeologicky_zaznam.ident_cely] = akce_warnings
         return result
 
     def parse_ident_cely(self):
@@ -493,7 +493,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             pass
         return has_oznamovatel
 
-    def set_permanent_ident_cely(self):
+    def set_permanent_ident_cely(self, update_repository=True):
         """
         Metóda na nastavení permanentního identu akce z projektu sekvence.
         """
@@ -529,7 +529,8 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             sequence.region + "-" + str(sequence.rok) + f"{sequence.sekvence:05}"
         )
         self.save()
-        self.record_ident_change(old_ident)
+        if update_repository:
+            self.record_ident_change(old_ident)
 
     def create_confirmation_document(self, additional=False, user=None):
         """
@@ -585,6 +586,15 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
 
     @property
     def pristupnost(self):
+        samostatne_nalezy = self.samostatne_nalezy.all()
+        pristupnosti_ids = set()
+        for samosatny_nalez in samostatne_nalezy:
+            from pas.models import SamostatnyNalez
+            samosatny_nalez: SamostatnyNalez
+            if samosatny_nalez.pristupnost is not None:
+                pristupnosti_ids.add(samosatny_nalez.pristupnost.id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
 
     @property

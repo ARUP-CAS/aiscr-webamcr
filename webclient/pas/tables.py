@@ -16,7 +16,7 @@ class SamostatnyNalezTable(SearchTable):
     Class pro definování tabulky pro samostatný nález použitých pro zobrazení přehledu nálezu a exportu.
     """
     ident_cely = tables.Column(linkify=True)
-    katastr = tables.Column(verbose_name=_("Katastrální území"), default="")
+    katastr = tables.Column(verbose_name=_("pas.tables.samostatnyNalezTable.katastr.label"), default="")
     datum_nalezu = tables.columns.DateTimeColumn(format="Y-m-d", default="")
     lokalizace = tables.columns.Column(default="")
     obdobi = tables.columns.Column(default="")

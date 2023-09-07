@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Pian" %}{% endblock %}
+{% block title %}{% trans "pian.templates.detail.title" %}{% endblock %}
 {% block head %}
 <!-- Map imports -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
@@ -91,14 +91,14 @@
   <div class="card app-card-form">
     <div class="card-header">
       <div class="app-fx app-left">
-        {% trans "Pian" %}
+        {% trans "pian.templates.detail.cardHeader" %}
       </div>
     </div>
     <div class="card-body">
       {% crispy form %}
     </div>
   </div>
-  <button type="submit" id="submitBtn" class="btn btn-primary mt-3">{% trans "Uložit" %}</button>
+  <button type="submit" id="submitBtn" class="btn btn-primary mt-3">{% trans "pian.templates.detail.submitButton.text" %}</button>
 </form>
 
 {% endblock %}

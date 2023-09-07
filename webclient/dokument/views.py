@@ -1286,7 +1286,7 @@ def create_model_3D(request):
             "formKomponenta": form_komponenta,
             "header": _("dokument.views.create_model_3D.title"),
             "header": _("dokument.views.create_model_3D.header"),
-            "header": _("dokument.views.create_model_3D.submitButton.text"),
+            "header": _("dokument.views.create_model_3D.formHeader.label"),
         },
     )
 
