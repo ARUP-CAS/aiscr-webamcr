@@ -2,12 +2,12 @@
 {% load i18n %}
 {% load template_tags %}
 {% block content %}
-    <p>{% trans "E-P-07.dobrý_den" %},</p>
+    <p>{% trans "projekt.templates.email.E-P-07.title" %}</p>
     <p>
-        {% trans "E-P-07.projekt" %}
-        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "E-P-07.na_katastru" %} <b>{{ katastr }}</b> {% trans "E-P-07.byl_navržen_k_odhlášení_oprávněnou_organizací" %}
+        {% trans "projekt.templates.email.E-P-07.part1" %}
+        <b><a href="{% get_site_url %}{% url 'core:redirect_ident' ident_cely %}">{{ ident_cely }}</a></b> {% trans "projekt.templates.email.E-P-07.part2" %} <b>{{ katastr }}</b> {% trans "projekt.templates.email.E-P-07.part3" %}
         <b>{{ organization }}</b>.
     </p>
-    <p><b>{% trans "E-P-07.důvod" %}:</b> {{ reason }}</p>
-    <p>{% trans "E-P-07.detaily_o_projektu_zjistíte_po_přihlášení_do_amčr" %}.</p>
+    <p><b>{% trans "projekt.templates.email.E-P-07.part4" %}</b> {{ reason }}</p>
+    <p>{% trans "projekt.templates.email.E-P-07.part5" %}</p>
 {% endblock %}

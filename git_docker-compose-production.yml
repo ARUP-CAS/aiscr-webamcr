@@ -134,6 +134,8 @@ services:
     restart: always
     ports:
       - "9090:9090"
+    secrets:
+      - prometheus_config
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
@@ -232,3 +234,5 @@ secrets:
     file: elastic_password.txt
   logstash_elastic_pass:
     file: logstash_elastic_password.txt
+  prometheus_config:
+    file: prometheus.yml

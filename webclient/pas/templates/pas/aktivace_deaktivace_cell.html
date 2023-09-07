@@ -3,11 +3,11 @@
   <span class="badge-span">
   {% if record.stav == 1 %}
     <button id="spoluprace-aktivovat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-aktivovat-btn m-0" style="line-height: 1" type="button" name="button" href="{% url 'pas:spoluprace_aktivace' record.id %}">
-      {% trans 'Aktivovat' %}
+      {% trans 'pas.templates.aktivace_deaktivace_cell.aktivovat' %}
     </button>
   {% else %}
     <button id="spoluprace-deaktivovat-{{record.id}}" class="btn btn-sm btn-spoluprace-vyber spoluprace-deaktivovat-btn m-0" style="line-height: 1" type="button" name="button" href="{% url 'pas:spoluprace_deaktivace' record.id %}">
-      {% trans 'Deaktivovat' %}
+      {% trans 'pas.templates.aktivace_deaktivace_cell.deaktivovat' %}
     </button>
   {% endif %}
   </span>

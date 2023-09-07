@@ -15,83 +15,83 @@
         {% if show.vratit_link %}
           <button id="projekt-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "Vrátit" %}
+            {% trans "templates.toolbarProjekt.vratit.label" %}
           </button>
         {% endif %}
         {% if show.znovu_zapsat_link %}
           <button id="projekt-vratit-navrh-zruseni" class="btn m-0" type="button" name="button">
             <span class="material-icons">wrap_text</span>
-            {% trans "Vrátit do stavu zapsán" %}
+            {% trans "templates.toolbarProjekt.vratitDoZapsat.label" %}
           </button>
         {% endif %}
         {% if show.navrhnout_zruseni_link %}
           <button id="projekt-navrh-zruseni" class="btn m-0" type="button" name="button">
           <span class="material-icons">shuffle</span>
-          {% trans "Navrhnout zrušení" %}
+          {% trans "templates.toolbarProjekt.navrhnoutZruseni.label" %}
         </button>
         {% endif %}
         {% if show.zrusit_link %}
           <button id="projekt-zrusit" class="btn m-0" type="button" name="button">
             <span class="material-icons">block</span>
-            {% trans "Zrušit" %}
+            {% trans "templates.toolbarProjekt.zrusit.label" %}
           </button>
         {% endif %}
         {% if show.schvalit_link %}
           <button id="projekt-schvalit" class="btn mt-0" type="button" name="button">
             <span class="material-icons">done</span>
-            {% trans "Schválit" %}
+            {% trans "templates.toolbarProjekt.schvalit.label" %}
           </button>
         {% endif %}
         {% if show.prihlasit_link %}
           <button id="projekt-prihlasit" class="btn m-0" type="button" name="button">
             <span class="material-icons">login</span>
-            {% trans "Přihlásit" %}
+            {% trans "templates.toolbarProjekt.vratprihlasitit.label" %}
           </button>
         {% endif %}
         {% if show.zahajit_teren_link %}
           <button id="projekt-zahajit-v-terenu" class="btn m-0" type="button" name="button">
             <span class="material-icons">outlined_flag</span>
-            {% trans "Zahájit výzkum" %}
+            {% trans "templates.toolbarProjekt.zahajitVyzkum.label" %}
           </button>
         {% endif %}
         {% if show.ukoncit_teren_link %}
           <button id="projekt-ukoncit-v-terenu" class="btn m-0" type="button" name="button">
             <span class="material-icons">highlight_off</span>
-            {% trans "Ukončit výzkum" %}
+            {% trans "templates.toolbarProjekt.ukoncitVyzkum.label" %}
           </button>
         {% endif %}
         {% if show.uzavrit_link %}
           <button id="projekt-uzavrit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_forward</span>
-            {% trans "Uzavřít" %}
+            {% trans "templates.toolbarProjekt.uzavrit.label" %}
           </button>
         {% endif %}
         {% if show.archivovat_link %}
           <button id="projekt-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
-            {% trans "Archivovat" %}
+            {% trans "templates.toolbarProjekt.archivovat.label" %}
           </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "Další volby" %}
+          {% trans "templates.toolbarProjekt.dalsiVolby.label" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <button id="projekt-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat projekt" %}</button>
-          <a class="dropdown-item" href="#">{% trans "Tisková sestava" %}</a>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.id %}">{% trans "projekt.detail.toolbar.MetadataDownload" %}</a>
+          <button id="projekt-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.smazatProjekt.label" %}</button>
+          <a class="dropdown-item" href="#">{% trans "templates.toolbarProjekt.tiskovaSestava.label" %}</a>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.id %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
           {% if projekt.expert_list_can_be_created and user.is_archiver_or_more %}
-            <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "Expertní list" %}</a>
+            <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
           {% endif %}
           {% if projekt.has_oznamovatel %}
-            <a class="dropdown-item" data-toggle="modal" data-target="#nove_potvrzeni">{% trans "Generovat nové potvrzení" %}</a>
+            <a class="dropdown-item" data-toggle="modal" data-target="#nove_potvrzeni">{% trans "templates.toolbarProjekt.generovatNovePotvrzeni.label" %}</a>
           {% endif %}
           {% if show.pridat_oznamovatele %}
-            <button id="projekt-pridat-oznamovatele" class="dropdown-item" type="button" name="button">{% trans "Přidat oznamovatele" %}</button>
+            <button id="projekt-pridat-oznamovatele" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.pridatOznamovatele.label" %}</button>
           {% endif %}
-          <a class="dropdown-item" href="{% url 'historie:projekt' projekt.ident_cely %}">{% trans "Historie" %}</a>
+          <a class="dropdown-item" href="{% url 'historie:projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.historie.label" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{Digi_archiv_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "projekt.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{OAPI_link_part1|add:projekt.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "projekt.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:projekt.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarProjekt.digiArchivLink.label" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:projekt.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarProjekt.OAIAPI.label" %}</a>
           {% endif %}
         </div>
       </div>
