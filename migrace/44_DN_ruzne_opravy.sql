@@ -193,7 +193,7 @@ UPDATE akce_vedouci SET organizace = (SELECT id FROM organizace WHERE organizace
 WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE akce.organizace_ostatni IN (SELECT nazev_zkraceny FROM organizace))
 AND akce IN (SELECT akce FROM (SELECT akce, count(id) as cnt FROM akce_vedouci GROUP BY akce) pom WHERE pom.cnt = 1);
 UPDATE akce_vedouci SET organizace = (SELECT organizace FROM akce WHERE akce.archeologicky_zaznam = akce_vedouci.akce)
-WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE (akce.organizace_ostatni IS NULL OR akce.organizace_ostatni = ''));
+WHERE akce IN (SELECT archeologicky_zaznam FROM akce WHERE (coalesce(akce.organizace_ostatni, '') = ''));
 
 -- Oprava typů polí v návaznosti na #385 a #384 (aby nebyla moc velká v administraci)
 ALTER TABLE heslar ALTER COLUMN heslo TYPE varchar(255);
