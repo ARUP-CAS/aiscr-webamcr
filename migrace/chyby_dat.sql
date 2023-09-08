@@ -12,12 +12,12 @@ update soubor set vlastnik = 598610 where vlastnik = 66050;
 --4. V produkcnich datech jsou projekty ktere nemaji datum zapisu. Projekty ktere maji odovedneho_pracovnika_archivace ale nemaji datum_archivace
 ---- COMMENT: select ident_cely, stav from projekt where odpovedny_pracovnik_archivace is not null and datum_archivace is null;)
 ---- DN:
-update projekt set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace is not null and datum_archivace is null and stav = 5;
+update projekt set odpovedny_pracovnik_archivace = null where not(coalesce(odpovedny_pracovnik_archivace, '') = '') and datum_archivace is null and stav = 5;
 ---- projekty, které nemají datum_zapisu jsem nenašel, resp. jsou to jen projekty ve stavu 0, což je v pořádku; datetime_born skutečně chybět může (pro projekty vzniklé před zavedením atributu)
 --5. Projekty ktere maji odpovedny_pracovnik_navrhu_zruseni ale nemaji datum_navrzeni_zruseni. Nejde kvuli tomu udelat migraci duvod_navrzeni_zruseni.
 ---- COMMENT: select ident_cely, stav from projekt where odpovedny_pracovnik_navrhu_zruseni is not null and datum_navrzeni_zruseni is null;
 ---- DN:
-update projekt set odpovedny_pracovnik_navrhu_zruseni = null where odpovedny_pracovnik_navrhu_zruseni is not null and datum_navrzeni_zruseni is null and stav < 7;
+update projekt set odpovedny_pracovnik_navrhu_zruseni = null where not(coalesce(odpovedny_pracovnik_navrhu_zruseni, '') = '') and datum_navrzeni_zruseni is null and stav < 7;
 -- DONE 6. Nelze pridat unique constraint do kladyzm.nazev je tam mnoho zaznamu ktere tam maji N_A.
 -- DN: Sloupec odstraníme, není k ničemu potřebný a obsahuje částečně poškozená data (chyba kódování textu).
 ALTER TABLE kladyzm drop column nazev;
@@ -96,11 +96,11 @@ WHERE (((akce.id) Is Null) AND ((jednotka_dokument.vazba_druha) Is Not Null) AND
 UPDATE jednotka_dokument SET vazba_druha = null FROM del WHERE jednotka_dokument.id = del.id;
 
 -- DN: Doplnění hodnot do prázdných ale potřebných polí u záchranných projektů (nemělo by ale být potřeba, data se zdají být v pořádku).
-UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and email is null;
-UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and adresa is null;
-UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 2) and telefon is null;
-UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 2) and odpovedna_osoba is null;
-UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and objednatel is null;
+UPDATE projekt SET email = '-' WHERE (typ_projektu = 2) and coalesce(email, '') = '';
+UPDATE projekt SET adresa = '-' WHERE (typ_projektu = 2) and coalesce(adresa, '') = '';
+UPDATE projekt SET telefon = '-' WHERE (typ_projektu = 2) and coalesce(telefon, '') = '';
+UPDATE projekt SET odpovedna_osoba = '-' WHERE (typ_projektu = 2) and coalesce(odpovedna_osoba, '') = '';
+UPDATE projekt SET objednatel = '-' WHERE (typ_projektu = 2) and coalesce(objednatel, '') = '';
 
 -- Příprava pole autori v ext. zdrojích
 UPDATE externi_zdroj SET autori = REPLACE(autori, ' (ed.)', '') WHERE autori LIKE '% (ed.)%';
