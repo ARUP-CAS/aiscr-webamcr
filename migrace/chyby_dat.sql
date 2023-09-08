@@ -12,12 +12,12 @@ update soubor set vlastnik = 598610 where vlastnik = 66050;
 --4. V produkcnich datech jsou projekty ktere nemaji datum zapisu. Projekty ktere maji odovedneho_pracovnika_archivace ale nemaji datum_archivace
 ---- COMMENT: select ident_cely, stav from projekt where odpovedny_pracovnik_archivace is not null and datum_archivace is null;)
 ---- DN:
-update projekt set odpovedny_pracovnik_archivace = null where not(coalesce(odpovedny_pracovnik_archivace, '') = '') and datum_archivace is null and stav = 5;
+update projekt set odpovedny_pracovnik_archivace = null where odpovedny_pracovnik_archivace is not null and datum_archivace is null and stav = 5;
 ---- projekty, které nemají datum_zapisu jsem nenašel, resp. jsou to jen projekty ve stavu 0, což je v pořádku; datetime_born skutečně chybět může (pro projekty vzniklé před zavedením atributu)
 --5. Projekty ktere maji odpovedny_pracovnik_navrhu_zruseni ale nemaji datum_navrzeni_zruseni. Nejde kvuli tomu udelat migraci duvod_navrzeni_zruseni.
 ---- COMMENT: select ident_cely, stav from projekt where odpovedny_pracovnik_navrhu_zruseni is not null and datum_navrzeni_zruseni is null;
 ---- DN:
-update projekt set odpovedny_pracovnik_navrhu_zruseni = null where not(coalesce(odpovedny_pracovnik_navrhu_zruseni, '') = '') and datum_navrzeni_zruseni is null and stav < 7;
+update projekt set odpovedny_pracovnik_navrhu_zruseni = null where odpovedny_pracovnik_navrhu_zruseni is not null and datum_navrzeni_zruseni is null and stav < 7;
 -- DONE 6. Nelze pridat unique constraint do kladyzm.nazev je tam mnoho zaznamu ktere tam maji N_A.
 -- DN: Sloupec odstraníme, není k ničemu potřebný a obsahuje částečně poškozená data (chyba kódování textu).
 ALTER TABLE kladyzm drop column nazev;
