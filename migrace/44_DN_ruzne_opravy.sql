@@ -1,10 +1,10 @@
 ALTER TABLE dokument_jazyk DROP CONSTRAINT dokument_jazyk_dokument_fk;
 
 -- Řešení pro chybějící či duplkicitní EN hesla.
-UPDATE heslar SET heslo_en = 'translate: ' || ident_cely WHERE (heslo_en Is Null);
+UPDATE heslar SET heslo_en = 'translate: ' || ident_cely WHERE (coalesce(heslo_en, '') = '');
 UPDATE heslar SET heslo_en = 'chain necklace' WHERE ident_cely = 'HES-000756';
 UPDATE heslar SET heslo_en = 'chopper' WHERE ident_cely = 'HES-000801';
-UPDATE organizace SET nazev_zkraceny_en = 'translate: ' || id WHERE (nazev_zkraceny_en Is Null);
+UPDATE organizace SET nazev_zkraceny_en = 'translate: ' || id WHERE (coalesce(nazev_zkraceny_en, '') = '');
 
 -- Přejmenování souborů a doplnění správných nových cest (příprava před migrací do Fedory)
 WITH soubor_prejm AS
