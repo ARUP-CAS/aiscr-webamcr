@@ -68,6 +68,15 @@ class ExterniZdrojIndexView(LoginRequiredMixin, TemplateView):
     """
     template_name = "ez/index.html"
 
+    def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
+        context = {
+            "toolbar_name": _("ez.views.externiZdrojIndexView.toolbarName"),
+        }
+        return context
+
 
 class ExterniZdrojListView(SearchListView):
     """
