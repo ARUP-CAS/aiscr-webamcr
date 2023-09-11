@@ -10,7 +10,7 @@
 
     <div class="row app-entity-cards mb-3">
       <div class="col">
-        <a href="{% url 'pas:spoluprace_list' %}" class="card app-card-entity app-card-spoluprace">
+        <a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" class="card app-card-entity app-card-spoluprace">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'pas:list' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-nalezy">
+        <a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-nalezy">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -50,7 +50,17 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" class="card app-card-entity app-card-potvrdit">
+        <a href="{% url 'pas:list' %}}?historie_typ_zmeny=SN01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-nalezy">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "pas.templates.index.cardNaseNalezy.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-potvrdit">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -60,7 +70,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'pas:list' %}?stav=3" class="card app-card-entity app-card-archivovat">
+        <a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -85,6 +95,13 @@
         <h4>{% trans "pas.templates.index.cardMojeNalezy.title" %}</h4>
         <hr />
         {% trans "pas.templates.index.cardMojeNalezy.text" %}
+      </div>
+    </div>
+    <div class="app-collapse-nase-nalezy collapse">
+      <div class="p-3">
+        <h4>{% trans "pas.templates.index.cardNaseNalezy.title" %}</h4>
+        <hr />
+        {% trans "pas.templates.index.cardNaseNalezy.text" %}
       </div>
     </div>
     <div class="app-collapse-vybrat collapse">
@@ -130,6 +147,12 @@
     });
     $(".app-card-moje-nalezy").mouseover(function(){
       $(".app-collapse-moje-nalezy").show(100);
+    });
+    $(".app-card-nase-nalezy").mouseleave(function(){
+      $(".app-collapse-nase-nalezy").hide(100);
+    });
+    $(".app-card-nase-nalezy").mouseover(function(){
+      $(".app-collapse-nase-nalezy").show(100);
     });
     $(".app-card-vybrat").mouseleave(function(){
       $(".app-collapse-vybrat").hide(100);

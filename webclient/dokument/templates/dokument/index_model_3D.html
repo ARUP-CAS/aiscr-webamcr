@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list-model-3D' %}" class="card app-card-entity app-card-vybrat">
+        <a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" class="card app-card-entity app-card-vybrat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list-model-3D' %}?vlastnik={{ user.id }}" class="card app-card-entity app-card-moje-modely">
+        <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-modely">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,17 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list-model-3D' %}?stav=2" class="card app-card-entity app-card-archivovat">
+        <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
+          <div class="card-body">
+            <img src="{% static 'logo-am-mark.png' %}" />
+          </div>
+          <div class="card-footer">
+            {% trans "dokument.templates.indexModel3D.cardNaseModely.label" %}
+          </div>
+        </a>
+      </div>
+      <div class="col">
+        <a href="{% url 'dokument:list-model-3D' %}?stav=3&sort=datum_nalezu&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
