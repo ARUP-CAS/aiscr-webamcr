@@ -82,7 +82,6 @@ crossorigin=""/>
         <!-- Koordinaty-->
         <div class="form-group">
             <label for="detector_system_coordinates">{{ formCoor.detector_system_coordinates.label }}</label>
-            <label for="detector_system_cordinates">{% trans "pas.templates.coor.sourSystem.label" %}</label>
             {% if global_map_can_edit %}
             {% render_field formCoor.detector_system_coordinates class="form-control form-control-sm sysCord" id="detector_system_coordinates" onchange="switch_coordinate_system()" %}
             <small class="form-text text-muted" id="hint_id_detector_system_coordinates">{% trans "pas.templates.coor.sourSystem.tooltip" %}</small>

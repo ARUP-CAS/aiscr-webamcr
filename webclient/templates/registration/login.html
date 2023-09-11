@@ -42,15 +42,16 @@
                 <a href="/accounts/register" target="_blank" title="{% trans 'templates.registration.login.register.title' %}">{% trans "templates.registration.login.register.text" %}</a>
               </p>
               <hr />
-              <div class="app-flags">
-                <a href="#" title="{% trans 'templates.registration.login.flag.czech' %}">
-                  <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
-                </a>
-                <a href="#" title="{% trans 'templates.registration.login.flag.english' %}">
-                  <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
-                </a>
-              </div>
             </form>
+            <div class="app-flags">
+              {% get_current_language as LANGUAGE_CODE %}
+              <button id="czech" class=" {% if "cs" in LANGUAGE_CODE or "en" not in LANGUAGE_CODE  %}app-active{% endif %}" >
+                <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
+              </button>
+              <button id="english" class=" {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
+                <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -97,5 +98,38 @@
         this.classList.toggle("bi-eye");
     });
   });
+  </script>
+  <script>
+    $('#english').click(function(){
+      this.disabled=true;
+      $('#czech').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    $('#czech').click(function(){
+      this.disabled=true;
+      $('#english').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    
   </script>
 {% endblock %}

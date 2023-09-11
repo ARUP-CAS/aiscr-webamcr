@@ -208,7 +208,7 @@ class Model3DFilter(HistorieFilter):
     )
 
     rok_vzniku_do = NumberFilter(
-        field_name="rok_vzniku", label="&nbsp;", lookup_expr="lte"
+        field_name="rok_vzniku", label=" ", lookup_expr="lte"
     )
 
     duveryhodnost = NumberFilter(
@@ -528,7 +528,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     rok_udalosti_do = NumberFilter(
-        field_name="extra_data__rok_do", label="&nbsp;", lookup_expr="lte"
+        field_name="extra_data__rok_do", label=" ", lookup_expr="lte"
     )
     osoby = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.osoby.label"),
@@ -542,7 +542,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     duveryhodnost_do = NumberFilter(
-        field_name="extra_data__duveryhodnost", label="&nbsp;", lookup_expr="lte"
+        field_name="extra_data__duveryhodnost", label=" ", lookup_expr="lte"
     )
 
     jistota = MultipleChoiceFilter(
@@ -607,7 +607,7 @@ class DokumentFilter(Model3DFilter):
 
     neident_rok_ukonceni_do = NumberFilter(
         field_name="casti__neident_akce__rok_ukonceni",
-        label="&nbsp;",
+        label=" ",
         lookup_expr="lte",
     )
 
@@ -719,7 +719,7 @@ class DokumentFilter(Model3DFilter):
     soubor_velikost_do = NumberFilter(
         field_name="soubory__soubory__size_mb",
         lookup_expr="lte",
-        label="&nbsp;",
+        label=" ",
     )
 
     soubor_pocet_stran_od = NumberFilter(
@@ -730,7 +730,7 @@ class DokumentFilter(Model3DFilter):
 
     soubor_pocet_stran_do = NumberFilter(
         field_name="soubory__soubory__rozsah",
-        label="&nbsp;",
+        label=" ",
         lookup_expr="lte",
     )
     id_vazby = CharFilter(

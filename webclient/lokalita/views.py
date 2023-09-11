@@ -47,6 +47,15 @@ class LokalitaIndexView(LoginRequiredMixin, TemplateView):
     """
     template_name = "lokalita/index.html"
 
+    def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
+        context = {
+            "toolbar_name": _("ez.views.lokalitaIndexView.toolbarName"),
+        }
+        return context
+
 
 class LokalitaListView(SearchListView):
     """

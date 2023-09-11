@@ -683,6 +683,15 @@ form {
 
       .form-group {
         justify-content: flex-start;
+        margin-left: 0;
+
+        .input-group {
+          justify-content: flex-start;
+
+          .btn {
+            max-width: fit-content;
+          }
+        }
       }
     }
 
@@ -699,6 +708,15 @@ form {
 
       .form-group {
         justify-content: flex-end;
+        margin-right: 0;
+
+        .input-group {
+          justify-content: flex-end;
+
+          .btn {
+            max-width: fit-content;
+          }
+        }
       }
     }
   }

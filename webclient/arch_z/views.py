@@ -904,6 +904,7 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "ostatni_vedouci_objekt_formset_readonly": True,
             "button": _("arch_z.views.zapsat.submitButton.text"),
+            "toolbar_name": _("arch_z.views.zapsat.toolbarName"),
         }
     )
     return render(
@@ -1531,6 +1532,15 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro zobrazení domovské stránky akcií s navigačními možnostmi.
     """
     template_name = "arch_z/index.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
+        context = {
+            "toolbar_name": _("arch_z.views.akceIndexView.toolbarName"),
+        }
+        return context
 
 
 class AkceListView(SearchListView):

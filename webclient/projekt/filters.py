@@ -357,6 +357,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_vedouci = MultipleChoiceFilter(
         method="filtr_akce_vedouci",
+        label=_("projekt.filters.projektFilter.akceVedouci.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",

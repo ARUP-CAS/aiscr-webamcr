@@ -17,6 +17,8 @@
           <a href="{% url 'projekt:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.projekt.cardHeader" %}</a>
           {% elif typ == "akce" %}
           <a href="{% url 'arch_z:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.akce.cardHeader" %}</a>
+          {% elif typ == "lokalita" %}
+          <a href="{% url 'lokalita:detail' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.lokalita.cardHeader" %}</a>
           {% elif typ == "knihovna_3d" %}
           <a href="{% url 'dokument:detail-model-3D' ident_cely %}"><span class="material-icons">dynamic_feed</span>{% trans "historie.templates.historieList.model3D.cardHeader" %}</a>
           {% elif typ == "dokument" %}

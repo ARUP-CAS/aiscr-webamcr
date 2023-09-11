@@ -20,6 +20,10 @@
   .navbar-nav {
     .nav-item {
       &.app-flags {
+        button {
+          background: transparent;
+          border: 0;
+        }
         .nav-link {
           display: inline-block;
 
