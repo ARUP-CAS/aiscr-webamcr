@@ -255,12 +255,13 @@
         </li>
         <li class="nav-item app-pipe"></li>
         <li class="nav-item app-flags">
-          <a class="nav-link app-active" href="#">
+          {% get_current_language as LANGUAGE_CODE %}
+          <button id="czech" class="nav-link {% if "cs" in LANGUAGE_CODE  %}app-active{% endif %}" >
             <img src="{% static 'flag-cs.svg' %}" alt="" class="app-flag" />
-          </a>
-          <a class="nav-link" href="#">
+          </button>
+          <button id="english" class="nav-link {% if "en" in LANGUAGE_CODE %}app-active{% endif %}">
             <img src="{% static 'flag-en.svg' %}" alt="" class="app-flag" />
-          </a>
+          </button>
         </li>
       </ul>
     </div>
@@ -314,7 +315,39 @@
       html : true
     });
   </script>
-
+  <script>
+    $('#english').click(function(){
+      this.disabled=true;
+      $('#czech').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'en', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    $('#czech').click(function(){
+      this.disabled=true;
+      $('#english').attr("disabled", "disabled"); 
+      $.ajax({
+        type: "POST",
+        url: "{% url 'set_language' %}",
+        data: {'language': 'cs', 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(response) {
+             location.reload();
+         },
+         error: function(rs, e) {
+                alert(e);
+         }
+   });
+    });
+    
+  </script>
   <script>
       // Open sidebar based on the url i am viewing
       $(document).ready(function () {

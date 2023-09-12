@@ -1,16 +1,15 @@
 {% extends 'core/email.html' %}
 {% load i18n %}
 {% block content %}
-    <p>{% trans "E-P-03b.vážená_paní/vážený_pane" %},</p>
-    <p>{% trans "E-P-03b.děkujeme_za_oznámení_o_stavební_nebo_jiné_činnosti" %}
-        (<b>{{ podnet }}</b>) {% trans "E-P-03b.na_území_s_archeologickými_nálezy_na_k.ú." %}<b>{{ katastr }}</b>
-        (<b>{{ okres }}</b>), {% trans "E-P-03b.parcela" %} <b>{{ parcela }}</b>
-        (<b>{{ lokalita }}</b>) {% trans "E-P-03b.podle_22_odst._2_zákona_č._20/1987_Sb._o_státní_památkové_péči" %}. {% trans "E-P-03b.ve_věci_uzavření_dohody_o_provedení_záchranného_archeologického_výzkumu_vás_bude_kontaktovat_organizace" %}
-        <b>{{ organization }}</b>, {% trans "E-P-03b.která_je_oprávněna_provádět_archeologické_výzkumy" %}.
+    <p>{% trans "projekt.templates.email.E-P-03b.title" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-03b.part1" %}
+        (<b>{{ podnet }}</b>) {% trans "projekt.templates.email.E-P-03b.part2" %}<b>{{ katastr }}</b>
+        (<b>{{ okres }}</b>) {% trans "projekt.templates.email.E-P-03b.part3" %} <b>{{ parcela }}</b>
+        (<b>{{ lokalita }}</b>) {% trans "projekt.templates.email.E-P-03b.part4" %}
+        <b>{{ organization }}</b> {% trans "projekt.templates.email.E-P-03b.part5" %}
     </p>
-    <p>{% trans "E-P-03b.s_pozdravem" %}</p>
-    <p>{% trans "E-P-03b.archeologický_ústav_av_čr_brno_v_v_i" %}</p>
-    <p>{% trans "E-P-03b.na_tuto_zprávu_prosím_neodpovídejte_je_automaticky_generována" %}.
-        {% trans "E-P-03b.vaše_případné_dotazy_pište_na_adresu_oznameni@arub.cz_nebo_volejte_na_tel_+420_515_911_133_(jihomoravský_a_zlínský_kraj)_+420_515_911_121_(vysočina_a_olomoucký_kraj)_+420_553_821_603_(moravskoslezský_kraj)" %}.
+    <p>{% trans "projekt.templates.email.E-P-03b.part6" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-03b.part7" %}</p>
+    <p>{% trans "projekt.templates.email.E-P-03b.part8" %}
     </p>
 {% endblock %}

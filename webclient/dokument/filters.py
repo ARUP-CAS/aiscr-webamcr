@@ -208,7 +208,7 @@ class Model3DFilter(HistorieFilter):
     )
 
     rok_vzniku_do = NumberFilter(
-        field_name="rok_vzniku", label="&nbsp;", lookup_expr="lte"
+        field_name="rok_vzniku", label=" ", lookup_expr="lte"
     )
 
     duveryhodnost = NumberFilter(
@@ -408,7 +408,7 @@ class Model3DFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",
@@ -457,8 +457,8 @@ class DokumentFilter(Model3DFilter):
         method="filter_uzemni_prislusnost",
         label=_("dokument.filters.dokumentFilter.uzemniPrislusnost.label"),
         choices=(
-            ("M-", ("dokument.filters.dokumentFilter.uzemniPrislusnost.M.option")),
-            ("C-", ("dokument.filters.dokumentFilter.uzemniPrislusnost.C.option")),
+            ("M-", _("dokument.filters.dokumentFilter.uzemniPrislusnost.M.option")),
+            ("C-", _("dokument.filters.dokumentFilter.uzemniPrislusnost.C.option")),
         ),
         widget=SelectMultiple(
             attrs={
@@ -528,7 +528,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     rok_udalosti_do = NumberFilter(
-        field_name="extra_data__rok_do", label="&nbsp;", lookup_expr="lte"
+        field_name="extra_data__rok_do", label=" ", lookup_expr="lte"
     )
     osoby = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.osoby.label"),
@@ -542,7 +542,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     duveryhodnost_do = NumberFilter(
-        field_name="extra_data__duveryhodnost", label="&nbsp;", lookup_expr="lte"
+        field_name="extra_data__duveryhodnost", label=" ", lookup_expr="lte"
     )
 
     jistota = MultipleChoiceFilter(
@@ -607,7 +607,7 @@ class DokumentFilter(Model3DFilter):
 
     neident_rok_ukonceni_do = NumberFilter(
         field_name="casti__neident_akce__rok_ukonceni",
-        label="&nbsp;",
+        label=" ",
         lookup_expr="lte",
     )
 
@@ -719,7 +719,7 @@ class DokumentFilter(Model3DFilter):
     soubor_velikost_do = NumberFilter(
         field_name="soubory__soubory__size_mb",
         lookup_expr="lte",
-        label="&nbsp;",
+        label=" ",
     )
 
     soubor_pocet_stran_od = NumberFilter(
@@ -730,7 +730,7 @@ class DokumentFilter(Model3DFilter):
 
     soubor_pocet_stran_do = NumberFilter(
         field_name="soubory__soubory__rozsah",
-        label="&nbsp;",
+        label=" ",
         lookup_expr="lte",
     )
     id_vazby = CharFilter(
@@ -1053,7 +1053,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",
@@ -1073,7 +1073,7 @@ class DokumentFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(extra_data_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#extraDataCollapse",
                 role="button",

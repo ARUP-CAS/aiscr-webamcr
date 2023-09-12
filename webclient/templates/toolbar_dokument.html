@@ -4,16 +4,17 @@
   <div class="app-left">
     <div class="app-entity-title">
       {% if is_3d %}
-      <a href="{% url 'dokument:index-model-3D' %}"><span class="material-icons">3d_rotation</span> {% trans "Knihovna 3D" %}</a>
+      <a href="{% url 'dokument:index-model-3D' %}"><span class="material-icons">3d_rotation</span> {% trans "templates.toolbarDokument.knihovna3D.title" %}</a>
       {% else %}
-      <a href="#"><span class="material-icons">description</span> {% trans "Dokument" %}</a>
+      <a href="#"><span class="material-icons">description</span> {% trans "templates.toolbarDokument.dokument.title" %}</a>
       {% endif %}
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {% if d.ident_cely %}
       {{ d.ident_cely }}{% if showback %}<div id="document-back" style="display:none"><span class="app-pipe"></span><a href="" class="app-entity-color font-weight-normal"></a></div>{% endif %}
+      {% elif index%}
       {% else %}
-      {% if is_3d %}{% trans "model3d.entity.tootlbar.Zapsat.label" %}{% else %}{% trans "dokument.entity.tootlbar.Zapsat.label" %}{% endif %}
+      {% if is_3d %}{% trans "templates.toolbarDokument.knihovna3D.zapsat.label" %}{% else %}{% trans "templates.toolbarDokument.dokument.zapsat.label" %}{% endif %}
       {% endif %}
     </div>
   </div>
@@ -23,31 +24,31 @@
         {% if show.vratit_link %}
           <button id="dokument-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "Vrátit" %}
+            {% trans "templates.toolbarDokument.vratit.label" %}
           </button>
         {% endif %}
         {% if show.odeslat_link %}
         <button id="dokument-odeslat" class="btn m-0" type="button" name="button">
             <span class="material-icons">send</span>
-            {% trans "Odeslat" %}
+            {% trans "templates.toolbarDokument.odeslat.label" %}
         </button>
         {% endif %}
         {% if show.archivovat_link %}
         <button id="dokument-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
-            {% trans "Archivovat" %}
+            {% trans "templates.toolbarDokument.archivovat.label" %}
         </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "Další volby" %}
+          {% trans "templates.toolbarDokument.dalsiVolby.label" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <button id="dokument-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat dokument" %}</button>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'dokument' d.id %}">{% trans "dokument.detail.toolbar.MetadataDownload" %}</a>
-          <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "Historie" %}</a>
+          <button id="dokument-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarDokument.smazatDokument.label" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'dokument' d.id %}">{% trans "templates.toolbarDokument.metadataDownload.label" %}</a>
+          <a class="dropdown-item" href="{% url 'historie:dokument' d.ident_cely %}">{% trans "templates.toolbarDokument.historie.label" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "dokument.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{OAPI_link_part1|add:d.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "dokument.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:d.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.digiArchivLink.label" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:d.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarDokument.OAIAPI.label" %}</a>
           {% endif %}
         </div>
       </div>

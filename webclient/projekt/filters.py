@@ -61,7 +61,7 @@ class KatastrFilter(filters.FilterSet):
     """
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
-        label=_("Kraj"),
+        label=_("projekt.filters.katastrFilter.kraj.label"),
         method="filtr_katastr_kraj",
         widget=SelectMultiple(
             attrs={
@@ -75,7 +75,7 @@ class KatastrFilter(filters.FilterSet):
 
     okres = MultipleChoiceFilter(
         choices=RuianOkres.objects.all().values_list("id", "nazev"),
-        label=_("Okres"),
+        label=_("projekt.filters.katastrFilter.okres.label"),
         method="filtr_katastr_okres",
         widget=SelectMultiple(
             attrs={
@@ -89,13 +89,13 @@ class KatastrFilter(filters.FilterSet):
 
     katastr = CharFilter(
         method="filtr_katastr",
-        label=_("Katastr"),
+        label=_("projekt.filters.katastrFilter.katastr.label"),
         distinct=True,
     )
 
     popisne_udaje = CharFilter(
         method="filter_popisne_udaje",
-        label=_("Popisné údaje"),
+        label=_("projekt.filters.katastrFilter.popisneUdaje.label"),
         distinct=True,
     )
 
@@ -156,7 +156,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     oblast = MultipleChoiceFilter(
         choices=OBLAST_CHOICES,
-        label=_("Územní příslušnost"),
+        label=_("projekt.filters.projektFilter.oblast.label"),
         method="filter_by_oblast",
         widget=SelectMultiple(
             attrs={
@@ -170,7 +170,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     typ_projektu = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PROJEKT_TYP),
-        label=_("Typ"),
+        label=_("projekt.filters.projektFilter.typProjektu.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -183,7 +183,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     stav = MultipleChoiceFilter(
         choices=Projekt.CHOICES,
-        label=_("Stav"),
+        label=_("projekt.filters.projektFilter.stav.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -196,21 +196,21 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     datum_zahajeni = DateFromToRangeFilter(
         field_name="datum_zahajeni",
-        label=_("Datum zahájení (od-do)"),
+        label=_("projekt.filters.projektFilter.datumZahajeni.label"),
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
     datum_ukonceni = DateFromToRangeFilter(
         field_name="datum_ukonceni",
-        label=_("Datum ukončení (od-do)"),
+        label=_("projekt.filters.projektFilter.datumUkonceni.label"),
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
     vedouci_projektu = ModelMultipleChoiceFilter(
         queryset=Osoba.objects.all(),
-        label=_("Vedoucí"),
+        label=_("projekt.filters.projektFilter.vedouci.label"),
         widget=autocomplete.ModelSelect2Multiple(url="heslar:osoba-autocomplete"),
         distinct=True,
     )
@@ -246,7 +246,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     termin_odevzdani_nz = DateFromToRangeFilter(
         field_name="termin_odevzdani_nz",
-        label=_("Termín odevzdání NZ (od-do)"),
+        label=_("projekt.filters.projektFilter.terminOdevzdani.label"),
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
@@ -281,7 +281,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
             lambda x: x[0].startswith("P") and not x[0].startswith("PI"),
             Historie.CHOICES,
         ),
-        label="Změna stavu",
+        label=_("projekt.filters.projektFilter.historieTypeZmeny.label"),
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
             attrs={
@@ -297,14 +297,14 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     akce_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__ident_cely",
         lookup_expr="icontains",
-        label=_("ID akce"),
+        label=_("projekt.filters.projektFilter.idAkce.label"),
         distinct=True,
     )
 
     akce_zjisteni = MultipleChoiceFilter(
         method="filter_has_positive_find",
-        label=_("Terénní zjištění"),
-        choices=[("True", "pozitivní"), ("False", "negativní")],
+        label=_("projekt.filters.projektFilter.akceZjisteni.label"),
+        choices=[("True",_("projekt.filters.projektFilter.akceZjisteni.choice.pozitivni")), ("False", _("projekt.filters.projektFilter.akceZjisteni.choice.negativni"))],
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -317,19 +317,19 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_popisne_udaje = CharFilter(
         method="filter_popisne_udaje_akce",
-        label="Popisné údaje",
+        label=_("projekt.filters.projektFilter.akcePopisneUdaje.label"),
         distinct=True,
     )
 
     akce_katastr = CharFilter(
         method="filtr_akce_katastr",
-        label=_("Katastr"),
+        label=_("projekt.filters.projektFilter.akceKatastr.label"),
         distinct=True,
     )
 
     akce_kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
-        label=_("Kraj"),
+        label=_("projekt.filters.projektFilter.akceKraj.label"),
         method="filtr_akce_katastr_kraj",
         widget=SelectMultiple(
             attrs={
@@ -343,7 +343,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_okres = MultipleChoiceFilter(
         choices=RuianOkres.objects.all().values_list("id", "nazev"),
-        label=_("Okres"),
+        label=_("projekt.filters.projektFilter.akceOkres.label"),
         method="filtr_akce_katastr_okres",
         widget=SelectMultiple(
             attrs={
@@ -357,6 +357,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_vedouci = MultipleChoiceFilter(
         method="filtr_akce_vedouci",
+        label=_("projekt.filters.projektFilter.akceVedouci.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",
@@ -366,7 +367,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_vedouci_organizace = MultipleChoiceFilter(
         choices=Organizace.objects.all().values_list("id", "nazev_zkraceny"),
-        label="Organizace",
+        label=_("projekt.filters.projektFilter.akceVedouciOrganizace.label"),
         method="filtr_akce_organizace",
         widget=SelectMultiple(
             attrs={
@@ -380,13 +381,13 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_datum_zahajeni = DateFromToRangeFilter(
         field_name="akce__datum_zahajeni",
-        label="Datum zahájení (od-do)",
+        label=_("projekt.filters.projektFilter.akceDatumZahajeni.label"),
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
     akce_datum_ukonceni = DateFromToRangeFilter(
         field_name="akce__datum_ukonceni",
-        label="Datum ukončení (od-do)",
+        label=_("projekt.filters.projektFilter.akceDatumUkonceni.label"),
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
@@ -396,7 +397,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         # ),
         choices=heslar_12(HESLAR_AKCE_TYP, HESLAR_AKCE_TYP_KAT)[1:],
         method="filter_akce_typ",
-        label="Typ",
+        label=_("projekt.filters.projektFilter.akceTyp.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -409,7 +410,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     pristupnost_akce = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
         field_name="akce__archeologicky_zaznam__pristupnost",
-        label="Přístupnost",
+        label=_("projekt.filters.projektFilter.akcePristupnost.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -422,7 +423,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     stav_akce = MultipleChoiceFilter(
         choices=ArcheologickyZaznam.STATES,
         field_name="akce__archeologicky_zaznam__stav",
-        label="Stav",
+        label=_("projekt.filters.projektFilter.akceStav.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -433,10 +434,10 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
     akce_je_nz = MultipleChoiceFilter(
-        choices=[("True", "Ano"), ("False", "Ne")],
+        choices=[("True", _("projekt.filters.projektFilter.akceJeNz.choice.ano")), ("False", _("projekt.filters.projektFilter.akceJeNz.choice.ne"))],
         field_name="akce__je_nz",
         lookup_expr="iexact",
-        label="ZAA jako NZ",
+        label=_("projekt.filters.projektFilter.akceJeNz.label"),
         widget=SelectMultiple(
             attrs={
                 "class": "selectpicker",
@@ -450,7 +451,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
     pian_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__dokumentacni_jednotky_akce__pian__ident_cely",
         lookup_expr="icontains",
-        label="ID PIAN",
+        label=_("projekt.filters.projektFilter.pianIdent.label"),
         distinct=True,
     )
 
@@ -458,21 +459,21 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         # field_name="akce__archeologicky_zaznam__casti_dokumentu__dokument__ident_cely",
         # lookup_expr="icontains",
         method="filtr_dokumenty_ident",
-        label="ID dokumentu",
+        label=_("projekt.filters.projektFilter.dokumentIdent.label"),
         distinct=True,
     )
 
     zdroj_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__externi_odkazy__externi_zdroj__ident_cely",
         lookup_expr="icontains",
-        label="ID externího zdroje",
+        label=_("projekt.filters.projektFilter.ezIdent.label"),
         distinct=True,
     )
 
     adb_ident_obsahuje = CharFilter(
         field_name="akce__archeologicky_zaznam__dokumentacni_jednotky_akce__adb__ident_cely",
         lookup_expr="icontains",
-        label="ID ADB",
+        label=_("projekt.filters.projektFilter.adbIdent.label"),
         distinct=True,
     )
 
@@ -656,13 +657,13 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"projekt.filter.history.divider.label")
+        "translation": _(u"projekt.filters.history.divider.label")
     }
     akce_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"projekt.filter.akce.divider.label")
+        "translation": _(u"projekt.filters.akce.divider.label")
     }
     dok_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"projekt.filter.dok.divider.label")
+        "translation": _(u"projekt.filters.dok.divider.label")
     }
     layout = Layout(
         Div(
@@ -687,7 +688,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",
@@ -707,7 +708,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(akce_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#akcieCollapse",
                 role="button",
@@ -736,7 +737,7 @@ class ProjektFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(dok_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#zaznamyCollapse",
                 role="button",

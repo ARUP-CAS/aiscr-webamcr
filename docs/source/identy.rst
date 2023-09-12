@@ -12,11 +12,11 @@ Dočasný ident
 
 * Přiřazuje se pro projekty vytvořené na základě oznámení
 
-* Logika složení je: "X-" + region (M anebo C) + "-" + 9 místní číslo (id ze sekvence `projekt_xident_seq` doplněné nulami na 9 číslic)
+* Logika složení je: "X-" + region (M anebo C) + "-" + devítimístné číslo (id ze sekvence `projekt_xident_seq` doplněné nulami na 9 číslic)
 
 * Příklad: "X-M-000001234"
 
-* Kód: `webclient/core/ident_cely.py/get_temporary_project_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L35 `get_temporary_project_ident`
 
 Permanentní ident
 --------------------
@@ -29,7 +29,7 @@ Permanentní ident
 
 * Při překročení maximálního pořadového čísla (99999) se uživateli na webu zobrazí chybové hlášení.
 
-* Kód: `webclient/projekt/models.py/set_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/projekt/models.py#L496 `set_permanent_ident_cely`
 
 Projektová akce
 ----------------
@@ -42,7 +42,7 @@ Projektová akce
 
 * Pokud je překročen maximální počet akcí pro projekt (26), zobrazí se na webu chybová zpráva
 
-* Kód: `webclient/core/ident_cely.py/get_project_event_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L46 `get_project_event_ident`
 
 ========
 Dokument
@@ -52,16 +52,16 @@ Dočasný ident
 
 * Přiřazení k vytvořeným dokumentům a 3D modelům
   
-* Logika složení je: "X-" + region (M anebo C) + "-" + rada (TX/DD/3D) + "-" + 9 místní číslo (id ze sekvence `dokument_xident_seq` doplněno na 9 čísel nulami)
+* Logika složení je: "X-" + region (M anebo C) + "-" + rada (TX/DD/3D...) + "-" + devítimístné číslo (id ze sekvence `dokument_xident_seq` doplněno na 9 čísel nulami)
 
 * Příklad: "X-M-TX-000000034"
   
-* Kód: `webclient/core/ident_cely.py/get_temp_dokument_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L91 `get_temp_dokument_ident`
 
 Permanentní ident
 ------------------
 
-* Přiřazení k dokumentům při archivaci. platí také pro díly a součásti
+* Přiřazení k dokumentům při archivaci. platí také pro potomky (soubory, části dokumentu a soubory)
   
 * Logika složení je: region- (M/C) + rada (TX/DD/3D) + "-" + rok + číslo sekvence z tabulky `dokument_sekvence` doplněno na 5 čísel nulami
 
@@ -71,7 +71,7 @@ Permanentní ident
 
 * Při překročení maximálního pořadového čísla (99999) je uživateli vrácena chybová zpráva
   
-* Kód: `webclient/dokumenty/models.py/set_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/dokument/models.py#L308 `set_permanent_ident_cely`
 
 ===============
 Část Dokumentu
@@ -85,7 +85,7 @@ Permanentní ident
 
 * Při překročení maximální části dokumentu (999) se na webu zobrazí chybové hlášení
 
-* Kód: `webclient/core/ident_cely.py/get_cast_dokumentu_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L105 `get_cast_dokumentu_ident`
 
 =====================
 Dokumentační jednotka
@@ -99,10 +99,10 @@ Dokumentační jednotka
 
 * Při překročení maximálního počtu DJ arch záznamu (99) se na webu zobrazí chybové hlášení
 
-* Kód: `webclient/core/ident_cely.py/get_dj_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L129 `get_dj_ident`
 
 ================================
-Komponenta dokumentacni jednotky
+Komponenta dokumentační jednotky
 ================================
 
 * Přiděluje se pro komponentu dokumentační jednotky
@@ -113,7 +113,7 @@ Komponenta dokumentacni jednotky
 
 * Pokud je překročeno maximum komponent arch záznamu pod DJ (999), zobrazí se na webu chybové hlášení
 
-* Kód: `webclient/core/ident_cely.py/get_komponenta_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L152 `get_komponenta_ident`
 
 ====================
 Komponenta dokumentu
@@ -127,7 +127,7 @@ Komponenta dokumentu
 
 * Pokud je překročeno maximum komponent u dokumentu (999), zobrazí se na webu chybové hlášení
 
-* Kód: `webclient/core/ident_cely.py/get_dokument_komponenta_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L152 `get_komponenta_ident`
 
 ====
 Pian
@@ -135,13 +135,13 @@ Pian
 Dočasný ident
 -------------
 
-* PPřiděluje se pro vytvořené piany
+* Přiděluje se pro vytvořené piany
 
-* Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + 9 místní číslo (id ze sekvence `pian_xident_seq` doplněno na 9 čísel nulami)
+* Logika složení je: "N-" + číslo zm50 (bez "-") + "-" + devítimístné číslo (id ze sekvence `pian_xident_seq` doplněno na 9 čísel nulami)
 
 * Příklad: "N-1224-000001234"
 
-* Kód: `webclient/core/ident_cely.py/get_temporary_pian_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L197 `get_temporary_pian_ident`
 
 Permanentní ident
 ------------------
@@ -152,9 +152,11 @@ Permanentní ident
 
 * Příklad: "P-1224-100321"
 
-* Pokud je překročeno maximum sekvence (999999), zobrazí se na webu chybové hlášení
+* Pokud je překročeno maximum sekvence (899999), zobrazí se na webu chybové hlášení
 
-* Kód: `webclient/pian/models.py/set_permanent_ident_cely`
+* Podkud jde o PIAN katastru, používá se odlišná řada začínající číslicí 9 (s maximem na 999999).
+
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/pian/models.py#L105 `set_permanent_ident_cely`
 
 ================
 Samostatný nález
@@ -168,7 +170,7 @@ Samostatný nález
 
 * Pokud je překročeno maximum SN u projektu (99999), zobrazí se na webu chybové hlášení
 
-* Kód: `webclient/core/ident_cely.py/get_sn_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L209 `get_sn_ident`
 
 ===
 ADB
@@ -176,13 +178,13 @@ ADB
 
 * Přiděluje se pro ADB
 
-* Logika složení je: "ADB-" + mapno pre sm5 + "-" + číslo sekvence z tabulky `adb_sekvence` (podle kladysm5) doplněno na 6 čísel nulami
+* Logika složení je: "ADB-" + mapno pro sm5 + "-" + číslo sekvence z tabulky `adb_sekvence` (podle kladysm5) doplněno na 6 čísel nulami
 
 * Příklad: "ADB-PRAH43-000012"
 
 * Pri překročení maxima sekvence u ADB (999999) se vráti uživateli na web chybová hláška.
 
-* Kód: `webclient/core/ident_cely.py/get_adb_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L233 `get_adb_ident`
 
 ============
 Výškové body
@@ -194,14 +196,14 @@ Výškové body
 
 * Příklad: "ADB-PRAH43-000012-V0001"
 
-* Pri překročení maxima VB u adb (9999) se vráti uživateli na web chybová hláška
+* Pri překročení maxima VB u ADB (9999) se vráti uživateli na web chybová hláška
 
-* Kód: `webclient/adb/models.py/get_vyskovy_bod`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/adb/models.py#L94 `get_vyskovy_bod`
 
 ========
 Uživatel
 ========
-Ident celý
+Permanentní ident
 -----------
 
 * Přiděluje se v databázi
@@ -218,24 +220,24 @@ Dočasný ident
 
 * Přiděluje se pro vytvořené lokality
 
-* Logika složení je: "X-" + region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
+* Logika složení je: "X-" + region (M anebo C) + "-" + typ + devítimístné číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
 
 * Příklad: "X-M-L000123456"
 
-* Kód: `webclient/core/ident_cely.py/get_temp_lokalita_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L280 `get_temp_lokalita_ident`
 
 Permanentní ident
 ------------------
 
 * Přiděluje se pro archivované lokality
 
-* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplňeno na 7 číslic.
+* Logika složení je: region (M anebo C) + "-" + typ + sedmimístné číslo ze sekvence `lokalita_xident_seq` doplňeno na 7 číslic.
 
 * Příklad: "C-K9000904"
 
-* Pri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
+* Pri překročení maxima čísla sekvence (9999999) se vráti uživateli na web chybová hláška
 
-* Kód: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/arch_z/models.py#L282 `set_lokalita_permanent_ident_cely`
 
 ================
 Samostatná akce
@@ -245,24 +247,24 @@ Dočasný ident
 
 * Přiděluje se pro vytvořené samostatné akce
 
-* Logika složení je: "X-" + region (M anebo C) + "-9" + typ + 9 místní číslo ze sekvence `akce_xident_seq` doplněno na 9 číslic + "A".
+* Logika složení je: "X-" + region (M anebo C) + "-9" + devítimístné číslo ze sekvence `akce_xident_seq` doplněno na 9 číslic + "A".
 
 * Příklad: "X-M-9000123456A"
 
-* Kód: `webclient/core/ident_cely.py/get_temp_akce_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L292 `get_temp_akce_ident`
 
 Permanentní ident
 ------------------
 
-* Přiděluje se pro archivované lokality
+* Přiděluje se pro archivované samostatné akce
 
-* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
+* Logika složení je: region (M anebo C) + "-9" + typ + číslo sekvence z tabulky `akce_sekvence` doplněno na 6 čísel nulami + "A".
 
-* Příklad: "P-1224-100321"
+* Příklad: "M-9123456A"
 
-* PPri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
+* Při překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
-* Kód: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/arch_z/models.py#L528 `get_akce_ident`
 
 
 ================
@@ -271,23 +273,23 @@ Externí zdroj
 Dočasný ident
 -------------
 
-* Přiděluje se pro vytvorene externé zdroje
+* Přiděluje se pro vytvořené externí zdroje
 
-* Logika složení je: "X-BIB" + 9 místní číslo ze sekvence `externi_zdroj_xident_seq` doplněno na 9 číslic.
+* Logika složení je: "X-BIB" + devítimístné číslo ze sekvence `externi_zdroj_xident_seq` doplněno na 9 číslic.
 
 * Příklad: "X-BIB-000123456"
 
-* Kód: `webclient/core/ident_cely.py/get_temp_ez_ident`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/core/ident_cely.py#L303 `get_temp_ez_ident`
 
 Permanentní ident
 ------------------
 
-* Přiděluje se pro archivované lokality
+* Přiděluje se pro archivované externí zdroje
 
-* Logika složení je: region (M anebo C) + "-" + typ + 9 místní číslo ze sekvence `lokalita_xident_seq` doplněno na 9 číslic.
+* Logika složení je: "BIB" + číslo sekvence z tabulky `externi_zdroj_sekvence` doplněno na 6 čísel nulami.
 
-* Příklad: "P-1224-100321"
+* Příklad: "BIB-123456"
 
 * Pri překročení maxima čísla sekvence (999999) se vráti uživateli na web chybová hláška
 
-* Kód: `webclient/arch_z/models.py/set_lokalita_permanent_ident_cely`
+* Kód: https://github.com/ARUP-CAS/aiscr-webamcr/blob/dev/webclient/ez/models.py#L165 `get_perm_ez_ident`

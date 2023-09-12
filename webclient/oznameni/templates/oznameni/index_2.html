@@ -4,7 +4,7 @@
 {% load template_filters %}
 {% load template_tags%}
 
-{% block title %}Oznámení o stavebním či jiném záměru - Krok 2{% endblock %}
+{% block title %}{% trans "oznameni.templates.oznameni.index_2.title" %}{% endblock %}
 
 {% block head %}
   <script>var maxFiles = 999;</script>
@@ -24,21 +24,21 @@
       <div class="step">
         <button type="button" class="btn step-trigger" disabled="disabled">
           <span class="bs-stepper-circle">1</span>
-          <span class="bs-stepper-label">{% trans "Vytvoření oznámení" %}</span>
+          <span class="bs-stepper-label">{% trans "oznameni.templates.oznameni.index_2.stepper.vytvoreniOznameni" %}</span>
         </button>
       </div>
       <div class="line"></div>
       <div class="step active">
         <button type="button" class="btn step-trigger">
           <span class="bs-stepper-circle">2</span>
-          <span class="bs-stepper-label">{% trans "Upload projektové dokumentace" %}</span>
+          <span class="bs-stepper-label">{% trans "oznameni.templates.oznameni.index_2.stepper.uploadProjDokumentace" %}</span>
         </button>
       </div>
       <div class="line"></div>
       <div class="step">
         <button type="button" class="btn step-trigger" disabled="disabled">
           <span class="bs-stepper-circle">3</span>
-          <span class="bs-stepper-label">{% trans "Oznámeno" %}</span>
+          <span class="bs-stepper-label">{% trans "oznameni.templates.oznameni.index_2.stepper.oznameno" %}</span>
         </button>
       </div>
     </div>
@@ -47,55 +47,55 @@
   <table class="table table-sm table-striped table-hover mb-4">
     <tbody>
       <tr>
-        <th scope="row">{% trans "Projekt" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.projekt" %}:</th>
         <td>{{ confirm.ident_cely }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Ozanamovatel" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.ozanamovatel" %}:</th>
         <td>{{ confirm.oznamovatel }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Zástupce oznamovatele" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.zastupceOznamovatele" %}:</th>
         <td>{{ confirm.zastupce }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Adresa" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.adresa" %}:</th>
         <td>{{ confirm.adresa }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Telefon" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.telefon" %}:</th>
         <td>{{ confirm.telefon }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Email" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.email" %}:</th>
         <td>{{ confirm.email }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Katastrální území" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.katastralniUzemi" %}:</th>
         <td>{{ confirm.katastr }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Další katastry" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.dalsiKatastry" %}:</th>
         <td>{{ confirm.dalsi_katastry|katastry_to_list }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Plánované zahájení" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.planovaneZahajeni" %}:</th>
         <td>{{ confirm.planovane_zahajeni|render_daterange }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Podnět" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.podnet" %}:</th>
         <td>{{ confirm.podnet }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Lokalizace" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.lokalizace" %}:</th>
         <td>{{ confirm.lokalizace }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Parcelní číslo" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.parcelniCislo" %}:</th>
         <td>{{ confirm.parcelni_cislo }}</td>
       </tr>
       <tr>
-        <th scope="row">{% trans "Označení stavby" %}:</th>
+        <th scope="row">{% trans "oznameni.templates.oznameni.index_2.table.oznaceniStavby" %}:</th>
         <td>{{ confirm.oznaceni_stavby }}</td>
       </tr>
     </tbody>
@@ -108,13 +108,13 @@
       <input name="file" type="file" multiple/>
     </div>
   </form>
-  <small class="form-text text-muted">{% trans "oznameni.templates.index_2.file_upload.tooltip" %}</small>
+  <small class="form-text text-muted">{% trans "oznameni.templates.oznameni.index_2.file_upload.tooltip" %}</small>
 
-  <form method="post" onSubmit="return confirm('{% trans "Nahrali jste všechny dokumenty?" %}') ">
+  <form method="post" onSubmit="return confirm('{% trans "oznameni.templates.oznameni.index_2.nahraliSteVsechnyDokumenty" %}') ">
     {% csrf_token %}
     <input name="ident_cely" type="hidden" value="{{ confirm.ident_cely }}">
-    <a href="{% url 'oznameni:index' %}?ident_cely={{confirm.ident_cely}}" class="btn btn-secondary">{% trans "Upravit oznameni" %}</a>
-    <button type="submit" class="btn btn-success ">{% trans "Dokončit oznámení" %}</button>
+    <a href="{% url 'oznameni:index' %}?ident_cely={{confirm.ident_cely}}" class="btn btn-secondary">{% trans "oznameni.templates.oznameni.index_2.upravitOznameni" %}</a>
+    <button type="submit" class="btn btn-success ">{% trans "oznameni.templates.oznameni.index_2.dokoncitOznameni" %}</button>
   </form>
 
 {% endblock %}

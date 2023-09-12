@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Novák"
+  given-names: "David"
+  orcid: "https://orcid.org/0000-0001-6592-6291"
+- family-names: "Pešík"
+  given-names: "Jiří"
+- family-names: "Ihnát"
+  given-names: "Jan"
+- family-names: "Pajdla"
+  given-names: "Petr"
+  orcid: "https://orcid.org/0000-0001-7050-9572"
+- family-names: "Křivánková"
+  given-names: "Dana"
+- family-names: "Švejcar"
+  given-names: "Ondřej"
+- family-names: "Bartoš"
+  given-names: "Jiří"
+- family-names: "Škvarla"
+  given-names: "Juraj"
+- family-names: "Kudela"
+  given-names: "Petr"
+- family-names: "Sedláček"
+  given-names: "Marek"
+- family-names: "Pavloň"
+  given-names: "Tomáš"
+title: "Archeologická mapa České republiky"
+version: pre-release
+doi: to-be-registered
+date-released: 2023-09-08
+url: "https://github.com/ARUP-CAS/aiscr-webamcr"

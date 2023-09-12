@@ -14,11 +14,11 @@ map.addLayer(poi_other);
 var heatPoints = [];
 var heatmapOptions =
 {
-    "radius": 0.5,
+    "radius": 15,
 	"maxOpacity": 0.8,
-	"minOpacity": 0.15,
+	"minOpacity": 0.5,
     "scaleRadius": true,
-    "useLocalExtrema": true,
+    "useLocalExtrema": false,
     "latField": "lat",
     "lngField": "lng",
     "valueField": "pocet",
