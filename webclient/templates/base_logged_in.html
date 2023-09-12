@@ -116,7 +116,7 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'pas:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.home" %}</a></li>
-              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
+              <li><a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
               <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
