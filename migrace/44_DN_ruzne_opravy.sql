@@ -46,15 +46,6 @@ WITH soubor_prejm AS
 	LEFT OUTER JOIN heslar as heslar_typ_dokumetu on heslar_typ_dokumetu.id = dokument.rada
 )
 UPDATE soubor SET nazev = soubor_prejm.nazev_novy FROM soubor_prejm WHERE soubor.id = soubor_prejm.soubor_id;
-WITH soubor_parent_id AS
-(
-	SELECT dokument.ident_cely as ident_cely, soubor.id as id FROM dokument INNER JOIN soubor ON dokument.soubory = soubor.vazba
-	UNION
-	SELECT samostatny_nalez.ident_cely as ident_cely, soubor.id as id FROM samostatny_nalez INNER JOIN soubor ON samostatny_nalez.soubory = soubor.vazba
-	UNION
-	SELECT projekt.ident_cely as ident_cely, soubor.id as id FROM projekt INNER JOIN soubor ON projekt.soubory = soubor.vazba
-)
-UPDATE soubor SET path = soubor_parent_id.ident_cely || '/soubor' FROM soubor_parent_id WHERE soubor.id = soubor_parent_id.id;
 
 
 -- Migrace soubor.vlastnik a soubor.vytvoreno do historie
