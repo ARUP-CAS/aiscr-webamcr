@@ -100,6 +100,3 @@ do
 done
 
 echo "*** MIGRATIONS DONE [${n}] ***"
-
-#echo "This is only for development, comment out for production"
-#psql -d prod_zaloha -f import_testovacich_uctu.sql
