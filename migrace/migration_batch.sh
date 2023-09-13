@@ -83,6 +83,7 @@ migration_scripts=("chyby_dat.sql"
 "98_heat_mapa.sql"
 "99_migrace_notifikace_nove.sql"
 "99_set_DB_privileges.sql"
+"999_prevod_null_hodnot_texty"
 "migrace_mazani.sql"
 )
 
