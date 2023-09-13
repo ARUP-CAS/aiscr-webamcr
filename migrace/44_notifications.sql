@@ -36,11 +36,11 @@ VALUES ('E-U-01'),
        ('E-N-06'),
        ('E-K-01'),
        ('E-K-02'),
-       ('S-E-A-XX'),
-       ('S-E-N-01'),
-       ('S-E-N-02'),
-       ('S-E-N-05'),
-       ('S-E-K-01');
+       ('AMČR: archivace záznamů'),
+       ('AMČR-PAS: nové nálezy k potvrzení'),
+       ('AMČR-PAS: archivace záznamů'),
+       ('AMČR-PAS: nová žádost o spolupráci'),
+       ('AMČR - Knihovna 3D: archivace záznamů');
 
 
 CREATE TABLE IF NOT EXISTS auth_user_notification_types
