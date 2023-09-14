@@ -1,6 +1,8 @@
 import logging
 
 import django_tables2 as tables
+from django.urls import reverse
+from django.utils.html import format_html
 from django_tables2.utils import A
 from django.utils.translation import gettext as _
 
@@ -29,10 +31,30 @@ class SamostatnyNalezTable(SearchTable):
         default="", order_by="predano_organizace__nazev_zkraceny"
     )
     app = "samostatny_nalez"
+    nahled = tables.columns.Column(
+        default="",
+        accessor="soubory",
+        attrs={
+            "th": {"class": "white"},
+        },
+        orderable=False,
+        verbose_name=_("dokument.tables.dokumentTable.soubory.label"),
+    )
+    columns_to_hide = (
+        "predano",
+        "pristupnost",
+        "evidencni_cislo",
+        "presna_datace",
+        "pocet",
+        "poznamka",
+        "okolnosti",
+        "hloubka"
+    )
 
     class Meta:
         model = SamostatnyNalez
         fields = (
+            "nahled",
             "ident_cely",
             "stav",
             "lokalizace",
@@ -45,7 +67,50 @@ class SamostatnyNalezTable(SearchTable):
             "evidencni_cislo",
             "predano",
             "predano_organizace",
+            "pristupnost",
+            "presna_datace",
+            "pocet",
+            "poznamka",
+            "okolnosti",
+            "hloubka"
         )
+        sequence = (
+            "nahled",
+            "ident_cely",
+            "stav",
+            "predano",
+            "pristupnost",
+            "evidencni_cislo",
+            "katastr",
+            "lokalizace",
+            "datum_nalezu",
+            "nalezce",
+            "predano_organizace",
+            "obdobi",
+            "presna_datace",
+            "druh_nalezu",
+            "specifikace",
+            "pocet",
+            "poznamka",
+            "okolnosti",
+            "hloubka"
+        )
+
+    def render_nahled(self, value, record):
+        """
+        Metóda pro správne zobrazení náhledu souboru.
+        """
+        if len(record.soubory.soubory.all()) > 0:
+            soubor = record.soubory.soubory.first()
+        else:
+            soubor = None
+        if soubor is not None:
+            soubor_url = reverse("core:download_file", args=(soubor.id,))
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
+                soubor_url,
+            )
+        return ""
 
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
@@ -115,6 +180,16 @@ class UzivatelSpolupraceTable(SearchTable):
             "organizace_vedouci",
             "spolupracovnik",
             "organizace_spolupracovnik",
+        )
+        sequence = (
+            "stav",
+            "vedouci",
+            "organizace_vedouci",
+            "spolupracovnik",
+            "organizace_spolupracovnik",
+            "historie",
+            "aktivace",
+            "smazani",
         )
 
     def __init__(self, *args, **kwargs):

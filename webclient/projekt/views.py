@@ -134,11 +134,11 @@ def detail(request, ident_cely):
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
-        ).all()
+        ).all().order_by("ident_cely")
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
-    )
+    ).order_by("archeologicky_zaznam__ident_cely")
     dokumenty = (
         Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
         .select_related("soubory")

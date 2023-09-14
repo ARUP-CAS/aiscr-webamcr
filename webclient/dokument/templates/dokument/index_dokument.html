@@ -30,7 +30,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-moje-modely">
+        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-moje-modely">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -40,7 +40,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
+        <a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" class="card app-card-entity app-card-nase-modely">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>
@@ -50,7 +50,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list' %}?stav=2" class="card app-card-entity app-card-archivovat">
+        <a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" class="card app-card-entity app-card-archivovat">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>

@@ -440,12 +440,10 @@
           <thead>
             <tr>
               <th>{% trans "projekt.templates.detail.akcePart.table.identCely.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.katastry.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.vedouci.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.datum.label" %}</th>
-              <th>{% trans "projekt.templates.detail.akcePart.table.pristupnost.label" %}</th>
-              <!--th>{% trans "Typ" %}</th-->
-              <!--th>{% trans "Uživatelské označení" %}</th-->
+              <th>{% trans "projekt.templates.detail.akcePart.table.hlavniKatastr.label" %}</th>
+              <th>{% trans "projekt.templates.detail.akcePart.table.datumZahajeni.label" %}</th>
+              <th>{% trans "projekt.templates.detail.akcePart.table.datumUkonceni.label" %}</th>
+              <th>{% trans "projekt.templates.detail.akcePart.table.hlavniTyp.label" %}</th>
               <th>{% trans "projekt.templates.detail.akcePart.table.stav.label" %}</th>
             </tr>
           </thead>
@@ -462,11 +460,9 @@
                   <strong>{{ a.archeologicky_zaznam.hlavni_katastr }}</strong>
                   {% if a.archeologicky_zaznam.katastry.all %}, {{ a.archeologicky_zaznam.katastry.all|katastry_to_list }}{% endif %}
                 </td>
-                <td>{{ a.hlavni_vedouci }}</td>
-                <td>{{ a.datum_zahajeni|date:'Y-m-d' }} - {{ a.datum_ukonceni|date:'Y-m-d' }}</td>
-                <td>{{ a.archeologicky_zaznam.pristupnost }}</td>
-                <!--td>{{ a.hlavni_typ|check_if_none }}, {{ a.vedlejsi_typ|check_if_none }}</td-->
-                <!--td>{{ a.archeologicky_zaznam.uzivatelske_oznaceni|check_if_none }}</td-->
+                <td>{{ a.datum_zahajeni|date:'Y-m-d' }}</td>
+                <td>{{ a.datum_ukonceni|date:'Y-m-d' }}</td>
+                <td>{{ a.hlavni_typ|check_if_none }}</td>
                 <td>
                   <div class="container">
                       <span class="badge-span">
@@ -510,14 +506,12 @@
           <thead>
             <tr>
               <th>{% trans "projekt.templates.detail.nalezyPart.table.identCely.label" %}</th>
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.katastr.label" %}</th>
-              <!--th>{% trans "Lokalizace" %}</th-->
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.obdobi.label" %}</th>
-              <!--th>{% trans "Nález" %}</th>
-              <th>{% trans "Materiál" %}</th>
-              <th>{% trans "Nálezce" %}</th-->
-              <th>{% trans "projekt.templates.detail.nalezyPart.table.datumNalezu.label" %}</th>
               <th>{% trans "projekt.templates.detail.nalezyPart.table.stav.label" %}</th>
+              <th>{% trans "projekt.templates.detail.nalezyPart.table.katastr.label" %}</th>
+              <th>{% trans "projekt.templates.detail.nalezyPart.table.datumNalezu.label" %}</th>
+              <th>{% trans "projekt.templates.detail.nalezyPart.table.nalezce.label" %}</th>
+              <th>{% trans "projekt.templates.detail.nalezyPart.table.obdobi.label" %}</th>
+              <th>{% trans "projekt.templates.detail.nalezyPart.table.druhNalezu.label" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -529,13 +523,6 @@
                     {{ nalez.ident_cely }}
                   </a>
                 </td>
-                <td>{{ nalez.katastr }}</td>
-                <!--td>{{ nalez.lokalizace }}</td-->
-                <td>{{ nalez.obdobi }}</td>
-                <!--td>{{ nalez.druh_nalezu }}</td>
-                <td>{{ nalez.specifikace }}</td>
-                <td>{{ nalez.nalezce }}</td-->
-                <td>{{ nalez.datum_nalezu|date:'Y/m/d' }}</td>
                 <td>
                   <div class="container">
                       <span class="badge-span">
@@ -543,6 +530,11 @@
                       </span>
                   </div>
                 </td>
+                <td>{{ nalez.katastr }}</td>
+                <td>{{ nalez.datum_nalezu|date:'Y/m/d' }}</td>
+                <td>{{ nalez.nalezce }}</td>
+                <td>{{ nalez.obdobi }}</td>
+                <td>{{ nalez.druh_nalezu }}</td>
               </tr>
             {% endfor %}
           </tbody>

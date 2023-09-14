@@ -41,6 +41,7 @@ class AkceVedouciColumn(tables.Column):
         )
         return queryset, True
 
+
 class AkceVedouciOrganizaceColumn(tables.Column):
     """
     Třída pro sloupec další katastry lokality.
@@ -70,6 +71,7 @@ class AkceVedouciOrganizaceColumn(tables.Column):
             ("-" if is_descending else "") + "organizace_nazev_zkraceny"
         )
         return queryset, True
+
 
 class AkceTable(SearchTable):
     """
