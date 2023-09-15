@@ -100,10 +100,7 @@ class SamostatnyNalezTable(SearchTable):
         """
         Metóda pro správne zobrazení náhledu souboru.
         """
-        if len(record.soubory.soubory.all()) > 0:
-            soubor = record.soubory.soubory.first()
-        else:
-            soubor = None
+        soubor = record.nahled_soubor
         if soubor is not None:
             soubor_url = reverse("core:download_file", args=(soubor.id,))
             return format_html(

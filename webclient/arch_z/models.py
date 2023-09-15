@@ -500,7 +500,7 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     class Meta:
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
-        ordering = ["id"]
+        ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):

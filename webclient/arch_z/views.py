@@ -219,7 +219,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
         akce_zaznam_ostatni_vedouci = []
         for vedouci in AkceVedouci.objects.filter(akce=context["zaznam"].akce).order_by(
-            "id"
+           "vedouci__prijmeni", "vedouci__jmeno"
         ):
             vedouci: AkceVedouci
             akce_zaznam_ostatni_vedouci.append(
