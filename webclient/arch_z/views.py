@@ -258,6 +258,28 @@ class AkceRelatedRecordUpdateView(TemplateView):
                 context["showbackdetail"] = True
         self.get_vedouci(context)
         context["next_url"] = zaznam.get_absolute_url()
+        context["heatmap_options"] = """
+        {
+    "radius": 0.5,
+	"maxOpacity": 0.8,
+	"minOpacity": 0.15,
+    "scaleRadius": true,
+    "useLocalExtrema": true,
+    "latField": "lat",
+    "lngField": "lng",
+    "valueField": "pocet",
+    "gradient":
+    {
+        "0.00": "rgb(255,0,255)",
+        "0.15": "rgb(0,0,255)",
+        "0.25": "rgb(0,255,0)",
+        "0.45": "rgb(255,255,0)",
+        "0.65": "rgb(255,170,0)",
+        "0.95": "rgb(255,0,0)",
+        "1.00": "rgb(255,0,0)"
+    }
+};
+        """
         return context
 
 
