@@ -118,6 +118,8 @@ services:
       - "9090:9090"
     secrets:
       - prometheus_config
+    command:
+      - "--config.file=/run/secrets/prometheus_config"
 
   logstash:
     image: docker.elastic.co/logstash/logstash:8.7.0
