@@ -1,5 +1,5 @@
 from django.contrib import admin
-from core.models import OdstavkaSystemu
+from core.models import OdstavkaSystemu, CustomAdminSettings
 from .forms import OdstavkaSystemuForm
 from polib import pofile
 from django.conf import settings
@@ -127,3 +127,4 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
 
 admin.site.register(OdstavkaSystemu, OdstavkaSystemuAdmin)
+admin.site.register(CustomAdminSettings)
