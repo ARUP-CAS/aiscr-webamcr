@@ -74,27 +74,7 @@ var poi_dj = L.layerGroup();
 var poi_other_dp = L.markerClusterGroup({ disableClusteringAtZoom: 22 });
 var poi_other = L.layerGroup();
 var heatPoints = [];
-var heatmapOptions =
-{
-    "radius": 0.5,
-	"maxOpacity": 0.8,
-	"minOpacity": 0.15,
-    "scaleRadius": true,
-    "useLocalExtrema": true,
-    "latField": "lat",
-    "lngField": "lng",
-    "valueField": "pocet",
-    "gradient":
-    {
-        "0.00": "rgb(255,0,255)",
-        "0.15": "rgb(0,0,255)",
-        "0.25": "rgb(0,255,0)",
-        "0.45": "rgb(255,255,0)",
-        "0.65": "rgb(255,170,0)",
-        "0.95": "rgb(255,0,0)",
-        "1.00": "rgb(255,0,0)"
-    }
-};
+var heatmapOptions = settings_heatmap_options;
 var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
 
 var global_clusters = false;
