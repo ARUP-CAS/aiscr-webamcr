@@ -40,10 +40,6 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "core.model.OdstavkaSystemu.modelTitles.label",
             },
         ),
-        migrations.RemoveField(
-            model_name="soubor",
-            name="repository_uuid",
-        ),
         migrations.AlterField(
             model_name="odstavkasystemu",
             name="cas_odstavky",
