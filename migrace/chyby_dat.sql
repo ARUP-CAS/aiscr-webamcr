@@ -192,3 +192,13 @@ WITH za_zl AS
 	WHERE heslar_rada.ident_cely = 'HES-000884' OR heslar_rada.ident_cely = 'HES-000885'
 )
 DELETE FROM dokument USING za_zl WHERE za_zl.id = dokument.id;
+
+-- Oprava špatného použití hesla anonym
+UPDATE dokument SET autor = replace(autor, 'anonym, anonym', 'anonym') WHERE autor LIKE ('%anonym, anonym%');
+UPDATE dokument SET autor = replace(autor, 'Anonym, Anonym', 'anonym') WHERE autor LIKE ('%Anonym, Anonym%');
+UPDATE akce SET vedouci_akce_ostatni = replace(vedouci_akce_ostatni, 'anonym, anonym', 'anonym') WHERE vedouci_akce_ostatni LIKE ('%anonym, anonym%');
+UPDATE akce SET vedouci_akce_ostatni = replace(vedouci_akce_ostatni, 'Anonym, Anonym', 'anonym') WHERE vedouci_akce_ostatni LIKE ('%Anonym, Anonym%');
+UPDATE externi_zdroj SET autori = replace(autori, 'anonym, anonym', 'anonym') WHERE autori LIKE ('%anonym, anonym%');
+UPDATE externi_zdroj SET autori = replace(autori, 'Anonym, Anonym', 'anonym') WHERE autori LIKE ('%Anonym, Anonym%');
+UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'anonym, anonym', 'anonym') WHERE sbornik_editor LIKE ('%anonym, anonym%');
+UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'Anonym, Anonym', 'anonym') WHERE sbornik_editor LIKE ('%Anonym, Anonym%');
