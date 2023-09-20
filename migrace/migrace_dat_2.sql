@@ -85,7 +85,7 @@ where dokument.id = sel.id;
 CREATE OR REPLACE FUNCTION migrateAutorFromDokument() RETURNS void AS $$
 DECLARE
 BEGIN
-    FOR counter IN 1..10
+    FOR counter IN 1..20
     LOOP
         RAISE NOTICE '%', counter;
         BEGIN
