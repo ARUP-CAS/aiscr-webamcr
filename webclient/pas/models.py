@@ -250,6 +250,13 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"))
         return resp
 
+    @property
+    def nahled_soubor(self):
+        if self.soubory.soubory.count() > 0:
+            return self.soubory.soubory.first()
+        else:
+            return None
+
     class Meta:
         db_table = "samostatny_nalez"
         constraints = [

@@ -23,7 +23,7 @@ from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
     OBLAST_MORAVA,
-    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
 )
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
@@ -293,6 +293,33 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
+        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            self.filters["vedouci"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="vedouci",
+                label="Vedoucí",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete")
+            )
+            self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="spolupracovnik",
+                label="Spolupracovník",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete")
+            )
+        else:
+            self.filters["vedouci"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="vedouci",
+                label="Vedoucí",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+            )
+            self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="spolupracovnik",
+                label="Spolupracovník",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+            )
         try:
             self.filters["vedouci"].extra.update(
                 {
@@ -303,7 +330,6 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
             )
         except utils.ProgrammingError as err:
             self.filters["vedouci"].extra.update({"queryset": None})
-
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
 

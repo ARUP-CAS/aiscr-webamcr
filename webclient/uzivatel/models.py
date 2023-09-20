@@ -224,6 +224,18 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         logger.debug("uzivatel.models.User.delete_repository_container.end")
         return connector.record_deletion()
 
+    @property
+    def can_see_users_details(self):
+        return self.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
+
+    @property
+    def full_details(self):
+        return f"{self.last_name}, {self.first_name} ({self.ident_cely}, {self.organizace})"
+
+    @property
+    def anonymous_details(self):
+        return f"{self.ident_cely} ({self.organizace})"
+
     class Meta:
         db_table = "auth_user"
         verbose_name = "Uživatel"

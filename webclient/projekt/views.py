@@ -100,7 +100,7 @@ from projekt.models import Projekt
 from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
-
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -134,11 +134,11 @@ def detail(request, ident_cely):
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
-        ).all()
+        ).all().order_by("ident_cely")
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
-    )
+    ).order_by("archeologicky_zaznam__ident_cely")
     dokumenty = (
         Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
         .select_related("soubory")
@@ -148,7 +148,7 @@ def detail(request, ident_cely):
     soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
-    context["history_dates"] = get_history_dates(projekt.historie)
+    context["history_dates"] = get_history_dates(projekt.historie, request.user)
     context["show"] = get_detail_template_shows(projekt, request.user)
     context["dokumenty"] = dokumenty
     context["generovatNovePotvrzeniForm"] = GenerovatNovePotvrzeniForm()
@@ -1132,7 +1132,7 @@ def generovat_expertni_list(request, ident_cely):
     return response
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
@@ -1142,29 +1142,32 @@ def get_history_dates(historie_vazby):
     Returns:
         historie: dictionary dátumů k historii.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
+        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ, anonymized),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
             [
                 VRACENI_NAVRHU_ZRUSENI,
                 SCHVALENI_OZNAMENI_PROJ,
                 ZAPSANI_PROJ,
                 VRACENI_ZRUSENI,
-            ]
+            ],
+            anonymized
         ),
-        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
+        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ, anonymized),
         "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
-            ZAHAJENI_V_TERENU_PROJ
+            ZAHAJENI_V_TERENU_PROJ, anonymized
         ),
         "datum_ukonceni_v_terenu": historie_vazby.get_last_transaction_date(
-            UKONCENI_V_TERENU_PROJ
+            UKONCENI_V_TERENU_PROJ, anonymized
         ),
-        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ),
+        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ, anonymized),
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
-            NAVRZENI_KE_ZRUSENI_PROJ
+            NAVRZENI_KE_ZRUSENI_PROJ, anonymized
         ),
-        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ),
+        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized),
     }
     return historie
 

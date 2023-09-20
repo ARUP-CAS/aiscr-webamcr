@@ -75,7 +75,7 @@ def get_detail_context(sn, request):
         instance=sn, readonly=True, user=request.user
     )
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
-    context["history_dates"] = get_history_dates(sn.historie)
+    context["history_dates"] = get_history_dates(sn.historie, request.user)
     context["show"] = get_detail_template_shows(sn)
     logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
@@ -929,15 +929,16 @@ def smazat_spolupraci(request, pk):
     return render(request, "core/transakce_modal.html", context)
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN),
-        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN, anonymized),
+        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN, anonymized),
     }
     return historie
 

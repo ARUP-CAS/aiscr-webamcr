@@ -5,7 +5,7 @@ from .views import (
     UzivatelAutocomplete,
     update_notifications,
     GetUserInfo,
-    ObtainAuthTokenWithUpdate,
+    ObtainAuthTokenWithUpdate, UzivatelAutocompletePublic,
 )
 
 
@@ -13,9 +13,14 @@ app_name = "uzivatel"
 
 urlpatterns = [
     path(
-        "seznam-uzivatele/",
+        "uzivatel/autocomplete/",
         UzivatelAutocomplete.as_view(),
         name="uzivatel-autocomplete",
+    ),
+    path(
+        "uzivatel/autocomplete-public/",
+        UzivatelAutocompletePublic.as_view(),
+        name="uzivatel-autocomplete-public",
     ),
     path("upravit-uzivatele/", UserAccountUpdateView.as_view(), name="update-uzivatel"),
     path("upravit-notifikace/", update_notifications, name="update-notifications"),

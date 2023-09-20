@@ -43,15 +43,15 @@
             <ul>
               <li><a href="{% url 'projekt:index' %}">{% trans "templates.baseLogedIn.sidebar.projekty.home" %}</a></li>
               <li><a href="{% url 'projekt:create' %}">{% trans "templates.baseLogedIn.sidebar.projekty.zapsat" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}">{% trans "templates.baseLogedIn.sidebar.projekty.prihlasit" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.zahajitVyzkum" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.ukoncitTeren" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.spravovatAkce" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}">{% trans "templates.baseLogedIn.sidebar.projekty.UzavritProjekt" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}">{% trans "templates.baseLogedIn.sidebar.projekty.vybratProjekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}">{% trans "templates.baseLogedIn.sidebar.projekty.naseProjekty" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}">{% trans "templates.baseLogedIn.sidebar.projekty.schvalitOznameni" %}</a></li>
-              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAPSANY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.prihlasit" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_PRIHLASENY}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.zahajitVyzkum" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.ukoncitTeren" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_ZAHAJENY_V_TERENU}}&stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.spravovatAkce" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UKONCENY_V_TERENU}}&organizace={{ user.organizace.id }}&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.UzavritProjekt" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.vybratProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?organizace={{user.organizace.id}}&sort=stav&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.naseProjekty" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_OZNAMENY}}&sort=planovane_zahajeni&sort=hlavni_katastr&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.schvalitOznameni" %}</a></li>
+              <li><a href="{% url 'projekt:list' %}?stav={{PROJEKT_STAV_UZAVRENY}}&sort=datum_ukonceni&sort=ident_cely">{% trans "templates.baseLogedIn.sidebar.projekty.archivovatProjekty" %}</a></li>
             </ul>
           </div>
         </div>
@@ -71,9 +71,10 @@
             <ul>
               <li><a href="{% url 'arch_z:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.home" %}</a></li>
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False&sort=datum_ukonceni&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -93,9 +94,10 @@
             <ul>
               <li><a href="{% url 'lokalita:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.home" %}</a></li>
               <li><a href="{% url 'lokalita:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.zapsat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
-              <li><a href="{% url 'lokalita:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.vybrat" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.mojelokality" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.lokality.naselokality" %}</a></li>
+              <li><a href="{% url 'lokalita:list' %}?stav=2&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.lokality.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -114,12 +116,13 @@
           <div class="card-body">
             <ul>
               <li><a href="{% url 'pas:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.home" %}</a></li>
-              <li><a href="{% url 'pas:spoluprace_list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
+              <li><a href="{% url 'pas:spoluprace_list' %}?sort=organizace_vedouci&sort=spolupracovnik" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.spoluprace" %}</a></li>
               <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?stav=3" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "Naše nálezy" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -139,9 +142,10 @@
             <ul>
               <li><a href="{% url 'dokument:index-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.home" %}</a></li>
               <li><a href="{% url 'dokument:create-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
-              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.archivovat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.mojeModely" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.naseModely" %}</a></li>
+              <li><a href="{% url 'dokument:list-model-3D' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.knihovna3D.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -161,9 +165,10 @@
             <ul>
               <li><a href="{% url 'dokument:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.home" %}</a></li>
               <li><a href="{% url 'dokument:zapsat' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.zapsat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
-              <li><a href="{% url 'dokument:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}??sort=organizace__nazev_zkraceny&sort=autori&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.vybrat" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel={{ user.id }}?sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.mojeDokumenty" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.naseDokumenty" %}</a></li>
+              <li><a href="{% url 'dokument:list' %}?stav=2&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.dokumenty.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -183,9 +188,10 @@
             <ul>
               <li><a href="{% url 'ez:index' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.home" %}</a></li>
               <li><a href="{% url 'ez:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.zapsat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
-              <li><a href="{% url 'ez:list' %}?stav=2" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.archivovat" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.vybrat" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel={{ user.id }}& sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.mojeExterniZdroje" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?historie_typ_zmeny=EZ01&historie_uzivatel_organizace={{ user.organizace.id }}& sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.naseExterniZdroje" %}</a></li>
+              <li><a href="{% url 'ez:list' %}?stav=2&sort=autor&sort=rok_vydani_vzniku&sort=nazev" title="">{% trans "templates.baseLogedIn.sidebar.externiZdroje.archivovat" %}</a></li>
             </ul>
           </div>
         </div>
@@ -215,7 +221,7 @@
     <div class="collapse navbar-collapse" id="navbarMobile">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
         <li class="nav-item d-lg-none d-xl-block">
-          <span class="nav-link">
+          <span class="nav-link" rel="tooltip" data-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <small>
               <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
             </small>
