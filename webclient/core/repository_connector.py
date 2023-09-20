@@ -44,6 +44,11 @@ class RepositoryBinaryFile:
     def size_mb(self):
         return self.size / 1024 ** 2
 
+    @property
+    def mime_type(self):
+        if self.filename is not None:
+            return get_mime_type(self.filename)
+
     def __init__(self, url: str, content: io.BytesIO, filename: Union[str, None] = None):
         self.url = url
         self.content = content
@@ -390,7 +395,7 @@ class FedoraRepositoryConnector:
         }
         url = self._get_request_url(FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, uuid=uuid)
         self._send_request(url, FedoraRequestType.UPDATE_BINARY_FILE_CONTENT, headers=headers, data=data)
-        logger.debug("core_repository_connector.save_binary_file.end",
+        logger.debug("core_repository_connector.update_binary_file.end",
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
@@ -464,6 +469,10 @@ class FedoraRepositoryConnector:
     def record_ident_change(self, ident_cely_old):
         logger.debug("core_repository_connector.record_ident_change.start", extra={"ident_cely": self.record.ident_cely,
                                                                                    "ident_cely_old": ident_cely_old})
+        if ident_cely_old is None or self.record.ident_cely == ident_cely_old:
+            logger.warning("core_repository_connector.record_ident_change.no_ident_cely_old",
+                         extra={"ident_cely": self.record.ident_cely})
+            return
         base_url = f"http://{settings.FEDORA_SERVER_HOSTNAME}:{settings.FEDORA_PORT_NUMBER}/rest/"
         ident_cely_new = self.record.ident_cely
         data = f"INSERT DATA {{<> <http://purl.org/dc/terms/isReplacedBy> " \

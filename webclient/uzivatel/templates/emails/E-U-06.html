@@ -2,12 +2,12 @@
 {% load i18n %}
 {% block content %}
     <p>
-        {% trans "E-U-06.dobrý_den" %},
+        {% trans "uzivatel.templates.E-U-06.title" %}
     </p>
     <p>
-        {% trans "E-U-06.vašemu_účtu_byla_v_AMČR_změněna_uživatelská_role_či_upraveno_oprávnění" %}. {% trans "E-U-06.platné_údaje" %}: {{ roles }}
+        {% trans "uzivatel.templates.E-U-06.part1" %} {% trans "uzivatel.templates.E-U-06.platneUdaje" %} {{ roles }}
     </p>
     <p>
-        {% trans "E-U-06.změny_se_projeví_po_přihlášení_do_systému" %}.
+        {% trans "uzivatel.templates.E-U-06.part2" %}
     </p>
 {% endblock %}

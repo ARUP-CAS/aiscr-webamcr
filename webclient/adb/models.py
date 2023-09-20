@@ -188,6 +188,7 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
 
     class Meta:
         db_table = "vyskovy_bod"
+        ordering = ["ident_cely", ]
 
 
 class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):

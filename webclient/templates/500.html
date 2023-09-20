@@ -3,12 +3,12 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{% trans "AMČR - 500" %}{% endblock %}
+{% block title %}{% trans "templates.500.title" %}{% endblock %}
 {% block head %}
 {% endblock %}
 
 {% block content %}
-<h2>{% trans "500" %}</h2>
-<p class="display-4">{% trans "Interní chyba serveru!" %}</p>
-<p>{% trans "Omlouváme se za potíže, prosím opakujte akci později." %}</p>
+<h2>{% trans "templates.500.header" %}</h2>
+<p class="display-4">{% trans "templates.500.text" %}</p>
+<p>{% trans "templates.500.text.part2" %}</p>
 {% endblock %}

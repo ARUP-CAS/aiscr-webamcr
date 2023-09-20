@@ -44,6 +44,7 @@ class NalezObjekt(ExportModelOperationsMixin("nalez_objekt"), models.Model):
 
     class Meta:
         db_table = "nalez_objekt"
+        ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __str__(self):
         return self.druh.heslo
@@ -82,6 +83,7 @@ class NalezPredmet(ExportModelOperationsMixin("nalez_predmet"), models.Model):
 
     class Meta:
         db_table = "nalez_predmet"
+        ordering = ["druh__razeni", "specifikace__razeni"]
 
     def __str__(self):
         return self.druh.heslo

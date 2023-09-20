@@ -128,42 +128,6 @@ class DecimalTextWideget(forms.widgets.TextInput):
         return str(round(value, 3))
 
 
-class SouborMetadataForm(forms.ModelForm):
-    """
-    Formulář pro zobrazení detailu metadat souboru.
-    """
-
-    nazev = forms.CharField()
-    mimetype = forms.CharField()
-    size_mb = forms.CharField(widget=DecimalTextWideget())
-
-    class Meta:
-        model = Soubor
-        fields = (
-            "nazev",
-            "rozsah",
-            "nazev",
-            "mimetype",
-            "size_mb",
-        )
-
-    def __init__(self, *args, **kwargs):
-        super(SouborMetadataForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper(self)
-        self.helper.layout = Layout(
-            Div(
-                Div("rozsah", css_class="col-sm-1"),
-                Div("nazev", css_class="col-sm-2"),
-                Div("mimetype", css_class="col-sm-2"),
-                Div("size_mb", css_class="col-sm-2"),
-                css_class="row mb-2",
-            ),
-        )
-        for field in self.fields:
-            self.fields[field].widget.attrs["readonly"] = True
-            self.fields[field].required = False
-
-
 class OdstavkaSystemuForm(forms.ModelForm):
     """
     Formulář pro nastavení a úpravu odstávky.

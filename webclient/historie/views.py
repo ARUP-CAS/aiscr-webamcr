@@ -10,7 +10,6 @@ from simple_history.models import HistoricalRecords
 from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from historie.models import Historie
 from historie.tables import HistorieTable, SimpleHistoryTable
-from core.forms import SouborMetadataForm
 from core.models import Soubor
 
 from projekt.models import Projekt
@@ -165,7 +164,6 @@ class SouborHistorieListView(HistorieListView):
         context["typ"] = "soubor"
         context["entity"] = context["typ"]
         soubor = Soubor.objects.get(pk=soubor_id)
-        context["metadata_form"] = SouborMetadataForm(instance=soubor)
         try:
             context["projekt"] = soubor.vazba.projekt_souboru
         except Projekt.DoesNotExist:

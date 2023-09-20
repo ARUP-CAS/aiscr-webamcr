@@ -199,7 +199,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         return (
             ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
             .select_related("externi_zdroj")
-            .order_by("id")
+            .order_by("externi_zdroj__ident_cely")
         )
 
     def get_vedouci(self, context):
@@ -219,7 +219,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
         akce_zaznam_ostatni_vedouci = []
         for vedouci in AkceVedouci.objects.filter(akce=context["zaznam"].akce).order_by(
-            "id"
+           "vedouci__prijmeni", "vedouci__jmeno"
         ):
             vedouci: AkceVedouci
             akce_zaznam_ostatni_vedouci.append(
@@ -904,6 +904,7 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
             "ostatni_vedouci_objekt_formset_readonly": True,
             "button": _("arch_z.views.zapsat.submitButton.text"),
+            "toolbar_name": _("arch_z.views.zapsat.toolbarName"),
         }
     )
     return render(
@@ -1497,7 +1498,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
     externi_odkazy = (
         ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
         .select_related("externi_zdroj")
-        .order_by("id")
+        .order_by("externi_zdroj__ident_cely")
     )
 
     context["dj_form_create"] = dj_form_create
@@ -1533,6 +1534,15 @@ class AkceIndexView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro zobrazení domovské stránky akcií s navigačními možnostmi.
     """
     template_name = "arch_z/index.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Metóda pro získaní kontextu podlehu.
+        """
+        context = {
+            "toolbar_name": _("arch_z.views.akceIndexView.toolbarName"),
+        }
+        return context
 
 
 class AkceListView(SearchListView):

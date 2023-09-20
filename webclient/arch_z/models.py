@@ -263,18 +263,18 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             if dc.dokument.stav != D_STAV_ARCHIVOVANY:
                 result.append(
                     _(
-                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1"
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text1")
                         + dc.dokument.ident_cely
-                        + "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2"
+                        + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dokument.text2"
                     )
                 )
         for dj in self.dokumentacni_jednotky_akce.all():
             if dj.pian and dj.pian.stav != PIAN_POTVRZEN:
                 result.append(
                     _(
-                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text1"
+                        "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text1")
                         + str(dj.ident_cely)
-                        + "arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2"
+                        + _("arch_z.models.ArcheologickyZaznam.checkPredArchivaci.dj.text2"
                     )
                 )
         return result
@@ -500,7 +500,7 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     class Meta:
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
-        ordering = ["id"]
+        ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):

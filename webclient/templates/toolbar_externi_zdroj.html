@@ -15,31 +15,31 @@
         {% if show.vratit_link %}
           <button id="ez-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "Vrátit" %}
+            {% trans "templates.toolbarExterniZdroj.vratit.label" %}
           </button>
         {% endif %}
         {% if show.odeslat_link %}
           <button id="ez-odeslat" class="btn m-0" type="button" name="button">
             <span class="material-icons">send</span>
-            {% trans "Odeslat" %}
+            {% trans "templates.toolbarExterniZdroj.odeslat.label" %}
           </button>
         {% endif %}
         {% if show.potvrdit_link %}
           <button id="ez-potvrdit" class="btn m-0" type="button" name="button">
             <span class="material-icons">flag</span>
-            {% trans "Potvrdit" %}
+            {% trans "templates.toolbarExterniZdroj.potvrdit.label" %}
           </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "Další volby" %}
+          {% trans "templates.toolbarExterniZdroj.dalsiVolby.label" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <button id="ez-smazat" class="dropdown-item" type="button" name="button">{% trans "externiZdroj.toolbar.smazat.label" %}</button>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'externi_zdroj' zaznam.id %}">{% trans "externi_zdroj.detail.toolbar.MetadataDownload" %}</a>
-          <a class="dropdown-item" href="{% url 'historie:ez' zaznam.ident_cely %}">{% trans "Historie" %}</a>
+          <button id="ez-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarExterniZdroj.smazat.label" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'externi_zdroj' zaznam.id %}">{% trans "templates.toolbarExterniZdroj.metadataDownload.label" %}</a>
+          <a class="dropdown-item" href="{% url 'historie:ez' zaznam.ident_cely %}">{% trans "templates.toolbarExterniZdroj.historie.label" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "externiZdroj.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{OAPI_link_part1|add:zaznam.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "externiZdroj.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:zaznam.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarExterniZdroj.digiArchivLink.label" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:zaznam.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarExterniZdroj.OAIAPI.label" %}</a>
           {% endif %}
         </div>
       </div>

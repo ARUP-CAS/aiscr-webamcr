@@ -1,1 +1,1 @@
-{% load i18n %}{% trans "E-U-01.amčr_potvrďte_svůj_email_pro_registraci" %}
+{% load i18n %}{% trans "templates.djangoRegistration.activationEmailSubject" %}
