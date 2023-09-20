@@ -6,6 +6,11 @@
 
 {% block title %}{% trans "projekt.templates.detail.title" %}{% endblock %}
 {% block head %}
+  <script>
+    {% autoescape off %}
+      var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+    {% endautoescape %}
+  </script>
   <!-- Leaflet imports -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -253,11 +258,6 @@
             <script src="{% static 'mapa_basic_grey.js' %}"></script>
             <script src="{% static 'spin/spin.min.js' %}"></script>
             <script src="{% static 'leaflet.spin.min.js' %}"></script>
-            <script>
-              {% autoescape off %}
-                var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %}
-              {% endautoescape %}
-            </script>
             <script src="{% static 'mapa_projekty.js' %}"></script>
             <script>
                 global_map_can_edit=false;

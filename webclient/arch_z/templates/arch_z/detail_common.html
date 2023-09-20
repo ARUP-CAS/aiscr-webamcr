@@ -7,6 +7,11 @@
 
 {% block title %}{% trans "arch_z.templates.arch_z.detail_common.detailArchZ.title" %}{% endblock %}
 {% block head %}
+  <script>
+    {% autoescape off %}
+      var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+    {% endautoescape %}
+  </script>
   <!--  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">-->
 
   <!-- Leaflet imports -->
@@ -199,11 +204,6 @@
   <script src="{% static 'coor_precision.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script>
-    {% autoescape off %}
-      var settings_heatmap_options = {% get_settings "heatmap_options" "arch_z_heatmap_options" %}
-    {% endautoescape %}
-  </script>
   <script src="{% static 'arch_z_detail_map.js' %}"></script>
   <script src="{% static 'leaflet.measure.js' %}"></script>
   <script>

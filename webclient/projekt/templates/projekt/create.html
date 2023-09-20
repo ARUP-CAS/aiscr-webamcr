@@ -7,6 +7,9 @@
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
   <script>
+  {% autoescape off %}
+    var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+    {% endautoescape %}
 		var global_csrftoken = '{{ csrf_token }}';
 		global_map_can_edit=false;
 	</script>
@@ -82,11 +85,6 @@
   <script src="{% static 'mapa_basic_grey.js' %}"></script>
   <script src="{% static 'spin/spin.min.js' %}"></script>
   <script src="{% static 'leaflet.spin.min.js' %}"></script>
-  <script>
-    {% autoescape off %}
-      var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %}
-    {% endautoescape %}
-  </script>
   <script src="{% static 'mapa_projekty.js' %}"></script>
   <script src="{% static 'dropzone.min.js' %}"></script>
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
