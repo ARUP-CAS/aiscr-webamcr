@@ -137,14 +137,14 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
             )
             .select_related("archeologicky_zaznam")
             .select_related("archeologicky_zaznam__akce")
-        )
+        ).order_by("archeologicky_zaznam__ident_cely")
         ez_lokality = (
             ez_odkazy.filter(
                 archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA
             )
             .select_related("archeologicky_zaznam")
             .select_related("archeologicky_zaznam__lokalita")
-        )
+        ).order_by("archeologicky_zaznam__ident_cely")
         context["form"] = ExterniZdrojForm(
             instance=zaznam, readonly=True, required=False
         )

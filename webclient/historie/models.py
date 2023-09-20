@@ -113,6 +113,7 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
     class Meta:
         db_table = "historie"
         verbose_name = "historie"
+        ordering = ["datum_zmeny", ]
 
 
 class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):

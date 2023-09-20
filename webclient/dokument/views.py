@@ -274,6 +274,12 @@ class Model3DListView(SearchListView):
         qs = super().get_queryset().filter(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+        ).prefetch_related(
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                to_attr="ordered_autors",
+            )
         )
         return qs
 

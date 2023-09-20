@@ -611,6 +611,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     class Meta:
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
+        ordering = ["tvar__razeni"]
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):

@@ -199,7 +199,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         return (
             ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
             .select_related("externi_zdroj")
-            .order_by("id")
+            .order_by("externi_zdroj__ident_cely")
         )
 
     def get_vedouci(self, context):
@@ -219,7 +219,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         )
         akce_zaznam_ostatni_vedouci = []
         for vedouci in AkceVedouci.objects.filter(akce=context["zaznam"].akce).order_by(
-            "id"
+           "vedouci__prijmeni", "vedouci__jmeno"
         ):
             vedouci: AkceVedouci
             akce_zaznam_ostatni_vedouci.append(
@@ -1496,7 +1496,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
     externi_odkazy = (
         ExterniOdkaz.objects.filter(archeologicky_zaznam__ident_cely=ident_cely)
         .select_related("externi_zdroj")
-        .order_by("id")
+        .order_by("externi_zdroj__ident_cely")
     )
 
     context["dj_form_create"] = dj_form_create

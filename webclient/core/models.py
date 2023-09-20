@@ -121,6 +121,7 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         indexes = [
             models.Index(fields=["mimetype",],name="mimetype_idx",opclasses=["text_ops"]),
         ]
+        ordering = ["nazev", ]
 
     def __str__(self):
         return self.nazev

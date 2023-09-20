@@ -1,4 +1,5 @@
 {% load i18n %}
+{% load template_filters %}
 
 <table class="table table-striped table-hover table-sm mb-0">
   <thead>
@@ -7,7 +8,7 @@
     <th scope="col">{% trans "core.templates.filetable.columnHeader.nazev.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.typ.label" %}</th>
     <th scope="col">{% trans "core.templates.filetable.columnHeader.velikost.label" %}</th>
-    <th scope="col">{% trans "core.templates.filetable.columnHeader.datumVytvoreni.label" %}</th>
+    <th scope="col">{% trans "core.templates.filetable.columnHeader.Rozsah.label" %}</th>
     {% if show %}
       <th scope="col">{% trans "core.templates.filetable.columnHeader.smazat.label" %}</th>
       {% if allow_replace %}
@@ -23,17 +24,13 @@
     <tr>
       <td>
         {% if soubor.mimetype|slice:5 == "image" %}
-        <img id="soubor-nahled" src="{% url 'core:download_file' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
+          <img id="soubor-nahled" src="{% url 'core:download_file' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
         {% endif %}  
       </td>
       <td>{{ soubor.nazev }}</td>
       <td>{{ soubor.mimetype }}</td>
       <td>{{ soubor.size_mb|floatformat:3 }} MB</td>
-      {% if soubor.vytvoreno %}
-        <td>{{ soubor.vytvoreno|date:'Y-m-d' }}</td>
-      {% else %}
-        <td></td>
-      {% endif %}
+      <td>{{ soubor.rozsah|check_if_none }}</td>
       {% if show %}
         <td>
           <button id="file-smazat-{{soubor.id}}" class="file-smazat-btn" type="button" name="button" href="{% url 'core:delete_file' soubor.id %}?next={{ next_url }}{{ ident }}">
