@@ -311,3 +311,9 @@ class GeomMigrationJob(ExportModelOperationsMixin("geom_migration_job"), models.
 
     class Meta:
         db_table = "amcr_geom_migrations_jobs"
+
+
+class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), models.Model):
+    item_group = models.CharField(max_length=100)
+    item_id = models.CharField(max_length=100)
+    value = models.TextField()

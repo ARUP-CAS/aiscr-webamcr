@@ -1,8 +1,7 @@
-from asyncio.log import logger
-from datetime import datetime, date, timedelta
-from typing import Dict
+import logging
 
-from pyparsing import empty
+from datetime import datetime, date, timedelta
+
 import core.message_constants as mc
 
 from django import template
@@ -18,10 +17,12 @@ from django_tables2.templatetags.django_tables2 import (
     context_processor_error_msg,
 )
 
-from core.models import OdstavkaSystemu
+from core.models import OdstavkaSystemu, CustomAdminSettings
 from django.core.cache import cache
 
 register = template.Library()
+logger = logging.getLogger(__name__)
+
 
 # to get message constant for auto logout
 @register.simple_tag
@@ -167,3 +168,13 @@ def get_server_domain():
 @register.simple_tag
 def get_site_url():
     return settings.SITE_URL
+
+
+@register.simple_tag
+def get_settings(item_group, item_id):
+    settings_query = CustomAdminSettings.objects.filter(item_group=item_group, item_id=item_id)
+    if settings_query.count() > 0:
+        return settings_query.last().value
+    logger.error("core.template_tags.get_settings.missing_settings",
+                 extra={"item_group": item_group, "item_id": item_id})
+    return ""
