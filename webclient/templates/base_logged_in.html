@@ -221,7 +221,7 @@
     <div class="collapse navbar-collapse" id="navbarMobile">
       <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
         <li class="nav-item d-lg-none d-xl-block">
-          <span class="nav-link">
+          <span class="nav-link" rel="tooltip" data-placement="top"  title="{{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})">
             <small>
               <strong>{% trans "templates.baseLogedIn.navbar.prihlasen" %}</strong> {{ user.email }} ({{ user.hlavni_role }} - {{ user.organizace }})
             </small>
