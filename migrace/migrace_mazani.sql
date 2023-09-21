@@ -465,3 +465,30 @@ with pom AS
     sn.id is null
 )
 DELETE FROM osoba USING pom WHERE osoba.id = pom.id;
+
+-- Zkontrolovat a odstranit sirotky z historie
+with pom AS
+(
+    SELECT h.* FROM historie h
+    LEFT JOIN archeologicky_zaznam az ON az.historie = h.vazba
+    LEFT JOIN auth_user au ON au.historie = h.vazba
+    LEFT JOIN dokument d ON d.historie = h.vazba
+    LEFT JOIN externi_zdroj ez ON ez.historie = h.vazba
+    LEFT JOIN pian pi ON pi.historie = h.vazba
+    LEFT JOIN projekt pr ON pr.historie = h.vazba
+    LEFT JOIN samostatny_nalez sn ON sn.historie = h.vazba
+    LEFT JOIN soubor so ON so.historie = h.vazba
+    LEFT JOIN uzivatel_spoluprace us ON us.historie = h.vazba
+    WHERE
+    az.id is null AND
+    au.id is null AND
+    d.id is null AND
+    ez.id is null AND
+    pi.id is null AND
+    pr.id is null AND
+    sn.id is null AND
+    so.id is null AND
+    us.id is null
+)
+DELETE FROM historie USING pom WHERE historie.id = pom.id
+DELETE FROM historie_vazby USING pom WHERE historie_vazby.id = pom.id;
