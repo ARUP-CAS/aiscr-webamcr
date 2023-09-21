@@ -421,3 +421,13 @@ DROP SEQUENCE vyskovy_bod_reorder;
 DROP TABLE uzivatel;
 DROP SEQUENCE uzivatel_id_seq;
 alter sequence user_storage_user_id rename to auth_user_ident_cely_seq;
+
+-- Ladění tabulek kladysm5 a kladyzm
+ALTER TABLE kladysm5 drop column id;
+ALTER TABLE kladysm5 drop column podil;
+ALTER TABLE kladysm5 drop column cislo;
+
+ALTER TABLE kladyzm drop column objectid;
+ALTER TABLE kladyzm drop column natoceni;
+ALTER TABLE kladyzm drop column shape_leng;
+ALTER TABLE kladyzm drop column shape_area;
