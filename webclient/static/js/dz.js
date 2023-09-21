@@ -9,23 +9,23 @@ const get_params = () => {
     return {}
 };
 const get_description = () => {
-    if (typeof object_id !== 'undefined') {
+    if (typ_uploadu == 'upload') {
         return "Přiložte dokumentaci";
     }
-    if (typeof file_id !== 'undefined') {
+    if (typ_uploadu == 'nahradit') {
         return "Přiložte aktualizovaný soubor";
     }
     return "";
 };
 
 const UploadResultsEnum = {
-	success: 0,
+    success: 0,
     duplicate: 1,
     reject: 2,
     error: 3,
 }
 
-const show_upload_successful_message = (file, result=UploadResultsEnum.success, message="") => {
+const show_upload_successful_message = (file, result = UploadResultsEnum.success, message = "") => {
     const collection = document.getElementsByClassName("message-container");
     if (collection.length > 0) {
         const message_container_element = collection[0];
@@ -85,7 +85,7 @@ window.onload = function () {
     if (currentLocation.includes("soubor/nahrat/pas/")) {
         acceptFile = "image/*"
         RejectedFileMessage = reject_dict["rejected_pas"] //pridat do message constants po merge AMCR-1 a otestovat
-    } else if (currentLocation.includes("nahrat-soubor/dokument/")) {
+    } else if (currentLocation.includes("soubor/nahrat/dokument/")) {
         acceptFile = ".jpeg, " +
             ".JPEG, " +
             ".jpg, " +
@@ -149,7 +149,7 @@ window.onload = function () {
             });
             this.on("removedfile", function (file) {
                 if (file.id) {
-                    xhttp.open("POST", "/soubor/smazat/" + file.id);
+                    xhttp.open("POST", "/soubor/smazat/" + typ_vazby + "/" + object_id + "/" + file.id);
                     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                     xhttp.setRequestHeader('X-CSRFToken', csrfcookie());
                     xhttp.send("dropzone=true");

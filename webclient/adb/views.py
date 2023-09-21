@@ -118,7 +118,7 @@ def smazat_vb(request, ident_cely):
     Pohled pro smazání VB.
     Po úspešném smazání je uživatel presměrován na next_url z requestu.
     """
-    zaznam = get_object_or_404(VyskovyBod, id=ident_cely)
+    zaznam = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
     context = {
         "object": zaznam,
         "title": _("adb.views.smazat_vb.modalForm.title"),

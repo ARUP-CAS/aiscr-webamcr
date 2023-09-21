@@ -27,7 +27,9 @@ from core.constants import (
     PROJEKT_STAV_ZAPSANY,
     PROJEKT_STAV_ZRUSENY,
     ROLE_ADMIN_ID,
+    ROLE_ARCHEOLOG_ID,
     ROLE_ARCHIVAR_ID,
+    ROLE_BADATEL_ID,
     RUSENI_PROJ,
     SCHVALENI_OZNAMENI_PROJ,
     UKONCENI_V_TERENU_PROJ,
@@ -73,7 +75,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import Group
 from django.contrib.gis.geos import Point
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery, Value
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -81,7 +83,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods
 from dokument.models import Dokument
 from dokument.views import odpojit, pripojit
-from heslar.hesla_dynamicka import TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_ANONYM_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_BADATEL_ID, TYP_PROJEKTU_PRUZKUM_ID, TYP_PROJEKTU_ZACHRANNY_ID
 from heslar.models import RuianKatastr
 from oznameni.forms import OznamovatelForm
 from projekt.filters import ProjektFilter
@@ -101,6 +103,7 @@ from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
 from uzivatel.models import User
+from pas.models import SamostatnyNalez
 
 logger = logging.getLogger(__name__)
 
@@ -469,6 +472,31 @@ class ProjektListView(SearchListView):
             .defer("geom")
         )
         return qs
+    
+    def add_accessibility_lookup(self,permission, qs):
+        group_to_accessibility={
+            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
+            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
+            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+        }
+        new_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
+        i = self.request.user.hlavni_role.id
+        accessibilities = [PRISTUPNOST_ANONYM_ID]
+        while i > 0:
+            if self.request.user.hlavni_role.id != 4:
+                accessibilities.append(group_to_accessibility.get(i))
+            i -= 1
+        filter = {accessibility_key:accessibilities}
+        pristupnost = (
+            SamostatnyNalez.objects.filter(projekt=OuterRef("pk"),pristupnost__isnull=False)
+            .order_by("pristupnost__razeni")
+            .values("pristupnost")
+        )
+        qs = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
+        no_sn_qs = qs.filter(samostatne_nalezy__isnull=True).annotate(pristupnost_filter=Value(PRISTUPNOST_ANONYM_ID))
+        qs = no_sn_qs | qs
+        return (new_qs | qs.filter(**filter)).distinct()
 
 
 @login_required

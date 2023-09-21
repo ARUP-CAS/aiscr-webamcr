@@ -115,6 +115,7 @@ from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import User
+from core.models import Permissions as p, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -361,7 +362,7 @@ class DokumentacniJednotkaUpdateView(
         jednotky = self.get_jednotky()
         # check po MR
         context["j"] = get_dj_form_detail(
-            "akce", jednotka, jednotky, show, old_adb_post
+            "akce", jednotka, jednotky, show, old_adb_post,self.request.user
         )
         return context
 
@@ -564,6 +565,7 @@ def edit(request, ident_cely):
             "sam_akce": False if zaznam.akce.projekt else True,
             "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
             "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
+            "arch_z_ident_cely":zaznam.ident_cely,
         },
     )
 
@@ -1010,10 +1012,7 @@ def odpojit_dokument(request, ident_cely, arch_z_ident_cely):
     Funkce volá další funkci pro odpojení s parametrem navíc - arch záznamem.
     """
     az = get_object_or_404(ArcheologickyZaznam, ident_cely=arch_z_ident_cely)
-    if az.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-        return odpojit(request, ident_cely, arch_z_ident_cely, az)
-    else:
-        return odpojit(request, ident_cely, arch_z_ident_cely, az)
+    return odpojit(request, ident_cely, arch_z_ident_cely, az)
 
 
 @login_required
@@ -1190,13 +1189,13 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     Returns:
         historie: dictionary možností pro zobrazení.
     """
-    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
-    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce"
+    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY and check_permissions(p.actionChoices.archz_vratit, user, archeologicky_zaznam.ident_cely)
+    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY and check_permissions(p.actionChoices.archz_odeslat, user, archeologicky_zaznam.ident_cely)
+    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce" and check_permissions(p.actionChoices.archz_archivovat, user, archeologicky_zaznam.ident_cely)
     show_edit = archeologicky_zaznam.stav not in [
         AZ_STAV_ARCHIVOVANY,
-    ]
-    show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+    ] and check_permissions(p.actionChoices.akce_edit, user, archeologicky_zaznam.ident_cely)
+    show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY and check_permissions(p.actionChoices.archz_historie, user, archeologicky_zaznam.ident_cely)
     zmenit_proj_akci = False
     zmenit_sam_akci = False
     if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -1265,7 +1264,7 @@ def get_required_fields(zaznam=None, next=0):
 
 @login_required
 @require_http_methods(["GET"])
-def smazat_akce_vedoucí(request, akce_vedouci_id):
+def smazat_akce_vedoucí(request, ident_cely, akce_vedouci_id):
     """
     Funkce pohledu pro smazání dalšího vedoucího akce.
     """
@@ -1409,6 +1408,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             and jednotka.typ.id == TYP_DJ_SONDA_ID
             and not has_adb
             and show["editovat"]
+            and check_permissions(p.actionChoices.adb_add,request.user,jednotka.ident_cely)
         )
         show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
         show_add_pian = False if jednotka.pian else True
@@ -1502,8 +1502,8 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
                     else NalezPredmetFormset(
                         instance=komponenta, prefix=komponenta.ident_cely + "_p"
                     ),
-                    "helper_predmet": NalezFormSetHelper(typ="predmet"),
-                    "helper_objekt": NalezFormSetHelper(typ="objekt"),
+                    "helper_predmet": NalezFormSetHelper(typ="predmet",typ_vazby="akce"),
+                    "helper_objekt": NalezFormSetHelper(typ="objekt",typ_vazby="akce"),
                 }
             )
     externi_odkazy = (
@@ -1777,7 +1777,7 @@ class ArchZTableRowView(LoginRequiredMixin, View):
         return HttpResponse(render_to_string("ez/ez_odkazy_table_row.html", context))
 
 
-def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None):
+def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None, user=None):
     """
     Funkce pro získaní dictionary contextu dokumentační jednotky.
 
@@ -1808,6 +1808,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         and jednotka.typ.id == TYP_DJ_SONDA_ID
         and not has_adb
         and show["editovat"]
+        and check_permissions(p.actionChoices.adb_add,user, jednotka.ident_cely)
     )
     show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
     show_add_pian = False if jednotka.pian else True

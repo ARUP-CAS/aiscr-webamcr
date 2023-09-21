@@ -23,7 +23,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file' 'dokument' dokument.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'dokument.templates.dok.detail.soubory.NahratSoubory.tooltip' %}">
               <span class="material-icons">publish</span>

@@ -41,7 +41,7 @@ urlpatterns = [
         name="pripojit_eo",
     ),
     path(
-        "ext-odkaz/edit/<slug:slug>",
+        "ext-odkaz/edit/<str:typ_vazby>/<str:ident_cely>/<slug:slug>",
         views.ExterniOdkazEditView.as_view(),
         name="zmenit_eo",
     ),

@@ -13,6 +13,8 @@ from django_tables2 import SingleTableMixin
 from django_filters.views import FilterView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
+from django.views.generic import TemplateView
+
 
 
 from django.conf import settings
@@ -82,7 +84,7 @@ def index(request):
 
 @login_required
 @require_http_methods(["POST", "GET"])
-def delete_file(request, pk):
+def delete_file(request, typ_vazby, ident_cely, pk):
     """
     Funkce pohledu pro smazání souboru. Funkce maže jak záznam v DB tak i soubor na disku.
     """
@@ -228,7 +230,7 @@ def upload_file_dokument(request, ident_cely):
 
 @login_required
 @require_http_methods(["GET"])
-def update_file(request, typ_vazby, file_id):
+def update_file(request, typ_vazby, ident_cely, file_id):
     """
     Funkce pohledu pro zobrazení stránky pro upload souboru.
     """
@@ -237,7 +239,7 @@ def update_file(request, typ_vazby, file_id):
     return render(
         request,
         "core/upload_file.html",
-        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id},
+        {"ident_cely": ident_cely, "back_url": back_url, "file_id": file_id, "typ_vazby":typ_vazby},
     )
 
 
@@ -255,6 +257,32 @@ def upload_file_samostatny_nalez(request, ident_cely):
         "core/upload_file.html",
         {"ident_cely": ident_cely, "back_url": sn.get_absolute_url()},
     )
+
+class uploadFileView(LoginRequiredMixin, TemplateView):
+    """
+    Třída pohledu pro zobrazení stránky s uploadem souboru.
+    """
+    template_name = "core/upload_file.html"
+    http_method_names = ["get"]
+
+    def get_zaznam(self):
+        self.typ_vazby = self.kwargs.get("typ_vazby")
+        self.ident = self.kwargs.get("ident_cely")
+        if self.typ_vazby == "pas":
+            return get_object_or_404(SamostatnyNalez, ident_cely=self.ident)
+        elif self.typ_vazby == "dokument":
+            return get_object_or_404(Dokument, ident_cely=self.ident)
+        else:
+            return get_object_or_404(Projekt, ident_cely=self.ident)
+
+    def get_context_data(self, **kwargs):
+        zaznam = self.get_zaznam()
+        context = {
+            "ident_cely": self.ident,
+            "back_url": zaznam.get_absolute_url(),
+            "typ_vazby": self.typ_vazby,
+        }
+        return context
 
 
 @require_http_methods(["POST"])
@@ -809,6 +837,18 @@ class StahnoutMetadataIdentCelyView(LoginRequiredMixin, View):
     def get(self, request, model_name, ident_cely):
         if model_name == "pian":
             record: Pian = Pian.objects.get(ident_cely=ident_cely)
+        elif model_name == "projekt":
+            record: Projekt = Projekt.objects.get(ident_cely=ident_cely)
+        elif model_name == "archeologicky_zaznam":
+            record: ArcheologickyZaznam = ArcheologickyZaznam.objects.get(ident_cely=ident_cely)
+        elif model_name == "adb":
+            record: Adb = Adb.objects.get(ident_cely=ident_cely)
+        elif model_name == "dokument":
+            record: Dokument = Dokument.objects.get(ident_cely=ident_cely)
+        elif model_name == "samostatny_nalez":
+            record: SamostatnyNalez = SamostatnyNalez.objects.get(ident_cely=ident_cely)
+        elif model_name == "externi_zdroj":
+            record: ExterniZdroj = ExterniZdroj.objects.get(ident_cely=ident_cely)
         else:
             raise Http404
         metadata = record.metadata

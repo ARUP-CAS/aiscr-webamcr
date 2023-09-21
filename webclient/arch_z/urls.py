@@ -33,13 +33,13 @@ urlpatterns = [
         name="pripojit_dokument",
     ),
     path(
-        "dokument/odpojit/<str:ident_cely>/<str:arch_z_ident_cely>",
+        "dokument/odpojit/<str:arch_z_ident_cely>/<str:ident_cely>",
         views.odpojit_dokument,
         name="odpojit_dokument",
     ),
     path("mapa-zoom", views.post_akce2kat, name="post_akce2kat"),
     path(
-        "akce/vedouci/smazat/<int:akce_vedouci_id>",
+        "akce/vedouci/smazat/<str:ident_cely>/<int:akce_vedouci_id>",
         views.smazat_akce_vedoucí,
         name="smazat_akce_vedouci",
     ),

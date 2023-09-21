@@ -23,7 +23,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_pas' sn.ident_cely %}"
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file' 'pas' sn.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'pas.templates.detail.nahratSoubor' %}">
               <span class="material-icons">publish</span>

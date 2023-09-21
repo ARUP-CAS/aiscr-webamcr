@@ -15,6 +15,8 @@ from historie.models import Historie, HistorieVazby
 from pian.models import Pian
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+from nalez.models import NalezObjekt, NalezPredmet
+from notifikace_projekty.models import Pes
 
 from xml_generator.models import ModelWithMetadata
 from .constants import (
@@ -325,6 +327,23 @@ class Permissions(models.Model):
         my = "my", "core.models.permissions.ownershipChoices.my"
         our = "our", "core.models.permissions.ownershipChoices.our"
 
+    class actionChoices(models.TextChoices):
+        adb_add = "adb_add", "core.models.permissions.actionChoices.adb_add"
+        archz_vratit = "archz_vratit", "core.models.permissions.actionChoices.archz_vratit"
+        archz_odeslat = "archz_odeslat", "core.models.permissions.actionChoices.archz_odeslat"
+        archz_archivovat = "archz_archivovat", "core.models.permissions.actionChoices.archz_archivovat"
+        akce_edit = "akce_edit", "core.models.permissions.actionChoices.akce_edit"
+        archz_historie = "archz_historie", "core.models.permissions.actionChoices.archz_historie"
+        soubor_nahrat_dokument = "soubor_nahrat_dokument", "core.models.permissions.actionChoices.soubor_nahrat_dokument"
+        soubor_nahrat_pas = "soubor_nahrat_pas", "core.models.permissions.actionChoices.soubor_nahrat_pas"
+        soubor_nahrat_projekt = "soubor_nahrat_projekt", "core.models.permissions.actionChoices.soubor_nahrat_projekt"
+        soubor_smazat_projekt = "soubor_smazat_projekt", "core.models.permissions.actionChoices.soubor_smazat_projekt"
+        soubor_smazat_dokument = "soubor_smazat_dokument", "core.models.permissions.actionChoices.soubor_smazat_dokument"
+        soubor_smazat_pas = "soubor_smazat_pas", "core.models.permissions.actionChoices.soubor_smazat_pas"
+        soubor_stahnout_projekt = "soubor_stahnout_projekt", "core.models.permissions.actionChoices.soubor_stahnout_projekt"
+        soubor_stahnout_dokument = "soubor_stahnout_dokument", "core.models.permissions.actionChoices.soubor_stahnout_dokument"
+        soubor_stahnout_pas = "soubor_stahnout_pas", "core.models.permissions.actionChoices.soubor_stahnout_pas"
+
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
         PRISTUPNOST_BADATEL_ID: ROLE_BADATEL_ID,
@@ -346,38 +365,43 @@ class Permissions(models.Model):
         default=True, verbose_name=_("core.models.permissions.base")
     )
     status = models.CharField(
-        max_length=10, verbose_name=_("core.models.permissions.status"), null=True
+        max_length=10, verbose_name=_("core.models.permissions.status"), null=True, blank=True,
     )
     ownership = models.CharField(
         max_length=10,
         verbose_name=_("core.models.permissions.ownership"),
         null=True,
+        blank=True,
         choices=ownershipChoices.choices,
     )
     accessibility = models.CharField(
         max_length=10,
         verbose_name=_("core.models.permissions.accessibility"),
         null=True,
+        blank=True,
         choices=ownershipChoices.choices,
+    )
+    action = models.CharField(
+        max_length=25,
+        verbose_name=_("core.models.permissions.action"),
+        null=True,
+        blank=True,
+        choices=actionChoices.choices,
     )
 
     class Meta:
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
-    def check_concrete_permission(self, request_kwargs, user):
+    def check_concrete_permission(self, user, ident=None, typ=None):
+        self.typ= typ
         self.object = None
         self.logged_in_user = user
         self.permission_object = None
-        if len(request_kwargs) > 0:
-            self.ident = list(request_kwargs.values())[0]
+        self.ident = ident
         if not self.check_base():
             return False
-        try: 
-            self.ident
-        except AttributeError as e:
-            logger.debug(e)
-        else:
+        if self.ident is not None:
             if not self.check_status():
                 return False
             if not self.check_ownership(self.ownership):
@@ -394,12 +418,9 @@ class Permissions(models.Model):
             return False
 
     def check_status(self):
-        from core.ident_cely import get_record_from_ident
-
         if self.status:
             if not self.permission_object:
-                self.object = get_record_from_ident(self.ident)
-                self.permission_object = self.object.get_permission_object()
+                self.get_permission_object()
             subed_status = re.sub("[a-zA-Z]", "", self.status)
             if ">" in self.status:
                 if not int(self.permission_object.stav) > int(subed_status[1]):
@@ -419,17 +440,15 @@ class Permissions(models.Model):
         return True
 
     def check_ownership(self, ownership):
-        from core.ident_cely import get_record_from_ident
-
         if ownership:
             if not self.permission_object:
-                self.object = get_record_from_ident(self.ident)
-                self.permission_object = self.object.get_permission_object()
+                self.get_permission_object()
             if ownership == self.ownershipChoices.my:
-                if not self.permission_object.get_create_user() == self.logged_in_user:
+                if self.permission_object.get_create_user() and not self.permission_object.get_create_user() == self.logged_in_user:
                     return False
             elif ownership == self.ownershipChoices.our:
                 if (
+                    self.permission_object.get_create_user() and 
                     not self.permission_object.get_create_user().organizace
                     == self.logged_in_user.organizace
                 ):
@@ -448,3 +467,39 @@ class Permissions(models.Model):
                     return False
         return True
     
+    def get_permission_object(self):
+        from core.ident_cely import get_record_from_ident
+        from pas.models import UzivatelSpoluprace
+
+        if "spoluprace/" in self.address_in_app:
+            self.permission_object = UzivatelSpoluprace.objects.get(id=self.ident)
+        elif "nalez/smazat" in self.address_in_app:
+            if self.typ == "objekt":
+                self.permission_object = NalezObjekt.objects.get(id=self.ident).get_permission_object()
+            elif self.typ == "predmet":
+                self.permission_object = NalezPredmet.objects.get(id=self.ident).get_permission_object()
+        elif "notifikace-projekty/smazat" in self.address_in_app:
+            self.permission_object = Pes.objects.get(id=self.ident)
+        else:
+            self.object = get_record_from_ident(self.ident)
+            self.permission_object = self.object.get_permission_object()
+    
+
+def check_permissions(action, user, ident=None):
+    permission_set = Permissions.objects.filter(
+        main_role=user.hlavni_role,
+        action=action,
+    )
+    logger.debug("checking action permission")
+    logger.debug(permission_set)
+    if permission_set.count() > 0:
+        tested = []
+        for concrete_permission in permission_set:
+            tested.append(
+                concrete_permission.check_concrete_permission(
+                    user, ident
+                )
+            )
+        if not any(tested):
+            return False
+    return True

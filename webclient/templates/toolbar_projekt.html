@@ -79,7 +79,7 @@
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="projekt-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarProjekt.smazatProjekt.label" %}</button>
           <a class="dropdown-item" href="#">{% trans "templates.toolbarProjekt.tiskovaSestava.label" %}</a>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.id %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'projekt' projekt.ident_cely %}">{% trans "templates.toolbarProjekt.metadataDownload.label" %}</a>
           {% if projekt.expert_list_can_be_created and user.is_archiver_or_more %}
             <a class="dropdown-item" data-toggle="modal" data-target="#expertni_list">{% trans "templates.toolbarProjekt.expertniList.label" %}</a>
           {% endif %}

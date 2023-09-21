@@ -124,10 +124,16 @@
   <script>var object_id = "{{ confirm.ident_cely }}";</script>
   {% if file_id %}
         <script>var maxFiles = 1;</script>
-        <script>var file_id = "{{ file_id }}";</script>
+        <script>var file_id = "{{ file_id }}";
+          var typ_vazby = "{{ typ_vazby }}";
+          var typ_uploadu = "nahradit";
+        </script>
     {% else %}
         <script>var maxFiles = 999;</script>
-        <script>var object_id = "{{ confirm.ident_cely }}";</script>
+        <script>
+          var typ_vazby = "projekt";
+          var typ_uploadu = "upload";
+        </script>
     {% endif %}
   <script>
   var reject_dict = {

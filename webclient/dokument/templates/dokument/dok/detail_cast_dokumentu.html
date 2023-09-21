@@ -64,7 +64,7 @@
       <div class="app-fx app-right">
         {% if show.editovat %}
         <div class="btn-group" role="group">
-            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.id %}"
+            <button id="button-edit-neident" class="btn" href="{% url 'neidentakce:edit' cast.ident_cely %}"
             rel="tooltip" data-placement="top"
             title="{% trans 'dokument.templates.dok.detail_cast_dokumentu.editNeidentAkci.tooltip' %}">
             <span class="material-icons">edit</span>

@@ -14,6 +14,7 @@ from core.constants import (
     SPOLUPRACE_NEAKTIVNI,
     VRACENI_SN,
     ZAPSANI_SN,
+    SPOLUPRACE_ZADOST,
 )
 from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
@@ -366,3 +367,6 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def __str__(self):
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=SPOLUPRACE_ZADOST)[0].uzivatel
