@@ -202,3 +202,6 @@ UPDATE externi_zdroj SET autori = replace(autori, 'anonym, anonym', 'anonym') WH
 UPDATE externi_zdroj SET autori = replace(autori, 'Anonym, Anonym', 'anonym') WHERE autori LIKE ('%Anonym, Anonym%');
 UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'anonym, anonym', 'anonym') WHERE sbornik_editor LIKE ('%anonym, anonym%');
 UPDATE externi_zdroj SET sbornik_editor = replace(sbornik_editor, 'Anonym, Anonym', 'anonym') WHERE sbornik_editor LIKE ('%Anonym, Anonym%');
+
+-- Oprava chybné null hodnoty pro evidenční číslo nálezu
+UPDATE samostatny_nalez SET inv_cislo = '' WHERE inv_cislo = '-1';
