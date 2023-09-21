@@ -101,6 +101,19 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
+    
+    def get_absolute_url(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None:
+                return dok_jednotka.get_absolute_url()
+            
+    def get_permission_object(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None:
+                return dok_jednotka.get_permission_object()
+    
 
     def set_permanent_ident_cely(self):
         """

@@ -2,17 +2,20 @@ import datetime
 import logging
 import os
 import re
-from typing import Optional
+from typing import Iterable, Optional
+from django_prometheus.models import ExportModelOperationsMixin
+
 
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
-from django.utils.functional import cached_property
+from django.contrib.auth.models import Group
+from django.utils.translation import gettext as _
 
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
-from django.utils.translation import gettext as _
-from django_prometheus.models import ExportModelOperationsMixin
+from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID
+from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 
 from xml_generator.models import ModelWithMetadata
 from .constants import (
@@ -317,3 +320,121 @@ class CustomAdminSettings(ExportModelOperationsMixin("custom_admin_settings"), m
     item_group = models.CharField(max_length=100)
     item_id = models.CharField(max_length=100)
     value = models.TextField()
+class Permissions(models.Model):
+    class ownershipChoices(models.TextChoices):
+        my = "my", "core.models.permissions.ownershipChoices.my"
+        our = "our", "core.models.permissions.ownershipChoices.our"
+
+    pristupnost_to_groups = {
+        PRISTUPNOST_BADATEL_ID: ROLE_BADATEL_ID,
+        PRISTUPNOST_ARCHEOLOG_ID: ROLE_ARCHEOLOG_ID,
+        PRISTUPNOST_ARCHIVAR_ID: ROLE_ARCHIVAR_ID,
+    }
+
+    address_in_app = models.CharField(
+        max_length=150, verbose_name=_("core.models.permissions.addressInApp")
+    )
+    main_role = models.ForeignKey(
+        Group,
+        models.DO_NOTHING,
+        db_column="role",
+        related_name="role_opravneni",
+        verbose_name=_("core.models.permissions.mainRole"),
+    )
+    base = models.BooleanField(
+        default=True, verbose_name=_("core.models.permissions.base")
+    )
+    status = models.CharField(
+        max_length=10, verbose_name=_("core.models.permissions.status"), null=True
+    )
+    ownership = models.CharField(
+        max_length=10,
+        verbose_name=_("core.models.permissions.ownership"),
+        null=True,
+        choices=ownershipChoices.choices,
+    )
+    accessibility = models.CharField(
+        max_length=10,
+        verbose_name=_("core.models.permissions.accessibility"),
+        null=True,
+        choices=ownershipChoices.choices,
+    )
+
+    def check_concrete_permission(self, request_kwargs, user):
+        self.object = None
+        self.logged_in_user = user
+        self.permission_object = None
+        if len(request_kwargs) > 0:
+            self.ident = list(request_kwargs.values())[0]
+        if not self.check_base():
+            return False
+        if not self.check_status():
+            return False
+        if not self.check_ownership(self.ownership):
+            return False
+        if not self.check_accessibility():
+            return False
+
+        return True
+
+    def check_base(self):
+        if self.base:
+            return True
+        else:
+            return False
+
+    def check_status(self):
+        from core.ident_cely import get_record_from_ident
+
+        if self.status:
+            if not self.permission_object:
+                self.object = get_record_from_ident(self.ident)
+                self.permission_object = self.object.get_permission_object()
+            subed_status = re.sub("[a-zA-Z]", "", self.status)
+            if ">" in self.status:
+                if not int(self.permission_object.stav) > int(subed_status[1]):
+                    return False
+            elif "<" in subed_status:
+                if not int(self.permission_object.stav) < int(subed_status[1]):
+                    return False
+            elif "-" in subed_status:
+                if not (
+                    int(self.permission_object.stav) >= int(subed_status[0])
+                    and int(self.permission_object.stav) <= int(subed_status[-1])
+                ):
+                    return False
+            else:
+                if not int(self.permission_object.stav) == int(subed_status):
+                    return False
+        return True
+
+    def check_ownership(self, ownership):
+        from core.ident_cely import get_record_from_ident
+
+        if ownership:
+            if not self.permission_object:
+                self.object = get_record_from_ident(self.ident)
+                self.permission_object = self.object.get_permission_object()
+            if ownership == self.ownershipChoices.my:
+                if not self.permission_object.get_create_user() == self.logged_in_user:
+                    return False
+            elif ownership == self.ownershipChoices.our:
+                if (
+                    not self.permission_object.get_create_user().organizace
+                    == self.logged_in_user.organizace
+                ):
+                    return False
+        return True
+
+    def check_accessibility(self):
+        if self.accessibility:
+            if not self.check_ownership(self.accessibility):
+                if (
+                    not self.logged_in_user.hlavni_role.id
+                    >= self.pristupnost_to_groups.get(
+                        self.permission_object.pristupnost.id
+                    )
+                ):
+                    return False
+        return True
+    

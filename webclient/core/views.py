@@ -62,6 +62,10 @@ from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
 
+from core.ident_cely import get_record_from_ident
+from dj.models import DokumentacniJednotka
+from komponenta.models import Komponenta
+
 logger = logging.getLogger(__name__)
 
 
@@ -508,110 +512,14 @@ def redirect_ident_view(request, ident_cely):
     """
     Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
     """
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.project", extra={"ident_cely": ident_cely})
-        return redirect("projekt:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.archeologicka_akce", extra={"ident_cely": ident_cely})
-        return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,9}\D{1}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.samostatna_akce", extra={"ident_cely": ident_cely})
-        return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.lokalita", extra={"ident_cely": ident_cely})
-        return redirect("lokalita:detail", slug=ident_cely)
-    if bool(re.fullmatch("(BIB|X-BIB)-\d{7,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.zdroj", extra={"ident_cely": ident_cely})
-        return redirect("ez:detail", slug=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
-        response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{ident_cely}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{ident_cely.replace('-', '_')}",
-            max_age=1000,
+    object = get_record_from_ident(ident_cely)
+    if object:
+        return redirect(object.get_absolute_url())
+    else:
+        messages.error(
+            request, _("core.views.redirectView.identnotmatchingregex.message.text")
         )
-        return response
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-K\d{3}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.komponenta_on_dokumentacni_jednotka",
-                     extra={"ident_cely": ident_cely})
-        response = redirect("arch_z:detail", ident_cely=ident_cely[:-5])
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-        )
-        response.set_cookie(
-            "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
-        )
-        return response
-    if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.adb", extra={"ident_cely": ident_cely})
-        adb = get_object_or_404(Adb, ident_cely=ident_cely)
-        dj_ident = adb.dokumentacni_jednotka.ident_cely
-        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
-            max_age=1000,
-        )
-        return response
-    if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.vyskovy_bod", extra={"ident_cely": ident_cely})
-        vb = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
-        dj_ident = vb.adb.dokumentacni_jednotka.ident_cely
-        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
-            max_age=1000,
-        )
-        return response
-    if bool(re.fullmatch("(P|N)-\d{4}-\d{6,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.pian", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.dokument_3D", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
-        re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu_3D", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(
-        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.dokument", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
-        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.samostatny_nalez", extra={"ident_cely": ident_cely})
-        logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
-        return redirect("pas:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(X-BIB|BIB)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(HES)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(ORG)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(OS)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-
-    messages.error(request, _("core.views.redirectView.identnotmatchingregex.message.text"))
-    return redirect("core:home")
-
+        return redirect("core:home")
 
 # for prolonging session ajax call
 @login_required

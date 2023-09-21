@@ -190,3 +190,11 @@ class OdstavkaSystemuForm(forms.ModelForm):
             entry = po_file.find("base.odstavka.text")
             text = "text_" + code
             self.fields[text].initial = entry.msgstr
+
+
+class PermissionImportForm(forms.Form):
+    file = forms.FileField(
+        required=True,
+        label="core.forms.permissionImport.file.label",
+        widget=forms.FileInput(attrs={'accept':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel'})
+    )

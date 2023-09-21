@@ -385,6 +385,12 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)
 
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
+
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """

@@ -11,7 +11,7 @@ from arch_z.views import (
     get_komponenta_form_detail,
     get_obdobi_choices,
 )
-from core.constants import AZ_STAV_ZAPSANY
+from core.constants import AZ_STAV_ZAPSANY, PIAN_POTVRZEN
 from core.ident_cely import get_temp_lokalita_ident
 from core.message_constants import (
     LOKALITA_USPESNE_ZAPSANA,
@@ -24,6 +24,7 @@ from dj.forms import CreateDJForm
 from dj.models import DokumentacniJednotka
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from django.views.generic import DetailView, TemplateView
@@ -388,9 +389,16 @@ class LokalitaPianUpdateView(LokalitaDokumentacniJednotkaRelatedView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["pian_ident_cely"] = self.get_pian().ident_cely
-        context["pian_form_update"] = PianCreateForm(instance=self.get_pian())
+        self.pian = self.get_pian()
+        context["pian_ident_cely"] = self.pian.ident_cely
+        context["pian_form_update"] = PianCreateForm(instance=self.pian)
         return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if self.pian == PIAN_POTVRZEN:
+            raise PermissionDenied
+        return self.render_to_response(context)
 
 
 def get_required_fields(zaznam=None, next=0):

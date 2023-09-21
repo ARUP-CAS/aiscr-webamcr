@@ -604,6 +604,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):
