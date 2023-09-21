@@ -360,6 +360,10 @@ class Permissions(models.Model):
         choices=ownershipChoices.choices,
     )
 
+    class Meta:
+        verbose_name = _("core.model.permissions.modelTitle.label")
+        verbose_name_plural = _("core.model.permissions.modelTitles.label")
+
     def check_concrete_permission(self, request_kwargs, user):
         self.object = None
         self.logged_in_user = user
@@ -368,12 +372,17 @@ class Permissions(models.Model):
             self.ident = list(request_kwargs.values())[0]
         if not self.check_base():
             return False
-        if not self.check_status():
-            return False
-        if not self.check_ownership(self.ownership):
-            return False
-        if not self.check_accessibility():
-            return False
+        try: 
+            self.ident
+        except AttributeError as e:
+            logger.debug(e)
+        else:
+            if not self.check_status():
+                return False
+            if not self.check_ownership(self.ownership):
+                return False
+            if not self.check_accessibility():
+                return False
 
         return True
 
