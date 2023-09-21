@@ -22,12 +22,9 @@ class Kladysm5(ExportModelOperationsMixin("kladysm5"), models.Model):
     """
 
     gid = models.IntegerField(primary_key=True)
-    id = models.IntegerField()
     mapname = models.TextField()
     mapno = models.TextField()
-    podil = models.DecimalField(max_digits=10, decimal_places=9)
     geom = pgmodels.PolygonField(srid=5514)
-    cislo = models.TextField()
 
     class Meta:
         db_table = "kladysm5"
