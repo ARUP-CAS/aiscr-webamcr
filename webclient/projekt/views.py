@@ -282,7 +282,7 @@ def create(request):
                     oznamovatel.projekt = projekt
                     oznamovatel.save()
                 if projekt.should_generate_confirmation_document:
-                    projekt.create_confirmation_document()
+                    projekt.create_confirmation_document(user=request.user)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 if projekt.ident_cely[0] == OBLAST_CECHY:
                     Mailer.send_ep01a(project=projekt)
