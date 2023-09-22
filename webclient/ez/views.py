@@ -97,6 +97,7 @@ class ExterniZdrojListView(SearchListView):
     hasOnlyPotvrdit_header = _("ez.templates.ExterniZdrojListView.hasOnlyPotvrdit_header.text")
     default_header = _("ez.templates.ExterniZdrojListView.header.default_header.text")
     toolbar_name = _("ez.templates.ExterniZdrojListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_EXT_ZD
 
     def get_queryset(self):
         qs = super().get_queryset()

@@ -434,6 +434,7 @@ class ProjektListView(SearchListView):
     hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
     default_header = _("projekt.views.projektListView.header.default")
     toolbar_name = _("projekt.views.projektListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_PROJ
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

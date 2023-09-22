@@ -18,6 +18,7 @@ from core.constants import (
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
+    SPOLUPRACE_ZADOST,
 )
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -618,6 +619,7 @@ class SamostatnyNalezListView(SearchListView):
     hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
     default_header = _("pas.views.samostatnyNalezListView.header.default")
     toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_SN
 
     def get_queryset(self):
         # Only allow to view 3D models
@@ -790,6 +792,7 @@ class UzivatelSpolupraceListView(SearchListView):
     search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
     pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
     toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
+    typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def get_queryset(self):
         qs = super().get_queryset()
