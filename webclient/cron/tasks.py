@@ -1,16 +1,19 @@
+import datetime
 import logging
 import traceback
 
 from celery import shared_task
+from django.db.models import Q
 
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
-from core.constants import ODESLANI_SN, ARCHIVACE_SN
+from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ
 from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
 from django.db import connection
+from django.utils.translation import gettext as _
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
 from dokument.models import Dokument, Let
@@ -449,3 +452,28 @@ def record_ident_change(class_name, record_pk, old_ident):
                                            get_mime_type(soubor.nazev),
                                            repository_binary_file.content)
     logger.debug("cron.record_ident_change.do.end")
+
+
+@shared_task
+def delete_personal_data_canceled_projects():
+    logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
+    deleted_string = _("core.tasks.nalez_to_jsk.data_deleted")
+    today = datetime.datetime.now().date()
+    year_ago = today - datetime.timedelta(days=365)
+    projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
+        .filter(~Q(oznamovatel__email__icontains=deleted_string))\
+        .filter(historie__historie__typ_zmeny=RUSENI_PROJ)\
+        .filter(historie__historie__datum_zmeny__lt=year_ago)
+    for item in projects:
+        item: Projekt
+        if item.has_oznamovatel():
+            logger.debug("core.cron.delete_personal_data_canceled_projects.do.project",
+                         extra={"project": item.ident_cely})
+            item.oznamovatel.email = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.adresa = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.oznamovatel = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.telefon = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.save()
+            item.archive_project_documentation()
+    logger.debug("core.cron.delete_personal_data_canceled_projects.do.end")
