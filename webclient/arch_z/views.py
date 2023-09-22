@@ -33,7 +33,8 @@ from core.constants import (
     ROLE_ADMIN_ID,
     ROLE_ARCHIVAR_ID,
     ZAPSANI_AZ,
-    ZMENA_AZ
+    ZMENA_AZ,
+    PIAN_POTVRZEN
 )
 from core.exceptions import MaximalEventCount
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -452,6 +453,13 @@ class PianUpdateView(LoginRequiredMixin, DokumentacniJednotkaRelatedUpdateView):
         context["j"] = self.get_dokumentacni_jednotka()
         context["pian_form_update"] = PianCreateForm()
         return context
+    
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        if context["j"].pian.stav == PIAN_POTVRZEN:
+            raise PermissionDenied
+        return self.render_to_response(context)
+    
 
 
 class AdbCreateView(DokumentacniJednotkaRelatedUpdateView):
@@ -1564,6 +1572,8 @@ class AkceListView(SearchListView):
     hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
     default_header = _("arch_z.views.AkceListView.default_header.text")
     toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
+    permission_model_lookup = "archeologicky_zaznam__"
+    typ_zmeny_lookup = ZAPSANI_AZ
 
     def get_queryset(self):
         qs = super().get_queryset()

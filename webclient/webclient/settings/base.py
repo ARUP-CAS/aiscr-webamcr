@@ -154,6 +154,7 @@ MIDDLEWARE = [
     "django_auto_logout.middleware.auto_logout",
     "django.middleware.locale.LocaleMiddleware",
     'django_prometheus.middleware.PrometheusAfterMiddleware',
+    'core.middleware.PermissionMiddleware',
 ]
 
 CRON_CLASSES = [

@@ -34,6 +34,10 @@ class NeocekavanaRadaError(Exception):
     def __init__(self, message="Neocekavana rada dokumentu."):
         self.message = message
 
+class WrongSheetError(Exception):
+    def __init__(self, message="Excel nema spravne sloupce"):
+        self.message = message
+
 
 class NeznamaGeometrieError(Exception):
     def __init__(self, message="Neocekavana geometrie pianu."):

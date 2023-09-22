@@ -263,6 +263,7 @@ class Model3DListView(SearchListView):
     hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
     default_header = _("dokument.views.Model3DListView.default_header.text")
     toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -310,6 +311,7 @@ class DokumentListView(SearchListView):
     hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
     default_header = _("dokument.views.DokumentListView.default_header.text")
     toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

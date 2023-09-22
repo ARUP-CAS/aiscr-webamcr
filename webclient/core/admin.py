@@ -1,14 +1,37 @@
-from django.contrib import admin
-from core.models import OdstavkaSystemu, CustomAdminSettings
-from .forms import OdstavkaSystemuForm
-from polib import pofile
-from django.conf import settings
+import json
+import re
 import logging
+import pandas as pd
 import os
+import io
 from bs4 import BeautifulSoup
-from django.core.cache import cache
-from core.constants import ROLE_NASTAVENI_ODSTAVKY
+from polib import pofile
+
+from django.contrib import admin
+from django.shortcuts import redirect
 from django.core.cache.utils import make_template_fragment_key
+from django.template.response import TemplateResponse
+from django.utils.translation import gettext as _
+from django.contrib import messages
+from django.conf import settings
+from django.core.management import call_command
+from django.contrib.auth.models import Group
+from django.urls import path, reverse
+from django.core.cache import cache
+
+from .models import OdstavkaSystemu, Permissions, CustomAdminSettings
+from .exceptions import WrongSheetError
+from .forms import OdstavkaSystemuForm, PermissionImportForm
+from .constants import (
+    ROLE_NASTAVENI_ODSTAVKY,
+    PERMISSIONS_IMPORT_SHEET,
+    PERMISSIONS_SHEET_ZAKLADNI_NAME,
+    PERMISSIONS_SHEET_PRISTUPNOST_NAME,
+    PERMISSIONS_SHEET_STAV_NAME,
+    PERMISSIONS_SHEET_VLASTNICTVI_NAME,
+    PERMISSIONS_SHEET_APP_NAME,
+    PERMISSIONS_SHEET_URL_NAME,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +89,9 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
                 uwsgi.reload()  # pretty easy right?
             except Exception as e:
-                logger.debug("core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e})
+                logger.debug(
+                    "core.admin.OdstavkaSystemuAdmin.exception", extra={"exception": e}
+                )
                 pass  # we may not be running under uwsgi :P
         super().save_model(request, obj, form, change)
 
@@ -128,3 +153,252 @@ class OdstavkaSystemuAdmin(admin.ModelAdmin):
 
 admin.site.register(OdstavkaSystemu, OdstavkaSystemuAdmin)
 admin.site.register(CustomAdminSettings)
+
+
+@admin.register(Permissions)
+class PermissionAdmin(admin.ModelAdmin):
+    """
+    Třída admin panelu pro zobrazení a správu oprávnení.
+    """
+
+    change_list_template = "core/permissions_changelist.html"
+
+    def get_urls(self):
+        """
+        Metóda pri definici dodatečných url.
+        """
+        urls = super().get_urls()
+        my_urls = [
+            path("import_file/", self.import_file, name="import_permissions"),
+            path(
+                "import_success/",
+                self.import_success,
+                name="import_success",
+            ),
+        ]
+        return my_urls + urls
+
+    def import_file(self, request):
+        """
+        Metóda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+        """
+        model = self.model
+        opts = model._meta
+        app_label = "core"
+        if request.method == "POST":
+            docfile = request.FILES["file"]
+            try:
+                sheet = pd.read_excel(docfile, PERMISSIONS_IMPORT_SHEET)
+            except ValueError as e:
+                logger.debug(e)
+                self.message_user(
+                    request,
+                    _("core.admin.permissionAdmin.wrongSheet.error"),
+                    messages.ERROR,
+                )
+                return redirect(reverse("admin:core_permissions_changelist"))
+            try:
+                sheet = self.validate_and_prepare_sheet(sheet)
+            except WrongSheetError as e:
+                logger.debug(e)
+                self.message_user(
+                    request,
+                    _("core.admin.permissionAdmin.wrongSheetConfiguration.error"),
+                    messages.ERROR,
+                )
+                return redirect(reverse("admin:core_permissions_changelist"))
+            Permissions.objects.all().delete()
+            sheet["result"] = sheet.apply(self.check_save_row, axis=1)
+            sheet.drop(sheet.iloc[:, 2:21], axis=1, inplace=True)
+            sheet = sheet.reset_index(drop=True)
+            request.session["table"] = sheet.to_json(orient="records")
+            return redirect(reverse("admin:import_success"))
+        form = PermissionImportForm()
+        media = self.media
+        payload = {
+            **self.admin_site.each_context(request),
+            "title": _("core.admin.permissionAdmin.title.error"),
+            "form": form,
+            "media": media,
+        }
+        payload.update(
+            {
+                "app_label": app_label,
+                "opts": opts,
+            }
+        )
+        return TemplateResponse(
+            request,
+            "core/permission_import_form.html",
+            payload,
+        )
+
+    def validate_and_prepare_sheet(self, sheet):
+        """
+        Metóda pro validaci importovaného excelu a jeho úpravu.
+        """
+        if (
+            not sheet.columns[2] == PERMISSIONS_SHEET_ZAKLADNI_NAME
+            or not sheet.columns[7] == PERMISSIONS_SHEET_STAV_NAME
+            or not sheet.columns[11] == PERMISSIONS_SHEET_VLASTNICTVI_NAME
+            or not sheet.columns[15] == PERMISSIONS_SHEET_PRISTUPNOST_NAME
+        ):
+            raise WrongSheetError
+        sheet.columns = sheet.iloc[0]
+        sheet = sheet[1:]
+        sheet = sheet.reset_index(drop=True)
+        if (
+            not sheet.columns[0] == PERMISSIONS_SHEET_APP_NAME
+            or not sheet.columns[1] == PERMISSIONS_SHEET_URL_NAME
+            or not sheet.columns[2] == "A"
+        ):
+            raise WrongSheetError
+        i = 3
+        while i < 19:
+            if (
+                not sheet.columns[i] == "B"
+                or not sheet.columns[i + 1] == "C"
+                or not sheet.columns[i + 2] == "D"
+                or not sheet.columns[i + 3] == "E"
+            ):
+                raise WrongSheetError
+            i = i + 4
+
+        return sheet
+
+    def check_save_row(self, row):
+        """
+        Metóda pro kontrolu řádku excelu.
+        """
+        number_to_role = ["B", "C", "D", "E"]
+        with io.StringIO() as out:
+            call_command("show_urls", "--format", "json", stdout=out)
+            url_list = pd.read_json(out.getvalue())
+        if url_list["url"].eq("/" + str(row[0]) + "/" + str(row[1])).any():
+            i = 0
+            row_result = list()
+            while i < 4:
+                row_result.append(self.save_permission(row, i))
+                i += 1
+            if all(i == True for i in row_result):
+                return "ALL OK"
+            else:
+                results = []
+                for idx, i in enumerate(row_result):
+                    if i == True:
+                        results.append(str(number_to_role[idx] + " OK"))
+                    else:
+                        results.append(str(number_to_role[idx] + " NOK"))
+            return results
+        else:
+            return "NOK address"
+
+    def save_permission(self, row, i):
+        """
+        Metóda pro kontrolu a uložení jednotlivého oprávnení z řádku excelu.
+        """
+        if row[3 + i] == "X":
+            Permissions.objects.create(
+                address_in_app=str(row[0]) + "/" + str(row[1]),
+                base=False,
+                main_role=Group.objects.get(id=i + 1),
+            )
+            return True
+        elif row[3 + i] == "*":
+            base = True
+        else:
+            return False
+        if "|" in row[7 + i]:
+            n = 0
+            results = list()
+            while n < len(row[7 + i].split("|")):
+                new_row = row
+                new_row[7 + i] = row[7 + i].split("|")[n].strip()
+                new_row[11 + i] = row[11 + i].split("|")[n].strip()
+                new_row[15 + i] = row[15 + i].split("|")[n].strip()
+                results.append(self.save_permission(new_row, i))
+                n += 1
+            if all(a == True for a in results):
+                return True
+            else:
+                return False
+        else:
+            if row[7 + i] == "*":
+                status = None
+            elif self.check_status_regex(row[7 + i]):
+                status = row[7 + i]
+            else:
+                return False
+        if row[11 + i] == "*":
+            ownership = None
+        elif row[11 + i].endswith(".my"):
+            ownership = Permissions.ownershipChoices.my
+        elif row[11 + i].endswith(".ours"):
+            ownership = Permissions.ownershipChoices.our
+        else:
+            return False
+        if row[15 + i] == "*":
+            accessibility = None
+        elif row[15 + i].endswith("(my)"):
+            accessibility = Permissions.ownershipChoices.my
+        elif row[15 + i].endswith("(ours)"):
+            accessibility = Permissions.ownershipChoices.our
+        else:
+            return False
+        if not (
+            base == True
+            and status is None
+            and ownership is None
+            and accessibility is None
+        ):
+            Permissions.objects.create(
+                address_in_app=str(row[0]) + "/" + str(row[1]),
+                base=base,
+                main_role=Group.objects.get(id=i + 1),
+                status=status,
+                ownership=ownership,
+                accessibility=accessibility,
+            )
+        return True
+
+    def check_status_regex(self, cell):
+        """
+        Metóda pro kontrolu správneho zadáni statusu v excelu.
+        """
+        if re.fullmatch("(<|>|)[A-Z]{1,2}\d{1}", cell) or re.fullmatch(
+            "\D{1,2}\d{1}-\D{1,2}\d{1}", cell
+        ):
+            return True
+        else:
+            return False
+
+    def import_success(self, request):
+        """
+        Metóda view pro zobrazení tabulky s výsledkom importu.
+        """
+        json_table = request.session.get("table", None)
+        if not json_table:
+            return redirect(reverse("admin:core_permissions_changelist"))
+        table = json.loads(json_table)
+        model = self.model
+        opts = model._meta
+        app_label = "core"
+        media = self.media
+        payload = {
+            **self.admin_site.each_context(request),
+            "title": _("core.admin.permissionAdmin.title.error"),
+            "table": table,
+            "media": media,
+        }
+        payload.update(
+            {
+                "app_label": app_label,
+                "opts": opts,
+            }
+        )
+        self.message_user(request, _("core.admin.permissionAdmin.uploadSucces"))
+        return TemplateResponse(
+            request,
+            "core/permission_import_success.html",
+            payload,
+        )

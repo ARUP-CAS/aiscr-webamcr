@@ -73,3 +73,6 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         except Exception:
             pass
         return has_adb
+
+    def get_permission_object(self):
+        return self.archeologicky_zaznam

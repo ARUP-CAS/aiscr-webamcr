@@ -1,7 +1,7 @@
 import logging
 
 
-from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN
+from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
 from core.ident_cely import get_temporary_pian_ident
 from core.message_constants import (
@@ -28,6 +28,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
+from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -50,6 +51,8 @@ def detail(request, ident_cely):
     dj_ident_cely = request.POST["dj_ident_cely"]
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = get_object_or_404(Pian, ident_cely=ident_cely)
+    if pian == PIAN_POTVRZEN:
+            raise PermissionDenied
     form = PianCreateForm(
         request.POST,
         instance=pian,
@@ -167,6 +170,8 @@ def potvrdit(request, dj_ident_cely):
     """
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=dj_ident_cely)
     pian = dj.pian
+    if pian == PIAN_POTVRZEN:
+            raise PermissionDenied
     if request.method == "POST":
         redirect_view = dj.archeologicky_zaznam.get_absolute_url(dj_ident_cely)
         try:
