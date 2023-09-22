@@ -423,7 +423,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["dokument"] = dokument
         context["form_dokument"] = form_dokument
         context["form_dokument_extra"] = form_dokument_extra
-        context["history_dates"] = get_history_dates(dokument.historie,request.user)
+        context["history_dates"] = get_history_dates(dokument.historie, self.request.user)
         context["show"] = show
 
         if dokument.soubory:
