@@ -358,6 +358,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
                                                           get_mime_type(soubor.nazev),
                                                           repository_binary_file.content)
+                connector.validate_file_sha_512(soubor)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():

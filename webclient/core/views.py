@@ -281,6 +281,7 @@ def post_upload(request):
                 path=rep_bin_file.url_without_domain,
                 sha_512=sha_512,
             )
+            conn.validate_file_sha_512(s)
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
@@ -333,8 +334,8 @@ def post_upload(request):
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
                 extension = soubor.name.split(".")[-1]
-                old_name = s.nazev.split(".")[-1]
-                new_name = f'{".".join(old_name[:-1])}.{extension[-1]}'
+                old_name = ".".join(s.nazev.split(".")[:-1])
+                new_name = f'{old_name}.{extension}'
                 rep_bin_file = conn.update_binary_file(new_name, get_mime_type(soubor.name),
                                                        soubor_data, s.repository_uuid)
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
@@ -344,6 +345,7 @@ def post_upload(request):
                 s.sha_512 = rep_bin_file.sha_512
                 s.save()
                 s.zaznamenej_nahrani_nove_verze(request.user, new_name)
+                conn.validate_file_sha_512(s)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)

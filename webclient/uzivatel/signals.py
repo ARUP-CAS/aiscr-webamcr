@@ -44,11 +44,14 @@ def create_ident_cely(sender, instance, **kwargs):
                 instance.ident_cely = "U-" + "{0}".format(str(number)).zfill(6)
             else:
                 instance.ident_cely = "U-000001"
+    if len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
+        instance.suppress_signal = True
 
 
 @receiver(post_save, sender=User)
 def user_post_save_method(sender, instance: User, created: bool, **kwargs):
-    instance.save_metadata()
+    if not instance.suppress_signal:
+        instance.save_metadata()
     send_deactivation_email(sender, instance, **kwargs)
     send_new_user_email_to_admin(sender, instance, created)
     send_account_confirmed_email(sender, instance, created)

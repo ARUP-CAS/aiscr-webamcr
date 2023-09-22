@@ -448,4 +448,5 @@ def record_ident_change(class_name, record_pk, old_ident):
                 connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
                                            get_mime_type(soubor.nazev),
                                            repository_binary_file.content)
+                connector.validate_file_sha_512(soubor)
     logger.debug("cron.record_ident_change.do.end")

@@ -85,6 +85,7 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
                                                 limit_choices_to={'ident_cely__icontains': 'S-E-'},
                                                 default=only_notification_groups)
     created_from_admin_panel = False
+    suppress_signal = False
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

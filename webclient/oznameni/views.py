@@ -132,7 +132,6 @@ def index(request, test_run=False):
     elif request.method == "POST" and "ident_cely" in request.POST:
         logger.debug(f"oznameni.views.index.second_part_start")
         p = Projekt.objects.get(ident_cely=request.POST["ident_cely"])
-        p.suppress_signal = False
         p.set_oznameny()
         context = {"ident_cely": request.POST["ident_cely"]}
         return render(request, "oznameni/success.html", context)

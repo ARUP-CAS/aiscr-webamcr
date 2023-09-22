@@ -14,6 +14,9 @@ from xml_generator.generator import DocumentGenerator
 logger = logging.getLogger(__name__)
 
 
+class FedoraValidationError(Exception):
+    pass
+
 class FedoraError(Exception):
     def __init__(self, message, code):
         self.message = message
@@ -505,3 +508,18 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old})
+
+    def validate_file_sha_512(self, soubor):
+        logger.error("core_repository_connector.validate_file_sha_512.start",
+                     extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
+        from core.models import Soubor
+        soubor: Soubor
+        rep_bin_file: RepositoryBinaryFile = self.get_binary_file(soubor.repository_uuid)
+        if rep_bin_file.sha_512 != soubor.sha_512:
+            logger.error("core_repository_connector.validate_file_sha_512.error",
+                         extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
+            raise FedoraValidationError()
+        else:
+            logger.debug("core_repository_connector.validate_file_sha_512.ok",
+                         extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
+
