@@ -218,7 +218,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
         if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document(user)
+            self.create_confirmation_document(user=user)
 
     def set_prihlaseny(self, user):
         """

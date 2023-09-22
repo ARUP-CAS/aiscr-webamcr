@@ -344,7 +344,7 @@ class Mailer:
         project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
                                                             nazev__startswith=f"oznameni_{project.ident_cely}",
                                                             nazev__endswith=".pdf"))
-        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno))
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
         if len(project_files) > 0:
             project_file = project_files[0]
         else:
