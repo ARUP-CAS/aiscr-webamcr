@@ -48,7 +48,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     PREDANO_BOOLEAN = (
         (True, _('pas.models.samostatnyNalez.predano.ano')),
-        (False, _('pas.models.samostatnyNalez.predano.ano')))
+        (False, _('pas.models.samostatnyNalez.predano.ne')))
 
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(

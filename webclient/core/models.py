@@ -14,7 +14,7 @@ from django.utils.translation import gettext as _
 
 from historie.models import Historie, HistorieVazby
 from pian.models import Pian
-from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID
+from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
 from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 
 from xml_generator.models import ModelWithMetadata
@@ -326,6 +326,7 @@ class Permissions(models.Model):
         our = "our", "core.models.permissions.ownershipChoices.our"
 
     pristupnost_to_groups = {
+        PRISTUPNOST_ANONYM_ID: 0,
         PRISTUPNOST_BADATEL_ID: ROLE_BADATEL_ID,
         PRISTUPNOST_ARCHEOLOG_ID: ROLE_ARCHEOLOG_ID,
         PRISTUPNOST_ARCHIVAR_ID: ROLE_ARCHIVAR_ID,

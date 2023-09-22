@@ -1572,6 +1572,8 @@ class AkceListView(SearchListView):
     hasOnlyPotvrdit_header = _("arch_z.views.AkceListView.hasOnlyPotvrdit_header.text")
     default_header = _("arch_z.views.AkceListView.default_header.text")
     toolbar_name = _("arch_z.views.AkceListView.toolbar_name.text")
+    permission_model_lookup = "archeologicky_zaznam__"
+    typ_zmeny_lookup = ZAPSANI_AZ
 
     def get_queryset(self):
         qs = super().get_queryset()

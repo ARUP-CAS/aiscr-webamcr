@@ -65,6 +65,10 @@ from datetime import datetime
 from core.ident_cely import get_record_from_ident
 from dj.models import DokumentacniJednotka
 from komponenta.models import Komponenta
+from core.models import Permissions
+from historie.models import Historie
+from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
+from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 
 logger = logging.getLogger(__name__)
 
@@ -601,6 +605,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
     default_header = _("core.views.AkceListView.default_header.text")
     toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+    permission_model_lookup = ""
+    typ_zmeny_lookup = ""
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -620,7 +626,97 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
         return context
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        permissions = Permissions.objects.filter(
+                main_role=self.request.user.hlavni_role,
+                address_in_app=self.request.resolver_match.route,
+            )
+        if permissions.count()>0:
+            new_qs = qs.none()
+            for perm in permissions:
+                new_qs = (new_qs | self.filter_by_permission(qs, perm))
+        
+        return new_qs.distinct()
+    
+    def filter_by_permission(self, qs, permission):
+        filterdoc = {}
+        logger.debug(permission.status)
+        if permission.status:
+            filterdoc.update(self.add_status_lookup(permission))
+        if permission.ownership:
+            filterdoc.update(self.add_ownership_lookup(permission.ownership))
+        qs = qs.filter(**filterdoc)
+        if permission.accessibility:
+            qs = self.add_accessibility_lookup(permission,qs)
 
+        return qs
+
+    def add_status_lookup(self, permission):
+        filterdoc = {}
+        subed_status = re.sub("[a-zA-Z]", "", permission.status)
+        if ">" in subed_status:
+            operator_str = "__gt"
+            status = subed_status[1]
+        elif "<" in subed_status:
+            operator_str = "__lt"
+            status = subed_status[1]
+        elif "-" in subed_status:
+            operator_str = ["__gte","__lte"]
+        else:
+            operator_str = ""
+            status = subed_status[0]
+        if isinstance(operator_str, list):
+            i = 0
+            for operator in operator_str:
+                str_oper = self.permission_model_lookup + "stav" + operator    
+                filterdoc.update(
+                    {
+                        str_oper:subed_status[i]
+                    }
+                )
+                i-=1
+        else:
+            str_oper = self.permission_model_lookup + "stav" + operator_str    
+            filterdoc.update(
+                {
+                    str_oper:status
+                }
+            )
+        return filterdoc
+    
+    def add_ownership_lookup(self, ownership):
+        filtered = Historie.objects.filter(typ_zmeny=self.typ_zmeny_lookup)
+        if ownership == Permissions.ownershipChoices.my:
+            usr_org_key = "uzivatel"
+            usr_org_value = self.request.user
+        elif ownership == Permissions.ownershipChoices.our:
+            usr_org_key = "uzivatel__organizace"    
+            usr_org_value = self.request.user.organizace
+        filter_historie = {usr_org_key:usr_org_value}
+        filtered = filtered.filter(**filter_historie)
+        historie_key = self.permission_model_lookup + "historie__historie__in"
+        filterdoc = {historie_key:filtered}
+        return filterdoc
+    
+    def add_accessibility_lookup(self,permission, qs):
+        group_to_accessibility={
+            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
+            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
+            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+        }
+        new_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        accessibility_key = self.permission_model_lookup+"pristupnost__in"
+        i = self.request.user.hlavni_role.id
+        accessibilities = [PRISTUPNOST_ANONYM_ID]
+        while i > 0:
+            if self.request.user.hlavni_role.id != 4:
+                accessibilities.append(group_to_accessibility.get(i))
+            i -= 1
+        filter = {accessibility_key:accessibilities}
+        logger.debug(qs.filter(**filter))
+        return (new_qs | qs.filter(**filter)).distinct()
 
 class SearchListChangeColumnsView(LoginRequiredMixin, View):
     """

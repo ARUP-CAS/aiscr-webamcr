@@ -11,7 +11,7 @@ from arch_z.views import (
     get_komponenta_form_detail,
     get_obdobi_choices,
 )
-from core.constants import AZ_STAV_ZAPSANY, PIAN_POTVRZEN
+from core.constants import AZ_STAV_ZAPSANY, PIAN_POTVRZEN, ZAPSANI_AZ
 from core.ident_cely import get_temp_lokalita_ident
 from core.message_constants import (
     LOKALITA_USPESNE_ZAPSANA,
@@ -77,6 +77,8 @@ class LokalitaListView(SearchListView):
     hasOnlyPotvrdit_header = _("lokalita.views.lokalitaListView.header.hasOnlyPotvrdit.text")
     default_header = _("lokalita.views.lokalitaListView.header.default.text")
     toolbar_name = _("lokalita.views.lokalitaListView.toolbar.title.text")
+    permission_model_lookup = "archeologicky_zaznam__"
+    typ_zmeny_lookup = ZAPSANI_AZ
 
     def get_queryset(self):
         qs = super().get_queryset()
