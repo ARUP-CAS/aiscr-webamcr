@@ -637,8 +637,9 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             new_qs = qs.none()
             for perm in permissions:
                 new_qs = (new_qs | self.filter_by_permission(qs, perm))
+            qs = new_qs
         
-        return new_qs.distinct()
+        return qs.distinct()
     
     def filter_by_permission(self, qs, permission):
         filterdoc = {}
