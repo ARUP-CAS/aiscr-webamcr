@@ -217,6 +217,10 @@ class HeslarOdkaz(ExportModelOperationsMixin("heslar_odkaz"), models.Model):
         db_table = "heslar_odkaz"
         verbose_name_plural = "Heslář odkaz"
 
+    def __init__(self, *args, **kwargs):
+        super(HeslarOdkaz, self).__init__(*args, **kwargs)
+        self.initial_heslo = self.heslo
+
 
 class RuianKatastr(ExportModelOperationsMixin("ruian_katastr"), ModelWithMetadata):
     """
