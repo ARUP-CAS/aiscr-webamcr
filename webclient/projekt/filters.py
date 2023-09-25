@@ -357,6 +357,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
 
     akce_vedouci = MultipleChoiceFilter(
         method="filtr_akce_vedouci",
+        label=_("projekt.filters.projektFilter.akceVedouci.label"),
         choices=Osoba.objects.all().values_list("id", "vypis_cely"),
         widget=autocomplete.Select2Multiple(
             url="heslar:osoba-autocomplete-choices",
@@ -513,7 +514,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         Metóda pro filtrování podle pozitivního nálezu akce.
         """
         if "True" in value and "False" in value:
-            return queryset
+            return queryset.filter(akce__archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False).distinct()
         elif "True" in value:
             return queryset.filter(
                 akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False

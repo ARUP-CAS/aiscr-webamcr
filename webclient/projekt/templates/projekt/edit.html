@@ -2,11 +2,16 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_filters %}
+{% load template_tags %}
 
 {% block title %}{% trans "projekt.templates.edit.title" %}{% endblock %}
 
 {% block head %}
 	<script>
+    {% autoescape off %}
+      var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+    {% endautoescape %}
 		var global_csrftoken = '{{ csrf_token }}';
 		global_map_can_edit=false;
 	</script>
@@ -55,7 +60,7 @@
         <div class="form-group">
           <input type="submit" name="save" value="{% trans 'projekt.templates.edit.submitButton.text' %}"
                  class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
-          <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "projekt.templates.edit.backButton.text" %}</button>
+          <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' projekt.ident_cely %}">{% trans "projekt.templates.edit.backButton.text" %}</a>
         </div>
       </div>
 		</form>

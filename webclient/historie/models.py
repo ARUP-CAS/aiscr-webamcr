@@ -110,9 +110,16 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
         "HistorieVazby", on_delete=models.CASCADE, db_column="vazba"
     )
 
+    def uzivatel_protected(self, anonymized=True):
+        if anonymized:
+            return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
+        else:
+            return f"{self.uzivatel.last_name}, {self.uzivatel.first_name} ({self.uzivatel.ident_cely}, {self.uzivatel.organizace})"
+
     class Meta:
         db_table = "historie"
         verbose_name = "historie"
+        ordering = ["datum_zmeny", ]
 
 
 class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
@@ -140,7 +147,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
     def __str__(self):
         return "{0} ({1})".format(str(self.id), self.typ_vazby)
 
-    def get_last_transaction_date(self, transaction_type):
+    def get_last_transaction_date(self, transaction_type, anonymized=True):
         """
         Metóda pro zjištení datumu posledné transakce daného typu.
         """
@@ -159,7 +166,7 @@ class HistorieVazby(ExportModelOperationsMixin("historie_vazby"), models.Model):
             )
         if len(transakce_list) > 0:
             resp["datum"] = transakce_list[0].datum_zmeny
-            resp["uzivatel"] = transakce_list[0].uzivatel
+            resp["uzivatel"] = transakce_list[0].uzivatel_protected(anonymized)
         return resp
 
     @property

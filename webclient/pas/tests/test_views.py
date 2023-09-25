@@ -39,12 +39,12 @@ class UrlTests(TestCase):
         self.assertEqual(uzivatel_spoluprace_query.count(), 1)
 
         uzivatel_spoluprace: UzivatelSpoluprace = uzivatel_spoluprace_query.last()
-        response = self.client.post(f"/pas/spoluprace/aktivace/{uzivatel_spoluprace.pk}", {}, follow=True)
+        response = self.client.post(f"/pas/spoluprace/aktivovat/{uzivatel_spoluprace.pk}", {}, follow=True)
         uzivatel_spoluprace.refresh_from_db()
         self.assertEqual(200, response.status_code)
         self.assertEqual(uzivatel_spoluprace.stav, SPOLUPRACE_AKTIVNI)
 
-        response = self.client.post(f"/pas/spoluprace/deaktivace/{uzivatel_spoluprace.pk}", {}, follow=True)
+        response = self.client.post(f"/pas/spoluprace/deaktivovat/{uzivatel_spoluprace.pk}", {}, follow=True)
         uzivatel_spoluprace.refresh_from_db()
         self.assertEqual(200, response.status_code)
         self.assertEqual(uzivatel_spoluprace.stav, SPOLUPRACE_NEAKTIVNI)

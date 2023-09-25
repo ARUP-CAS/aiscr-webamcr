@@ -65,20 +65,18 @@
             }
           }
         }
+      }
+      .app-flags {
+        button {
+          text-decoration: unset;
+          background: transparent;
+          border: 0;
+          &:not(.app-active) {
+            @extend .app-flag-inactive;
+          }
 
-        .app-flags {
-          a {
-            text-decoration: unset;
-
-            .app-flag {
-              &:not(:hover) {
-                @extend .app-flag-inactive;
-              }
-            }
-
-            &:first-child {
-              margin-right: .5rem;
-            }
+          &:first-child {
+            margin-right: .5rem;
           }
         }
       }

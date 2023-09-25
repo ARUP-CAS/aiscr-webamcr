@@ -56,7 +56,7 @@ class UrlTests(TestCase):
 
     def test_get_cast_editovat(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/dokument/edit-cast/{DOKUMENT_CAST_IDENT}")
+        response = self.client.get(f"/dokument/cast/edit/{DOKUMENT_CAST_IDENT}")
         self.assertEqual(200, response.status_code)
 
     def test_post_cast_editovat(self):
@@ -78,7 +78,7 @@ class UrlTests(TestCase):
     def test_get_cast_zapsat(self):
         self.client.force_login(self.existing_user)
         response = self.client.get(
-            f"/dokument/vytvorit-cast/{TESTOVACI_DOKUMENT_IDENT}"
+            f"/dokument/cast/zapsat/{TESTOVACI_DOKUMENT_IDENT}"
         )
         self.assertEqual(200, response.status_code)
 
@@ -91,7 +91,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/vytvorit-cast/{TESTOVACI_DOKUMENT_IDENT}",
+            f"/dokument/cast/zapsat/{TESTOVACI_DOKUMENT_IDENT}",
             data,
             follow=True,
         )
@@ -144,7 +144,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/edit-tvar/{TESTOVACI_DOKUMENT_IDENT}",
+            f"/dokument/tvar/edit/{TESTOVACI_DOKUMENT_IDENT}",
             data,
             follow=True,
         )
@@ -156,7 +156,7 @@ class UrlTests(TestCase):
     def test_get_tvary_smazat(self):
         tvar = Tvar.objects.first()
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/dokument/smazat-tvar/{tvar.pk}")
+        response = self.client.get(f"/dokument/tvar/smazat/{tvar.pk}")
         self.assertEqual(200, response.status_code)
 
     def test_post_tvary_smazat(self):
@@ -178,7 +178,7 @@ class UrlTests(TestCase):
     def test_get_pripojit_archz(self):
         self.client.force_login(self.existing_user)
         response = self.client.get(
-            f"/dokument/pripojit-arch-z/{DOKUMENT_CAST_IDENT}?type=akce"
+            f"/dokument/cast/pripojit-arch-z/{DOKUMENT_CAST_IDENT}?type=akce"
         )
         self.assertEqual(200, response.status_code)
 
@@ -192,7 +192,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/pripojit-arch-z/{DOKUMENT_CAST_IDENT}?type=akce",
+            f"/dokument/cast/pripojit-arch-z/{DOKUMENT_CAST_IDENT}?type=akce",
             data,
             follow=True,
         )
@@ -203,7 +203,7 @@ class UrlTests(TestCase):
 
     def test_get_pripojit_projekt(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/dokument/pripojit-projekt/{DOKUMENT_CAST_IDENT}")
+        response = self.client.get(f"/dokument/cast/pripojit-projekt/{DOKUMENT_CAST_IDENT}")
         self.assertEqual(200, response.status_code)
 
     def test_post_pripojit_projekt(self):
@@ -215,7 +215,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/pripojit-projekt/{DOKUMENT_CAST_IDENT}",
+            f"/dokument/cast/pripojit-projekt/{DOKUMENT_CAST_IDENT}",
             data,
             follow=True,
         )
@@ -226,7 +226,7 @@ class UrlTests(TestCase):
 
     def test_get_odpojit_vazbu_cast(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/dokument/odpojit-cast/{DOKUMENT_CAST_IDENT}")
+        response = self.client.get(f"/dokument/cast/odpojit/{DOKUMENT_CAST_IDENT}")
         self.assertEqual(200, response.status_code)
 
     def test_post_odpojit_vazbu_cast(self):
@@ -236,7 +236,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/odpojit-cast/{DOKUMENT_CAST_IDENT}",
+            f"/dokument/cast/odpojit/{DOKUMENT_CAST_IDENT}",
             data,
             follow=True,
         )
@@ -247,7 +247,7 @@ class UrlTests(TestCase):
 
     def test_get_smazat_cast(self):
         self.client.force_login(self.existing_user)
-        response = self.client.get(f"/dokument/smazat-cast/{DOKUMENT_CAST_IDENT2}")
+        response = self.client.get(f"/dokument/cast/smazat/{DOKUMENT_CAST_IDENT2}")
         self.assertEqual(200, response.status_code)
 
     def test_post_smazat_cast(self):
@@ -259,7 +259,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/smazat-cast/{DOKUMENT_CAST_IDENT}",
+            f"/dokument/cast/smazat/{DOKUMENT_CAST_IDENT}",
             data,
             follow=True,
         )
@@ -273,7 +273,7 @@ class UrlTests(TestCase):
     def test_get_smazat_neident_akce(self):
         self.client.force_login(self.existing_user)
         response = self.client.get(
-            f"/dokument/smazat-neident-akce/{DOKUMENT_CAST_IDENT2}"
+            f"/dokument/neident-akce/smazat/{DOKUMENT_CAST_IDENT2}"
         )
         self.assertEqual(200, response.status_code)
 
@@ -284,7 +284,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/dokument/smazat-neident-akce/{DOKUMENT_CAST_IDENT2}",
+            f"/dokument/neident-akce/smazat/{DOKUMENT_CAST_IDENT2}",
             data,
             follow=True,
         )

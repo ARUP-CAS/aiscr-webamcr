@@ -17,7 +17,7 @@ map.on('click', function (e) {
                 //$("#detector_coordinates_y").change();
                 addPointToPoiLayer(corX, corY, 'Vámi vybraná poloha záměru');
                 let xhr = new XMLHttpRequest();
-                xhr.open('POST', '/oznameni/oznameni-zjisti-katastr');
+                xhr.open('POST', '/oznameni/mapa-zjisti-katastr');
                 xhr.setRequestHeader('Content-type', 'application/json');
                 if (typeof global_csrftoken !== 'undefined') {
                     xhr.setRequestHeader('X-CSRFToken', global_csrftoken);

@@ -10,29 +10,29 @@ urlpatterns = [
     path("zapsat/<str:ident_cely>", views.create, name="create-from-project"),
     path("detail/<str:ident_cely>", views.detail, name="detail"),
     path("edit/<str:ident_cely>", views.edit, name="edit"),
-    path("edit/ulozeni/<str:ident_cely>", views.edit_ulozeni, name="edit_ulozeni"),
-    path("vratit/<str:ident_cely>", views.vratit, name="vratit"),
-    path("odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
-    path("potvrdit/<str:ident_cely>", views.potvrdit, name="potvrdit"),
-    path("archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
+    path("ulozeni/edit/<str:ident_cely>", views.edit_ulozeni, name="edit_ulozeni"),
+    path("stav/vratit/<str:ident_cely>", views.vratit, name="vratit"),
+    path("stav/odeslat/<str:ident_cely>", views.odeslat, name="odeslat"),
+    path("stav/potvrdit/<str:ident_cely>", views.potvrdit, name="potvrdit"),
+    path("stav/archivovat/<str:ident_cely>", views.archivovat, name="archivovat"),
     path("vyber", SamostatnyNalezListView.as_view(), name="list"),
     path("smazat/<str:ident_cely>", views.smazat, name="smazat"),
     path("spoluprace/zadost", views.zadost, name="spoluprace_zadost"),
     path(
         "spoluprace/vyber", UzivatelSpolupraceListView.as_view(), name="spoluprace_list"
     ),
-    path("spoluprace/aktivace/<int:pk>", views.aktivace, name="spoluprace_aktivace"),
     path("spoluprace/aktivace-email/<int:pk>", views.AktivaceEmailView.as_view(), name="spoluprace_aktivace_email"),
+    path("spoluprace/aktivovat/<int:pk>", views.aktivace, name="spoluprace_aktivace"),
     path(
-        "spoluprace/deaktivace/<int:pk>", views.deaktivace, name="spoluprace_deaktivace"
+        "spoluprace/deaktivovat/<int:pk>", views.deaktivace, name="spoluprace_deaktivace"
     ),
     path(
-        "pas-zjisti-katastr",
+        "mapa-zjisti-katastr",
         views.post_point_position_2_katastre,
         name="post_point_position_2_katastre",
     ),
     path(
-        "pas-zjisti-katastr-with-geom",
+        "mapa-zjisti-katastr-geom",
         views.post_point_position_2_katastre_with_geom,
         name="post_point_position_2_katastre_with_geom",
     ),

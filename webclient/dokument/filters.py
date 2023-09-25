@@ -16,6 +16,8 @@ from django_filters import (
     NumberFilter,
     DateFromToRangeFilter,
 )
+
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
 from django.db.models import Q
@@ -100,14 +102,6 @@ class HistorieFilter(filters.FilterSet):
         distinct=True,
     )
 
-    historie_uzivatel = ModelMultipleChoiceFilter(
-        queryset=User.objects.all(),
-        field_name="historie__historie__uzivatel",
-        label=_("dokument.filters.historieFilter.historieUzivatel.label"),
-        widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
-        distinct=True,
-    )
-
     def filter_queryset(self, queryset):
         """
         Metóda pro filtrování podle historie s logickým operátorem AND.
@@ -147,6 +141,26 @@ class HistorieFilter(filters.FilterSet):
                 type(queryset).__name__,
             )
         return queryset
+
+    def __init__(self, *args, **kwargs):
+        super(HistorieFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
+        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.all(),
+                field_name="historie__historie__uzivatel",
+                label=_("dokument.filters.historieFilter.historieUzivatel.label"),
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                distinct=True,
+            )
+        else:
+            self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.all(),
+                field_name="historie__historie__uzivatel",
+                label=_("dokument.filters.historieFilter.historieUzivatel.label"),
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                distinct=True,
+            )
 
 
 class Model3DFilter(HistorieFilter):
@@ -208,7 +222,7 @@ class Model3DFilter(HistorieFilter):
     )
 
     rok_vzniku_do = NumberFilter(
-        field_name="rok_vzniku", label="&nbsp;", lookup_expr="lte"
+        field_name="rok_vzniku", label=" ", lookup_expr="lte"
     )
 
     duveryhodnost = NumberFilter(
@@ -528,7 +542,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     rok_udalosti_do = NumberFilter(
-        field_name="extra_data__rok_do", label="&nbsp;", lookup_expr="lte"
+        field_name="extra_data__rok_do", label=" ", lookup_expr="lte"
     )
     osoby = ModelMultipleChoiceFilter(
         label=_("dokument.filters.dokumentFilter.osoby.label"),
@@ -542,7 +556,7 @@ class DokumentFilter(Model3DFilter):
     )
 
     duveryhodnost_do = NumberFilter(
-        field_name="extra_data__duveryhodnost", label="&nbsp;", lookup_expr="lte"
+        field_name="extra_data__duveryhodnost", label=" ", lookup_expr="lte"
     )
 
     jistota = MultipleChoiceFilter(
@@ -607,7 +621,7 @@ class DokumentFilter(Model3DFilter):
 
     neident_rok_ukonceni_do = NumberFilter(
         field_name="casti__neident_akce__rok_ukonceni",
-        label="&nbsp;",
+        label=" ",
         lookup_expr="lte",
     )
 
@@ -719,7 +733,7 @@ class DokumentFilter(Model3DFilter):
     soubor_velikost_do = NumberFilter(
         field_name="soubory__soubory__size_mb",
         lookup_expr="lte",
-        label="&nbsp;",
+        label=" ",
     )
 
     soubor_pocet_stran_od = NumberFilter(
@@ -730,7 +744,7 @@ class DokumentFilter(Model3DFilter):
 
     soubor_pocet_stran_do = NumberFilter(
         field_name="soubory__soubory__rozsah",
-        label="&nbsp;",
+        label=" ",
         lookup_expr="lte",
     )
     id_vazby = CharFilter(

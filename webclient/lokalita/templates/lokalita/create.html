@@ -29,7 +29,11 @@
         <div class="mt-3">
           <div class="form-group">
             <button type="submit" id="newEntitySubmitBtn" class="btn btn-primary">{% trans "lokalita.templates.create.submitButton" %}</button>
-            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "lokalita.templates.create.backButton" %}</button>
+            {% if object.ident_cely %}
+              <a type="button" class="btn btn-secondary" href="{% url 'lokalita:detail' object.ident_cely %}">{% trans "lokalita.templates.create.backButton" %}</a>
+            {% else %}
+              <a type="button" class="btn btn-secondary" href="{% url 'lokalita:index' %}">{% trans "lokalita.templates.create.backButton" %}</a>
+            {% endif %}
           </div>
         </div>
     </form>

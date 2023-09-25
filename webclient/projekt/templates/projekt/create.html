@@ -2,10 +2,14 @@
 {% load i18n %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load template_tags %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block head %}
   <script>
+  {% autoescape off %}
+    var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+    {% endautoescape %}
 		var global_csrftoken = '{{ csrf_token }}';
 		global_map_can_edit=false;
 	</script>
@@ -68,6 +72,7 @@
         </div>
       </div>
       <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
+      <a type="button" class="btn btn-secondary" {% url 'projekt:index' %}>{% trans "Zpět" %}</a>
     </form>
   </div>
 {% endblock %}

@@ -59,6 +59,8 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
 
 class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_result_label(self, result):
+        return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
     """
     Třída pohledu pro získaní uživatelů pro autocomplete.
     """
@@ -96,6 +98,15 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView)
             qs = new_qs.union(new_qs2).order_by("qs_order", "grand_name")
         return qs
 
+class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
+    def get_queryset(self):
+        qs = User.objects.all().order_by("ident_cely")
+        if self.q:
+            qs = qs.filter(Q(ident_cely__icontains=self.q)
+                           | Q(organizace__nazev_zkraceny__icontains=self.q))
+        return qs
 
 class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     """
@@ -293,7 +304,7 @@ def update_notifications(request):
         messages.add_message(request, messages.SUCCESS,
                              _("uzivatel.views.update_notifications.post.success"))
         user.save_metadata()
-        return redirect("/upravit-uzivatele/")
+        return redirect("/uzivatel/edit/")
 
 
 class UserActivationView(ActivationView):

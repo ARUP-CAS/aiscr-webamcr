@@ -89,7 +89,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         db_column="typ_projektu",
         related_name="projekty_typu",
         limit_choices_to={"nazev_heslare": HESLAR_PROJEKT_TYP},
-        verbose_name=_("Typ projektu"),
+        verbose_name=_("projekt.models.projekt.typProjektu.label"),
         db_index=True,
     )
     lokalizace = models.TextField(blank=True, null=True)
@@ -218,7 +218,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
         if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document(user)
+            self.create_confirmation_document(user=user)
 
     def set_prihlaseny(self, user):
         """
@@ -604,6 +604,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

@@ -15,19 +15,19 @@ app_name = "heslar"
 urlpatterns = [
     path("katastry/", RuianKatastrAutocomplete.as_view(), name="katastr-autocomplete"),
     path(
-        "zjisti-katastr-souradnic/",
+        "mapa-zjisti-katastr/",
         zjisti_katastr_souradnic,
         name="zjisti-katastr-souradnic",
     ),
     path("zjisti-vychozi-hodnotu/", zjisti_vychozi_hodnotu, name="get-initial-value"),
     path("zjisti-nadrazenou-hodnotu/", zjisti_nadrazenou_hodnotu, name="get-nadrazena-value"),
     path("osoba/zapsat", create_osoba, name="create_osoba"),
-    path("seznam-osoby/", OsobaAutocomplete.as_view(), name="osoba-autocomplete"),
+    path("osoba/autocomplete/", OsobaAutocomplete.as_view(), name="osoba-autocomplete"),
     path("dokument-typ/", DokumentTypAutocomplete.as_view(), name="dokument-typ-autocomplete"),
     path("dokument-format/", DokumentFormatAutocomplete.as_view(), name="dokument-format-autocomplete"),
     path("pristupnost/", PristupnostAutocomplete.as_view(), name="pristupnost-autocomplete"),
     path(
-        "seznam-osoby-vyber/",
+        "osoba/autocomplete-vyber/",
         OsobaAutocompleteChoices.as_view(),
         name="osoba-autocomplete-choices",
     ),
