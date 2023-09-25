@@ -376,6 +376,13 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     def get_create_user(self):
         return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel
 
+    def __init__(self, *args, **kwargs):
+        super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
+        if hasattr(self, "pristupnost") and self.pristupnost is not None:
+            self.initial_pristupnost = self.pristupnost
+        else:
+            self.initial_pristupnost = None
+
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
     """

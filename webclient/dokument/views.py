@@ -234,7 +234,7 @@ def detail_model_3D(request, ident_cely):
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }
-    context["history_dates"] = get_history_dates(dokument.historie)
+    context["history_dates"] = get_history_dates(dokument.historie, request.user)
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:

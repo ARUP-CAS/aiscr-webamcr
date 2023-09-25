@@ -88,6 +88,20 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
 
+    def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        pristupnosti_ids = set()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None \
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None\
+                    and (skip_zaznam_id is None or skip_zaznam_id != dok_jednotka.archeologicky_zaznam.id):
+                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+        if added_pristupnost_id is not None:
+            pristupnosti_ids.add(added_pristupnost_id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        return Heslar.objects.get(ident_cely="HES-000865")
+
     class Meta:
         db_table = "pian"
         constraints = [

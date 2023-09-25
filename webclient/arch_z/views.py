@@ -240,7 +240,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["zaznam"] = zaznam
         context["dokumentacni_jednotky"] = self.get_jednotky()
         context["dokumenty"] = self.get_dokumenty()
-        context["history_dates"] = get_history_dates(zaznam.historie)
+        context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
         context["show"] = get_detail_template_shows(
             zaznam, self.get_jednotky(), self.request.user
         )
