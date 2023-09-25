@@ -26,8 +26,12 @@
         </div>
       </div>      
     <div>
-      <input type="submit" name="save" value="{% trans 'pas.templates.edit.submitButton' %}" class="btn btn-primary" id="submit-id-save">
-      <button type="button" class="btn btn-secondary" onclick="window.history.back();">{% trans "pas.templates.edit.backButton" %}</button>
+      <input type="submit" name="save" value="{% translate 'Uložit změny' %}" class="btn btn-primary" id="submit-id-save">
+      {% if sn %}
+        <a type="button" class="btn btn-secondary" href="{% url 'pas:detail' sn.ident_cely %}">{% trans "pas.templates.edit.backButton.sn" %}</a>
+      {% else %}
+        <a type="button" class="btn btn-secondary" href="{% url 'pas:index' %}">{% trans "pas.templates.edit.backButton.pas" %}</a>
+      {% endif %}
     </div>
     </form>
   </div>

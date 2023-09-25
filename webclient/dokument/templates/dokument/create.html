@@ -33,7 +33,15 @@
         <div class="mt-3">
           <div class="form-group">
             <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{% trans "dokument.templates.create.novyDokument.submitButton.text" %}</button>
-            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "dokument.templates.create.novyDokument.zpetButton.text" %}</button>
+            {% if back_ident %}
+              {% if zaznam and zaznam.typ_zaznamu == TYP_ZAZNAMU_LOKALITA %}
+                <a type="button" class="btn btn-secondary" href="{% url 'lokalita:detail' back_ident %}">{% trans "dokument.templates.create.novyDokument.zpetButton.text" %}</a>
+              {% elif zaznam and zaznam.typ_zaznamu == TYP_ZAZNAMU_AKCE %}
+                <a type="button" class="btn btn-secondary" href="{% url 'arch_z:detail' back_ident %}">{% trans "dokument.templates.create.novyDokument.zpetButton.text" %}</a>
+              {% endif %}
+            {% else %}
+              <a type="button" class="btn btn-secondary" href="{% url 'dokument:index' %}">{% trans "dokument.templates.create.novyDokument.zpetButton.text" %}</a>
+            {% endif %}
           </div>
         </div>
       </div>
