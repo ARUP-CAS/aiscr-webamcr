@@ -31,12 +31,12 @@ class AuthUserCreationForm(RegistrationForm):
         )
 
         labels = {
-            "first_name": _("Jméno"),
-            "last_name": _("Přijmení"),
-            "email": _("Email"),
-            "organizace": _("Organizace"),
-            "password1": _("Heslo"),
-            "telefon": _("Telefon"),
+            "first_name": _("uzivatel.forms.userCreation.first_name.label"),
+            "last_name": _("uzivatel.forms.userCreation.last_name.label"),
+            "email": _("uzivatel.forms.userCreation.email.label"),
+            "organizace": _("uzivatel.forms.userCreation.organizace.label"),
+            "password1": _("uzivatel.forms.userCreation.password1.label"),
+            "telefon": _("uzivatel.forms.userCreation.telefon.label"),
         }
 
         widgets = {
@@ -46,12 +46,12 @@ class AuthUserCreationForm(RegistrationForm):
             "telefon": forms.TextInput,
         }
         help_texts = {
-            "first_name": _("uzivatel.form.userCreation.first_name.tooltip"),
-            "last_name": _("uzivatel.form.userCreation.last_name.tooltip"),
-            "email": _("uzivatel.form.userCreation.email.tooltip"),
-            "organizace": _("uzivatel.form.userCreation.organizace.tooltip"),
-            "password1": _("uzivatel.form.userCreation.password1.tooltip"),
-            "telefon": _("uzivatel.form.userCreation.telefon.tooltip"),
+            "first_name": _("uzivatel.forms.userCreation.first_name.tooltip"),
+            "last_name": _("uzivatel.forms.userCreation.last_name.tooltip"),
+            "email": _("uzivatel.forms.userCreation.email.tooltip"),
+            "organizace": _("uzivatel.forms.userCreation.organizace.tooltip"),
+            "password1": _("uzivatel.forms.userCreation.password1.tooltip"),
+            "telefon": _("uzivatel.forms.userCreation.telefon.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -80,7 +80,7 @@ class AuthUserChangeForm(forms.ModelForm):
         model = User
         fields = ("telefon",)
         help_texts = {
-            "telefon": _("uzivatel.form.userChange.telefon.tooltip"),
+            "telefon": _("uzivatel.forms.userChange.telefon.tooltip"),
         }
 
         widgets = {
@@ -110,14 +110,14 @@ class AuthReadOnlyUserChangeForm(forms.ModelForm):
         fields = (
             "first_name", "last_name", "email", "ident_cely", "date_joined", "organizace", "groups")
         help_texts = {
-            "first_name": _("uzivatel.form.userChange.first_name.tooltip"),
-            "last_name": _("uzivatel.form.userChange.last_name.tooltip"),
-            "email": _("uzivatel.form.userChange.email.tooltip"),
-            "ident_cely": _("uzivatel.form.userChange.ident_cely.tooltip"),
-            "date_joined": _("uzivatel.form.userChange.date_joined.tooltip"),
-            "organizace": _("uzivatel.form.userChange.organizace.tooltip"),
-            "hlavni_role": _("uzivatel.form.userChange.hlavni_role.tooltip"),
-            "groups": _("uzivatel.form.userChange.hlavni_role.tooltip"),
+            "first_name": _("uzivatel.forms.userChange.first_name.tooltip"),
+            "last_name": _("uzivatel.forms.userChange.last_name.tooltip"),
+            "email": _("uzivatel.forms.userChange.email.tooltip"),
+            "ident_cely": _("uzivatel.forms.userChange.ident_cely.tooltip"),
+            "date_joined": _("uzivatel.forms.userChange.date_joined.tooltip"),
+            "organizace": _("uzivatel.forms.userChange.organizace.tooltip"),
+            "hlavni_role": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
+            "groups": _("uzivatel.forms.userChange.hlavni_role.tooltip"),
         }
 
         widgets = {
@@ -160,13 +160,13 @@ class NotificationsForm(forms.ModelForm):
     notification_types = forms.ModelMultipleChoiceField(
         queryset=UserNotificationType.objects.filter(ident_cely__icontains='S-E-'),
         widget=forms.CheckboxSelectMultiple,
-        required=False, label=_("uzivatel.form.notifications_form.notification_types.notification_types_label"))
+        required=False, label=_("uzivatel.forms.notifications_form.notification_types.notification_types_label"))
 
     class Meta:
         model = User
         fields = ('notification_types',)
         help_texts = {
-            "notification_types": _("uzivatel.form.notifications_form.notification_types.tooltip"),
+            "notification_types": _("uzivatel.forms.notifications_form.notification_types.tooltip"),
         }
 
 class UpdatePasswordSettings(forms.ModelForm):
@@ -182,19 +182,19 @@ class UpdatePasswordSettings(forms.ModelForm):
         password2 = cleaned_data.get("password2")
 
         if password1 == "" and password2 != "":
-            raise ValidationError({"password1": [_("Toto pole musí být vyplněno!")]})
+            raise ValidationError({"password1": [_("uzivatel.forms.UpdatePasswordSettings.password1.error")]})
         elif password2 != "" and password2 == "":
-            raise ValidationError({"password2": [_("Toto pole musí být vyplněno!")]})
+            raise ValidationError({"password2": [_("uzivatel.forms.UpdatePasswordSettings.password2.error")]})
         if password1 != password2:
-            raise ValidationError(_("Hesla se neshodují"))
+            raise ValidationError(_("uzivatel.forms.UpdatePasswordSettings.passwordsDifferent.error"))
         validate_password(password1)
 
     class Meta:
         model = User
         fields = ["password1", "password2"]
         help_texts = {
-            "password1": _("uzivatel.form.UpdatePasswordSettings.password1.tooltip"),
-            "password2": _("uzivatel.form.UpdatePasswordSettings.password2.tooltip"),
+            "password1": _("uzivatel.forms.UpdatePasswordSettings.password1.tooltip"),
+            "password2": _("uzivatel.forms.UpdatePasswordSettings.password2.tooltip"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -216,8 +216,8 @@ class AuthUserLoginForm(AuthenticationForm):
     """
     def __init__(self, *args, **kwargs):
         super(AuthUserLoginForm, self).__init__(*args, **kwargs)
-        self.fields["username"].help_text= _("uzivatel.form.login.username.tooltip")
-        self.fields["password"].help_text= _("uzivatel.form.login.password.tooltip")
+        self.fields["username"].help_text= _("uzivatel.forms.login.username.tooltip")
+        self.fields["password"].help_text= _("uzivatel.forms.login.password.tooltip")
         self.helper = FormHelper(self)
         self.helper.form_tag = False
         self.helper.layout = Layout(
@@ -227,14 +227,14 @@ class AuthUserLoginForm(AuthenticationForm):
 
     def get_invalid_login_error(self):
         return ValidationError(
-            _("Nesprávne zadaný email nebo heslo."),
+            _("uzivatel.forms.login.error"),
             code="invalid_login",
         )
 
 class UserPasswordResetForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)
-        self.fields["email"].help_text= _("uzivatel.form.passwordReset.email.tooltip")
+        self.fields["email"].help_text= _("uzivatel.forms.passwordReset.email.tooltip")
 
 
 
@@ -257,15 +257,15 @@ class OsobaForm(forms.ModelForm):
             # "rodne_prijmeni": forms.Textarea(attrs={"rows": 1, "cols": 40}),
         }
         labels = {
-            "jmeno": _("uzivatel.form.osoba.jmeno.label"),
-            "prijmeni": _("uzivatel.form.osoba.prijmeni.label"),
+            "jmeno": _("uzivatel.forms.osoba.jmeno.label"),
+            "prijmeni": _("uzivatel.forms.osoba.prijmeni.label"),
             # "rok_narozeni": _("Rok narození"),
             # "rok_umrti": _("Rok úmrtí"),
             # "rodne_prijmeni": _("Rodné příjmení"),
         }
         help_texts = {
-            "jmeno": _("uzivatel.form.osoba.jmeno.tooltip"),
-            "prijmeni": _("uzivatel.form.osoba.prijmeni.tooltip"),
+            "jmeno": _("uzivatel.forms.osoba.jmeno.tooltip"),
+            "prijmeni": _("uzivatel.forms.osoba.prijmeni.tooltip"),
             # "rok_narozeni": _("Lorem ipsum."),
             # "rok_umrti": _("Lorem ipsum."),
             # "rodne_prijmeni": _("Lorem ipsum."),

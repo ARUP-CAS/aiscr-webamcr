@@ -59,6 +59,8 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
 
 
 class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_result_label(self, result):
+        return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
     """
     Třída pohledu pro získaní uživatelů pro autocomplete.
     """
@@ -96,6 +98,15 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView)
             qs = new_qs.union(new_qs2).order_by("qs_order", "grand_name")
         return qs
 
+class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
+    def get_result_label(self, result):
+        return f"{result.ident_cely} ({result.organizace.nazev_zkraceny})"
+    def get_queryset(self):
+        qs = User.objects.all().order_by("ident_cely")
+        if self.q:
+            qs = qs.filter(Q(ident_cely__icontains=self.q)
+                           | Q(organizace__nazev_zkraceny__icontains=self.q))
+        return qs
 
 class OsobaAutocompleteChoices(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     """
@@ -226,11 +237,11 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
             self.request.user.set_password(str(request_data["pass-password1"][0]))
             self.request.user.save()
             messages.add_message(request, messages.SUCCESS,
-                                 _("uzivatel.UserAccountUpdateView._change_password.success"))
+                                 _("uzivatel.views.UserAccountUpdateView.change_password.success"))
             return None
         else:
             messages.add_message(request, messages.ERROR,
-                                 _("uzivatel.UserAccountUpdateView._change_password.fail"))
+                                 _("uzivatel.views.UserAccountUpdateView.change_password.fail"))
             return self.invalid_form_context(form, "form_password")
 
     def invalid_form_context(self, form, form_tag="form"):
@@ -250,10 +261,10 @@ class UserAccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView)
             obj = form.save(commit=False)
             obj.save(update_fields=("telefon",))
             messages.add_message(request, messages.SUCCESS,
-                                 _("uzivatel.UserAccountUpdateView.post.success"))
+                                 _("uzivatel.views.UserAccountUpdateView.post.success"))
         else:
             messages.add_message(request, messages.ERROR,
-                                 _("uzivatel.UserAccountUpdateView._change_password.fail"))
+                                 _("uzivatel.views.UserAccountUpdateView.post.change_password.fail"))
             context = self.invalid_form_context(form, "form")
             return render(request, self.template_name, context)
         if tuple(request_data.get("pass-password1", [""])) != ("",) \
@@ -291,9 +302,9 @@ def update_notifications(request):
                 else:
                     user.notification_types.remove(type_obj)
         messages.add_message(request, messages.SUCCESS,
-                             _("uzivatel.update_notifications.post.success"))
+                             _("uzivatel.views.update_notifications.post.success"))
         user.save_metadata()
-        return redirect("/upravit-uzivatele/")
+        return redirect("/uzivatel/edit/")
 
 
 class UserActivationView(ActivationView):
@@ -325,13 +336,13 @@ class TokenAuthenticationBearer(TokenAuthentication):
         try:
             token = model.objects.select_related('user').get(key=key)
         except model.DoesNotExist:
-            raise exceptions.AuthenticationFailed(_('Invalid token.'))
+            raise exceptions.AuthenticationFailed(_('uzivatel.views.tokenAuthenticationBearer.invalidToken'))
 
         if not token.user.is_active:
-            raise exceptions.AuthenticationFailed(_('User inactive or deleted.'))
+            raise exceptions.AuthenticationFailed(_('uzivatel.views.tokenAuthenticationBearer.userInactiveOrDeleted.'))
 
         if not token.created + datetime.timedelta(hours=settings.TOKEN_EXPIRATION_HOURS) > timezone.now():
-            raise exceptions.AuthenticationFailed(_('User token too old.'))
+            raise exceptions.AuthenticationFailed(_('uzivatel.views.tokenAuthenticationBearer.userTokenTooOld.'))
 
         return (token.user, token)
 

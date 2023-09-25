@@ -5,11 +5,12 @@
       <th>{% trans "ez.templates.ezOdkazyTableOnly.Id.label" %}</th>
       <th>{% trans "ez.templates.ezOdkazyTableOnly.katastr.label" %}</th>
       {% if card_type == "akce" %}
-      <th>{% trans "ez.templates.ezOdkazyTableOnly.vedouci.label" %}</th>
-      <th>{% trans "ez.templates.ezOdkazyTableOnly.datum.label" %}</th>
+        <th>{% trans "ez.templates.ezOdkazyTableOnly.datumZahajeni.label" %}</th>
+        <th>{% trans "ez.templates.ezOdkazyTableOnly.datumUkonceni.label" %}</th>
+        <th>{% trans "ez.templates.ezOdkazyTableOnly.hlavniTyp.label" %}</th>
       {% elif card_type == "lokalita" %}
-      <th>{% trans "ez.templates.ezOdkazyTableOnly.druh.label" %}</th>
-      <th>{% trans "ez.templates.ezOdkazyTableOnly.nazev.label" %}</th>
+        <th>{% trans "ez.templates.ezOdkazyTableOnly.druh.label" %}</th>
+        <th>{% trans "ez.templates.ezOdkazyTableOnly.nazev.label" %}</th>
       {% endif %}
       {% if show.paginace %}
       <th>{% trans "ez.templates.ezOdkazyTableOnly.paginace.label" %}</th>

@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 
 from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres, HeslarDatace, HeslarHierarchie, \
@@ -76,11 +76,14 @@ def save_metadata_heslar_dokument_typ_material_rada(sender, instance: HeslarDoku
 
 
 @receiver(post_save, sender=HeslarOdkaz)
-def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, **kwargs):
+def save_metadata_heslar_odkaz(sender, instance: HeslarOdkaz, created, **kwargs):
     """
     Funkce pro uložení metadat heslář - odkaz.
     """
     instance.heslo.save_metadata()
+    if instance.initial_heslo != instance.heslo:
+        heslo = Heslar.objects.get(pk=instance.initial_heslo.pk)
+        heslo.save_metadata()
 
 
 @receiver(post_delete, sender=Heslar)

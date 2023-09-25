@@ -15,37 +15,37 @@
         {% if show.vratit_link %}
           <button id="pas-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "Vrátit" %}
+            {% trans "templates.toolbarPas.vratit.label" %}
           </button>
         {% endif %}
         {% if show.odeslat_link %}
           <button id="pas-odeslat" class="btn m-0" type="button" name="button">
             <span class="material-icons">send</span>
-            {% trans "Odeslat" %}
+            {% trans "templates.toolbarPas.odeslat.label" %}
           </button>
         {% endif %}
         {% if show.potvrdit_link %}
           <button id="pas-potvrdit" class="btn m-0" type="button" name="button">
             <span class="material-icons">flag</span>
-            {% trans "Potvrdit" %}
+            {% trans "templates.toolbarPas.potvrdit.label" %}
           </button>
         {% endif %}
         {% if show.archivovat_link %}
           <button id="pas-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
-            {% trans "Archivovat" %}
+            {% trans "templates.toolbarPas.archivovat.label" %}
           </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "Další volby" %}
+          {% trans "templates.toolbarPas.dalsiVolby.label" %}
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
-          <button id="pas-smazat" class="dropdown-item" type="button" name="button">{% trans "Smazat Nalez" %}</button>
-          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'samostatny_nalez' sn.id %}">{% trans "samostatny_nalez.detail.toolbar.MetadataDownload" %}</a>
-          <a class="dropdown-item" href="{% url 'historie:pas' sn.ident_cely %}">{% trans "Historie" %}</a>
+          <button id="pas-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarPas.smazatNalez.label" %}</button>
+          <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'samostatny_nalez' sn.id %}">{% trans "templates.toolbarPas.metadataDownload.label" %}</a>
+          <a class="dropdown-item" href="{% url 'historie:pas' sn.ident_cely %}">{% trans "templates.toolbarPas.historie.label" %}</a>
           {% if show.arch_links%}
-          <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "pas.detail.toolbar.DalsiVolby.DigiArchivLink" %}</a>
-          <a class="dropdown-item" href="{{OAPI_link_part1|add:sn.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "pas.detail.toolbar.DalsiVolby.OAIAPI" %}</a>
+          <a class="dropdown-item" href="{{Digi_archiv_link|add:sn.ident_cely}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarPas.digiArchivLink.label" %}</a>
+          <a class="dropdown-item" href="{{OAPI_link_part1|add:sn.ident_cely|add:OAPI_link_part2}}" target="_blank" rel="noopener noreferrer">{% trans "templates.toolbarPas.OAIAPI.label" %}</a>
           {% endif %}
         </div>
       </div>

@@ -22,6 +22,8 @@ import uzivatel.models
 import dokument.models
 import pas.models
 from core.constants import PROJEKT_STAV_UKONCENY_V_TERENU, PRIHLASENI_PROJ
+from core.models import Soubor
+from core.repository_connector import FedoraRepositoryConnector, RepositoryBinaryFile
 from historie.models import Historie
 from .mlstripper import MLStripper
 from urllib.parse import urljoin
@@ -114,14 +116,14 @@ class Mailer:
 
     @classmethod
     def __send(cls, subject, to, html_content, notification_type, user=None, from_email=settings.DEFAULT_FROM_EMAIL,
-               attachment_path=None):
+               attachment: RepositoryBinaryFile=None):
         if "@" in to:
             plain_text = cls.__strip_tags(html_content)
             email = EmailMultiAlternatives(subject, plain_text, from_email, [to])
             email.attach_alternative(html_content, "text/html")
             logger.info("services.mailer.send.debug", extra={"from_email": from_email, "to": to, "subject": subject})
-            if attachment_path:
-                email.attach_file(attachment_path)
+            if attachment:
+                email.attach(attachment.filename, attachment.content, mimetype=attachment.mime_type)
             try:
                 email.send()
             except Exception as e:
@@ -342,17 +344,20 @@ class Mailer:
         project_files = list(projekt.models.Soubor.objects.filter(vazba=project.soubory.id,
                                                             nazev__startswith=f"oznameni_{project.ident_cely}",
                                                             nazev__endswith=".pdf"))
-        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno))
+        project_files = list(sorted(project_files, key=lambda x: x.vytvoreno.datum_zmeny))
         if len(project_files) > 0:
             project_file = project_files[0]
         else:
             project_file = None
         if project.has_oznamovatel():
-            attachment_path = None
+            attachment = None
             if project_file:
-                attachment_path = project_file.path.name
+                project_file: Soubor
+                repository_coonector = FedoraRepositoryConnector(project)
+                attachment = repository_coonector.get_binary_file(project_file.repository_uuid)
+                attachment.filename = project_file.nazev
             cls.__send(subject=subject, to=project.oznamovatel.email, html_content=html,
-                       notification_type=notification_type, attachment_path=attachment_path)
+                       notification_type=notification_type, attachment=attachment)
 
     @classmethod
     def send_ep01a(cls, project: 'projekt.models.Projekt'):

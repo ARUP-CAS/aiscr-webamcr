@@ -413,9 +413,7 @@ class OznameniPDFCreator(DocumentCreator):
         file = io.BytesIO()
         file.write(pdf_value)
         file.seek(0)
-        checksum = calculate_crc_32(file)
-        file.seek(0)
-        filename = f"{checksum}_oznameni_{self.projekt.ident_cely}{postfix}.pdf"
+        filename = f"oznameni_{self.projekt.ident_cely}{postfix}.pdf"
 
         con = FedoraRepositoryConnector(self.projekt)
         rep_bin_file: RepositoryBinaryFile = con.save_binary_file(filename, "application/pdf", file)

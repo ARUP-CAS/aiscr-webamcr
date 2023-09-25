@@ -31,8 +31,8 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
     Class pro db model pian.
     """
     STATES = (
-        (PIAN_NEPOTVRZEN, _("Nepotvrzený")),
-        (PIAN_POTVRZEN, _("Potvrzený")),
+        (PIAN_NEPOTVRZEN, _("pian.models.pian.states.nepotvrzen")),
+        (PIAN_POTVRZEN, _("pian.models.pian.states.potvrzen")),
     )
 
     presnost = models.ForeignKey(
@@ -88,6 +88,20 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
             return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
         return Heslar.objects.get(ident_cely="HES-000865")
 
+    def evaluate_pristupnost_change(self, added_pristupnost_id=None, skip_zaznam_id=None):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        pristupnosti_ids = set()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None \
+                    and dok_jednotka.archeologicky_zaznam.pristupnost is not None\
+                    and (skip_zaznam_id is None or skip_zaznam_id != dok_jednotka.archeologicky_zaznam.id):
+                pristupnosti_ids.add(dok_jednotka.archeologicky_zaznam.pristupnost.id)
+        if added_pristupnost_id is not None:
+            pristupnosti_ids.add(added_pristupnost_id)
+        if len(pristupnosti_ids) > 0:
+            return Heslar.objects.filter(id__in=list(pristupnosti_ids)).order_by("razeni").first()
+        return Heslar.objects.get(ident_cely="HES-000865")
+
     class Meta:
         db_table = "pian"
         constraints = [
@@ -101,6 +115,19 @@ class Pian(ExportModelOperationsMixin("pian"), ModelWithMetadata):
 
     def __str__(self):
         return self.ident_cely + " (" + self.get_stav_display() + ")"
+    
+    def get_absolute_url(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None:
+                return dok_jednotka.get_absolute_url()
+            
+    def get_permission_object(self):
+        dok_jednotky = self.dokumentacni_jednotky_pianu.all()
+        for dok_jednotka in dok_jednotky:
+            if dok_jednotka.archeologicky_zaznam is not None:
+                return dok_jednotka.get_permission_object()
+    
 
     def set_permanent_ident_cely(self):
         """

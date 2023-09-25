@@ -74,27 +74,7 @@ var poi_dj = L.layerGroup();
 var poi_other_dp = L.markerClusterGroup({ disableClusteringAtZoom: 22 });
 var poi_other = L.layerGroup();
 var heatPoints = [];
-var heatmapOptions =
-{
-    "radius": 0.5,
-	"maxOpacity": 0.8,
-	"minOpacity": 0.15,
-    "scaleRadius": true,
-    "useLocalExtrema": true,
-    "latField": "lat",
-    "lngField": "lng",
-    "valueField": "pocet",
-    "gradient":
-    {
-        "0.00": "rgb(255,0,255)",
-        "0.15": "rgb(0,0,255)",
-        "0.25": "rgb(0,255,0)",
-        "0.45": "rgb(255,255,0)",
-        "0.65": "rgb(255,170,0)",
-        "0.95": "rgb(255,0,0)",
-        "1.00": "rgb(255,0,0)"
-    }
-};
+var heatmapOptions = settings_heatmap_options;
 var heatLayer = L.heatLayer(heatPoints, heatmapOptions);
 
 var global_clusters = false;
@@ -554,7 +534,7 @@ var clickOnMap=(e)=>{
             var [corX, corY] = amcr_static_coordinate_precision_wgs84([e.latlng.lng, e.latlng.lat]);
 
             let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/pas/pas-zjisti-katastr-with-geom');
+            xhr.open('POST', '/pas/mapa-zjisti-katastr-geom');
             xhr.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -602,7 +582,7 @@ var mouseOverGeometry =(geom, allowClick=true)=>{
                 map.spin(true);
                 $.ajax({
                     type: "GET",
-                    url:"/pian/seznam-pian/?q="+getContent(e),
+                    url:"/pian/autocomplete/?q="+getContent(e),
                     dataType: 'json',
                     success: function(data){
                     if(data.results.length>0){
@@ -915,7 +895,7 @@ switchMap = function (overview = false) {
             addLogText("Change: " + northWest + "  " + southEast + " " + zoom);
             boundsLock = bounds;
             let xhr = new XMLHttpRequest();
-            xhr.open('POST', '/arch-z/katastr-zjisti-piany');
+            xhr.open('POST', '/arch-z/mapa-pian');
             xhr.setRequestHeader('Content-type', 'application/json');
             if (typeof global_csrftoken !== 'undefined') {
                 xhr.setRequestHeader('X-CSRFToken', global_csrftoken);
@@ -989,7 +969,7 @@ switchMap = function (overview = false) {
 function loadKatastry() {
     akce_ident_cely = document.getElementById("id-app-entity-item").textContent.trim().split("Zpět")[0]
     let xhr = new XMLHttpRequest();
-    xhr.open('POST', '/arch-z/akce-ostatni-katastry');
+    xhr.open('POST', '/arch-z/mapa-dalsi-katastry');
     xhr.setRequestHeader('Content-type', 'application/json');
     if (typeof global_csrftoken !== 'undefined') {
         xhr.setRequestHeader('X-CSRFToken', global_csrftoken);

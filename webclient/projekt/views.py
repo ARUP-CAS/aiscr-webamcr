@@ -100,7 +100,7 @@ from projekt.models import Projekt
 from projekt.tables import ProjektTable
 from uzivatel.forms import OsobaForm
 from services.mailer import Mailer
-
+from uzivatel.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -134,11 +134,11 @@ def detail(request, ident_cely):
     elif typ_projektu.id == TYP_PROJEKTU_PRUZKUM_ID:
         context["samostatne_nalezy"] = projekt.samostatne_nalezy.select_related(
             "obdobi", "druh_nalezu", "specifikace", "nalezce", "katastr"
-        ).all()
+        ).all().order_by("ident_cely")
 
     akce = Akce.objects.filter(projekt=projekt).select_related(
         "archeologicky_zaznam__pristupnost", "hlavni_typ"
-    )
+    ).order_by("archeologicky_zaznam__ident_cely")
     dokumenty = (
         Dokument.objects.filter(casti__projekt__ident_cely=ident_cely)
         .select_related("soubory")
@@ -148,7 +148,7 @@ def detail(request, ident_cely):
     soubory = projekt.soubory.soubory.all()
     context["soubory"] = soubory
     context["dalsi_katastry"] = projekt.katastry.all()
-    context["history_dates"] = get_history_dates(projekt.historie)
+    context["history_dates"] = get_history_dates(projekt.historie, request.user)
     context["show"] = get_detail_template_shows(projekt, request.user)
     context["dokumenty"] = dokumenty
     context["generovatNovePotvrzeniForm"] = GenerovatNovePotvrzeniForm()
@@ -261,15 +261,15 @@ def create(request):
                         {
                             "form_projekt": form_projekt,
                             "form_oznamovatel": form_oznamovatel,
-                            "title": _("Zápis projektu"),
-                            "header": _("Zápis projektu"),
-                            "button": _("Zapsat projekt"),
+                            "title": _("projekt.views.create.title.text"),
+                            "header": _("projekt.views.create.header.text"),
+                            "button": _("projekt.views.create.submitButton.text"),
                         },
                     )
             if long and lat:
                 projekt.geom = Point(long, lat)
             try:
-                projekt.set_permanent_ident_cely()
+                projekt.set_permanent_ident_cely(False)
             except MaximalIdentNumberError:
                 messages.add_message(request, messages.SUCCESS, MAXIMUM_IDENT_DOSAZEN)
             else:
@@ -282,7 +282,7 @@ def create(request):
                     oznamovatel.projekt = projekt
                     oznamovatel.save()
                 if projekt.should_generate_confirmation_document:
-                    projekt.create_confirmation_document()
+                    projekt.create_confirmation_document(user=request.user)
                 messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_VYTVOREN)
                 if projekt.ident_cely[0] == OBLAST_CECHY:
                     Mailer.send_ep01a(project=projekt)
@@ -302,9 +302,9 @@ def create(request):
         {
             "form_projekt": form_projekt,
             "form_oznamovatel": form_oznamovatel,
-            "title": _("Zápis projektu"),
-            "header": _("Zápis projektu"),
-            "button": _("Zapsat projekt"),
+            "title": _("projekt.views.create.title.text"),
+            "header": _("projekt.views.create.header.text"),
+            "button": _("projekt.views.create.submitButton.text"),
         },
     )
 
@@ -407,9 +407,9 @@ def smazat(request, ident_cely):
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         context = {
             "object": projekt,
-            "title": _("projekt.modalForm.smazani.title.text"),
+            "title": _("projekt.views.smazat.title.text"),
             "id_tag": "smazat-form",
-            "button": _("projekt.modalForm.smazani.submit.button"),
+            "button": _("projekt.views.smazat.submitButton.text"),
             "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
@@ -425,31 +425,32 @@ class ProjektListView(SearchListView):
     template_name = "projekt/projekt_list.html"
     filterset_class = ProjektFilter
     export_name = "export_projekty_"
-    page_title = _("projekt.vyber.pageTitle")
+    page_title = _("projekt.views.projektListView.pageTitle")
     app = "projekt"
     toolbar = "toolbar_projekt.html"
-    search_sum = _("projekt.vyber.pocetVyhledanych")
-    pick_text = _("projekt.vyber.pickText")
-    hasOnlyVybrat_header = _("projekt.vyber.header.hasOnlyVybrat")
-    hasOnlyArchive_header = _("projekt.vyber.header.hasOnlyArchive")
-    default_header = _("projekt.vyber.header.default")
-    toolbar_name = _("projekt.template.toolbar.title")
+    search_sum = _("projekt.views.projektListView.pocetVyhledanych")
+    pick_text = _("projekt.views.projektListView.pickText")
+    hasOnlyVybrat_header = _("projekt.views.projektListView.header.hasOnlyVybrat")
+    hasOnlyArchive_header = _("projekt.views.projektListView.header.hasOnlyArchive")
+    default_header = _("projekt.views.projektListView.header.default")
+    toolbar_name = _("projekt.views.projektListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_PROJ
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["hasSchvalitOznameni_header"] = _(
-            "projekt.vyber.header.hasSchvalitOznameni"
+            "projekt.views.projektListView.header.hasSchvalitOznameni"
         )
-        context["hasPrihlasit_header"] = _("projekt.vyber.header.hasPrihlasit")
-        context["hasPrihlasit_header"] = _("projekt.vyber.header.hasPrihlasit")
-        context["hasZahajitVyzkum_header"] = _("projekt.vyber.header.hasZahajitVyzkum")
-        context["hasUkoncitTeren_header"] = _("projekt.vyber.header.hasUkoncitTeren")
-        context["hasSpravovatAkce_header"] = _("projekt.vyber.header.hasSpravovatAkce")
+        context["hasPrihlasit_header"] = _("projekt.views.projektListView.header.hasPrihlasit")
+        context["hasPrihlasit_header"] = _("projekt.views.projektListView.header.hasPrihlasit")
+        context["hasZahajitVyzkum_header"] = _("projekt.views.projektListView.header.hasZahajitVyzkum")
+        context["hasUkoncitTeren_header"] = _("projekt.views.projektListView.header.hasUkoncitTeren")
+        context["hasSpravovatAkce_header"] = _("projekt.views.projektListView.header.hasSpravovatAkce")
         context["hasUzavritProjekt_header"] = _(
-            "projekt.vyber.header.hasUzavritProjekt"
+            "projekt.views.projektListView.header.hasUzavritProjekt"
         )
-        context["hasNaseProjekty_header"] = _("projekt.vyber.header.hasNaseProjekty")
-        context["has_header"] = _("projekt.vyber.header.hasNaseProjekty")
+        context["hasNaseProjekty_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
+        context["has_header"] = _("projekt.views.projektListView.header.hasNaseProjekty")
         return context
 
     def get_queryset(self):
@@ -525,9 +526,9 @@ def schvalit(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
     context = {
         "object": projekt,
-        "title": _("projekt.modalForm.schvaleni.title.text"),
+        "title": _("projekt.views.schvalit.title.text"),
         "id_tag": "schvalit-form",
-        "button": _("projekt.modalForm.schvaleni.submit.button"),
+        "button": _("projekt.views.schvalit.submitButton.text"),
         "form_check": form_check,
     }
     return render(request, "core/transakce_modal.html", context)
@@ -631,9 +632,9 @@ def zahajit_v_terenu(request, ident_cely):
         {
             "form": form,
             "object": projekt,
-            "title": _("projekt.modalForm.zahajitvTerenu.title.text"),
+            "title": _("projekt.views.zahajitvTerenu.title.text"),
             "id_tag": "zahajit-v-terenu-form",
-            "button": _("projekt.modalForm.zahajitvTerenu.submit.button"),
+            "button": _("projekt.views.zahajitvTerenu.submitButton.text"),
         },
     )
 
@@ -682,9 +683,9 @@ def ukoncit_v_terenu(request, ident_cely):
         {
             "form": form,
             "object": projekt,
-            "title": _("projekt.modalForm.ukoncitvTerenu.title.text"),
+            "title": _("projekt.views.ukoncitvTerenu.title.text"),
             "id_tag": "ukoncit-v-terenu-form",
-            "button": _("projekt.modalForm.ukoncitvTerenu.submit.button"),
+            "button": _("projekt.views.ukoncitvTerenu.submitButton.text"),
         },
     )
 
@@ -757,9 +758,9 @@ def uzavrit(request, ident_cely):
 
         context = {
             "object": projekt,
-            "title": _("projekt.modalForm.uzavrit.title.text"),
+            "title": _("projekt.views.uzavrit.title.text"),
             "id_tag": "uzavrit-form",
-            "button": _("projekt.modalForm.uzavrit.submit.button"),
+            "button": _("projekt.views.uzavrit.submitButton.text"),
             "form_check": form_check,
         }
 
@@ -812,18 +813,18 @@ def archivovat(request, ident_cely):
     if request.GET.get("from_arch") == "true":
         context = {
             "object": projekt,
-            "title": _("arch_z.modal.archivovatProjekt.title"),
-            "text": _("arch_z.modal.archivovatProjekt.text"),
+            "title": _("projekt.views.archivovat.fromAkce.title.text"),
+            "text": _("projekt.views.archivovat.fromAkce.text"),
             "id_tag": "archivovat-form",
-            "button": _("arch_z.modal.archivovatProjekt.confirmButton.text"),
+            "button": _("projekt.views.archivovat.fromAkce.submitButton.text"),
             "form_check": form_check,
         }
     else:
         context = {
             "object": projekt,
-            "title": _("projekt.modalForm.archivovat.title.text"),
+            "title": _("projekt.views.archivovat.title.text"),
             "id_tag": "archivovat-form",
-            "button": _("projekt.modalForm.archivovat.submit.button"),
+            "button": _("projekt.views.archivovat.submitButton.text"),
             "form_check": form_check,
         }
     return render(request, "core/transakce_modal.html", context)
@@ -946,9 +947,9 @@ def zrusit(request, ident_cely):
             logger.debug("projekt.views.zrusit.form_not_valid", extra={"errors": form.errors})
             context = {
                 "object": projekt,
-                "title": _("projekt.modalForm.zruseni.title.text"),
+                "title": _("projekt.views.zrusit.title.text"),
                 "id_tag": "zrusit-form",
-                "button": _("projekt.modalForm.zruseni.submit.button"),
+                "button": _("projekt.views.zrusit.submitButton.text"),
                 "form_check": form_check,
                 "form": form,
             }
@@ -956,9 +957,9 @@ def zrusit(request, ident_cely):
         form_check = CheckStavNotChangedForm(initial={"old_stav": projekt.stav})
         context = {
             "object": projekt,
-            "title": _("projekt.modalForm.zruseni.title.text"),
+            "title": _("projekt.views.zrusit.title.text"),
             "id_tag": "zrusit-form",
-            "button": _("projekt.modalForm.zruseni.submit.button"),
+            "button": _("projekt.views.zrusit.submitButton.text"),
             "form_check": form_check,
         }
         if projekt.stav == PROJEKT_STAV_NAVRZEN_KE_ZRUSENI:
@@ -1012,9 +1013,9 @@ def vratit(request, ident_cely):
     context = {
         "object": projekt,
         "form": form,
-        "title": _("projekt.modalForm.vraceni.title.text"),
+        "title": _("projekt.views.vratit.title.text"),
         "id_tag": "vratit-form",
-        "button": _("projekt.modalForm.vraceni.submit.button"),
+        "button": _("projekt.views.vratit.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -1063,9 +1064,9 @@ def vratit_navrh_zruseni(request, ident_cely):
     context = {
         "object": projekt,
         "form": form,
-        "title": _("projekt.modalForm.vratitNavrhZruseni.title.text"),
+        "title": _("projekt.views.vratitNavrhZruseni.title.text"),
         "id_tag": "vratit-navrh-form",
-        "button": _("projekt.modalForm.vratitNavrhZruseni.submit.button"),
+        "button": _("projekt.views.vratitNavrhZruseni.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -1132,7 +1133,7 @@ def generovat_expertni_list(request, ident_cely):
     return response
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní dátumů pro historii.
 
@@ -1142,29 +1143,32 @@ def get_history_dates(historie_vazby):
     Returns:
         historie: dictionary dátumů k historii.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ),
+        "datum_oznameni": historie_vazby.get_last_transaction_date(OZNAMENI_PROJ, anonymized),
         "datum_zapsani": historie_vazby.get_last_transaction_date(
             [
                 VRACENI_NAVRHU_ZRUSENI,
                 SCHVALENI_OZNAMENI_PROJ,
                 ZAPSANI_PROJ,
                 VRACENI_ZRUSENI,
-            ]
+            ],
+            anonymized
         ),
-        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ),
+        "datum_prihlaseni": historie_vazby.get_last_transaction_date(PRIHLASENI_PROJ, anonymized),
         "datum_zahajeni_v_terenu": historie_vazby.get_last_transaction_date(
-            ZAHAJENI_V_TERENU_PROJ
+            ZAHAJENI_V_TERENU_PROJ, anonymized
         ),
         "datum_ukonceni_v_terenu": historie_vazby.get_last_transaction_date(
-            UKONCENI_V_TERENU_PROJ
+            UKONCENI_V_TERENU_PROJ, anonymized
         ),
-        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ),
+        "datum_uzavreni": historie_vazby.get_last_transaction_date(UZAVRENI_PROJ, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_PROJ, anonymized),
         "datum_navrhu_ke_zruseni": historie_vazby.get_last_transaction_date(
-            NAVRZENI_KE_ZRUSENI_PROJ
+            NAVRZENI_KE_ZRUSENI_PROJ, anonymized
         ),
-        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ),
+        "datum_zruseni": historie_vazby.get_last_transaction_date(RUSENI_PROJ, anonymized),
     }
     return historie
 

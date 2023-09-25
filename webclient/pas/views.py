@@ -18,6 +18,7 @@ from core.constants import (
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
+    SPOLUPRACE_ZADOST,
 )
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -75,7 +76,7 @@ def get_detail_context(sn, request):
         instance=sn, readonly=True, user=request.user
     )
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
-    context["history_dates"] = get_history_dates(sn.historie)
+    context["history_dates"] = get_history_dates(sn.historie, request.user)
     context["show"] = get_detail_template_shows(sn)
     logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
@@ -168,9 +169,9 @@ def create(request, ident_cely=None):
             "global_map_can_edit": True,
             "formCoor": form_coor,
             "form": form,
-            "title": _("Nový samostatný nález"),
-            "header": _("Nový samostatný nález"),
-            "button": _("Vytvořit samostatný nález"),
+            "title": _("pas.views.create.title"),
+            "header": _("pas.views.create.header"),
+            "button": _("pas.views.create.submitButton.text"),
         },
     )
 
@@ -402,9 +403,9 @@ def edit_ulozeni(request, ident_cely):
     context = {
         "object": sn,
         "form": form,
-        "title": _("pas.modalForm.editUlozeni.title.text"),
+        "title": _("pas.views.editUlozeni.title.text"),
         "id_tag": "edit-ulozeni-pas-form",
-        "button": _("pas.modalForm.editUlozeni.submit.button"),
+        "button": _("pas.views.editUlozeni.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -448,9 +449,9 @@ def vratit(request, ident_cely):
     context = {
         "object": sn,
         "form": form,
-        "title": _("pas.modalForm.vraceni.title.text"),
+        "title": _("pas.views.vratit.title.text"),
         "id_tag": "vratit-pas-form",
-        "button": _("pas.modalForm.vraceni.submit.button"),
+        "button": _("pas.views.vratit.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -504,9 +505,9 @@ def odeslat(request, ident_cely):
     form_check = CheckStavNotChangedForm(initial={"old_stav": sn.stav})
     context = {
         "object": sn,
-        "title": _("pas.modalForm.odeslat.title.text"),
+        "title": _("pas.views.odeslat.title.text"),
         "id_tag": "odeslat-pas-form",
-        "button": _("pas.modalForm.odeslat.submit.button"),
+        "button": _("pas.views.odeslat.submitButton.text"),
         "form_check": form_check,
     }
 
@@ -555,9 +556,9 @@ def potvrdit(request, ident_cely):
     context = {
         "object": sn,
         "form": form,
-        "title": _("pas.modalForm.potvrdit.title.text"),
+        "title": _("pas.views.potvrdit.title.text"),
         "id_tag": "potvrdit-pas-form",
-        "button": _("pas.modalForm.potvrdit.submit.button"),
+        "button": _("pas.views.potvrdit.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -590,9 +591,9 @@ def archivovat(request, ident_cely):
         form_check = CheckStavNotChangedForm(initial={"old_stav": sn.stav})
         context = {
             "object": sn,
-            "title": _("pas.modalForm.archivovat.title.text"),
+            "title": _("pas.views.archivovat.title.text"),
             "id_tag": "archivovat-pas-form",
-            "button": _("pas.modalForm.archivovat.submit.button"),
+            "button": _("pas.views.archivovat.submitButton.text"),
             "form_check": form_check,
         }
     return render(request, "core/transakce_modal.html", context)
@@ -608,17 +609,18 @@ class SamostatnyNalezListView(SearchListView):
     template_name = "pas/samostatny_nalez_list.html"
     filterset_class = SamostatnyNalezFilter
     export_name = "export_samostatny-nalez_"
-    page_title = _("pas.vyber.pageTitle")
+    page_title = _("pas.views.samostatnyNalezListView.pageTitle")
     app = "samostatny_nalez"
     toolbar = "toolbar_pas.html"
-    search_sum = _("pas.vyber.pocetVyhledanych")
-    pick_text = _("pas.vyber.pickText")
-    hasOnlyVybrat_header = _("pas.vyber.header.hasOnlyVybrat")
-    hasOnlyVlastnik_header = _("pas.vyber.header.hasOnlyVlastnik")
-    hasOnlyArchive_header = _("pas.vyber.header.hasOnlyArchive")
-    hasOnlyPotvrdit_header = _("pas.vyber.header.hasOnlyPotvrdit")
-    default_header = _("pas.vyber.header.default")
-    toolbar_name = _("pas.template.toolbar.title")
+    search_sum = _("pas.views.samostatnyNalezListView.pocetVyhledanych")
+    pick_text = _("pas.views.samostatnyNalezListView.pickText")
+    hasOnlyVybrat_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVybrat")
+    hasOnlyVlastnik_header = _("pas.views.samostatnyNalezListView.header.hasOnlyVlastnik")
+    hasOnlyArchive_header = _("pas.views.samostatnyNalezListView.header.hasOnlyArchive")
+    hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
+    default_header = _("pas.views.samostatnyNalezListView.header.default")
+    toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_SN
 
     def get_queryset(self):
         # Only allow to view 3D models
@@ -677,9 +679,9 @@ def smazat(request, ident_cely):
         form_check = CheckStavNotChangedForm(initial={"old_stav": nalez.stav})
         context = {
             "object": nalez,
-            "title": _("pas.modalForm.smazani.title.text"),
+            "title": _("pas.views.smazat.title.text"),
             "id_tag": "smazat-pas-form",
-            "button": _("pas.modalForm.smazani.submit.button"),
+            "button": _("pas.views.smazat.submitButton.text"),
             "form_check": form_check,
         }
         return render(request, "core/transakce_modal.html", context)
@@ -705,26 +707,26 @@ def zadost(request):
 
             if uzivatel == request.user:
                 messages.add_message(
-                    request, messages.ERROR, _("Nelze vytvořit spolupráci sám se sebou")
+                    request, messages.ERROR, _("pas.views.zadost.uzivatel.error")
                 )
                 logger.debug(
                     "pas.views.zadost.post.error",
-                    extra={"error": _("Nelze vytvořit spolupráci sám se sebou")},
+                    extra={"error": "Nelze vytvořit spolupráci sám se sebou"},
                 )
             elif exists:
                 messages.add_message(
                     request,
                     messages.ERROR,
                     _(
-                        "Spolupráce s uživatelem s emailem "
+                        "pas.views.zadost.existuje.error.part1")
                         + uzivatel_email
-                        + " již existuje."
+                        + _("pas.views.zadost.existuje.error.part2"
                     ),
                 )
                 logger.debug(
                     "pas.views.zadost.post.error",
                     extra={
-                        "error": _("Spoluprace jiz existuje"),
+                        "error": "Spoluprace jiz existuje",
                         "email": uzivatel_email,
                     },
                 )
@@ -771,7 +773,7 @@ def zadost(request):
     return render(
         request,
         "pas/zadost.html",
-        {"title": _("Žádost o spolupráci"), "header": _("Nová žádost"), "form": form},
+        {"title": _("pas.views.zadost.title.text"), "header": _("pas.views.zadost.header.text"), "form": form},
     )
 
 
@@ -785,12 +787,13 @@ class UzivatelSpolupraceListView(SearchListView):
     template_name = "pas/uzivatel_spoluprace_list.html"
     filterset_class = UzivatelSpolupraceFilter
     export_name = "export_spoluprace_"
-    page_title = _("spoluprace.vyber.pageTitle")
+    page_title = _("pas.views.uzivatelSpolupraceListView.pageTitle")
     app = "spoluprace"
     toolbar = "toolbar_spoluprace.html"
-    search_sum = _("spoluprace.vyber.pocetVyhledanych")
-    pick_text = _("spoluprace.vyber.pickText")
-    toolbar_name = _("spoluprace.template.toolbar.title")
+    search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
+    pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
+    toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
+    typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -832,13 +835,13 @@ def aktivace(request, pk):
     context = {
         "object": spoluprace,
         "title": (
-            _("Aktivace spolupráce mezi ")
+            _("pas.views.aktivace.title.part1")
             + spoluprace.vedouci.email
-            + " a "
+            + _("pas.views.aktivace.title.part2")
             + spoluprace.spolupracovnik.email
         ),
         "id_tag": "aktivace-spoluprace-form",
-        "button": _("pas.spoluprace.modalForm.aktivace.submit.button"),
+        "button": _("pas.views.aktivace.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -878,13 +881,13 @@ def deaktivace(request, pk):
     context = {
         "object": spoluprace,
         "title": (
-            _("Deaktivace spolupráce mezi ")
+            _("pas.views.deaktivace.title.part1")
             + spoluprace.vedouci.email
-            + " a "
+            + _("pas.views.deaktivace.title.part2")
             + spoluprace.spolupracovnik.email
         ),
         "id_tag": "deaktivace-spoluprace-form",
-        "button": _("pas.spoluprace.modalForm.deaktivace.submit.button"),
+        "button": _("pas.views.deaktivace.submitButton.text"),
     }
     return render(request, "core/transakce_modal.html", context)
 
@@ -919,26 +922,27 @@ def smazat_spolupraci(request, pk):
         context = {
             "object": spoluprace,
             "title": (
-                _("pas.spoluprace.modalForm.smazani.title.text")
+                _("pas.views.smazatSpolupraci.title.part1")
                 + spoluprace.vedouci.email
-                + _(" a ")
+                + _("pas.views.smazatSpolupraci.title.part2")
                 + spoluprace.spolupracovnik.email
             ),
             "id_tag": "smazani-spoluprace-form",
-            "button": _("pas.spoluprace.modalForm.smazani.submit.button"),
+            "button": _("pas.views.smazatSpolupraci.submitButton.text"),
         }
     return render(request, "core/transakce_modal.html", context)
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN),
-        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN, anonymized),
+        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN, anonymized),
     }
     return historie
 

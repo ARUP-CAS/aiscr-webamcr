@@ -358,6 +358,7 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
                 rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
                                                           get_mime_type(soubor.nazev),
                                                           repository_binary_file.content)
+                connector.validate_file_sha_512(soubor)
         for dc in self.casti.all():
             if "3D" in perm_ident_cely:
                 for komponenta in dc.komponenty.komponenty.all():
@@ -384,6 +385,12 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         last_day_of_month = calendar.monthrange(new_date.year, month)[1]
         day = min(new_date.day, last_day_of_month)
         self.datum_zverejneni = datetime.date(year, month, day)
+
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
 
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
@@ -611,6 +618,7 @@ class Tvar(ExportModelOperationsMixin("tvar"), models.Model):
     class Meta:
         db_table = "tvar"
         unique_together = (("dokument", "tvar", "poznamka"),)
+        ordering = ["tvar__razeni"]
 
 
 class DokumentSekvence(ExportModelOperationsMixin("dokument_sekvence"), models.Model):

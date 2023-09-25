@@ -14,7 +14,7 @@ from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
-    ZAPSANI_DOK,
+    ZAPSANI_DOK, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -235,7 +235,7 @@ def detail_model_3D(request, ident_cely):
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }
-    context["history_dates"] = get_history_dates(dokument.historie)
+    context["history_dates"] = get_history_dates(dokument.historie, request.user)
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
@@ -264,6 +264,7 @@ class Model3DListView(SearchListView):
     hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
     default_header = _("dokument.views.Model3DListView.default_header.text")
     toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -275,6 +276,12 @@ class Model3DListView(SearchListView):
         qs = super().get_queryset().filter(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+        ).prefetch_related(
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                to_attr="ordered_autors",
+            )
         )
         return qs
 
@@ -305,6 +312,7 @@ class DokumentListView(SearchListView):
     hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
     default_header = _("dokument.views.DokumentListView.default_header.text")
     toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -418,7 +426,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["dokument"] = dokument
         context["form_dokument"] = form_dokument
         context["form_dokument_extra"] = form_dokument_extra
-        context["history_dates"] = get_history_dates(dokument.historie)
+        context["history_dates"] = get_history_dates(dokument.historie, self.request.user)
         context["show"] = show
 
         if dokument.soubory:
@@ -472,7 +480,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                     logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_found")
                     response.delete_cookie("zpet")
             elif (
-                "nahrat-soubor" in referer
+                "soubor/nahrat" in referer
                 and context["dokument"].ident_cely in referer_next
             ):
                 logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_changed")
@@ -515,9 +523,9 @@ class DokumentCastEditView(LoginRequiredMixin, UpdateView):
     """
     model = DokumentCast
     template_name = "core/transakce_modal.html"
-    title = _("dokument.views.DokumentCastEditView.title.text"),
+    title = _("dokument.views.DokumentCastEditView.title.text")
     id_tag = "edit-cast-form"
-    button = _("dokument.views.DokumentCastEditView.submitButton.text"),
+    button = _("dokument.views.DokumentCastEditView.submitButton.text")
     form_class = DokumentCastForm
     slug_field = "ident_cely"
 
@@ -633,9 +641,9 @@ class TvarSmazatView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro smazání tvaru dokumentu pomocí modalu.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dokument.views.TvarSmazatView.title.text"),
+    title = _("dokument.views.TvarSmazatView.title.text")
     id_tag = "smazat-tvar-form"
-    button = _("dokument.views.TvarSmazatView.submitButton.text"),
+    button = _("dokument.views.TvarSmazatView.submitButton.text")
 
     def get_zaznam(self):
         id = self.kwargs.get("pk")
@@ -672,9 +680,9 @@ class VytvoritCastView(LoginRequiredMixin, TemplateView):
     Třida pohledu pro vytvoření části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_modal.html"
-    title = _("dokument.views.VytvoritCastView.title.text"),
+    title = _("dokument.views.VytvoritCastView.title.text")
     id_tag = "vytvor-cast-form"
-    button = _("dokument.views.VytvoritCastView.submitButton.text"),
+    button = _("dokument.views.VytvoritCastView.submitButton.text")
 
     def get_zaznam(self):
         ident_cely = self.kwargs.get("ident_cely")
@@ -792,9 +800,9 @@ class DokumentCastPripojitAkciView(TransakceView):
     Třida pohledu pro připojení akce do části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("dokument.views.DokumentCastPripojitAkciView.title.text"),
+    title = _("dokument.views.DokumentCastPripojitAkciView.title.text")
     id_tag = "pripojit-eo-form"
-    button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text"),
+    button = _("dokument.views.DokumentCastPripojitAkciView.submitButton.text")
     success_message = DOKUMENT_AZ_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
@@ -830,9 +838,9 @@ class DokumentCastPripojitProjektView(TransakceView):
     Třida pohledu pro připojení projektu do části dokumentu pomoci modalu.
     """
     template_name = "core/transakce_table_modal.html"
-    title = _("dokument.views.DokumentCastPripojitProjektView.title.text"),
+    title = _("dokument.views.DokumentCastPripojitProjektView.title.text")
     id_tag = "pripojit-projekt-form"
-    button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text"),
+    button = _("dokument.views.DokumentCastPripojitProjektView.submitButton.text")
     success_message = DOKUMENT_PROJEKT_USPESNE_PRIPOJEN
 
     def get_context_data(self, **kwargs):
@@ -861,9 +869,9 @@ class DokumentCastOdpojitView(TransakceView):
     """
     Třida pohledu pro odpojení části dokumentu pomoci modalu.
     """
-    title = _("dokument.views.DokumentCastOdpojitView.title.text"),
+    title = _("dokument.views.DokumentCastOdpojitView.title.text")
     id_tag = "odpojit-cast-form"
-    button = _("dokument.views.DokumentCastOdpojitView.submitButton.text"),
+    button = _("dokument.views.DokumentCastOdpojitView.submitButton.text")
     success_message = DOKUMENT_CAST_USPESNE_ODPOJEN
 
     def get_context_data(self, **kwargs):
@@ -894,9 +902,9 @@ class DokumentCastSmazatView(TransakceView):
     """
     Třida pohledu pro smazání části dokumentu pomoci modalu.
     """
-    title = _("dokument.views.DokumentCastSmazatView.title.text"),
+    title = _("dokument.views.DokumentCastSmazatView.title.text")
     id_tag = "smazat-cast-form"
-    button = _("dokument.views.DokumentCastSmazatView.submitButton.text"),
+    button = _("dokument.views.DokumentCastSmazatView.submitButton.text")
     success_message = DOKUMENT_CAST_USPESNE_SMAZANA
 
     def post(self, request, *args, **kwargs):
@@ -916,9 +924,9 @@ class DokumentNeidentAkceSmazatView(TransakceView):
     """
     Třida pohledu pro smazání neident akce z části dokumentu pomoci modalu.
     """
-    title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text"),
+    title = _("dokument.views.DokumentNeidentAkceSmazatView.title.text")
     id_tag = "smazat-neident-akce-form"
-    button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text"),
+    button = _("dokument.views.DokumentNeidentAkceSmazatView.submitButton.text")
     success_message = DOKUMENT_NEIDENT_AKCE_USPESNE_SMAZANA
 
     def get_context_data(self, **kwargs):
@@ -1285,9 +1293,9 @@ def create_model_3D(request):
             "formDokument": form_d,
             "formExtraData": form_extra,
             "formKomponenta": form_komponenta,
-            "header": _("dokument.views.create_model_3D.title"),
+            "title": _("dokument.views.create_model_3D.title"),
             "header": _("dokument.views.create_model_3D.header"),
-            "header": _("dokument.views.create_model_3D.submitButton.text"),
+            "button": _("dokument.views.create_model_3D.submitButton.text"),
         },
     )
 
@@ -1526,14 +1534,16 @@ def get_hierarchie_dokument_typ():
     return hierarchie
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK, anonymized),
     }
     return historie
 

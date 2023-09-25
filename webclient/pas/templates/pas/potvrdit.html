@@ -3,7 +3,7 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}{% trans "Potvrzení nálezu " %}{{ sn.ident_cely }}{% endblock %}
+{% block title %}{% trans "pas.templates.potvrdit.title" %}{{ sn.ident_cely }}{% endblock %}
 {% block head %}
 {% endblock %}
 
@@ -14,16 +14,16 @@
       <div class="card app-card-form">
         <div class="card-header">
           <div class="app-fx app-left">
-            {% trans "Potvrzení nálezu" %}
+            {% trans "pas.templates.potvrdit.cardHeader.potvrzeniNalezu" %}
           </div>
         </div>
         <div class="card-body">
           {% crispy form %}
           <div class="mt-3">
             <button type="submit" name="save" class="btn btn-primary mr-1"
-                    id="submit-id-save">{% translate 'Potvrdit nález' %}</button>
+                    id="submit-id-save">{% trans 'pas.templates.potvrdit.submitButton' %}</button>
             <button type="button" class="btn btn-secondary"
-                    onclick="window.history.back();">{% trans "Zpět" %}</button>
+                    onclick="window.history.back();">{% trans "pas.templates.potvrdit.backButton" %}</button>
           </div>
         </div>
       </div>

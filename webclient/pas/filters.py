@@ -23,7 +23,7 @@ from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
     OBLAST_MORAVA,
-    ROLE_ARCHEOLOG_ID,
+    ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
 )
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
@@ -62,13 +62,13 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     predano = django_filters.ChoiceFilter(
         choices=SamostatnyNalez.PREDANO_BOOLEAN,
-        label=_("SamostatnyNalezFilter.predano.label"),
+        label=_("pas.filters.samostatnyNalezFilter.predano.label"),
         widget=Select(attrs={"class": "selectpicker", "data-live-search": "true"}),
     )
 
     oblast = django_filters.ChoiceFilter(
         choices=OBLAST_CHOICES,
-        label=_("Územní příslušnost"),
+        label=_("pas.filters.samostatnyNalezFilter.oblast.label"),
         method="filter_by_oblast",
         widget=Select(
             attrs={
@@ -80,7 +80,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
     kraj = MultipleChoiceFilter(
         choices=RuianKraj.objects.all().values_list("id", "nazev"),
-        label=_("Kraj"),
+        label=_("pas.filters.samostatnyNalezFilter.kraj.label"),
         field_name="katastr__okres__kraj",
         widget=SelectMultiple(
             attrs={
@@ -93,7 +93,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     okres = MultipleChoiceFilter(
         choices=RuianOkres.objects.all().values_list("id", "nazev"),
-        label=_("Okres"),
+        label=_("pas.filters.samostatnyNalezFilter.okres.label"),
         field_name="katastr__okres",
         widget=SelectMultiple(
             attrs={
@@ -106,7 +106,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     katastr = CharFilter(
         lookup_expr="nazev__icontains",
-        label=_("Katastr"),
+        label=_("pas.filters.samostatnyNalezFilter.katastr.label"),
     )
 
     vlastnik = ModelMultipleChoiceFilter(
@@ -123,7 +123,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
     popisne_udaje = CharFilter(
         method="filter_popisne_udaje",
-        label="Popisné údaje",
+        label=_("pas.filters.samostatnyNalezFilter.popisne_udaje.label"),
     )
 
     nalezce = ModelMultipleChoiceFilter(
@@ -144,7 +144,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     obdobi = MultipleChoiceFilter(
         method="filter_obdobi",
-        label=_("Období"),
+        label=_("pas.filters.samostatnyNalezFilter.obdobi.label"),
         choices=heslar_12(HESLAR_OBDOBI, HESLAR_OBDOBI_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -168,7 +168,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     druh_nalezu = MultipleChoiceFilter(
         method="filter_druh_nalezu)",
-        label=_("Druh nálezu"),
+        label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(
             attrs={
@@ -191,14 +191,14 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
 
     datum_nalezu = DateFromToRangeFilter(
-        label=_("pas.filters.datumNalezu.label"),
+        label=_("pas.filters.samostatnyNalezFilter.datumNalezu.label"),
         field_name="datum_nalezu",
         widget=DateRangeWidget(attrs={"type": "date", "max": "2100-12-31"}),
         distinct=True,
     )
 
     hloubka_od = NumberFilter(
-        field_name="hloubka", label=_("pas.filters.hloubka.label"), lookup_expr="gte"
+        field_name="hloubka", label=_("pas.filters.samostatnyNalezFilter.hloubkaOd.label"), lookup_expr="gte"
     )
 
     hloubka_do = NumberFilter(field_name="hloubka", label=" ", lookup_expr="lte")
@@ -206,7 +206,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     # Filters by historie
     historie_typ_zmeny = MultipleChoiceFilter(
         choices=filter(lambda x: x[0].startswith("SN"), Historie.CHOICES),
-        label="Změna stavu",
+        label=_("pas.filters.samostatnyNalezFilter.historie_typ_zmeny.label"),
         field_name="historie__historie__typ_zmeny",
         widget=SelectMultiple(
             attrs={
@@ -220,7 +220,7 @@ class SamostatnyNalezFilter(HistorieFilter):
 
     pristupnost = ModelMultipleChoiceFilter(
         queryset=Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST),
-        label=_("Přístupnost"),
+        label=_("pas.filters.samostatnyNalezFilter.pristupnost.label"),
         field_name="pristupnost",
         widget=SelectMultipleSeparator(),
     )
@@ -276,14 +276,14 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
     vedouci = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace"),
         field_name="vedouci",
-        label="Vedoucí",
+        label=_("pas.filters.uzivatelSpolupraceFilter.vedouci.label"),
         widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
     spolupracovnik = ModelMultipleChoiceFilter(
         queryset=User.objects.select_related("organizace"),
         field_name="spolupracovnik",
-        label="Spolupracovník",
+        label=_("pas.filters.uzivatelSpolupraceFilter.spolupracovnik.label"),
         widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
     )
 
@@ -293,6 +293,33 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
+        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            self.filters["vedouci"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="vedouci",
+                label="Vedoucí",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete")
+            )
+            self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="spolupracovnik",
+                label="Spolupracovník",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete")
+            )
+        else:
+            self.filters["vedouci"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="vedouci",
+                label="Vedoucí",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+            )
+            self.filters["spolupracovnik"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.select_related("organizace"),
+                field_name="spolupracovnik",
+                label="Spolupracovník",
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+            )
         try:
             self.filters["vedouci"].extra.update(
                 {
@@ -303,7 +330,6 @@ class UzivatelSpolupraceFilter(filters.FilterSet):
             )
         except utils.ProgrammingError as err:
             self.filters["vedouci"].extra.update({"queryset": None})
-
         self.helper = UzivatelSpolupraceFilterFormHelper()
 
 
@@ -313,7 +339,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
     """
     form_method = "GET"
     history_divider = u"<span class='app-divider-label'>%(translation)s</span>" % {
-        "translation": _(u"pas.filter.history.divider.label")
+        "translation": _(u"pas.filters.samostatnyNalezFilterFormHelper.history.divider.label")
     }
     layout = Layout(
         Div(
@@ -341,7 +367,7 @@ class SamostatnyNalezFilterFormHelper(crispy_forms.helper.FormHelper):
             Div(
                 HTML('<span class="material-icons app-icon-expand">expand_more</span>'),
                 HTML(history_divider),
-                HTML(_('<hr class="mt-0" />')),
+                HTML('<hr class="mt-0" />'),
                 data_toggle="collapse",
                 href="#historieCollapse",
                 role="button",

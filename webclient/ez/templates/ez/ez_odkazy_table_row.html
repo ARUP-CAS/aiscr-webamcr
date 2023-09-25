@@ -8,11 +8,12 @@
     </td>
     <td>{{ arch_z.hlavni_katastr }}</td>
     {% if card_type == "akce" %}
-    <td>{{ arch_z.akce.hlavni_vedouci }}</td>
-    <td>{{ arch_z.akce.datum_zahajeni|date:'Y-m-d' }} - {{ arch_z.akce.datum_ukonceni|date:'Y-m-d' }}</td>
+      <td>{{ arch_z.akce.datum_zahajeni|date:'Y-m-d' }}</td>
+      <td>{{ arch_z.akce.datum_ukonceni|date:'Y-m-d' }}</td>
+      <td>{{ arch_z.hlavni_typ|check_if_none }}</td>
     {% elif card_type == "lokalita" %}
-    <td>{{ arch_z.lokalita.druh }}</td>
-    <td>{{ arch_z.lokalita.nazev }}</td>
+      <td>{{ arch_z.lokalita.druh }}</td>
+      <td>{{ arch_z.lokalita.nazev }}</td>
     {% endif %}
     {% if show.paginace %}
     <td >{{ z.paginace|check_if_none }}

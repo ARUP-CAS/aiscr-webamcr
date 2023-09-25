@@ -62,6 +62,14 @@ from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
 
+from core.ident_cely import get_record_from_ident
+from dj.models import DokumentacniJednotka
+from komponenta.models import Komponenta
+from core.models import Permissions
+from historie.models import Historie
+from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
+from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+
 logger = logging.getLogger(__name__)
 
 
@@ -196,7 +204,6 @@ def update_file(request, typ_vazby, file_id):
     """
     ident_cely = ""
     back_url = request.GET.get("next")
-    soubor = get_object_or_404(Soubor, id=file_id)
     return render(
         request,
         "core/upload_file.html",
@@ -282,6 +289,7 @@ def post_upload(request):
                 path=rep_bin_file.url_without_domain,
                 sha_512=sha_512,
             )
+            conn.validate_file_sha_512(s)
             duplikat = Soubor.objects.filter(sha_512=sha_512).order_by("pk")
             if not duplikat.exists():
                 logger.debug("core.views.post_upload.saving", extra={"s": s})
@@ -333,18 +341,19 @@ def post_upload(request):
             conn = FedoraRepositoryConnector(objekt)
             mimetype = get_mime_type(soubor.name)
             if s.repository_uuid is not None:
-                rep_bin_file = conn.update_binary_file(f"{checksum}_{soubor.name}", get_mime_type(soubor.name),
+                extension = soubor.name.split(".")[-1]
+                old_name = ".".join(s.nazev.split(".")[:-1])
+                new_name = f'{old_name}.{extension}'
+                rep_bin_file = conn.update_binary_file(new_name, get_mime_type(soubor.name),
                                                        soubor_data, s.repository_uuid)
-                name_without_checksum = soubor.name
-                soubor.name = checksum + "_" + new_name
-                s.nazev = checksum + "_" + new_name
                 logger.debug("core.views.post_upload.update", extra={"pk": s.pk, "new_name": new_name})
                 s.nazev = new_name
                 s.size_mb = rep_bin_file.size_mb
                 s.mimetype = mimetype
                 s.sha_512 = rep_bin_file.sha_512
                 s.save()
-                s.zaznamenej_nahrani_nove_verze(request.user, name_without_checksum)
+                s.zaznamenej_nahrani_nove_verze(request.user, new_name)
+                conn.validate_file_sha_512(s)
             if rep_bin_file is not None:
                 duplikat = (
                     Soubor.objects.filter(sha_512=rep_bin_file.sha_512)
@@ -371,9 +380,11 @@ def post_upload(request):
                     return JsonResponse(
                         {"filename": s.nazev, "id": s.pk}, status=200
                     )
+            else:
+                logger.warning("core.views.post_upload.rep_bin_file_is_none")
+                return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
     else:
         logger.warning("core.views.post_upload.no_file")
-
     return JsonResponse({"error": "Soubor se nepovedlo nahrát."}, status=500)
 
 
@@ -507,110 +518,14 @@ def redirect_ident_view(request, ident_cely):
     """
     Funkce pro získaní správneho redirectu na záznam podle ident%cely záznamu.
     """
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.project", extra={"ident_cely": ident_cely})
-        return redirect("projekt:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.archeologicka_akce", extra={"ident_cely": ident_cely})
-        return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,9}\D{1}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.samostatna_akce", extra={"ident_cely": ident_cely})
-        return redirect("arch_z:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.lokalita", extra={"ident_cely": ident_cely})
-        return redirect("lokalita:detail", slug=ident_cely)
-    if bool(re.fullmatch("(BIB|X-BIB)-\d{7,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.zdroj", extra={"ident_cely": ident_cely})
-        return redirect("ez:detail", slug=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-D\d{2}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
-        response = redirect("arch_z:detail", ident_cely=ident_cely[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{ident_cely}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{ident_cely.replace('-', '_')}",
-            max_age=1000,
+    object = get_record_from_ident(ident_cely)
+    if object:
+        return redirect(object.get_absolute_url())
+    else:
+        messages.error(
+            request, _("core.views.redirectView.identnotmatchingregex.message.text")
         )
-        return response
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-K\d{3}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.komponenta_on_dokumentacni_jednotka",
-                     extra={"ident_cely": ident_cely})
-        response = redirect("arch_z:detail", ident_cely=ident_cely[:-5])
-        response.set_cookie(
-            "show-form", f"detail_komponenta_form_{ident_cely}", max_age=1000
-        )
-        response.set_cookie(
-            "set-active", f"el_komponenta_{ident_cely.replace('-', '_')}", max_age=1000
-        )
-        return response
-    if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.adb", extra={"ident_cely": ident_cely})
-        adb = get_object_or_404(Adb, ident_cely=ident_cely)
-        dj_ident = adb.dokumentacni_jednotka.ident_cely
-        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
-            max_age=1000,
-        )
-        return response
-    if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.vyskovy_bod", extra={"ident_cely": ident_cely})
-        vb = get_object_or_404(VyskovyBod, ident_cely=ident_cely)
-        dj_ident = vb.adb.dokumentacni_jednotka.ident_cely
-        response = redirect("arch_z:detail", ident_cely=dj_ident[:-4])
-        response.set_cookie("show-form", f"detail_dj_form_{dj_ident}", max_age=1000)
-        response.set_cookie(
-            "set-active",
-            f"el_div_dokumentacni_jednotka_{dj_ident.replace('-', '_')}",
-            max_age=1000,
-        )
-        return response
-    if bool(re.fullmatch("(P|N)-\d{4}-\d{6,9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.pian", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.dokument_3D", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail-model-3D", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
-        re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu_3D", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail-model-3D", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(
-        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.dokument", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
-        re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)
-    ):
-        logger.debug("core.views.redirect_ident_view.obsah_cast_dokumentu", extra={"ident_cely": ident_cely})
-        return redirect("dokument:detail", ident_cely=ident_cely[:-5])
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.samostatny_nalez", extra={"ident_cely": ident_cely})
-        logger.debug("regex match for Samostatny nalez with ident %s", ident_cely)
-        return redirect("pas:detail", ident_cely=ident_cely)
-    if bool(re.fullmatch("(X-BIB|BIB)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(HES)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(ORG)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-    if bool(re.fullmatch("(OS)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
-        # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
-
-    messages.error(request, _("core.views.redirectView.identnotmatchingregex.message.text"))
-    return redirect("core:home")
-
+        return redirect("core:home")
 
 # for prolonging session ajax call
 @login_required
@@ -692,6 +607,8 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
     hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
     default_header = _("core.views.AkceListView.default_header.text")
     toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+    permission_model_lookup = ""
+    typ_zmeny_lookup = ""
 
     def get_paginate_by(self, queryset):
         return self.request.GET.get("per_page", self.paginate_by)
@@ -711,7 +628,98 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
         context["default_header"] = self.default_header
         context["toolbar_name"] = self.toolbar_name
         return context
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        permissions = Permissions.objects.filter(
+                main_role=self.request.user.hlavni_role,
+                address_in_app=self.request.resolver_match.route,
+            )
+        if permissions.count()>0:
+            new_qs = qs.none()
+            for perm in permissions:
+                new_qs = (new_qs | self.filter_by_permission(qs, perm))
+            qs = new_qs
+        
+        return qs.distinct()
+    
+    def filter_by_permission(self, qs, permission):
+        filterdoc = {}
+        logger.debug(permission.status)
+        if permission.status:
+            filterdoc.update(self.add_status_lookup(permission))
+        if permission.ownership:
+            filterdoc.update(self.add_ownership_lookup(permission.ownership))
+        qs = qs.filter(**filterdoc)
+        if permission.accessibility:
+            qs = self.add_accessibility_lookup(permission,qs)
 
+        return qs
+
+    def add_status_lookup(self, permission):
+        filterdoc = {}
+        subed_status = re.sub("[a-zA-Z]", "", permission.status)
+        if ">" in subed_status:
+            operator_str = "__gt"
+            status = subed_status[1]
+        elif "<" in subed_status:
+            operator_str = "__lt"
+            status = subed_status[1]
+        elif "-" in subed_status:
+            operator_str = ["__gte","__lte"]
+        else:
+            operator_str = ""
+            status = subed_status[0]
+        if isinstance(operator_str, list):
+            i = 0
+            for operator in operator_str:
+                str_oper = self.permission_model_lookup + "stav" + operator    
+                filterdoc.update(
+                    {
+                        str_oper:subed_status[i]
+                    }
+                )
+                i-=1
+        else:
+            str_oper = self.permission_model_lookup + "stav" + operator_str    
+            filterdoc.update(
+                {
+                    str_oper:status
+                }
+            )
+        return filterdoc
+    
+    def add_ownership_lookup(self, ownership):
+        filtered = Historie.objects.filter(typ_zmeny=self.typ_zmeny_lookup)
+        if ownership == Permissions.ownershipChoices.my:
+            usr_org_key = "uzivatel"
+            usr_org_value = self.request.user
+        elif ownership == Permissions.ownershipChoices.our:
+            usr_org_key = "uzivatel__organizace"    
+            usr_org_value = self.request.user.organizace
+        filter_historie = {usr_org_key:usr_org_value}
+        filtered = filtered.filter(**filter_historie)
+        historie_key = self.permission_model_lookup + "historie__historie__in"
+        filterdoc = {historie_key:filtered}
+        return filterdoc
+    
+    def add_accessibility_lookup(self,permission, qs):
+        group_to_accessibility={
+            ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
+            ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
+            ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+        }
+        new_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        accessibility_key = self.permission_model_lookup+"pristupnost__in"
+        i = self.request.user.hlavni_role.id
+        accessibilities = [PRISTUPNOST_ANONYM_ID]
+        while i > 0:
+            if self.request.user.hlavni_role.id != 4:
+                accessibilities.append(group_to_accessibility.get(i))
+            i -= 1
+        filter = {accessibility_key:accessibilities}
+        logger.debug(qs.filter(**filter))
+        return (new_qs | qs.filter(**filter)).distinct()
 
 class SearchListChangeColumnsView(LoginRequiredMixin, View):
     """
