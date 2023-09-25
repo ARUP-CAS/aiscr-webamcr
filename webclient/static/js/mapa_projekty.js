@@ -109,7 +109,7 @@ map.on('click', function (e) {
             const getUrl = window.location;
             const select = $("input[name='hlavni_katastr']");
             if (select) {
-                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/zjisti-katastr-souradnic/?long=${long}&lat=${lat}`)
+                fetch(getUrl.protocol + "//" + getUrl.host + `/heslar/mapa-zjisti-katastr/?long=${long}&lat=${lat}`)
                     .then(response => response.json())
                     .then(response => {
                         if (ORIGIN_KATASTR.length == 0) {

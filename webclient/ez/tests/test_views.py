@@ -73,7 +73,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/odeslat/{EXISTING_EZ_IDENT}", data, follow=True
+            f"/ext-zdroj/stav/odeslat/{EXISTING_EZ_IDENT}", data, follow=True
         )
         ez = ExterniZdroj.objects.get(ident_cely=EXISTING_EZ_IDENT)
         ez.refresh_from_db()
@@ -99,7 +99,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/potvrdit/{EXISTING_EZ_ODESLANY}", data, follow=True
+            f"/ext-zdroj/stav/potvrdit/{EXISTING_EZ_ODESLANY}", data, follow=True
         )
         ez.refresh_from_db()
         self.assertEqual(200, response.status_code)
@@ -125,7 +125,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/vratit/{EXISTING_EZ_ODESLANY}", data, follow=True
+            f"/ext-zdroj/stav/vratit/{EXISTING_EZ_ODESLANY}", data, follow=True
         )
         ez.refresh_from_db()
         self.assertEqual(200, response.status_code)
@@ -176,7 +176,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/pripojit-externi-odkaz/{EXISTING_EZ_IDENT}?type=akce",
+            f"/ext-zdroj/ext-odkaz/pripojit-az/{EXISTING_EZ_IDENT}?type=akce",
             data,
             follow=True,
         )
@@ -203,7 +203,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/edit-paginace/{eo.pk}",
+            f"/ext-zdroj/ext-odkaz/edit/{eo.pk}",
             data,
             follow=True,
         )
@@ -230,7 +230,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/odpojit-externi-odkaz/{EXISTING_EZ_IDENT}/{eo.pk}",
+            f"/ext-zdroj/ext-odkaz/odpojit-az/{EXISTING_EZ_IDENT}/{eo.pk}",
             data,
             follow=True,
         )
@@ -260,7 +260,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/pripojit-externi-odkaz-do-az/{EXISTING_EVENT_IDENT}",
+            f"/ext-zdroj/ext-odkaz/pripojit-ez/{EXISTING_EVENT_IDENT}",
             data,
             follow=True,
         )
@@ -290,7 +290,7 @@ class UrlTests(TestCase):
         }
         self.client.force_login(self.existing_user)
         response = self.client.post(
-            f"/ext-zdroj/odpojit-externi-odkaz-az/{eo.archeologicky_zaznam.ident_cely}/{eo.pk}",
+            f"/ext-zdroj/ext-odkaz/odpojit-ez/{eo.archeologicky_zaznam.ident_cely}/{eo.pk}",
             data,
             follow=True,
         )

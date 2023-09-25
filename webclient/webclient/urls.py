@@ -69,7 +69,7 @@ urlpatterns = [
     path("arch-z/lokalita/", include("lokalita.urls")),
     path("ext-zdroj/", include("ez.urls")),
     path("neident-akce/", include("neidentakce.urls")),
-    path("notifikace_projekty/",  include("notifikace_projekty.urls")),
+    path("notifikace-projekty/",  include("notifikace_projekty.urls")),
     path('', include('django_prometheus.urls')),
     path("i18n/", include("django.conf.urls.i18n")),
 ]

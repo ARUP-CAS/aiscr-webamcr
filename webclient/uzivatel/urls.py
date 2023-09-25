@@ -22,8 +22,8 @@ urlpatterns = [
         UzivatelAutocompletePublic.as_view(),
         name="uzivatel-autocomplete-public",
     ),
-    path("upravit-uzivatele/", UserAccountUpdateView.as_view(), name="update-uzivatel"),
-    path("upravit-notifikace/", update_notifications, name="update-notifications"),
+    path("uzivatel/edit/", UserAccountUpdateView.as_view(), name="update-uzivatel"),
+    path("uzivatel/notifikace/edit/", update_notifications, name="update-notifications"),
     path("api/token-auth/", ObtainAuthTokenWithUpdate.as_view()),
     path("api/uzivatel-info/", GetUserInfo.as_view()),
 ]
