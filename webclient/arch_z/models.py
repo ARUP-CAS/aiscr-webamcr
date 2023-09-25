@@ -489,6 +489,14 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
 
+    @property
+    def vedouci_organizace(self):
+        return ', '.join([str(x.organizace) for x in self.akcevedouci_set.all()])
+
+    @property
+    def vedouci(self):
+        return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """

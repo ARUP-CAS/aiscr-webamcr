@@ -80,11 +80,41 @@ class AkceTable(SearchTable):
     ident_cely = tables.Column(
         linkify=True, accessor="archeologicky_zaznam__ident_cely"
     )
+    katastr = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.katastr.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr",
+    )
+    pristupnost = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.pristupnost.label"),
+        default="",
+        accessor="archeologicky_zaznam__pristupnost",
+    )
+    hlavni_katastr = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.hlavni_katastr.label"),
+        default="",
+        accessor="archeologicky_zaznam__hlavni_katastr",
+    )
+    katastry = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.katastry.label"),
+        default="",
+        accessor="archeologicky_zaznam__katastry",
+    )
     stav = tables.columns.Column(default="", accessor="archeologicky_zaznam__stav")
     organizace = tables.columns.Column(
         default="", order_by="organizace__nazev_zkraceny"
     )
+    vedouci_organizace = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.vedouci_organizace.label"),
+        default="",
+        accessor="vedouci_organizace",
+    )
     hlavni_vedouci = tables.columns.Column(default="")
+    vedouci = tables.Column(
+        verbose_name=_("arch_z.tables.AkceTable.vedouci.label"),
+        default="",
+        accessor="vedouci",
+    )
     uzivatelske_oznaceni = tables.Column(
         verbose_name=_("arch_z.tables.AkceTable.uzivatelske_oznaceni.label"),
         default="",
@@ -112,7 +142,17 @@ class AkceTable(SearchTable):
     )
 
     app = "akce"
-    columns_to_hide = ("uzivatelske_oznaceni", "dalsi_katastry")
+    columns_to_hide = \
+        ("pristupnost",
+         "uzivatelske_oznaceni",
+         "katastry",
+         "specifikace_data",
+         "organizace_vedouci",
+         "ulozeni_nalezu",
+         "ulozeni_dokumentace",
+         "je_nz",
+         "odlozena_nz",
+         )
     first_columns = None
 
     class Meta:
@@ -138,14 +178,14 @@ class AkceTable(SearchTable):
             "pristupnost",
             "uzivatelske_oznaceni",
             "hlavni_katastr",
-            "dalsi_katastry",
+            "katastry",
             "specifikace_data",
             "datum_zahajeni",
             "datum_ukonceni",
             "organizace",
-            "akce_vedouci_organizace",
+            "vedouci_organizace",
             "hlavni_vedouci",
-            "akce_vedouci_vedouci",
+            "vedouci",
             "hlavni_typ",
             "vedlejsi_typ",
             "lokalizace_okolnosti",
