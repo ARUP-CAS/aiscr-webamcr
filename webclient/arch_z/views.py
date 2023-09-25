@@ -115,6 +115,7 @@ from projekt.forms import PripojitProjektForm
 from projekt.models import Projekt
 from services.mailer import Mailer
 from uzivatel.models import User
+from core.models import Permissions as p, check_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +241,7 @@ class AkceRelatedRecordUpdateView(TemplateView):
         context["zaznam"] = zaznam
         context["dokumentacni_jednotky"] = self.get_jednotky()
         context["dokumenty"] = self.get_dokumenty()
-        context["history_dates"] = get_history_dates(zaznam.historie)
+        context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
         context["show"] = get_detail_template_shows(
             zaznam, self.get_jednotky(), self.request.user
         )
@@ -361,7 +362,7 @@ class DokumentacniJednotkaUpdateView(
         jednotky = self.get_jednotky()
         # check po MR
         context["j"] = get_dj_form_detail(
-            "akce", jednotka, jednotky, show, old_adb_post
+            "akce", jednotka, jednotky, show, old_adb_post,self.request.user
         )
         return context
 
@@ -1187,13 +1188,13 @@ def get_detail_template_shows(archeologicky_zaznam, dok_jednotky, user, app="akc
     Returns:
         historie: dictionary možností pro zobrazení.
     """
-    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY
-    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY
-    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce"
+    show_vratit = archeologicky_zaznam.stav > AZ_STAV_ZAPSANY and check_permissions(p.actionChoices.archz_vratit, user, archeologicky_zaznam.ident_cely)
+    show_odeslat = archeologicky_zaznam.stav == AZ_STAV_ZAPSANY and check_permissions(p.actionChoices.archz_odeslat, user, archeologicky_zaznam.ident_cely)
+    show_archivovat = archeologicky_zaznam.stav == AZ_STAV_ODESLANY and app == "akce" and check_permissions(p.actionChoices.archz_archivovat, user, archeologicky_zaznam.ident_cely)
     show_edit = archeologicky_zaznam.stav not in [
         AZ_STAV_ARCHIVOVANY,
-    ]
-    show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY
+    ] and check_permissions(p.actionChoices.akce_edit, user, archeologicky_zaznam.ident_cely)
+    show_arch_links = archeologicky_zaznam.stav == AZ_STAV_ARCHIVOVANY and check_permissions(p.actionChoices.archz_historie, user, archeologicky_zaznam.ident_cely)
     zmenit_proj_akci = False
     zmenit_sam_akci = False
     if archeologicky_zaznam.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
@@ -1406,6 +1407,7 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
             and jednotka.typ.id == TYP_DJ_SONDA_ID
             and not has_adb
             and show["editovat"]
+            and check_permissions(p.actionChoices.adb_add,request.user,jednotka.ident_cely)
         )
         show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
         show_add_pian = False if jednotka.pian else True
@@ -1774,7 +1776,7 @@ class ArchZTableRowView(LoginRequiredMixin, View):
         return HttpResponse(render_to_string("ez/ez_odkazy_table_row.html", context))
 
 
-def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None):
+def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=None, user=None):
     """
     Funkce pro získaní dictionary contextu dokumentační jednotky.
 
@@ -1805,6 +1807,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         and jednotka.typ.id == TYP_DJ_SONDA_ID
         and not has_adb
         and show["editovat"]
+        and check_permissions(p.actionChoices.adb_add,user, jednotka.ident_cely)
     )
     show_add_komponenta = not jednotka.negativni_jednotka and show["editovat"]
     show_add_pian = False if jednotka.pian else True

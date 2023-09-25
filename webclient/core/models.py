@@ -325,6 +325,14 @@ class Permissions(models.Model):
         my = "my", "core.models.permissions.ownershipChoices.my"
         our = "our", "core.models.permissions.ownershipChoices.our"
 
+    class actionChoices(models.TextChoices):
+        adb_add = "adb_add", "core.models.permissions.actionChoices.adb_add"
+        archz_vratit = "archz_vratit", "core.models.permissions.actionChoices.archz_vratit"
+        archz_odeslat = "archz_odeslat", "core.models.permissions.actionChoices.archz_odeslat"
+        archz_archivovat = "archz_archivovat", "core.models.permissions.actionChoices.archz_archivovat"
+        akce_edit = "akce_edit", "core.models.permissions.actionChoices.akce_edit"
+        archz_historie = "archz_historie", "core.models.permissions.actionChoices.archz_historie"
+
     pristupnost_to_groups = {
         PRISTUPNOST_ANONYM_ID: 0,
         PRISTUPNOST_BADATEL_ID: ROLE_BADATEL_ID,
@@ -360,24 +368,25 @@ class Permissions(models.Model):
         null=True,
         choices=ownershipChoices.choices,
     )
+    action = models.CharField(
+        max_length=25,
+        verbose_name=_("core.models.permissions.action"),
+        null=True,
+        choices=actionChoices.choices,
+    )
 
     class Meta:
         verbose_name = _("core.model.permissions.modelTitle.label")
         verbose_name_plural = _("core.model.permissions.modelTitles.label")
 
-    def check_concrete_permission(self, request_kwargs, user):
+    def check_concrete_permission(self, user, ident=None):
         self.object = None
         self.logged_in_user = user
         self.permission_object = None
-        if len(request_kwargs) > 0:
-            self.ident = list(request_kwargs.values())[0]
+        self.ident = ident
         if not self.check_base():
             return False
-        try: 
-            self.ident
-        except AttributeError as e:
-            logger.debug(e)
-        else:
+        if self.ident is not None:
             if not self.check_status():
                 return False
             if not self.check_ownership(self.ownership):
@@ -448,3 +457,22 @@ class Permissions(models.Model):
                     return False
         return True
     
+
+def check_permissions(action, user, ident=None):
+    permission_set = Permissions.objects.filter(
+        main_role=user.hlavni_role,
+        action=action,
+    )
+    logger.debug("checking action permission")
+    logger.debug(permission_set)
+    if permission_set.count() > 0:
+        tested = []
+        for concrete_permission in permission_set:
+            tested.append(
+                concrete_permission.check_concrete_permission(
+                    user, ident
+                )
+            )
+        if not any(tested):
+            return False
+    return True

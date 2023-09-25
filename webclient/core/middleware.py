@@ -31,10 +31,14 @@ class PermissionMiddleware:
             )
             if permission_set.count() > 0:
                 tested = []
+                if len(resolver.kwargs) > 0:
+                    ident = list(resolver.kwargs.values())[0]
+                else:
+                    ident=None
                 for concrete_permission in permission_set:
                     tested.append(
                         concrete_permission.check_concrete_permission(
-                            resolver.kwargs, request.user
+                            request.user, ident
                         )
                     )
                 if any(tested):

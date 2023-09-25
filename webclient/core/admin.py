@@ -31,6 +31,7 @@ from .constants import (
     PERMISSIONS_SHEET_VLASTNICTVI_NAME,
     PERMISSIONS_SHEET_APP_NAME,
     PERMISSIONS_SHEET_URL_NAME,
+    PERMISSIONS_SHEET_ACTION_NAME,
 )
 
 logger = logging.getLogger(__name__)
@@ -162,6 +163,9 @@ class PermissionAdmin(admin.ModelAdmin):
     """
 
     change_list_template = "core/permissions_changelist.html"
+    list_display = [
+        "address_in_app", "main_role", "action"
+    ]
 
     def get_urls(self):
         """
@@ -209,9 +213,11 @@ class PermissionAdmin(admin.ModelAdmin):
                 return redirect(reverse("admin:core_permissions_changelist"))
             Permissions.objects.all().delete()
             sheet["result"] = sheet.apply(self.check_save_row, axis=1)
-            sheet.drop(sheet.iloc[:, 2:21], axis=1, inplace=True)
+            sheet.drop(sheet.iloc[:, 3:22], axis=1, inplace=True)
             sheet = sheet.reset_index(drop=True)
-            request.session["table"] = sheet.to_json(orient="records")
+            logger.debug(sheet.info())
+            json_sheet = sheet.to_json(orient="records")
+            cache.set("import_json_results",json_sheet,120)
             return redirect(reverse("admin:import_success"))
         form = PermissionImportForm()
         media = self.media
@@ -238,10 +244,10 @@ class PermissionAdmin(admin.ModelAdmin):
         Metóda pro validaci importovaného excelu a jeho úpravu.
         """
         if (
-            not sheet.columns[2] == PERMISSIONS_SHEET_ZAKLADNI_NAME
-            or not sheet.columns[7] == PERMISSIONS_SHEET_STAV_NAME
-            or not sheet.columns[11] == PERMISSIONS_SHEET_VLASTNICTVI_NAME
-            or not sheet.columns[15] == PERMISSIONS_SHEET_PRISTUPNOST_NAME
+            not sheet.columns[3] == PERMISSIONS_SHEET_ZAKLADNI_NAME
+            or not sheet.columns[8] == PERMISSIONS_SHEET_STAV_NAME
+            or not sheet.columns[12] == PERMISSIONS_SHEET_VLASTNICTVI_NAME
+            or not sheet.columns[16] == PERMISSIONS_SHEET_PRISTUPNOST_NAME
         ):
             raise WrongSheetError
         sheet.columns = sheet.iloc[0]
@@ -250,11 +256,12 @@ class PermissionAdmin(admin.ModelAdmin):
         if (
             not sheet.columns[0] == PERMISSIONS_SHEET_APP_NAME
             or not sheet.columns[1] == PERMISSIONS_SHEET_URL_NAME
-            or not sheet.columns[2] == "A"
+            or not sheet.columns[2] == PERMISSIONS_SHEET_ACTION_NAME
+            or not sheet.columns[3] == "A"
         ):
             raise WrongSheetError
-        i = 3
-        while i < 19:
+        i = 4
+        while i < 20:
             if (
                 not sheet.columns[i] == "B"
                 or not sheet.columns[i + 1] == "C"
@@ -297,25 +304,26 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda pro kontrolu a uložení jednotlivého oprávnení z řádku excelu.
         """
-        if row[3 + i] == "X":
+        if row[4 + i] == "X":
             Permissions.objects.create(
                 address_in_app=str(row[0]) + "/" + str(row[1]),
                 base=False,
                 main_role=Group.objects.get(id=i + 1),
+                action=None if pd.isna(row[2]) else row[2]
             )
             return True
-        elif row[3 + i] == "*":
+        elif row[4 + i] == "*":
             base = True
         else:
             return False
-        if "|" in row[7 + i]:
+        if "|" in row[8 + i]:
             n = 0
             results = list()
-            while n < len(row[7 + i].split("|")):
+            while n < len(row[8 + i].split("|")):
                 new_row = row
-                new_row[7 + i] = row[7 + i].split("|")[n].strip()
-                new_row[11 + i] = row[11 + i].split("|")[n].strip()
-                new_row[15 + i] = row[15 + i].split("|")[n].strip()
+                new_row[8 + i] = row[8 + i].split("|")[n].strip()
+                new_row[12 + i] = row[12 + i].split("|")[n].strip()
+                new_row[16 + i] = row[16 + i].split("|")[n].strip()
                 results.append(self.save_permission(new_row, i))
                 n += 1
             if all(a == True for a in results):
@@ -323,25 +331,25 @@ class PermissionAdmin(admin.ModelAdmin):
             else:
                 return False
         else:
-            if row[7 + i] == "*":
+            if row[8 + i] == "*":
                 status = None
-            elif self.check_status_regex(row[7 + i]):
-                status = row[7 + i]
+            elif self.check_status_regex(row[8 + i]):
+                status = row[8 + i]
             else:
                 return False
-        if row[11 + i] == "*":
+        if row[12 + i] == "*":
             ownership = None
-        elif row[11 + i].endswith(".my"):
+        elif row[12 + i].endswith(".my"):
             ownership = Permissions.ownershipChoices.my
-        elif row[11 + i].endswith(".ours"):
+        elif row[12 + i].endswith(".ours"):
             ownership = Permissions.ownershipChoices.our
         else:
             return False
-        if row[15 + i] == "*":
+        if row[16 + i] == "*":
             accessibility = None
-        elif row[15 + i].endswith("(my)"):
+        elif row[16 + i].endswith("(my)"):
             accessibility = Permissions.ownershipChoices.my
-        elif row[15 + i].endswith("(ours)"):
+        elif row[16 + i].endswith("(ours)"):
             accessibility = Permissions.ownershipChoices.our
         else:
             return False
@@ -358,6 +366,7 @@ class PermissionAdmin(admin.ModelAdmin):
                 status=status,
                 ownership=ownership,
                 accessibility=accessibility,
+                action=None if pd.isna(row[2]) else row[2]
             )
         return True
 
@@ -376,7 +385,8 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda view pro zobrazení tabulky s výsledkom importu.
         """
-        json_table = request.session.get("table", None)
+        json_table = cache.get("import_json_results")
+        cache.delete("import_json_results")
         if not json_table:
             return redirect(reverse("admin:core_permissions_changelist"))
         table = json.loads(json_table)
