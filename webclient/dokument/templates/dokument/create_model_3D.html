@@ -84,7 +84,14 @@
           </div>
         </div>
       </div>
-      <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
+      <div class="form-group">
+        <button type="submit" id="newDocumentSubmitBtn" class="btn btn-primary">{{ button }}</button>
+        {% if object %}
+          <a type="button" class="btn btn-secondary" href="{% url 'dokument:detail-model-3D' object.ident_cely %}">{% trans "dokument.templates.dokument.create.detailForm.button.zpet.label" %}</a>
+        {% else %}
+          <a type="button" class="btn btn-secondary" href="{% url 'dokument:index-model-3D' %}">{% trans "dokument.templates.dokument.create.detailForm.button.zpet.label" %}</a>
+        {% endif %}
+      </div>
     </form>
   </div>
 {% endblock %}
