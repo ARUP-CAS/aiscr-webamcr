@@ -29,7 +29,7 @@ def create_arch_z_metadata(sender, instance: ArcheologickyZaznam, **kwargs):
     """
     if not instance.suppress_signal:
         instance.save_metadata()
-    if instance.pristupnost.id != instance.initial_pristupnost.id:
+    if instance.initial_pristupnost is not None and instance.pristupnost.id != instance.initial_pristupnost.id:
         for dok_jednotka in instance.dokumentacni_jednotky_akce.all():
             initial_pristupnost \
                 = dok_jednotka.pian.evaluate_pristupnost_change(instance.initial_pristupnost.id, instance.id)

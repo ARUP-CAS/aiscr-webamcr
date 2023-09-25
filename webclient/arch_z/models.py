@@ -380,6 +380,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
         if hasattr(self, "pristupnost") and self.pristupnost is not None:
             self.initial_pristupnost = self.pristupnost
+        else:
+            self.initial_pristupnost = None
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):

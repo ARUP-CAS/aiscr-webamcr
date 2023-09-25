@@ -169,7 +169,10 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                               FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK):
-            response = requests.get(url, headers=headers, auth=auth, verify=False)
+            try:
+                response = requests.get(url, headers=headers, auth=auth, verify=False)
+            except requests.exceptions.RequestException:
+                return None
         elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                               FedoraRequestType.CREATE_LINK):
@@ -194,7 +197,7 @@ class FedoraRepositoryConnector:
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                                 FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                                 FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3,
+                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, FedoraRequestType.GET_DELETED_LINK,
                                 ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok",
@@ -445,9 +448,9 @@ class FedoraRepositoryConnector:
 
     def record_deletion(self):
         logger.debug("core_repository_connector.record_deletion.start", extra={"ident_cely": self.record.ident_cely})
-        url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK)
+        url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK, ident_cely=self.record.ident_cely)
         result = self._send_request(url, FedoraRequestType.GET_DELETED_LINK)
-        if result.status_code == 404 or "not found" in result.text:
+        if result is None or result.status_code == 404 or "not found" in result.text:
             logger.debug("core_repository_connector.record_deletion.already_exists",
                          extra={"ident_cely": self.record.ident_cely})
         else:
