@@ -60,7 +60,7 @@
         <div class="form-group">
           <input type="submit" name="save" value="{% trans 'projekt.templates.edit.submitButton.text' %}"
                  class="btn btn-primary app-entity-projekt-btn" id="submit-id-save">
-          <a type="button" class="btn btn-secondary" {% url 'projekt:detail' projekt.ident_cely %}>{% trans "projekt.templates.edit.backButton.text" %}</a>
+          <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' projekt.ident_cely %}">{% trans "projekt.templates.edit.backButton.text" %}</a>
         </div>
       </div>
 		</form>
