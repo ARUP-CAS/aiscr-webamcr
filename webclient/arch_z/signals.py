@@ -1,10 +1,16 @@
 import logging
 
+from django.db.models import Q
+
 from arch_z.models import ArcheologickyZaznam, ExterniOdkaz
 from core.constants import ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
+
+from dokument.models import DokumentCast, Dokument
 from historie.models import HistorieVazby
+from komponenta.models import KomponentaVazby, Komponenta
+from neidentakce.models import NeidentAkce
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +53,41 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         instance.archeologicky_zaznam.save_metadata()
     if instance.externi_zdroj is not None:
         instance.externi_zdroj.save_metadata()
+
+
+@receiver(pre_delete, sender=ArcheologickyZaznam)
+def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **kwargs):
+    """
+        Trigger delete_connected_documents
+    """
+    logger.debug("arch_z.signals.delete_arch_z_repository_container.start", extra={"arch_z": instance.ident_cely})
+    dokument_query = Dokument.objects.filter(~Q(ident_cely__startswith="X-"))
+    for item in dokument_query:
+        delete_dokument = True
+        item: Dokument
+        dokument_cast_query = DokumentCast.objects.filter(archeologicky_zaznam=item).filter(dokument=item)
+        for inner_item in dokument_cast_query:
+            inner_item: DokumentCast
+            if inner_item.filter(dokument=item).filter(~Q(archeologicky_zaznam=instance)).exists():
+                delete_dokument = False
+        if delete_dokument:
+            item.delete()
+            logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.delete.part_2",
+                         extra={"arch_z": item.ident_cely})
+        else:
+            logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.not_delete.part_2",
+                         extra={"arch_z": item.ident_cely})
+
+    for item in instance.casti_dokumentu.all():
+        item: DokumentCast
+        if item.komponenty.komponenty.exists():
+            continue
+        if item.neident_akce.exist():
+            continue
+        item.delete()
+        logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.delete.part_1",
+                     extra={"arch_z": item.ident_cely})
+    logger.debug("arch_z.signals.delete_arch_z_repository_container.end", extra={"arch_z": instance.ident_cely})
 
 
 @receiver(post_delete, sender=ArcheologickyZaznam)
