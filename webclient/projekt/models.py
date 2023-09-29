@@ -267,6 +267,47 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         ).save()
         self.save()
 
+    def archive_project_documentation(self):
+        # making txt file with deleted files
+        today = datetime.datetime.now()
+        soubory = self.soubory.soubory.exclude(
+            nazev__regex="^log_dokumentace_"
+        )
+        if soubory.count() > 0:
+            filename = (
+                    "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
+            )
+            file_content = (
+                    "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
+                    % today.strftime("%d. %m. %Y")
+            )
+            file_content += "\n".join(soubory.values_list("nazev", flat=True))
+            prev = 0
+            prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
+            new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
+            file = io.BytesIO()
+            file.write(file_content.encode("utf-8"))
+            file.seek(0)
+            conn = FedoraRepositoryConnector(self)
+            mimetype = get_mime_type(new_filename)
+            rep_bin_file = conn.save_binary_file(new_filename, mimetype, file)
+            aktual_soubor = Soubor(
+                vazba=self.soubory,
+                nazev=new_filename,
+                mimetype=mimetype,
+                size_mb=rep_bin_file.size_mb,
+                path=rep_bin_file.url_without_domain,
+                sha_512=rep_bin_file.sha_512,
+            )
+            file_deleted_pk_list = [x.pk for x in soubory]
+            aktual_soubor.save()
+            for file in soubory:
+                if file.repository_uuid is not None:
+                    conn.delete_binary_file(file)
+                file.delete()
+            logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
+                         extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list})
+
     def set_archivovany(self, user):
         """
         Metóda pro nastavení stavu archivovaný a uložení změny do historie.
@@ -277,46 +318,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             # Removing personal information from the projekt announcement
             if self.has_oznamovatel():
                 self.oznamovatel.delete()
-            # making txt file with deleted files
-            today = datetime.datetime.now()
-            soubory = self.soubory.soubory.exclude(
-                nazev__regex="^log_dokumentace_"
-            )
-            if soubory.count() > 0:
-                filename = (
-                        "log_dokumentace_" + today.strftime("%Y-%m-%d-%H-%M") + ".txt"
-                )
-                file_content = (
-                        "Z důvodu ochrany osobních údajů byly dne %s automaticky odstraněny následující soubory z projektové dokumentace:\n"
-                        % today.strftime("%d. %m. %Y")
-                )
-                file_content += "\n".join(soubory.values_list("nazev", flat=True))
-                prev = 0
-                prev = zlib.crc32(bytes(file_content, "utf-8"), prev)
-                new_filename = "%d_%s" % (prev & 0xFFFFFFFF, filename)
-                file = io.BytesIO()
-                file.write(file_content.encode("utf-8"))
-                file.seek(0)
-                conn = FedoraRepositoryConnector(self)
-                mimetype = get_mime_type(new_filename)
-                rep_bin_file = conn.save_binary_file(new_filename, mimetype, file)
-                aktual_soubor = Soubor(
-                    vazba=self.soubory,
-                    nazev=new_filename,
-                    mimetype=mimetype,
-                    size_mb=rep_bin_file.size_mb,
-                    path=rep_bin_file.url_without_domain,
-                    sha_512=rep_bin_file.sha_512,
-                )
-                file_deleted_pk_list = [x.pk for x in soubory]
-                aktual_soubor.save()
-                for file in soubory:
-                    if file.repository_uuid is not None:
-                        conn.delete_binary_file(file)
-                    file.delete()
-                logger.debug("projekt.models.Projekt.set_archivovany.files_deleted",
-                             extra={"deleted": len(file_deleted_pk_list), "deleted_list": file_deleted_pk_list})
-
+                self.archive_project_documentation()
         self.stav = PROJEKT_STAV_ARCHIVOVANY
         Historie(typ_zmeny=ARCHIVACE_PROJ, uzivatel=user, vazba=self.historie).save()
         Mailer.send_ea01(project=self, user=user)

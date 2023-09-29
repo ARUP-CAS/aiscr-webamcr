@@ -1,20 +1,27 @@
+import datetime
 import logging
 import traceback
 
 from celery import shared_task
+from django.db.models import Q, F, Min
+from django.db.models.functions import Upper
+from django.utils import timezone
 
 from adb.models import Adb
 from arch_z.models import ArcheologickyZaznam
-from core.constants import ODESLANI_SN, ARCHIVACE_SN
+from core.constants import ODESLANI_SN, ARCHIVACE_SN, PROJEKT_STAV_ZRUSENY, RUSENI_PROJ, PROJEKT_STAV_VYTVORENY, \
+    OZNAMENI_PROJ, ZAPSANI_PROJ
 from core.models import Soubor
 from cron.convertToSJTSK import get_multi_transform_to_sjtsk
 from cron.classes import MyList
 from cron.functions import collect_en01_en02
 from django.db import connection
+from django.utils.translation import gettext as _
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
 from dokument.models import Dokument, Let
 from ez.models import ExterniZdroj
+from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
 from pas.models import SamostatnyNalez
 from pian.models import Pian
@@ -31,6 +38,14 @@ NUM_TO_SJTSK_CONVERT = 200
 
 @shared_task
 def send_notifications():
+    """
+     Každý den zkontrolovat a případně odeslat upozornění uživatelům na základě pole projekt.datum_odevzdani_NZ,
+     pokud je projekt ve stavu <P5 a zároveň:
+        -- pokud [dnes] + 90 dní = datum_odevzdani_NZ => email E-NZ-01
+        -- pokud [dnes] - 1 den = datum_odevzdani_NZ => email E-NZ-02
+
+     Každý den kontrola a odeslání emailů E-N-01 a E-N-02
+    """
     logger.debug("cron.Notifications.do.start")
     Mailer.send_enz01()
     logger.debug("cron.Notifications.do.send_enz_01.end")
@@ -438,4 +453,103 @@ def record_ident_change(class_name, record_pk, old_ident):
         return
     connector = FedoraRepositoryConnector(record)
     connector.record_ident_change(old_ident)
-    logger.debug("cron.record_ident_change.do.end")
+
+
+@shared_task
+def delete_personal_data_canceled_projects():
+    """
+     Rok po zrušení projektu nahradit související údaje v tabulce oznamovatel řetězcem “RRRR-MM-DD: údaj odstraněn”,
+     kromě pole projekt.oznamovatel + odstranit projektovou dokumentaci a vytvořit log (jako při archivaci projektu).
+    """
+    logger.debug("core.cron.delete_personal_data_canceled_projects.do.start")
+    deleted_string = _("core.tasks.nalez_to_jsk.data_deleted")
+    today = datetime.datetime.now().date()
+    year_ago = today - datetime.timedelta(days=365)
+    projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
+        .filter(~Q(oznamovatel__email__icontains=deleted_string))\
+        .filter(historie__historie__typ_zmeny=RUSENI_PROJ)\
+        .filter(historie__historie__datum_zmeny__lt=year_ago)
+    for item in projects:
+        item: Projekt
+        if item.has_oznamovatel():
+            logger.debug("core.cron.delete_personal_data_canceled_projects.do.project",
+                         extra={"project": item.ident_cely})
+            item.oznamovatel.email = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.adresa = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.odpovedna_osoba = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.oznamovatel = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.telefon = f"{today.strftime('%Y%m%d')}: {deleted_string}"
+            item.oznamovatel.save()
+            item.archive_project_documentation()
+    logger.debug("core.cron.delete_personal_data_canceled_projects.do.end")
+
+
+@shared_task
+def delete_reporter_data_canceled_projects():
+    """
+     Deset let po zápisu projektu smazat související záznam z tabulky oznamovatel + odstranit projektovou dokumentaci
+     a vytvořit log (jako při archivaci projektu).
+    """
+    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.start")
+    today = datetime.datetime.now().date()
+    ten_years_ago = today - datetime.timedelta(days=365*10)
+    projects = Projekt.objects.filter(stav=PROJEKT_STAV_ZRUSENY)\
+        .filter(oznamovatel__isnull=False)\
+        .filter(historie__historie__datum_zmeny__lt=ten_years_ago)
+    for item in projects:
+        logger.debug("core.cron.delete_reporter_data_canceled_projects.do.project", extra={"project": item.ident_cely})
+        item.oznamovatel.delete()
+        item.archive_project_documentation()
+    logger.debug("core.cron.delete_reporter_data_canceled_projects.do.end")
+
+
+@shared_task
+def change_document_accessibility():
+    """
+    Každý den změnit přístupnost dokumentů, u kterých datum_zverejneni<=[dnes], a to na přístupnost stanovenou
+    v hesláři organizace (podle vazby dokument.organizace), ale nikdy ne na vyšší přístupnost, než má nejlépe
+    přístupný připojený archeologický záznam (tj. když mají připojené AZ C a D, bude mít dokument nejvýše C).
+    """
+    logger.debug("core.cron.change_document_accessibility.do.start")
+    documents = Dokument.objects\
+        .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
+        .filter(Q(pristupnost__razeni__gt=Min(F("casti__archeologicky_zaznam__pristupnost__razeni")))
+                | ~Q(pristupnost__razeni=F('organizace__zverejneni_pristupnost__razeni')))
+    for item in documents:
+        item: Dokument
+        pristupnost_razeni = min(*[x for x in item.casti.archeologicky_zaznam.pristupnost.razeni],
+                                 item.organizace.zverejneni_pristupnost.razeni)
+        pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST).filter(razeni=pristupnost_razeni).first()
+        item.pristupnost = pristupnost
+        item.save()
+    logger.debug("core.cron.change_document_accessibility.do.end")
+
+
+@shared_task
+def delete_unsubmited_projects():
+    """
+     Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
+    """
+    now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
+    Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)\
+        .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).delete()
+
+
+@shared_task
+def cancel_old_projects():
+    """
+     Každý den převést na P8 projekty v P1 starší tří let, které mají plánované datum zahájení více než rok
+     v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
+     nelze očekávat zahájení.”
+    """
+    toady_minus_3_years = datetime.datetime.today() - datetime.timedelta(days=365 * 3)
+    toady_minus_1_year = datetime.datetime.today() - datetime.timedelta(days=365)
+    projects = Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
+        .filter(Q(historie__historie__typ_zmeny=ZAPSANI_PROJ)
+                & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
+        .annotate(upper=Upper('planovane_zahajeni')).annotate(new_upper=F('upper')) \
+        .filter(upper__lte=toady_minus_1_year)
+    cancelled_string = _("core.tasks.cancel_old_projects.cancelled")
+    for project in projects:
+        project: Projekt
+        project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string)

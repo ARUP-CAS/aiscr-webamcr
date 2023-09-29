@@ -222,23 +222,22 @@ class Mailer:
 
     @classmethod
     def send_enz01(cls):
-        now = datetime.datetime.now()
-        in_90_days = now + datetime.timedelta(days=90)
+        today_minus_90_days = (datetime.datetime.now() - datetime.timedelta(days=90)).date()
         IDENT_CELY = 'E-NZ-01'
         logger.debug("services.mailer.send_enz01", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
-                                                         termin_odevzdani_nz=in_90_days)
+        projects = projekt.models.Projekt.objects.filter(stav__lt=PROJEKT_STAV_UKONCENY_V_TERENU,
+                                                         termin_odevzdani_nz=today_minus_90_days)
         cls._send_notification_for_projects(projects, notification_type)
 
     @classmethod
     def send_enz02(cls):
-        today = datetime.datetime.now().date()
+        today_plus_1_day = (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         IDENT_CELY = 'E-NZ-02'
         logger.debug("services.mailer.send_enz02", extra={"ident_cely": IDENT_CELY})
         notification_type = uzivatel.models.UserNotificationType.objects.get(ident_cely=IDENT_CELY)
-        projects = projekt.models.Projekt.objects.filter(stav=PROJEKT_STAV_UKONCENY_V_TERENU,
-                                                         termin_odevzdani_nz__lt=today)
+        projects = projekt.models.Projekt.objects.filter(stav__lt=PROJEKT_STAV_UKONCENY_V_TERENU,
+                                                         termin_odevzdani_nz__lt=today_plus_1_day)
         cls._send_notification_for_projects(projects, notification_type)
 
     @classmethod
