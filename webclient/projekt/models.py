@@ -207,7 +207,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
             poznamka=f"{old_ident} -> {self.ident_cely}",
         ).save()
         self.save()
-        self.record_ident_change(old_ident)
         logger.debug("projekt.models.Projekt.set_schvaleny.end", extra={"old_ident": old_ident})
 
     def set_zapsany(self, user):
@@ -218,7 +217,7 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         Historie(typ_zmeny=ZAPSANI_PROJ, uzivatel=user, vazba=self.historie).save()
         self.save()
         if self.typ_projektu == TYP_PROJEKTU_ZACHRANNY_ID:
-            self.create_confirmation_document(user)
+            self.create_confirmation_document(user=user)
 
     def set_prihlaseny(self, user):
         """
@@ -606,6 +605,11 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
         else:
             return ""
 
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

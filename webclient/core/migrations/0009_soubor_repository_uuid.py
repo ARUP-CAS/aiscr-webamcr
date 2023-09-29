@@ -9,9 +9,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name="soubor",
-            name="repository_uuid",
-            field=models.CharField(blank=True, db_index=True, max_length=36, null=True),
-        ),
+
     ]

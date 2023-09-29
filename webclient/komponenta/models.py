@@ -1,4 +1,6 @@
 import logging
+
+from django.urls import reverse
 from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     DOKUMENTACNI_JEDNOTKA_RELATION_TYPE,
@@ -73,6 +75,13 @@ class Komponenta(ExportModelOperationsMixin("komponenta"), models.Model):
     class Meta:
         db_table = "komponenta"
         ordering = ["ident_cely"]
+
+    def get_absolute_url(self):
+        return reverse("arch_z:update-komponenta", args=[self.ident_cely[:-5],self.komponenta_vazby.dokumentacni_jednotka.ident_cely,self.ident_cely])
+    
+    def get_permission_object(self):
+        return self.komponenta_vazby.dokumentacni_jednotka.get_permission_object()
+    
 
 
 class KomponentaAktivita(ExportModelOperationsMixin("komponenta_aktivita"), models.Model):

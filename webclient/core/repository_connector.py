@@ -1,6 +1,7 @@
 import hashlib
 import io
 import logging
+import re
 from enum import Enum
 from typing import Union, Optional
 
@@ -13,6 +14,9 @@ from xml_generator.generator import DocumentGenerator
 
 logger = logging.getLogger(__name__)
 
+
+class FedoraValidationError(Exception):
+    pass
 
 class FedoraError(Exception):
     def __init__(self, message, code):
@@ -86,6 +90,10 @@ class FedoraRequestType(Enum):
     DELETE_BINARY_FILE = 25
     DELETE_BINARY_FILE_COMPLETELY = 26
     GET_DELETED_LINK = 27
+    CONNECT_DELETED_RECORD_1 = 28
+    CONNECT_DELETED_RECORD_2 = 29
+    CONNECT_DELETED_RECORD_3 = 30
+    CONNECT_DELETED_RECORD_4 = 31
 
 
 class FedoraRepositoryConnector:
@@ -122,7 +130,8 @@ class FedoraRepositoryConnector:
             return f"{base_url}/record/"
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.CREATE_METADATA,
                               FedoraRequestType.CREATE_BINARY_FILE_CONTAINER, FedoraRequestType.DELETE_CONTAINER,
-                              FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS):
+                              FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
+                              FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             return f"{base_url}/record/{self.record.ident_cely}"
         elif request_type in (FedoraRequestType.CREATE_LINK, ):
             return f"{base_url}/model/{self._get_model_name()}/member"
@@ -148,8 +157,10 @@ class FedoraRepositoryConnector:
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3):
             return f"{base_url}/record/{ident_cely}"
-        elif request_type == FedoraRequestType.GET_DELETED_LINK:
+        elif request_type in (FedoraRequestType.GET_DELETED_LINK, FedoraRequestType.CONNECT_DELETED_RECORD_3,):
             return f"{base_url}/model/deleted/member/{ident_cely}"
+        elif request_type in (FedoraRequestType.CONNECT_DELETED_RECORD_4,):
+            return f"{base_url}/model/deleted/member/{ident_cely}/fcr:tombstone"
 
     @staticmethod
     def _send_request(url: str, request_type: FedoraRequestType, *,
@@ -166,7 +177,10 @@ class FedoraRepositoryConnector:
         elif request_type in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                               FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                               FedoraRequestType.GET_LINK, FedoraRequestType.GET_DELETED_LINK):
-            response = requests.get(url, headers=headers, auth=auth, verify=False)
+            try:
+                response = requests.get(url, headers=headers, auth=auth, verify=False)
+            except requests.exceptions.RequestException:
+                return None
         elif request_type in (FedoraRequestType.CREATE_METADATA, FedoraRequestType.RECORD_DELETION_ADD_MARK,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4,
                               FedoraRequestType.CREATE_LINK):
@@ -179,19 +193,21 @@ class FedoraRepositoryConnector:
             response = requests.post(url, auth=auth, verify=False)
         elif request_type in (FedoraRequestType.DELETE_CONTAINER, FedoraRequestType.DELETE_TOMBSTONE,
                               FedoraRequestType.DELETE_LINK_CONTAINER, FedoraRequestType.DELETE_LINK_TOMBSTONE,
-                              FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY):
+                              FedoraRequestType.DELETE_BINARY_FILE_COMPLETELY,
+                              FedoraRequestType.CONNECT_DELETED_RECORD_3, FedoraRequestType.CONNECT_DELETED_RECORD_4):
             response = requests.delete(url, auth=auth)
         elif request_type in (FedoraRequestType.RECORD_DELETION_MOVE_MEMBERS,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
                               FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3,
-                              FedoraRequestType.DELETE_BINARY_FILE):
+                              FedoraRequestType.DELETE_BINARY_FILE,
+                              FedoraRequestType.CONNECT_DELETED_RECORD_1, FedoraRequestType.CONNECT_DELETED_RECORD_2):
             response = requests.patch(url, auth=auth, headers=headers, data=data)
         if request_type not in (FedoraRequestType.GET_CONTAINER, FedoraRequestType.GET_METADATA,
                                 FedoraRequestType.GET_BINARY_FILE_CONTAINER, FedoraRequestType.GET_BINARY_FILE_CONTENT,
                                 FedoraRequestType.GET_LINK, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_1,
                                 FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_2,
-                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3,
+                                FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_3, FedoraRequestType.GET_DELETED_LINK,
                                 ):
             if str(response.status_code)[0] == "2":
                 logger.debug("core_repository_connector._send_request.response.ok",
@@ -232,18 +248,48 @@ class FedoraRepositoryConnector:
         logger.debug("core_repository_connector._container_exists.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
-        if result.status_code == 404 or "not found" in result.text:
+        if result is None or result.status_code == 404 or "not found" in result.text:
             logger.debug("core_repository_connector._container_exists.false",
                          extra={"ident_cely": self.record.ident_cely})
             return False
         logger.debug("core_repository_connector._container_exists.true", extra={"ident_cely": self.record.ident_cely})
         return True
 
+    def _connect_deleted_container(self):
+        logger.debug("core_repository_connector._connect_deleted_container.start",
+                     extra={"ident_cely": self.record.ident_cely})
+        url = self._get_request_url(FedoraRequestType.CONNECT_DELETED_RECORD_1)
+        headers = {
+            "Content-Type": "application/sparql-update",
+        }
+        data = "DELETE DATA {<> <http://purl.org/dc/terms/type> 'deleted'}"
+        self._send_request(url, FedoraRequestType.CONNECT_DELETED_RECORD_1, headers=headers, data=data)
+        url = self._get_request_url(FedoraRequestType.CONNECT_DELETED_RECORD_2)
+        headers = {
+            "Content-Type": "application/sparql-update",
+        }
+        data = "INSERT DATA {<> <http://purl.org/dc/terms/type> 'restored'}"
+        self._send_request(url, FedoraRequestType.CONNECT_DELETED_RECORD_2, headers=headers, data=data)
+        url = self._get_request_url(FedoraRequestType.CONNECT_DELETED_RECORD_3)
+        self._send_request(url, FedoraRequestType.CONNECT_DELETED_RECORD_3)
+        url = self._get_request_url(FedoraRequestType.CONNECT_DELETED_RECORD_4)
+        self._send_request(url, FedoraRequestType.CONNECT_DELETED_RECORD_4)
+        logger.debug("core_repository_connector._connect_deleted_container.end",
+                     extra={"ident_cely": self.record.ident_cely})
+
+
     def _check_container(self):
         logger.debug("core_repository_connector._check_container.start", extra={"ident_cely": self.record.ident_cely})
         url = self._get_request_url(FedoraRequestType.GET_CONTAINER)
         result = self._send_request(url, FedoraRequestType.GET_CONTAINER)
-        if result.status_code == 404 or "not found" in result.text:
+        regex = re.compile(r"dcterms:type *\"deleted\" *;")
+        if hasattr(result, "text") and regex.search(result.text):
+            logger.debug("core_repository_connector._check_container.connect_delete",
+                         extra={"ident_cely": self.record.ident_cely})
+            self._connect_deleted_container()
+        elif result.status_code == 404 or (hasattr(result, "text") and "not found" in result.text):
+            logger.debug("core_repository_connector._check_container.create",
+                         extra={"ident_cely": self.record.ident_cely})
             self._create_container()
         url = self._get_request_url(FedoraRequestType.GET_LINK)
         result = self._send_request(url, FedoraRequestType.GET_LINK)
@@ -442,9 +488,9 @@ class FedoraRepositoryConnector:
 
     def record_deletion(self):
         logger.debug("core_repository_connector.record_deletion.start", extra={"ident_cely": self.record.ident_cely})
-        url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK)
+        url = self._get_request_url(FedoraRequestType.GET_DELETED_LINK, ident_cely=self.record.ident_cely)
         result = self._send_request(url, FedoraRequestType.GET_DELETED_LINK)
-        if result.status_code == 404 or "not found" in result.text:
+        if result is not None and result.status_code != 404 and "not found" not in result.text:
             logger.debug("core_repository_connector.record_deletion.already_exists",
                          extra={"ident_cely": self.record.ident_cely})
         else:
@@ -505,3 +551,18 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old})
+
+    def validate_file_sha_512(self, soubor):
+        logger.error("core_repository_connector.validate_file_sha_512.start",
+                     extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
+        from core.models import Soubor
+        soubor: Soubor
+        rep_bin_file: RepositoryBinaryFile = self.get_binary_file(soubor.repository_uuid)
+        if rep_bin_file.sha_512 != soubor.sha_512:
+            logger.error("core_repository_connector.validate_file_sha_512.error",
+                         extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
+            raise FedoraValidationError()
+        else:
+            logger.debug("core_repository_connector.validate_file_sha_512.ok",
+                         extra={"ident_cely": self.record.ident_cely, "soubor": soubor.pk})
+

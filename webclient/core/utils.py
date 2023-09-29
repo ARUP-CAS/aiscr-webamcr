@@ -3,6 +3,9 @@ import logging
 import mimetypes
 import zlib
 
+from django.urls import reverse
+from django.utils.html import format_html
+
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam
@@ -671,3 +674,20 @@ class SearchTable(ColumnShiftTableBootstrap4):
             if column is not None and column in self.column_default_show:
                 self.column_default_show.remove(column)
         return super(SearchTable, self).get_column_default_show()
+
+    def render_nahled(self, value, record):
+        """
+        Metóda pro správne zobrazení náhledu souboru.
+        """
+        record: SamostatnyNalez
+        if record.soubory.soubory.count() > 0:
+            soubor = record.soubory.soubory.first()
+        else:
+            soubor = None
+        if soubor is not None:
+            soubor_url = reverse("core:download_file", args=(soubor.id,))
+            return format_html(
+                '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
+                soubor_url,
+            )
+        return ""

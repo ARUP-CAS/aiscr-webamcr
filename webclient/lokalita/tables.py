@@ -80,7 +80,7 @@ class LokalitaTable(SearchTable):
         accessor="archeologicky_zaznam__pristupnost",
     )
 
-    columns_to_hide = ("uzivatelske_oznaceni", "dalsi_katastry")
+    columns_to_hide = ("pristupnost", "uzivatelske_oznaceni", "dalsi_katastry")
     app = "lokalita"
     first_columns = None
 
@@ -97,14 +97,14 @@ class LokalitaTable(SearchTable):
             "ident_cely",
             "stav",
             "pristupnost",
+            "uzivatelske_oznaceni",
             "katastr",
+            "dalsi_katastry",
+            "nazev",
             "typ_lokality",
             "druh",
-            "nazev",
             "zachovalost",
             "jistota",
-            "uzivatelske_oznaceni",
-            "dalsi_katastry",
         )
 
         def __init__(self, *args, **kwargs):

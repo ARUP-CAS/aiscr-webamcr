@@ -13,13 +13,13 @@ class HistorieTable(ColumnShiftTableBootstrap4):
     datum_zmeny = columns.DateTimeColumn(format ='Y-m-d, H:i',default="")
     typ_zmeny = columns.Column(default="")
     poznamka = columns.Column(default="")
-    uzivatel = columns.Column(default="")
+    uzivatel_custom = columns.Column(default="", verbose_name= 'core.tables.HistorieTable.uzivatel_custom')
     class Meta:
         model = Historie
         fields = (
             "typ_zmeny",
             "datum_zmeny",
-            "uzivatel",
+            "uzivatel_custom",
             "poznamka",
         )
 

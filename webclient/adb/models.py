@@ -90,6 +90,13 @@ class Adb(ExportModelOperationsMixin("adb"), ModelWithMetadata):
     class Meta:
         db_table = "adb"
 
+    def get_absolute_url(self):
+        return self.dokumentacni_jednotka.get_absolute_url()
+    
+    def get_permission_object(self):
+        return self.dokumentacni_jednotka.get_permission_object()
+    
+
 
 def get_vyskovy_bod(adb: Adb, offset=1) -> str:
     """
@@ -188,6 +195,14 @@ class VyskovyBod(ExportModelOperationsMixin("vyskovy_bod"), models.Model):
 
     class Meta:
         db_table = "vyskovy_bod"
+        ordering = ["ident_cely", ]
+
+    def get_absolute_url(self):
+        return self.adb.dokumentacni_jednotka.get_absolute_url()
+    
+    def get_permission_object(self):
+        return self.adb.get_permission_object()
+    
 
 
 class AdbSekvence(ExportModelOperationsMixin("adb_sekvence"), models.Model):

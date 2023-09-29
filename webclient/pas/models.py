@@ -48,7 +48,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
 
     PREDANO_BOOLEAN = (
         (True, _('pas.models.samostatnyNalez.predano.ano')),
-        (False, _('pas.models.samostatnyNalez.predano.ano')))
+        (False, _('pas.models.samostatnyNalez.predano.ne')))
 
     evidencni_cislo = models.TextField(blank=True, null=True)
     projekt = models.ForeignKey(
@@ -250,6 +250,13 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             resp.append(_("pas.models.samostatnyNalez.checkPredOdeslanim.soubory.text"))
         return resp
 
+    @property
+    def nahled_soubor(self):
+        if self.soubory.soubory.count() > 0:
+            return self.soubory.soubory.first()
+        else:
+            return None
+
     class Meta:
         db_table = "samostatny_nalez"
         constraints = [
@@ -266,6 +273,12 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
             return self.ident_cely
         else:
             return "Samostatny nalez [ident_cely not yet assigned]"
+        
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):

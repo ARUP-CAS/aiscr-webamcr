@@ -16,7 +16,7 @@
         <div class="form-group">
             <input type="submit" name="save" value="{% trans 'oznameni.templates.oznameni.edit.submitButton' %}" class="btn btn-primary"
                    id="submit-id-save">
-            <button type="button" class="btn btn-secondary" onclick="goBack();">{% trans "oznameni.templates.oznameni.edit.backButton" %}</button>
+            <a type="button" class="btn btn-secondary" href="{% url 'projekt:detail' oznameni.projekt.ident_cely %}">{% trans "oznameni.templates.oznameni.edit.backButton" %}</a>
         </div>
       </div>
     </form>

@@ -14,6 +14,7 @@ from django_filters import (
 )
 from django_filters.widgets import DateRangeWidget
 
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
 from heslar.hesla import (
     HESLAR_ADB_PODNET,
     HESLAR_ADB_TYP,
@@ -366,6 +367,25 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__specifikace__in=value
         ).distinct()
 
+    def __init__(self, *args, **kwargs):
+        super(ArchZaznamFilter, self).__init__(*args, **kwargs)
+        user: User = kwargs.get("request").user
+        if user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID):
+            self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.all(),
+                field_name="archeologicky_zaznam__historie__historie__uzivatel",
+                label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel.label"),
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete"),
+                distinct=True,
+            )
+        else:
+            self.filters["historie_uzivatel"] = ModelMultipleChoiceFilter(
+                queryset=User.objects.all(),
+                field_name="archeologicky_zaznam__historie__historie__uzivatel",
+                label=_("arch_z.filters.ArchZaznamFilter.historie_uzivatel.label"),
+                widget=autocomplete.ModelSelect2Multiple(url="uzivatel:uzivatel-autocomplete-public"),
+                distinct=True,
+            )
 
 class AkceFilter(ArchZaznamFilter):
     """

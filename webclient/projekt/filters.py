@@ -514,7 +514,7 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         Metóda pro filtrování podle pozitivního nálezu akce.
         """
         if "True" in value and "False" in value:
-            return queryset
+            return queryset.filter(akce__archeologicky_zaznam__dokumentacni_jednotky_akce__isnull=False).distinct()
         elif "True" in value:
             return queryset.filter(
                 akce__archeologicky_zaznam__dokumentacni_jednotky_akce__negativni_jednotka=False

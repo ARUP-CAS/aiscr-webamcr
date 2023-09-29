@@ -18,6 +18,7 @@ from core.constants import (
     SPOLUPRACE_ZADOST,
     UZIVATEL_SPOLUPRACE_RELATION_TYPE,
     ZAPSANI_SN,
+    SPOLUPRACE_ZADOST,
 )
 from core.exceptions import MaximalIdentNumberError
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -75,7 +76,7 @@ def get_detail_context(sn, request):
         instance=sn, readonly=True, user=request.user
     )
     context["ulozeni_form"] = PotvrditNalezForm(instance=sn, readonly=True)
-    context["history_dates"] = get_history_dates(sn.historie)
+    context["history_dates"] = get_history_dates(sn.historie, request.user)
     context["show"] = get_detail_template_shows(sn)
     logger.debug("pas.views.get_detail_context", extra=context)
     if sn.soubory:
@@ -346,6 +347,7 @@ def edit(request, ident_cely):
         request,
         "pas/edit.html",
         {
+            "sn": sn,
             "global_map_can_edit": True,
             "formCoor": form_coor,
             "form": form,
@@ -618,6 +620,7 @@ class SamostatnyNalezListView(SearchListView):
     hasOnlyPotvrdit_header = _("pas.views.samostatnyNalezListView.header.hasOnlyPotvrdit")
     default_header = _("pas.views.samostatnyNalezListView.header.default")
     toolbar_name = _("pas.views.samostatnyNalezListView.toolbar.title")
+    typ_zmeny_lookup = ZAPSANI_SN
 
     def get_queryset(self):
         # Only allow to view 3D models
@@ -790,6 +793,7 @@ class UzivatelSpolupraceListView(SearchListView):
     search_sum = _("pas.views.uzivatelSpolupraceListView.pocetVyhledanych")
     pick_text = _("pas.views.uzivatelSpolupraceListView.pickText")
     toolbar_name = _("pas.views.uzivatelSpolupraceListView.toolbar.title")
+    typ_zmeny_lookup = SPOLUPRACE_ZADOST
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -929,15 +933,16 @@ def smazat_spolupraci(request, pk):
     return render(request, "core/transakce_modal.html", context)
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN),
-        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_SN, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_SN, anonymized),
+        "datum_potvrzeni": historie_vazby.get_last_transaction_date(POTVRZENI_SN, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_SN, anonymized),
     }
     return historie
 

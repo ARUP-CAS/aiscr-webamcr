@@ -358,20 +358,8 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
         """
         Metóda pro získaní redirect záznamu podle typu arch záznamu a argumentu dj_ident_cely.
         """
-        if self.typ_zaznamu == ArcheologickyZaznam.TYP_ZAZNAMU_AKCE:
-            if dj_ident_cely is None:
-                return redirect(reverse("arch_z:detail", self.ident_cely))
-            else:
-                return redirect(
-                    reverse("arch_z:detail-dj", args=[self.ident_cely, dj_ident_cely])
-                )
-        else:
-            if dj_ident_cely is None:
-                return redirect(reverse("lokalita:detail", self.ident_cely))
-            else:
-                return redirect(
-                    reverse("lokalita:detail-dj", args=[self.ident_cely, dj_ident_cely])
-                )
+        return redirect(self.get_absolute_url(dj_ident_cely))
+        
 
     def __str__(self):
         """
@@ -381,6 +369,19 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
             return self.ident_cely
         else:
             return "[ident_cely not yet assigned]"
+        
+    def get_permission_object(self):
+        return self
+    
+    def get_create_user(self):
+        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel
+
+    def __init__(self, *args, **kwargs):
+        super(ArcheologickyZaznam, self).__init__(*args, **kwargs)
+        if hasattr(self, "pristupnost") and self.pristupnost is not None:
+            self.initial_pristupnost = self.pristupnost
+        else:
+            self.initial_pristupnost = None
 
 
 class ArcheologickyZaznamKatastr(ExportModelOperationsMixin("archeologicky_zaznam_katastr"), models.Model):
@@ -488,6 +489,14 @@ class Akce(ExportModelOperationsMixin("akce"), models.Model):
         connector = FedoraRepositoryConnector(self)
         return connector.save_metadata(True)
 
+    @property
+    def vedouci_organizace(self):
+        return ', '.join([str(x.organizace) for x in self.akcevedouci_set.all()])
+
+    @property
+    def vedouci(self):
+        return ', '.join([str(x.vedouci) for x in self.akcevedouci_set.all()])
+
 
 class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     """
@@ -500,7 +509,7 @@ class AkceVedouci(ExportModelOperationsMixin("akce_vedouci"), models.Model):
     class Meta:
         db_table = "akce_vedouci"
         unique_together = (("akce", "vedouci"),)
-        ordering = ["id"]
+        ordering = ["vedouci__prijmeni", "vedouci__jmeno"]
 
 
 class ExterniOdkaz(ExportModelOperationsMixin("externi_odkaz"), models.Model):

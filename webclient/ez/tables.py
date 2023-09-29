@@ -72,18 +72,25 @@ class ExterniZdrojTable(SearchTable):
     Class pro definování tabulky pro externí zdroj použitých pro zobrazení přehledu zdrojů a exportu.
     """
     ident_cely = tables.Column(linkify=True)
-    autor = ExtZdrojAutoriColumn(default="", accessor="autori__all")
-    editor = ExtZdrojEditoriColumn(default="", accessor="editori__all")
+    autori = ExtZdrojAutoriColumn(default="", accessor="autori__all")
+    editori = ExtZdrojEditoriColumn(default="", accessor="editori__all")
     casopis_denik_nazev = tables.columns.Column(default="")
     casopis_rocnik = tables.columns.Column(default="")
     sbornik_nazev = tables.columns.Column(default="")
     sysno = tables.columns.Column(default="")
     columns_to_hide = (
-        "editor",
-        "casopis_denik_nazev",
-        "casopis_rocnik",
-        "sbornik_nazev",
         "sysno",
+        "datum_rd",
+        "edice_rada",
+        "misto",
+        "vydavatel",
+        "typ_dokumentu",
+        "organizace",
+        "paginace_titulu",
+        "isbn",
+        "issn",
+        "link",
+        "poznamka"
     )
     app = "ext_zdroj"
     first_columns = None
@@ -99,20 +106,39 @@ class ExterniZdrojTable(SearchTable):
             "casopis_rocnik",
             "sbornik_nazev",
             "sysno",
+            "datum_rd",
+            "edice_rada",
+            "misto",
+            "vydavatel",
+            "typ_dokumentu",
+            "organizace",
+            "paginace_titulu",
+            "isbn",
+            "issn",
+            "link",
+            "poznamka",
         )
         sequence = (
             "ident_cely",
+            "sysno",
             "stav",
             "typ",
-            "autor",
+            "autori",
             "rok_vydani_vzniku",
+            "datum_rd",
             "nazev",
-            "editor",
+            "editori",
             "casopis_denik_nazev",
             "casopis_rocnik",
             "sbornik_nazev",
-            "sysno",
+            "edice_rada",
+            "misto",
+            "vydavatel",
+            "typ_dokumentu",
+            "organizace",
+            "paginace_titulu",
+            "isbn",
+            "issn",
+            "link",
+            "poznamka",
         )
-
-        def __init__(self, *args, **kwargs):
-            super(ExterniZdrojTable, self).__init__(*args, **kwargs)

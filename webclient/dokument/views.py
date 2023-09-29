@@ -14,7 +14,7 @@ from core.constants import (
     DOKUMENT_CAST_RELATION_TYPE,
     IDENTIFIKATOR_DOCASNY_PREFIX,
     ODESLANI_DOK,
-    ZAPSANI_DOK,
+    ZAPSANI_DOK, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
 )
 from core.exceptions import MaximalIdentNumberError, UnexpectedDataRelations
 from core.forms import CheckStavNotChangedForm, VratitForm
@@ -111,6 +111,7 @@ from heslar.models import Heslar, HeslarHierarchie
 from heslar.views import heslar_12
 from komponenta.forms import CreateKomponentaForm
 from komponenta.models import Komponenta, KomponentaVazby
+from lokalita.models import Lokalita
 from nalez.forms import (
     NalezFormSetHelper,
     create_nalez_objekt_form,
@@ -234,7 +235,7 @@ def detail_model_3D(request, ident_cely):
         "helper_predmet": NalezFormSetHelper(typ="predmet"),
         "helper_objekt": NalezFormSetHelper(typ="objekt"),
     }
-    context["history_dates"] = get_history_dates(dokument.historie)
+    context["history_dates"] = get_history_dates(dokument.historie, request.user)
     context["show"] = show
     context["global_map_can_edit"] = False
     if dokument.soubory:
@@ -263,6 +264,7 @@ class Model3DListView(SearchListView):
     hasOnlyPotvrdit_header = _("dokument.views.Model3DListView.hasOnlyPotvrdit_header.text")
     default_header = _("dokument.views.Model3DListView.default_header.text")
     toolbar_name = _("dokument.views.Model3DListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -274,6 +276,12 @@ class Model3DListView(SearchListView):
         qs = super().get_queryset().filter(ident_cely__contains="3D")
         qs = qs.select_related(
             "typ_dokumentu", "extra_data", "organizace", "extra_data__format"
+        ).prefetch_related(
+            Prefetch(
+                "autori",
+                queryset=Osoba.objects.all().order_by("dokumentautor__poradi"),
+                to_attr="ordered_autors",
+            )
         )
         return qs
 
@@ -304,6 +312,7 @@ class DokumentListView(SearchListView):
     hasOnlyPotvrdit_header = _("dokument.views.DokumentListView.hasOnlyPotvrdit_header.text")
     default_header = _("dokument.views.DokumentListView.default_header.text")
     toolbar_name = _("dokument.views.DokumentListView.toolbar_name.text")
+    typ_zmeny_lookup = ZAPSANI_DOK
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -417,7 +426,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
         context["dokument"] = dokument
         context["form_dokument"] = form_dokument
         context["form_dokument_extra"] = form_dokument_extra
-        context["history_dates"] = get_history_dates(dokument.historie)
+        context["history_dates"] = get_history_dates(dokument.historie, self.request.user)
         context["show"] = show
 
         if dokument.soubory:
@@ -471,7 +480,7 @@ class RelatedContext(LoginRequiredMixin, TemplateView):
                     logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_found")
                     response.delete_cookie("zpet")
             elif (
-                "nahrat-soubor" in referer
+                "soubor/nahrat" in referer
                 and context["dokument"].ident_cely in referer_next
             ):
                 logger.debug("dokument.views.RelatedContext.render_to_response.back_option_not_changed")
@@ -1525,14 +1534,16 @@ def get_hierarchie_dokument_typ():
     return hierarchie
 
 
-def get_history_dates(historie_vazby):
+def get_history_dates(historie_vazby, request_user):
     """
     Funkce pro získaní historických datumu.
     """
+    request_user: User
+    anonymized = not request_user.hlavni_role.pk in (ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID)
     historie = {
-        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK),
-        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK),
-        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK),
+        "datum_zapsani": historie_vazby.get_last_transaction_date(ZAPSANI_DOK, anonymized),
+        "datum_odeslani": historie_vazby.get_last_transaction_date(ODESLANI_DOK, anonymized),
+        "datum_archivace": historie_vazby.get_last_transaction_date(ARCHIVACE_DOK, anonymized),
     }
     return historie
 
@@ -1634,11 +1645,21 @@ def zapsat(request, zaznam=None):
             required=required_fields,
             required_next=required_fields_next,
         )
-
+    if zaznam:
+        if isinstance(zaznam, ArcheologickyZaznam):
+            back_ident = zaznam.ident_cely
+        else:
+            back_ident = None
+    else:
+        back_ident = None
     return render(
         request,
         "dokument/create.html",
         {
+            "back_ident": back_ident,
+            "zaznam": zaznam,
+            "TYP_ZAZNAMU_LOKALITA": ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
+            "TYP_ZAZNAMU_AKCE": ArcheologickyZaznam.TYP_ZAZNAMU_AKCE,
             "formDokument": form_d,
             "hierarchie": get_hierarchie_dokument_typ(),
             "samostatny": True if not zaznam else False,

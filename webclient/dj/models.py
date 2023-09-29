@@ -73,3 +73,10 @@ class DokumentacniJednotka(ExportModelOperationsMixin("dokumentacni_jednotka"), 
         except Exception:
             pass
         return has_adb
+
+    def get_permission_object(self):
+        return self.archeologicky_zaznam
+
+    def __init__(self, *args, **kwargs):
+        super(DokumentacniJednotka, self).__init__(*args, **kwargs)
+        self.initial_pian = self.pian

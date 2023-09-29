@@ -20,9 +20,14 @@ class ProjektTable(SearchTable):
     uzivatelske_oznaceni = tables.columns.Column(default="")
     planovane_zahajeni = tables.columns.Column(default="")
     columns_to_hide = (
-                "kulturni_pamatka",
-                "typ_projektu",
-            )
+        "uzivatelske_oznaceni",
+        "katastry",
+        "termin_odevzdani_nz",
+        "lokalizace",
+        "parcelni_cislo",
+        "vedouci_projektu",
+        "kulturni_pamatka",
+    )
     app = "projekt"
 
     class Meta:
@@ -30,17 +35,48 @@ class ProjektTable(SearchTable):
         fields = (
             "ident_cely",
             "stav",
+            "typ_projektu",
+            "uzivatelske_oznaceni",
             "hlavni_katastr",
-            "podnet",
-            "lokalizace",
+            "katastry",
+            "planovane_zahajeni",
             "datum_zahajeni",
             "datum_ukonceni",
+            "termin_odevzdani_nz",
+            "podnet",
+            "oznaceni_stavby",
+            "lokalizace",
+            "parcelni_cislo",
             "organizace",
             "vedouci_projektu",
             "kulturni_pamatka",
             "typ_projektu",
             "uzivatelske_oznaceni",
             "planovane_zahajeni",
+            "katastry",
+            'termin_odevzdani_nz',
+            'oznaceni_stavby',
+            'parcelni_cislo',
+
+        )
+        sequence = (
+            "ident_cely",
+            "stav",
+            "typ_projektu",
+            "uzivatelske_oznaceni",
+            "hlavni_katastr",
+            "katastry",
+            "planovane_zahajeni",
+            "datum_zahajeni",
+            "datum_ukonceni",
+            "termin_odevzdani_nz",
+            "podnet",
+            "oznaceni_stavby",
+            "lokalizace",
+            "parcelni_cislo",
+            "organizace",
+            "vedouci_projektu",
+            "kulturni_pamatka"
         )
 
     def __init__(self, *args, **kwargs):

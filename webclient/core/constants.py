@@ -168,7 +168,18 @@ DOK_TELEFON = {
 }
 DOK_EMAIL = (_("core.constants.dok.email_praha"), _("core.constants.dok.email_brno"))
 DOC_KOMU = (_("core.constants.dok.komu_praha"), _("core.constants.dok.komu_brno"))
-DOC_REDITEL = (_("core.constants.dok.reditel_praha"), _("core.constants.dok.reditel_brno"))
+DOC_REDITEL = (
+    _("core.constants.dok.reditel_praha"),
+    _("core.constants.dok.reditel_brno"),
+)
 
 ORGANIZACE_MESICU_DO_ZVEREJNENI_DEFAULT = 36
 ORGANIZACE_MESICU_DO_ZVEREJNENI_MAX = 1200
+
+PERMISSIONS_IMPORT_SHEET = "URLs"
+PERMISSIONS_SHEET_ZAKLADNI_NAME = "Základní"
+PERMISSIONS_SHEET_STAV_NAME = "Stav"
+PERMISSIONS_SHEET_VLASTNICTVI_NAME = "Vlastnictví"
+PERMISSIONS_SHEET_PRISTUPNOST_NAME = "Přístupnost"
+PERMISSIONS_SHEET_APP_NAME = "app"
+PERMISSIONS_SHEET_URL_NAME = "URL"
