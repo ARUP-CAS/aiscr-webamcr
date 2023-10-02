@@ -51,34 +51,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunSQL(
             sql="""
-            CREATE OR REPLACE FUNCTION public.delete_related_neident_dokument_cast()
-                RETURNS trigger
-                LANGUAGE 'plpgsql'
-                COST 100
-                VOLATILE NOT LEAKPROOF
-            AS $BODY$
-                BEGIN
-                    DELETE FROM neident_akce AS na
-                    WHERE na.dokument_cast = old.id
-                    ;
-                    return OLD;
-                END;    
-            $BODY$;
-            """,
-            reverse_sql="DROP FUNCTION public.delete_related_neident_dokument_cast;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE TRIGGER trigger_delete_related_neident_dokument_cast
-                BEFORE DELETE
-                ON dokument_cast
-                FOR EACH ROW
-                EXECUTE FUNCTION delete_related_neident_dokument_cast();
-            """,
-            reverse_sql="DROP TRIGGER public.trigger_delete_related_neident_dokument_cast;",
-        ),
-        migrations.RunSQL(
-            sql="""
             CREATE OR REPLACE FUNCTION public.delete_related_neident_vedouci()
                 RETURNS trigger
                 LANGUAGE 'plpgsql'
@@ -104,34 +76,5 @@ class Migration(migrations.Migration):
                 EXECUTE FUNCTION delete_related_neident_vedouci();
             """,
             reverse_sql="DROP TRIGGER public.trigger_delete_related_neident_vedouci;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE OR REPLACE FUNCTION public.delete_related_dokument_cast()
-                RETURNS trigger
-                LANGUAGE 'plpgsql'
-                COST 100
-                VOLATILE NOT LEAKPROOF
-            AS $BODY$
-                BEGIN
-                    DELETE FROM dokument_cast AS dc
-                    WHERE dc.dokument = old.id
-                    ;
-                    return OLD
-                    ;
-                END;    
-            $BODY$;
-            """,
-            reverse_sql="DROP FUNCTION public.delete_related_neident_dokument_cast;",
-        ),
-        migrations.RunSQL(
-            sql="""
-            CREATE TRIGGER trigger_delete_related_dokument_cast
-                BEFORE DELETE
-                ON dokument
-                FOR EACH ROW
-                EXECUTE FUNCTION delete_related_dokument_cast();
-            """,
-            reverse_sql="DROP TRIGGER public.trigger_delete_related_dokument_cast;",
         ),
     ]

@@ -78,6 +78,12 @@ class ModelWithMetadata(models.Model):
                     soubor: Soubor
                     connector.delete_binary_file(soubor)
             logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.end")
+            from dokument.models import Dokument
+            from pas.models import SamostatnyNalez
+            if isinstance(self, Dokument):
+                self.soubory.delete()
+            elif isinstance(self, SamostatnyNalez):
+                self.soubory.delete()
         except ObjectDoesNotExist as err:
             logger.debug("xml_generator.models.ModelWithMetadata.no_files_to_delete.end", extra={"err": err})
         return connector.record_deletion()
