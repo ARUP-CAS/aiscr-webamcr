@@ -11,13 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="""
-            CREATE TRIGGER delete_related_soubor_samostatny_nalez BEFORE DELETE ON samostatny_nalez
-                FOR EACH ROW EXECUTE PROCEDURE delete_related_soubor();
-            """,
-            reverse_sql="""
-            DROP TRIGGER public.delete_related_soubor_samostatny_nalez;
-            """,
-        ),
     ]

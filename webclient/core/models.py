@@ -76,7 +76,8 @@ class SouborVazby(ExportModelOperationsMixin("soubor_vazby"), models.Model):
         if self.typ_vazby == PROJEKT_RELATION_TYPE:
             return self.projekt_souboru
         if self.typ_vazby == DOKUMENT_RELATION_TYPE:
-            return  self.dokument_souboru
+            if hasattr(self, "dokument_souboru") and self.dokument_souboru is not None:
+                return self.dokument_souboru
         if self.typ_vazby == SAMOSTATNY_NALEZ_RELATION_TYPE:
             return self.samostatny_nalez_souboru
 

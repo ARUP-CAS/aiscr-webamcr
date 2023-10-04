@@ -333,6 +333,7 @@ class ExterniZdrojSmazatView(TransakceView):
     def post(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         zaznam = context["object"]
+        zaznam.deleted_by_user = request.user
         if hasattr(zaznam, "container_creation_queued") and zaznam.container_creation_queued():
             messages.add_message(request, messages.ERROR, ZAZNAM_NELZE_SMAZAT_FEDORA)
             return JsonResponse({"redirect": zaznam.get_absolute_url()}, status=403)

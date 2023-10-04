@@ -14,6 +14,7 @@ class ModelWithMetadata(models.Model):
     ident_cely = models.TextField(unique=True)
     suppress_signal = False
     soubory = None
+    deleted_by_user = None
 
     @property
     def metadata(self):
@@ -68,6 +69,17 @@ class ModelWithMetadata(models.Model):
 
     def record_deletion(self):
         logger.debug("xml_generator.models.ModelWithMetadata.delete_repository_container.start")
+        from arch_z.models import ArcheologickyZaznam
+        from dokument.models import Dokument
+        from ez.models import ExterniZdroj
+        from pian.models import Pian
+        from projekt.models import Projekt
+        from pas.models import SamostatnyNalez
+        if isinstance(self, ArcheologickyZaznam) or isinstance(self, Dokument) or isinstance(self, ExterniZdroj)\
+                or isinstance(self, Pian) or isinstance(self, Projekt) or isinstance(self, SamostatnyNalez):
+            from historie.models import Historie
+            Historie.save_record_deletion_record(record=self)
+            self.save_metadata(use_celery=False)
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(self)
         try:

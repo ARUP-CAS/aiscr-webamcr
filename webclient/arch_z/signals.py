@@ -8,9 +8,7 @@ from django.db.models.signals import pre_save, post_save, post_delete, pre_delet
 from django.dispatch import receiver
 
 from dokument.models import DokumentCast, Dokument
-from historie.models import HistorieVazby
-from komponenta.models import KomponentaVazby, Komponenta
-from neidentakce.models import NeidentAkce
+from historie.models import HistorieVazby, Historie
 
 logger = logging.getLogger(__name__)
 
@@ -55,17 +53,17 @@ def create_externi_odkaz_metadata(sender, instance: ExterniOdkaz, **kwargs):
         instance.externi_zdroj.save_metadata()
 
 
-@receiver(pre_delete, sender=ArcheologickyZaznam)
+@receiver(post_delete, sender=ArcheologickyZaznam)
 def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **kwargs):
     """
         Trigger delete_connected_documents
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container.start", extra={"arch_z": instance.ident_cely})
-    dokument_query = Dokument.objects.filter(~Q(ident_cely__startswith="X-"))
+    dokument_query = instance.casti_dokumentu.filter(~Q(dokument__ident_cely__startswith="X-"))
     for item in dokument_query:
         delete_dokument = True
         item: Dokument
-        dokument_cast_query = DokumentCast.objects.filter(archeologicky_zaznam=item).filter(dokument=item)
+        dokument_cast_query = DokumentCast.objects.filter(archeologicky_zaznam=instance).filter(dokument=item)
         for inner_item in dokument_cast_query:
             inner_item: DokumentCast
             if inner_item.filter(dokument=item).filter(~Q(archeologicky_zaznam=instance)).exists():

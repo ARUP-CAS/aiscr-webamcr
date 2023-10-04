@@ -1,7 +1,17 @@
-Spuštění termínálu
+Konzistence databáze
+=====================
+
+Aplikace zajišťuje konzistenci databáze s využitím signálů,
+které jsou náhradou databázových triggerů. Níže je přehled testovacích scénářů,
+které ověří korektní funkčnost signálů.
+
+
+Prvním krokem je spuštění termínálu.
 
 ..
     python3 manage.py shell --settings=webclient.settings.dev
+
+Pro generování identů je použita funkce `get_random_string`.
 
 .. code:: py
     import random
@@ -120,3 +130,15 @@ Spuštění termínálu
     nav.refresh_from_db()
 
 
+**delete_unconfirmed_pian**
+
+.. code:: py
+    from heslar.models import Heslar
+    from pian.models import Pian
+    p_1 = Pian.objects.first()
+    p_2 = Pian(presnost=Heslar.objects.filter(nazev_heslare=24).filter(zkratka__lt="4").first(), typ=Heslar.objects.filter(nazev_heslare=40).first(), geom=p_1.geom, ident_cely="A", zm10=p_1.zm10, zm50=p_1.zm50)
+    p_2.save()
+    dj = DokumentacniJednotka(typ=Heslar.objects.filter(nazev_heslare=34).first(), pian=p_2, archeologicky_zaznam=ArcheologickyZaznam.objects.last())
+    dj.save()
+    dj.delete()
+    p_2.refresh_from_db()
