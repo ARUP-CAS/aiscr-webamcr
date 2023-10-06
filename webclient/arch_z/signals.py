@@ -60,6 +60,10 @@ def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **k
     """
     logger.debug("arch_z.signals.delete_arch_z_repository_container.start", extra={"arch_z": instance.ident_cely})
     dokument_query = instance.casti_dokumentu.filter(~Q(dokument__ident_cely__startswith="X-"))
+    if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
+        deleted_by_user = instance.deleted_by_user
+    else:
+        deleted_by_user = None
     for item in dokument_query:
         delete_dokument = True
         item: Dokument
@@ -69,6 +73,7 @@ def delete_arch_z_connected_documents(sender, instance: ArcheologickyZaznam, **k
             if inner_item.filter(dokument=item).filter(~Q(archeologicky_zaznam=instance)).exists():
                 delete_dokument = False
         if delete_dokument:
+            item.deleted_by_user = deleted_by_user
             item.delete()
             logger.debug("arch_z.signals.delete_arch_z_repository_container.cast_dokumentu.delete.part_2",
                          extra={"arch_z": item.ident_cely})
