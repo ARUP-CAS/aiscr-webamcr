@@ -39,7 +39,6 @@ body {
 }
 
 #app-page-wrapper {
-  min-width: 100vh;
   width: 100%;
   -webkit-transition: margin .25s ease-out;
   -moz-transition: margin .25s ease-out;
@@ -69,6 +68,10 @@ body {
   #app-page-wrapper {
     margin-left: 0;
   }
+}
+
+#app-sidebar-wrapper {
+  z-index: 1;
 }
 
 .form-group {

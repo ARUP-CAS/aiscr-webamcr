@@ -115,11 +115,11 @@ class CreateProjektForm(forms.ModelForm):
                                 Div("longitude", css_class="hidden"),
                                 css_class="row",
                             ),
-                            css_class="col-sm-9",
+                            css_class="col-sm-9 col-12",
                         ),
                         Div(
                             Div(id="projectMap"),
-                            css_class="col-sm-3",
+                            css_class="col-sm-3 col-12",
                         ),
                         css_class="row",
                     ),

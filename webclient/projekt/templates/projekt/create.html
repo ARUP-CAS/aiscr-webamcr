@@ -72,7 +72,7 @@
         </div>
       </div>
       <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
-      <a type="button" class="btn btn-secondary" {% url 'projekt:index' %}>{% trans "Zpět" %}</a>
+      <a class="btn btn-secondary" href="{% url 'projekt:index' %}">{% trans "Zpět" %}</a>
     </form>
   </div>
 {% endblock %}
