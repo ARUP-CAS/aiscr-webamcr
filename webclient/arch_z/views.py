@@ -955,6 +955,7 @@ def smazat(request, ident_cely):
         for eo in az.externi_odkazy.all():
             eo.delete()
         try:
+            az.deleted_by_user = request.user
             az.delete()
             historie_vazby.delete()
             for komponenta_vazba in komponenty_jednotek_vazby:

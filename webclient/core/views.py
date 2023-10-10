@@ -88,6 +88,7 @@ def delete_file(request, pk):
     """
     s = get_object_or_404(Soubor, pk=pk)
     if request.method == "POST":
+        s.deleted_by_user = request.user
         items_deleted: Soubor = s.delete()
         if not items_deleted:
             # Not sure if 404 is the only correct option

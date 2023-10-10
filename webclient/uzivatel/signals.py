@@ -3,6 +3,7 @@ import logging
 from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
 from django.dispatch import receiver
 
+from historie.models import Historie
 from services.mailer import Mailer
 from uzivatel.models import Organizace, Osoba, User
 from rest_framework.authtoken.models import Token
@@ -99,7 +100,10 @@ def delete_profile(sender, instance, *args, **kwargs):
     """
     Signál pro zaslání emailu uživately o jeho smazání.
     """
+    instance: User
     Mailer.send_eu03(user=instance)
+    Historie.save_record_deletion_record(record=instance)
+    instance.save_metadata(use_celery=False)
     instance.record_deletion()
 
 

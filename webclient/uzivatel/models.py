@@ -212,11 +212,16 @@ class User(ExportModelOperationsMixin("user"), AbstractBaseUser, PermissionsMixi
         connector = FedoraRepositoryConnector(self)
         return connector.get_metadata()
 
-    def save_metadata(self, **kwargs):
-        if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
-            return
-        from cron.tasks import save_record_metadata
-        save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+    def save_metadata(self, use_celery=True, **kwargs):
+        if use_celery is True:
+            if ModelWithMetadata.update_queued(self.__class__.__name__, self.pk):
+                return
+            from cron.tasks import save_record_metadata
+            save_record_metadata.apply_async([self.__class__.__name__, self.pk], countdown=METADATA_UPDATE_TIMEOUT)
+        else:
+            from core.repository_connector import FedoraRepositoryConnector
+            connector = FedoraRepositoryConnector(self)
+            connector.save_metadata(True)
 
     def record_deletion(self):
         logger.debug("uzivatel.models.User.delete_repository_container.start")
