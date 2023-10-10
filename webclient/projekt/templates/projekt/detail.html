@@ -412,7 +412,7 @@
         </div>
         {% endif %}
       </div>
-      <div class="card-body">
+      <div class="card-body content-with-table-responsive">
         {% if soubory %}
           {% include "core/filetable.html" with soubory=soubory next_url='/projekt/detail/' ident=projekt.ident_cely allow_replace=False vazba_trida="projekt" %}
         {% else %}
@@ -440,7 +440,7 @@
           </div>
         </div>
       </div>
-      <div class="card-body">
+      <div class="card-body content-with-table-responsive">
         {% if akce %}
         <table class="table table-striped table-hover table-sm mb-0">
           <thead>
@@ -506,7 +506,7 @@
         </div>
         {% endif %}
       </div>
-      <div class="card-body ">
+      <div class="card-body content-with-table-responsive">
         {% if samostatne_nalezy %}
         <table class="table table-striped table-hover table-sm mb-0">
           <thead>

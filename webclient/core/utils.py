@@ -679,6 +679,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
         """
         Metóda pro správne zobrazení náhledu souboru.
         """
+        from pas.models import SamostatnyNalez
         record: SamostatnyNalez
         if record.soubory.soubory.count() > 0:
             soubor = record.soubory.soubory.first()

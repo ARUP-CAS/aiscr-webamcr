@@ -153,7 +153,7 @@ class ExterniZdrojDetailView(LoginRequiredMixin, DetailView):
         context["app"] = "ext_zdroj"
         context["page_title"] = _("ez.templates.ExterniZdrojDetailView.pageTitle")
         context["toolbar_name"] = _("ez.templates.ExterniZdrojDetailView.toolbar.title")
-        context["history_dates"] = get_history_dates(zaznam.historie, request.user)
+        context["history_dates"] = get_history_dates(zaznam.historie, self.request.user)
         context["show"] = get_detail_template_shows(zaznam)
         context["ez_akce"] = ez_akce
         context["ez_lokality"] = ez_lokality
