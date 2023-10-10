@@ -32,7 +32,7 @@
         </div>
         {% endif %}
       </div>
-      <div class="card-body">
+      <div class="card-body content-with-table-responsive">
         {% if soubory %}
           {% include "core/filetable.html" with soubory=soubory next_url='/pas/detail/' ident=sn.ident_cely allow_replace=True vazba_trida="pas" %}
         {% else %}

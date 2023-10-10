@@ -74,6 +74,7 @@
 
       // stepper
       .bs-stepper {
+        overflow-x: auto;
         .step {
           &.active {
             .bs-stepper-circle {

@@ -122,7 +122,9 @@
           {% crispy j.adb_form %}
           <h5>{% trans "arch_z.templates.arch_z.dj.partials.dj_update.editADB.vyskoveBody.label" %}</h5>
           <input type="hidden" name="adb_zapsat_vyskove_body" value="{{ j.adb_ident_cely }}"/>
-          {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
+          <div class="content-with-table-responsive">
+            {% crispy j.vyskovy_bod_formset j.vyskovy_bod_formset_helper %}
+          </div>
         </div>
       </div>
       {% if show.editovat %}
