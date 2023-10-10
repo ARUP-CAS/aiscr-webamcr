@@ -655,6 +655,7 @@ def smazat(request, ident_cely):
     if request.method == "POST":
         historie = nalez.historie
         soubory = nalez.soubory
+        nalez.deleted_by_user = request.user
         resp1 = nalez.delete()
         resp2 = historie.delete()
         resp3 = soubory.delete()

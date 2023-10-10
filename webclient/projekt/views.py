@@ -385,6 +385,7 @@ def smazat(request, ident_cely):
             status=403,
         )
     if request.method == "POST":
+        projekt.deleted_by_user = request.user
         projekt.delete()
         messages.add_message(request, messages.SUCCESS, ZAZNAM_USPESNE_SMAZAN)
         return JsonResponse({"redirect": reverse("projekt:list")})
