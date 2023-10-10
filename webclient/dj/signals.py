@@ -1,13 +1,12 @@
 import logging
 
-
-
-from django.db.models.signals import post_save
+from django.db.models import Q
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 
 from dj.models import DokumentacniJednotka
 from heslar.models import RuianKatastr
-from pian.models import vytvor_pian
+from pian.models import vytvor_pian, Pian
 from heslar.hesla_dynamicka import TYP_DJ_KATASTR
 
 logger = logging.getLogger(__name__)
@@ -42,3 +41,16 @@ def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created
         if instance.initial_pian is not None:
             instance.initial_pian.save_metadata()
     instance.archeologicky_zaznam.save_metadata()
+
+
+@receiver(pre_delete, sender=DokumentacniJednotka)
+def create_dokumentacni_jednotka(sender, instance: DokumentacniJednotka, created, **kwargs):
+    logger.debug("dj.signals.create_dokumentacni_jednotka.start")
+    pian: Pian = instance.pian
+    dj_query = DokumentacniJednotka.objects.filter(pian=pian).filter(~Q(ident_cely=instance.ident_cely))
+    if not pian.ident_cely.startswith("N-") and not dj_query.exist():
+        logger.debug("dj.signals.create_dokumentacni_jednotka.delete", extra={"ident_cely": pian.ident_cely})
+        if hasattr(instance, "deleted_by_user") and instance.deleted_by_user is not None:
+            pian.deleted_by_user = instance.deleted_by_user
+        pian.delete()
+    logger.debug("dj.signals.create_dokumentacni_jednotka.end")

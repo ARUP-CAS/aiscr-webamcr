@@ -3,8 +3,9 @@ import logging
 
 from core.constants import PROJEKT_RELATION_TYPE, PROJEKT_STAV_ZAPSANY, PROJEKT_STAV_VYTVORENY
 from core.models import SouborVazby
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import pre_save, post_save, post_delete, pre_delete
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
 from historie.models import HistorieVazby
 from projekt.models import Projekt
 from notifikace_projekty.tasks import check_hlidaci_pes
@@ -56,6 +57,12 @@ def create_projekt_vazby(sender, instance, **kwargs):
         sv = SouborVazby(typ_vazby=PROJEKT_RELATION_TYPE)
         sv.save()
         instance.soubory = sv
+
+
+@receiver(pre_delete, sender=Projekt)
+def projekt_pre_delete(sender, instance: Projekt, **kwargs):
+    if instance.soubory.exists():
+        raise Exception(_("projekt.signals.projekt_pre_delete.cannot_delete"))
 
 
 @receiver(post_save, sender=Projekt)

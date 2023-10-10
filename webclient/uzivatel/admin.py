@@ -268,6 +268,11 @@ class CustomUserAdmin(DjangoObjectActions, UserAdmin):
             else:
                 user.notification_types.remove(group_obj)
 
+    def log_deletion(self, request, object, object_repr):
+        object.deleted_by_user = request.user
+        super().log_deletion(request, object, object_repr)
+
+
 class CustomGroupAdmin(admin.ModelAdmin):
     """
     Admin panel pro správu uživatelskych skupin.

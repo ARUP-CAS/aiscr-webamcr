@@ -1,3 +1,6 @@
+import logging
+from typing import Union
+
 from core.constants import (
     ARCHEOLOGICKY_ZAZNAM_RELATION_TYPE,
     ARCHIVACE_AZ,
@@ -48,6 +51,7 @@ from django.utils.translation import gettext as _
 from uzivatel.models import User
 from django_prometheus.models import ExportModelOperationsMixin
 
+logger = logging.getLogger(__name__)
 
 class Historie(ExportModelOperationsMixin("historie"), models.Model):
     """
@@ -115,6 +119,19 @@ class Historie(ExportModelOperationsMixin("historie"), models.Model):
             return f"{self.uzivatel.ident_cely} ({self.uzivatel.organizace})"
         else:
             return f"{self.uzivatel.last_name}, {self.uzivatel.first_name} ({self.uzivatel.ident_cely}, {self.uzivatel.organizace})"
+
+    @classmethod
+    def save_record_deletion_record(cls, record):
+        logger.debug("history.models.save_record_deletion_record.start")
+        from arch_z.models import ArcheologickyZaznam
+        record: Union[ArcheologickyZaznam]
+        if hasattr(record, "deleted_by_user") and record.deleted_by_user is not None:
+            uzivatel = record.deleted_by_user
+        else:
+            uzivatel = User.objects.get(email="amcr@arup.cas.cz")
+        historie_record = cls(uzivatel=uzivatel, poznamka=record.ident_cely, vazba=record.historie, typ_zmeny="DEL")
+        historie_record.save()
+        logger.debug("history.models.save_record_deletion_record.end")
 
     class Meta:
         db_table = "historie"
