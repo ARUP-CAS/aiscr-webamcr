@@ -1450,6 +1450,7 @@ def smazat(request, ident_cely):
     Funkce pohledu pro smazání dokumentu cez modal.
     """
     d = get_object_or_404(Dokument, ident_cely=ident_cely)
+    d.deleted_by_user = request.user
     if check_stav_changed(request, d):
         return JsonResponse({"redirect": get_detail_json_view(ident_cely)}, status=403)
     if d.container_creation_queued():

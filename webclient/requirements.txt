@@ -1,5 +1,5 @@
 asgiref==3.6.0
-Django==4.2.5
+Django==4.2.6
 psycopg2-binary==2.9.7
 pytz==2023.3.post1
 simplejson==3.19.1
@@ -29,7 +29,7 @@ django-extensions==3.2.3
 celery==5.3.4
 django-add-default-value==0.10.0
 selenium==4.13.0
-redis==5.0.0
+redis==5.0.1
 django-celery-beat==2.5.0
 django-celery-results==2.5.1
 django-prometheus==2.3.1

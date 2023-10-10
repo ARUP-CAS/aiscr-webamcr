@@ -229,6 +229,7 @@ def smazat(request, ident_cely):
     dj = get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if request.method == "POST":
         try:
+            dj.deleted_by_user = request.user
             resp = dj.delete()
             update_all_katastr_within_akce_or_lokalita(dj.ident_cely)
             if resp:
