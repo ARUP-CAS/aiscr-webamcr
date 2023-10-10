@@ -1,5 +1,5 @@
 asgiref==3.6.0
-Django==4.2.5
+Django==4.2.6
 psycopg2-binary==2.9.7
 pytz==2023.3.post1
 simplejson==3.19.1
