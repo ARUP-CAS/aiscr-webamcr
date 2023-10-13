@@ -10,11 +10,11 @@ from django_filters import (
     MultipleChoiceFilter,
     DateFromToRangeFilter,
     RangeFilter,
-    ChoiceFilter,
+    ChoiceFilter, NumberFilter, ModelChoiceFilter,
 )
 from django_filters.widgets import DateRangeWidget
 
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_AZ
 from heslar.hesla import (
     HESLAR_ADB_PODNET,
     HESLAR_ADB_TYP,
@@ -252,6 +252,13 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         widget=SelectMultipleSeparator(),
     )
 
+    historie_zapsal_uzivatel_organizace = CharFilter(
+        label=_("arch_z.filters.AkceFilter.filter_historie_uzivatel_organizace.label"),
+        method="filter_historie_zapsal_uzivatel_organizace",
+        distinct=True,
+    )
+
+
     def filtr_katastr(self, queryset, name, value):
         """
         Metóda pro filtrování podle hlavního i vedlejšího katastru.
@@ -366,6 +373,12 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         return queryset.filter(
             archeologicky_zaznam__dokumentacni_jednotky_akce__komponenty__komponenty__objekty__specifikace__in=value
         ).distinct()
+
+    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
+        historie_query = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False).filter(typ_zmeny=ZAPSANI_AZ)\
+            .filter(uzivatel__organizace=int(value))
+        arch_z_ids = [x.vazba.archeologickyzaznam for x in historie_query]
+        return queryset.filter(archeologicky_zaznam__in=arch_z_ids).distinct()
 
     def __init__(self, *args, **kwargs):
         super(ArchZaznamFilter, self).__init__(*args, **kwargs)

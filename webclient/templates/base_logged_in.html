@@ -73,7 +73,7 @@
               <li><a href="{% url 'arch_z:zapsat-akci' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.zapsat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.vybrat" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.mojeAkce" %}</a></li>
-              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_typ_zmeny=AZ01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
+              <li><a href="{% url 'arch_z:list' %}?zahrnout_projektove=False&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.naseAkce" %}</a></li>
               <li><a href="{% url 'arch_z:list' %}?stav=2&zahrnout_projektove=False&sort=datum_ukonceni&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneAkce.archivovat" %}</a></li>
             </ul>
           </div>
