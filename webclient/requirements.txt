@@ -19,7 +19,7 @@ django-simple-history==3.4.0
 distlib==0.3.7
 django-rosetta==0.9.9
 django-auto-logout==0.5.1
-reportlab==4.0.5
+reportlab==4.0.6
 PyRTF3==0.47.5
 pypdf==3.16.3
 Pillow==10.0.1
