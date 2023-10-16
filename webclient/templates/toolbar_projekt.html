@@ -3,9 +3,9 @@
 <div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="{% url 'projekt:index' %}"><span class="material-icons">dynamic_feed</span><span class="app-controls-button-text">Projekt</span></a>
+      <a href="{% url 'projekt:index' %}"><span class="material-icons">dynamic_feed</span><span class="app-controls-button-text"> Projekt</span></a>
     </div>
-    <div id="id-app-entity-item" class="app-entity-item">
+    <div id="id-app-entity-item" class="app-entity-item app-projekt-entity-item">
       {{ projekt.ident_cely }}
     </div>
   </div>
@@ -73,7 +73,7 @@
           </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle m-0" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          <span class="app-controls-other-menu-icon"><span class="material-icons">archive</span></span>
+          <span class="app-controls-other-menu-icon"><span class="material-icons">more_vert</span></span>
           <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.dalsiVolby.label" %}</span>
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">

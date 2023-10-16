@@ -58,7 +58,9 @@
     .app-entity-item {
       @extend .align-self-center;
       font-weight: 600;
-      @media (max-width: 576px) {
+    }
+    .app-projekt-entity-item {
+       @media (max-width: 576px) {
         display: none;
       }
     }

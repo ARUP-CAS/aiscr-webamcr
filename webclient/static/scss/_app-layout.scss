@@ -39,8 +39,8 @@ body {
 }
 
 #app-page-wrapper {
-  @media (min-width: 576px) {
-    min-width: 100vh;
+  @media (min-width: 768px) {
+     min-width: calc(100vh - 300px);
   }
   width: 100%;
   -webkit-transition: margin .25s ease-out;
