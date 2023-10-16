@@ -3,7 +3,7 @@
 <div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="#"><span class="material-icons">brush</span> {{toolbar_name}}</a>
+      <a href="#"><span class="material-icons">brush</span><span class="app-controls-button-text"> {{toolbar_name}}</span></a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item">
       {% if toolbar_label %}{{toolbar_label}}{%endif%}
@@ -16,23 +16,24 @@
         {% if show.vratit_link %}
           <button id="{{type}}-vratit" class="btn m-0" type="button" name="button">
             <span class="material-icons">arrow_back</span>
-            {% trans "templates.toolbarAkce.vratit.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarAkce.vratit.label" %}</span>
           </button>
         {% endif %}
         {% if show.odeslat_link %}
           <button id="{{type}}-odeslat" class="btn m-0" type="button" name="button">
             <span class="material-icons">send</span>
-            {% trans "templates.toolbarAkce.odeslat.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarAkce.odeslat.label" %}</span>
           </button>
         {% endif %}
         {% if show.archivovat_link %}
           <button id="{{type}}-archivovat" class="btn m-0" type="button" name="button">
             <span class="material-icons">archive</span>
-            {% trans "templates.toolbarAkce.archivovat.label" %}
+            <span class="app-controls-button-text">{% trans "templates.toolbarAkce.archivovat.label" %}</span>
           </button>
         {% endif %}
         <button id="otherOptions" type="button" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          {% trans "templates.toolbarAkce.dalsiVolby.label" %}
+          <span class="app-controls-other-menu-icon"><span class="material-icons">more_vert</span></span>
+          <span class="app-controls-button-text">{% trans "templates.toolbarAkce.dalsiVolby.label" %}</span>
         </button>
         <div class="dropdown-menu" aria-labelledby="otherOptions">
           <button id="{{type}}-smazat" class="dropdown-item" type="button" name="button">{% trans "templates.toolbarAkce.smazatAkci.label" %}</button>
