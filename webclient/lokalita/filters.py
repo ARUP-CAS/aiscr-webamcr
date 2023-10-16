@@ -5,9 +5,10 @@ from crispy_forms.layout import Div, Layout, HTML
 from django.db.models import Q
 from django.utils.translation import gettext as _
 from django_filters import (
-    ModelMultipleChoiceFilter,
+    ModelMultipleChoiceFilter, CharFilter,
 )
 
+from core.constants import ZAPSANI_AZ
 from heslar.hesla import (
     HESLAR_JISTOTA_URCENI,
     HESLAR_LOKALITA_DRUH,
@@ -17,6 +18,7 @@ from heslar.hesla import (
 from heslar.models import Heslar
 from arch_z.filters import ArchZaznamFilter
 from core.forms import SelectMultipleSeparator
+from historie.models import Historie
 from .models import Lokalita
 
 logger = logging.getLogger(__name__)
@@ -56,6 +58,11 @@ class LokalitaFilter(ArchZaznamFilter):
         widget=SelectMultipleSeparator(),
         distinct=True,
     )
+    historie_zapsal_uzivatel_organizace = CharFilter(
+        label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        method="filter_historie_zapsal_uzivatel_organizace",
+        distinct=True,
+    )
 
     def filter_popisne_udaje(self, queryset, name, value):
         """
@@ -67,6 +74,12 @@ class LokalitaFilter(ArchZaznamFilter):
             | Q(poznamka__icontains=value)
             | Q(archeologicky_zaznam__uzivatelske_oznaceni__icontains=value)
         ).distinct()
+
+    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
+        historie_query = Historie.objects.filter(vazba__archeologickyzaznam__isnull=False).filter(typ_zmeny=ZAPSANI_AZ)\
+            .filter(uzivatel__organizace=int(value))
+        arch_z_ids = [x.vazba.archeologickyzaznam for x in historie_query]
+        return queryset.filter(archeologicky_zaznam__in=arch_z_ids).distinct()
 
     class Meta:
         model = Lokalita

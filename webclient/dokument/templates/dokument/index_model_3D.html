@@ -40,7 +40,7 @@
         </a>
       </div>
       <div class="col">
-        <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
+        <a href="{% url 'dokument:list-model-3D' %}?historie_typ_zmeny=D01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" class="card app-card-entity app-card-nase-modely">
           <div class="card-body">
             <img src="{% static 'logo-am-mark.png' %}" />
           </div>

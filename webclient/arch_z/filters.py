@@ -253,7 +253,7 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
     )
 
     historie_zapsal_uzivatel_organizace = CharFilter(
-        label=_("arch_z.filters.AkceFilter.filter_historie_uzivatel_organizace.label"),
+        label=_("arch_z.filters.AkceFilter.filter_historie_zapsal_uzivatel_organizace.label"),
         method="filter_historie_zapsal_uzivatel_organizace",
         distinct=True,
     )
