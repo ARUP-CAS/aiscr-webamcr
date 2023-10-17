@@ -103,7 +103,7 @@ def auto_logout_client(request):
 
         if options.get("REDIRECT_TO_LOGIN_IMMEDIATELY"):
             ctx["redirect_to_login_immediately"] = mark_safe(
-                "window.location.href = '/accounts/logout/?autologout=true'"
+                f"window.location.href = '/accounts/logout/?autologout=true&next={next_url}'"
             )
         else:
             ctx["redirect_to_login_immediately"] = mark_safe(
