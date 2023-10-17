@@ -50,6 +50,16 @@
       }
     }
   }
+
+  .navbar-mobile-header-ident {
+    @media (min-width: 576px) {
+      display: none;
+    }
+    font-weight: 600;
+    .navbar-mobile-header-ident-projekt {
+      color: #F39225;
+    }
+  }
 }
 
 

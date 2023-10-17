@@ -23,7 +23,7 @@ from core.constants import (
     OBLAST_CECHY,
     OBLAST_CHOICES,
     OBLAST_MORAVA,
-    ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID,
+    ROLE_ARCHEOLOG_ID, ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_SN,
 )
 from heslar.hesla import (
     HESLAR_NALEZOVE_OKOLNOSTI,
@@ -224,6 +224,18 @@ class SamostatnyNalezFilter(HistorieFilter):
         field_name="pristupnost",
         widget=SelectMultipleSeparator(),
     )
+
+    historie_zapsal_uzivatel_organizace = CharFilter(
+        label=_("arch_z.filters.SamostatnyNalezFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        method="filter_historie_zapsal_uzivatel_organizace",
+        distinct=True,
+    )
+
+    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
+        historie_query = Historie.objects.filter(vazba__sn_historie__isnull=False).filter(typ_zmeny=ZAPSANI_SN)\
+            .filter(uzivatel__organizace=int(value))
+        sn_ids = [x.vazba.sn_historie.pk for x in historie_query]
+        return queryset.filter(pk__in=sn_ids).distinct()
 
     class Meta:
         model = SamostatnyNalez

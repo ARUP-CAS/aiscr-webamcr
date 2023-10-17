@@ -17,7 +17,7 @@ from django_filters import (
     DateFromToRangeFilter,
 )
 
-from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID
+from core.constants import ROLE_ADMIN_ID, ROLE_ARCHIVAR_ID, ZAPSANI_DOK
 from dokument.models import Dokument, DokumentCast, Tvar
 from historie.models import Historie
 from django.db.models import Q
@@ -351,6 +351,12 @@ class Model3DFilter(HistorieFilter):
         distinct=True,
     )
 
+    historie_zapsal_uzivatel_organizace = CharFilter(
+        label=_("arch_z.filters.model3DFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        method="filter_historie_zapsal_uzivatel_organizace",
+        distinct=True,
+    )
+
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metóda pro filtrování podle popisu, poznámky, odkazu a poznámek v objektech a předmětech.
@@ -375,6 +381,12 @@ class Model3DFilter(HistorieFilter):
         Metóda pro filtrování podle areálu komponenty.
         """
         return queryset.filter(casti__komponenty__komponenty__areal__in=value)
+
+    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
+        historie_query = Historie.objects.filter(vazba__dokument_historie__isnull=False).filter(typ_zmeny=ZAPSANI_DOK)\
+            .filter(uzivatel__organizace=int(value))
+        d_ids = [x.vazba.dokument_historie.pk for x in historie_query]
+        return queryset.filter(pk__in=d_ids).distinct()
 
     class Meta:
         model = Dokument
@@ -823,6 +835,12 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
+    historie_zapsal_uzivatel_organizace = CharFilter(
+        label=_("arch_z.filters.dokumentFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        method="filter_historie_zapsal_uzivatel_organizace",
+        distinct=True,
+    )
+
     def filter_uzemni_prislusnost(self, queryset, name, value):
         """
         Metóda pro filtrování podle územní príslušnosti.
@@ -1006,6 +1024,12 @@ class DokumentFilter(Model3DFilter):
 
         else:
             return queryset.distinct()
+
+    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
+        historie_query = Historie.objects.filter(vazba__dokument_historie__isnull=False).filter(typ_zmeny=ZAPSANI_DOK)\
+            .filter(uzivatel__organizace=int(value))
+        d_ids = [x.vazba.dokument_historie.pk for x in historie_query]
+        return queryset.filter(pk__in=d_ids).distinct()
 
     def __init__(self, *args, **kwargs):
         super(DokumentFilter, self).__init__(*args, **kwargs)

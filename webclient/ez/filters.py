@@ -12,6 +12,7 @@ from django_filters import (
     MultipleChoiceFilter,
 )
 
+from core.constants import ZAPSANI_EXT_ZD
 from heslar.hesla import (
     HESLAR_DOKUMENT_TYP,
     HESLAR_EXTERNI_ZDROJ_TYP,
@@ -137,6 +138,12 @@ class ExterniZdrojFilter(HistorieFilter):
         widget=SelectMultipleSeparator(),
     )
 
+    historie_zapsal_uzivatel_organizace = CharFilter(
+        label=_("arch_z.filters.ExterniZdrojFilter.filter_historie_zapsal_uzivatel_organizace.label"),
+        method="filter_historie_zapsal_uzivatel_organizace",
+        distinct=True,
+    )
+
     def filter_popisne_udaje(self, queryset, name, value):
         """
         Metóda pro filtrování podle názvu, edice, sborníku, časopisu, isbn, issn, roku vydání a poznámek.
@@ -169,6 +176,12 @@ class ExterniZdrojFilter(HistorieFilter):
             externi_odkazy_zdroje__archeologicky_zaznam__ident_cely__icontains=value,
             externi_odkazy_zdroje__archeologicky_zaznam__typ_zaznamu=ArcheologickyZaznam.TYP_ZAZNAMU_LOKALITA,
         )
+
+    def filter_historie_zapsal_uzivatel_organizace(self, queryset, name, value):
+        historie_query = Historie.objects.filter(vazba__externizdroj__isnull=False).filter(typ_zmeny=ZAPSANI_EXT_ZD)\
+            .filter(uzivatel__organizace=int(value))
+        d_ids = [x.vazba.externizdroj.pk for x in historie_query]
+        return queryset.filter(pk__in=d_ids).distinct()
 
     class Meta:
         model = ExterniZdroj

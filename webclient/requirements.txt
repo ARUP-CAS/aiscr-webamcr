@@ -19,15 +19,15 @@ django-simple-history==3.4.0
 distlib==0.3.7
 django-rosetta==0.9.9
 django-auto-logout==0.5.1
-reportlab==4.0.5
+reportlab==4.0.6
 PyRTF3==0.47.5
-pypdf==3.16.2
-Pillow==10.0.1
+pypdf==3.16.4
+Pillow==10.1.0
 beautifulsoup4==4.12.2
 django-extensions==3.2.3
 celery==5.3.4
 django-add-default-value==0.10.0
-selenium==4.13.0
+selenium==4.14.0
 redis==5.0.1
 django-celery-beat==2.5.0
 django-celery-results==2.5.1
@@ -37,7 +37,7 @@ djangorestframework==3.14.0
 djangorestframework-xml==2.0.0
 lxml==4.9.3
 # DEV requirements
-pre-commit==3.4.0
+pre-commit==3.5.0
 isort==5.12.0
 coverage==7.3.2
 django-debug-toolbar==4.2.0
@@ -47,7 +47,7 @@ django-debug-toolbar-template-profiler==2.1.0
 psycopg2==2.9.9
 django-object-actions==4.2.0
 
-pre-commit==3.4.0
+pre-commit==3.5.0
 isort==5.12.0
 coverage==7.3.2
 django-debug-toolbar==4.2.0

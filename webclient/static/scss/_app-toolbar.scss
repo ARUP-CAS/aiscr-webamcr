@@ -5,6 +5,17 @@
   height: $app-toolbar-height;
   margin: -#{$spacer-3} -#{$spacer-3} #{$spacer-3} -#{$spacer-3};
 
+  .app-controls-button-text{
+    @media (max-width: 576px) {
+      display: none;
+    }
+  }
+  .app-controls-other-menu-icon {
+    @media (min-width: 576px) {
+      display: none;
+    }
+  }
+
   .app-left {
     @extend .flex-grow-1, .d-flex;
 
@@ -48,6 +59,11 @@
       @extend .align-self-center;
       font-weight: 600;
     }
+    .app-projekt-entity-item {
+       @media (max-width: 576px) {
+        display: none;
+      }
+    }
   }
 
   .app-right {
@@ -62,6 +78,11 @@
           border: 0;
           align-items: center;
           border-left: 1px solid;
+
+          @media (max-width: 576px) {
+            padding-left: 0.5rem!important;
+            padding-right: 0!important;
+          }
 
           .material-icons {
             @extend .mr-2;
