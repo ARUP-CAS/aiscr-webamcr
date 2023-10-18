@@ -52,7 +52,6 @@ ARCHIVACE_PROJ: Final = "P56"  # 6
 NAVRZENI_KE_ZRUSENI_PROJ: Final = "P*7"  # 7
 RUSENI_PROJ: Final = "P78"  # 8
 VRACENI_PROJ: Final = "P-1"  # New
-PRIDANI_OZNAMOVATELE_PROJ: Final = "PO1"  # New
 VRACENI_NAVRHU_ZRUSENI: Final = "P71"  # New
 VRACENI_ZRUSENI: Final = "P81"  # New
 # Akce + Lokalita (archeologicke zaznamy)
