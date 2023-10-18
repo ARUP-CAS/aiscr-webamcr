@@ -1,4 +1,5 @@
 import json
+import html
 import logging
 import mimetypes
 import os
@@ -730,7 +731,7 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         if "vychozi_skryte_sloupce" not in request.session:
             request.session["vychozi_skryte_sloupce"] = {}
         app = json.loads(request.body.decode("utf8"))["app"]
-        sloupec = json.loads(request.body.decode("utf8"))["sloupec"]
+        sloupec = html.escape(json.loads(request.body.decode("utf8"))["sloupec"])
         zmena = json.loads(request.body.decode("utf8"))["zmena"]
         if app not in request.session["vychozi_skryte_sloupce"]:
             request.session["vychozi_skryte_sloupce"][app] = []
@@ -747,7 +748,7 @@ class SearchListChangeColumnsView(LoginRequiredMixin, View):
         else:
             skryte_sloupce.append(sloupec)
             request.session.modified = True
-        return HttpResponse("Pridano do skrytych %s" % sloupec)
+        return HttpResponse(f"{_('core.views.SearchListChangeColumnsView.response')} {sloupec}")
 
 
 class StahnoutMetadataView(LoginRequiredMixin, View):
