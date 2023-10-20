@@ -190,7 +190,7 @@ class DownloadThumbnail(DownloadFile):
             return output_buffer
         except Exception as err:
             logger.debug("core.views.DownloadFile._resize_image.error", extra={"err": err})
-            return output_buffer
+            return file_content
 
 
 
