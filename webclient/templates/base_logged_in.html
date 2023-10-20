@@ -120,7 +120,7 @@
               <li><a href="{% url 'pas:create' %}" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.zapsat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?sort=katastr&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.vybrat" %}</a></li>
               <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_uzivatel={{ user.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.mojeNalezy" %}</a></li>
-              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "Naše nálezy" %}</a></li>
+              <li><a href="{% url 'pas:list' %}?historie_typ_zmeny=SN01&historie_zapsal_uzivatel_organizace={{ user.organizace.id }}&sort=stav&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.naseNalezy" %}</a></li>
               <li><a href="{% url 'pas:list' %}?stav=2&predano_organizace={{ user.organizace.id }}&sort=nalezce&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.potvrdit" %}</a></li>
               <li><a href="{% url 'pas:list' %}?stav=3&sort=datum_nalezu&sort=ident_cely" title="">{% trans "templates.baseLogedIn.sidebar.samostatneNalezy.archivovat" %}</a></li>
             </ul>
@@ -292,8 +292,7 @@
       </div>
       <div>
         <small>
-          © 2023 
-          <a class="text-dark" href="https://amcr-info.aiscr.cz/">AMČR</a><span class="app-pipe"></span>Verze: 1.0.0
+          {% trans "templates.baseLogedIn.footer.copyright" %}<span class="app-pipe"></span>{% trans "templates.baseLogedIn.footer.verze" %}: 1.0.0
         </small>
       </div>
     </div>

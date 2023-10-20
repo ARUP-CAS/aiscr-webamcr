@@ -691,7 +691,7 @@ TYP_VYZKUMU_CHOICES = [
 ]
 VYSLEDEK_CHOICES = [
     ("pozitivni", _("projekt.forms.GenerovatExpertniListForm.vysledek.pozitivni.text")),
-    ("negativni", _("projekt.forms.GenerovatExpertniListForm.vysledek..text")),
+    ("negativni", _("projekt.forms.GenerovatExpertniListForm.vysledek.negativni.text")),
     ("jine", _("projekt.forms.GenerovatExpertniListForm.vysledek.jine.text")),
 ]
 

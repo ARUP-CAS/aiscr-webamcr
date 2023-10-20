@@ -3,7 +3,7 @@
 <div class="app-toolbar {% if showcontrols %}mb-0{% else %}mb-2{% endif %}">
   <div class="app-left">
     <div class="app-entity-title">
-      <a href="{% url 'projekt:index' %}"><span class="material-icons">dynamic_feed</span><span class="app-controls-button-text"> Projekt</span></a>
+      <a href="{% url 'projekt:index' %}"><span class="material-icons">dynamic_feed</span><span class="app-controls-button-text"> {% trans "templates.toolbarProjekt.projekt.title" %}</span></a>
     </div>
     <div id="id-app-entity-item" class="app-entity-item app-projekt-entity-item">
       {{ projekt.ident_cely }}
@@ -45,7 +45,7 @@
         {% if show.prihlasit_link %}
           <button id="projekt-prihlasit" class="btn m-0" type="button" name="button">
             <span class="material-icons">login</span>
-            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.vratprihlasitit.label" %}</span>
+            <span class="app-controls-button-text">{% trans "templates.toolbarProjekt.prihlasit.label" %}</span>
           </button>
         {% endif %}
         {% if show.zahajit_teren_link %}

@@ -72,7 +72,7 @@
         </div>
       </div>
       <button type="submit" id="actionSubmitBtn" class="btn btn-primary mt-3">{{ button }}</button>
-      <a class="btn btn-secondary" href="{% url 'projekt:index' %}">{% trans "Zpět" %}</a>
+      <a class="btn btn-secondary" href="{% url 'projekt:index' %}">{% trans "projekt.templates.create.backButton.text" %}</a>
     </form>
   </div>
 {% endblock %}
@@ -156,7 +156,7 @@
               $('.selectpicker').selectpicker('refresh');
           });
 
-          document.getElementById("id-app-entity-item").innerHTML = "Zapsat"
+          document.getElementById("id-app-entity-item").innerHTML = {% trans "projekt.templates.create.toolbar.title" %}
       })
   </script>
   <script src="{% static 'daterangepicker.js' %}"></script>

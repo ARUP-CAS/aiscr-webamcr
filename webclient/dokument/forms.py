@@ -53,7 +53,7 @@ class AutoriField(forms.models.ModelMultipleChoiceField):
 
 class CoordinatesDokumentForm(forms.Form):
     """
-    Hlavní formulář pro editaci souradnic u modelu 3D.
+    Hlavní formulář pro editaci souřadnic v PAS.
     """
     detector_system_coordinates = forms.ChoiceField(
         label=_("pas.forms.coordinates.detector.label"),
