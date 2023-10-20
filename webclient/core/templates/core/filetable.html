@@ -24,7 +24,7 @@
     <tr>
       <td>
         {% if soubor.mimetype|slice:5 == "image" %}
-          <img id="soubor-nahled" src="{% url 'core:download_file' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
+          <img id="soubor-nahled" src="{% url 'core:download_thumbnail' soubor.id %}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal" >
         {% endif %}  
       </td>
       <td>{{ soubor.nazev }}</td>

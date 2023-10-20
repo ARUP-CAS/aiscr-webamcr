@@ -5,6 +5,7 @@ import mimetypes
 import os
 import re
 from io import StringIO, BytesIO
+from PIL import Image
 
 import unicodedata
 from django.core.files.uploadedfile import TemporaryUploadedFile
@@ -64,8 +65,6 @@ from django_tables2.export import ExportMixin
 from datetime import datetime
 
 from core.ident_cely import get_record_from_ident
-from dj.models import DokumentacniJednotka
-from komponenta.models import Komponenta
 from core.models import Permissions
 from historie.models import Historie
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
@@ -133,37 +132,66 @@ def delete_file(request, pk):
         return render(request, "core/transakce_modal.html", context)
 
 
-@login_required
-@require_http_methods(["GET"])
-def download_file(request, pk):
-    """
-    Funkce pohledu pro stažení souboru.
-    """
-    soubor: Soubor = get_object_or_404(Soubor, id=pk)
-    rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
-    if soubor.repository_uuid is not None:
-        # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
-        response = FileResponse(rep_bin_file.content, filename=soubor.nazev)
-        response["Content-Length"] = rep_bin_file.size
-        response["Content-Disposition"] = (
-                "attachment; filename=" + soubor.nazev
-        )
-        return response
+class DownloadFile(LoginRequiredMixin, View):
+    @staticmethod
+    def _preprocess_image(file_content: BytesIO) -> BytesIO:
+        return file_content
 
-    path = os.path.join(settings.MEDIA_ROOT, soubor.path)
-    if os.path.exists(path):
-        content_type = mimetypes.guess_type(soubor.nazev)[
-            0
-        ]  # Use mimetypes to get file type
-        response = HttpResponse(soubor.path, content_type=content_type)
-        response["Content-Length"] = str(len(soubor.path))
-        response["Content-Disposition"] = (
-            "attachment; filename=" + soubor.nazev
-        )
-        return response
-    else:
-        logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
-    return HttpResponse("")
+    def get(self, request, pk, *args, **kwargs):
+        soubor: Soubor = get_object_or_404(Soubor, id=pk)
+        rep_bin_file: RepositoryBinaryFile = soubor.get_repository_content()
+        if soubor.repository_uuid is not None:
+            # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
+            content = self._preprocess_image(rep_bin_file.content)
+            response = FileResponse(content, filename="test.jpeg")
+            content.seek(0)
+            response["Content-Length"] = content.getbuffer().nbytes
+            content.seek(0)
+            response["Content-Disposition"] = (
+                    "attachment; filename=" + "test.jpeg"
+            )
+            return response
+
+        path = os.path.join(settings.MEDIA_ROOT, soubor.path)
+        if os.path.exists(path):
+            content_type = mimetypes.guess_type(soubor.nazev)[
+                0
+            ]  # Use mimetypes to get file type
+            response = HttpResponse(soubor.path, content_type=content_type)
+            response["Content-Length"] = str(len(soubor.path))
+            response["Content-Disposition"] = (
+                    "attachment; filename=" + soubor.nazev
+            )
+            return response
+        else:
+            logger.debug("core.views.download_file.not_exists", extra={"soubor_name": soubor.nazev, "path": path})
+        return HttpResponse("")
+
+
+class DownloadThumbnail(DownloadFile):
+    @staticmethod
+    def _preprocess_image(file_content: BytesIO) -> BytesIO:
+        logger.debug("core.views.DownloadFile._resize_image.start")
+        try:
+            image = Image.open(file_content)
+            max_size = 100
+            width, height = image.size
+            if width > height:
+                new_width = max_size
+                new_height = int((max_size / width) * height)
+            else:
+                new_height = max_size
+                new_width = int((max_size / height) * width)
+            image.thumbnail((new_width, new_height))
+            output_buffer = BytesIO()
+            image.save(output_buffer, format="JPEG")
+            output_buffer.seek(0)
+            logger.debug("core.views.DownloadFile._resize_image.end")
+            return output_buffer
+        except Exception as err:
+            logger.debug("core.views.DownloadFile._resize_image.error", extra={"err": err})
+            return output_buffer
+
 
 
 @login_required
