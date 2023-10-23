@@ -143,12 +143,12 @@ class DownloadFile(LoginRequiredMixin, View):
         if soubor.repository_uuid is not None:
             # content_type = mimetypes.guess_type(soubor.path.name)[0]  # Use mimetypes to get file type
             content = self._preprocess_image(rep_bin_file.content)
-            response = FileResponse(content, filename="test.jpeg")
+            response = FileResponse(content, filename=soubor.nazev)
             content.seek(0)
             response["Content-Length"] = content.getbuffer().nbytes
             content.seek(0)
             response["Content-Disposition"] = (
-                    "attachment; filename=" + "test.jpeg"
+                    f"attachment; filename={soubor.nazev}"
             )
             return response
 
