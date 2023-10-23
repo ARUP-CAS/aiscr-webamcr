@@ -342,6 +342,9 @@ def get_record_from_ident(ident_cely):
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}\D{1}-D\d{2}", ident_cely)):
         logger.debug("core.views.get_record_from_ident.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
+    if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}-D\d{2}", ident_cely)):
+        logger.debug("core.views.get_record_from_ident.dokumentacni_jednotka_lokality", extra={"ident_cely": ident_cely})
+        return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}\D{1}-K\d{3}", ident_cely)):
         logger.debug("core.views.get_record_from_ident.komponenta_on_dokumentacni_jednotka",
                      extra={"ident_cely": ident_cely})

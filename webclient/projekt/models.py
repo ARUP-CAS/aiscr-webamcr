@@ -567,8 +567,6 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     def expert_list_can_be_created(self):
         if self.typ_projektu.pk != TYP_PROJEKTU_ZACHRANNY_ID:
             return False
-        if self.stav not in (PROJEKT_STAV_ARCHIVOVANY, PROJEKT_STAV_UZAVRENY, PROJEKT_STAV_UKONCENY_V_TERENU):
-            return False
         return True
 
     def create_expert_list(self, popup_parametry=None):
@@ -610,6 +608,9 @@ class Projekt(ExportModelOperationsMixin("projekt"), ModelWithMetadata):
     
     def get_create_user(self):
         return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_PROJ)[0].uzivatel
+    
+    def get_create_org(self):
+        return self.organizace
 
 
 class ProjektKatastr(ExportModelOperationsMixin("projekt_katastr"), models.Model):

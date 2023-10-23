@@ -9,7 +9,6 @@
       {% trans "arch_z.templates.arch_z.dj.partials.dj_update.cardHeader.label" %} {{ j.ident_cely }}
     </div>
     <div class="app-fx app-right">
-      {% if show.editovat %}
       <div class="btn-group" role="group">
         <div class="dropdown-menu" aria-labelledby="others">
           {% if j.show_add_komponenta %}
@@ -17,7 +16,7 @@
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatKomponentu.label' %}
           </a>
           {% endif %}
-          {% if j.show_add_pian %}
+          {% if j.show_add_pian_zapsat %}
           <a id="show_menu_pian_new_id" class="dropdown-item" href="{% url 'arch_z:create-pian' zaznam.ident_cely j.ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.pridatNovyPian.label' %}
           </a>
@@ -68,10 +67,12 @@
           {% if j.adb_pk %}
             <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "adb.detail.toolbar.MetadataDownload" %}</a>
           {% endif %}
+          {% if j.show_dj_smazat %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">
             {% trans 'arch_z.templates.arch_z.dj.partials.dj_update.editButtons.smazatDJ.label' %}
           </button>
+          {% endif %}
           {% if j.show_pripojit_pian %}
           <button id="pian-pripojit-{{j.pian_ident_cely}}" class="dropdown-item pian-pripojit-btn" type="button"
                   name="button" onclick="set_pian_by_id('{{j.ident_cely}}')")>
@@ -91,7 +92,6 @@
           <span class="material-icons">more_vert</span>
         </button>
       </div>
-      {% endif %}
     </div>
   </div>
   <div class="card-body">

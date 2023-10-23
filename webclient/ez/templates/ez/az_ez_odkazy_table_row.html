@@ -11,14 +11,14 @@
     <td>{{ ez.nazev|check_if_none }}</td>
     {% if hide_paginace != True %}
     <td>{{ z.paginace|check_if_none }}
-      {% if show.editovat %}
+      {% if show.paginace_edit %}
       <button  id="ez-change-{{z.id}}" class="ez-change-btn" type="button" name="button" href="{% url 'ez:zmenit_eo' 'akce' zaznam.ident_cely z.id %}?next_url={{next_url}}">
         <span class="material-icons app-color-warning">edit</span>
       </button>
       {% endif %}
     </td>
     {% endif %}
-    {% if show.editovat %}
+    {% if show.odpojit_eo %}
     <td>
       <button id="ez-odpojit-{{z.id}}" class="ez-odpojit-btn" type="button" name="button" href="{% url 'ez:odpojit_eo_az' zaznam.ident_cely z.id %}">
         <span class="material-icons app-color-danger">delete_forever</span>

@@ -2,6 +2,8 @@ import logging
 from django.core.exceptions import PermissionDenied
 
 from core.models import Permissions
+from core.ident_cely import get_record_from_ident
+from dokument.models import Dokument
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,10 @@ class PermissionMiddleware:
             if "nalez/smazat" in resolver.route:
                 i = 2
                 typ = resolver.kwargs.get("typ")
+            if resolver.route.startswith("/komponenta"):
+                object = get_record_from_ident(list(resolver.kwargs.values())[i])
+                if isinstance(object, Dokument):
+                    filter.update({"action__like": "dok"})
             if not "autocomplete" in resolver.route:
                 permission_set = Permissions.objects.filter(**filter)
             else:

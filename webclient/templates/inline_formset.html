@@ -55,21 +55,21 @@
                     {% endfor %}
                     <td>
                         
-                        {% if form.id.value and show.editovat %} 
-                            {% if form_id and form_id == "vb" %}
+                        {% if form.id.value %} 
+                            {% if form_id and form_id == "vb" and j.show_vb_smazat %}
                                 <button id="vb-smazat-{{form.id.value}}" class="vb-smazat-btn" type="button" name="button" href="{% url 'adb:smazat-vb' form.ident_cely.value %}?next={{ request.get_full_path }}">
                                     <span class="material-icons app-color-danger">delete_forever</span>
                                 </button>
                             {% elif form_id %}
-                                {% if form_id == "objekt" or form_id == "predmet"%}
+                                {% if form_id == "objekt" or form_id == "predmet" and show.nalez_smazat %}
                                 <button id="objekt-smazat-{{form.id.value}}" class="objekt-smazat-btn" type="button" name="button" href="{% url 'nalez:smazat_nalez' typ_vazby form.typ.value form.id.value %}?next={{ request.get_full_path }}">
                                     <span class="material-icons app-color-danger">delete_forever</span>
                                 </button>
-                                {% elif form_id == "tvar"%}
+                                {% elif form_id == "tvar" and show.tvary_smazat %}
                                 <button id="tvar-smazat-{{form.id.value}}" class="tvar-smazat-btn" type="button" name="button" href="{% url 'dokument:smazat-tvar' dokument.ident_cely form.id.value %}?next={{ request.get_full_path }}">
                                     <span class="material-icons app-color-danger">delete_forever</span>
                                 </button>
-                                {% elif form_id == "pes"%}
+                                {% elif form_id == "pes" and show.editovat %}
                                 <button id="pes-smazat-{{form.id.value}}" class="pes-smazat-btn" type="button" name="button" href="{% url 'notifikace_projekty:smazat' form.id.value %}">
                                     <span class="material-icons app-color-danger">delete_forever</span>
                                 </button>

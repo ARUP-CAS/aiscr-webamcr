@@ -1,11 +1,14 @@
 import json
 import re
 import logging
+from django.http import HttpResponse
+from django.http.request import HttpRequest
 import pandas as pd
 import os
 import io
 from bs4 import BeautifulSoup
 from polib import pofile
+import csv
 
 from django.contrib import admin
 from django.shortcuts import redirect
@@ -19,9 +22,11 @@ from django.contrib.auth.models import Group
 from django.urls import path, reverse
 from django.core.cache import cache
 
-from .models import OdstavkaSystemu, Permissions, CustomAdminSettings
+from uzivatel.models import User
+
+from .models import OdstavkaSystemu, Permissions, CustomAdminSettings, PermissionsSkip
 from .exceptions import WrongSheetError
-from .forms import OdstavkaSystemuForm, PermissionImportForm
+from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .constants import (
     ROLE_NASTAVENI_ODSTAVKY,
     PERMISSIONS_IMPORT_SHEET,
@@ -166,6 +171,10 @@ class PermissionAdmin(admin.ModelAdmin):
     list_display = [
         "address_in_app", "main_role", "action"
     ]
+    list_filter = ["main_role", "address_in_app"]
+
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
+        return super().changelist_view(request, {"import_list":True})
 
     def get_urls(self):
         """
@@ -401,7 +410,7 @@ class PermissionAdmin(admin.ModelAdmin):
         media = self.media
         payload = {
             **self.admin_site.each_context(request),
-            "title": _("core.admin.permissionAdmin.title.error"),
+            "title": _("core.admin.permissionAdmin.title.success"),
             "table": table,
             "media": media,
         }
@@ -417,3 +426,135 @@ class PermissionAdmin(admin.ModelAdmin):
             "core/permission_import_success.html",
             payload,
         )
+
+
+@admin.register(PermissionsSkip)
+class PermissionSkipAdmin(admin.ModelAdmin):
+    """
+    Třída admin panelu pro zobrazení a správu oprávnení.
+    """
+
+    change_list_template = "core/permissions_changelist.html"
+    list_display = [
+        "user"
+    ]
+    actions = ("export_as_csv",)
+
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
+        return super().changelist_view(request, {"import_skip_list":True})
+
+    def get_urls(self):
+        """
+        Metóda pri definici dodatečných url.
+        """
+        urls = super().get_urls()
+        my_urls = [
+            path("import_skip_file/", self.import_skip_file, name="import_permissions_skip"),
+            path(
+                "import_skip_success/",
+                self.import_skip_success,
+                name="import_skip_success",
+            ),
+        ]
+        return my_urls + urls
+
+    def import_skip_file(self, request):
+        """
+        Metóda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+        """
+        model = self.model
+        opts = model._meta
+        app_label = "core"
+        if request.method == "POST":
+            docfile = request.FILES["file"]
+            try:
+                sheet = pd.read_csv(docfile, sep=";")
+            except ValueError as e:
+                logger.debug(e)
+                self.message_user(
+                    request,
+                    _("core.admin.permissionSkipAdmin.wrongDoc.error"),
+                    messages.ERROR,
+                )
+                return redirect(reverse("admin:core_permissionsskip_changelist"))
+            PermissionsSkip.objects.all().delete()
+            sheet["result"] = sheet.apply(self.check_save_row, axis=1)
+            sheet.drop(sheet.iloc[:, 1:2], axis=1, inplace=True)
+            sheet = sheet.reset_index(drop=True)
+            logger.debug(sheet.info())
+            json_sheet = sheet.to_json(orient="records")
+            cache.set("import_json_results",json_sheet,120)
+            return redirect(reverse("admin:import_skip_success"))
+        form = PermissionSkipImportForm()
+        media = self.media
+        payload = {
+            **self.admin_site.each_context(request),
+            "title": _("core.admin.permissionSkipAdmin.title.error"),
+            "form": form,
+            "media": media,
+        }
+        payload.update(
+            {
+                "app_label": app_label,
+                "opts": opts,
+            }
+        )
+        return TemplateResponse(
+            request,
+            "core/permission_import_form.html",
+            payload,
+        )
+    
+    def check_save_row(self, row):
+        try:
+            PermissionsSkip.objects.create(
+                user=User.objects.get(ident_cely=row[0]),
+                ident_list=row[1],
+            )
+            return "OK"
+        except Exception as e:
+            logger.error(e)
+            return "NOK"
+        
+    def import_skip_success(self, request):
+        """
+        Metóda view pro zobrazení tabulky s výsledkom importu.
+        """
+        json_table = cache.get("import_json_results")
+        cache.delete("import_json_results")
+        if not json_table:
+            return redirect(reverse("admin:core_permissions_skip_changelist"))
+        table = json.loads(json_table)
+        model = self.model
+        opts = model._meta
+        app_label = "core"
+        media = self.media
+        payload = {
+            **self.admin_site.each_context(request),
+            "title": _("core.admin.permissionSkipAdmin.title.success"),
+            "table": table,
+            "media": media,
+        }
+        payload.update(
+            {
+                "app_label": app_label,
+                "opts": opts,
+            }
+        )
+        self.message_user(request, _("core.admin.permissionSkipAdmin.uploadSucces"))
+        return TemplateResponse(
+            request,
+            "core/permission_import_success.html",
+            payload,
+        )
+    
+    def export_as_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=opravneni_override.csv'
+        writer = csv.writer(response,delimiter=";")
+        writer.writerow(["IDENT_CELY","IDENT_LIST"])
+        for obj in queryset:
+            writer.writerow([obj.user.ident_cely,obj.ident_list])
+        return response
+
+    export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")

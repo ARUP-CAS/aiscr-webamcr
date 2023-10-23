@@ -395,7 +395,13 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         except Exception as e:
             logger.debug(e)
             return None
-
+        
+    def get_create_org(self):
+        try:
+            return self.get_create_user().organizace
+        except Exception as e:
+            logger.debug(e)
+            return None
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """

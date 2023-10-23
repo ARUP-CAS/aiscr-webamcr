@@ -7,9 +7,11 @@
       </div>
       <div class="app-fx app-right">
         <div class="btn-group" role="group">
+          {% if show.pripojit_eo %}
           <button class="btn" id="eo-pripojit-{{card_type}}" type="button" type="button" rel="tooltip" data-placement="top" title="{{pridatLabel}}" name="button" href="{% url 'ez:pripojit_eo' zaznam.ident_cely %}?type={{ card_type | urlencode }}">
             <span class="material-icons">add</span>
           </button>
+          {% endif %}
         </div>
       </div>
     </div>

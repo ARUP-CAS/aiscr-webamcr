@@ -39,6 +39,9 @@ from core.constants import (
     PROJEKT_STAV_ARCHIVOVANY,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SN_ARCHIVOVANY,
+    ROLE_BADATEL_ID, 
+    ROLE_ARCHEOLOG_ID, 
+    ROLE_ARCHIVAR_ID
 )
 from core.forms import CheckStavNotChangedForm
 from core.message_constants import (
@@ -65,12 +68,17 @@ from projekt.models import Projekt
 from uzivatel.models import User
 from django_tables2.export import ExportMixin
 from datetime import datetime
+from heslar.hesla import HESLAR_PRISTUPNOST
+
+from heslar.models import Heslar
+from .models import Permissions, PermissionsSkip
+from historie.models import Historie
 
 from core.ident_cely import get_record_from_ident
 from core.models import Permissions
 from historie.models import Historie
 from heslar.hesla_dynamicka import PRISTUPNOST_BADATEL_ID, PRISTUPNOST_ARCHEOLOG_ID, PRISTUPNOST_ARCHIVAR_ID, PRISTUPNOST_ANONYM_ID
-from core.constants import ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+
 
 logger = logging.getLogger(__name__)
 
@@ -645,69 +653,37 @@ class ExportMixinDate(ExportMixin):
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         return "{}{}.{}".format(self.export_name, now, export_format)
 
-
-class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView):
-    """
-    Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
-    """
-    template_name = "search_list.html"
-    paginate_by = 100
-    allow_empty = True
-    export_formats = ["csv", "json", "xlsx"]
-    page_title = _("core.views.AkceListView.page_title.text")
-    app = "core"
-    toolbar = "toolbar_akce.html"
-    search_sum = _("core.views.AkceListView.search_sum.text")
-    pick_text = _("core.views.AkceListView.pick_text.text")
-    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
-    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
-    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
-    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
-    default_header = _("core.views.AkceListView.default_header.text")
-    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+class PermissionFilterMixin():
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
-
-    def get_paginate_by(self, queryset):
-        return self.request.GET.get("per_page", self.paginate_by)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["export_formats"] = self.export_formats
-        context["page_title"] = self.page_title
-        context["app"] = self.app
-        context["toolbar"] = self.toolbar
-        context["search_sum"] = self.search_sum
-        context["pick_text"] = self.pick_text
-        context["hasOnlyVybrat_header"] = self.hasOnlyVybrat_header
-        context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
-        context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
-        context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
-        context["default_header"] = self.default_header
-        context["toolbar_name"] = self.toolbar_name
-        return context
     
-    def get_queryset(self):
-        qs = super().get_queryset()
+    def check_filter_permission(self, qs):
         permissions = Permissions.objects.filter(
                 main_role=self.request.user.hlavni_role,
                 address_in_app=self.request.resolver_match.route,
             )
         if permissions.count()>0:
-            new_qs = qs.none()
-            for perm in permissions:
-                new_qs = (new_qs | self.filter_by_permission(qs, perm))
-            qs = new_qs
-        
-        return qs.distinct()
+            for idx, perm in enumerate(permissions):
+                if idx == 0:
+                    new_qs = self.filter_by_permission(qs, perm)
+                else:
+                    new_qs = self.filter_by_permission(qs, perm).exclude(pk__in=new_qs.values("pk")) | new_qs
+
+            perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
+            if len(perm_skips) > 0:
+                qs = new_qs | qs.filter(ident_cely__in=perm_skips[0].split(","))
+            else:
+                qs = new_qs
+        return qs
     
     def filter_by_permission(self, qs, permission):
         filterdoc = {}
-        logger.debug(permission.status)
+        if not permission.base:
+            return qs.none()
         if permission.status:
             filterdoc.update(self.add_status_lookup(permission))
         if permission.ownership:
-            filterdoc.update(self.add_ownership_lookup(permission.ownership))
+            filterdoc.update(self.add_ownership_lookup(permission.ownership,qs))
         qs = qs.filter(**filterdoc)
         if permission.accessibility:
             qs = self.add_accessibility_lookup(permission,qs)
@@ -747,17 +723,16 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             )
         return filterdoc
     
-    def add_ownership_lookup(self, ownership):
-        filtered = Historie.objects.filter(typ_zmeny=self.typ_zmeny_lookup)
-        if ownership == Permissions.ownershipChoices.my:
-            usr_org_key = "uzivatel"
-            usr_org_value = self.request.user
-        elif ownership == Permissions.ownershipChoices.our:
-            usr_org_key = "uzivatel__organizace"    
-            usr_org_value = self.request.user.organizace
-        filter_historie = {usr_org_key:usr_org_value}
-        filtered = filtered.filter(**filter_historie)
-        historie_key = self.permission_model_lookup + "historie__historie__in"
+    def add_ownership_lookup(self, ownership, qs=None):
+        filter_historie = {"typ_zmeny":self.typ_zmeny_lookup,"uzivatel":self.request.user}
+        filtered_my = Historie.objects.filter(**filter_historie)
+        if ownership == Permissions.ownershipChoices.our:
+            filter_historie = {"typ_zmeny":self.typ_zmeny_lookup, "uzivatel__organizace":self.request.user.organizace}
+            filtered_our = Historie.objects.exclude(pk__in=filtered_my.values("pk")).filter(**filter_historie)
+            filtered = Historie.objects.filter(Q(pk__in=filtered_our.values("pk"))|Q(pk__in=filtered_my.values("pk")))
+        else:
+            filtered = filtered_my
+        historie_key = self.permission_model_lookup + "historie__historie__pk__in"
         filterdoc = {historie_key:filtered}
         return filterdoc
     
@@ -767,17 +742,52 @@ class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterVi
             ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
             ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
         }
-        new_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
+        qs_ownership = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
-        i = self.request.user.hlavni_role.id
-        accessibilities = [PRISTUPNOST_ANONYM_ID]
-        while i > 0:
-            if self.request.user.hlavni_role.id != 4:
-                accessibilities.append(group_to_accessibility.get(i))
-            i -= 1
+        accessibilities = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST, razeni__lte=Heslar.objects.filter(id=group_to_accessibility.get(self.request.user.hlavni_role.id)).values_list("razeni",flat=True))
         filter = {accessibility_key:accessibilities}
-        logger.debug(qs.filter(**filter))
-        return (new_qs | qs.filter(**filter)).distinct()
+        qs_access = qs.exclude(pk__in=qs_ownership.values("pk")).filter(**filter)
+        return qs.filter(Q(pk__in=qs_ownership.values("pk"))|Q(pk__in=qs_access.values("pk")))
+
+class SearchListView(ExportMixin, LoginRequiredMixin, SingleTableMixin, FilterView, PermissionFilterMixin):
+    """
+    Třída pohledu pro tabulky záznamů, která je použita jako základ pro jednotlivé pohledy.
+    """
+    template_name = "search_list.html"
+    paginate_by = 100
+    allow_empty = True
+    export_formats = ["csv", "json", "xlsx"]
+    page_title = _("core.views.AkceListView.page_title.text")
+    app = "core"
+    toolbar = "toolbar_akce.html"
+    search_sum = _("core.views.AkceListView.search_sum.text")
+    pick_text = _("core.views.AkceListView.pick_text.text")
+    hasOnlyVybrat_header = _("core.views.AkceListView.hasOnlyVybrat_header.text")
+    hasOnlyVlastnik_header = _("core.views.AkceListView.hasOnlyVlastnik_header.text")
+    hasOnlyArchive_header = _("core.views.AkceListView.hasOnlyArchive_header.text")
+    hasOnlyPotvrdit_header = _("core.views.AkceListView.hasOnlyPotvrdit_header.text")
+    default_header = _("core.views.AkceListView.default_header.text")
+    toolbar_name = _("core.views.AkceListView.toolbar_name.text")
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("per_page", self.paginate_by)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["export_formats"] = self.export_formats
+        context["page_title"] = self.page_title
+        context["app"] = self.app
+        context["toolbar"] = self.toolbar
+        context["search_sum"] = self.search_sum
+        context["pick_text"] = self.pick_text
+        context["hasOnlyVybrat_header"] = self.hasOnlyVybrat_header
+        context["hasOnlyVlastnik_header"] = self.hasOnlyVlastnik_header
+        context["hasOnlyArchive_header"] = self.hasOnlyArchive_header
+        context["hasOnlyPotvrdit_header"] = self.hasOnlyPotvrdit_header
+        context["default_header"] = self.default_header
+        context["toolbar_name"] = self.toolbar_name
+        return context
+    
 
 class SearchListChangeColumnsView(LoginRequiredMixin, View):
     """

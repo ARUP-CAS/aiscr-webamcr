@@ -43,6 +43,7 @@ from core.message_constants import (
 from uzivatel.forms import AuthUserCreationForm, OsobaForm, AuthUserLoginForm, AuthReadOnlyUserChangeForm, \
     UpdatePasswordSettings, AuthUserChangeForm, NotificationsForm, UserPasswordResetForm
 from uzivatel.models import Osoba, User, UserNotificationType
+from core.views import PermissionFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -58,12 +59,14 @@ class OsobaAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
         return qs
 
 
-class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView):
-    def get_result_label(self, result):
-        return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
+class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
     """
     Třída pohledu pro získaní uživatelů pro autocomplete.
     """
+
+    def get_result_label(self, result):
+        return f"{result.last_name}, {result.first_name} ({result.ident_cely}, {result.organizace.nazev_zkraceny})"
+    
     def get_queryset(self):
         qs = User.objects.all().order_by("last_name")
         if self.q and " " not in self.q:
@@ -96,7 +99,13 @@ class UzivatelAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView)
                 .annotate(qs_order=Value(2, IntegerField()))
             )
             qs = new_qs.union(new_qs2).order_by("qs_order", "grand_name")
+        return self.check_filter_permission(qs)
+    
+    def add_accessibility_lookup(self,permission, qs):
         return qs
+    
+    def add_ownership_lookup(self, ownership, qs=None):
+        return {}
 
 class UzivatelAutocompletePublic(LoginRequiredMixin, autocomplete.Select2QuerySetView):
     def get_result_label(self, result):

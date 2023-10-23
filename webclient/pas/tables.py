@@ -5,8 +5,11 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django_tables2.utils import A
 from django.utils.translation import gettext as _
+from django.template import Context, Template
+from django.template.loader import get_template
 
 from core.utils import SearchTable
+from core.models import Permissions as p, check_permissions
 
 from .models import SamostatnyNalez, UzivatelSpoluprace
 
@@ -102,7 +105,7 @@ class SamostatnyNalezTable(SearchTable):
         """
         soubor = record.nahled_soubor
         if soubor is not None:
-            soubor_url = reverse("core:download_thumbnail", args=(soubor.id,))
+            soubor_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely ,soubor.id,))
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
                 soubor_url,
@@ -112,7 +115,24 @@ class SamostatnyNalezTable(SearchTable):
     def __init__(self, *args, **kwargs):
         super(SamostatnyNalezTable, self).__init__(*args, **kwargs)
 
-
+class AktivaceDeaktivaceColumn(tables.TemplateColumn):
+    def render(self, record, table, value, bound_column, **kwargs):
+        if record.aktivni:
+            perm_check = check_permissions(p.actionChoices.spoluprace_deaktivovat, table.request.user,record.id)
+        else:
+            perm_check = check_permissions(p.actionChoices.spoluprace_aktivovat, table.request.user,record.id)
+        if perm_check:
+            return super().render(record, table, value, bound_column, **kwargs)
+        else:
+            return format_html("")
+        
+class smazatColumn(tables.TemplateColumn):
+    def render(self, record, table, value, bound_column, **kwargs):
+        if check_permissions(p.actionChoices.spoluprace_smazat, table.request.user,record.id):
+            return super().render(record, table, value, bound_column, **kwargs)
+        else:
+            return format_html("")
+        
 class UzivatelSpolupraceTable(SearchTable):
     """
     Class pro definování tabulky pro uživatelskou spolupráci použitých pro zobrazení přehledu spoluprác a exportu.
@@ -152,14 +172,14 @@ class UzivatelSpolupraceTable(SearchTable):
         attrs={"th": {"style": "color:white"}},
         orderable=False,
     )
-    aktivace = tables.TemplateColumn(
+    aktivace = AktivaceDeaktivaceColumn(
         attrs={
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
         template_name="pas/aktivace_deaktivace_cell.html",
         orderable=False,
     )
-    smazani = tables.TemplateColumn(
+    smazani = smazatColumn(
         attrs={
             "th": {"class": "orderable ", "style": "color:#fff"},
         },
@@ -191,3 +211,6 @@ class UzivatelSpolupraceTable(SearchTable):
 
     def __init__(self, *args, **kwargs):
         super(UzivatelSpolupraceTable, self).__init__(*args, **kwargs)
+
+
+

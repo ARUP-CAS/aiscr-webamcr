@@ -17,9 +17,11 @@
     {% endif %}
     {% if show.paginace %}
     <td >{{ z.paginace|check_if_none }}
+      {% if show.paginace_edit %}
       <button  id="ez-change-{{z.id}}" class="ez-change-btn" type="button" name="button" href="{% url 'ez:zmenit_eo' 'ez' zaznam.ident_cely z.id %}">
         <span class="material-icons app-color-warning">edit</span>
       </button>
+      {% endif %}
     </td>
     {% endif %}
     {% if show.odpojit %}
