@@ -131,7 +131,7 @@ class Model3DTable(SearchTable):
         else:
             soubor = None
         if soubor is not None:
-            soubor_url = reverse("core:download_file", args=(soubor.id,))
+            soubor_url = reverse("core:download_thumbnail", args=(soubor.id,))
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
                 soubor_url,
@@ -213,7 +213,7 @@ class DokumentTable(SearchTable):
         else: 
             soubor = None
         if soubor is not None:
-            soubor_url = reverse("core:download_file", args=(soubor.id,))
+            soubor_url = reverse("core:download_thumbnail", args=(soubor.id,))
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
                 soubor_url,
