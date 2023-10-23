@@ -17,7 +17,7 @@ from core.exceptions import (
 from django.contrib.gis.db.models.functions import Centroid
 from django.contrib.gis.geos import LineString, Point, Polygon
 from dokument.models import Dokument
-from heslar.models import HeslarDokumentTypMaterialRada
+from heslar.models import HeslarDokumentTypMaterialRada, Heslar
 from pas.models import SamostatnyNalez
 from pian.models import Pian
 from projekt.models import Projekt
@@ -314,6 +314,14 @@ def get_temp_ez_ident():
     """
     id_number = f"{get_next_sequence('externi_zdroj_xident_seq'):09}"
     return str(IDENTIFIKATOR_DOCASNY_PREFIX + "BIB-" + id_number)
+
+
+def get_heslar_ident():
+    """
+    Metoda pro výpočet dočasného identu hesláře.
+    """
+    return f"{Heslar.ident_prefix}-{get_next_sequence('heslar_ident_cely_seq'):06}"
+
 
 def get_record_from_ident(ident_cely):
     """
