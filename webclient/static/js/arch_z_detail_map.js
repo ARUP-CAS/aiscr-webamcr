@@ -418,6 +418,7 @@ map.on('draw:edited', function (e) {
     addLogText("arch_z_detail_map.draw:edited")
     addLogText("edited")
     geomToText();
+    save_edited_geometry_session();
 });
 map.on('draw:deleted', function (e) {
     addLogText("arch_z_detail_map.draw:drawstart")
@@ -425,6 +426,7 @@ map.on('draw:deleted', function (e) {
     addWGS84Geometry()
     addSJTSKGeometry()
     disableSavePianButton();
+    save_edited_geometry_session();
 })
 
 map.on('draw:drawstart', function (e) {
@@ -456,6 +458,7 @@ map.on('draw:created', function (e) {
         }
         addLogText("created")
         geomToText();
+        save_edited_geometry_session();
         disableSavePianButton();
 
     }
@@ -1028,3 +1031,46 @@ function searchByAjax(text, callResponse) {
     ];
     Promise.all(ajaxCall).then(() => {/*console.log("Vyhledani ukonceno");*/callResponse([...items2, ...items1]); })
 }
+
+function save_edited_geometry_session(){
+    const currentUrl = window.location.href;
+     sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:document.getElementById(global_map_element).value}))
+}
+
+window.addEventListener("load", function(){
+    const currentUrl = window.location.href;
+    const urlParams = new URLSearchParams(window.location.search);
+    let myParamG = urlParams.get('geometry');
+    let myParamL = urlParams.get('label');
+    if(myParamG !==null){
+        //console.log("query")
+        global_blocked_by_query_geom=true;
+        drawnItems.clearLayers();
+        drawnItemsBuffer.clearLayers();
+        addPointQuery(null,  drawnItems,myParamL,myParamG,false)
+        //myParam="POINT (13.2164736 49.9596986)"
+        //http://localhost:8000/arch-z/akce/detail/C-202211987A/dj/C-202211987A-D02?geometry=
+        //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2183513 49.9593602,13.2164736 49.9596986))"
+        //myParam="POLYGON ((13.2164736 49.9596986,13.2154006 49.9589111,13.2178685 49.9583378,13.2165204 49.9590543,13.2164736 49.9596986))"
+    } else{
+        let geom_session=sessionStorage.getItem("Geom-session")
+        if(geom_session != null){
+            geom_session=JSON.parse(geom_session)
+            if(geom_session.url==currentUrl && geom_session.geometry !=null){
+                global_blocked_by_query_geom=true;
+                drawnItems.clearLayers();
+                drawnItemsBuffer.clearLayers();
+                //POLYGON ((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
+                //POLYGON ((13.2491214 50.0100783, 13.2482845 50.0096987, 13.249218 50.0096021, 13.2491214 50.0100783))
+                //POLYGON((13.2496364 50.0099953, 13.2502051 50.0099539, 13.2500978 50.0094364, 13.2496364 50.0099953))
+                //myParam="POLYGON((13.2496364 50.0099953,13.2502051 50.0099539,13.2500978 50.0094364,13.2496364 50.0099953))"
+                addPointQuery(null,  drawnItems,"Refresh geom",geom_session.geometry,false)
+        
+            }else{
+                sessionStorage.setItem("Geom-session",JSON.stringify({url:currentUrl,geometry:null}));
+            }
+        }
+    }
+    
+
+});
