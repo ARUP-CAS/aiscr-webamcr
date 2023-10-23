@@ -5,7 +5,6 @@ import re
 from typing import Iterable, Optional
 from django_prometheus.models import ExportModelOperationsMixin
 
-
 from django.conf import settings
 from django.db import models
 from django.forms import ValidationError
@@ -26,6 +25,10 @@ from .constants import (
     SOUBOR_RELATION_TYPE,
 )
 from .repository_connector import RepositoryBinaryFile
+
+from PIL import Image
+from pypdf import PdfReader
+
 
 logger = logging.getLogger(__name__)
 
@@ -198,29 +201,25 @@ class Soubor(ExportModelOperationsMixin("soubor"), models.Model):
         Metóda pro uložení souboru do DB. Navíc se počítá počet stran pro pdf, případne počet frames pro obrázek.
         """
         # TODO: Rewrite this
-        # super().save(*args, **kwargs)
-        # try:
-        #     self.path
-        # except self.DoesNotExist:
-        #     super().save(*args, **kwargs)
-        # if self.path and self.path.path.lower().endswith("pdf"):
-        #     try:
-        #         reader = PdfReader(self.path)
-        #     except:
-        #         logger.debug("core.models.Soubor.save_error_reading_pdf")
-        #         self.rozsah = 1
-        #     else:
-        #         self.rozsah = len(reader.pages)
-        # elif self.path and self.path.path.lower().endswith("tif"):
-        #     try:
-        #         img = Image.open(self.path)
-        #     except:
-        #         logger.debug("core.models.Soubor.save_error_reading_tif")
-        #         self.rozsah = 1
-        #     else:
-        #         self.rozsah = img.n_frames
-        # else:
-        #     self.rozsah = 1
+        super().save(*args, **kwargs)
+        repository_binary_file = self.get_repository_content()
+        if repository_binary_file and self.nazev.lower().endswith("pdf"):
+            try:
+                reader = PdfReader(repository_binary_file.content)
+                self.rozsah = len(reader.pages)
+            except:
+                logger.debug("core.models.Soubor.save_error_reading_pdf")
+                self.rozsah = 1
+        elif repository_binary_file and self.nazev.lower().endswith("tif"):
+            try:
+                img = Image.open(repository_binary_file.content)
+            except:
+                logger.debug("core.models.Soubor.save_error_reading_tif")
+                self.rozsah = 1
+            else:
+                self.rozsah = img.n_frames
+        else:
+            self.rozsah = 1
         super().save(*args, **kwargs)
 
 
