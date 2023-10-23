@@ -1,11 +1,14 @@
 import json
 import re
 import logging
+from django.http import HttpResponse
+from django.http.request import HttpRequest
 import pandas as pd
 import os
 import io
 from bs4 import BeautifulSoup
 from polib import pofile
+import csv
 
 from django.contrib import admin
 from django.shortcuts import redirect
@@ -19,9 +22,11 @@ from django.contrib.auth.models import Group
 from django.urls import path, reverse
 from django.core.cache import cache
 
-from .models import OdstavkaSystemu, Permissions, CustomAdminSettings
+from uzivatel.models import User
+
+from .models import OdstavkaSystemu, Permissions, CustomAdminSettings, PermissionsSkip
 from .exceptions import WrongSheetError
-from .forms import OdstavkaSystemuForm, PermissionImportForm
+from .forms import OdstavkaSystemuForm, PermissionImportForm, PermissionSkipImportForm
 from .constants import (
     ROLE_NASTAVENI_ODSTAVKY,
     PERMISSIONS_IMPORT_SHEET,
@@ -31,6 +36,7 @@ from .constants import (
     PERMISSIONS_SHEET_VLASTNICTVI_NAME,
     PERMISSIONS_SHEET_APP_NAME,
     PERMISSIONS_SHEET_URL_NAME,
+    PERMISSIONS_SHEET_ACTION_NAME,
 )
 
 logger = logging.getLogger(__name__)
@@ -162,6 +168,13 @@ class PermissionAdmin(admin.ModelAdmin):
     """
 
     change_list_template = "core/permissions_changelist.html"
+    list_display = [
+        "address_in_app", "main_role", "action"
+    ]
+    list_filter = ["main_role", "address_in_app"]
+
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
+        return super().changelist_view(request, {"import_list":True})
 
     def get_urls(self):
         """
@@ -209,9 +222,11 @@ class PermissionAdmin(admin.ModelAdmin):
                 return redirect(reverse("admin:core_permissions_changelist"))
             Permissions.objects.all().delete()
             sheet["result"] = sheet.apply(self.check_save_row, axis=1)
-            sheet.drop(sheet.iloc[:, 2:21], axis=1, inplace=True)
+            sheet.drop(sheet.iloc[:, 3:22], axis=1, inplace=True)
             sheet = sheet.reset_index(drop=True)
-            request.session["table"] = sheet.to_json(orient="records")
+            logger.debug(sheet.info())
+            json_sheet = sheet.to_json(orient="records")
+            cache.set("import_json_results",json_sheet,120)
             return redirect(reverse("admin:import_success"))
         form = PermissionImportForm()
         media = self.media
@@ -238,10 +253,10 @@ class PermissionAdmin(admin.ModelAdmin):
         Metóda pro validaci importovaného excelu a jeho úpravu.
         """
         if (
-            not sheet.columns[2] == PERMISSIONS_SHEET_ZAKLADNI_NAME
-            or not sheet.columns[7] == PERMISSIONS_SHEET_STAV_NAME
-            or not sheet.columns[11] == PERMISSIONS_SHEET_VLASTNICTVI_NAME
-            or not sheet.columns[15] == PERMISSIONS_SHEET_PRISTUPNOST_NAME
+            not sheet.columns[3] == PERMISSIONS_SHEET_ZAKLADNI_NAME
+            or not sheet.columns[8] == PERMISSIONS_SHEET_STAV_NAME
+            or not sheet.columns[12] == PERMISSIONS_SHEET_VLASTNICTVI_NAME
+            or not sheet.columns[16] == PERMISSIONS_SHEET_PRISTUPNOST_NAME
         ):
             raise WrongSheetError
         sheet.columns = sheet.iloc[0]
@@ -250,11 +265,12 @@ class PermissionAdmin(admin.ModelAdmin):
         if (
             not sheet.columns[0] == PERMISSIONS_SHEET_APP_NAME
             or not sheet.columns[1] == PERMISSIONS_SHEET_URL_NAME
-            or not sheet.columns[2] == "A"
+            or not sheet.columns[2] == PERMISSIONS_SHEET_ACTION_NAME
+            or not sheet.columns[3] == "A"
         ):
             raise WrongSheetError
-        i = 3
-        while i < 19:
+        i = 4
+        while i < 20:
             if (
                 not sheet.columns[i] == "B"
                 or not sheet.columns[i + 1] == "C"
@@ -274,7 +290,8 @@ class PermissionAdmin(admin.ModelAdmin):
         with io.StringIO() as out:
             call_command("show_urls", "--format", "json", stdout=out)
             url_list = pd.read_json(out.getvalue())
-        if url_list["url"].eq("/" + str(row[0]) + "/" + str(row[1])).any():
+        url = "/" + str(row[0]) + "/" + str(row[1]) if row[0]!="core" else "/" + str(row[1])
+        if url_list["url"].eq(url).any():
             i = 0
             row_result = list()
             while i < 4:
@@ -297,25 +314,30 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda pro kontrolu a uložení jednotlivého oprávnení z řádku excelu.
         """
-        if row[3 + i] == "X":
+        if row[0]!="core":
+            address = str(row[0]) + "/" + str(row[1])
+        else:
+            address =  str(row[1])
+        if row[4 + i] == "X":
             Permissions.objects.create(
-                address_in_app=str(row[0]) + "/" + str(row[1]),
+                address_in_app=address,
                 base=False,
                 main_role=Group.objects.get(id=i + 1),
+                action=None if pd.isna(row[2]) else row[2]
             )
             return True
-        elif row[3 + i] == "*":
+        elif row[4 + i] == "*":
             base = True
         else:
             return False
-        if "|" in row[7 + i]:
+        if "|" in row[8 + i]:
             n = 0
             results = list()
-            while n < len(row[7 + i].split("|")):
+            while n < len(row[8 + i].split("|")):
                 new_row = row
-                new_row[7 + i] = row[7 + i].split("|")[n].strip()
-                new_row[11 + i] = row[11 + i].split("|")[n].strip()
-                new_row[15 + i] = row[15 + i].split("|")[n].strip()
+                new_row[8 + i] = row[8 + i].split("|")[n].strip()
+                new_row[12 + i] = row[12 + i].split("|")[n].strip()
+                new_row[16 + i] = row[16 + i].split("|")[n].strip()
                 results.append(self.save_permission(new_row, i))
                 n += 1
             if all(a == True for a in results):
@@ -323,25 +345,25 @@ class PermissionAdmin(admin.ModelAdmin):
             else:
                 return False
         else:
-            if row[7 + i] == "*":
+            if row[8 + i] == "*":
                 status = None
-            elif self.check_status_regex(row[7 + i]):
-                status = row[7 + i]
+            elif self.check_status_regex(row[8 + i]):
+                status = row[8 + i]
             else:
                 return False
-        if row[11 + i] == "*":
+        if row[12 + i] == "*":
             ownership = None
-        elif row[11 + i].endswith(".my"):
+        elif row[12 + i].endswith(".my"):
             ownership = Permissions.ownershipChoices.my
-        elif row[11 + i].endswith(".ours"):
+        elif row[12 + i].endswith(".ours"):
             ownership = Permissions.ownershipChoices.our
         else:
             return False
-        if row[15 + i] == "*":
+        if row[16 + i] == "*":
             accessibility = None
-        elif row[15 + i].endswith("(my)"):
+        elif row[16 + i].endswith("(my)"):
             accessibility = Permissions.ownershipChoices.my
-        elif row[15 + i].endswith("(ours)"):
+        elif row[16 + i].endswith("(ours)"):
             accessibility = Permissions.ownershipChoices.our
         else:
             return False
@@ -352,12 +374,13 @@ class PermissionAdmin(admin.ModelAdmin):
             and accessibility is None
         ):
             Permissions.objects.create(
-                address_in_app=str(row[0]) + "/" + str(row[1]),
+                address_in_app=address,
                 base=base,
                 main_role=Group.objects.get(id=i + 1),
                 status=status,
                 ownership=ownership,
                 accessibility=accessibility,
+                action=None if pd.isna(row[2]) else row[2]
             )
         return True
 
@@ -376,7 +399,8 @@ class PermissionAdmin(admin.ModelAdmin):
         """
         Metóda view pro zobrazení tabulky s výsledkom importu.
         """
-        json_table = request.session.get("table", None)
+        json_table = cache.get("import_json_results")
+        cache.delete("import_json_results")
         if not json_table:
             return redirect(reverse("admin:core_permissions_changelist"))
         table = json.loads(json_table)
@@ -386,7 +410,7 @@ class PermissionAdmin(admin.ModelAdmin):
         media = self.media
         payload = {
             **self.admin_site.each_context(request),
-            "title": _("core.admin.permissionAdmin.title.error"),
+            "title": _("core.admin.permissionAdmin.title.success"),
             "table": table,
             "media": media,
         }
@@ -402,3 +426,135 @@ class PermissionAdmin(admin.ModelAdmin):
             "core/permission_import_success.html",
             payload,
         )
+
+
+@admin.register(PermissionsSkip)
+class PermissionSkipAdmin(admin.ModelAdmin):
+    """
+    Třída admin panelu pro zobrazení a správu oprávnení.
+    """
+
+    change_list_template = "core/permissions_changelist.html"
+    list_display = [
+        "user"
+    ]
+    actions = ("export_as_csv",)
+
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
+        return super().changelist_view(request, {"import_skip_list":True})
+
+    def get_urls(self):
+        """
+        Metóda pri definici dodatečných url.
+        """
+        urls = super().get_urls()
+        my_urls = [
+            path("import_skip_file/", self.import_skip_file, name="import_permissions_skip"),
+            path(
+                "import_skip_success/",
+                self.import_skip_success,
+                name="import_skip_success",
+            ),
+        ]
+        return my_urls + urls
+
+    def import_skip_file(self, request):
+        """
+        Metóda view pro zobrazení formuláře a samtotný import oprávnení z excelu.
+        """
+        model = self.model
+        opts = model._meta
+        app_label = "core"
+        if request.method == "POST":
+            docfile = request.FILES["file"]
+            try:
+                sheet = pd.read_csv(docfile, sep=";")
+            except ValueError as e:
+                logger.debug(e)
+                self.message_user(
+                    request,
+                    _("core.admin.permissionSkipAdmin.wrongDoc.error"),
+                    messages.ERROR,
+                )
+                return redirect(reverse("admin:core_permissionsskip_changelist"))
+            PermissionsSkip.objects.all().delete()
+            sheet["result"] = sheet.apply(self.check_save_row, axis=1)
+            sheet.drop(sheet.iloc[:, 1:2], axis=1, inplace=True)
+            sheet = sheet.reset_index(drop=True)
+            logger.debug(sheet.info())
+            json_sheet = sheet.to_json(orient="records")
+            cache.set("import_json_results",json_sheet,120)
+            return redirect(reverse("admin:import_skip_success"))
+        form = PermissionSkipImportForm()
+        media = self.media
+        payload = {
+            **self.admin_site.each_context(request),
+            "title": _("core.admin.permissionSkipAdmin.title.error"),
+            "form": form,
+            "media": media,
+        }
+        payload.update(
+            {
+                "app_label": app_label,
+                "opts": opts,
+            }
+        )
+        return TemplateResponse(
+            request,
+            "core/permission_import_form.html",
+            payload,
+        )
+    
+    def check_save_row(self, row):
+        try:
+            PermissionsSkip.objects.create(
+                user=User.objects.get(ident_cely=row[0]),
+                ident_list=row[1],
+            )
+            return "OK"
+        except Exception as e:
+            logger.error(e)
+            return "NOK"
+        
+    def import_skip_success(self, request):
+        """
+        Metóda view pro zobrazení tabulky s výsledkom importu.
+        """
+        json_table = cache.get("import_json_results")
+        cache.delete("import_json_results")
+        if not json_table:
+            return redirect(reverse("admin:core_permissions_skip_changelist"))
+        table = json.loads(json_table)
+        model = self.model
+        opts = model._meta
+        app_label = "core"
+        media = self.media
+        payload = {
+            **self.admin_site.each_context(request),
+            "title": _("core.admin.permissionSkipAdmin.title.success"),
+            "table": table,
+            "media": media,
+        }
+        payload.update(
+            {
+                "app_label": app_label,
+                "opts": opts,
+            }
+        )
+        self.message_user(request, _("core.admin.permissionSkipAdmin.uploadSucces"))
+        return TemplateResponse(
+            request,
+            "core/permission_import_success.html",
+            payload,
+        )
+    
+    def export_as_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=opravneni_override.csv'
+        writer = csv.writer(response,delimiter=";")
+        writer.writerow(["IDENT_CELY","IDENT_LIST"])
+        for obj in queryset:
+            writer.writerow([obj.user.ident_cely,obj.ident_list])
+        return response
+
+    export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")

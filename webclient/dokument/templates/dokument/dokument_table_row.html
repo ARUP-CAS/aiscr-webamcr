@@ -11,9 +11,9 @@
     <td>{{ d.organizace }}</td>
     <td>{{ d.rok_vzniku }}</td>
     <td>{{ d.popis }}</td>
-    {% if show.editovat and d.ident_cely %}
+    {% if show.editovat and d.ident_cely and show.dokument_odpojit %}
     <td>
-      <button id="dokument-odpojit-{{d.ident_cely}}" class="dokument-odpojit-btn" type="button" name="button" href="{% url type|add:':odpojit_dokument' d.ident_cely zaznam.ident_cely %}">
+      <button id="dokument-odpojit-{{d.ident_cely}}" class="dokument-odpojit-btn" type="button" name="button" href="{% url type|add:':odpojit_dokument' zaznam.ident_cely d.ident_cely %}">
         <span class="material-icons app-color-danger">delete_forever</span>
       </button>
     </td>

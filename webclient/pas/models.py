@@ -14,6 +14,7 @@ from core.constants import (
     SPOLUPRACE_NEAKTIVNI,
     VRACENI_SN,
     ZAPSANI_SN,
+    SPOLUPRACE_ZADOST,
 )
 from core.models import SouborVazby, ModelWithMetadata
 from django.contrib.gis.db import models as pgmodels
@@ -279,6 +280,9 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     
     def get_create_user(self):
         return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_SN)[0].uzivatel
+    
+    def get_create_org(self):
+        return self.projekt.organizace
 
 
 class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), models.Model):
@@ -366,3 +370,9 @@ class UzivatelSpoluprace(ExportModelOperationsMixin("uzivatel_spoluprace"), mode
 
     def __str__(self):
         return self.spolupracovnik.last_name + " + " + self.vedouci.last_name
+    
+    def get_create_user(self):
+        return self.spolupracovnik
+    
+    def get_create_org(self):
+        return self.vedouci.organizace

@@ -270,10 +270,36 @@ class EditProjektForm(forms.ModelForm):
             ),
         }
 
-    def __init__(self, *args, required=None,required_next=None, **kwargs):
+    def __init__(self, *args, required=None,required_next=None, edit_fields=None, **kwargs):
         super(EditProjektForm, self).__init__(*args, **kwargs)
         self.fields["katastry"].required = False
         self.helper = FormHelper(self)
+        self.fields[
+            "hlavni_katastr"
+        ].widget.template_name = "core/select_to_text.html"
+        for key in self.fields.keys():
+            if edit_fields:
+                if key not in edit_fields:
+                    self.fields[key].disabled = True
+            if required or required_next:
+                self.fields[key].required = True if key in required else False
+                if "class" in self.fields[key].widget.attrs.keys():
+                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
+                else:
+                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
+            if isinstance(self.fields[key].widget, forms.widgets.Select):
+                self.fields[key].empty_label = ""
+                if self.fields[key].disabled is True:
+                    self.fields[key].widget.template_name = "core/select_to_text.html"
+            if self.fields[key].disabled is True:
+                self.fields[key].help_text = ""
+        if self.fields["vedouci_projektu"].disabled is True:
+            helper_vedouci_projektu = Div("vedouci_projektu",css_class="col-sm-4")
+        else:
+            helper_vedouci_projektu = Div(
+                            AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
+                            css_class="col-sm-4 input-osoba",
+            )
         self.helper.layout = Layout(
             Div(
                 Div(
@@ -315,10 +341,7 @@ class EditProjektForm(forms.ModelForm):
                             HTML('<hr class="mt-0" />'),
                             css_class="col-sm-12",
                         ),
-                        Div(
-                            AppendedText("vedouci_projektu", mark_safe('<button id="create-osoba" class="btn btn-sm app-btn-in-form" type="button" name="button"><span class="material-icons">add</span></button>')),
-                            css_class="col-sm-4 input-osoba",
-                        ),
+                        helper_vedouci_projektu,
                         Div("organizace", css_class="col-sm-4"),
                         Div("uzivatelske_oznaceni", css_class="col-sm-4"),
                         Div("kulturni_pamatka", css_class="col-sm-3"),
@@ -346,20 +369,6 @@ class EditProjektForm(forms.ModelForm):
             )
         )
         self.helper.form_tag = False
-        self.fields[
-            "hlavni_katastr"
-        ].widget.template_name = "core/select_to_text.html"
-        for key in self.fields.keys():
-            if required or required_next:
-                self.fields[key].required = True if key in required else False
-                if "class" in self.fields[key].widget.attrs.keys():
-                    self.fields[key].widget.attrs["class"]= str(self.fields[key].widget.attrs["class"]) + (' required-next' if key in required_next else "")
-                else:
-                    self.fields[key].widget.attrs["class"]= 'required-next' if key in required_next else ""
-            if isinstance(self.fields[key].widget, forms.widgets.Select):
-                self.fields[key].empty_label = ""
-            if self.fields[key].disabled is True:
-                self.fields[key].help_text = ""
 
     def clean(self):
         """
@@ -752,14 +761,14 @@ class PripojitProjektForm(forms.Form):
                 .filter(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .values_list("id", "ident_cely")
             )
-            typ = "dok"
+            typ = "dokument"
         else:
             new_choices = list(
                 Projekt.objects.filter(stav__gte=PROJEKT_STAV_ZAHAJENY_V_TERENU,stav__lte=PROJEKT_STAV_ARCHIVOVANY)
                 .exclude(typ_projektu__id=TYP_PROJEKTU_PRUZKUM_ID)
                 .values_list("id", "ident_cely")
             )
-            typ= "projekt"
+            typ= "archz"
         self.fields["projekt"] = forms.ChoiceField(
             label=_("projekt.forms.projektPripojit.projekt.label"),
             choices=new_choices,

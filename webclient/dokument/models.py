@@ -390,8 +390,18 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         return self
     
     def get_create_user(self):
-        return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
-
+        try:
+            return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_DOK)[0].uzivatel
+        except Exception as e:
+            logger.debug(e)
+            return None
+        
+    def get_create_org(self):
+        try:
+            return self.get_create_user().organizace
+        except Exception as e:
+            logger.debug(e)
+            return None
 
 class DokumentCast(ExportModelOperationsMixin("dokument_cast"), models.Model):
     """

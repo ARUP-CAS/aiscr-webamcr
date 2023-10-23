@@ -686,7 +686,7 @@ class SearchTable(ColumnShiftTableBootstrap4):
         else:
             soubor = None
         if soubor is not None:
-            soubor_url = reverse("core:download_thumbnail", args=(soubor.id,))
+            soubor_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely ,soubor.id,))
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
                 soubor_url,

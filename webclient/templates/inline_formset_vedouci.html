@@ -54,7 +54,7 @@
                     {% if not form.readonly and not ostatni_vedouci_objekt_formset_readonly %}
                         <td>
                           {% if form.id.value %}
-                            <a href="{% url 'arch_z:smazat_akce_vedouci' form.id.value %}?next={{ request.get_full_path }}">
+                            <a href="{% url 'arch_z:smazat_akce_vedouci' arch_z_ident_cely form.id.value %}?next={{ request.get_full_path }}">
                               <button id="objekt-smazat-{{ form.id.value }}" class="objekt-smazat-btn" type="button"
                                       name="button">
                                 <span class="material-icons app-color-danger">delete_forever</span>

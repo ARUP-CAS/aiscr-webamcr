@@ -69,7 +69,7 @@ urlpatterns = [
         name="post_ajax_get_projects_limit",
     ),
     path(
-        "dokument/odpojit/<str:ident_cely>/<str:proj_ident_cely>",
+        "dokument/odpojit/<str:proj_ident_cely>/<str:ident_cely>",
         odpojit_dokument,
         name="odpojit_dokument",
     ),

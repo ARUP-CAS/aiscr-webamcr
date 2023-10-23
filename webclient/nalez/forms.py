@@ -7,11 +7,12 @@ from nalez.models import NalezObjekt, NalezPredmet
 
 
 class NalezFormSetHelper(FormHelper):
-    def __init__(self,typ=None, *args, **kwargs):
+    def __init__(self,typ=None,typ_vazby="dokument", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template = "inline_formset.html"
         self.form_tag = False
         self.form_id = typ
+        self.typ_vazby = typ_vazby
 
 
 # Will subclass this function so that I can pass choices to formsets in formsetfactory call as arguments

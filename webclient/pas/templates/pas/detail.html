@@ -23,7 +23,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-dokument" href="{% url 'core:upload_file_pas' sn.ident_cely %}"
+            <a class="btn app-entity-dokument" href="{% url 'core:upload_file' 'pas' sn.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'pas.templates.detail.nahratSoubor' %}">
               <span class="material-icons">publish</span>
@@ -79,7 +79,7 @@
         <div class="app-fx app-left">
           {% trans "pas.templates.detail.cardHeader.ulozeni" %}
         </div>
-        {% if show.editovat %}
+        {% if show.ulozeni_edit %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
             <button id="pas-edit-ulozeni" class="btn" type="button" name="button" rel="tooltip"data-placement="top">

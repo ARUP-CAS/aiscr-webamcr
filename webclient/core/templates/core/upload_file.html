@@ -15,7 +15,7 @@
           enctype="multipart/form-data">
       {% csrf_token %}
       {% if file_id %}
-        <input type="hidden" name="">
+        <input type="hidden" name="fileID" value={{file_id}}>
       {% endif %}
       <div class="fallback">
         <input name="file" type="file" multiple/>
@@ -34,13 +34,22 @@
 {% block script %}
   <script src="{% static 'dropzone.min.js' %}"></script>
     {% if file_id %}
-        <script>var maxFiles = 1;</script>
-        <script>var file_id = {{ file_id }};</script>
-        <script>var addRemoveLinks = false;</script>
+        <script>
+          var maxFiles = 1;
+          var file_id = {{ file_id }};
+          var object_id = "{{ ident_cely }}";
+          var typ_vazby = "{{ typ_vazby }}";
+          var typ_uploadu = "nahradit";
+          var addRemoveLinks = false;
+      </script>
     {% else %}
-        <script>var maxFiles = 999;</script>
-        <script>var object_id = "{{ ident_cely }}";</script>
-        <script>var addRemoveLinks = true;</script>
+        <script>
+          var maxFiles = 999;
+          var object_id = "{{ ident_cely }}";
+          var typ_vazby = "{{ typ_vazby }}";
+          var typ_uploadu = "upload";
+          var addRemoveLinks = true;
+        </script>
     {% endif %}
     <script>
     var reject_dict = {

@@ -383,6 +383,9 @@ class ArcheologickyZaznam(ExportModelOperationsMixin("archeologicky_zaznam"), Mo
     
     def get_create_user(self):
         return self.historie.historie_set.filter(typ_zmeny=ZAPSANI_AZ)[0].uzivatel
+    
+    def get_create_org(self):
+        return self.get_create_user().organizace
 
     def __init__(self, *args, **kwargs):
         super(ArcheologickyZaznam, self).__init__(*args, **kwargs)

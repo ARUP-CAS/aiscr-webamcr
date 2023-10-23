@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 @login_required
 @require_http_methods(["GET", "POST"])
-def smazat_nalez(request, typ, ident_cely):
+def smazat_nalez(request, typ_vazby, typ, ident_cely):
     """
     Funkce pohledu pro smazání nálezu předmětu nebo objektu pomocí modalu.
     """
@@ -83,7 +83,7 @@ def smazat_nalez(request, typ, ident_cely):
 
 @login_required
 @require_http_methods(["POST"])
-def edit_nalez(request, komp_ident_cely):
+def edit_nalez(request, typ_vazby, komp_ident_cely):
     """
     Funkce pohledu pro zapsání editace nálezu předmětu a objektu.
     """

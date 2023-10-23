@@ -25,7 +25,7 @@
         {% if show.editovat %}
         <div class="app-fx app-right">
           <div class="btn-group" role="group">
-            <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file_dokument' dokument.ident_cely %}"
+            <a class="btn app-entity-knihovna_3d" href="{% url 'core:upload_file' 'model3d' dokument.ident_cely %}"
                rel="tooltip"
                data-placement="top" title="{% trans 'dokument.templates.detail_model_3D.nahledy3dModelu.nahratSoubor.tooltip' %}">
               <span class="material-icons">publish</span>
@@ -36,7 +36,7 @@
       </div>
       <div class="card-body content-with-table-responsive">
         {% if soubory %}
-          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/model/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="dokument" %}
+          {% include "core/filetable.html" with soubory=soubory show=show.editovat next_url='/dokument/model/detail/' ident=dokument.ident_cely allow_replace=True vazba_trida="model3d" %}
         {% else %}
           <div class="app-note">
             <span class="material-icons">info</span>

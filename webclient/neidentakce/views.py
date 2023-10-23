@@ -29,7 +29,7 @@ class NeidentAkceEditView(LoginRequiredMixin, UpdateView):
     allowed_states = []
     success_message = "success"
     form_class = NeidentAkceForm
-    slug_field = "dokument_cast__id"
+    slug_field = "dokument_cast__ident_cely"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

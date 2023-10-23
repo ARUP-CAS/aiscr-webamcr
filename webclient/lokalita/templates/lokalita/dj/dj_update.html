@@ -68,7 +68,7 @@
           </button>
           {% endif %}
           {% if j.adb_pk %}
-            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_pk %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
+            <a class="dropdown-item" href="{% url 'core:stahnout_metadata' 'adb' j.adb_ident_cely %}">{% trans "lokalita.templates.dj.djUpdate.moreActions.downloadAdbMetadata.label" %}</a>
           {% endif %}
           <button id="dj-smazat-{{j.ident_cely}}" class="dropdown-item dj-smazat-btn" type="button" name="button"
                   href="{% url 'dj:smazat' j.ident_cely %}">

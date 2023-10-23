@@ -198,3 +198,10 @@ class PermissionImportForm(forms.Form):
         label="core.forms.permissionImport.file.label",
         widget=forms.FileInput(attrs={'accept':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel'})
     )
+
+class PermissionSkipImportForm(forms.Form):
+    file = forms.FileField(
+        required=True,
+        label="core.forms.permissionSkipImport.file.label",
+        widget=forms.FileInput(attrs={'accept':'.csv'})
+    )
