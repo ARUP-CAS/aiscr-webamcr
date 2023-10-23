@@ -671,7 +671,9 @@ class PermissionFilterMixin():
 
             perm_skips = list(PermissionsSkip.objects.filter(user=self.request.user).values_list("ident_list",flat=True))
             if len(perm_skips) > 0:
-                qs = new_qs | qs.filter(ident_cely__in=perm_skips[0].split(","))
+                ident_key = self.permission_model_lookup + "ident_cely__in"
+                filterdoc = {ident_key:perm_skips[0].split(",")}
+                qs = new_qs | qs.filter(**filterdoc)
             else:
                 qs = new_qs
         return qs

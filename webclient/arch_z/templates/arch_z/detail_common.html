@@ -58,6 +58,7 @@
   <script src="{% static 'leaflet.markercluster-src.js' %}"></script>
   <link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
   <link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+  <script src="{% static 'leaflet_subgroup.js' %}"></script>
 
 
   <script>
@@ -269,7 +270,7 @@
                   }
                   if (rs.zoom == 17) {
                       drawnItems.clearLayers();
-                      addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
+                      addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,pian_id,rs.geom,rs.presnost==4)
                   }
               };
               xhr.send(JSON.stringify(
