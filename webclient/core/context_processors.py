@@ -102,8 +102,9 @@ def auto_logout_client(request):
             ctx["IDLE_WARNING_TIME"] = mark_safe(options["IDLE_WARNING_TIME"])
 
         if options.get("REDIRECT_TO_LOGIN_IMMEDIATELY"):
+            next_url = request.COOKIES.get("next_url", "/")
             ctx["redirect_to_login_immediately"] = mark_safe(
-                f"window.location.href = '/accounts/logout/?autologout=true&next={next_url}'"
+                f"window.location.href = '/accounts/logout/?autologout=true&next={request.path}'"
             )
         else:
             ctx["redirect_to_login_immediately"] = mark_safe(
