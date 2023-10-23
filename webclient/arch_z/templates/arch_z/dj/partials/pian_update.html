@@ -40,7 +40,7 @@
                   if (rs.zoom == 17) {
                       if(!global_blocked_by_query_geom){
                         drawnItems.clearLayers();
-                        addPointToPoiLayerWithForce([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom,rs.presnost==4)
+                        addGoldPointOnLoad([rs.lat, rs.lng],  drawnItems,'{{ dj_ident_cely }}',rs.geom,rs.presnost==4)
                       }
                   }
               };

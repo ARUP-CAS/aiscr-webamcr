@@ -1,6 +1,10 @@
 from django.urls import path
 from pas import views
-from pas.views import SamostatnyNalezListView, UzivatelSpolupraceListView
+from pas.views import (
+    SamostatnyNalezListView,
+    UzivatelSpolupraceListView,
+    post_ajax_get_pas_and_pian_limit,
+)
 
 app_name = "pas"
 
@@ -21,10 +25,16 @@ urlpatterns = [
     path(
         "spoluprace/vyber", UzivatelSpolupraceListView.as_view(), name="spoluprace_list"
     ),
-    path("spoluprace/aktivace-email/<int:pk>", views.AktivaceEmailView.as_view(), name="spoluprace_aktivace_email"),
+    path(
+        "spoluprace/aktivace-email/<int:pk>",
+        views.AktivaceEmailView.as_view(),
+        name="spoluprace_aktivace_email",
+    ),
     path("spoluprace/aktivovat/<int:pk>", views.aktivace, name="spoluprace_aktivace"),
     path(
-        "spoluprace/deaktivovat/<int:pk>", views.deaktivace, name="spoluprace_deaktivace"
+        "spoluprace/deaktivovat/<int:pk>",
+        views.deaktivace,
+        name="spoluprace_deaktivace",
     ),
     path(
         "mapa-zjisti-katastr",
@@ -38,5 +48,10 @@ urlpatterns = [
     ),
     path(
         "spoluprace/smazat/<int:pk>", views.smazat_spolupraci, name="spoluprace_smazani"
+    ),
+    path(
+        "akce-get-pas-pian",
+        post_ajax_get_pas_and_pian_limit,
+        name="post_ajax_get_pas_pian_limit",
     ),
 ]

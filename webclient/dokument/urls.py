@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .views import DokumentAutocomplete, Model3DListView, DokumentListView
+from .views import DokumentAutocomplete, Model3DListView, DokumentListView, post_ajax_get_3d_limit
 
 app_name = "dokument"
 
@@ -40,5 +40,10 @@ urlpatterns = [
     path(
         "model/detail/<str:ident_cely>", views.detail_model_3D, name="detail-model-3D"
     ),
-    path("radek-tabulky-odkaz",views.get_dokument_table_row, name="get_dokument_table_row")
+    path("radek-tabulky-odkaz",views.get_dokument_table_row, name="get_dokument_table_row"),
+    path(
+        "akce-get-3d",
+        post_ajax_get_3d_limit,
+        name="post_ajax_get_3d_limit",
+    )
 ]
