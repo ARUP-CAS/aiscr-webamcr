@@ -1,5 +1,6 @@
 import logging
 import os
+import simplejson as json
 
 from django.db.models.signals import post_save
 from django.views import View
@@ -130,6 +131,10 @@ from core.models import Soubor
 from django.db.models import Prefetch, Subquery, OuterRef
 
 from uzivatel.models import Osoba
+
+from core.utils import (
+    get_3d_from_envelope,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -2005,3 +2010,31 @@ def get_areal_choices():
     Funkce která vrací dvou stupňový heslař pro areál.
     """
     return heslar_12(HESLAR_AREAL, HESLAR_AREAL_KAT)
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_3d_limit(request):
+    """
+    Funkce pohledu pro získaní 3D.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    pians = get_3d_from_envelope(
+        body["southEast"]["lng"],
+        body["northWest"]["lat"],
+        body["northWest"]["lng"],
+        body["southEast"]["lat"],
+    )
+    back = []
+    for pian in pians:
+        logger.debug(pian)
+        back.append(
+            {
+                "id": pian["dokument__id"],
+                "ident_cely": pian["dokument__ident_cely"],
+                "geom": pian["geom"].wkt.replace(", ", ",")
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+    else:
+        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)

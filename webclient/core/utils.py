@@ -3,9 +3,6 @@ import logging
 import mimetypes
 import zlib
 
-from django.urls import reverse
-from django.utils.html import format_html
-
 import core.message_constants as mc
 import requests
 from arch_z.models import ArcheologickyZaznam
@@ -18,6 +15,8 @@ from core.message_constants import (
 )
 from dj.models import DokumentacniJednotka
 from django.db import connection
+from django.urls import reverse
+from django.utils.html import format_html
 from django_tables2_column_shifter.tables import ColumnShiftTableBootstrap4
 from heslar.models import RuianKatastr
 from pian.models import Pian
@@ -57,8 +56,10 @@ def get_cadastre_from_point(point):
     )
     try:
         katastr = RuianKatastr.objects.raw(query, [point[0], point[1]])[0]
-        logger.debug("core.utils.get_cadastre_from_point.start",
-                     extra={"point_0": point[0], "point_1": point[1], "katastr": katastr})
+        logger.debug(
+            "core.utils.get_cadastre_from_point.start",
+            extra={"point_0": point[0], "point_1": point[1], "katastr": katastr},
+        )
         return katastr
     except IndexError:
         logger.error("core.utils.get_cadastre_from_point.error", extra={"point": point})
@@ -74,13 +75,19 @@ def get_cadastre_from_point_with_geometry(point):
         "ST_Contains(hranice,ST_GeomFromText('POINT (%s %s)',4326) ) and aktualni='t' limit 1"
     )
     try:
-        logger.debug("core.utils.get_cadastre_from_point.start", extra={"point_0": point[0], "point_1": point[1]})
+        logger.debug(
+            "core.utils.get_cadastre_from_point.start",
+            extra={"point_0": point[0], "point_1": point[1]},
+        )
         cursor = connection.cursor()
         cursor.execute(query, [point[0], point[1]])
         line = cursor.fetchone()
         return [line[1], line[2], line[3]]
     except IndexError:
-        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"point": point})
+        logger.error(
+            "core.utils.get_cadastre_from_point_with_geometry.error",
+            extra={"point": point},
+        )
         return None
 
 
@@ -101,24 +108,26 @@ def get_centre_point(bod, geom):
                     len(geom),
                 ]
         elif isinstance(geom[0][0][0], tuple):
-            for i in range(0, len(geom)-1):
+            for i in range(0, len(geom) - 1):
                 [x0, x1, xlength] = [
                     x0 + geom[0][0][i][0],
                     x1 + geom[0][0][i][1],
-                    len(geom)-1,
+                    len(geom) - 1,
                 ]
         else:
-            for i in range(0, len(geom[0])-1):
+            for i in range(0, len(geom[0]) - 1):
                 [x0, x1, xlength] = [
                     x0 + geom[0][i][0],
                     x1 + geom[0][i][1],
-                    len(geom[0])-1,
+                    len(geom[0]) - 1,
                 ]
         bod.lat = x1 / xlength
         bod.lng = x0 / xlength
         return [bod, geom]
     except Exception as e:
-        logger.error("core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e})
+        logger.error(
+            "core.utils.get_cadastre_from_point_with_geometry.error", extra={"e": e}
+        )
 
 
 def get_all_pians_with_akce(ident_cely):
@@ -270,31 +279,14 @@ def get_centre_from_akce(katastr, pian):
                 presnost = dj.pian.presnost.zkratka
         return [bod, geom, presnost]
     except IndexError:
-        logger.error("core.utils.get_centre_from_akce.error", extra={"katastr": katastr, "pian": pian})
+        logger.error(
+            "core.utils.get_centre_from_akce.error",
+            extra={"katastr": katastr, "pian": pian},
+        )
         return None
 
 
-def get_points_from_envelope(left, bottom, right, top):
-    """
-    Funkce pro získaní projektů a jeho geomu podle čtverce.
-    """
-    from projekt.models import Projekt
-
-    query = (
-        "select id,ident_cely,ST_Y(geom) AS lat, ST_X(geom) as lng "
-        " from public.projekt where "
-        "geom && ST_MakeEnvelope(%s, %s, %s, %s,4326)  limit 100"
-    )
-    try:
-        projekty = Projekt.objects.raw(query, [left, bottom, right, top])
-        return projekty
-    except IndexError:
-        logger.debug("core.utils.get_centre_from_akce.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
-        return None
-
-
-def get_all_pians_with_dj(ident_cely, lat, lng):
+def get_dj_pians_centroid(ident_cely, lat, lng):
     """
     Funkce pro získaní pianů s DJ podle ident_cely DJ a souradnic.
     """
@@ -311,7 +303,7 @@ def get_all_pians_with_dj(ident_cely, lat, lng):
         )
         return pians
     except Exception:
-        logger.debug("core.utils.get_all_pians_with_dj.no_pians")
+        logger.debug("core.utils.get_dj_pians_centroid.no_pians")
         return None
 
 
@@ -329,12 +321,14 @@ def get_num_pians_from_envelope(left, bottom, right, top):
         cursor.execute(query, [left, bottom, right, top])
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("core.utils.get_num_pians_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_num_pians_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
-def get_pians_from_envelope(left, bottom, right, top, ident_cely):
+def get_dj_pians_from_envelope(left, bottom, right, top, ident_cely):
     """
     Funkce pro získaní pianů ze čtverce.
     """
@@ -357,48 +351,297 @@ def get_pians_from_envelope(left, bottom, right, top, ident_cely):
         pians = Pian.objects.raw(query, [ident_cely, left, bottom, right, top])
         return pians
     except IndexError:
-        logger.debug("core.utils.get_pians_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_dj_pians_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_projekt_stav_label(stav):
+    from core.constants import (
+        PROJEKT_STAV_ARCHIVOVANY,
+        PROJEKT_STAV_NAVRZEN_KE_ZRUSENI,
+        PROJEKT_STAV_OZNAMENY,
+        PROJEKT_STAV_PRIHLASENY,
+        PROJEKT_STAV_UKONCENY_V_TERENU,
+        PROJEKT_STAV_UZAVRENY,
+        PROJEKT_STAV_ZAHAJENY_V_TERENU,
+        PROJEKT_STAV_ZAPSANY,
+        PROJEKT_STAV_ZRUSENY,
+    )
+
+    if stav == PROJEKT_STAV_ZAPSANY:
+        return "P1"
+    elif stav == PROJEKT_STAV_PRIHLASENY:
+        return "P2"
+    elif stav == PROJEKT_STAV_ZAHAJENY_V_TERENU:
+        return "P3"
+    elif PROJEKT_STAV_UKONCENY_V_TERENU <= stav <= PROJEKT_STAV_ARCHIVOVANY:
+        return "P4-P6"
+    elif PROJEKT_STAV_NAVRZEN_KE_ZRUSENI <= stav <= PROJEKT_STAV_ZRUSENY:
+        return "P7-P8"
+    else:
+        return "P0"
+
+
+def get_project_geom(ident_cely):
+    """
+    Funkce pro získaní geometrie projekt.
+    Bez pristupnosti
+    """
+    from django.db.models import Q
+    from projekt.models import Projekt
+
+    c1 = Q(geom__isnull=False)
+    c3 = Q(ident_cely=ident_cely)
+    queryset = Projekt.objects.filter(c1).filter(c3)
+    try:
+        return queryset.only("id", "ident_cely", "geom", "stav")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
 def get_num_projects_from_envelope(left, bottom, right, top):
     """
     Funkce pro získaní počtu projektů ze čtverce.
+    Bez pristupnosti
     """
-    query = (
-        "select count(*) from public.projekt p where "
-        "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 1"
-    )
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from projekt.models import Projekt
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = Projekt.objects.filter(c1).filter(c2).count()
     try:
-        # num = Pian.objects.raw(query, [left, bottom, right, top])
-        cursor = connection.cursor()
-        cursor.execute(query, [left, bottom, right, top])
-        return cursor.fetchone()[0]
+        return queryset
     except IndexError:
-        logger.debug("core.utils.get_num_projects_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_num_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
 def get_projects_from_envelope(left, bottom, right, top):
     """
     Funkce pro získaní projektů ze čtverce.
+    Bez pristupnosti
     """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
     from projekt.models import Projekt
 
-    query = (
-        "select p.id,p.ident_cely,ST_AsText(p.geom) as geometry "
-        "from public.projekt p "
-        "where p.geom is not null and "
-        "p.geom && ST_MakeEnvelope(%s, %s, %s, %s,4326) limit 8000"
-    )
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = Projekt.objects.filter(c1).filter(c2)
     try:
-        pians = Projekt.objects.raw(query, [left, bottom, right, top])
-        return pians
+        return queryset.only("id", "ident_cely", "geom", "stav")
     except IndexError:
-        logger.debug("core.utils.get_projects_from_envelope.no_points",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_projects_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_project_pas_from_envelope(left, bottom, right, top, ident_cely):
+    """
+    Funkce pro získaní pas projekt ze čtverce.
+    @janhnat zohlednit pristupnost
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pas.models import SamostatnyNalez
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    c3 = Q(projekt__ident_cely=ident_cely)
+    queryset = SamostatnyNalez.objects.filter(c3).filter(c1)
+    # FIltering bbox is disabled-because of caching add .filter(c2)
+    try:
+        return queryset.only("id", "ident_cely", "geom")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_project_pas_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_project_pian_from_envelope(left, bottom, right, top, ident_cely):
+    """
+    Funkce pro získaní pianů projektu ze čtverce.
+    @janhnat zohlednit pristupnost
+    """
+    from arch_z.models import Akce
+    from dj.models import DokumentacniJednotka
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+
+    q1 = Akce.objects.filter(projekt__ident_cely=ident_cely).only(
+        "archeologicky_zaznam__ident_cely"
+    )
+
+    queryset_akce = []
+    queryset = None
+    d = None
+    for i in q1:
+        d = (
+            DokumentacniJednotka.objects.filter(
+                Q(ident_cely__istartswith=i.archeologicky_zaznam.ident_cely)
+                | Q(pian__geom__crosses=Polygon.from_bbox([right, top, left, bottom]))
+            )
+            .distinct()
+            .values("pian__id", "pian__ident_cely", "pian__geom")
+        )
+        # FIltering bbox is disabled-because of caching add .filter(Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom])))
+        logger.debug(d)
+        queryset_akce.append(d)
+        if len(queryset_akce) > 1:
+            queryset = queryset.union(d)
+        else:
+            queryset = d
+
+    try:  # chyba vykonu spravne ma vracet queryset
+        return queryset_akce
+    except IndexError:
+        logger.debug(
+            "core.utils.get_project_pian_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_3d_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní 3d ze čtverce.
+    Bez pristupnosti
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from dokument.models import DokumentExtraData
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = DokumentExtraData.objects.filter(c1).filter(c2)
+    try:
+        return queryset.values("dokument__id", "dokument__ident_cely", "geom")
+    except IndexError:
+        logger.debug(
+            "core.utils.get_3d_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_num_pass_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní počtu pas ze čtverce.
+    @janhnat zohlednit pristupnost
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pas.models import SamostatnyNalez
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = SamostatnyNalez.objects.filter(c1).filter(c2).count()
+    try:
+        return queryset
+    except IndexError:
+        logger.debug(
+            "core.utils.get_num_pas_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_pas_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní pas ze čtverce.
+    @janhnat zohlednit pristupnost
+    """
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+    from pas.models import SamostatnyNalez
+
+    c1 = Q(geom__isnull=False)
+    c2 = Q(geom__within=Polygon.from_bbox([right, top, left, bottom]))
+    queryset = SamostatnyNalez.objects.filter(c2).filter(c1)
+
+    try:
+        return queryset.only("id", "ident_cely", "geom")
+    except IndexError:
+        logger.debug(
+            "core.utils.get__pas_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_num_pian_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní počtu pianu ze čtverce.
+    @janhnat zohlednit pristupnost
+    """
+    from dj.models import DokumentacniJednotka
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+
+    queryset = DokumentacniJednotka.objects.filter(
+        Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))
+        | Q(pian__geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
+    ).count()
+
+    try:
+        return queryset
+    except IndexError:
+        logger.debug(
+            "core.utils.get_num_pian_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_pian_from_envelope(left, bottom, right, top):
+    """
+    Funkce pro získaní pianů ze čtverce.
+    @janhnat zohlednit pristupnost
+    """
+    from dj.models import DokumentacniJednotka
+    from django.contrib.gis.db.models.functions import Centroid
+    from django.contrib.gis.geos import Polygon
+    from django.db.models import Q
+
+    queryset = (
+        DokumentacniJednotka.objects.filter(
+            Q(pian__geom__within=Polygon.from_bbox([right, top, left, bottom]))
+            | Q(pian__geom__intersects=Polygon.from_bbox([right, top, left, bottom]))
+        )
+        .annotate(pian__centroid=Centroid("pian__geom"))
+        .distinct()
+    )
+
+    try:
+        return queryset[:10000].values(
+            "pian__id",
+            "pian__ident_cely",
+            "pian__geom",
+            "pian__presnost__zkratka",
+            "ident_cely",
+            "pian__centroid",
+        )
+    except IndexError:
+        logger.debug(
+            "core.utils.get_pian_from_envelope.no_points",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -426,8 +669,10 @@ def get_heatmap_pian(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("core.utils.get_heatmap_pian.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_pian.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -446,8 +691,57 @@ def get_heatmap_pian_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("core.utils.get_heatmap_pian_density.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_pian_density.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_heatmap_pas(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy pass ze čtverce.
+    """
+    query = "select count, ST_AsText(st_centroid) as geometry from amcr_heat_pas_l2"
+    query_zoom = (
+        "select count*3 as count, ST_AsText(st_centroid) as geometry "
+        "from amcr_heat_pas_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    )
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
+        return dictfetchall(cursor)
+    except IndexError:
+        logger.debug(
+            "core.utils.get_heatmap_pas.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
+        return None
+
+
+def get_heatmap_pas_density(left, bottom, right, top, zoom):
+    """
+    Funkce pro získaní heat mapy hustoty pass ze čtverce.
+    """
+    query = "select max(count) from amcr_heat_pas_l2"
+    query_zoom = "select max(count) from amcr_heat_pas_lx2 where st_centroid && ST_MakeEnvelope(%s, %s, %s, %s,4326)"
+    try:
+        # num = Pian.objects.raw(query, [left, bottom, right, top])
+        cursor = connection.cursor()
+        if zoom > 12:
+            cursor.execute(query_zoom, [left, bottom, right, top])
+        else:
+            cursor.execute(query)
+        return cursor.fetchone()[0]
+    except IndexError:
+        logger.debug(
+            "core.utils.get_heatmap_pas_density.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -469,8 +763,10 @@ def get_heatmap_project(left, bottom, right, top, zoom):
             cursor.execute(query)
         return dictfetchall(cursor)
     except IndexError:
-        logger.debug("core.utils.get_heatmap_project.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_project.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -492,8 +788,10 @@ def get_heatmap_project_density(left, bottom, right, top, zoom):
             cursor.execute(query)
         return cursor.fetchone()[0]
     except IndexError:
-        logger.debug("core.utils.get_heatmap_project_density.no_heatmap",
-                     extra={"left": left, "bottom": bottom, "right": right, "top": top})
+        logger.debug(
+            "core.utils.get_heatmap_project_density.no_heatmap",
+            extra={"left": left, "bottom": bottom, "right": right, "top": top},
+        )
         return None
 
 
@@ -625,7 +923,9 @@ def get_multi_transform_towgs84(jtsk_points):
         for line in r.text.split("\n"):
             if len(line) > 5:
                 p = line.split("\t")[1].split(" ")
-                logger.debug("core.utils.get_multi_transform_towgs84.finished", extra={"p": p})
+                logger.debug(
+                    "core.utils.get_multi_transform_towgs84.finished", extra={"p": p}
+                )
                 points.append([p[0], p[1]])
 
         return points
@@ -652,7 +952,7 @@ def get_message(az, message):
 
 class SearchTable(ColumnShiftTableBootstrap4):
     """
-    Základní setup pro tabulky používané v aplikaci. 
+    Základní setup pro tabulky používané v aplikaci.
     Obsahuje metódu na získaní sloupců které mají byt zobrazeny.
     """
 
@@ -680,13 +980,21 @@ class SearchTable(ColumnShiftTableBootstrap4):
         Metóda pro správne zobrazení náhledu souboru.
         """
         from pas.models import SamostatnyNalez
+
         record: SamostatnyNalez
         if record.soubory.soubory.count() > 0:
             soubor = record.soubory.soubory.first()
         else:
             soubor = None
         if soubor is not None:
-            soubor_url = reverse("core:download_thumbnail", args=('pas', record.ident_cely ,soubor.id,))
+            soubor_url = reverse(
+                "core:download_thumbnail",
+                args=(
+                    "pas",
+                    record.ident_cely,
+                    soubor.id,
+                ),
+            )
             return format_html(
                 '<img src="{}" class="image-nahled" data-toggle="modal" data-target="#soubor-modal">',
                 soubor_url,
