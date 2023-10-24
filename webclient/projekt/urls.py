@@ -59,6 +59,7 @@ urlpatterns = [
         name="projekt_navrhnout_ke_zruseni",
     ),
     path("stav/zrusit/<str:ident_cely>", zrusit, name="projekt_zrusit"),
+    path("stav/vratit/<str:ident_cely>", vratit, name="projekt_vratit"),
     path(
         "stav/vratit-navrh-zruseni/<str:ident_cely>",
         vratit_navrh_zruseni,
