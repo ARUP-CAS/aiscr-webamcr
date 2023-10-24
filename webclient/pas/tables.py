@@ -155,7 +155,7 @@ class UzivatelSpolupraceTable(SearchTable):
     spolupracovnik = tables.Column(
         accessor="spolupracovnik__name_and_id",
         verbose_name="Spolupracovník",
-        order_by=("vedouci__last_name", "vedouci__first_name", "vedouci__ident_cely"),
+        order_by=("spolupracovnik__last_name", "spolupracovnik__first_name", "spolupracovnik__ident_cely"),
         default="",
     )
     organizace_spolupracovnik = tables.Column(
