@@ -383,11 +383,11 @@ class FedoraRepositoryConnector:
                      extra={"url": uuid, "ident_cely": self.record.ident_cely})
         return rep_bin_file
 
-    def migrate_binary_file(self, soubor, include_content=True) -> Optional[RepositoryBinaryFile]:
+    def migrate_binary_file(self, soubor, include_content=True, check_if_exists=True) -> Optional[RepositoryBinaryFile]:
         from core.models import Soubor
         soubor: Soubor
         logger.debug("core_repository_connector.migrate_binary_file.start", extra={"soubor": soubor.pk})
-        if soubor.repository_uuid is not None:
+        if soubor.repository_uuid is not None and check_if_exists:
             return None
         self._check_binary_file_container()
         url = self._get_request_url(FedoraRequestType.CREATE_BINARY_FILE)
@@ -397,14 +397,18 @@ class FedoraRepositoryConnector:
         soubor.suppress_signal = True
         soubor.save()
         if include_content:
-            with open(soubor.path, mode="rb") as file:
-                data = file.read()
-            data = io.BytesIO(data)
-            soubor.nazev = soubor.nazev
-            soubor.save()
-            content_type = get_mime_type(soubor.name)
+            if soubor.repository_uuid is None:
+                with open(soubor.path, mode="rb") as file:
+                    data = file.read()
+                data = io.BytesIO(data)
+                file_sha_512 = hashlib.sha512(data).hexdigest()
+            else:
+                old_rep_bin_file = soubor.get_repository_content()
+                data = old_rep_bin_file.content
+                file_sha_512 = old_rep_bin_file.sha_512
+                data.seek(0)
+            content_type = get_mime_type(soubor.nazev)
             rep_bin_file = RepositoryBinaryFile(uuid, data, soubor.nazev)
-            file_sha_512 = hashlib.sha512(data).hexdigest()
             headers = {
                 "Content-Type": content_type,
                 "Content-Disposition": f'attachment; filename="{soubor.nazev}"'.encode("utf-8"),
@@ -551,6 +555,15 @@ class FedoraRepositoryConnector:
         self._send_request(url, FedoraRequestType.CHANGE_IDENT_CONNECT_RECORDS_4, headers=headers, data=data)
         logger.debug("core_repository_connector.record_ident_change.end", extra={"ident_cely": self.record.ident_cely,
                                                                                  "ident_cely_old": ident_cely_old})
+        from dokument.models import Dokument
+        if isinstance(self.record, Dokument):
+            for item in self.record.soubory.soubory.all():
+                from core.models import Soubor
+                item: Soubor
+                item.nazev = item.nazev.replace(ident_cely_old.replace("-", ""),
+                                                self.record.ident_cely.replace("-", ""))
+                item.save()
+                self.migrate_binary_file(item, include_content=True, check_if_exists=False)
 
     def validate_file_sha_512(self, soubor):
         logger.error("core_repository_connector.validate_file_sha_512.start",
