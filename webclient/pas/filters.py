@@ -34,7 +34,7 @@ from heslar.hesla import (
     HESLAR_OBDOBI_KAT,
     HESLAR_PRISTUPNOST,
 )
-from heslar.models import Heslar, RuianKraj, RuianOkres
+from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from historie.models import Historie
 from pas.models import SamostatnyNalez, UzivatelSpoluprace
 from uzivatel.models import Organizace, Osoba, User
@@ -104,9 +104,11 @@ class SamostatnyNalezFilter(HistorieFilter):
         ),
     )
 
-    katastr = CharFilter(
-        lookup_expr="nazev__icontains",
+    katastr = ModelMultipleChoiceFilter(
+        queryset=RuianKatastr.objects.all(),
+        field_name="katastr",
         label=_("pas.filters.samostatnyNalezFilter.katastr.label"),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete")
     )
 
     vlastnik = ModelMultipleChoiceFilter(

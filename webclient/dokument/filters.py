@@ -52,7 +52,7 @@ from heslar.hesla import (
     HESLAR_PREDMET_SPECIFIKACE,
 )
 from heslar.hesla_dynamicka import MODEL_3D_DOKUMENT_TYPES
-from heslar.models import Heslar
+from heslar.models import Heslar, RuianKatastr
 from uzivatel.models import Organizace, User, Osoba
 from django.utils.translation import gettext as _
 
@@ -612,9 +612,11 @@ class DokumentFilter(Model3DFilter):
         distinct=True,
     )
 
-    neident_katastr = CharFilter(
+    neident_katastr =ModelMultipleChoiceFilter(
+        queryset=RuianKatastr.objects.all(),
         label=_("dokument.filters.dokumentFilter.neidentAkceKatastr.label"),
-        field_name="casti__neident_akce__katastr__nazev",
+        field_name="casti__neident_akce__katastr",
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 

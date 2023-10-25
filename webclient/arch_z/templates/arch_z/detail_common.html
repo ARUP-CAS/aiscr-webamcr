@@ -442,22 +442,47 @@
           new Modal(options, elements.item(i).id);
         }
       }
+      var successFunctionAutorPopisu = function(settings, response) {
+        var newOption = new Option(response.text, response.value, true, true);
+        console.log("test")
+        $('#id_autor_popisu').append(newOption).trigger('change');
+        $('#id_autor_popisu').trigger({
+          type: 'select2:select',
+          params: {
+              data: [response.text, response.value, true, true]
+          }
+        });
+        $(settings.modalIDD).modal("hide");
+      };
       var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
+      successFunc:successFunctionAutorPopisu,
     })
     try {
      create_autor_popisu_modal = new Modal(options, "create-autor-popisu");
     } catch (e) {
       console.log(e);
     }
+    var successFunctionAutorRevize = function(settings, response) {
+      var newOption = new Option(response.text, response.value, true, true);
+      $('#id_autor_revize').append(newOption).trigger('change');
+      $('#id_autor_revize').trigger({
+        type: 'select2:select',
+        params: {
+            data: [response.text, response.value, true, true]
+        }
+      });
+      $(settings.modalIDD).modal("hide");
+    };
     var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
       formURL: "{% url 'heslar:create_osoba' %}",
       formID: "create-osoba-form",
       modalFormID: "#create-osoba-form",
       modalIDD : "#modal-form",
+      successFunc:successFunctionAutorRevize,
     })
     try {
      create_autor_revize_modal = new Modal(options, "create-autor-revize");

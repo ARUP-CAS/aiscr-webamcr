@@ -73,13 +73,7 @@ def create_akce_vedouci_objekt_form(readonly=True):
                 }
             else:
                 widgets = {
-                    "vedouci": forms.Select(
-                        attrs={
-                            "class": "selectpicker",
-                            "data-multiple-separator": "; ",
-                            "data-live-search": "true",
-                        }
-                    ),
+                    "vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
                     "organizace": forms.Select(
                         attrs={
                             "class": "selectpicker",
@@ -344,13 +338,7 @@ class CreateAkceForm(forms.ModelForm):
         }
 
         widgets = {
-            "hlavni_vedouci": forms.Select(
-                attrs={
-                    "class": "selectpicker",
-                    "data-multiple-separator": "; ",
-                    "data-live-search": "true",
-                }
-            ),
+            "hlavni_vedouci": autocomplete.ModelSelect2(url="heslar:osoba-autocomplete"),
             "organizace": forms.Select(
                 attrs={
                     "class": "selectpicker",
@@ -459,7 +447,7 @@ class CreateAkceForm(forms.ModelForm):
                             HTML(
                                 '<a href="{% url "heslar:create_osoba" %}" target="_blank"><input type="button" value="+" class="btn btn-secondary" /></a>'
                             ),
-                            css_class="col-sm-2",
+                            css_class="col-sm-2 input-osoba select2-input",
                             style="display: flex; align-items: center;",
                         ),
                         css_class="row",

@@ -325,70 +325,72 @@ def get_record_from_ident(ident_cely):
 
 
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}", ident_cely)):
-        logger.debug("core.utils.get_record_from_ident.project", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.project", extra={"ident_cely": ident_cely})
         return get_object_or_404(Projekt, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}\D{1}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.archeologicka_akce", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.archeologicka_akce", extra={"ident_cely": ident_cely})
         return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-9\d{6,9}\D{1}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.samostatna_akce", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.samostatna_akce", extra={"ident_cely": ident_cely})
         return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.lokalita", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.lokalita", extra={"ident_cely": ident_cely})
         return get_object_or_404(ArcheologickyZaznam, ident_cely=ident_cely)
     if bool(re.fullmatch("(BIB|X-BIB)-\d{7,9}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.zdroj", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.zdroj", extra={"ident_cely": ident_cely})
         return get_object_or_404(ExterniZdroj, ident_cely=ident_cely)
-    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}\D{1}-D\d{2}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
+    if bool(re.fullmatch("(C|M|X-C|X-M)-\w{7,10}\D{1}-D\d{2}", ident_cely)):
+        logger.debug("core.ident_cely.get_record_from_ident.dokumentacni_jednotka", extra={"ident_cely": ident_cely})
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(N|L|K)\d{7,9}-D\d{2}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.dokumentacni_jednotka_lokality", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.dokumentacni_jednotka_lokality", extra={"ident_cely": ident_cely})
         return get_object_or_404(DokumentacniJednotka, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\w{8,10}\D{1}-K\d{3}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.komponenta_on_dokumentacni_jednotka",
+        logger.debug("core.ident_cely.get_record_from_ident.komponenta_on_dokumentacni_jednotka",
                      extra={"ident_cely": ident_cely})
         return get_object_or_404(Komponenta, ident_cely=ident_cely)
     if bool(re.fullmatch("ADB-\D{4}\d{2}-\d{6}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.adb", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.adb", extra={"ident_cely": ident_cely})
         return get_object_or_404(Adb, ident_cely=ident_cely)
     if bool(re.fullmatch("(X-ADB|ADB)-\D{4}\d{2}-\d{4,6}-V\d{4}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.vyskovy_bod", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.vyskovy_bod", extra={"ident_cely": ident_cely})
         return get_object_or_404(VyskovyBod, ident_cely=ident_cely)
     if bool(re.fullmatch("(P|N)-\d{4}-\d{6,9}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.pian", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.pian", extra={"ident_cely": ident_cely})
         return get_object_or_404(Pian, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.dokument_3D", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.dokument_3D", extra={"ident_cely": ident_cely})
         return get_object_or_404(Dokument, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-(3D)-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
         re.fullmatch("3D-(C|M|X-C|X-M)-\w{8,10}-\d{1,9}-(D|K)\d{3}", ident_cely)
     ):
-        logger.debug("core.views.get_record_from_ident.obsah_cast_dokumentu_3D", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.obsah_cast_dokumentu_3D", extra={"ident_cely": ident_cely})
         return get_object_or_404(Dokument, ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}", ident_cely)) or bool(
         re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}", ident_cely)
     ):
-        logger.debug("core.views.get_record_from_ident.dokument", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.dokument", extra={"ident_cely": ident_cely})
         return get_object_or_404(Dokument, ident_cely=ident_cely)
     if bool(re.fullmatch("(C|M|X-C|X-M)-\D{2}-\d{9}-(D|K)\d{3}", ident_cely)) or bool(
         re.fullmatch("(C|M|X-C|X-M)-\w{8,10}-\D{2}-\d{1,9}-(D|K)\d{3}", ident_cely)
     ):
-        logger.debug("core.views.get_record_from_ident.obsah_cast_dokumentu", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.obsah_cast_dokumentu", extra={"ident_cely": ident_cely})
         return get_object_or_404(Dokument, ident_cely=ident_cely[:-5])
     if bool(re.fullmatch("(C|M|X-C|X-M)-\d{9}-N\d{5}", ident_cely)):
-        logger.debug("core.views.get_record_from_ident.samostatny_nalez", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.samostatny_nalez", extra={"ident_cely": ident_cely})
         return get_object_or_404(SamostatnyNalez, ident_cely=ident_cely)
     if bool(re.fullmatch("(LET)-\d{7}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(HES)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(ORG)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
     if bool(re.fullmatch("(OS)-\d{6}", ident_cely)):
-        logger.debug("core.views.redirect_ident_view.externi_zdroj", extra={"ident_cely": ident_cely})
+        logger.debug("core.ident_cely.get_record_from_ident.externi_zdroj", extra={"ident_cely": ident_cely})
         # return redirect("dokument:detail", ident_cely=ident_cely) TO DO redirect
+    else:
+        logger.debug("core.ident_cely.get_record_from_ident.no_match", extra={"ident_cely": ident_cely})
     return None
