@@ -559,7 +559,7 @@ def edit(request, ident_cely):
             "formAkce": form_akce,
             "ostatni_vedouci_objekt_formset": ostatni_vedouci_objekt_formset,
             "ostatni_vedouci_objekt_formset_helper": AkceVedouciFormSetHelper(),
-            "ostatni_vedouci_objekt_formset_readonly": check_permissions(p.actionChoices.archz_vedouci_smazat, request.user, zaznam.ident_cely),
+            "ostatni_vedouci_objekt_formset_readonly": not check_permissions(p.actionChoices.archz_vedouci_smazat, request.user, zaznam.ident_cely),
             "title": _("arch_z.views.edit.title.text"),
             "header": _("arch_z.views.edit.header.text"),
             "button": _("arch_z.views.edit.submitButton.text"),
@@ -918,6 +918,8 @@ def zapsat(request, projekt_ident_cely=None):
             "ostatni_vedouci_objekt_formset_readonly": True,
             "button": _("arch_z.views.zapsat.submitButton.text"),
             "toolbar_name": _("arch_z.views.zapsat.toolbarName"),
+            "heslar_specifikace_v_letech_presne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRESNE,
+            "heslar_specifikace_v_letech_priblizne": HESLAR_DATUM_SPECIFIKACE_V_LETECH_PRIBLIZNE,
         }
     )
     return render(
@@ -1460,13 +1462,13 @@ def get_arch_z_context(request, ident_cely, zaznam, app):
                 CreateADBForm(
                     old_adb_post,
                     instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
+                    #prefix=jednotka.adb.ident_cely,
                     readonly=not check_permissions(p.actionChoices.archz_adb_zapsat,request.user,zaznam.ident_cely),
                 )
                 if jednotka.adb.ident_cely == adb_ident_cely
                 else CreateADBForm(
                     instance=jednotka.adb,
-                    prefix=jednotka.adb.ident_cely,
+                    #prefix=jednotka.adb.ident_cely,
                     readonly=not check_permissions(p.actionChoices.archz_adb_zapsat,request.user,zaznam.ident_cely),
                 )
             )
@@ -1869,7 +1871,7 @@ def get_dj_form_detail(app, jednotka, jednotky=None, show=None, old_adb_post=Non
         dj_form_detail["adb_form"] = CreateADBForm(
             old_adb_post,
             instance=jednotka.adb,
-            prefix=jednotka.adb.ident_cely,
+            #prefix=jednotka.adb.ident_cely,
             readonly=not show["editovat"],
         )
         dj_form_detail["adb_ident_cely"] = jednotka.adb.ident_cely

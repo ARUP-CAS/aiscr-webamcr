@@ -281,7 +281,7 @@ class GeomMigrationJobError(ExportModelOperationsMixin("geom_migration_job_error
         abstract = True
 
 
-class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError):
+class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_sjtsk_error"), GeomMigrationJobError): # type: ignore pylance to ignore error
     """
     Model pro tabulku s chybami jobu geaom SJTSK migracií.
     """
@@ -291,7 +291,7 @@ class GeomMigrationJobSJTSKError(ExportModelOperationsMixin("geom_migration_job_
         abstract = False
 
 
-class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError):
+class GeomMigrationJobWGS84Error(ExportModelOperationsMixin("geom_migration_job_wgs84_error"), GeomMigrationJobError): # type: ignore pylance to ignore error
     """
     Model pro tabulku s chybami jobu geaom WGS84 migracií.
     """

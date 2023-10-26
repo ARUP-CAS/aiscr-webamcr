@@ -125,7 +125,7 @@ def detail(request, ident_cely):
         form = CreateADBForm(
             request.POST,
             instance=adb,
-            prefix=ident_cely,
+            #prefix=ident_cely,
         )
         if form.is_valid():
             logger.debug("dj.views.detail.adb_detail.form_is_valid")

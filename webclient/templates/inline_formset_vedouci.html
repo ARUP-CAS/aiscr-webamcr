@@ -49,7 +49,7 @@
 
                 <tr>
                     {% for field in form %}
-                        {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False %}
+                        {% include 'bootstrap4/field.html' with tag="td" form_show_labels=False vedouci="col-6" %}
                     {% endfor %}
                     {% if not form.readonly and not ostatni_vedouci_objekt_formset_readonly %}
                         <td>

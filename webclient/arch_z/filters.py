@@ -263,10 +263,12 @@ class ArchZaznamFilter(HistorieFilter, KatastrFilter):
         """
         Metóda pro filtrování podle hlavního i vedlejšího katastru.
         """
-        return queryset.filter(
-            Q(archeologicky_zaznam__hlavni_katastr__nazev__icontains=value)
-            | Q(archeologicky_zaznam__katastry__nazev__icontains=value)
-        ).distinct()
+        if value:
+            return queryset.filter(
+                Q(archeologicky_zaznam__hlavni_katastr__in=value)
+                | Q(archeologicky_zaznam__katastry__in=value)
+            ).distinct()
+        return queryset
 
     def filtr_katastr_kraj(self, queryset, name, value):
         """

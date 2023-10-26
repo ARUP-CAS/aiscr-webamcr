@@ -30,7 +30,7 @@ from heslar.hesla import (
     HESLAR_PROJEKT_TYP,
     HESLAR_AKCE_TYP_KAT,
 )
-from heslar.models import Heslar, RuianKraj, RuianOkres
+from heslar.models import Heslar, RuianKatastr, RuianKraj, RuianOkres
 from projekt.models import Projekt
 from psycopg2._range import DateRange
 from uzivatel.models import Organizace, Osoba
@@ -87,9 +87,11 @@ class KatastrFilter(filters.FilterSet):
         distinct=True,
     )
 
-    katastr = CharFilter(
+    katastr = ModelMultipleChoiceFilter(
+        queryset=RuianKatastr.objects.all(),
         method="filtr_katastr",
         label=_("projekt.filters.katastrFilter.katastr.label"),
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete"),
         distinct=True,
     )
 
@@ -103,10 +105,12 @@ class KatastrFilter(filters.FilterSet):
         """
         Metóda pro filtrování podle názvu hlavního a dalších katastrů.
         """
-        return queryset.filter(
-            Q(hlavni_katastr__nazev__icontains=value)
-            | Q(katastry__nazev__icontains=value)
-        ).distinct()
+        if value:
+            return queryset.filter(
+                Q(hlavni_katastr__in=value)
+                | Q(katastry__in=value)
+            ).distinct()
+        return queryset
 
     def filtr_katastr_kraj(self, queryset, name, value):
         """
@@ -321,10 +325,12 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         distinct=True,
     )
 
-    akce_katastr = CharFilter(
+    akce_katastr = ModelMultipleChoiceFilter(
         method="filtr_akce_katastr",
+        queryset=RuianKatastr.objects.all(),
+        field_name="katastr",
         label=_("projekt.filters.projektFilter.akceKatastr.label"),
-        distinct=True,
+        widget=autocomplete.ModelSelect2Multiple(url="heslar:katastr-autocomplete")
     )
 
     akce_kraj = MultipleChoiceFilter(
@@ -580,10 +586,12 @@ class ProjektFilter(HistorieFilter, KatastrFilter):
         """
         Metóda pro filtrování podle katastru akce.
         """
-        return queryset.filter(
-            Q(akce__archeologicky_zaznam__hlavni_katastr__nazev__icontains=value)
-            | Q(akce__archeologicky_zaznam__katastry__nazev__icontains=value)
-        ).distinct()
+        if value:
+            return queryset.filter(
+                Q(akce__archeologicky_zaznam__hlavni_katastr__in=value)
+                | Q(akce__archeologicky_zaznam__katastry__in=value)
+            ).distinct()
+        return queryset
 
     def filtr_akce_katastr_kraj(self, queryset, name, value):
         """
