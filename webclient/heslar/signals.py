@@ -3,10 +3,20 @@ import logging
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 
+from core.ident_cely import get_heslar_ident
 from .models import Heslar, RuianKatastr, RuianKraj, RuianOkres, HeslarDatace, HeslarHierarchie, \
     HeslarDokumentTypMaterialRada, HeslarOdkaz
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(pre_save, sender=Heslar)
+def save_ident_cely(sender, instance: Heslar, **kwargs):
+    """
+    Funkce pro uložení metadat hesláře.
+    """
+    if not instance.ident_cely and not instance.pk:
+        instance.ident_cely = get_heslar_ident()
 
 
 @receiver(post_save, sender=Heslar)

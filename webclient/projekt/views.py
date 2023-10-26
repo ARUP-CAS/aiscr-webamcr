@@ -68,6 +68,10 @@ from core.utils import (
     get_heatmap_project_density,
     get_num_projects_from_envelope,
     get_projects_from_envelope,
+    get_projekt_stav_label,
+    get_project_geom,
+    get_project_pas_from_envelope,
+    get_project_pian_from_envelope,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from core.models import Permissions as p, check_permissions
@@ -169,7 +173,7 @@ def detail(request, ident_cely):
 @require_http_methods(["POST"])
 def post_ajax_get_projects_limit(request):
     """
-    Funkce pohledu pro získaní heatmapy.
+    Funkce pohledu pro získaní heatmapy projektu.
     """
     body = json.loads(request.body.decode("utf-8"))
     num = get_num_projects_from_envelope(
@@ -192,7 +196,8 @@ def post_ajax_get_projects_limit(request):
                 {
                     "id": pian.id,
                     "ident_cely": pian.ident_cely,
-                    "geom": pian.geometry.replace(", ", ","),
+                    "geom": pian.geom.wkt.replace(", ", ","),
+                    "stav": get_projekt_stav_label(pian.stav)
                 }
             )
         if len(pians) > 0:
@@ -233,6 +238,90 @@ def post_ajax_get_projects_limit(request):
         else:
             return JsonResponse({"heat": [], "algorithm": "heat"}, status=200)
 
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_project_one(request):
+    """
+    Funkce pohledu pro získaní geometrie projektu.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    pians = get_project_geom(
+        body["projekt_ident_cely"],
+    )
+    back = []
+    for pian in pians:
+        back.append(
+            {
+                "id": pian.id,
+                "ident_cely": pian.ident_cely,
+                "geom": pian.geom.wkt.replace(", ", ",")
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+    else:
+        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_project_pas_limit(request):
+    """
+    Funkce pohledu pro získaní heatmapy pas.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    pians = get_project_pas_from_envelope(
+        body["southEast"]["lng"],
+        body["northWest"]["lat"],
+        body["northWest"]["lng"],
+        body["southEast"]["lat"],
+        body["projekt_ident_cely"],
+    )
+    back = []
+    for pian in pians:
+        back.append(
+            {
+                "id": pian.id,
+                "ident_cely": pian.ident_cely,
+                "geom": pian.geom.wkt.replace(", ", ",")
+            }
+        )
+    if len(pians) > 0:
+        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+    else:
+        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+@login_required
+@require_http_methods(["POST"])
+def post_ajax_get_project_pian_limit(request):
+    """
+    Funkce pohledu pro získaní heatmapy pianu.
+    """
+    body = json.loads(request.body.decode("utf-8"))
+    queries = get_project_pian_from_envelope(
+        body["southEast"]["lng"],
+        body["northWest"]["lat"],
+        body["northWest"]["lng"],
+        body["southEast"]["lat"],
+        body["projekt_ident_cely"],
+    )
+    back = []
+    back_ident_cely = []
+    for query in queries:
+        for pian in query:
+            if(pian["pian__ident_cely"] not in back_ident_cely):
+                back_ident_cely.append(pian["pian__ident_cely"])
+                back.append(
+                    {
+                        "id": pian["pian__id"],
+                        "ident_cely": pian["pian__ident_cely"],
+                        "geom": pian["pian__geom"].wkt.replace(", ", ",")
+                    }
+                )
+    if len(back_ident_cely) > 0:
+        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+    else:
+        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+      
 
 @login_required
 @require_http_methods(["GET", "POST"])

@@ -4,9 +4,15 @@
 {% load crispy_forms_tags %}
 {% load template_filters %}
 {% load crispy_forms_field %}
+{% load template_tags %}
 
 {% block head %}
 <!-- Map imports -->
+<script>
+  {% autoescape off %}
+    var settings_heatmap_options = {% get_settings "heatmap_options" "projekty_heatmap_options" %};
+  {% endautoescape %}
+</script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
 integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
 crossorigin=""/>
@@ -14,6 +20,12 @@ crossorigin=""/>
   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
   crossorigin="">
 </script>
+<script src="{% static 'leaflet.markercluster-src.js' %}"></script>
+<link rel="stylesheet" href="{% static 'MarkerCluster.css' %}" />
+<link rel="stylesheet" href="{% static 'MarkerCluster.Default.css' %}" />
+<script src="{% static 'simpleheat.js' %}"></script>
+<script src="{% static 'HeatLayer.js' %}"></script>
+
 <!--Leaflet FullScreen-->
 <script src="https://unpkg.com/lerc@1.0.1/LercDecode.js"></script>
 <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
@@ -178,6 +190,10 @@ crossorigin=""/>
 <script src="{% static 'coor_precision.js' %}"></script>
 <script src="{% static 'mapa_basic_grey.js' %}"></script>
 <script src="{% static 'convertToJTSK.js' %}"></script>
+<script src="{% static 'convertToJTSK.js' %}"></script>
+<script src="{% static 'leaflet_subgroup.js' %}"></script>
+<script src="{% static 'spin/spin.min.js' %}"></script>
+<script src="{% static 'leaflet.spin.min.js' %}"></script>
 <script src="{% static 'mapa_pas.js' %}"></script>
     <script>
         $(document).ready(function () {
@@ -242,7 +258,7 @@ crossorigin=""/>
         });
         $(settings.modalIDD).modal("hide");
       };
-    
+
       document.addEventListener('DOMContentLoaded', function (event) {
         var options = Object.assign(Object.create(defaults), {modalID: "modal-form",
         formURL: "{% url 'heslar:create_osoba' %}",
@@ -251,8 +267,8 @@ crossorigin=""/>
         modalIDD : "#modal-form",
         successFunc:successFunction,
       })
-      new Modal(options, "create-nalezce-osoba"); 
-      
+      new Modal(options, "create-nalezce-osoba");
+
     });
       </script>
 {% endblock %}

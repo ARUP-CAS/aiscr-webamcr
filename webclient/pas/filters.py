@@ -169,7 +169,7 @@ class SamostatnyNalezFilter(HistorieFilter):
     )
 
     druh_nalezu = MultipleChoiceFilter(
-        method="filter_druh_nalezu)",
+        method="filter_druh_nalezu",
         label=_("pas.filters.samostatnyNalezFilter.druhNalezu.label"),
         choices=heslar_12(HESLAR_PREDMET_DRUH, HESLAR_PREDMET_DRUH_KAT)[1:],
         widget=SelectMultiple(

@@ -49,13 +49,13 @@ from core.message_constants import (
 )
 from core.utils import (
     get_all_pians_with_akce,
-    get_all_pians_with_dj,
+    get_dj_pians_centroid,
     get_centre_from_akce,
     get_heatmap_pian,
     get_heatmap_pian_density,
     get_message,
     get_num_pians_from_envelope,
-    get_pians_from_envelope,
+    get_dj_pians_from_envelope,
 )
 from core.views import PermissionFilterMixin, SearchListView, check_stav_changed
 from dal import autocomplete
@@ -1025,7 +1025,7 @@ def post_ajax_get_pians(request):
     Vypada nepouzito check s J. Bartos
     """
     body = json.loads(request.body.decode("utf-8"))
-    pians = get_all_pians_with_dj(body["dj_ident_cely"], body["lat"], body["lng"])
+    pians = get_dj_pians_centroid(body["dj_ident_cely"], body["lat"], body["lng"])
     back = []
     for pian in pians:
         back.append(
@@ -1058,7 +1058,7 @@ def post_ajax_get_pians_limit(request):
     clusters = num >= 500
     logger.debug("arch_z.views.post_ajax_get_pians_limit.pocet_geometrii", extra={"num": num})
     if num < 5000:
-        pians = get_pians_from_envelope(
+        pians = get_dj_pians_from_envelope(
             body["southEast"]["lng"],
             body["northWest"]["lat"],
             body["northWest"]["lng"],

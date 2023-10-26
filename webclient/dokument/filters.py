@@ -229,7 +229,7 @@ class Model3DFilter(HistorieFilter):
         field_name="extra_data__duveryhodnost",
         label=_("dokument.filters.model3DFilter.duverihodnost.label"),
         lookup_expr="gte",
-        widget=NumberInput(attrs={"min": "1", "max": "100"}),
+        widget=NumberInput(attrs={"min": "0", "max": "100"}),
         distinct=True,
     )
     popisne_udaje = CharFilter(

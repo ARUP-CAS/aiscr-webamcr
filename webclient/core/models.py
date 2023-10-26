@@ -514,6 +514,8 @@ class Permissions(models.Model):
         if self.status:
             if not self.permission_object:
                 self.get_permission_object()
+                if self.permission_object == "error":
+                    return True
             subed_status = re.sub("[a-zA-Z]", "", self.status)
             if ">" in self.status:
                 if not int(self.permission_object.stav) > int(subed_status[1]):
@@ -536,6 +538,8 @@ class Permissions(models.Model):
         if ownership:
             if not self.permission_object:
                 self.get_permission_object()
+                if self.permission_object == "error":
+                    return True
             if self.permission_object.get_create_user() and self.permission_object.get_create_user() == self.logged_in_user:
                 return True
             if ownership == self.ownershipChoices.our:
@@ -562,6 +566,8 @@ class Permissions(models.Model):
     def check_permission_skip(self):
         if not self.permission_object:
             self.get_permission_object()
+            if self.permission_object == "error":
+                return True
         perm_skips = list(PermissionsSkip.objects.filter(user=self.logged_in_user).values_list("ident_list",flat=True))
         if len(perm_skips) > 0 and self.permission_object.ident_cely in perm_skips[0].split(","):
             return True
@@ -584,8 +590,12 @@ class Permissions(models.Model):
         elif "notifikace-projekty/smazat" in self.address_in_app:
             self.permission_object = Pes.objects.get(id=self.ident)
         else:
-            self.object = get_record_from_ident(self.ident)
-            self.permission_object = self.object.get_permission_object()
+            try:
+                self.object = get_record_from_ident(self.ident)
+                self.permission_object = self.object.get_permission_object()
+            except Exception as e:
+                logger.error(e)
+                self.permission_object = "error"
     
 
 def check_permissions(action, user, ident=None):

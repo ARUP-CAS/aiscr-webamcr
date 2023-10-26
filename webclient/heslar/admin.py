@@ -87,8 +87,9 @@ class HeslarDataceAdmin(admin.ModelAdmin):
     Admin část pro správu modelu heslař datace.
     """
     list_display = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
-    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
-    search_fields = ("obdobi__ident_cely", "obdobi__heslo", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max")
+    fields = ("obdobi", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max", "poznamka")
+    search_fields = ("obdobi__ident_cely", "obdobi__heslo", "rok_od_min", "rok_do_min", "rok_od_max", "rok_do_max",
+                     "poznamka")
     list_filter = ("obdobi", )
 
     def get_readonly_fields(self, request, obj=None):
@@ -147,7 +148,7 @@ class OsobaAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu osob.
     """
-    list_display = ("jmeno", "prijmeni", "ident_cely", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely",
+    list_display = ("ident_cely", "jmeno", "prijmeni", "vypis", "rok_narozeni", "rok_umrti", "vypis_cely",
                     "rodne_prijmeni")
     fields = ("jmeno", "prijmeni", "ident_cely", "vypis", "vypis_cely", "rok_narozeni", "rok_umrti",
               "rodne_prijmeni")
@@ -166,7 +167,7 @@ class OrganizaceAdmin(ObjectWithMetadataAdmin):
     """
     Admin část pro správu modelu organizace.
     """
-    list_display = ("nazev_zkraceny", "typ_organizace", "ident_cely", "oao", "zanikla", "nazev", "nazev_zkraceny_en",
+    list_display = ("ident_cely", "nazev_zkraceny", "typ_organizace", "oao", "zanikla", "nazev", "nazev_zkraceny_en",
                     "nazev_en", "soucast", "ico", "adresa", "email", "telefon", "zverejneni_pristupnost",
                     "mesicu_do_zverejneni")
     list_filter = ("oao", "zanikla")

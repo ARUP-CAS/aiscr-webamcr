@@ -1,9 +1,9 @@
 from django.urls import path
-
 from oznameni.views import OznamovatelCreateView
 
 from .views import (
     ProjectTableRowView,
+    ProjektAutocompleteBezZrusenych,
     ProjektListView,
     archivovat,
     create,
@@ -14,6 +14,9 @@ from .views import (
     index,
     navrhnout_ke_zruseni,
     odpojit_dokument,
+    post_ajax_get_project_one,
+    post_ajax_get_project_pas_limit,
+    post_ajax_get_project_pian_limit,
     post_ajax_get_projects_limit,
     prihlasit,
     pripojit_dokument,
@@ -25,7 +28,6 @@ from .views import (
     vratit_navrh_zruseni,
     zahajit_v_terenu,
     zrusit,
-    ProjektAutocompleteBezZrusenych,
 )
 
 app_name = "projekt"
@@ -64,12 +66,27 @@ urlpatterns = [
         name="projekt_vratit_navrh_zruseni",
     ),
     path(
+        "akce-get-projekt",
+        post_ajax_get_project_one,
+        name="post_ajax_get_project_one",
+    ),
+    path(
         "akce-get-projekty",
         post_ajax_get_projects_limit,
         name="post_ajax_get_projects_limit",
     ),
     path(
-        "dokument/odpojit/<str:proj_ident_cely>/<str:ident_cely>",
+        "akce-get-projekt-pas",
+        post_ajax_get_project_pas_limit,
+        name="post_ajax_get_project_pas_limit",
+    ),
+    path(
+        "akce-get-projekt-pian",
+        post_ajax_get_project_pian_limit,
+        name="post_ajax_get_project_pian_limit",
+    ),
+    path(
+        "dokument/odpojit/<str:ident_cely>/<str:proj_ident_cely>",
         odpojit_dokument,
         name="odpojit_dokument",
     ),

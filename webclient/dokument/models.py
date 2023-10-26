@@ -346,26 +346,14 @@ class Dokument(ExportModelOperationsMixin("dokument"), ModelWithMetadata):
         self.save()
         self.save_metadata(use_celery=False)
 
-        from core.repository_connector import FedoraRepositoryConnector
-        from core.utils import get_mime_type
-        from core.views import get_projekt_soubor_name
-        connector = FedoraRepositoryConnector(self)
-        connector.record_ident_change(old_ident_cely)
-        for soubor in self.soubory.soubory.all():
-            soubor: Soubor
-            repository_binary_file = soubor.get_repository_content()
-            if repository_binary_file is not None:
-                rep_bin_file = connector.save_binary_file(get_projekt_soubor_name(soubor.nazev),
-                                                          get_mime_type(soubor.nazev),
-                                                          repository_binary_file.content)
-                connector.validate_file_sha_512(soubor)
+        self.record_ident_change(old_ident_cely)
+
         for dc in self.casti.all():
-            if "3D" in perm_ident_cely:
-                for komponenta in dc.komponenty.komponenty.all():
-                    komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
-                    komponenta.save()
-                    logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
-                                   extra={"ident_cely": komponenta.ident_cely})
+            for komponenta in dc.komponenty.komponenty.all():
+                komponenta.ident_cely = perm_ident_cely + komponenta.ident_cely[-5:]
+                komponenta.save()
+                logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_components",
+                               extra={"ident_cely": komponenta.ident_cely})
             dc.ident_cely = perm_ident_cely + dc.ident_cely[-5:]
             dc.save()
             logger.debug("dokument.models.Dokument.set_permanent_ident_cely.renamed_dokumentacni_casti",
