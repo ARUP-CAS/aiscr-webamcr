@@ -496,6 +496,17 @@ form {
   width: 70%;
 }
 
+.app-alert-floating-import-pian {
+  box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.2);
+    border-color: initial;
+    position: fixed;
+    top: 15px;
+    left: calc(300px + 15%);
+    z-index: 10000;
+    width: calc(70% - 300px);
+    text-align: center;
+}
+
 // tooltip
 .tooltip {
   a {
@@ -540,6 +551,11 @@ form {
     flex: 1 0 auto; //
     position: relative;
     max-height: fit-content;
+    &.add-pian-table{
+      table thead tr th {
+        color: #ffffff;
+      }
+    }
 
     .app-table-list-inner {
       position: absolute; //

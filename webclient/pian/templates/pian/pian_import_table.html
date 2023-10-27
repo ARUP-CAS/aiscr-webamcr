@@ -1,0 +1,42 @@
+{% load i18n %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+<div class="app-card-akce app-entity-akce app-table-list-container">
+    <div class="app-table-list-wrapper add-pian-table">
+        <table class="table table-striped table-hover table-sm mb-0">
+            <thead>
+            <tr>
+              <th>{% trans "pian.templates.pian_import_table.label.label" %}</th>
+              <th>{% trans "pian.templates.pian_import_table.epsg.label" %}</th>
+              <th>{% trans "pian.templates.pian_import_table.geometry.label" %}</th>
+              <th>{% trans "pian.templates.pian_import_table.checkResult.label" %}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for index, row in table.iterrows %}
+            <tr>
+                
+                <td class="app-ident-cely">
+                    {% if row.result == True %}
+                    <a href="{% url 'arch_z:update-pian' archz_ident dj_ident pian_ident %}?label={{row.label}}&geometry={{row.geometry}}">
+                      <span class="material-icons">description</span>
+                      {{ row.label }}
+                    </a>
+                    {% else %}
+                    {{ row.label }}
+                    {% endif %}
+                </td>
+                <td>{{ row.epsg }}</td>
+                <td>{{ row.geometry }}</td>
+                {% if row.result == True %}
+                    <td>{% trans "pian.templates.pian_import_table.checkResult.allOK" %}</td>
+                {% else %}
+                <td>{{ row.result }}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+    </div>
+</div>
