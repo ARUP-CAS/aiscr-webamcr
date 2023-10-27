@@ -438,6 +438,8 @@ def save_record_metadata(class_name, record_pk):
         from core.repository_connector import FedoraRepositoryConnector
         connector = FedoraRepositoryConnector(record)
         connector.save_metadata(True)
+    else:
+        logger.warning("cron.send_notifications.do.is_null")
     logger.debug("cron.send_notifications.do.end")
 
 
@@ -453,6 +455,8 @@ def record_ident_change(class_name, record_pk, old_ident):
         return
     connector = FedoraRepositoryConnector(record)
     connector.record_ident_change(old_ident)
+    logger.debug("cron.record_ident_change.do.end", extra={"class_name": class_name, "record_pk": record_pk,
+                                                             "old_ident": old_ident})
 
 
 @shared_task
@@ -513,11 +517,13 @@ def change_document_accessibility():
     logger.debug("core.cron.change_document_accessibility.do.start")
     documents = Dokument.objects\
         .filter(datum_zverejneni__lte=datetime.datetime.now().date()) \
-        .filter(Q(pristupnost__razeni__gt=Min(F("casti__archeologicky_zaznam__pristupnost__razeni")))
+        .annotate(min_pristupnost_razeni=Min(F("casti__archeologicky_zaznam__pristupnost__razeni"))) \
+        .filter(Q(pristupnost__razeni__gt=F("min_pristupnost_razeni"))
                 | ~Q(pristupnost__razeni=F('organizace__zverejneni_pristupnost__razeni')))
     for item in documents:
         item: Dokument
-        pristupnost_razeni = min(*[x for x in item.casti.archeologicky_zaznam.pristupnost.razeni],
+        logger.debug("core.cron.change_document_accessibility.do.dokument", extra={"dokument": item.ident_cely})
+        pristupnost_razeni = min(*[x.archeologicky_zaznam.pristupnost.razeni for x in item.casti.all()],
                                  item.organizace.zverejneni_pristupnost.razeni)
         pristupnost = Heslar.objects.filter(nazev_heslare=HESLAR_PRISTUPNOST).filter(razeni=pristupnost_razeni).first()
         item.pristupnost = pristupnost
@@ -530,9 +536,11 @@ def delete_unsubmited_projects():
     """
      Každý den smazat projekty ve stavu -1, které vznikly před více než 12 hodinami.
     """
+    logger.debug("core.cron.delete_unsubmited_projects.do.start")
     now_minus_12_hours = timezone.now() - datetime.timedelta(hours=12)
     Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY).filter(historie__historie__typ_zmeny=OZNAMENI_PROJ)\
         .filter(historie__historie__datum_zmeny__lt=now_minus_12_hours).delete()
+    logger.debug("core.cron.delete_unsubmited_projects.do.end")
 
 
 @shared_task
@@ -542,8 +550,9 @@ def cancel_old_projects():
      v minulosti. Do poznámky ke zrušení uvést “Automatické zrušení projektů starších tří let, u kterých již
      nelze očekávat zahájení.”
     """
-    toady_minus_3_years = datetime.datetime.today() - datetime.timedelta(days=365 * 3)
-    toady_minus_1_year = datetime.datetime.today() - datetime.timedelta(days=365)
+    logger.debug("core.cron.cancel_old_projects.do.start")
+    toady_minus_3_years = timezone.now() - datetime.timedelta(days=365 * 3)
+    toady_minus_1_year = timezone.now() - datetime.timedelta(days=365)
     projects = Projekt.objects.filter(stav=PROJEKT_STAV_VYTVORENY) \
         .filter(Q(historie__historie__typ_zmeny=ZAPSANI_PROJ)
                 & Q(historie__historie__datum_zmeny__lt=toady_minus_3_years)) \
@@ -553,3 +562,5 @@ def cancel_old_projects():
     for project in projects:
         project: Projekt
         project.set_zruseny(User.objects.get(email="amcr@arup.cas.cz"), cancelled_string)
+        logger.debug("core.cron.cancel_old_projects.do.project", extra={"ident_cely": project.ident_cely})
+    logger.debug("core.cron.cancel_old_projects.do.end")
