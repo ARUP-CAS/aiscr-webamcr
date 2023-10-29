@@ -171,7 +171,8 @@ class PermissionAdmin(admin.ModelAdmin):
     list_display = [
         "address_in_app", "main_role", "action"
     ]
-    list_filter = ["main_role", "address_in_app"]
+    list_filter = ["main_role"]
+    search_fields = ["address_in_app", "action"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
         return super().changelist_view(request, {"import_list":True})
@@ -431,7 +432,7 @@ class PermissionAdmin(admin.ModelAdmin):
 @admin.register(PermissionsSkip)
 class PermissionSkipAdmin(admin.ModelAdmin):
     """
-    Třída admin panelu pro zobrazení a správu oprávnení.
+    Třída admin panelu pro zobrazení a správu proskakovani oprávnení.
     """
 
     change_list_template = "core/permissions_changelist.html"
@@ -439,6 +440,7 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         "user"
     ]
     actions = ("export_as_csv",)
+    search_fields = ["user"]
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = ...) -> TemplateResponse:
         return super().changelist_view(request, {"import_skip_list":True})
@@ -556,5 +558,5 @@ class PermissionSkipAdmin(admin.ModelAdmin):
         for obj in queryset:
             writer.writerow([obj.user.ident_cely,obj.ident_list])
         return response
-
+    
     export_as_csv.short_description = _("core.admin.permissionSkipAdmin.downloadAction_label")

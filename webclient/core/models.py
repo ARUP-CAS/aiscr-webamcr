@@ -399,6 +399,8 @@ class Permissions(models.Model):
         pas_smazat = "pas_smazat" , "core.models.permissions.actionChoices.pas_smazat"
         pas_ulozeni_edit = "pas_ulozeni_edit", "core.models.permissions.actionChoices.pas_ulozeni_edit"
         pas_zapsat_do_projektu = "pas_zapsat_do_projektu", "core.models.permissions.actionChoices.pas_zapsat_do_projektu"
+        pas_mapa_pas = "pas_mapa_pas", "core.models.permissions.actionChoices.pas_mapa_pas"
+        pas_mapa_pian = "pas_mapa_pian", "core.models.permissions.actionChoices.pas_mapa_pian"
         pian_potvrdit = "pian_potvrdit", "core.models.permissions.actionChoices.pian_potvrdit"
         pian_odpojit = "pian_odpojit", "core.models.permissions.actionChoices.pian_odpojit"
         pian_zapsat = "pian_zapsat", "core.models.permissions.actionChoices.pian_zapsat"

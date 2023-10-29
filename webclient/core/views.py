@@ -37,6 +37,7 @@ from core.constants import (
     DOKUMENT_RELATION_TYPE,
     PROJEKT_RELATION_TYPE,
     PROJEKT_STAV_ARCHIVOVANY,
+    ROLE_ADMIN_ID,
     SAMOSTATNY_NALEZ_RELATION_TYPE,
     SN_ARCHIVOVANY,
     ROLE_BADATEL_ID, 
@@ -657,11 +658,18 @@ class PermissionFilterMixin():
     permission_model_lookup = ""
     typ_zmeny_lookup = ""
     
-    def check_filter_permission(self, qs):
-        permissions = Permissions.objects.filter(
+    def check_filter_permission(self, qs, action=None):
+        if action:
+            permissions = Permissions.objects.filter(
                 main_role=self.request.user.hlavni_role,
                 address_in_app=self.request.resolver_match.route,
+                action=action
             )
+        else:    
+            permissions = Permissions.objects.filter(
+                    main_role=self.request.user.hlavni_role,
+                    address_in_app=self.request.resolver_match.route,
+                )
         if permissions.count()>0:
             for idx, perm in enumerate(permissions):
                 if idx == 0:
@@ -743,6 +751,7 @@ class PermissionFilterMixin():
             ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
             ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
             ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
         }
         qs_ownership = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost__in"
