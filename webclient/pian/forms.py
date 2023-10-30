@@ -27,4 +27,4 @@ class PianCreateForm(forms.ModelForm):
         super(PianCreateForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper(self)
         self.helper.form_tag = False
-        self.fields["geom_system"].initial = "wgs84"
+        self.fields["geom_system"].initial = "4326"

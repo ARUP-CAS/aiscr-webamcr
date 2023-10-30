@@ -221,8 +221,8 @@ def detail(request, ident_cely):
             )
         system = (
             "WGS-84"
-            if sn.geom_system == "wgs84"
-            else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
+            if sn.geom_system == "4326"
+            else ("S-JTSK*" if sn.geom_system == "5514*" else "S-JTSK")
         )
         logger.debug(
             "pas.views.create.detail",
@@ -333,8 +333,8 @@ def edit(request, ident_cely):
                 )
             system = (
                 "WGS-84"
-                if sn.geom_system == "wgs84"
-                else ("S-JTSK*" if sn.geom_system == "sjtsk*" else "S-JTSK")
+                if sn.geom_system == "4326"
+                else ("S-JTSK*" if sn.geom_system == "5514*" else "S-JTSK")
             )
             gx_wgs = geom.split(" ")[1]
             gy_wgs = geom.split(" ")[0]

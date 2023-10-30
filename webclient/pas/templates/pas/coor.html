@@ -205,14 +205,14 @@ crossorigin=""/>
               this.value = this.value.replace(".",",")
 
               if(this.id=="detector_coordinates_x" || this.id=="detector_coordinates_y"){
-                var res_system="wgs84";
+                var res_system="4326";
                 var re  = new RegExp("^(\-?[1-9][0-9]{0,1})$|^(\-?[1-9][0-9]{0,1},[0-9]{0,7})$");
                 var re1 = new RegExp("^(\-?[1-9][0-9]{0,1}),?");
                 var re2 = new RegExp("^(\-?[1-9][0-9]{0,1},[0-9]{0,8})$");
                 var re3 = new RegExp("^(\-?[1-9][0-9]{0,1}),$");
                 var pos=this.selectionStart;
                 if(document.getElementById('detector_system_coordinates').value == 2){
-                  res_system="sjtsk";
+                  res_system="5514";
                   re  = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5})$|^(-[1]{0,1}[0-9][0-9]{0,5},[0-9]{0,2})$");
                   re1 = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5}),?");
                   re2 = new RegExp("^(-[1]{0,1}[0-9][0-9]{0,5},[0-9]{0,3})$");

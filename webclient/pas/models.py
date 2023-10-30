@@ -80,7 +80,7 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
     )
     geom = pgmodels.PointField(blank=True, null=True, srid=4326)
     geom_sjtsk = pgmodels.PointField(blank=True, null=True, srid=5514)
-    geom_system = models.TextField(default='wgs84')
+    geom_system = models.TextField(default="4326")
     pristupnost = models.ForeignKey(
         Heslar,
         models.RESTRICT,
@@ -262,8 +262,8 @@ class SamostatnyNalez(ExportModelOperationsMixin("samostatny_nalez"), ModelWithM
         db_table = "samostatny_nalez"
         constraints = [
             CheckConstraint(
-                check=((Q(geom_system="sjtsk") & Q(geom_sjtsk__isnull=False))
-                       | (Q(geom_system="wgs84") & Q(geom__isnull=False))
+                check=((Q(geom_system="5514") & Q(geom_sjtsk__isnull=False))
+                       | (Q(geom_system="4326") & Q(geom__isnull=False))
                        | (Q(geom_sjtsk__isnull=True) & Q(geom__isnull=True))),
                 name='samostatny_nalez_geom_check',
             ),
