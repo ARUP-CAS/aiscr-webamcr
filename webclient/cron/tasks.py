@@ -19,7 +19,7 @@ from django.db import connection
 from django.utils.translation import gettext as _
 
 from cron.convertToWGS84 import get_multi_transform_to_wgs84
-from dokument.models import Dokument, Let
+from dokument.models import Dokument, Let, DokumentCast
 from ez.models import ExterniZdroj
 from heslar.hesla import HESLAR_PRISTUPNOST
 from heslar.models import Heslar, RuianKatastr, RuianOkres, RuianKraj
@@ -457,6 +457,14 @@ def record_ident_change(class_name, record_pk, old_ident):
     connector.record_ident_change(old_ident)
     logger.debug("cron.record_ident_change.do.end", extra={"class_name": class_name, "record_pk": record_pk,
                                                              "old_ident": old_ident})
+    if isinstance(record, ArcheologickyZaznam):
+        for i in record.casti_dokumentu.all():
+            i: DokumentCast
+            i.dokument.save_metadata()
+    elif isinstance(record, Dokument):
+        for i in record.casti.all():
+            i: DokumentCast
+            i.archeologicky_zaznam.save_metadata()
 
 
 @shared_task
