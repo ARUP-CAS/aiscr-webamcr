@@ -112,10 +112,12 @@ class Modal {
             type: $(settings.modalFormID).attr("method"),
             url: $(settings.modalFormID).attr("action"),
             data: new FormData($(settings.modalFormID)[0]),
-            async: false,
+            async: true,
             contentType: false,
             processData: false,
             beforeSend: function () {
+                $("#loader-spinner").show()
+                console.log("showing spinner22")
                 $("#submit-btn").prop("disabled", true);
             },
             success: function (response) {
