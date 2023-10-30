@@ -1,7 +1,7 @@
 import logging
 
 
-from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
+from core.constants import KLADYZM10, KLADYZM50, PIAN_NEPOTVRZEN, PIAN_POTVRZEN, ROLE_ADMIN_ID, ZAPSANI_AZ, ZAPSANI_PIAN, ROLE_BADATEL_ID, ROLE_ARCHEOLOG_ID, ROLE_ARCHIVAR_ID
 from core.exceptions import MaximalIdentNumberError, NeznamaGeometrieError
 from core.ident_cely import get_temporary_pian_ident
 from core.message_constants import (
@@ -307,17 +307,7 @@ def create(request, dj_ident_cely):
     )
     return response
 
-
-class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PermissionFilterMixin):
-    """
-    Třída pohledu pro autocomplete pianu.
-    """
-    def get_queryset(self):
-        qs = Pian.objects.all().order_by("ident_cely")
-        if self.q:
-            qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
-        return self.check_filter_permission(qs)
-
+class PianPermissionFilterMixin(PermissionFilterMixin):
     def add_ownership_lookup(self, ownership):
         filtered_pian_history = Historie.objects.filter(typ_zmeny=ZAPSANI_PIAN,uzivatel=self.request.user)
         filtered_pian_pian = set(Pian.objects.filter(historie__historie__in=filtered_pian_history).values_list("pk", flat=True))
@@ -342,6 +332,7 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Per
             ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
             ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
             ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
         }
         ownership_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"
@@ -355,3 +346,14 @@ class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, Per
         qs = qs.annotate(pristupnost_filter=Subquery(pristupnost[:1]))
         qs_access = qs.exclude(pk__in=ownership_qs.values("pk")).filter(Q(**filter)|Q(pristupnost_filter__isnull=True))
         return (ownership_qs | qs_access)
+
+
+class PianAutocomplete(LoginRequiredMixin, autocomplete.Select2QuerySetView, PianPermissionFilterMixin):
+    """
+    Třída pohledu pro autocomplete pianu.
+    """
+    def get_queryset(self):
+        qs = Pian.objects.all().order_by("ident_cely")
+        if self.q:
+            qs = qs.filter(ident_cely__icontains=self.q).exclude(presnost__zkratka="4")
+        return self.check_filter_permission(qs)

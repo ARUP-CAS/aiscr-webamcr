@@ -39,6 +39,7 @@ from core.constants import (
     VRACENI_ZRUSENI,
     ZAHAJENI_V_TERENU_PROJ,
     ZAPSANI_PROJ, OBLAST_CECHY,
+    ZAPSANI_SN,
 )
 from core.decorators import allowed_user_groups
 from core.exceptions import MaximalIdentNumberError
@@ -112,6 +113,7 @@ from uzivatel.models import User
 from pas.models import SamostatnyNalez
 from core.models import Permissions
 from heslar.hesla import HESLAR_PRISTUPNOST
+from pian.views import PianPermissionFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -262,65 +264,73 @@ def post_ajax_get_project_one(request):
     else:
         return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
 
-@login_required
-@require_http_methods(["POST"])
-def post_ajax_get_project_pas_limit(request):
+class ProjectPasFromEnvelopeView(LoginRequiredMixin, View, PermissionFilterMixin):
     """
-    Funkce pohledu pro získaní heatmapy pas.
+    Trida pohledu pro získaní heatmapy pas.
+    @jiri-bartos presunuto z post_ajax_get_project_pas_limit
     """
-    body = json.loads(request.body.decode("utf-8"))
-    pians = get_project_pas_from_envelope(
-        body["southEast"]["lng"],
-        body["northWest"]["lat"],
-        body["northWest"]["lng"],
-        body["southEast"]["lat"],
-        body["projekt_ident_cely"],
-    )
-    back = []
-    for pian in pians:
-        back.append(
-            {
-                "id": pian.id,
-                "ident_cely": pian.ident_cely,
-                "geom": pian.geom.wkt.replace(", ", ",")
-            }
-        )
-    if len(pians) > 0:
-        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
-    else:
-        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+    typ_zmeny_lookup = ZAPSANI_SN
 
-@login_required
-@require_http_methods(["POST"])
-def post_ajax_get_project_pian_limit(request):
+    def post (self, request):
+        body = json.loads(request.body.decode("utf-8"))
+        pians = get_project_pas_from_envelope(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["projekt_ident_cely"],
+        )
+        if pians:
+            pians = self.check_filter_permission(pians)
+        back = []
+        for pian in pians:
+            back.append(
+                {
+                    "id": pian.id,
+                    "ident_cely": pian.ident_cely,
+                    "geom": pian.geom.wkt.replace(", ", ",")
+                }
+            )
+        if len(pians) > 0:
+            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+
+
+
+class ProjectPianFromEnvelopeView(LoginRequiredMixin, View, PianPermissionFilterMixin):
     """
-    Funkce pohledu pro získaní heatmapy pianu.
+    Trida pohledu pro získaní heatmapy pianu.
+    @jiri-bartos presunuto z post_ajax_get_project_pian_limit upraveno na queryset
     """
-    body = json.loads(request.body.decode("utf-8"))
-    queries = get_project_pian_from_envelope(
-        body["southEast"]["lng"],
-        body["northWest"]["lat"],
-        body["northWest"]["lng"],
-        body["southEast"]["lat"],
-        body["projekt_ident_cely"],
-    )
-    back = []
-    back_ident_cely = []
-    for query in queries:
-        for pian in query:
-            if(pian["pian__ident_cely"] not in back_ident_cely):
-                back_ident_cely.append(pian["pian__ident_cely"])
+    def post (self, request):
+        body = json.loads(request.body.decode("utf-8"))
+        queries = get_project_pian_from_envelope(
+            body["southEast"]["lng"],
+            body["northWest"]["lat"],
+            body["northWest"]["lng"],
+            body["southEast"]["lat"],
+            body["projekt_ident_cely"],
+        )
+        logger.debug(queries)
+        queries = self.check_filter_permission(queries)
+        logger.debug(queries)
+        back = []
+        back_ident_cely = []
+        for pian in queries:
+            if(pian.ident_cely not in back_ident_cely):
+                back_ident_cely.append(pian.ident_cely)
                 back.append(
                     {
-                        "id": pian["pian__id"],
-                        "ident_cely": pian["pian__ident_cely"],
-                        "geom": pian["pian__geom"].wkt.replace(", ", ",")
+                        "id": pian.id,
+                        "ident_cely": pian.ident_cely,
+                        "geom": pian.geom.wkt.replace(", ", ",")
                     }
                 )
-    if len(back_ident_cely) > 0:
-        return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
-    else:
-        return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
+        if len(back_ident_cely) > 0:
+            return JsonResponse({"points": back, "algorithm": "detail"}, status=200)
+        else:
+            return JsonResponse({"points": [], "algorithm": "detail"}, status=200)
       
 
 @login_required
@@ -532,6 +542,7 @@ class ProjektPermissionFilterMixin(PermissionFilterMixin):
             ROLE_BADATEL_ID: PRISTUPNOST_BADATEL_ID,
             ROLE_ARCHEOLOG_ID: PRISTUPNOST_ARCHEOLOG_ID,
             ROLE_ARCHIVAR_ID:PRISTUPNOST_ARCHIVAR_ID ,
+            ROLE_ADMIN_ID:PRISTUPNOST_ARCHIVAR_ID ,
         }
         ownership_qs = qs.filter(**self.add_ownership_lookup(permission.accessibility))
         accessibility_key = self.permission_model_lookup+"pristupnost_filter__in"

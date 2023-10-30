@@ -1100,8 +1100,8 @@ def post_ajax_get_pas_and_pian_limit(request):
             body["southEast"]["lat"],
             body["zoom"]
             ]
-    num1 =  get_num_pass_from_envelope(*params[0:4])
-    num2 =  get_num_pian_from_envelope(*params[0:4])
+    num1 =  get_num_pass_from_envelope(*params[0:4],request)
+    num2 =  get_num_pian_from_envelope(*params[0:4],request)
     req_pian=body["pian"]
     req_pas=body["pas"]
     logger.debug("pas.views.post_ajax_get_pas_and_pian_limit.num", extra={"num": num1+num2})
@@ -1117,7 +1117,7 @@ def post_ajax_get_pas_and_pian_limit(request):
         remove_duplicity = []
 
         if req_pas:
-            pases = get_pas_from_envelope(*params[0:4])
+            pases = get_pas_from_envelope(*params[0:4],request)
             for pas in pases:
                 if pas.id not in remove_duplicity:
                     remove_duplicity.append(pas.id)
@@ -1131,7 +1131,7 @@ def post_ajax_get_pas_and_pian_limit(request):
                     )
 
         if req_pian:    
-            pians = get_pian_from_envelope(*params[0:4])    
+            pians = get_pian_from_envelope(*params[0:4],request)    
             for pian in pians:
                 if pian["pian__id"] not in remove_duplicity:
                     remove_duplicity.append(pian["pian__id"])
