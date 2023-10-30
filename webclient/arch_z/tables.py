@@ -145,7 +145,7 @@ class AkceTable(SearchTable):
         queryset = queryset \
             .annotate(vedouci_organizace__nazev_zkraceny=
                       StringAgg("akcevedouci__organizace__nazev_zkraceny", delimiter=", ", )) \
-            .order_by("vedouci_organizace__nazev_zkraceny")
+            .order_by(f"{'-' * (-1 * is_descending)}vedouci_organizace__nazev_zkraceny")
         return (queryset, True)
 
     app = "akce"
