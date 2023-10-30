@@ -45,7 +45,7 @@ def create_ident_cely(sender, instance, **kwargs):
                 instance.ident_cely = "U-" + "{0}".format(str(number)).zfill(6)
             else:
                 instance.ident_cely = "U-000001"
-    if len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
+    if kwargs["update_fields"] and len(kwargs["update_fields"]) == 1 and "last_login" in kwargs["update_fields"]:
         instance.suppress_signal = True
 
 
